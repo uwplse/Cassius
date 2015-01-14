@@ -18,18 +18,16 @@
 ; of symbols (see examples.rkt). It returns #f if the formula 
 ; is unsatisfiable or a map from constant names to values if the 
 ; formula is satisfiable.
-(define (solve encoding #:debug [debug #f])
+(define (solve encoding #:debug [debug #f] #:model [model #f])
   (define-values (process out in err) 
     (subprocess #f #f #f (z3) "-smt2" "-in"))
   (with-handlers ([exn:break? (lambda (e) 
                                 (subprocess-kill process #t)
                                 (error 'solve "user break"))])
     (write-encoding encoding in #:debug debug)
-    ; uncomment this to see what is being sent to the solver
-    ;(write-encoding encoding (current-output-port))
     (define sol (read-solution out))
     (subprocess-kill process #t)
-    (when debug
+    (when model
       (printf "\n~a\n\n" sol))
     sol))
 
@@ -40,7 +38,7 @@
     (set! line (+ line 1))
     (apply fprintf port args)
     (when debug
-      (printf "~a " (~a line #:width 2))
+      (printf "~a " (~a line #:width 4))
       (apply printf args)))
 
   (for ([expr (z3-lib)])
@@ -64,8 +62,8 @@
   (match v
     [(== 'true) #t]
     [(== 'false) #f]
-    [`(- ,n) (- n)]
-    [`(/ ,n ,d) (/ n d)]
+    [`(- ,n) (- (de-z3ify n))]
+    [`(/ ,n ,d) (/ (de-z3ify n) (de-z3ify d))]
     [(list args ...) (map de-z3ify args)]
     [else v]))
 
@@ -79,4 +77,4 @@
        [other (error 'solution "expected model, given ~a" other)])]
     [(== 'unsat) (read port) #f] 
     
-    [other other #;(error 'smt-solution "unrecognized solver output: ~a" other)]))
+    [other (error 'smt-solution "unrecognized solver output: ~a" other)]))
