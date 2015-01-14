@@ -7,7 +7,6 @@
   '([(width) Width]
     [(height) Height]
     [(margin-top margin-bottom margin-left margin-right) Margin]
-    [(border-top border-bottom border-left border-right) Border]
     [(padding-top padding-bottom padding-left padding-right) Padding]))
   
 (define css-property-pairs
@@ -52,14 +51,6 @@
                 (= (padding-l (padding-right ,re)) (pr ,e)))
             (=> (is-percentage (padding-right (rules ,e)))
                 (= (* (padding-p (padding-right (rules ,e))) (w (parent ,e))) (pr ,e)))
-            (=> (is-length (border-left ,re))
-                (= (border-l (border-left ,re)) (bl ,e)))
-            (=> (is-percentage (border-left (rules ,e)))
-                (= (* (border-p (border-left (rules ,e))) (w (parent ,e))) (bl ,e)))
-            (=> (is-length (border-right ,re))
-                (= (border-l (border-right ,re)) (br ,e)))
-            (=> (is-percentage (border-right (rules ,e)))
-                (= (* (border-p (border-right (rules ,e))) (w (parent ,e))) (br ,e)))
             (=> (is-length (margin-left (rules ,e)))
                 (= (margin-l (margin-left (rules ,e))) (ml ,e)))
             (=> (is-percentage (margin-left (rules ,e)))
