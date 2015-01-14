@@ -1,0 +1,3 @@
+Not that I know of. Some potentially relevant work that comes to mind is Bricolage (http://hci.stanford.edu/research/bricolage/) and its sister project Webzeitgeist (http://webzeitgeist.stanford.edu/), though they are focused on different problems then what you describe.
+
+There is also our own work on ReVision (http://idl.cs.washington.edu/papers/revision/), which goes from rendered bitmaps to visualization & data models.
