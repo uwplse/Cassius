@@ -8,36 +8,44 @@
     [(height) Height]
     [(margin-top margin-bottom margin-left margin-right) Margin]
     [(padding-top padding-bottom padding-left padding-right) Padding]))
-  
+
 (define css-property-pairs
   (for*/list ([category css-properties] [rule-name (car category)])
     `(,rule-name ,(second category))))
 
 (define (print-rules smt-out)
   (for ([k+v (in-hash-pairs smt-out)])
-    (when (not (eq? (car k+v) 'html))
-      (printf "~a {\n" (car k+v))
+    (when (member (car k+v) (map car (hash-values *rules*)))
+      (printf "~a {\n" (cdr (car (memf (λ (x) (eq? (car x) (car k+v))) (hash-values *rules*)))))
       (for ([property (map car css-property-pairs)]
             [type (map cadr css-property-pairs)]
-            [value (cdr (second (cdr k+v)))])
+            [value (cdr (cdr k+v))])
         (printf "  ~a: ~a;\n" property (print-type type value)))
       (printf "}\n"))))
 
 (define (print-type type value)
   (match type
-    [(or 'Width 'Height 'Margin 'Border 'Padding)
+    [(or 'Width 'Height 'Margin 'Padding)
      (match value
        [`(as auto ,_) 'auto]
        [`((as length ,_) ,x) (format "~apx" x)]
        [`((as percentage ,_) ,x) (format "~a%" x)])]))
 
-(define (make-element e)
+(define *rules* (make-hash))
+
+(define (make-rule elt-name rule-name)
+  (let ([symb (string->symbol (symbol->string (gensym 'rule)))])
+    (hash-set! *rules* elt-name (cons symb rule-name))
+    `((declare-const ,symb Rules))))
+
+(define (make-element e elt-name)
   (let ([re `(rules ,e)])
     (cons
      `(declare-const ,e Element)
      (map (curry list 'assert)
           `((not (is-nil (parent ,e)))
             (not (is-nil ,e))
+            (= (rules ,e) ,(car (hash-ref *rules* elt-name (λ () (error "Invalid rule name" elt-name)))))
             (= (+ (ml ,e) (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e) (mr ,e)) (w (parent ,e)))
             (=> (is-length (width ,re))
                 (= (width-l (width ,re)) (w ,e)))
@@ -66,40 +74,89 @@
                 (= (mr ,e) (ml ,e)))
             (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0))
             (=> (and (is-auto (width ,re)) (is-auto (margin-right ,re))) (= (mr ,e) 0))
-            (> (w ,e) 0)
+            (>= (w ,e) 0)
+            (= (x ,e) (+ (ml ,e) (pl (parent ,e))))
+            ; Banned in CSS2
+            (>= (pl ,e) 0)
+            (>= (pr ,e) 0)
+            (>= (pb ,e) 0)
+            (>= (pt ,e) 0)
             ; This isn't true in CSS1; it is only true for "replaced elements"
             #;(=> (is-length (height (rules ,e))) (= (height-l (height (rules ,e))) (w ,e)))
-            )))))
+            ; TODO : Add back borders
+            (= (bl ,e) 0)
+            (= (br ,e) 0)
+            (= (bt ,e) 0)
+            (= (bb ,e) 0))))))
 
-(print-rules
- `((declare-datatypes ()
-     ((Width   auto (length (width-l Real)) (percentage (width-p Real)))
+(define (make-preamble)
+  `((declare-datatypes ()
+      ((Width   auto (length (width-l Real)) (percentage (width-p Real)))
       (Height  auto (length (height-l Real)) (percentage (height-p Real)))
       (Margin  auto (length (margin-l Real)) (percentage (margin-p Real)))
       (Border  (length (border-l Real)) (percentage (border-p Real)))
       (Padding (length (padding-l Real)) (percentage (padding-p Real)))))
 
-   (declare-datatypes ()
-     ((Rules (rules ,@css-property-pairs))))
+    (declare-datatypes ()
+      ((Rules (rules ,@css-property-pairs))))
 
-   (declare-datatypes ()
-     ((Element
-       nil
-       (element (rules Rules) (parent Element)
-                (x Real) (y Real) (w Real) (h Real)
-                (mt Real) (mb Real) (ml Real) (mr Real)
-                (bt Real) (bb Real) (bl Real) (br Real)
-                (pt Real) (pb Real) (pl Real) (pr Real)))))
+    (declare-datatypes ()
+      ((Element
+        nil
+        (element (rules Rules) (parent Element)
+                 (x Real) (y Real) (w Real) (h Real)
+                 (mt Real) (mb Real) (ml Real) (mr Real)
+                 (bt Real) (bb Real) (bl Real) (br Real)
+                 (pt Real) (pb Real) (pl Real) (pr Real)))))
 
-   (declare-const html Element)
-   (assert (not (is-nil html)))
-   (assert (= (x html) 0))
-   (assert (= (y html) 0))
-   (assert (= (parent html) nil))
+    (define-fun x- ((e Element)) Real
+      (+ (x e) (pl e) (w e) (pr e)))
 
-   ,@(make-element 'body)
-   (assert (= (parent body) html))
+    (define-fun y- ((e Element)) Real
+      (+ (y e) (pt e) (h e) (pb e)))))
 
-   (assert (= (w html) 709))
-   (assert (= (h html) 1653)))))
+(define (make-html name)
+  `((declare-const ,name Element)
+    (assert (not (is-nil ,name)))
+    (assert (= (x ,name) 0))
+    (assert (= (y ,name) 0))
+    (assert (= (parent ,name) nil))
+    (assert (= (pl ,name) 0))
+    (assert (= (pr ,name) 0))
+    (assert (= (pt ,name) 0))
+    (assert (= (pb ,name) 0))
+    (assert (= (bl ,name) 0))
+    (assert (= (br ,name) 0))
+    (assert (= (bt ,name) 0))
+    (assert (= (bb ,name) 0))
+    (assert (= (ml ,name) 0))
+    (assert (= (mr ,name) 0))
+    (assert (= (mt ,name) 0))
+    (assert (= (mb ,name) 0))))
+
+(print-rules
 (solve #:debug #f
+ `(,@(make-preamble)
+   ,@(make-rule 'body 'body)
+
+   ,@(make-html 'html1)
+
+   ,@(make-element 'body1 'body)
+   (assert (= (parent body1) html1))
+
+   (assert (= (w html1) 600))
+   (assert (= (h html1) 400))
+
+   (assert (= (x body1) 100))
+   (assert (= (x- body1) 500))
+
+   ,@(make-html 'html2)
+
+   ,@(make-element 'body2 'body)
+   (assert (= (parent body2) html2))
+
+   (assert (= (w html2) 800))
+   (assert (= (h html2) 400))
+
+   (assert (= (x body2) 200))
+   (assert (= (x- body2) 600)))))
