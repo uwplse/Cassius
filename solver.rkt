@@ -18,27 +18,30 @@
 ; of symbols (see examples.rkt). It returns #f if the formula 
 ; is unsatisfiable or a map from constant names to values if the 
 ; formula is satisfiable.
-(define (solve encoding)
+(define (solve encoding #:debug [debug #f])
   (define-values (process out in err) 
     (subprocess #f #f #f (z3) "-smt2" "-in"))
   (with-handlers ([exn:break? (lambda (e) 
                                 (subprocess-kill process #t)
                                 (error 'solve "user break"))])
-    (write-encoding encoding in)
+    (write-encoding encoding in #:debug debug)
     ; uncomment this to see what is being sent to the solver
     ;(write-encoding encoding (current-output-port))
     (define sol (read-solution out))
     (subprocess-kill process #t)
+    (when debug
+      (printf "\n~a\n\n" sol))
     sol))
 
 ; Writes the given encoding to the specified port.
-(define (write-encoding encoding port)
+(define (write-encoding encoding port #:debug [debug #f])
   (define line 0)
   (define (write . args)
     (set! line (+ line 1))
     (apply fprintf port args)
-    (printf "~a " (~a line #:width 2))
-    (apply printf args))
+    (when debug
+      (printf "~a " (~a line #:width 2))
+      (apply printf args)))
 
   (for ([expr (z3-lib)])
     (write "~a\n" expr))
@@ -57,17 +60,22 @@
 ; unsatisfiable core (if the solution is 'unsat and a 
 ; core was extracted); or #f (if the solution is 
 ; 'unsat and no core was extracted).
+(define (de-z3ify v)
+  (match v
+    [(== 'true) #t]
+    [(== 'false) #f]
+    [`(- ,n) (- n)]
+    [`(/ ,n ,d) (/ n d)]
+    [(list args ...) (map de-z3ify args)]
+    [else v]))
+
 (define (read-solution port)
   (match (read port)
     [(== 'sat) 
      (match (read port)
        [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
         (for/hash ([c const] [v val]) 
-          (values c (match v
-                      [(== 'true) #t]
-                      [(== 'false) #f]
-                      [`(- ,n) (- n)]
-                      [else v])))]
+          (values c (de-z3ify v)))]
        [other (error 'solution "expected model, given ~a" other)])]
     [(== 'unsat) (read port) #f] 
     

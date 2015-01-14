@@ -15,7 +15,6 @@
     `(,rule-name ,(second category))))
 
 (define (print-rules smt-out)
-  (printf "\n~a\n\n" smt-out)
   (for ([k+v (in-hash-pairs smt-out)])
     (when (not (eq? (car k+v) 'html))
       (printf "~a {\n" (car k+v))
@@ -82,7 +81,6 @@
             )))))
 
 (print-rules
-(solve
  `((declare-datatypes ()
      ((Width   auto (length (width-l Real)) (percentage (width-p Real)))
       (Height  auto (length (height-l Real)) (percentage (height-p Real)))
@@ -113,3 +111,4 @@
 
    (assert (= (w html) 709))
    (assert (= (h html) 1653)))))
+(solve #:debug #f
