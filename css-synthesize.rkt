@@ -95,26 +95,46 @@
                 (= (margin-l (margin-top ,re)) (mt ,e)))
             (=> (is-percentage (margin-top ,re))
                 (= (* (margin-p (margin-top ,re)) (w (parent ,e))) (mt ,e)))
-            (=> (is-auto (margin-top ,re)) (= (mt ,e) 0)) ; This is a guess
+            (=> (is-auto (margin-top ,re)) (= (mt ,e) 0))
 
-            ; These are the horrid rules for the right-margin
-            ; TODO: These are the CSS1 rules, which are different from the CSS2 rules
-            (=> (and (or (is-auto (width ,re)) (is-auto (margin-left ,re)))
-                     (is-length (margin-right ,re)))
-                (= (margin-l (margin-right ,re)) (mr ,e)))
-            (=> (and (or (is-auto (width ,re)) (is-auto (margin-left ,re)))
-                     (is-percentage (margin-right ,re)))
-                (= (* (margin-p (margin-right ,re)) (w (parent ,e))) (mr ,e)))
+            ; These are the horrid rules for the right-margin; see CSS2 §10.3.3
+            (= (+ (ml ,e) (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e) (mr ,e)) (w (parent ,e)))
             (=> (and (not (is-auto (width ,re)))
-                     (is-auto (margin-left ,re)) (is-auto (margin-right ,re)))
-                (= (mr ,e) (ml ,e)))
+                     (> (+ (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e)
+                           (ite (not (is-auto (margin-left ,re)))
+                                (ite (is-length (margin-left ,re))
+                                     (margin-l (margin-left ,re))
+                                     (* (margin-p (margin-left ,re)) (w (parent ,e))))
+                                0)
+                           (ite (not (is-auto (margin-right ,re)))
+                                (ite (is-length (margin-right ,re))
+                                     (margin-l (margin-right ,re))
+                                     (* (margin-p (margin-right ,re)) (w (parent ,e))))
+                                0))
+                        (w (parent ,e))))
+                (and
+                 (=> (is-auto (margin-right ,re)) (= 0 (mr ,e)))
+                 (=> (is-auto (margin-left ,re)) (= 0 (ml ,e)))))
+                                        ; TODO: If all of the above have a computed value other
+                                        ; than 'auto', the values are said to be "over-constrained" and one of
+                                        ; the used values will have to be different from its computed value.
+                                        ; If the 'direction' property of the containing block has the value
+                                        ; 'ltr', the specified value of 'margin-right' is ignored and the
+                                        ; value is calculated so as to make the equality true. If the value of
+                                        ; 'direction' is 'rtl', this happens to 'margin-left' instead.
+            (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0))
             (=> (and (is-auto (width ,re)) (is-auto (margin-right ,re))) (= (mr ,e) 0))
+            (=> (and (is-auto (margin-left ,re)) (is-auto (margin-right ,re)))
+                (= (mr ,e) (ml ,e)))
+
+            (=> (is-length (margin-right ,re)) (= (margin-l (margin-right ,re)) (mr ,e)))
+            (=> (is-percentage (margin-right ,re)) (= (* (margin-p (margin-right ,re)) (w (parent ,e))) (mr ,e)))
 
             (=> (is-length (margin-bottom ,re))
                 (= (margin-l (margin-bottom ,re)) (mb ,e)))
             (=> (is-percentage (margin-bottom ,re))
                 (= (* (margin-p (margin-bottom ,re)) (w (parent ,e))) (mb ,e)))
-            (=> (is-auto (margin-bottom ,re)) (= (mb ,e) 0)) ; This is a guess
+            (=> (is-auto (margin-bottom ,re)) (= (mb ,e) 0))
             (=> (is-length (margin-left ,re))
                 (= (margin-l (margin-left ,re)) (ml ,e)))
             (=> (is-percentage (margin-left ,re))
@@ -122,21 +142,19 @@
             (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0))
 
             (= (x ,e) (+ (x (parent ,e)) (pl (parent ,e)) (ml ,e)))
-            (= (y ,e)
-               (ite (= (previous ,e) nil)
-                    (+ (mt ,e) (pt (parent ,e)) (y (parent ,e)))
-                    (+ (pt (parent ,e)) (y (parent ,e))
-                       ; Position of previous element
-                       (y (previous ,e)) (pt (previous ,e)) (h (previous ,e))  (pb (previous ,e))
-                       ; Gap due to the margins
-                       (ite (>= (mb (previous ,e)) 0)
-                            (ite (>= (mt ,e) 0)
-                                 (max (mb (previous ,e)) (mt ,e))
-                                 (+ (mb (previous ,e)) (mt ,e)))
-                            (ite (>= (mt ,e) 0)
-                                 (+ (mb (previous ,e)) (mt ,e))
-                                 (min (mb (previous ,e)) (mt ,e)))))))
-            (= (+ (ml ,e) (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e) (mr ,e)) (w (parent ,e)))
+            (=> (= (previous ,e) nil)
+                (= (y ,e) (+ (mt ,e) (pt (parent ,e)) (y (parent ,e)))))
+            (=> (not (= (previous ,e) nil))
+                (= (y ,e)
+                   (+ (y (previous ,e)) (pt (previous ,e)) (h (previous ,e))  (pb (previous ,e))
+                      ; Gap due to the margins
+                      (ite (>= (mb (previous ,e)) 0)
+                           (ite (>= (mt ,e) 0)
+                                (max (mb (previous ,e)) (mt ,e))
+                                (+ (mb (previous ,e)) (mt ,e)))
+                           (ite (>= (mt ,e) 0)
+                                (+ (mb (previous ,e)) (mt ,e))
+                                (min (mb (previous ,e)) (mt ,e)))))))
             (>= (w ,e) 0)
             (>= (h ,e) 0)
             (>= (pl ,e) 0)
