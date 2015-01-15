@@ -14,15 +14,30 @@
   (for*/list ([category css-properties] [rule-name (car category)])
     `(,rule-name ,(second category))))
 
+(define (r2 x)
+  (/ (round (* 10 x)) 10))
+
 (define (print-rules smt-out)
-  (for ([k+v (in-hash-pairs smt-out)])
-    (when (member (car k+v) (map car (hash-values *rules*)))
-      (printf "~a {\n" (cdr (car (memf (λ (x) (eq? (car x) (car k+v))) (hash-values *rules*)))))
-      (for ([property (map car css-property-pairs)]
-            [type (map cadr css-property-pairs)]
-            [value (cdr (cdr k+v))])
-        (printf "  ~a: ~a;\n" property (print-type type value)))
-      (printf "}\n"))))
+  (with-output-to-file "test.css" #:exists 'replace
+    (lambda ()
+      (eprintf "\n")
+      (for ([k+v (in-hash-pairs smt-out)])
+        (when (and (list? (cdr k+v)) (or (eq? (cadr k+v) 'element) (eq? (cadr k+v) 'let)))
+          (let ([elt (if (eq? (cadr k+v) 'element) (cddr k+v) (cdr (cadddr k+v)))])
+            (match elt
+              [`(,tag ,rules ,previous ,parent ,first-child ,fgc ,bgc ,x ,y ,w ,h
+                      ,mt ,mb ,ml ,mr ,bt ,bb ,bl ,br ,pt ,pb ,pl ,pr)
+               (eprintf "~a (~a) ~a×~a at (~a, ~a)\n" (car k+v) tag (r2 w) (r2 h) (r2 y) (r2 x))
+               (eprintf "margin:  ~a ~a ~a ~a\n" (r2 mt) (r2 mr) (r2 mb) (r2 ml))
+               (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
+               (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))])))
+        (when (member (car k+v) (map car (hash-values *rules*)))
+          (printf "~a {\n" (cdr (car (memf (λ (x) (eq? (car x) (car k+v))) (hash-values *rules*)))))
+          (for ([property (map car css-property-pairs)]
+                [type (map cadr css-property-pairs)]
+                [value (cdr (cdr k+v))])
+            (printf "  ~a: ~a;\n" property (print-type type value)))
+          (printf "}\n"))))))
 
 (define (print-type type value)
   (match type
@@ -30,7 +45,7 @@
      (match value
        [`(as auto ,_) 'auto]
        [`((as length ,_) ,x) (format "~apx" x)]
-       [`((as percentage ,_) ,x) (format "~a%" x)])]
+       [`((as percentage ,_) ,x) (format "~a%" (* 100 x))])]
     ['Color
      (string-append "#" (~a (format "~x" value) #:width 6 #:align 'right #:pad-string "0"))]))
 
@@ -131,7 +146,7 @@
             (= (bgc ,e) (background-color ,re))
             (= (fgc ,e) (color ,re))
             ; This isn't true in CSS1; it is only true for "replaced elements"
-            #;(=> (is-length (height ,re)) (= (height-l (height ,re)) (w ,e)))
+            #;(=> (is-length (height ,re)) (= (height-l (height ,re)) (h ,e)))
             ; TODO : Add back borders
             (= (bl ,e) 0)
             (= (br ,e) 0)
