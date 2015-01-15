@@ -25,7 +25,7 @@
                                 (subprocess-kill process #t)
                                 (error 'solve "user break"))])
     (write-encoding encoding in #:debug debug)
-    (define sol (read-solution out))
+    (define sol (read-solution in out))
     (subprocess-kill process #t)
     (when model
       (printf "\n~a\n\n" sol))
@@ -41,12 +41,12 @@
       (printf "~a " (~a line #:width 4))
       (apply printf args)))
 
+  (write "(set-option :produce-unsat-cores true)\n")
   (for ([expr (z3-lib)])
     (write "~a\n" expr))
   (for ([expr encoding])
     (write "~a\n" expr))
   (write "(check-sat)\n")
-  (write "(get-model)\n")
   (flush-output port))
 
 ; Reads the SMT solution from the given input port.
@@ -67,14 +67,19 @@
     [(list args ...) (map de-z3ify args)]
     [else v]))
 
-(define (read-solution port)
-  (match (read port)
+(define (read-solution in out)
+  (match (read out)
     [(== 'sat) 
-     (match (read port)
+     (fprintf in "(get-model)\n")
+     (flush-output in)
+     (match (read out)
        [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
         (for/hash ([c const] [v val]) 
           (values c (de-z3ify v)))]
        [other (error 'solution "expected model, given ~a" other)])]
-    [(== 'unsat) (read port) #f] 
+    [(== 'unsat)
+     (fprintf in "(get-unsat-core)\n")
+     (flush-output in)
+     (error "No solution found" (read out))] 
     
     [other (error 'smt-solution "unrecognized solver output: ~a" other)]))
