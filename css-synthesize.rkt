@@ -270,8 +270,7 @@
 
    ,@(make-dom 'html1
                '((tag-BODY body1 body)
-                 ((tag-DIV diva1 div))
-                 ((tag-DIV divb1 div))))
+                 ((tag-DIV diva1 div))))
 
    (assert (! (= (w html1) 600) :named width-1))
    (assert (! (= (h html1) 400) :named height-1))
@@ -287,12 +286,6 @@
    (assert (! (= (y diva1) 5) :named a-t-1))
    (assert (! (= (y- diva1) 195) :named a-b-1))
    (assert (! (= (bgc diva1) |#x00ff00|) :named a-bg-1))
-
-   (assert (! (= (x divb1) 150) :named b-l-1))
-   (assert (! (= (x- divb1) 450) :named b-r-1))
-   (assert (! (= (y divb1) 200) :named b-t-1))
-   #;(assert (! (= (y- divb1) 390) :named b-b-1))
-   (assert (! (= (bgc divb1) |#x00ff00|) :named b-bg-1))
 
    ,@(make-dom 'html2
                '((tag-BODY body2 body)
@@ -316,6 +309,6 @@
 
    (assert (! (= (x divb2) 250) :named b-l-2))
    (assert (! (= (x- divb2) 550) :named b-r-2))
-   (assert (! (= (y divb2) 200) :named b-t-2))
-   #;(assert (! (= (y- divb2) 395) :named b-b-2))
+   (assert (! (= (y divb2) 205) :named b-t-2))
+   (assert (! (= (y- divb2) 395) :named b-b-2))
    (assert (! (= (bgc divb2) |#x00ff00|) :named b-bg-2)))))
