@@ -12,8 +12,18 @@ Current Status
 
 Cassius implementation has just begun;
   for now, it supports only a part of CSS2.1.
-It can already synthesize some simple layouts
-  including centering and box layout.
+For now, the focus is on implementing the CSS box model.
+
+Cassius currently models:
++ Widths, padding, and margins
++ `auto` margins
++ Margin collapse
+
+Cassius does not model:
++ Percentage margins, widths, or padding
++ Borders
++ Floats
++ Positioning
 
 Installing
 ----------
