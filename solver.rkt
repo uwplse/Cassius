@@ -72,10 +72,10 @@
     [(== 'sat) 
      (fprintf in "(get-model)\n")
      (flush-output in)
-     (match (read out)
+     (match (de-z3ify (read out))
        [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
         (for/hash ([c const] [v val]) 
-          (values c (de-z3ify v)))]
+          (values c v))]
        [other (error 'solution "expected model, given ~a" other)])]
     [(== 'unsat)
      (fprintf in "(get-unsat-core)\n")
