@@ -27,7 +27,7 @@
             (match elt
               [`(,tag ,rules ,previous ,parent ,first-child ,fgc ,bgc ,x ,y ,w ,h
                       ,mt ,mb ,ml ,mr ,mtp ,mtn ,mbp ,mbn ,_ ,bt ,bb ,bl ,br ,pt ,pb ,pl ,pr)
-               (eprintf "~a (~a) ~a×~a at (~a, ~a)\n" (car k+v) tag (r2 w) (r2 h) (r2 y) (r2 x))
+               (eprintf "~a (~a) ~a×~a at (~a, ~a)\n" tag (car k+v) (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
                (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
                         (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
                         (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
@@ -90,7 +90,7 @@
                 (= (padding-l (padding-right ,re)) (pr ,e)))
             (=> (is-percentage (padding-right ,re))
                 (= (* (padding-p (padding-right ,re)) (w ,pe)) (pr ,e)))
-            #;(not (is-percentage (padding-bottom ,re)))
+            (not (is-percentage (padding-bottom ,re)))
             (=> (is-length (padding-bottom ,re))
                 (= (padding-l (padding-bottom ,re)) (pb ,e)))
             #;(=> (is-percentage (padding-bottom ,re))
@@ -110,6 +110,10 @@
 
             ; These are the horrid rules for the right-margin; see CSS2 §10.3.3
             (= (+ (ml ,e) (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e) (mr ,e)) (w ,pe))
+            ; TODO: If the 'direction' property of the containing block has the value
+            ; 'ltr', the specified value of 'margin-right' is ignored and the
+            ; value is calculated so as to make the equality true. If the value of
+            ; 'direction' is 'rtl', this happens to 'margin-left' instead.
             (=> (and (not (is-auto (width ,re)))
                      (> (+ (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e)
                            (ite (not (is-auto (margin-left ,re)))
@@ -126,13 +130,6 @@
                 (and
                  (=> (is-auto (margin-right ,re)) (= 0.0 (mr ,e)))
                  (=> (is-auto (margin-left ,re)) (= 0.0 (ml ,e)))))
-                                        ; TODO: If all of the above have a computed value other
-                                        ; than 'auto', the values are said to be "over-constrained" and one of
-                                        ; the used values will have to be different from its computed value.
-                                        ; If the 'direction' property of the containing block has the value
-                                        ; 'ltr', the specified value of 'margin-right' is ignored and the
-                                        ; value is calculated so as to make the equality true. If the value of
-                                        ; 'direction' is 'rtl', this happens to 'margin-left' instead.
             (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0.0))
             (=> (and (is-auto (width ,re)) (is-auto (margin-right ,re))) (= (mr ,e) 0.0))
             (=> (and (is-auto (margin-left ,re)) (is-auto (margin-right ,re)))
@@ -215,7 +212,7 @@
        (Padding (length (padding-l Real)) (percentage (padding-p Real)))))
 
     (declare-datatypes ()
-      ((TagNames tag-HTML tag-BODY tag-DIV)))
+      ((TagNames <HTML> <BODY> <DIV>)))
 
     (define-sort Color () (_ BitVec 24))
 
@@ -256,7 +253,7 @@
     (assert (= (x ,elt) 0))
     (assert (= (y ,elt) 0))
     (assert (= (parent ,elt) (as nil ,type-name)))
-    (assert (= (tagname ,elt) tag-HTML))
+    (assert (= (tagname ,elt) <HTML>))
     (assert (= (previous ,elt) (as nil ,type-name)))
     (assert (= (pl ,elt) 0))
     (assert (= (pr ,elt) 0))
@@ -318,8 +315,8 @@
    ,@(make-rule 'divdiv '|div div|)
 
    ,@(make-dom 'html1 'doc1
-               '((tag-BODY body1 body)
-                 ((tag-DIV diva1 div))))
+               '((<BODY> body1 body)
+                 ((<DIV> diva1 div))))
 
    (assert (! (= (w (doc1f html1)) 600) :named width-1))
    (assert (! (>= (h (doc1f html1)) 400) :named height-1))
@@ -337,10 +334,10 @@
    (assert (! (= (bgc (doc1f diva1)) |#x00ff00|) :named a-bg-1))
 
    ,@(make-dom 'html2 'doc2
-               '((tag-BODY body2 body)
-                 ((tag-DIV diva2 div)
-                  ((tag-DIV divc2 div)))
-                 ((tag-DIV divb2 div))))
+               '((<BODY> body2 body)
+                 ((<DIV> diva2 div)
+                  ((<DIV> divc2 div)))
+                 ((<DIV> divb2 div))))
 
    (assert (! (= (w (doc2f html2)) 800) :named width-2))
    (assert (! (>= (h (doc2f html2)) 400) :named height-2))
@@ -368,9 +365,6 @@
    (assert (! (= (y (doc2f divc2)) 10) :named c-t-2))
    #;(assert (! (= ,(vh '(doc2f divc2)) 90) :named c-b-2))
    (assert (! (= (bgc (doc2f divc2)) |#x00ff00|) :named c-bg-2))
-
-   (declare-const HTML (Element doc2))
-   (assert (= HTML (doc2f html2)))
 
    (declare-const BODY (Element doc2))
    (assert (= BODY (doc2f body2)))
