@@ -179,12 +179,9 @@
 
             (= (y ,e)
                (ite (is-nil ,le)
-                    (+ (ite ; Margins collapse if the borders and padding are zero.
-                        (and (not (is-html ,pe)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
-                        0.0
-                        (+ (mtp ,e) (mtn ,e)))
-                       (pt ,pe)
-                       (y ,pe))
+                    (ite (and (not (is-html ,pe)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
+                         (y ,pe) ; Margins collapse if the borders and padding are zero.
+                         (+ (mtp ,e) (mtn ,e) (pt ,pe) (y ,pe)))
                     (+ (y ,le) (pt ,le) (h ,le)  (pb ,le)
                        (+ (max (mbp ,le) (mtp ,e)) (min (mbn ,le) (mtn ,le))))))
 
