@@ -26,8 +26,8 @@ Cassius does not model:
 + Positioning
 
 Cassius development is tracked
-[https://trello.com/b/ylAVgJh3/cassius](on Trello).
-Email [mailto:emina@cs.washington.edu](Emina Torlak)
+[on Trello](https://trello.com/b/ylAVgJh3/cassius).
+Email [Emina Torlak](mailto:emina@cs.washington.edu)
 to be added to the project.
 
 Installing
