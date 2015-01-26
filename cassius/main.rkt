@@ -1,18 +1,7 @@
 #lang racket
-
-(require "solver.rkt")
+(require "z3.rkt")
+(require "css-rules.rkt")
 (z3 "/opt/z3/bin/z3")
-
-(define css-properties
-  '([(width) Width]
-    [(height) Height]
-    [(margin-top margin-bottom margin-left margin-right) Margin]
-    [(padding-top padding-bottom padding-left padding-right) Padding]
-    [(background-color color) Color]))
-
-(define css-property-pairs
-  (for*/list ([category css-properties] [rule-name (car category)])
-    `(,rule-name ,(second category))))
 
 (define (r2 x)
   (/ (round (* 100 x)) 100))
@@ -36,7 +25,7 @@
         (when (member (car k+v) (map car (hash-values *rules*)))
           (printf "~a {\n" (cdr (car (memf (λ (x) (eq? (car x) (car k+v))) (hash-values *rules*)))))
           (for ([property (map car css-property-pairs)]
-                [type (map cadr css-property-pairs)]
+                [type (map cdr css-property-pairs)]
                 [value (cdr (cdr k+v))])
             (printf "  ~a: ~a;\n" property (print-type type value)))
           (printf "}\n"))))))
@@ -201,20 +190,10 @@
             (= (bb ,e) 0)))))
 
 (define (make-preamble)
-  `((declare-datatypes ()
-      ((Width   auto (length (width-l Real)) (percentage (width-p Real)))
-       (Height  auto (length (height-l Real)))
-       (Margin  auto (length (margin-l Real)) (percentage (margin-p Real)))
-       (Border  (length (border-l Real)) (percentage (border-p Real)))
-       (Padding (length (padding-l Real)) (percentage (padding-p Real)))))
-
-    (declare-datatypes ()
-      ((TagNames <HTML> <BODY> <DIV>)))
-
-    (define-sort Color () (_ BitVec 24))
-
-    (declare-datatypes ()
-      ((Rules (rules ,@css-property-pairs))))
+  `(,@css-types
+    ,html-tag-type
+    ,css-rule-type
+    ,@math-utilities
 
     (declare-datatypes (T)
       ((Element
@@ -233,13 +212,7 @@
                  ; Borders
                  (bt Real) (bb Real) (bl Real) (br Real)
                  ; Padding
-                 (pt Real) (pb Real) (pl Real) (pr Real)))))
-
-    (define-fun max ((x Real) (y Real)) Real
-      (ite (< x y) y x))
-
-    (define-fun min ((x Real) (y Real)) Real
-      (ite (< x y) x y))))
+                 (pt Real) (pb Real) (pl Real) (pr Real)))))))
 
 (define (vw e) `(+ (pl ,e) (w ,e) (pr ,e)))
 (define (vh e) `(+ (pt ,e) (h ,e) (pb ,e)))
@@ -309,11 +282,10 @@
    ,@(make-preamble)
    ,@(make-rule 'body 'body)
    ,@(make-rule 'div 'div)
-   ,@(make-rule 'divdiv '|div div|)
 
    ,@(make-dom 'html1 'doc1
-               '((<BODY> body1 body)
-                 ((<DIV> diva1 div))))
+               '([<BODY> body1 body]
+                 ([<DIV> diva1 div])))
 
    (assert (! (= (w (doc1f html1)) 600) :named width-1))
    (assert (! (>= (h (doc1f html1)) 400) :named height-1))
@@ -331,10 +303,10 @@
    (assert (! (= (bgc (doc1f diva1)) |#x00ff00|) :named a-bg-1))
 
    ,@(make-dom 'html2 'doc2
-               '((<BODY> body2 body)
-                 ((<DIV> diva2 div)
-                  ((<DIV> divc2 div)))
-                 ((<DIV> divb2 div))))
+               '([<BODY> body2 body]
+                 ([<DIV> diva2 div]
+                  ([<DIV> divc2 div]))
+                 ([<DIV> divb2 div])))
 
    (assert (! (= (w (doc2f html2)) 800) :named width-2))
    (assert (! (>= (h (doc2f html2)) 400) :named height-2))
@@ -362,7 +334,7 @@
    (assert (! (= (y (doc2f divc2)) 10) :named c-t-2))
    #;(assert (! (= ,(vh '(doc2f divc2)) 90) :named c-b-2))
    (assert (! (= (bgc (doc2f divc2)) |#x00ff00|) :named c-bg-2))
-
+   
    (declare-const BODY (Element doc2))
    (assert (= BODY (doc2f body2)))
 
@@ -374,4 +346,6 @@
    
    (declare-const DIV-C (Element doc2))
    (assert (= DIV-C (doc2f divc2)))
+
+   (check-sat)
    )))

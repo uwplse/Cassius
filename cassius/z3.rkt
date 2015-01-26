@@ -2,22 +2,14 @@
 
 (require racket/runtime-path racket/path)
 
-(provide solve z3 z3!)
-
-(define z3-lib (make-parameter '()))
-
-(define-syntax-rule (z3! cmd args ...)
-  (z3-lib (cons '(cmd args ...) (z3-lib))))
+(provide solve z3)
 
 ; We assume that the solver is in the ../bin/ folder.
 (define-runtime-path bin (build-path ".." "bin"))
-
 (define z3 (make-parameter (build-path bin "z3")))
 
-; Invokes Z3 on the given QF_BV formula, represented as a list 
-; of symbols (see examples.rkt). It returns #f if the formula 
-; is unsatisfiable or a map from constant names to values if the 
-; formula is satisfiable.
+; Invokes Z3 and returns #f if unsatisfiable
+; or a map from constant names to values if satisfiable.
 (define (solve encoding #:debug [debug #f] #:model [model #f])
   (define-values (process out in err) 
     (subprocess #f #f #f (z3) "-smt2" "-in"))
@@ -42,11 +34,8 @@
       (apply printf args)))
 
   (write "(set-option :produce-unsat-cores true)\n")
-  (for ([expr (z3-lib)])
-    (write "~a\n" expr))
   (for ([expr encoding])
     (write "~a\n" expr))
-  (write "(check-sat)\n")
   (flush-output port))
 
 ; Reads the SMT solution from the given input port.
