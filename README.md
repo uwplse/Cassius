@@ -25,6 +25,11 @@ Cassius does not model:
 + Floats
 + Positioning
 
+Cassius development is tracked
+[https://trello.com/b/ylAVgJh3/cassius](on Trello).
+Email [mailto:emina@cs.washington.edu](Emina Torlak)
+to be added to the project.
+
 Installing
 ----------
 
