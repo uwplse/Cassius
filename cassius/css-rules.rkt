@@ -30,7 +30,7 @@
                         `(,rule ,(car cat))))))))
 
 (define html-tag-type
-  `(declare-datatypes () ((TagNames <HTML> <BODY> <DIV>))))
+  `(declare-datatypes () ((TagNames <HTML> <BODY> <DIV> <H1> <P> <svg>))))
 
 (define math-utilities
   (list `(define-fun max ((x Real) (y Real)) Real
