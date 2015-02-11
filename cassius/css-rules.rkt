@@ -10,8 +10,8 @@
        (Height  auto (length (height-l Real)))
        (Margin  auto (length (margin-l Real)) (percentage (margin-p Real)))
        (Border  (length (border-l Real)) (percentage (border-p Real)))
-       (Padding (length (padding-l Real)) (percentage (padding-p Real)))))
-   `(define-sort Color () (_ BitVec 24))))
+       (Padding (length (padding-l Real)) (percentage (padding-p Real)))
+       (Color   transparent (color (color-c (_ BitVec 24))))))))
 
 (define css-properties
   '([Width    width]
@@ -30,7 +30,7 @@
                         `(,rule ,(car cat))))))))
 
 (define html-tag-type
-  `(declare-datatypes () ((TagNames <HTML> <BODY> <DIV> <H1> <P> <svg>))))
+  `(declare-datatypes () ((TagNames <HTML> <BODY> <DIV> <H1> <P> <svg> <BR> <PRE>))))
 
 (define math-utilities
   (list `(define-fun max ((x Real) (y Real)) Real

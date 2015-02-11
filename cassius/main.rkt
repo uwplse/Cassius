@@ -8,9 +8,10 @@
 (define (r2 x)
   (/ (round (* 100 x)) 100))
 
-(define (print-rules smt-out)
+(define (print-rules #:header [header ""] smt-out)
   (with-output-to-file "test.css" #:exists 'replace
     (lambda ()
+      (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n\n" header)
       (eprintf "\n")
       (for ([k+v (in-hash-pairs smt-out)])
         (when (and (list? (cdr k+v)) (or (eq? (cadr k+v) 'element) (eq? (cadr k+v) 'let)))
@@ -40,7 +41,10 @@
        [`((as length ,_) ,x) (format "~apx" x)]
        [`((as percentage ,_) ,x) (format "~a%" (* 100 x))])]
     ['Color
-     (string-append "#" (~a (format "~x" value) #:width 6 #:align 'right #:pad-string "0"))]))
+     (match value
+       ['transparent 'transparent]
+       [`(color ,n)
+        (string-append "#" (~a (format "~x" n) #:width 6 #:align 'right #:pad-string "0"))])]))
 
 (define *rules* (make-hash))
 
@@ -69,7 +73,7 @@
             (=> (is-length (height ,re))
                 (= (height-l (height ,re)) (h ,e)))
             ; TODO : Figure out what height:auto actually means
-            (not (is-auto (height ,re)))
+            #;(not (is-auto (height ,re)))
 
             (=> (is-length (padding-top ,re))
                 (= (padding-l (padding-top ,re)) (pt ,e)))
