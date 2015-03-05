@@ -61,18 +61,18 @@
          `((is-element ,pe)
            (is-linebox ,e)
            (or (is-nil ,ve) (is-linebox ,ve))
-           (= (x-l ,e) (+ (x ,pe) (pl ,pe)))
-           (<= (w-l ,e) (w ,pe)) ; Not true if the line box cannot be broken...
+           (= (x-l ,e) (+ (x-e ,pe) (pl ,pe)))
+           (<= (w-l ,e) (w-e ,pe)) ; Not true if the line box cannot be broken...
            (= (y-l ,e)
               (ite (is-linebox ,ve)
                    (+ (y-l ,ve) (h-l ,pe) (/ (+ (gap-l ,e) (gap-l ,ve)) 2))
-                   (+ (y ,pe) (pt ,pe) (/ (gap-l ,e) 2))))))))
+                   (+ (y-e ,pe) (pt ,pe) (/ (gap-l ,e) 2))))))))
 
 (define (make-element type map-name tag-name e-name rule-name)
   (let* ([e `(,map-name ,e-name)]
          [re `(rules ,e)]
-         [pe `(,map-name (parent ,e))]
-         [ve `(,map-name (previous ,e))]
+         [pe `(,map-name (parent-e ,e))]
+         [ve `(,map-name (previous-e ,e))]
          [fe `(,map-name (first-child ,e))]
          [le `(,map-name (last-child ,e))])
     (map (curry list 'assert)
@@ -82,62 +82,62 @@
             (= ,re ,(car (hash-ref *rules* rule-name (λ () (error "Invalid rule name" rule-name)))))
             (= (tagname ,e) ,tag-name)
             (=> (is-length (width ,re))
-                (= (width-l (width ,re)) (w ,e)))
+                (= (width-l (width ,re)) (w-e ,e)))
             (not (is-percentage (width ,re)))
             #;(=> (is-percentage (width ,re))
-                (= (* (width-p (width ,re)) (w ,pe)) (w ,e)))
+                (= (* (width-p (width ,re)) (w-e ,pe)) (w-e ,e)))
             (=> (is-length (height ,re))
-                (= (height-l (height ,re)) (h ,e)))
+                (= (height-l (height ,re)) (h-e ,e)))
             ; TODO : Figure out what height:auto actually means
 
             (=> (is-length (padding-top ,re))
                 (= (padding-l (padding-top ,re)) (pt ,e)))
             (not (is-percentage (padding-top ,re)))
             #;(=> (is-percentage (padding-top ,re))
-                (= (* (padding-p (padding-top ,re)) (w ,pe)) (pt ,e)))
+                (= (* (padding-p (padding-top ,re)) (w-e ,pe)) (pt ,e)))
             (not (is-percentage (padding-right ,re)))
             (=> (is-length (padding-right ,re))
                 (= (padding-l (padding-right ,re)) (pr ,e)))
             (=> (is-percentage (padding-right ,re))
-                (= (* (padding-p (padding-right ,re)) (w ,pe)) (pr ,e)))
+                (= (* (padding-p (padding-right ,re)) (w-e ,pe)) (pr ,e)))
             (not (is-percentage (padding-bottom ,re)))
             (=> (is-length (padding-bottom ,re))
                 (= (padding-l (padding-bottom ,re)) (pb ,e)))
             #;(=> (is-percentage (padding-bottom ,re))
-                (= (* (padding-p (padding-bottom ,re)) (w ,pe)) (pb ,e)))
+                (= (* (padding-p (padding-bottom ,re)) (w-e ,pe)) (pb ,e)))
             (not (is-percentage (padding-left ,re)))
             (=> (is-length (padding-left ,re))
                 (= (padding-l (padding-left ,re)) (pl ,e)))
             #;(=> (is-percentage (padding-left ,re))
-                (= (* (padding-p (padding-left ,re)) (w ,pe)) (pl ,e)))
+                (= (* (padding-p (padding-left ,re)) (w-e ,pe)) (pl ,e)))
 
             (not (is-percentage (margin-top ,re)))
             (=> (is-length (margin-top ,re))
                 (= (margin-l (margin-top ,re)) (mt ,e)))
             #;(=> (is-percentage (margin-top ,re))
-                (= (* (margin-p (margin-top ,re)) (w ,pe)) (mt ,e)))
+                (= (* (margin-p (margin-top ,re)) (w-e ,pe)) (mt ,e)))
             (=> (is-auto (margin-top ,re))
                 (= (mt ,e) (ite (is-linebox ,fe) (max (/ (gap-l ,fe) 2) 0.0) 0.0)))
 
             ; These are the horrid rules for the right-margin; see CSS2 §10.3.3
-            (= (+ (ml ,e) (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e) (mr ,e)) (w ,pe))
+            (= (+ (ml ,e) (bl ,e) (pl ,e) (w-e ,e) (pr ,e) (br ,e) (mr ,e)) (w-e ,pe))
             ; TODO: If the 'direction' property of the containing block has the value
             ; 'ltr', the specified value of 'margin-right' is ignored and the
             ; value is calculated so as to make the equality true. If the value of
             ; 'direction' is 'rtl', this happens to 'margin-left' instead.
             (=> (and (not (is-auto (width ,re)))
-                     (> (+ (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e)
+                     (> (+ (bl ,e) (pl ,e) (w-e ,e) (pr ,e) (br ,e)
                            (ite (not (is-auto (margin-left ,re)))
                                 (ite (is-length (margin-left ,re))
                                      (margin-l (margin-left ,re))
-                                     (* (margin-p (margin-left ,re)) (w ,pe)))
+                                     (* (margin-p (margin-left ,re)) (w-e ,pe)))
                                 0.0)
                            (ite (not (is-auto (margin-right ,re)))
                                 (ite (is-length (margin-right ,re))
                                      (margin-l (margin-right ,re))
-                                     (* (margin-p (margin-right ,re)) (w ,pe)))
+                                     (* (margin-p (margin-right ,re)) (w-e ,pe)))
                                 0.0))
-                        (w ,pe)))
+                        (w-e ,pe)))
                 (and
                  (=> (is-auto (margin-right ,re)) (= 0.0 (mr ,e)))
                  (=> (is-auto (margin-left ,re)) (= 0.0 (ml ,e)))))
@@ -148,13 +148,13 @@
 
             (not (is-percentage (margin-right ,re)))
             (=> (is-length (margin-right ,re)) (= (margin-l (margin-right ,re)) (mr ,e)))
-            #;(=> (is-percentage (margin-right ,re)) (= (* (margin-p (margin-right ,re)) (w ,pe)) (mr ,e)))
+            #;(=> (is-percentage (margin-right ,re)) (= (* (margin-p (margin-right ,re)) (w-e ,pe)) (mr ,e)))
 
             (not (is-percentage (margin-bottom ,re)))
             (=> (is-length (margin-bottom ,re))
                 (= (margin-l (margin-bottom ,re)) (mb ,e)))
             #;(=> (is-percentage (margin-bottom ,re))
-                (= (* (margin-p (margin-bottom ,re)) (w ,pe)) (mb ,e)))
+                (= (* (margin-p (margin-bottom ,re)) (w-e ,pe)) (mb ,e)))
             (=> (is-auto (margin-bottom ,re))
                 (= (mb ,e) (ite (is-linebox ,fe) (max (/ (gap-l ,fe) 2) 0.0) 0.0)))
 
@@ -162,10 +162,10 @@
             (=> (is-length (margin-left ,re))
                 (= (margin-l (margin-left ,re)) (ml ,e)))
             #;(=> (is-percentage (margin-left ,re))
-                (= (* (margin-p (margin-left ,re)) (w ,pe)) (ml ,e)))
+                (= (* (margin-p (margin-left ,re)) (w-e ,pe)) (ml ,e)))
             (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0.0))
 
-            (= (x ,e) (+ (x ,pe) (pl ,pe) (ml ,e)))
+            (= (x-e ,e) (+ (x-e ,pe) (pl ,pe) (ml ,e)))
 
             (=> (is-element ,fe)
                 (and
@@ -189,24 +189,24 @@
                  (= (mbp ,e) (ite (> (mb ,e) 0) (mb ,e) 0))
                  (= (mbn ,e) (ite (< (mb ,e) 0) (mb ,e) 0))))
 
-            (= (y ,e)
+            (= (y-e ,e)
                (ite (is-element ,ve)
-                    (+ (y ,ve) ,(vh ve)
+                    (+ (y-e ,ve) ,(vh ve)
                        (max (mbp ,ve) (mtp ,e)) (min (mbn ,ve) (mtn ,e)))
                     (ite (and (not (is-html ,pe)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
-                         (y ,pe) ; Margins collapse if the borders and padding are zero.
-                         (+ (mtp ,e) (mtn ,e) (pt ,pe) (y ,pe)))))
+                         (y-e ,pe) ; Margins collapse if the borders and padding are zero.
+                         (+ (mtp ,e) (mtn ,e) (pt ,pe) (y-e ,pe)))))
 
             (=> (is-auto (height ,re))
-                (= (h ,e)
+                (= (h-e ,e)
                    (ite (is-nil ,le)
                         0.0
                         (ite (is-element ,le)
-                             (- (+ (y ,le) ,(vh le)) (+ (y ,e) (pt ,e)))
-                             (- (+ (y-l ,le) ,(vh le) (/ (gap-l ,le) 2)) (+ (y ,e) (pt ,e)))))))
+                             (- (+ (y-e ,le) ,(vh le)) (+ (y-e ,e) (pt ,e)))
+                             (- (+ (y-l ,le) ,(vh le) (/ (gap-l ,le) 2)) (+ (y-e ,e) (pt ,e)))))))
 
-            (>= (w ,e) 0.0)
-            (>= (h ,e) 0.0)
+            (>= (w-e ,e) 0.0)
+            (>= (h-e ,e) 0.0)
             (>= (pl ,e) 0.0)
             (>= (pr ,e) 0.0)
             (>= (pb ,e) 0.0)
@@ -237,11 +237,11 @@
         (element
             (tagname TagNames) (rules Rules)
             ; The DOM tree pointers
-            (previous T) (parent T) (first-child T) (last-child T)
+            (previous-e T) (parent-e T) (first-child T) (last-child T)
             ; Foreground and Background Colors
             (bgc Color) (fgc Color)
             ; X Y position, width and height
-            (x Real) (y Real) (w Real) (h Real)
+            (x-e Real) (y-e Real) (w-e Real) (h-e Real)
             ; Margins
             (mt Real) (mb Real) (ml Real) (mr Real)
             ; Collecting the most-negative and most-positive margins
@@ -253,21 +253,21 @@
 
 (define (vw e)
   `(ite (is-element ,e)
-        (+ (pl ,e) (w ,e) (pr ,e))
+        (+ (pl ,e) (w-e ,e) (pr ,e))
         (w-l ,e)))
 (define (vh e)
   `(ite (is-element ,e)
-        (+ (pt ,e) (h ,e) (pb ,e))
+        (+ (pt ,e) (h-e ,e) (pb ,e))
         (h-l ,e)))
 
 (define (make-html name map-name type-name)
   (define elt `(,map-name ,name))
   `((assert (is-element ,elt))
-    (assert (= (x ,elt) 0))
-    (assert (= (y ,elt) 0))
-    (assert (= (parent ,elt) (as nil ,type-name)))
+    (assert (= (x-e ,elt) 0))
+    (assert (= (y-e ,elt) 0))
+    (assert (= (parent-e ,elt) (as nil ,type-name)))
     (assert (= (tagname ,elt) <HTML>))
-    (assert (= (previous ,elt) (as nil ,type-name)))
+    (assert (= (previous-e ,elt) (as nil ,type-name)))
     (assert (= (pl ,elt) 0))
     (assert (= (pr ,elt) 0))
     (assert (= (pt ,elt) 0))
@@ -312,8 +312,8 @@
                                  (assert (= (parent-l (,map-name ,cname)) ,pname))
                                  (assert (= (previous-l (,map-name ,cname)) ,prev))))
                              `(,@(draw-elts child)
-                               (assert (= (parent (,map-name ,cname)) ,pname))
-                               (assert (= (previous (,map-name ,cname)) ,prev))))
+                               (assert (= (parent-e (,map-name ,cname)) ,pname))
+                               (assert (= (previous-e (,map-name ,cname)) ,prev))))
                        (set! prev cname))))))
       (assert (= (first-child (,map-name ,pname)) ,first-child))
       (assert (= (last-child (,map-name ,pname)) ,last-child))))
@@ -327,5 +327,5 @@
     ,@(make-html root map-name type)
     ,@constraints
     (assert (= (first-child (,map-name ,root)) ,root-name))
-    (assert (= (parent (,map-name ,root-name)) ,root))
-    (assert (= (previous (,map-name ,root-name)) (as nil ,type)))))
+    (assert (= (parent-e (,map-name ,root-name)) ,root))
+    (assert (= (previous-e (,map-name ,root-name)) (as nil ,type)))))

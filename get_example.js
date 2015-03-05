@@ -84,7 +84,7 @@ function go() {
     var types = {};
     var head = ",@(make-dom '" + HTML + " '" + DOC + "\n'";
     var wrect = document.querySelector("html").getBoundingClientRect();
-    var tail = "(assert (! (= (w (" + DOC + "f " + HTML + ")) " + wrect.width + ") :named " + HTML + "-width))\n";
+    var tail = "(assert (! (= (w-e (" + DOC + "f " + HTML + ")) " + wrect.width + ") :named " + HTML + "-width))\n";
     
     printblock(document.querySelector("body"), 1, function(call, indent, type, w, h, x, y, bgc, fgc) {
         if (call == "open") {
@@ -92,8 +92,8 @@ function go() {
             head += "([&lt;" + type + "&gt; " + ELT + " " + type + "-rule]";
             types[type] = true;
 
-            tail += "(assert (! (= (x (" + DOC + "f " + ELT + ")) " + r2(x) + ") :named " + ELT + "-x))\n";
-            tail += "(assert (! (= (y (" + DOC + "f " + ELT + ")) " + r2(y) + ") :named " + ELT + "-y))\n";
+            tail += "(assert (! (= (x-e (" + DOC + "f " + ELT + ")) " + r2(x) + ") :named " + ELT + "-x))\n";
+            tail += "(assert (! (= (y-e (" + DOC + "f " + ELT + ")) " + r2(y) + ") :named " + ELT + "-y))\n";
             tail += "(assert (! (= ,(vw '(" + DOC + "f " + ELT + ")) " + r2(w) + ") :named " + ELT + "-w))\n";
             tail += "(assert (! (= ,(vh '(" + DOC + "f " + ELT + ")) " + r2(h) + ") :named " + ELT + "-h))\n";
             tail += "(assert (! (= (fgc (" + DOC + "f " + ELT + ")) " + fgc + ") :named " + ELT + "-fg))\n";
