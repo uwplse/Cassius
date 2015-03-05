@@ -1,7 +1,7 @@
 #lang racket
 (require "z3.rkt")
 
-(provide css-types css-rule-type html-tag-type math-utilities css-property-pairs)
+(provide css-types css-rule-type math-utilities css-property-pairs)
 
 (define css-types
   (list
@@ -11,7 +11,9 @@
        (Margin  auto (length (margin-l Real)) (percentage (margin-p Real)))
        (Border  (length (border-l Real)) (percentage (border-p Real)))
        (Padding (length (padding-l Real)) (percentage (padding-p Real)))
-       (Color   transparent (color (color-c (_ BitVec 24))))))))
+       (Color   transparent (color (color-c (_ BitVec 24))))
+       (TagNames <HTML> <BODY> <DIV> <H1> <P> <svg> <BR> <PRE>)
+       (Selector all (tag (tag-s TagNames)))))))
 
 (define css-properties
   '([Width    width]
@@ -20,17 +22,17 @@
     [Padding  padding-top padding-bottom padding-left padding-right]
     [Color    color background-color]))
 
+
 (define css-property-pairs
   (for*/list ([type css-properties] [prop (cdr type)])
     (cons prop (car type))))
 
 (define css-rule-type
   `(declare-datatypes ()
-     ((Rules (rules ,@(for*/list ([cat css-properties] [rule (cdr cat)])
-                        `(,rule ,(car cat))))))))
-
-(define html-tag-type
-  `(declare-datatypes () ((TagNames <HTML> <BODY> <DIV> <H1> <P> <svg> <BR> <PRE>))))
+     ((Rules (rules
+              (selector Selector)
+              ,@(for*/list ([cat css-properties] [rule (cdr cat)])
+                  `(,rule ,(car cat))))))))
 
 (define math-utilities
   (list `(define-fun max ((x Real) (y Real)) Real

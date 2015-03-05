@@ -29,7 +29,7 @@
           (printf "~a {\n" (cdr (car (memf (λ (x) (eq? (car x) (car k+v))) (hash-values *rules*)))))
           (for ([property (map car css-property-pairs)]
                 [type (map cdr css-property-pairs)]
-                [value (cdr (cdr k+v))])
+                [value (cddr (cdr k+v))])
             (printf "  ~a: ~a;\n" property (print-type type value)))
           (printf "}\n"))))))
 
@@ -223,7 +223,6 @@
 (define (make-preamble)
   `((set-option :produce-unsat-cores true)
     ,@css-types
-    ,html-tag-type
     ,css-rule-type
     ,@math-utilities
 
