@@ -17,7 +17,7 @@
         (when (and (list? (cdr k+v)) (or (eq? (cadr k+v) 'element) (eq? (cadr k+v) 'let)))
           (let ([elt (if (eq? (cadr k+v) 'element) (cddr k+v) (cdr (cadddr k+v)))])
             (match elt
-              [`(,tag ,rules ,previous ,parent ,first-child ,fgc ,bgc ,x ,y ,w ,h
+              [`(,tag ,rules ,previous ,parent ,first-child ,last-child ,fgc ,bgc ,x ,y ,w ,h
                       ,mt ,mb ,ml ,mr ,mtp ,mtn ,mbp ,mbn ,_ ,bt ,bb ,bl ,br ,pt ,pb ,pl ,pr)
                (eprintf "~a (~a) ~a×~a at (~a, ~a)\n" tag (car k+v) (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
                (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
@@ -53,15 +53,31 @@
     (hash-set! *rules* elt-name (cons symb rule-name))
     `((declare-const ,symb Rules))))
 
+(define (make-linebox type map-name e-name)
+  (let* ([e `(,map-name ,e-name)]
+         [pe `(,map-name (parent-l ,e))]
+         [ve `(,map-name (previous-l ,e))])
+    (map (curry list 'assert)
+         `((is-element ,pe)
+           (is-linebox ,e)
+           (or (is-nil ,ve) (is-linebox ,ve))
+           (= (x-l ,e) (+ (x ,pe) (pl ,pe)))
+           (<= (w-l ,e) (w ,pe)) ; Not true if the line box cannot be broken...
+           (= (y-l ,e)
+              (ite (is-linebox ,ve)
+                   (+ (y-l ,ve) (h-l ,pe) (/ (+ (gap-l ,e) (gap-l ,ve)) 2))
+                   (+ (y ,pe) (pt ,pe) (/ (gap-l ,e) 2))))))))
+
 (define (make-element type map-name tag-name e-name rule-name)
   (let* ([e `(,map-name ,e-name)]
          [re `(rules ,e)]
          [pe `(,map-name (parent ,e))]
-         [le `(,map-name (previous ,e))]
-         [fe `(,map-name (first-child ,e))])
+         [ve `(,map-name (previous ,e))]
+         [fe `(,map-name (first-child ,e))]
+         [le `(,map-name (last-child ,e))])
     (map (curry list 'assert)
-          `((not (is-nil ,pe))
-            (not (is-nil ,e))
+          `((is-element ,pe)
+            (is-element ,e)
             (not (is-html ,e))
             (= ,re ,(car (hash-ref *rules* rule-name (λ () (error "Invalid rule name" rule-name)))))
             (= (tagname ,e) ,tag-name)
@@ -73,7 +89,6 @@
             (=> (is-length (height ,re))
                 (= (height-l (height ,re)) (h ,e)))
             ; TODO : Figure out what height:auto actually means
-            #;(not (is-auto (height ,re)))
 
             (=> (is-length (padding-top ,re))
                 (= (padding-l (padding-top ,re)) (pt ,e)))
@@ -101,7 +116,8 @@
                 (= (margin-l (margin-top ,re)) (mt ,e)))
             #;(=> (is-percentage (margin-top ,re))
                 (= (* (margin-p (margin-top ,re)) (w ,pe)) (mt ,e)))
-            (=> (is-auto (margin-top ,re)) (= (mt ,e) 0.0))
+            (=> (is-auto (margin-top ,re))
+                (= (mt ,e) (ite (is-linebox ,fe) (max (/ (gap-l ,fe) 2) 0.0) 0.0)))
 
             ; These are the horrid rules for the right-margin; see CSS2 §10.3.3
             (= (+ (ml ,e) (bl ,e) (pl ,e) (w ,e) (pr ,e) (br ,e) (mr ,e)) (w ,pe))
@@ -139,7 +155,8 @@
                 (= (margin-l (margin-bottom ,re)) (mb ,e)))
             #;(=> (is-percentage (margin-bottom ,re))
                 (= (* (margin-p (margin-bottom ,re)) (w ,pe)) (mb ,e)))
-            (=> (is-auto (margin-bottom ,re)) (= (mb ,e) 0.0))
+            (=> (is-auto (margin-bottom ,re))
+                (= (mb ,e) (ite (is-linebox ,fe) (max (/ (gap-l ,fe) 2) 0.0) 0.0)))
 
             (not (is-percentage (margin-left ,re)))
             (=> (is-length (margin-left ,re))
@@ -150,35 +167,43 @@
 
             (= (x ,e) (+ (x ,pe) (pl ,pe) (ml ,e)))
 
-            (=> (not (is-nil ,fe))
+            (=> (is-element ,fe)
                 (and
                  (= (mtp ,e) (max (ite (> (mt ,e) 0.0) (mt ,e) 0.0)
                                   (ite (and (= (pt ,e) 0.0) (= (bt ,e) 0.0)) (mtp ,fe) 0.0)))
                  (= (mtn ,e) (min (ite (< (mt ,e) 0.0) (mt ,e) 0.0)
                                   (ite (and (= (pt ,e) 0.0) (= (bt ,e) 0.0)) (mtn ,fe) 0.0)))))
-            (=> (is-nil ,fe)
+            (=> (not (is-element ,fe))
                 (and
                  (= (mtp ,e) (ite (> (mt ,e) 0.0) (mt ,e) 0.0))
                  (= (mtn ,e) (ite (< (mt ,e) 0.0) (mt ,e) 0.0))))
 
-            (=> (not (is-nil ,fe))
+            (=> (is-element ,fe)
                 (and
                  (= (mbp ,e) (max (ite (> (mb ,e) 0.0) (mb ,e) 0.0)
                                   (ite (and (= (pb ,e) 0.0) (= (bb ,e) 0.0)) (mbp ,fe) 0.0)))
                  (= (mbn ,e) (min (ite (< (mb ,e) 0.0) (mb ,e) 0)
                                   (ite (and (= (pb ,e) 0.0) (= (bb ,e) 0.0)) (mbn ,fe) 0.0)))))
-            (=> (is-nil ,fe)
+            (=> (not (is-element ,fe))
                 (and
                  (= (mbp ,e) (ite (> (mb ,e) 0) (mb ,e) 0))
                  (= (mbn ,e) (ite (< (mb ,e) 0) (mb ,e) 0))))
 
             (= (y ,e)
-               (ite (is-nil ,le)
+               (ite (is-element ,ve)
+                    (+ (y ,ve) ,(vh ve)
+                       (max (mbp ,ve) (mtp ,e)) (min (mbn ,ve) (mtn ,e)))
                     (ite (and (not (is-html ,pe)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
                          (y ,pe) ; Margins collapse if the borders and padding are zero.
-                         (+ (mtp ,e) (mtn ,e) (pt ,pe) (y ,pe)))
-                    (+ (y ,le) (pt ,le) (h ,le)  (pb ,le)
-                       (+ (max (mbp ,le) (mtp ,e)) (min (mbn ,le) (mtn ,le))))))
+                         (+ (mtp ,e) (mtn ,e) (pt ,pe) (y ,pe)))))
+
+            (=> (is-auto (height ,re))
+                (= (h ,e)
+                   (ite (is-nil ,le)
+                        0.0
+                        (ite (is-element ,le)
+                             (- (+ (y ,le) ,(vh le)) (+ (y ,e) (pt ,e)))
+                             (- (+ (y-l ,le) ,(vh le) (/ (gap-l ,le) 2)) (+ (y ,e) (pt ,e)))))))
 
             (>= (w ,e) 0.0)
             (>= (h ,e) 0.0)
@@ -205,28 +230,39 @@
     (declare-datatypes (T)
       ((Element
         nil
-        (element (tagname TagNames) (rules Rules)
-                 ; The DOM tree pointers
-                 (previous T) (parent T) (first-child T)
-                 ; Foreground and Background Colors
-                 (bgc Color) (fgc Color)
-                 ; X Y position, width and height
-                 (x Real) (y Real) (w Real) (h Real)
-                 ; Margins
-                 (mt Real) (mb Real) (ml Real) (mr Real)
-                 ; Collecting the most-negative and most-positive margins
-                 (mtp Real) (mtn Real) (mbp Real) (mbn Real) (is-html Bool)
-                 ; Borders
-                 (bt Real) (bb Real) (bl Real) (br Real)
-                 ; Padding
-                 (pt Real) (pb Real) (pl Real) (pr Real)))))))
+        (linebox
+         ; For now, these have no rule, no margins, no padding, no nothing.
+         (previous-l T) (parent-l T)
+         (x-l Real) (y-l Real) (w-l Real) (h-l Real) (gap-l Real))
+        (element
+            (tagname TagNames) (rules Rules)
+            ; The DOM tree pointers
+            (previous T) (parent T) (first-child T) (last-child T)
+            ; Foreground and Background Colors
+            (bgc Color) (fgc Color)
+            ; X Y position, width and height
+            (x Real) (y Real) (w Real) (h Real)
+            ; Margins
+            (mt Real) (mb Real) (ml Real) (mr Real)
+            ; Collecting the most-negative and most-positive margins
+            (mtp Real) (mtn Real) (mbp Real) (mbn Real) (is-html Bool)
+            ; Borders
+            (bt Real) (bb Real) (bl Real) (br Real)
+            ; Padding
+            (pt Real) (pb Real) (pl Real) (pr Real)))))))
 
-(define (vw e) `(+ (pl ,e) (w ,e) (pr ,e)))
-(define (vh e) `(+ (pt ,e) (h ,e) (pb ,e)))
+(define (vw e)
+  `(ite (is-element ,e)
+        (+ (pl ,e) (w ,e) (pr ,e))
+        (w-l ,e)))
+(define (vh e)
+  `(ite (is-element ,e)
+        (+ (pt ,e) (h ,e) (pb ,e))
+        (h-l ,e)))
 
 (define (make-html name map-name type-name)
   (define elt `(,map-name ,name))
-  `((assert (not (is-nil ,elt)))
+  `((assert (is-element ,elt))
     (assert (= (x ,elt) 0))
     (assert (= (y ,elt) 0))
     (assert (= (parent ,elt) (as nil ,type-name)))
@@ -256,6 +292,10 @@
       (if (null? (cdr q))
           `(as nil ,type)
           (cadar (cadr q))))
+    (define last-child
+      (if (null? (cdr q))
+          `(as nil ,type)
+          (cadar (last q))))
 
     (set! elts (cons pname elts))
 
@@ -263,13 +303,20 @@
       ,@(let ([prev `(as nil ,type)])
           (apply append
                  (for/list ([child (cdr q)])
-                   (let ([cname (cadar child)])
-                     (begin0 
-                         `(,@(draw-elts child)
-                           (assert (= (parent (,map-name ,cname)) ,pname))
-                           (assert (= (previous (,map-name ,cname)) ,prev)))
+                   (let ([cname (cadar child)] [ctype (caar child)])
+                     (begin0
+                         (if (eq? ctype '<>)
+                             (begin
+                               (set! elts (cons cname elts))
+                               `(,@(apply make-linebox type map-name (cdar child))
+                                 (assert (= (parent-l (,map-name ,cname)) ,pname))
+                                 (assert (= (previous-l (,map-name ,cname)) ,prev))))
+                             `(,@(draw-elts child)
+                               (assert (= (parent (,map-name ,cname)) ,pname))
+                               (assert (= (previous (,map-name ,cname)) ,prev))))
                        (set! prev cname))))))
-      (assert (= (first-child (,map-name ,pname)) ,first-child))))
+      (assert (= (first-child (,map-name ,pname)) ,first-child))
+      (assert (= (last-child (,map-name ,pname)) ,last-child))))
   
   (define root-name (cadar q))
   (define constraints (draw-elts q))

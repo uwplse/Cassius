@@ -7,7 +7,7 @@ function is_block(elt) {
     var cStyle = elt.currentStyle || window.getComputedStyle(elt);
     return cStyle.display == "block";
 }
-function has_text(elt) {
+function has_text(root) {
     for (var i = 0; i < root.childNodes.length; i++) {
         var elt = root.childNodes[i];
         if (elt.textContent.strip() !== "") return true;
@@ -21,7 +21,7 @@ function has_normal_position(elt) {
 
 function parse_color(s) {
     if (s.indexOf("(") > -1) {
-        var a = s.substring(s.indexOf("(") + 1, s.indexOf(")")).split(", ").map(function(s) {return parseInt(s)});
+        var a = s.substring(s.indexOf("(") + 1, s.indexOf(")")).split(", ").map(function(s) {return parseInt(s);});
         var hexval = (a[3] << 24) | (a[0] << 16) | (a[1] << 8) | a[2];
         return "(color |#x" + hexval.toString(16) + "|)";
     } else {
@@ -46,13 +46,26 @@ function printblock(root, indent, f) {
             lines = lines.concat(r.getClientRects().slice());
         }
     }
-    printlines(lines, indent + 1, f);
+    if (lines.length > 0) printlines(root, lines, indent + 1, f);
 
     f("close", indent);
 }
 
-function printlines(lines, indent, f) {
-    
+function val2px(val) {
+    if (val.endsWith("px")) {
+        return +val.substr(0, val.length - 2);
+    } else {
+        throw "Error"
+    }
+}
+
+function printlines(root, lines, indent, f) {
+    var rStyle = window.getComputedStyle(root);
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var gap = val2px(rStyle.lineHeight) - line.height;
+        f("line", indent, "", line.width, line.height, line.x, line.y, gap);
+    }
 }
 
 function gensym(name) {
@@ -65,16 +78,13 @@ function r2(x) {
 
 function go() {
     var root = document.querySelector("body");
-    // Ensure that we don't have to worry about scroll bars
-    document.querySelector("html").style.overflowX = "scroll";
-    document.querySelector("html").style.overflowY = "scroll";
-
     var DOC = gensym("doc");
     var HTML = gensym("html");
 
     var types = {};
     var head = ",@(make-dom '" + HTML + " '" + DOC + "\n'";
-    var tail = "(assert (! (= (w (" + DOC + "f " + HTML + ")) " + window.innerWidth + ") :named " + HTML + "-width))\n";
+    var wrect = document.querySelector("html").getBoundingClientRect();
+    var tail = "(assert (! (= (w (" + DOC + "f " + HTML + ")) " + wrect.width + ") :named " + HTML + "-width))\n";
     
     printblock(document.querySelector("body"), 1, function(call, indent, type, w, h, x, y, bgc, fgc) {
         if (call == "open") {
@@ -90,6 +100,16 @@ function go() {
             tail += "(assert (! (= (bgc (" + DOC + "f " + ELT + ")) " + bgc + ") :named " + ELT + "-bg))\n";
         } else if (call == "close") {
             head += ")\n";
+        } else if (call == "line") {
+            var ELT = gensym("line");
+            var gap = bgc;
+            head += "([&lt;&gt; " + ELT + "])\n";
+
+            tail += "(assert (! (= (x-l (" + DOC + "f " + ELT + ")) " + r2(x) + ") :named " + ELT + "-x))\n";
+            tail += "(assert (! (= (y-l (" + DOC + "f " + ELT + ")) " + r2(y) + ") :named " + ELT + "-y))\n";
+            tail += "(assert (! (= (w-l (" + DOC + "f " + ELT + ")) " + r2(w) + ") :named " + ELT + "-w))\n";
+            tail += "(assert (! (= (h-l (" + DOC + "f " + ELT + ")) " + r2(h) + ") :named " + ELT + "-h))\n";
+            tail += "(assert (! (= (gap-l (" + DOC + "f " + ELT + ")) " + r2(gap) + ") :named " + ELT + "-gap))\n";
         }
     });
     head += ")\n";
@@ -118,3 +138,14 @@ function go() {
 }
 
 go();
+
+function draw_rect(rect) {
+    var d = document.createElement("flarg");
+    d.style.position = "absolute";
+    d.style.top = rect.top + "px";
+    d.style.left = rect.left + "px";
+    d.style.width = rect.width + "px";
+    d.style.height = rect.height + "px";
+    d.style.outline = "1px solid red";
+    document.querySelector("html").appendChild(d);
+}

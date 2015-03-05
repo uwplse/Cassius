@@ -69,6 +69,7 @@
     [(== 'unsat)
      (fprintf in "(get-unsat-core)\n")
      (flush-output in)
-     (error "No solution found" (read out))] 
+     (error "No solution found" (read out))
+     ] 
     
     [other (error 'smt-solution "unrecognized solver output: ~a" other)]))
