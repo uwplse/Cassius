@@ -78,7 +78,6 @@
     (map (curry list 'assert)
           `((is-element ,pe)
             (is-element ,e)
-            (not (is-html ,e))
             (= ,re ,(car (hash-ref *rules* rule-name (λ () (error "Invalid rule name" rule-name)))))
             (= (tagname ,e) ,tag-name)
             (=> (is-length (width ,re))
@@ -193,7 +192,7 @@
                (ite (is-element ,ve)
                     (+ (y-e ,ve) ,(vh ve)
                        (max (mbp ,ve) (mtp ,e)) (min (mbn ,ve) (mtn ,e)))
-                    (ite (and (not (is-html ,pe)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
+                    (ite (and (not (= (tagname ,pe) <HTML>)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
                          (y-e ,pe) ; Margins collapse if the borders and padding are zero.
                          (+ (mtp ,e) (mtn ,e) (pt ,pe) (y-e ,pe)))))
 
@@ -244,7 +243,7 @@
             ; Margins
             (mt Real) (mb Real) (ml Real) (mr Real)
             ; Collecting the most-negative and most-positive margins
-            (mtp Real) (mtn Real) (mbp Real) (mbn Real) (is-html Bool)
+            (mtp Real) (mtn Real) (mbp Real) (mbn Real)
             ; Borders
             (bt Real) (bb Real) (bl Real) (br Real)
             ; Padding
@@ -278,8 +277,7 @@
     (assert (= (ml ,elt) 0))
     (assert (= (mr ,elt) 0))
     (assert (= (mt ,elt) 0))
-    (assert (= (mb ,elt) 0))
-    (assert (is-html ,elt))))
+    (assert (= (mb ,elt) 0))))
 
 (define (make-dom root type q)
   (define elts `(,root nil))
