@@ -3,35 +3,64 @@
 (require "css-rules.rkt")
 (z3 "/opt/z3/bin/z3")
 
-(provide print-rules solve make-preamble make-rule make-dom vw vh)
+(provide print-rules solve make-preamble make-stylesheet make-dom vw vh)
 
 (define (r2 x)
   (/ (round (* 100 x)) 100))
+
+(define (groups-of-n l n)
+  (let-values
+      ([[latest all i]
+        (for/fold
+            ([latest '()]
+             [all '()]
+             [i n])
+            ([item l])
+          (if (= i 0)
+              (values (list item) (cons (reverse latest) all) (- n 1))
+              (values (cons item latest) all (- i 1))))])
+    (reverse (cons (reverse latest) all))))
 
 (define (print-rules #:header [header ""] smt-out)
   (with-output-to-file "test.css" #:exists 'replace
     (lambda ()
       (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n\n" header)
-      (eprintf "\n")
-      (for ([k+v (in-hash-pairs smt-out)])
-        (when (and (list? (cdr k+v)) (or (eq? (cadr k+v) 'element) (eq? (cadr k+v) 'let)))
-          (let ([elt (if (eq? (cadr k+v) 'element) (cddr k+v) (cdr (cadddr k+v)))])
-            (match elt
+      (for ([(key value) (in-hash smt-out)])
+        (match value
+          [(or `(element ,element-parts ...)
+               `(let ,_ ,element-parts ...))
+            (match element-parts
               [`(,tag ,rules ,previous ,parent ,first-child ,last-child ,fgc ,bgc ,x ,y ,w ,h
                       ,mt ,mb ,ml ,mr ,mtp ,mtn ,mbp ,mbn ,_ ,bt ,bb ,bl ,br ,pt ,pb ,pl ,pr)
-               (eprintf "~a (~a) ~a×~a at (~a, ~a)\n" tag (car k+v) (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
+               (eprintf "~a (~a) ~a×~a at (~a, ~a)\n" tag key (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
                (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
                         (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
                         (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
                (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-               (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))])))
-        (when (member (car k+v) (map car (hash-values *rules*)))
-          (printf "~a {\n" (cdr (car (memf (λ (x) (eq? (car x) (car k+v))) (hash-values *rules*)))))
-          (for ([property (map car css-property-pairs)]
-                [type (map cdr css-property-pairs)]
-                [value (cddr (cdr k+v))])
-            (printf "  ~a: ~a;\n" property (print-type type value)))
-          (printf "}\n"))))))
+               (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))])]
+          [(list 'computedRules rest ...)
+           (eprintf "<~a> {\n" key)
+           (for ([property (map append (groups-of-n rest 2) css-property-pairs)])
+             (match property
+               [`(,value ,score ,name . ,type)
+                (eprintf "  ~a: ~a;\n" name (print-type type value))]))
+           (eprintf "}\n")]
+          [else '#f]))
+      
+      (define stylesheet-rules
+        (map (curry hash-ref smt-out) (apply append (hash-values *stylesheets*))))
+
+      ;; TODO : make this just select the available specifiedRules
+      (for ([k (apply append (hash-values *stylesheets*))] [v stylesheet-rules])
+        (match (cdr v)
+          [(list sel idx rest ...)
+           (printf "~a {\n" (print-type 'Selector sel))
+           (for ([property (map append (groups-of-n rest 2) css-property-pairs)])
+             (match property
+               [`(,value ,enabled ,name . ,type)
+                (when enabled
+                  (printf "  ~a: ~a;\n" name (print-type type value)))]))
+           (printf "}\n")])))))
 
 (define (print-type type value)
   (match type
@@ -44,14 +73,12 @@
      (match value
        ['transparent 'transparent]
        [`(color ,n)
-        (string-append "#" (~a (format "~x" n) #:width 6 #:align 'right #:pad-string "0"))])]))
-
-(define *rules* (make-hash))
-
-(define (make-rule elt-name rule-name)
-  (let ([symb (string->symbol (symbol->string (gensym 'rule)))])
-    (hash-set! *rules* elt-name (cons symb rule-name))
-    `((declare-const ,symb Rules))))
+        (string-append "#" (~a (format "~x" n) #:width 6 #:align 'right #:pad-string "0"))])]
+    ['Selector
+     (match value
+       ['all "html *"]
+       [`(tag ,name) (substring (symbol->string name)
+                                1 (- (string-length (symbol->string name)) 1))])]))
 
 (define (make-linebox type map-name e-name)
   (let* ([e `(,map-name ,e-name)]
@@ -68,7 +95,7 @@
                    (+ (y-l ,ve) (h-l ,pe) (/ (+ (gap-l ,e) (gap-l ,ve)) 2))
                    (+ (y-e ,pe) (pt ,pe) (/ (gap-l ,e) 2))))))))
 
-(define (make-element type map-name tag-name e-name rule-name)
+(define (make-element doc-type stylesheet map-name tag-name e-name)
   (let* ([e `(,map-name ,e-name)]
          [re `(rules ,e)]
          [pe `(,map-name (parent-e ,e))]
@@ -76,10 +103,26 @@
          [fe `(,map-name (first-child ,e))]
          [le `(,map-name (last-child ,e))])
     (map (curry list 'assert)
-          `((is-element ,pe)
+
+          `(,@(for*/list ([type css-properties] [property (cdr type)] [rule stylesheet])
+                `(=> (and (,(css-enabled-variable property) ,rule)
+                          ,(css-is-applicable `(selector ,rule) e))
+                     (score-ge (,(css-score-variable property) ,re) (score ,rule))))
+
+            ,@(for*/list ([type css-properties] [property (cdr type)])
+                `(or
+                  ,@(for/list ([rule stylesheet])
+                      `(and
+                        (,(css-enabled-variable property) ,rule)
+                        ,(css-is-applicable `(selector ,rule) e)
+                        (= (,(css-score-variable property) ,re) (score ,rule))
+                        (= (,property ,re)
+                           (,(variable-append property 'specified) ,rule))))))
+
+            (is-element ,pe)
             (is-element ,e)
-            (= ,re ,(car (hash-ref *rules* rule-name (λ () (error "Invalid rule name" rule-name)))))
             (= (tagname ,e) ,tag-name)
+
             (=> (is-length (width ,re))
                 (= (width-l (width ,re)) (w-e ,e)))
             (not (is-percentage (width ,re)))
@@ -222,7 +265,8 @@
 (define (make-preamble)
   `((set-option :produce-unsat-cores true)
     ,@css-types
-    ,css-rule-type
+    ,css-rule-types
+    ,@css-score-ops
     ,@math-utilities
 
     (declare-datatypes (T)
@@ -233,7 +277,7 @@
          (previous-l T) (parent-l T)
          (x-l Real) (y-l Real) (w-l Real) (h-l Real) (gap-l Real))
         (element
-            (tagname TagNames) (rules Rules)
+            (tagname TagNames) (rules ComputedRule)
             ; The DOM tree pointers
             (previous-e T) (parent-e T) (first-child T) (last-child T)
             ; Foreground and Background Colors
@@ -248,6 +292,18 @@
             (bt Real) (bb Real) (bl Real) (br Real)
             ; Padding
             (pt Real) (pb Real) (pl Real) (pr Real)))))))
+
+(define *stylesheets* (make-hash))
+
+(define (make-stylesheet name count)
+  (define names
+    (for/list ([i (in-range count)])
+      (string->symbol (format "~a-rule-~a" name i))))
+  (hash-set! *stylesheets* name names)
+  (apply append
+         (for/list ([name names] [i (in-naturals)])
+           `((declare-const ,name SpecifiedRule)
+             (assert (= (index ,name) ,i))))))
 
 (define (vw e)
   `(ite (is-element ,e)
@@ -279,7 +335,7 @@
     (assert (= (mt ,elt) 0))
     (assert (= (mb ,elt) 0))))
 
-(define (make-dom root type q)
+(define (make-dom root type sheet q)
   (define elts `(,root nil))
   (define map-name (string->symbol (string-append (symbol->string type) "f")))
 
@@ -296,7 +352,7 @@
 
     (set! elts (cons pname elts))
 
-    `(,@(apply make-element type map-name (car q))
+    `(,@(apply make-element type (hash-ref *stylesheets* sheet) map-name (car q))
       ,@(let ([prev `(as nil ,type)])
           (apply append
                  (for/list ([child (cdr q)])

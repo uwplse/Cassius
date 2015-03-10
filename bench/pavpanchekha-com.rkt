@@ -10,43 +10,39 @@ h1 { font-family: 'Open Sans Semibold', 'Deja Vu Sans', 'Georgia', sans; font-we
      font-size: 24px; line-height: 1; letter-spacing: -.03em;}
 p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}"
 
-(solve
+(solve ;#:debug #t
 `(
 
 ,@(make-preamble)
-,@(make-rule 'BODY-rule 'BODY)
-,@(make-rule 'DIV-rule 'DIV)
-,@(make-rule 'H1-rule 'H1)
-,@(make-rule 'P-rule 'P)
-,@(make-rule 'PRE-rule 'PRE)
+,@(make-stylesheet 'main.css 4)
 
-,@(make-dom 'html0.2577661201012946 'doc0.6561059409840904
-            '([<BODY> BODY0.6673003669211357 BODY-rule]
-              ([<DIV> DIV0.32692574433047483 DIV-rule]
-               ([<H1> H10.8001806927372528 H1-rule]
+,@(make-dom 'html0.2577661201012946 'doc0.6561059409840904 'main.css
+            '([<BODY> BODY0.6673003669211357]
+              ([<DIV> DIV0.32692574433047483]
+               ([<H1> H10.8001806927372528]
                 ([<> line0.663108918863126])) 
-               ([<P> P0.4196245347598335 P-rule]
+               ([<P> P0.4196245347598335]
                 ([<> line0.004050135232036456])) 
-               ([<DIV> DIV0.9740061795609466 DIV-rule]
-                ([<PRE> PRE0.06318375491103967 PRE-rule]
+               ([<DIV> DIV0.9740061795609466]
+                ([<PRE> PRE0.06318375491103967]
                  ([<> line0.8150350820423058]) 
                  ([<> line0.7408018627444731]))) 
-               ([<P> P0.8216760075392059 P-rule]
+               ([<P> P0.8216760075392059]
                 ([<> line0.18183329716199792]) 
                 ([<> line0.9890331526471597])) 
-               ([<DIV> DIV0.9313995365229619 DIV-rule]
-                ([<PRE> PRE0.8106411677588024 PRE-rule]
+               ([<DIV> DIV0.9313995365229619]
+                ([<PRE> PRE0.8106411677588024]
                  ([<> line0.48824076720422593]) 
                  ([<> line0.7043775888793943]) 
                  ([<> line0.5784952535256321]) 
                  ([<> line0.3974532162481076]) 
                  ([<> line0.3402218945496419]) 
                  ([<> line0.16202928258320648]))) 
-               ([<P> P0.897681385626159 P-rule]
+               ([<P> P0.897681385626159]
                 ([<> line0.975464269518794]) 
                 ([<> line0.04204972878527424])) 
-               ([<DIV> DIV0.04163848568012818 DIV-rule]
-                ([<PRE> PRE0.6533785035300099 PRE-rule]
+               ([<DIV> DIV0.04163848568012818]
+                ([<PRE> PRE0.6533785035300099]
                  ([<> line0.9540013504851798]) 
                  ([<> line0.2818084329653884]))))))
 
@@ -206,7 +202,8 @@ p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: aut
 
 
 
-
+(declare-const r1 ComputedRule)
+(assert (= r1 (rules (doc0.6561059409840904f BODY0.6673003669211357))))
 
 
 (check-sat)
