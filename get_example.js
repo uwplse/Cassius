@@ -82,14 +82,14 @@ function go() {
     var HTML = gensym("html");
 
     var types = {};
-    var head = ",@(make-dom '" + HTML + " '" + DOC + "\n'";
+    var head = ",@(make-dom '" + HTML + " '" + DOC + " 'main.css\n'";
     var wrect = document.querySelector("html").getBoundingClientRect();
     var tail = "(assert (! (= (w-e (" + DOC + "f " + HTML + ")) " + wrect.width + ") :named " + HTML + "-width))\n";
     
     printblock(document.querySelector("body"), 1, function(call, indent, type, w, h, x, y, bgc, fgc) {
         if (call == "open") {
             var ELT = gensym(type);
-            head += "([&lt;" + type + "&gt; " + ELT + " " + type + "-rule]";
+            head += "([&lt;" + type + "&gt; " + ELT + "]";
             types[type] = true;
 
             tail += "(assert (! (= (x-e (" + DOC + "f " + ELT + ")) " + r2(x) + ") :named " + ELT + "-x))\n";
@@ -115,9 +115,11 @@ function go() {
     head += ")\n";
 
     var rules = ",@(make-preamble)\n";
+    var n = 0;
     for (var type in types) {
-        rules += ",@(make-rule '" + type + "-rule '" + type + ")\n";
+        n++;
     }
+    rules += ",@(make-stylesheet 'main.css " + n + ")\n";
 
     var pre = document.createElement("pre");
     pre.innerHTML = rules + "\n\n" + head + "\n\n" + tail;

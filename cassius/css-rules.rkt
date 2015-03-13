@@ -40,7 +40,8 @@
   (let ([sel `(selector rule)] [idx `(index rule)])
     `((define-fun score ((rule SpecifiedRule)) CascadeScore
        (ite (is-all ,sel)
-            (cascadeScore AuthorNormal false 0 0 0 ,idx)
+            ; The last entry should be 0, but it is 1 since we write `html *`
+            (cascadeScore AuthorNormal false 0 0 1 ,idx)
             (cascadeScore AuthorNormal false 0 0 1 ,idx)))
 
       (define-fun importanceOrigin-score ((io ImportanceOrigin)) Int

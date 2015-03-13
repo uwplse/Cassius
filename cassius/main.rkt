@@ -88,12 +88,21 @@
          `((is-element ,pe)
            (is-linebox ,e)
            (or (is-nil ,ve) (is-linebox ,ve))
-           (= (x-l ,e) (+ (x-e ,pe) (pl ,pe)))
            (<= (w-l ,e) (w-e ,pe)) ; Not true if the line box cannot be broken...
-           (= (y-l ,e)
-              (ite (is-linebox ,ve)
-                   (+ (y-l ,ve) (h-l ,pe) (/ (+ (gap-l ,e) (gap-l ,ve)) 2))
-                   (+ (y-e ,pe) (pt ,pe) (/ (gap-l ,e) 2))))))))
+           (ite (is-linebox ,ve)
+                (or
+                 ; Do we need to break line? We allow it to go either way.
+                 (and ; we break line
+                  (= (x-l ,e) (+ (x-e ,pe) (pl ,pe)))
+                  (= (y-l ,e)
+                     (+ (y-l ,ve) (h-l ,pe) (/ (+ (gap-l ,e) (gap-l ,ve)) 2))))
+                 (and ; we do not
+                  (= (x-l ,e) (+ (x-l ,ve) (w-l ,ve)))
+                  (= (- (y-l ,e) (/ (gap-l ,e) 2)) (- (y-l ,ve) (/ (gap-l ,e) 2)))))
+                ; If no previous line box
+                (and
+                 (= (x-l ,e) (+ (x-e ,pe) (pl ,pe)))
+                 (= (y-l ,e) (+ (y-e ,pe) (pt ,pe) (/ (gap-l ,e) 2)))))))))
 
 (define (make-element doc-type stylesheet map-name tag-name e-name)
   (let* ([e `(,map-name ,e-name)]
@@ -244,7 +253,9 @@
                    (ite (is-nil ,le)
                         0.0
                         (ite (is-element ,le)
-                             (- (+ (y-e ,le) ,(vh le)) (+ (y-e ,e) (pt ,e)))
+                             (ite (and (not (= (tagname ,e) <HTML>)) (= (pt ,e) 0.0) (= (bt ,e) 0.0))
+                                  (- (+ (y-e ,le) ,(vh le)) (+ (y-e ,e) (pt ,e)))
+                                  (+ (- (+ (y-e ,le) ,(vh le)) (+ (y-e ,e) (pt ,e))) (mb ,le)))
                              (- (+ (y-l ,le) ,(vh le) (/ (gap-l ,le) 2)) (+ (y-e ,e) (pt ,e)))))))
 
             (>= (w-e ,e) 0.0)
