@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/runtime-path racket/path)
+(require srfi/13)
 
 (provide solve z3)
 
@@ -57,7 +58,12 @@
     [else v]))
 
 (define (read-solution in out)
-  (match (read out)
+  (define (get-line)
+    (let ([line (read-line out)])
+      (if (string-contains line "|->")
+          (get-line)
+          (call-with-input-string line read))))
+  (match (get-line)
     [(== 'sat) 
      (fprintf in "(get-model)\n")
      (flush-output in)
@@ -69,7 +75,5 @@
     [(== 'unsat)
      (fprintf in "(get-unsat-core)\n")
      (flush-output in)
-     (error "No solution found" (read out))
-     ] 
-    
+     (error "No solution found; conflicting constraints:\n" (read out))] 
     [other (error 'smt-solution "unrecognized solver output: ~a" other)]))

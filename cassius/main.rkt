@@ -1,7 +1,12 @@
 #lang racket
 (require "z3.rkt")
 (require "css-rules.rkt")
-(z3 "/opt/z3/bin/z3")
+(require unstable/sequence)
+(require srfi/1)
+(z3 "/opt/z3opt/bin/z3")
+;(z3 "/usr/bin/z3")
+
+(define maximize #f)
 
 (provide print-rules solve make-preamble make-stylesheet make-dom vw vh)
 
@@ -39,12 +44,14 @@
                (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
                (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))])]
           [(list 'computedRules rest ...)
-           (eprintf "<~a> {\n" key)
-           (for ([property (map append (groups-of-n rest 2) css-property-pairs)])
-             (match property
-               [`(,value ,score ,name . ,type)
-                (eprintf "  ~a: ~a;\n" name (print-type type value))]))
-           (eprintf "}\n")]
+           (let ([properties (groups-of-n rest 2)])
+             (when (ormap cadr properties)
+               (eprintf "<~a> {\n" key)
+               (for ([property (map append properties css-property-pairs)])
+                 (match property
+                   [`(,value ,score ,name . ,type)
+                    (eprintf "  ~a: ~a;\n" name (print-type type value))]))
+               (eprintf "}\n")))]
           [else '#f]))
       
       (define stylesheet-rules
@@ -52,26 +59,41 @@
 
       ;; TODO : make this just select the available specifiedRules
       (for ([k (apply append (hash-values *stylesheets*))] [v stylesheet-rules])
-        (match (cdr v)
-          [(list sel idx rest ...)
+        (match v
+          [(list 'specifiedRules sel idx rest ...)
            (printf "~a {\n" (print-type 'Selector sel))
-           (for ([property (map append (groups-of-n rest 2) css-property-pairs)])
-             (match property
-               [`(,value ,enabled ,name . ,type)
-                (when enabled
-                  (printf "  ~a: ~a;\n" name (print-type type value)))]))
+
+           (define hash (make-hash))
+
+           (for ([property (groups-of-n rest 2)] [(name type) (in-pairs css-property-pairs)])
+             (when (second property)
+               (hash-set! hash name (cons type (first property)))))
+
+           (for ([(name subproperties) (in-pairs css-shorthand-properties)])
+             (when (every (curry hash-has-key? hash) subproperties)
+               (define vals
+                 (for/list ([subprop subproperties])
+                   (begin0
+                       (hash-ref hash subprop)
+                     (hash-remove! hash subprop))))
+               (printf "  ~a: ~a;\n" name
+                       (string-join (map print-type (map car vals) (map cdr vals)) " "))))
+           
+           (for ([(name value) (in-hash hash)])
+             (printf "  ~a: ~a;\n" name (print-type (car value) (cdr value))))
+
            (printf "}\n")])))))
 
 (define (print-type type value)
   (match type
     [(or 'Width 'Height 'Margin 'Padding)
      (match value
-       [`(as auto ,_) 'auto]
+       [`(as auto ,_) "auto"]
        [`((as length ,_) ,x) (format "~apx" x)]
        [`((as percentage ,_) ,x) (format "~a%" (* 100 x))])]
     ['Color
      (match value
-       ['transparent 'transparent]
+       ['transparent "transparent"]
        [`(color ,n)
         (string-append "#" (~a (format "~x" n) #:width 6 #:align 'right #:pad-string "0"))])]
     ['Selector
@@ -314,7 +336,31 @@
   (apply append
          (for/list ([name names] [i (in-naturals)])
            `((declare-const ,name SpecifiedRule)
-             (assert (= (index ,name) ,i))))))
+             (assert (= (index ,name) ,i))
+
+             ; Optimize for short CSS
+
+             ; Each enabled property costs one line
+             ,@(if maximize
+                   (for*/list ([type css-properties] [property (cdr type)])
+                     `(assert-soft (not (,(css-enabled-variable property) ,name)) :weight 1))
+                   '())
+
+             ; Each block with an enabled property costs two line (open/selector and close brace)
+             ,@(if maximize
+                   `((assert-soft (and
+                                   ,@(for*/list ([type css-properties] [property (cdr type)])
+                                       `(not (,(css-enabled-variable property) ,name))))
+                                  :weight 2))
+                   '())
+
+             ; Each shorthand rule can save space if all its properties exist
+             ,@(if maximize
+                   (for/list ([(short-name subproperties) (in-pairs css-shorthand-properties)])
+                     `(assert-soft (and ,@(for/list ([subprop subproperties])
+                                            (list (css-enabled-variable subprop) name)))
+                                   :weight 3))
+                   '())))))
 
 (define (vw e)
   `(ite (is-element ,e)

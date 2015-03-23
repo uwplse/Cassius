@@ -3,7 +3,7 @@
 
 (provide css-types math-utilities css-properties css-property-pairs css-is-applicable
          css-score-ops css-rule-types css-enabled-variable css-score-variable
-         variable-append)
+         variable-append css-shorthand-properties)
 
 (define css-types
   (list
@@ -11,7 +11,7 @@
       ((Width   auto (length (width-l Real)) (percentage (width-p Real)))
        (Height  auto (length (height-l Real)))
        (Margin  auto (length (margin-l Real)) (percentage (margin-p Real)))
-       (Border  (length (border-l Real)) (percentage (border-p Real)))
+       #;(Border  (length (border-l Real)) (percentage (border-p Real)))
        (Padding (length (padding-l Real)) (percentage (padding-p Real)))
        (Color   transparent (color (color-c (_ BitVec 24))))
        (TagNames <HTML> <BODY> <DIV> <H1> <P> <PRE> <svg>)
@@ -26,6 +26,7 @@
     [Height   height]
     [Margin   margin-top margin-bottom margin-left margin-right]
     [Padding  padding-top padding-bottom padding-left padding-right]
+    #;[Border   border-top border-bottom border-left border-right]
     [Color    color background-color]))
 
 (define (css-is-applicable sel elt)
@@ -95,3 +96,8 @@
            (ite (< x y) y x))
         `(define-fun min ((x Real) (y Real)) Real
            (ite (< x y) x y))))
+
+(define css-shorthand-properties
+  '((margin margin-top margin-right margin-bottom margin-left)
+    (padding padding-top padding-right padding-bottom padding-left)
+    #;(border border-top border-right border-bottom border-left)))
