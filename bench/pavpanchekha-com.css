@@ -1,38 +1,30 @@
-/* This is the original CSS, as applied to the pavpanchekha-com benchmark */
-
+/* This is the original CSS, as applied to the pavpanchekha-com benchmark */ 
 html { background-color: #f1f1f1;}
 body { font-size: 18px; line-height: 1.333; text-rendering: optimizeLegibility; font-family: 'PT Serif', serif;}
 pre { font-family: 'Open Sans Light', 'Inconsolata', 'Deja Vu Sans Mono', monospace; font-weight: 300;}
 h1 { font-family: 'Open Sans Semibold', 'Deja Vu Sans', 'Georgia', sans; font-weight: 600;
      font-size: 24px; line-height: 1; letter-spacing: -.03em;}
-p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
+p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;} 
+/* Competes with generated code */
 
-html { /*9*/
+html {
     margin: 0;
     padding: 0;
     color: #2e3436;
-}
-
-body { /*9*/
+} 
+body {
     padding: 0 .5em 5em;
     width: 35em;
     margin: 0 auto;
-}
-
-pre { /*8*/
+} 
+pre {
     padding: .5em;
     margin: 1.2em 0 1.7em;
-}
-
-
-p { /*4*/
+} 
+p {
     margin: 1em 0;
-}
-
-h1 { /*5*/
+} 
+h1 {
     color: #555753;
     margin-top: 1.5em;
 }
-
-/* Total: 45 */
-
