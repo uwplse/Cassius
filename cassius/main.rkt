@@ -150,9 +150,13 @@
                         (= (,property ,re)
                            (,(variable-append property 'specified) ,rule))))))
 
+            ; Trivial constraints
+
             (is-element ,pe)
             (is-element ,e)
             (= (tagname ,e) ,tag-name)
+
+            ; Length and width
 
             (=> (is-length (width ,re))
                 (= (width-l (width ,re)) (w-e ,e)))
@@ -162,6 +166,8 @@
             (=> (is-length (height ,re))
                 (= (height-l (height ,re)) (h-e ,e)))
             ; TODO : Figure out what height:auto actually means
+
+            ; Padding
 
             (=> (is-length (padding-top ,re))
                 (= (padding-l (padding-top ,re)) (pt ,e)))
@@ -184,6 +190,8 @@
             #;(=> (is-percentage (padding-left ,re))
                 (= (* (padding-p (padding-left ,re)) (w-e ,pe)) (pl ,e)))
 
+            ; Margin
+
             (not (is-percentage (margin-top ,re)))
             (=> (is-length (margin-top ,re))
                 (= (margin-l (margin-top ,re)) (mt ,e)))
@@ -194,10 +202,6 @@
 
             ; These are the horrid rules for the right-margin; see CSS2 §10.3.3
             (= (+ (ml ,e) (bl ,e) (pl ,e) (w-e ,e) (pr ,e) (br ,e) (mr ,e)) (w-e ,pe))
-            ; TODO: If the 'direction' property of the containing block has the value
-            ; 'ltr', the specified value of 'margin-right' is ignored and the
-            ; value is calculated so as to make the equality true. If the value of
-            ; 'direction' is 'rtl', this happens to 'margin-left' instead.
             (=> (and (not (is-auto (width ,re)))
                      (> (+ (bl ,e) (pl ,e) (w-e ,e) (pr ,e) (br ,e)
                            (ite (not (is-auto (margin-left ,re)))
@@ -239,6 +243,7 @@
             (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0.0))
 
             (= (x-e ,e) (+ (x-e ,pe) (pl ,pe) (ml ,e)))
+            ; Computing maximum collapsed positive and negative margin
 
             (=> (is-element ,fe)
                 (and
@@ -269,6 +274,7 @@
                     (ite (and (not (= (tagname ,pe) <HTML>)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
                          (y-e ,pe) ; Margins collapse if the borders and padding are zero.
                          (+ (mtp ,e) (mtn ,e) (pt ,pe) (y-e ,pe)))))
+            ; Computing height
 
             (=> (is-auto (height ,re))
                 (= (h-e ,e)
@@ -286,8 +292,6 @@
             (>= (pr ,e) 0.0)
             (>= (pb ,e) 0.0)
             (>= (pt ,e) 0.0)
-            (= (bgc ,e) (background-color ,re))
-            (= (fgc ,e) (color ,re))
 
             ; TODO : Add back borders
             (= (bl ,e) 0)
