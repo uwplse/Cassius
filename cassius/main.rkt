@@ -6,9 +6,11 @@
 (z3 "/opt/z3opt/bin/z3")
 ;(z3 "/usr/bin/z3")
 
-(define maximize #f)
+(define maximize #t)
 
-(provide print-rules solve make-preamble make-stylesheet make-dom vw vh)
+(provide print-rules solve make-preamble vw vh
+         (struct-out dom) dom-constraints
+         (struct-out rendering-context) (struct-out stylesheet) stylesheet-constraints)
 
 (define (r2 x)
   (/ (round (* 100 x)) 100))
@@ -26,7 +28,7 @@
               (values (cons item latest) all (- i 1))))])
     (reverse (cons (reverse latest) all))))
 
-(define (print-rules #:header [header ""] smt-out)
+(define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
   (with-output-to-file "test.css" #:exists 'replace
     (lambda ()
       (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n\n" header)
@@ -53,13 +55,9 @@
                     (eprintf "  ~a: ~a;\n" name (print-type type value))]))
                (eprintf "}\n")))]
           [else '#f]))
-      
-      (define stylesheet-rules
-        (map (curry hash-ref smt-out) (apply append (hash-values *stylesheets*))))
 
-      ;; TODO : make this just select the available specifiedRules
-      (for ([k (apply append (hash-values *stylesheets*))] [v stylesheet-rules])
-        (match v
+      (for ([rule-value (map (curry hash-ref smt-out) (stylesheet-rules stylesheet))])
+        (match rule-value
           [(list 'specifiedRules sel idx rest ...)
            (printf "~a {\n" (print-type 'Selector sel))
 
@@ -89,6 +87,7 @@
     [(or 'Width 'Height 'Margin 'Padding)
      (match value
        [`(as auto ,_) "auto"]
+       [`(,_ 0.0) "0"]
        [`((as length ,_) ,x) (format "~apx" x)]
        [`((as percentage ,_) ,x) (format "~a%" (* 100 x))])]
     ['Color
@@ -96,6 +95,7 @@
        ['transparent "transparent"]
        [`(color ,n)
         (string-append "#" (~a (format "~x" n) #:width 6 #:align 'right #:pad-string "0"))])]
+    ['Float (~a value)]
     ['Selector
      (match value
        ['all "html *"]
@@ -126,7 +126,7 @@
                  (= (x-l ,e) (+ (x-e ,pe) (pl ,pe)))
                  (= (y-l ,e) (+ (y-e ,pe) (pt ,pe) (/ (gap-l ,e) 2)))))))))
 
-(define (make-element doc-type stylesheet map-name tag-name e-name)
+(define (make-element doc-type map-name tag-name e-name)
   (let* ([e `(,map-name ,e-name)]
          [re `(rules ,e)]
          [pe `(,map-name (parent-e ,e))]
@@ -134,170 +134,163 @@
          [fe `(,map-name (first-child ,e))]
          [le `(,map-name (last-child ,e))])
     (map (curry list 'assert)
+         `(; Trivial constraints
 
-          `(,@(for*/list ([type css-properties] [property (cdr type)] [rule stylesheet])
-                `(=> (and (,(css-enabled-variable property) ,rule)
-                          ,(css-is-applicable `(selector ,rule) e))
-                     (score-ge (,(css-score-variable property) ,re) (score ,rule))))
+           (is-element ,pe)
+           (is-element ,e)
+           (= (tagname ,e) ,tag-name)
 
-            ,@(for*/list ([type css-properties] [property (cdr type)])
-                `(or
-                  ,@(for/list ([rule stylesheet])
-                      `(and
-                        (,(css-enabled-variable property) ,rule)
-                        ,(css-is-applicable `(selector ,rule) e)
-                        (= (,(css-score-variable property) ,re) (score ,rule))
-                        (= (,property ,re)
-                           (,(variable-append property 'specified) ,rule))))))
+           ; Length and width
 
-            ; Trivial constraints
+           (=> (is-length (width ,re))
+               (= (width-l (width ,re)) (w-e ,e)))
+           (not (is-percentage (width ,re)))
+           #;(=> (is-percentage (width ,re))
+               (= (* (width-p (width ,re)) (w-e ,pe)) (w-e ,e)))
+           (=> (is-length (height ,re))
+               (= (height-l (height ,re)) (h-e ,e)))
+           ; TODO : Figure out what height:auto actually means
 
-            (is-element ,pe)
-            (is-element ,e)
-            (= (tagname ,e) ,tag-name)
+           ; Padding
 
-            ; Length and width
+           (=> (is-length (padding-top ,re))
+               (= (padding-l (padding-top ,re)) (pt ,e)))
+           (not (is-percentage (padding-top ,re)))
+           #;(=> (is-percentage (padding-top ,re))
+               (= (* (padding-p (padding-top ,re)) (w-e ,pe)) (pt ,e)))
+           (not (is-percentage (padding-right ,re)))
+           (=> (is-length (padding-right ,re))
+               (= (padding-l (padding-right ,re)) (pr ,e)))
+           (=> (is-percentage (padding-right ,re))
+               (= (* (padding-p (padding-right ,re)) (w-e ,pe)) (pr ,e)))
+           (not (is-percentage (padding-bottom ,re)))
+           (=> (is-length (padding-bottom ,re))
+               (= (padding-l (padding-bottom ,re)) (pb ,e)))
+           #;(=> (is-percentage (padding-bottom ,re))
+               (= (* (padding-p (padding-bottom ,re)) (w-e ,pe)) (pb ,e)))
+           (not (is-percentage (padding-left ,re)))
+           (=> (is-length (padding-left ,re))
+               (= (padding-l (padding-left ,re)) (pl ,e)))
+           #;(=> (is-percentage (padding-left ,re))
+               (= (* (padding-p (padding-left ,re)) (w-e ,pe)) (pl ,e)))
 
-            (=> (is-length (width ,re))
-                (= (width-l (width ,re)) (w-e ,e)))
-            (not (is-percentage (width ,re)))
-            #;(=> (is-percentage (width ,re))
-                (= (* (width-p (width ,re)) (w-e ,pe)) (w-e ,e)))
-            (=> (is-length (height ,re))
-                (= (height-l (height ,re)) (h-e ,e)))
-            ; TODO : Figure out what height:auto actually means
+           ; Margin
 
-            ; Padding
+           (not (is-percentage (margin-top ,re)))
+           (=> (is-length (margin-top ,re))
+               (= (margin-l (margin-top ,re)) (mt ,e)))
+           #;(=> (is-percentage (margin-top ,re))
+               (= (* (margin-p (margin-top ,re)) (w-e ,pe)) (mt ,e)))
+           (=> (is-auto (margin-top ,re))
+               (= (mt ,e) (ite (is-linebox ,fe) (max (/ (gap-l ,fe) 2) 0.0) 0.0)))
 
-            (=> (is-length (padding-top ,re))
-                (= (padding-l (padding-top ,re)) (pt ,e)))
-            (not (is-percentage (padding-top ,re)))
-            #;(=> (is-percentage (padding-top ,re))
-                (= (* (padding-p (padding-top ,re)) (w-e ,pe)) (pt ,e)))
-            (not (is-percentage (padding-right ,re)))
-            (=> (is-length (padding-right ,re))
-                (= (padding-l (padding-right ,re)) (pr ,e)))
-            (=> (is-percentage (padding-right ,re))
-                (= (* (padding-p (padding-right ,re)) (w-e ,pe)) (pr ,e)))
-            (not (is-percentage (padding-bottom ,re)))
-            (=> (is-length (padding-bottom ,re))
-                (= (padding-l (padding-bottom ,re)) (pb ,e)))
-            #;(=> (is-percentage (padding-bottom ,re))
-                (= (* (padding-p (padding-bottom ,re)) (w-e ,pe)) (pb ,e)))
-            (not (is-percentage (padding-left ,re)))
-            (=> (is-length (padding-left ,re))
-                (= (padding-l (padding-left ,re)) (pl ,e)))
-            #;(=> (is-percentage (padding-left ,re))
-                (= (* (padding-p (padding-left ,re)) (w-e ,pe)) (pl ,e)))
+           ; These are the horrid rules for the right-margin; see CSS2 §10.3.3
+           (= (+ (ml ,e) (bl ,e) (pl ,e) (w-e ,e) (pr ,e) (br ,e) (mr ,e)) (w-e ,pe))
+           (=> (and (not (is-auto (width ,re)))
+                    (> (+ (bl ,e) (pl ,e) (w-e ,e) (pr ,e) (br ,e)
+                          (ite (not (is-auto (margin-left ,re)))
+                               (ite (is-length (margin-left ,re))
+                                    (margin-l (margin-left ,re))
+                                    (* (margin-p (margin-left ,re)) (w-e ,pe)))
+                               0.0)
+                          (ite (not (is-auto (margin-right ,re)))
+                               (ite (is-length (margin-right ,re))
+                                    (margin-l (margin-right ,re))
+                                    (* (margin-p (margin-right ,re)) (w-e ,pe)))
+                               0.0))
+                       (w-e ,pe)))
+               (and
+                (=> (is-auto (margin-right ,re)) (= 0.0 (mr ,e)))
+                (=> (is-auto (margin-left ,re)) (= 0.0 (ml ,e)))))
+           (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0.0))
+           (=> (and (is-auto (width ,re)) (is-auto (margin-right ,re))) (= (mr ,e) 0.0))
+           (=> (and (is-auto (margin-left ,re)) (is-auto (margin-right ,re)))
+               (= (mr ,e) (ml ,e)))
 
-            ; Margin
+           (not (is-percentage (margin-right ,re)))
+           (=> (is-length (margin-right ,re)) (= (margin-l (margin-right ,re)) (mr ,e)))
+           #;(=> (is-percentage (margin-right ,re)) (= (* (margin-p (margin-right ,re)) (w-e ,pe)) (mr ,e)))
 
-            (not (is-percentage (margin-top ,re)))
-            (=> (is-length (margin-top ,re))
-                (= (margin-l (margin-top ,re)) (mt ,e)))
-            #;(=> (is-percentage (margin-top ,re))
-                (= (* (margin-p (margin-top ,re)) (w-e ,pe)) (mt ,e)))
-            (=> (is-auto (margin-top ,re))
-                (= (mt ,e) (ite (is-linebox ,fe) (max (/ (gap-l ,fe) 2) 0.0) 0.0)))
+           (not (is-percentage (margin-bottom ,re)))
+           (=> (is-length (margin-bottom ,re))
+               (= (margin-l (margin-bottom ,re)) (mb ,e)))
+           #;(=> (is-percentage (margin-bottom ,re))
+               (= (* (margin-p (margin-bottom ,re)) (w-e ,pe)) (mb ,e)))
+           (=> (is-auto (margin-bottom ,re))
+               (= (mb ,e) (ite (is-linebox ,fe) (max (/ (gap-l ,fe) 2) 0.0) 0.0)))
 
-            ; These are the horrid rules for the right-margin; see CSS2 §10.3.3
-            (= (+ (ml ,e) (bl ,e) (pl ,e) (w-e ,e) (pr ,e) (br ,e) (mr ,e)) (w-e ,pe))
-            (=> (and (not (is-auto (width ,re)))
-                     (> (+ (bl ,e) (pl ,e) (w-e ,e) (pr ,e) (br ,e)
-                           (ite (not (is-auto (margin-left ,re)))
-                                (ite (is-length (margin-left ,re))
-                                     (margin-l (margin-left ,re))
-                                     (* (margin-p (margin-left ,re)) (w-e ,pe)))
-                                0.0)
-                           (ite (not (is-auto (margin-right ,re)))
-                                (ite (is-length (margin-right ,re))
-                                     (margin-l (margin-right ,re))
-                                     (* (margin-p (margin-right ,re)) (w-e ,pe)))
-                                0.0))
-                        (w-e ,pe)))
-                (and
-                 (=> (is-auto (margin-right ,re)) (= 0.0 (mr ,e)))
-                 (=> (is-auto (margin-left ,re)) (= 0.0 (ml ,e)))))
-            (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0.0))
-            (=> (and (is-auto (width ,re)) (is-auto (margin-right ,re))) (= (mr ,e) 0.0))
-            (=> (and (is-auto (margin-left ,re)) (is-auto (margin-right ,re)))
-                (= (mr ,e) (ml ,e)))
+           (not (is-percentage (margin-left ,re)))
+           (=> (is-length (margin-left ,re))
+               (= (margin-l (margin-left ,re)) (ml ,e)))
+           #;(=> (is-percentage (margin-left ,re))
+               (= (* (margin-p (margin-left ,re)) (w-e ,pe)) (ml ,e)))
+           (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0.0))
 
-            (not (is-percentage (margin-right ,re)))
-            (=> (is-length (margin-right ,re)) (= (margin-l (margin-right ,re)) (mr ,e)))
-            #;(=> (is-percentage (margin-right ,re)) (= (* (margin-p (margin-right ,re)) (w-e ,pe)) (mr ,e)))
+           (is-none (float ,re))
 
-            (not (is-percentage (margin-bottom ,re)))
-            (=> (is-length (margin-bottom ,re))
-                (= (margin-l (margin-bottom ,re)) (mb ,e)))
-            #;(=> (is-percentage (margin-bottom ,re))
-                (= (* (margin-p (margin-bottom ,re)) (w-e ,pe)) (mb ,e)))
-            (=> (is-auto (margin-bottom ,re))
-                (= (mb ,e) (ite (is-linebox ,fe) (max (/ (gap-l ,fe) 2) 0.0) 0.0)))
+           ; Computing maximum collapsed positive and negative margin
 
-            (not (is-percentage (margin-left ,re)))
-            (=> (is-length (margin-left ,re))
-                (= (margin-l (margin-left ,re)) (ml ,e)))
-            #;(=> (is-percentage (margin-left ,re))
-                (= (* (margin-p (margin-left ,re)) (w-e ,pe)) (ml ,e)))
-            (=> (and (is-auto (width ,re)) (is-auto (margin-left ,re))) (= (ml ,e) 0.0))
+           (=> (is-element ,fe)
+               (and
+                (= (mtp ,e) (max (ite (> (mt ,e) 0.0) (mt ,e) 0.0)
+                                 (ite (and (= (pt ,e) 0.0) (= (bt ,e) 0.0)) (mtp ,fe) 0.0)))
+                (= (mtn ,e) (min (ite (< (mt ,e) 0.0) (mt ,e) 0.0)
+                                 (ite (and (= (pt ,e) 0.0) (= (bt ,e) 0.0)) (mtn ,fe) 0.0)))))
+           (=> (not (is-element ,fe))
+               (and
+                (= (mtp ,e) (ite (> (mt ,e) 0.0) (mt ,e) 0.0))
+                (= (mtn ,e) (ite (< (mt ,e) 0.0) (mt ,e) 0.0))))
 
-            (= (x-e ,e) (+ (x-e ,pe) (pl ,pe) (ml ,e)))
-            ; Computing maximum collapsed positive and negative margin
+           (=> (is-element ,fe)
+               (and
+                (= (mbp ,e) (max (ite (> (mb ,e) 0.0) (mb ,e) 0.0)
+                                 (ite (and (= (pb ,e) 0.0) (= (bb ,e) 0.0)) (mbp ,fe) 0.0)))
+                (= (mbn ,e) (min (ite (< (mb ,e) 0.0) (mb ,e) 0)
+                                 (ite (and (= (pb ,e) 0.0) (= (bb ,e) 0.0)) (mbn ,fe) 0.0)))))
+           (=> (not (is-element ,fe))
+               (and
+                (= (mbp ,e) (ite (> (mb ,e) 0) (mb ,e) 0))
+                (= (mbn ,e) (ite (< (mb ,e) 0) (mb ,e) 0))))
 
-            (=> (is-element ,fe)
-                (and
-                 (= (mtp ,e) (max (ite (> (mt ,e) 0.0) (mt ,e) 0.0)
-                                  (ite (and (= (pt ,e) 0.0) (= (bt ,e) 0.0)) (mtp ,fe) 0.0)))
-                 (= (mtn ,e) (min (ite (< (mt ,e) 0.0) (mt ,e) 0.0)
-                                  (ite (and (= (pt ,e) 0.0) (= (bt ,e) 0.0)) (mtn ,fe) 0.0)))))
-            (=> (not (is-element ,fe))
-                (and
-                 (= (mtp ,e) (ite (> (mt ,e) 0.0) (mt ,e) 0.0))
-                 (= (mtn ,e) (ite (< (mt ,e) 0.0) (mt ,e) 0.0))))
+           ; Computing height
 
-            (=> (is-element ,fe)
-                (and
-                 (= (mbp ,e) (max (ite (> (mb ,e) 0.0) (mb ,e) 0.0)
-                                  (ite (and (= (pb ,e) 0.0) (= (bb ,e) 0.0)) (mbp ,fe) 0.0)))
-                 (= (mbn ,e) (min (ite (< (mb ,e) 0.0) (mb ,e) 0)
-                                  (ite (and (= (pb ,e) 0.0) (= (bb ,e) 0.0)) (mbn ,fe) 0.0)))))
-            (=> (not (is-element ,fe))
-                (and
-                 (= (mbp ,e) (ite (> (mb ,e) 0) (mb ,e) 0))
-                 (= (mbn ,e) (ite (< (mb ,e) 0) (mb ,e) 0))))
+           (=> (is-auto (height ,re))
+               (= (h-e ,e)
+                  (ite (is-nil ,le)
+                       0.0
+                       (ite (is-element ,le)
+                            (ite (and (not (= (tagname ,e) <HTML>)) (= (pt ,e) 0.0) (= (bt ,e) 0.0))
+                                 (- (+ (y-e ,le) ,(vh le)) (+ (y-e ,e) (pt ,e)))
+                                 (+ (- (+ (y-e ,le) ,(vh le)) (+ (y-e ,e) (pt ,e))) (mb ,le)))
+                            (- (+ (y-l ,le) ,(vh le) (/ (gap-l ,le) 2)) (+ (y-e ,e) (pt ,e)))))))
 
-            (= (y-e ,e)
-               (ite (is-element ,ve)
-                    (+ (y-e ,ve) ,(vh ve)
-                       (max (mbp ,ve) (mtp ,e)) (min (mbn ,ve) (mtn ,e)))
-                    (ite (and (not (= (tagname ,pe) <HTML>)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
-                         (y-e ,pe) ; Margins collapse if the borders and padding are zero.
-                         (+ (mtp ,e) (mtn ,e) (pt ,pe) (y-e ,pe)))))
-            ; Computing height
+           ; Computing X and Y position
 
-            (=> (is-auto (height ,re))
-                (= (h-e ,e)
-                   (ite (is-nil ,le)
-                        0.0
-                        (ite (is-element ,le)
-                             (ite (and (not (= (tagname ,e) <HTML>)) (= (pt ,e) 0.0) (= (bt ,e) 0.0))
-                                  (- (+ (y-e ,le) ,(vh le)) (+ (y-e ,e) (pt ,e)))
-                                  (+ (- (+ (y-e ,le) ,(vh le)) (+ (y-e ,e) (pt ,e))) (mb ,le)))
-                             (- (+ (y-l ,le) ,(vh le) (/ (gap-l ,le) 2)) (+ (y-e ,e) (pt ,e)))))))
+           (=> (is-none (float ,re)) (= (x-e ,e) (+ (x-e ,pe) (pl ,pe) (ml ,e))))
 
-            (>= (w-e ,e) 0.0)
-            (>= (h-e ,e) 0.0)
-            (>= (pl ,e) 0.0)
-            (>= (pr ,e) 0.0)
-            (>= (pb ,e) 0.0)
-            (>= (pt ,e) 0.0)
+           (=> (is-none (float ,re))
+               (= (y-e ,e)
+                  (ite (is-element ,ve)
+                       (+ (y-e ,ve) ,(vh ve)
+                          (max (mbp ,ve) (mtp ,e)) (min (mbn ,ve) (mtn ,e)))
+                       (ite (and (not (= (tagname ,pe) <HTML>)) (= (pt ,pe) 0.0) (= (bt ,pe) 0.0))
+                            (y-e ,pe) ; Margins collapse if the borders and padding are zero.
+                            (+ (mtp ,e) (mtn ,e) (pt ,pe) (y-e ,pe))))))
 
-            ; TODO : Add back borders
-            (= (bl ,e) 0)
-            (= (br ,e) 0)
-            (= (bt ,e) 0)
-            (= (bb ,e) 0)))))
+           ; Positivity constraint
+
+           (>= (w-e ,e) 0.0)
+           (>= (h-e ,e) 0.0)
+           (>= (pl ,e) 0.0)
+           (>= (pr ,e) 0.0)
+           (>= (pb ,e) 0.0)
+           (>= (pt ,e) 0.0)
+
+           ; TODO : Add back borders
+           (= (bl ,e) 0)
+           (= (br ,e) 0)
+           (= (bt ,e) 0)
+           (= (bb ,e) 0)))))
 
 (define (make-preamble)
   `((set-option :produce-unsat-cores true)
@@ -317,8 +310,6 @@
             (tagname TagNames) (rules ComputedRule)
             ; The DOM tree pointers
             (previous-e T) (parent-e T) (first-child T) (last-child T)
-            ; Foreground and Background Colors
-            (bgc Color) (fgc Color)
             ; X Y position, width and height
             (x-e Real) (y-e Real) (w-e Real) (h-e Real)
             ; Margins
@@ -330,15 +321,152 @@
             ; Padding
             (pt Real) (pb Real) (pl Real) (pr Real)))))))
 
-(define *stylesheets* (make-hash))
+(define (vw e)
+  `(ite (is-element ,e)
+        (+ (pl ,e) (w-e ,e) (pr ,e))
+        (w-l ,e)))
+(define (vh e)
+  `(ite (is-element ,e)
+        (+ (pt ,e) (h-e ,e) (pb ,e))
+        (h-l ,e)))
 
-(define (make-stylesheet name count)
-  (define names
-    (for/list ([i (in-range count)])
-      (string->symbol (format "~a-rule-~a" name i))))
-  (hash-set! *stylesheets* name names)
+(struct dom (name stylesheet context tree))
+(struct rendering-context (width))
+(struct stylesheet (name count))
+
+(define (inline-element? elt)
+  (eq? (car elt) '<>))
+
+(define (in-tree-subtrees tree)
+  (apply sequence-append
+         (in-parallel (in-value (car tree)) (in-value (cdr tree)))
+         (map in-tree-subtrees (cdr tree))))
+
+(define (in-tree-values tree)
+  (apply sequence-append
+         (in-value (car tree))
+         (map in-tree-values (cdr tree))))
+
+(define (dom-type dom) (dom-name dom))
+(define (dom-map dom) (variable-append (dom-name dom) 'map))
+(define (dom-root dom) (variable-append (dom-name dom) 'root))
+(define (dom-get dom elt) `(,(dom-map dom) ,(second elt)))
+
+(define (dom-tree-constraints dom)
+  (define type (dom-name dom))
+  (define map-name (dom-map dom))
+  (define elt-get (curry dom-get dom))
+  (define root (dom-root dom))
+
+  (define (get-child children accessor)
+    (if (null? children)
+        `(as nil ,type)
+        (car (accessor children))))
+
+  (define constraints
+    (for/list ([(elt children) (in-tree-subtrees (dom-tree dom))])
+      (append
+       ; Parent element
+       (for/list ([child (sequence-map car children)])
+         `(assert (= (,(if (inline-element? child) 'parent-l 'parent-e)
+                      ,(elt-get child)) ,(cadr elt))))
+       ; Previous element
+       (for/list ([child (sequence-map car children)]
+                  [prev (sequence-append (in-value `(as nil ,(dom-type dom)))
+                                         (sequence-map cadar children))])
+         `(assert (= (,(if (inline-element? child) 'previous-l 'previous-e)
+                      ,(elt-get child)) ,prev)))
+       ; First/last child
+       (if (inline-element? elt)
+           '()
+           (list
+            `(assert (= (first-child ,(elt-get elt)) ,(cadr (get-child children first))))
+            `(assert (= (last-child ,(elt-get elt)) ,(cadr (get-child children last)))))))))
+
+  (define names (for/list ([elt (in-tree-values (dom-tree dom))]) (cadr elt)))
+  
+  (list*
+   ; The type of element names
+   `(declare-datatypes () ((,type ,@names ,root nil)))
+   ; The element info for a name
+   `(declare-fun ,map-name (,type) (Element ,type))
+   ; Pointed map: nil goes to nil
+   `(assert (= (,map-name (as nil ,type)) (as nil (Element ,type))))
+   (apply append constraints)))
+
+(define (dom-element-constraints dom)
   (apply append
-         (for/list ([name names] [i (in-naturals)])
+         (for/list ([elt (in-tree-values (dom-tree dom))])
+           (match elt
+             [`(<> ,name)
+              (make-linebox (dom-type dom) (dom-map dom) name)]
+             [`(,tag ,name)
+              (make-element (dom-type dom) (dom-map dom) tag name)]))))
+
+(define (dom-style-constraints dom)
+  (apply append
+         (for/list ([elt (in-tree-values (dom-tree dom))])
+           (match elt
+             [`(<> ,name) '()]
+             [`(,tag ,name)
+              (define e (dom-get dom elt))
+              (define re `(rules ,e))
+              
+              (append
+               ; Score of computed rule is >= any applicable stylesheet rule
+               (for*/list ([type css-properties] [property (cdr type)]
+                           [rule (stylesheet-rules (dom-stylesheet dom))])
+                 `(assert (=> (and (,(css-enabled-variable property) ,rule)
+                           ,(css-is-applicable `(selector ,rule) e))
+                      (score-ge (,(css-score-variable property) ,re) (score ,rule)))))
+               
+               ; Score&value of computed rule is = some applicable stylesheet rule
+               (for*/list ([type css-properties] [property (cdr type)])
+                 `(assert (or
+                   ,@(for/list ([rule (stylesheet-rules (dom-stylesheet dom))])
+                       `(and
+                         (,(css-enabled-variable property) ,rule)
+                         ,(css-is-applicable `(selector ,rule) e)
+                         (= (,(css-score-variable property) ,re) (score ,rule))
+                         (= (,property ,re)
+                            (,(variable-append property 'specified) ,rule))))))))]))))
+
+(define (dom-root-constraints dom)
+  (define elt (list (dom-map dom) (dom-root dom)))
+  (list
+   `(assert (is-element ,elt))
+   `(assert (= (x-e ,elt) 0))
+   `(assert (= (y-e ,elt) 0))
+   `(assert (= (parent-e ,elt) (as nil ,(dom-type dom))))
+   `(assert (= (tagname ,elt) <HTML>))
+   `(assert (= (previous-e ,elt) (as nil ,(dom-type dom))))
+   `(assert (= (pl ,elt) 0))
+   `(assert (= (pr ,elt) 0))
+   `(assert (= (pt ,elt) 0))
+   `(assert (= (pb ,elt) 0))
+   `(assert (= (bl ,elt) 0))
+   `(assert (= (br ,elt) 0))
+   `(assert (= (bt ,elt) 0))
+   `(assert (= (bb ,elt) 0))
+   `(assert (= (ml ,elt) 0))
+   `(assert (= (mr ,elt) 0))
+   `(assert (= (mt ,elt) 0))
+   `(assert (= (mb ,elt) 0))
+   `(assert (! (= (w-e ,elt) ,(rendering-context-width (dom-context dom)))
+               :name ,(variable-append (dom-name dom) 'context-width)))
+   `(assert (= (parent-e (,(dom-map dom) ,(cadar (dom-tree dom)))) ,(dom-root dom)))
+   `(assert (= (previous-e (,(dom-map dom) ,(cadar (dom-tree dom)))) (as nil ,(dom-type dom))))
+   `(assert (= (first-child ,elt) ,(cadar (dom-tree dom))))
+   `(assert (= (parent-e ,elt) (as nil ,(dom-type dom))))
+   `(assert (= (previous-e ,elt) (as nil ,(dom-type dom))))))
+
+(define (stylesheet-rules sheet)
+  (for/list ([i (in-range (stylesheet-count sheet))])
+    (string->symbol (format "~a-rule-~a" (stylesheet-name sheet) i))))
+
+(define (stylesheet-constraints sheet)
+  (apply append
+         (for/list ([i (in-naturals)] [name (stylesheet-rules sheet)])
            `((declare-const ,name SpecifiedRule)
              (assert (= (index ,name) ,i))
 
@@ -366,80 +494,9 @@
                                    :weight 3))
                    '())))))
 
-(define (vw e)
-  `(ite (is-element ,e)
-        (+ (pl ,e) (w-e ,e) (pr ,e))
-        (w-l ,e)))
-(define (vh e)
-  `(ite (is-element ,e)
-        (+ (pt ,e) (h-e ,e) (pb ,e))
-        (h-l ,e)))
-
-(define (make-html name map-name type-name)
-  (define elt `(,map-name ,name))
-  `((assert (is-element ,elt))
-    (assert (= (x-e ,elt) 0))
-    (assert (= (y-e ,elt) 0))
-    (assert (= (parent-e ,elt) (as nil ,type-name)))
-    (assert (= (tagname ,elt) <HTML>))
-    (assert (= (previous-e ,elt) (as nil ,type-name)))
-    (assert (= (pl ,elt) 0))
-    (assert (= (pr ,elt) 0))
-    (assert (= (pt ,elt) 0))
-    (assert (= (pb ,elt) 0))
-    (assert (= (bl ,elt) 0))
-    (assert (= (br ,elt) 0))
-    (assert (= (bt ,elt) 0))
-    (assert (= (bb ,elt) 0))
-    (assert (= (ml ,elt) 0))
-    (assert (= (mr ,elt) 0))
-    (assert (= (mt ,elt) 0))
-    (assert (= (mb ,elt) 0))))
-
-(define (make-dom root type sheet q)
-  (define elts `(,root nil))
-  (define map-name (string->symbol (string-append (symbol->string type) "f")))
-
-  (define (draw-elts q)
-    (define pname (cadar q))
-    (define first-child
-      (if (null? (cdr q))
-          `(as nil ,type)
-          (cadar (cadr q))))
-    (define last-child
-      (if (null? (cdr q))
-          `(as nil ,type)
-          (cadar (last q))))
-
-    (set! elts (cons pname elts))
-
-    `(,@(apply make-element type (hash-ref *stylesheets* sheet) map-name (car q))
-      ,@(let ([prev `(as nil ,type)])
-          (apply append
-                 (for/list ([child (cdr q)])
-                   (let ([cname (cadar child)] [ctype (caar child)])
-                     (begin0
-                         (if (eq? ctype '<>)
-                             (begin
-                               (set! elts (cons cname elts))
-                               `(,@(apply make-linebox type map-name (cdar child))
-                                 (assert (= (parent-l (,map-name ,cname)) ,pname))
-                                 (assert (= (previous-l (,map-name ,cname)) ,prev))))
-                             `(,@(draw-elts child)
-                               (assert (= (parent-e (,map-name ,cname)) ,pname))
-                               (assert (= (previous-e (,map-name ,cname)) ,prev))))
-                       (set! prev cname))))))
-      (assert (= (first-child (,map-name ,pname)) ,first-child))
-      (assert (= (last-child (,map-name ,pname)) ,last-child))))
-  
-  (define root-name (cadar q))
-  (define constraints (draw-elts q))
-
-  `((declare-datatypes () ((,type ,@elts)))
-    (declare-fun ,map-name (,type) (Element ,type))
-    (assert (= (,map-name (as nil ,type)) (as nil (Element ,type))))
-    ,@(make-html root map-name type)
-    ,@constraints
-    (assert (= (first-child (,map-name ,root)) ,root-name))
-    (assert (= (parent-e (,map-name ,root-name)) ,root))
-    (assert (= (previous-e (,map-name ,root-name)) (as nil ,type)))))
+(define (dom-constraints dom)
+  (append
+   (dom-tree-constraints dom)
+   (dom-element-constraints dom)
+   (dom-style-constraints dom)
+   (dom-root-constraints dom)))
