@@ -8,14 +8,15 @@
 (define css-types
   (list
    `(declare-datatypes ()
-      ((Width   auto (length (width-l Real)) (percentage (width-p Real)))
+      ((Width   auto (length (width-l Real)) #;(percentage (width-p Real)))
        (Height  auto (length (height-l Real)))
-       (Margin  auto (length (margin-l Real)) (percentage (margin-p Real)))
+       (Margin  auto (length (margin-l Real)) #;(percentage (margin-p Real)))
        #;(Border  (length (border-l Real)) (percentage (border-p Real)))
        (Float   none left right inherit)
        #;(Clear   none left right both inherit)
-       (Padding (length (padding-l Real)) (percentage (padding-p Real)))
-       (TagNames <HTML> <BODY> <DIV> <H1> <P> <PRE> <svg>)
+       (Padding (length (padding-l Real)) #;(percentage (padding-p Real)))
+       (Display block inline)
+       (TagNames <HTML> <BODY> <DIV> <H1> <P> <PRE> <svg> <>)
        (Selector all (tag (tag-s TagNames)))
        (ImportanceOrigin UserAgent UserNormal AuthorNormal AuthorImportant UserImportant)
        (CascadeScore (cascadeScore (precedence ImportanceOrigin) (isFromStyle Bool)
@@ -28,6 +29,7 @@
     [Margin   margin-top margin-bottom margin-left margin-right]
     [Padding  padding-top padding-bottom padding-left padding-right]
     [Float    float]
+    #;[Display  display]
     #;[Border   border-top border-bottom border-left border-right]))
 
 (define (css-is-applicable sel elt)
