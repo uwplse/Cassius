@@ -9,9 +9,23 @@
 
 (define maximize #f)
 
+(define (println x)
+  (pretty-print x)
+  x)
+
 (provide print-rules solve make-preamble vw vh
          (struct-out dom) dom-constraints
          (struct-out rendering-context) (struct-out stylesheet) stylesheet-constraints)
+
+(define-syntax-rule (reap [sows ...] body ...)
+  (let* ([sows (let ([store '()])
+		 (λ (elt) (if elt
+			      (begin (set! store (cons elt store))
+				     elt)
+			      store)))] ...)
+    body ...
+    (values (reverse (sows #f)) ...)))
+
 
 (define (r2 x)
   (/ (round (* 100 x)) 100))
@@ -179,20 +193,13 @@
    `(assert (= (,map-name (as nil ,type)) (as nil (Element ,type))))
    (apply append constraints)))
 
-(define (dom-element-constraints dom)
+(define (dom-rendering-constraints dom)
   (apply append
          (for/list ([elt (in-tree-values (dom-tree dom))])
            (match elt
              [`(,tag ,name ,constraints ...)
               (append
-               (element-constraints tag name (dom-map dom))
-               (for/list ([prop+val (groups-of-n constraints 2)])
-                 (match prop+val
-                   [(list prop val)
-                    (define fun (match prop
-                                  [':x 'x] [':y 'y] [':w 'w] [':h 'h] [':gap 'gap]
-                                  [':vh 'box-height] [':vw 'box-width]))
-                    `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,val) :name ,(variable-append name fun)))])))]))))
+               (element-constraints tag name (dom-map dom)))]))))
 
 (define (dom-style-constraints dom)
   (apply append
@@ -292,16 +299,33 @@
                                    :weight 3))
                    '())))))
 
-(define (dom-print-all dom)
-  (apply append
-         (for/list ([elt (in-tree-values (dom-tree dom))])
-           `((declare-const ,(variable-append (cadr elt) 'elt) Box)
-             (assert (= ,(variable-append (cadr elt) 'elt) (placement-box (,(dom-map dom) ,(cadr elt)))))))))
+(define (dom-element-constraints dom)
+  (define (interpret elt cmds k)
+    (define name (cadr elt))
+    (match cmds
+      [(list ':print rest ...)
+       (k `(declare-const ,(variable-append (cadr elt) 'placement) Box))
+       (k `(assert (= ,(variable-append (cadr elt) 'placement) (placement-box (,(dom-map dom) ,(cadr elt))))))
+       (interpret elt rest k)]
+      [(list (and (or ':x ':y ':w ':h ':vw ':vh ':gap) field) value rest ...)
+       (define fun
+         (match field
+           [':x 'x] [':y 'y] [':w 'w] [':h 'h] [':gap 'gap] [':vh 'box-height] [':vw 'box-width]))
+       (k `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :name ,(variable-append name fun))))
+       (interpret elt rest k)]
+      [(list)
+       (void)]))
+  
+  (reap [sow]
+        (for ([elt (in-tree-values (dom-tree dom))])
+          (match elt
+            [`(,tag ,name ,cmds ...)
+             (interpret elt cmds sow)]))))
 
 (define (dom-constraints dom)
   (append
    (dom-tree-constraints dom)
    (dom-element-constraints dom)
+   (dom-rendering-constraints dom)
    (dom-style-constraints dom)
-   (dom-root-constraints dom)
-   (dom-print-all dom)))
+   (dom-root-constraints dom)))
