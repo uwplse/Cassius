@@ -18,25 +18,25 @@
 
     (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
     (define-fun left-border ((box Box)) Real (x box))
-    (define-fun box-left ((box Box)) Real (x box))
+    (define-fun box-left ((box Box)) Real (+ (x box) (bl box)))
     (define-fun left-padding ((box Box)) Real (+ (x box) (bl box)))
     (define-fun left-content ((box Box)) Real (+ (x box) (bl box) (pl box)))
 
     (define-fun right-content ((box Box)) Real (+ (x box) (bl box) (pl box) (w box)))
     (define-fun right-padding ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box)))
-    (define-fun box-right ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box)))
+    (define-fun box-right ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box)))
     (define-fun right-border ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box)))
     (define-fun right-outer ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box) (mr box)))
 
     (define-fun top-outer ((box Box)) Real (- (y box) (mtn box) (mtp box)))
     (define-fun top-border ((box Box)) Real (y box))
-    (define-fun box-top ((box Box)) Real (y box))
+    (define-fun box-top ((box Box)) Real (+ (y box) (bt box)))
     (define-fun top-padding ((box Box)) Real (+ (y box) (bt box)))
     (define-fun top-content ((box Box)) Real (+ (y box) (bt box) (pt box)))
 
     (define-fun bottom-content ((box Box)) Real (+ (y box) (bt box) (pt box) (h box)))
     (define-fun bottom-padding ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box)))
-    (define-fun box-bottom ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box)))
+    (define-fun box-bottom ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box)))
     (define-fun bottom-border ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box)))
     (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
 
@@ -65,6 +65,7 @@
   (define r `(rules ,e))
 
   (define b  `(flow-box ,e))
+  (define bp `(placement-box ,e))
   (define vb `(flow-box ,ve))
   (define pb `(placement-box ,pe))
   (define fb `(flow-box ,fe))
@@ -164,8 +165,8 @@
             ; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
             ; NOTE: We don't do that, instead following Chrome and Firefox
             ; TODO: Is this correct? I think the signs might be wrong
-            (=> (is-auto (margin-top ,r)) (= (mt ,b) (- (max (- (/ (gap ,b) 2)) 0.0))))
-            (=> (is-auto (margin-bottom ,r)) (= (mb ,b) (- (max (- (/ (gap ,b) 2)) 0.0))))
+            (=> (is-auto (margin-top ,r)) (= (mt ,b) (- (max (- (/ (gap ,fb) 2)) 0.0))))
+            (=> (is-auto (margin-bottom ,r)) (= (mb ,b) (- (max (- (/ (gap ,lb) 2)) 0.0))))
 
             ; If 'height' is 'auto', the height depends on whether the element has
             ; any block-level children and whether it has padding or borders: 
@@ -196,7 +197,8 @@
            (= (x ,b) (+ (left-content ,pb) (ml ,b)))
            (= (y ,b)
               (ite (is-nil ,ve)
-                   (ite (and (not (= (tagname ,pe) <HTML>)) (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
+                   (ite (and (not (= (tagname ,pe) <HTML>)) (is-none (float ,pb))
+                             (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                         (top-content ,pb)
                         (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
                    (+ (bottom-border ,vb) (max (mbp ,vb) (mtp ,b)) (min (mbn ,vb) (mtn ,b)))))
@@ -220,4 +222,86 @@
 
    ; In-flow block element layout
    ,@(map (λ (x) `(assert (=> (and (= (display ,e) block) (not (is-none (float ,e)))) ,x)))
-          `(false))))
+          `(,@(for/list ([item '((width width w) (height height h)
+                                 (padding-left padding pl) (padding-right padding pr)
+                                 (padding-top padding pt) (padding-bottom padding pb)
+                                 (margin-top margin mt) (margin-bottom margin mb)
+                                 (margin-right margin mr) (margin-left margin ml))])
+                (match item
+                  [(list prop type field)
+                   `(=> (is-length (,prop ,r)) (= (,field ,bp) (,(variable-append type 'l) (,prop ,r))))]))
+
+            ; Block elements don't have a gap
+            (= (gap ,bp) 0.0)
+
+            ; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
+            (=> (is-auto (margin-left ,r)) (= (ml ,bp) 0))
+            (=> (is-auto (margin-right ,r)) (= (ml ,bp) 0))
+            (=> (is-auto (margin-top ,r)) (= (mt ,bp) 0))
+            (=> (is-auto (margin-bottom ,r)) (= (mt ,bp) 0))
+
+            ; CSS § 10.3.5 : If 'width' is computed as 'auto', the used value is the "shrink-to-fit"
+            ; width.
+            ; Calculation of the shrink-to-fit width is similar to calculating the width of a table
+            ; cell using the automatic table layout algorithm. Roughly: calculate the preferred width
+            ; by formatting the content without breaking lines other than where explicit line breaks
+            ; occur, and also calculate the preferred minimum width, e.g., by trying all possible
+            ; line breaks. CSS 2.1 does not define the exact algorithm. Thirdly, find the available
+            ; width: in this case, this is the width of the containing block minus the used values
+            ; of 'margin-left', 'border-left-width', 'padding-left', 'padding-right',
+            ; 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
+            ; Then the shrink-to-fit width is: min(max(preferred minimum width, available width),
+            ; preferred width).
+
+            ; TODO : We just don't support auto widths on floats.
+            (=> (not (is-auto (width ,r))))
+
+            ; CSS 2.1 § 10.6.7 : In certain cases, the height of an
+            ; element that establishes a block formatting context is computed as follows:
+            (=> (is-auto (height ,r))
+                (= (h ,pb) 
+                   (ite (is-element ,le)
+                        (ite (= (display ,le) inline)
+                             ; If it only has inline-level children, the height is the distance between
+                             ; the top of the topmost line box and the bottom of the bottommost line box.
+                             (- (box-bottom ,le) (box-top ,fe))
+                             ; If it has block-level children, the height is the distance between the
+                             ; top margin-edge of the topmost block-level child box and the
+                             ; bottom margin-edge of the bottommost block-level child box.
+                             (- (bottom-outer ,le) (top-outer ,fe)))
+                        0.0)))
+
+            ; TODO : In addition, if the element has any floating descendants whose bottom margin edge
+            ; is below the element's bottom content edge, then the height is increased to include
+            ; those edges. Only floats that participate in this block formatting context are taken
+            ; into account, e.g., floats inside absolutely positioned descendants or other floats
+            ; are not. 
+
+            ; Positivity constraint
+            ; CSS 2.1 § 9.5.1 : When the float occurs between two collapsing margins, the float is
+            ; positioned as if it had an otherwise empty anonymous block parent taking part in the flow.
+            ; The position of such a parent is defined by the rules in the section on margin collapsing. 
+            (= (flow-box ,e)
+               ; TODO : Handle the margin collapsing nonsense
+               (ite (is-nil ,ve)
+                    (box (left-content ,vb) (top-content ,pb) (w ,pb) 0.0
+                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+                         0.0)
+                    (box (box-left ,vb) (box-bottom ,vb) (w ,pb) 0.0
+                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+                         0.0)))
+            
+            (>= (w ,bp) 0.0)
+            (>= (h ,bp) 0.0)
+            (>= (pl ,bp) 0.0)
+            (>= (pr ,bp) 0.0)
+            (>= (pb ,bp) 0.0)
+            (>= (pt ,bp) 0.0)
+            (= (bl ,bp) 0.0)
+            (= (br ,bp) 0.0)
+            (= (bt ,bp) 0.0)
+            (= (bb ,bp) 0.0)
+
+            (= (float ,bp) (float ,r))))))

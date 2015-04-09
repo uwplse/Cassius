@@ -1,5 +1,6 @@
 #lang racket
 (require "z3.rkt")
+(require "dom.rkt")
 (require "css-rules.rkt")
 (require "elements.rkt")
 (require unstable/sequence)
@@ -9,13 +10,7 @@
 
 (define maximize #f)
 
-(define (println x)
-  (pretty-print x)
-  x)
-
-(provide print-rules solve make-preamble vw vh
-         (struct-out dom) dom-constraints
-         (struct-out rendering-context) (struct-out stylesheet) stylesheet-constraints)
+(provide (all-defined-out) solve (all-from-out "dom.rkt"))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
@@ -115,45 +110,6 @@
        [`(tag ,name) (substring (symbol->string name)
                                 1 (- (string-length (symbol->string name)) 1))])]))
 
-(define (make-preamble)
-  `((set-option :produce-unsat-cores true)
-    ,@css-types
-    ,css-rule-types
-    ,@css-score-ops
-    ,@math-utilities
-    ,@box-functions
-    ,element-type))
-
-(define (vw e)
-  `(ite (is-element ,e)
-        (+ (pl ,e) (w-e ,e) (pr ,e))
-        (w-l ,e)))
-(define (vh e)
-  `(ite (is-element ,e)
-        (+ (pt ,e) (h-e ,e) (pb ,e))
-        (h-l ,e)))
-
-(struct dom (name stylesheet context tree))
-(struct rendering-context (width))
-(struct stylesheet (name count))
-
-(define (inline-element? elt)
-  (eq? (car elt) '<>))
-
-(define (in-tree-subtrees tree)
-  (apply sequence-append
-         (in-parallel (in-value (car tree)) (in-value (cdr tree)))
-         (map in-tree-subtrees (cdr tree))))
-
-(define (in-tree-values tree)
-  (apply sequence-append
-         (in-value (car tree))
-         (map in-tree-values (cdr tree))))
-
-(define (dom-type dom) (dom-name dom))
-(define (dom-map dom) (variable-append (dom-name dom) 'map))
-(define (dom-root dom) (variable-append (dom-name dom) 'root))
-(define (dom-get dom elt) `(,(dom-map dom) ,(second elt)))
 
 (define (dom-tree-constraints dom)
   (define type (dom-type dom))
@@ -327,5 +283,10 @@
    (dom-tree-constraints dom)
    (dom-element-constraints dom)
    (dom-rendering-constraints dom)
+   (dom-element-float-constraints dom)
    (dom-style-constraints dom)
-   (dom-root-constraints dom)))
+   (dom-root-constraints dom)
+
+   `((assert (or
+              ,@(for/list ([i (in-naturals)] [name (stylesheet-rules (dom-stylesheet dom))])
+                  `(not (is-none (float-specified ,name)))))))))
