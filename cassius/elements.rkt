@@ -39,7 +39,11 @@
     (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
 
     (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
-    (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))))
+    (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
+
+    (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
+      (or (> (+ (y box1) (box-height box1)) (y box2) (y box1))
+          (> (+ (y box2) (box-height box2)) (y box1) (y box2))))))
 
 (define element-type
   `(declare-datatypes (T)
@@ -195,7 +199,7 @@
            (= (x ,b) (+ (left-content ,pb) (ml ,b)))
            (= (y ,b)
               (ite (is-nil ,ve)
-                   (ite (and (not (= (tagname ,pe) <HTML>)) (is-none (float ,pb))
+                   (ite (and (not (= (tagname ,pe) <HTML>)) (is-none (float ,pe))
                              (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                         (top-content ,pb)
                         (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
@@ -234,9 +238,14 @@
 
             ; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
             (=> (is-auto (margin-left ,r)) (= (ml ,bp) 0))
-            (=> (is-auto (margin-right ,r)) (= (ml ,bp) 0))
+            (=> (is-auto (margin-right ,r)) (= (mr ,bp) 0))
             (=> (is-auto (margin-top ,r)) (= (mt ,bp) 0))
-            (=> (is-auto (margin-bottom ,r)) (= (mt ,bp) 0))
+            (=> (is-auto (margin-bottom ,r)) (= (mb ,bp) 0))
+
+            (= (mtp ,bp) (max (mt ,bp) 0.0))
+            (= (mtn ,bp) (min (mt ,bp) 0.0))
+            (= (mbp ,bp) (max (mb ,bp) 0.0))
+            (= (mbn ,bp) (min (mb ,bp) 0.0))
 
             ; CSS § 10.3.5 : If 'width' is computed as 'auto', the used value is the "shrink-to-fit"
             ; width.
@@ -252,21 +261,21 @@
             ; preferred width).
 
             ; TODO : We just don't support auto widths on floats.
-            (=> (not (is-auto (width ,r))))
+            (not (is-auto (width ,r)))
 
             ; CSS 2.1 § 10.6.7 : In certain cases, the height of an
             ; element that establishes a block formatting context is computed as follows:
             (=> (is-auto (height ,r))
-                (= (h ,pb) 
+                (= (h ,bp) 
                    (ite (is-element ,le)
                         (ite (= (display ,le) inline)
                              ; If it only has inline-level children, the height is the distance between
                              ; the top of the topmost line box and the bottom of the bottommost line box.
-                             (- (box-bottom ,le) (box-top ,fe))
+                             (- (box-bottom ,lb) (box-top ,fb))
                              ; If it has block-level children, the height is the distance between the
                              ; top margin-edge of the topmost block-level child box and the
                              ; bottom margin-edge of the bottommost block-level child box.
-                             (- (bottom-outer ,le) (top-outer ,fe)))
+                             (- (bottom-outer ,lb) (top-outer ,fb)))
                         0.0)))
 
             ; TODO : In addition, if the element has any floating descendants whose bottom margin edge
@@ -282,11 +291,11 @@
             (= (flow-box ,e)
                ; TODO : Handle the margin collapsing nonsense
                (ite (is-nil ,ve)
-                    (box (left-content ,vb) (top-content ,pb) (w ,pb) 0.0
+                    (box (left-content ,pb) (top-content ,pb) (w ,pb) 0.0
                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                          0.0)
-                    (box (box-left ,vb) (box-bottom ,vb) (w ,pb) 0.0
+                    (box (left-content ,pb) (box-bottom ,vb) (w ,pb) 0.0
                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                          0.0)))
@@ -302,4 +311,4 @@
             (= (bt ,bp) 0.0)
             (= (bb ,bp) 0.0)
 
-            (= (float ,bp) (float ,r))))))
+            (= (float ,e) (float ,r))))))

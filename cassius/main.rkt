@@ -3,6 +3,7 @@
 (require "dom.rkt")
 (require "css-rules.rkt")
 (require "elements.rkt")
+(require "float.rkt")
 (require unstable/sequence)
 (require srfi/1)
 (z3 "/opt/z3opt/bin/z3")
@@ -297,4 +298,5 @@
 
    `((assert (or
               ,@(for/list ([i (in-naturals)] [name (stylesheet-rules (dom-stylesheet dom))])
-                  `(not (is-none (float-specified ,name)))))))))
+                  `(and (or (is-left (float-specified ,name))
+                            (is-right (float-specified ,name))) (float-enabled ,name))))))))

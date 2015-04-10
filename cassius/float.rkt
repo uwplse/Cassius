@@ -1,68 +1,79 @@
 #lang racket
 (require "dom.rkt")
+(provide dom-element-float-constraints)
 
 (define (dom-element-float-constraints dom)
   (apply append
          (for*/list ([elt (in-tree-values (dom-tree dom))])
            (match elt
-             [`(<> ,name)
+             [(list '<> name cmds ...)
               '()]
-             [`(,tag ,name)
+             [(list tag name cmds ...)
               (define e (dom-get dom elt))
               (define pe `(,(dom-map dom) (parent ,(dom-get dom elt))))
-              (define ve `(,(dom-map dom) (previous ,(dom-get dom elt))))
               (define b `(placement-box ,e))
               (define pb `(placement-box ,pe))
-              (define vb `(placement-box ,ve))
-              (define re `(rules ,(dom-get dom elt)))
 
               (list*
                ; CSS 2.1, § 9.5.1, item 1: The left outer edge of a left-floating box
                ; may not be to the left of the left edge of its containing block.
                ; An analogous rule holds for right-floating elements. 
-               `(assert (=> (is-left (float ,b)) (>= (left-outer ,b) (box-left ,pb))))
-               `(assert (=> (is-right (float ,b)) (<= (right-outer ,b) (box-right ,pb))))
+               `(assert (=> (is-left (float ,e)) (>= (left-outer ,b) (left-content ,pb))))
+               `(assert (=> (is-right (float ,e)) (<= (right-outer ,b) (right-content ,pb))))
 
                ; CSS 2.1, § 9.5.1, item 8: A floating box must be placed as high as possible. 
                ; NOTE: Simplified to be at its normal position, or the same y-position as another float
-               `(assert (=> (not (is-none (float ,b)))
+               `(assert (=> (not (is-none (float ,e)))
                             (or
-                             (= (y ,b) (flow-box ,e))
+                             (= (y ,b) (y (flow-box ,e)))
                              ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
+                                 (define e* (dom-get dom elt*))
                                  (define b* `(placement-box ,(dom-get dom elt*)))
-                                 `(and (not (is-none (float ,b*)))
-                                       (= (top-outer ,b*) (top-outer ,b*)))))))
+                                 `(and (not (is-none (float ,e*)))
+                                       (or (= (top-outer ,b) (top-outer ,b*))
+                                           (= (top-outer ,b) (bottom-outer ,b*))))))))
 
                ; CSS 2.1, § 9.5.1, item 9: A left-floating box must be put as far to the left
                ; as possible, a right-floating box as far to the right as possible. A higher
                ; position is preferred over one that is further to the left/right.  
-               ; NOTE: simplified to being at the left/right or next to an existing box
-               `(assert (=> (is-left (float ,b))
+               ; NOTE: simplified to being at the left/right or next to an existing floating box
+               `(assert (=> (is-left (float ,e))
                             (or
-                             (= (left-outer ,b)) (box-left ,pb))
+                             (= (left-outer ,b) (left-content ,pb))
                              ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
+                                 (define e* (dom-get dom elt*))
                                  (define b* `(placement-box ,(dom-get dom elt*)))
-                                 `(and (is-left (float ,b*))
-                                       (= (left-outer ,b) (right-outer ,b*))))))
-               `(assert (=> (is-right (float ,b))
+                                 `(and (is-left (float ,e*))
+                                       (= (left-outer ,b) (right-outer ,b*)))))))
+               `(assert (=> (is-right (float ,e))
                             (or
-                             (= (right-border ,b) (right-padding ,b*))
+                             (= (right-outer ,b) (right-content ,pb))
                              ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
+                                 (define e* (dom-get dom elt*))
                                  (define b* `(placement-box ,(dom-get dom elt*)))
-                                 `(and (is-right (float ,b*))
-                                       (= (right-outer ,b) (left-outer b*)))))))
+                                 `(and (is-right (float ,e*))
+                                       (= (right-outer ,b) (left-outer ,b*)))))))
+
+               ; TODO : The simplifications above don't capture the notion that we must place
+               ; a box as high as possible, which may lead to boxes overlapping.
+               ; This, anyway, can lead to problems. For now, we ban negative margins.
+               ;`(assert (>= (mt ,b) 0.0))
+               ;`(assert (>= (mb ,b) 0.0))
+               ;`(assert (>= (ml ,b) 0.0))
+               ;`(assert (>= (mr ,b) 0.0))
 
                ; CSS 2.1, § 9.5.1, item 4: A floating box's outer top may not be higher
                ; than the top of its containing block. When the float occurs between
                ; two collapsing margins, the float is positioned as if it had an otherwise
                ; empty anonymous block parent taking part in the flow. The position of such
                ; a parent is defined by the rules in the section on margin collapsing. 
-               `(assert (=> (or (is-left (float ,b)) (is-right (float ,b)))
-                            (>= (top-outer ,b) (top-padding ,pb))))
+               `(assert (=> (or (is-left (float ,e)) (is-right (float ,e)))
+                            (>= (top-outer ,b) (top-content ,pb))))
 
                (apply append
                       ; The #:break ensures these are only preceding elements
                       (for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
+                        (define e* (dom-get dom elt*))
                         (define b* `(placement-box ,(dom-get dom elt*)))
 
                         (list
@@ -73,36 +84,34 @@
                          ; of the right outer edge of the earlier box, or its top must be lower
                          ; than the bottom of the earlier box.
                          ; Analogous rules hold for right-floating boxes. 
-                         `(assert (=> (and (is-left (float ,b)) (is-left (float ,b*)))
+                         `(assert (=> (and (is-left (float ,e)) (is-left (float ,e*)))
                                       (or (>= (left-outer ,b) (right-outer ,b*))
                                           (>= (box-top ,b) (box-bottom ,b*)))))
-                         `(assert (=> (and (is-right (float ,b)) (is-right (float ,b*)))
+                         `(assert (=> (and (is-right (float ,e)) (is-right (float ,e*)))
                                       (or (<= (right-outer ,b) (left-outer ,b*))
                                           (>= (box-top ,b) (box-bottom ,b*)))))
 
                          ; CSS 2.1, § 9.5.1, item 3: The right outer edge of a left-floating box
                          ; may not be to the right of the left outer edge of any right-floating box
                          ; that is next to it. Analogous rules hold for right-floating elements. 
-                         `(assert (=> (and (is-left (float ,b)) (is-right (float ,b*))
-                                           (or (> (+ (y ,b*) (h ,b*)) (y ,b) (y ,b*))
-                                               (> (+ (y ,b) (h ,b)) (y ,b*) (y ,b))))
+                         `(assert (=> (and (is-left (float ,e)) (is-right (float ,e*))
+                                           (horizontally-adjacent ,b ,b*))
                                       (<= (right-outer ,b) (left-outer ,b*))))
-                         `(assert (=> (and (is-right (float ,b)) (is-left (float ,b*))
-                                           (or (> (+ (y ,b*) (h ,b*)) (y ,b) (y ,b*))
-                                               (> (+ (y ,b) (h ,b)) (y ,b*) (y ,b))))
+                         `(assert (=> (and (is-right (float ,e)) (is-left (float ,e*))
+                                           (horizontally-adjacent ,b ,b*))
                                       (>= (left-outer ,b) (right-outer ,b*))))
 
                          ; CSS 2.1, § 9.5.1, item 5: The outer top of a floating box
                          ; may not be higher than the outer top of any block or floated box
                          ; generated by an element earlier in the source document. 
-                         `(assert (=> (and (or (is-right (float ,b)) (is-left (float ,b)))
+                         `(assert (=> (and (or (is-right (float ,e)) (is-left (float ,e)))
                                            (= (display ,e*) block))
                                       (>= (top-outer ,b) (top-outer ,b*))))
 
                          ; CSS 2.1 § 9.5.1, item 6: The outer top of an element's floating box
                          ; may not be higher than the top of any line-box containing a box
                          ; generated by an element earlier in the source document. 
-                         `(assert (=> (and (or (is-right (float ,b)) (is-left (float ,b)))
+                         `(assert (=> (and (or (is-right (float ,e)) (is-left (float ,e)))
                                            (= (display ,e*) inline))
                                       (>= (top-outer ,b) (- (y ,b*) (/ (gap ,b*) 2)))))
 
@@ -113,14 +122,9 @@
                          ; unless it is already as far to the left as possible.)
                          ; An analogous rule holds for right-floating elements. 
                          ; TODO : is this equivalent to (at left edge /\ not over right edge)?
-                         `(assert (=> (and (is-left (float ,b)) (is-left (float ,b*))
-                                           (< (x ,b*) (x ,b))
-                                           (or (> (+ (y ,b*) (h ,b*)) (y ,b) (y ,b*))
-                                               (> (+ (y ,b) (h ,b)) (y ,b*) (y ,b))))
+                         `(assert (=> (and (is-left (float ,e)) (is-left (float ,e*))
+                                           (< (x ,b*) (x ,b)) (horizontally-adjacent ,b ,b*))
                                       (<= (right-outer ,b) (right-content ,pb))))
-                         `(assert (=> (and (is-right (float ,b)) (is-right (float ,b*))
-                                           (> (x ,b*) (x ,b))
-                                           (or (> (+ (y ,b*) (h ,b*)) (y ,b) (y ,b*))
-                                               (> (+ (y ,b) (h ,b)) (y ,b*) (y ,b))))
-                                      (>= (left-outer ,b)
-                                          (left-padding ,pb))))))))]))))
+                         `(assert (=> (and (is-right (float ,e)) (is-right (float ,e*))
+                                           (> (x ,b*) (x ,b)) (horizontally-adjacent ,b ,b*))
+                                      (>= (left-outer ,b) (left-content ,pb))))))))]))))
