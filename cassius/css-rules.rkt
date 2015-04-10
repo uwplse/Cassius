@@ -1,9 +1,8 @@
 #lang racket
-(require "z3.rkt")
+(require "dom.rkt")
 
 (provide css-types math-utilities css-properties css-property-pairs css-is-applicable
-         css-score-ops css-rule-types css-enabled-variable css-score-variable
-         variable-append css-shorthand-properties)
+         css-score-ops css-rule-types css-shorthand-properties)
 
 (define css-types
   (list
@@ -72,11 +71,6 @@
   (for*/list ([type css-properties] [prop (cdr type)])
     (cons prop (car type))))
 
-(define (variable-append var end)
-  (string->symbol (string-append (symbol->string var) "-" (symbol->string end))))
-(define css-score-variable (curryr variable-append 'score))
-(define css-enabled-variable (curryr variable-append 'enabled))
-
 (define css-rule-types
   `(declare-datatypes ()
      ((ComputedRule
@@ -84,7 +78,7 @@
         ,@(apply append
                  (for*/list ([cat css-properties] [property (cdr cat)])
                    `((,property ,(car cat))
-                     (,(css-score-variable property) CascadeScore))))))
+                     (,(variable-append property 'score) CascadeScore))))))
       (SpecifiedRule
        (specifiedRules
         (selector Selector)
@@ -92,7 +86,7 @@
         ,@(apply append
                  (for*/list ([cat css-properties] [property (cdr cat)])
                    `((,(variable-append property 'specified) ,(car cat))
-                     (,(css-enabled-variable property) Bool)))))))))
+                     (,(variable-append property 'enabled) Bool)))))))))
 
 (define math-utilities
   (list `(define-fun max ((x Real) (y Real)) Real

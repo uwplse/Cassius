@@ -1,11 +1,9 @@
 #lang racket
+(require "dom.rkt")
 
 (require unstable/sequence)
 
 (provide box-functions element-type element-constraints)
-
-(define (variable-append var end)
-  (string->symbol (string-append (symbol->string var) "-" (symbol->string end))))
 
 (define box-functions
   `((declare-datatypes ()

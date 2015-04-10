@@ -110,6 +110,14 @@
        [`(tag ,name) (substring (symbol->string name)
                                 1 (- (string-length (symbol->string name)) 1))])]))
 
+(define (make-preamble)
+  `((set-option :produce-unsat-cores true)
+    ,@css-types
+    ,css-rule-types
+    ,@css-score-ops
+    ,@math-utilities
+    ,@box-functions
+    ,element-type))
 
 (define (dom-tree-constraints dom)
   (define type (dom-type dom))
@@ -170,18 +178,18 @@
                ; Score of computed rule is >= any applicable stylesheet rule
                (for*/list ([type css-properties] [property (cdr type)]
                            [rule (stylesheet-rules (dom-stylesheet dom))])
-                 `(assert (=> (and (,(css-enabled-variable property) ,rule)
+                 `(assert (=> (and (,(variable-append property 'enabled) ,rule)
                            ,(css-is-applicable `(selector ,rule) e))
-                      (score-ge (,(css-score-variable property) ,re) (score ,rule)))))
+                      (score-ge (,(variable-append property 'score) ,re) (score ,rule)))))
                
                ; Score&value of computed rule is = some applicable stylesheet rule
                (for*/list ([type css-properties] [property (cdr type)])
                  `(assert (or
                    ,@(for/list ([rule (stylesheet-rules (dom-stylesheet dom))])
                        `(and
-                         (,(css-enabled-variable property) ,rule)
+                         (,(variable-append property 'enabled) ,rule)
                          ,(css-is-applicable `(selector ,rule) e)
-                         (= (,(css-score-variable property) ,re) (score ,rule))
+                         (= (,(variable-append property 'score) ,re) (score ,rule))
                          (= (,property ,re)
                             (,(variable-append property 'specified) ,rule))))))))]))))
 
@@ -236,14 +244,14 @@
              ; Each enabled property costs one line
              ,@(if maximize
                    (for*/list ([type css-properties] [property (cdr type)])
-                     `(assert-soft (not (,(css-enabled-variable property) ,name)) :weight 1))
+                     `(assert-soft (not (,(variable-append property 'enabled) ,name)) :weight 1))
                    '())
 
              ; Each block with an enabled property costs two line (open/selector and close brace)
              ,@(if maximize
                    `((assert-soft (and
                                    ,@(for*/list ([type css-properties] [property (cdr type)])
-                                       `(not (,(css-enabled-variable property) ,name))))
+                                       `(not (,(variable-append property 'enabled) ,name))))
                                   :weight 2))
                    '())
 
@@ -251,7 +259,7 @@
              ,@(if maximize
                    (for/list ([(short-name subproperties) (in-pairs css-shorthand-properties)])
                      `(assert-soft (and ,@(for/list ([subprop subproperties])
-                                            (list (css-enabled-variable subprop) name)))
+                                            (list (variable-append subprop 'enabled) name)))
                                    :weight 3))
                    '())))))
 

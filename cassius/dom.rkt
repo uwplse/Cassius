@@ -1,6 +1,10 @@
 #lang racket
 (provide (struct-out dom) (struct-out rendering-context) (struct-out stylesheet)
-         inline-element? in-tree-subtrees in-tree-values dom-type dom-map dom-root dom-get)
+         inline-element? in-tree-subtrees in-tree-values dom-type dom-map dom-root dom-get
+         variable-append)
+
+(define (variable-append var end)
+  (string->symbol (string-append (symbol->string var) "-" (symbol->string end))))
 
 (struct dom (name stylesheet context tree))
 (struct rendering-context (width))
