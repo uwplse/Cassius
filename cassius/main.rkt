@@ -294,9 +294,4 @@
    (dom-rendering-constraints dom)
    (dom-element-float-constraints dom)
    (dom-style-constraints dom)
-   (dom-root-constraints dom)
-
-   `((assert (or
-              ,@(for/list ([i (in-naturals)] [name (stylesheet-rules (dom-stylesheet dom))])
-                  `(and (or (is-left (float-specified ,name))
-                            (is-right (float-specified ,name))) (float-enabled ,name))))))))
+   (dom-root-constraints dom)))

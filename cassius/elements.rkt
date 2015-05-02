@@ -165,10 +165,8 @@
 
             ; Width and horizontal margins out of the way, let's do height and vertical margins
             ; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
-            ; NOTE: We don't do that, instead following Chrome and Firefox
-            ; TODO: Is this correct? I think the signs might be wrong
-            (=> (is-auto (margin-top ,r)) (= (mt ,b) (- (max (- (/ (gap ,fb) 2)) 0.0))))
-            (=> (is-auto (margin-bottom ,r)) (= (mb ,b) (- (max (- (/ (gap ,lb) 2)) 0.0))))
+            (=> (is-auto (margin-top ,r)) (= (mt ,b) 0.0))
+            (=> (is-auto (margin-bottom ,r)) (= (mb ,b) 0.0))
 
             ; If 'height' is 'auto', the height depends on whether the element has
             ; any block-level children and whether it has padding or borders: 
@@ -190,7 +188,9 @@
                                   (- (bottom-outer ,lb) (top-content ,b))))
                         ; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
                         ; whose top margin doesn't collapse with the element's bottom margin 
-                        ; TODO: I have no idea how this can happen. Though it probably can.
+                        ; NOTE: This can happen is the box height is 0.
+                        ; We don't support that, so it's not an issue.
+
                         ; CSS § 10.6.3, item 4: zero, otherwise 
                         0.0)))
 
@@ -205,7 +205,8 @@
                         (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
                    (+ (bottom-border ,vb) (max (mbp ,vb) (mtp ,b)) (min (mbn ,vb) (mtn ,b)))))
 
-           ; Positivity constraint
+           ; Positivity constraint---otherwise floats can overlap
+           (> (box-height ,b) 0.0)
 
            (>= (w ,b) 0.0)
            (>= (h ,b) 0.0)
