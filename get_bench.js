@@ -2,6 +2,8 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_example.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
+LETTER = window.LETTER || "";
+
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
 function is_block(elt) {
     var cStyle = elt.currentStyle || window.getComputedStyle(elt);
@@ -29,26 +31,26 @@ function parse_color(s) {
     }
 }
 
-function printblock(root, indent, f) {
+function printblock(root, f) {
     var rect = root.getBoundingClientRect();
     var bgc = parse_color(window.getComputedStyle(root).backgroundColor);
     var fgc = parse_color(window.getComputedStyle(root).color);
-    f("open", indent, root.nodeName, rect.width, rect.height, rect.x, rect.y, bgc, fgc);
+    f("open", root.nodeName, rect.width, rect.height, rect.x, rect.y, bgc, fgc);
 
     var lines = [];
     for (var i = 0; i < root.childNodes.length; i++) {
         var elt = root.childNodes[i];
         if (elt.nodeType && !is_text(elt) && has_normal_position(elt) && is_block(elt)) {
-            printblock(elt, indent + 1, f);
+            printblock(elt, f);
         } else if (is_text(elt) || has_normal_position(elt)) {
             var r = new Range();
             r.selectNode(elt);
             lines = lines.concat(r.getClientRects().slice());
         }
     }
-    if (lines.length > 0) printlines(root, lines, indent + 1, f);
+    if (lines.length > 0) printlines(root, lines, f);
 
-    f("close", indent);
+    f("close");
 }
 
 function val2px(val) {
@@ -59,17 +61,21 @@ function val2px(val) {
     }
 }
 
-function printlines(root, lines, indent, f) {
+function printlines(root, lines, f) {
     var rStyle = window.getComputedStyle(root);
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
         var gap = val2px(rStyle.lineHeight) - line.height;
-        f("line", indent, "", line.width, line.height, line.x, line.y, gap);
+        f("line", "", line.width, line.height, line.x, line.y, gap);
     }
 }
 
+ID = 0;
+PADDING = "0000";
+
 function gensym(name) {
-    return name + Math.random();
+    s = "" + (++ID);
+    return LETTER + PADDING.substring(0, PADDING.length - s.length) + s;
 }
 
 function r2(x) {
@@ -81,48 +87,60 @@ function go() {
     var DOC = gensym("doc");
     var HTML = gensym("html");
 
-    var types = {};
-    var head = ",@(make-dom '" + HTML + " '" + DOC + " 'main.css\n'";
+    var head = "(define dom" + LETTER + "\n  (let ([tree";
+    var quoted = false;
+    var indent = "         ";
+
     var wrect = document.querySelector("html").getBoundingClientRect();
-    var tail = "(assert (! (= (w-e (" + DOC + "f " + HTML + ")) " + wrect.width + ") :named " + HTML + "-width))\n";
+    var tail = "]\n       [context (rendering-context " + wrect.width + ")])\n" +
+        "    (dom 'doc" + LETTER + " sheet context tree)))\n\n";
     
-    printblock(document.querySelector("body"), 1, function(call, indent, type, w, h, x, y, bgc, fgc) {
+    printblock(document.querySelector("body"), function(call, type, w, h, x, y, bgc, fgc) {
         if (call == "open") {
-            var ELT = gensym(type);
-            head += "([&lt;" + type + "&gt; " + ELT + "]";
-            types[type] = true;
+            var ELT = gensym();
 
-            tail += "(assert (! (= (x-e (" + DOC + "f " + ELT + ")) " + r2(x) + ") :named " + ELT + "-x))\n";
-            tail += "(assert (! (= (y-e (" + DOC + "f " + ELT + ")) " + r2(y) + ") :named " + ELT + "-y))\n";
-            tail += "(assert (! (= ,(vw '(" + DOC + "f " + ELT + ")) " + r2(w) + ") :named " + ELT + "-w))\n";
-            tail += "(assert (! (= ,(vh '(" + DOC + "f " + ELT + ")) " + r2(h) + ") :named " + ELT + "-h))\n";
-            tail += "(assert (! (= (fgc (" + DOC + "f " + ELT + ")) " + fgc + ") :named " + ELT + "-fg))\n";
-            tail += "(assert (! (= (bgc (" + DOC + "f " + ELT + ")) " + bgc + ") :named " + ELT + "-bg))\n";
+            var idt = indent;
+            console.log(indent);
+            indent = indent + " ";
+            if (!quoted) {
+                idt = idt.substring(0, idt.length - 1) + "'";
+                quoted = true;
+            }
+            
+            head += "\n" + idt + "([&lt;" + type + "&gt; " + ELT;
+
+            head += " :x " + r2(x);
+            head += " :y " + r2(y);
+            head += " :vw " + r2(w);
+            head += " :vh " + r2(h);
+            head += "]";
         } else if (call == "close") {
-            head += ")\n";
+            head += ")";
+            indent = indent.substring(0, indent.length - 1);
         } else if (call == "line") {
-            var ELT = gensym("line");
-            var gap = bgc;
-            head += "([&lt;&gt; " + ELT + "])\n";
+            var ELT = gensym();
+            var gap = bgc; // Because different calls use different numbers of arguments
 
-            tail += "(assert (! (= (x-l (" + DOC + "f " + ELT + ")) " + r2(x) + ") :named " + ELT + "-x))\n";
-            tail += "(assert (! (= (y-l (" + DOC + "f " + ELT + ")) " + r2(y) + ") :named " + ELT + "-y))\n";
-            tail += "(assert (! (= (w-l (" + DOC + "f " + ELT + ")) " + r2(w) + ") :named " + ELT + "-w))\n";
-            tail += "(assert (! (= (h-l (" + DOC + "f " + ELT + ")) " + r2(h) + ") :named " + ELT + "-h))\n";
-            tail += "(assert (! (= (gap-l (" + DOC + "f " + ELT + ")) " + r2(gap) + ") :named " + ELT + "-gap))\n";
+            var idt = indent;
+            if (!quoted) {
+                idt = idt.substring(0, idt.length - 1) + "'";
+                quoted = true;
+            }
+            
+            head += "\n" + idt + "([&lt;&gt; " + ELT;
+
+            head += " :x " + r2(x);
+            head += " :y " + r2(y);
+            head += " :w " + r2(w);
+            head += " :h " + r2(h);
+            head += " :gap " + r2(gap);
+            head += "])";
         }
     });
-    head += ")\n";
-
-    var rules = ",@(make-preamble)\n";
-    var n = 0;
-    for (var type in types) {
-        n++;
-    }
-    rules += ",@(make-stylesheet 'main.css " + n + ")\n";
 
     var pre = document.createElement("pre");
-    pre.innerHTML = rules + "\n\n" + head + "\n\n" + tail;
+    pre.id = "--cassius-output-block";
+    pre.innerHTML = head + tail;
     pre.style.background = "white";
     pre.style.color = "black";
     pre.style.position = "absolute";
