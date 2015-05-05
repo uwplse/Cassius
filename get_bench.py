@@ -44,17 +44,19 @@ def make_browser():
     return webdriver.Firefox()
 
 class CassiusInput():
-    def __init__(self, fd):
+    def __init__(self, fd, urls):
         self.fd = fd
         self.fd.write("""#lang racket
 (require "../cassius/main.rkt")
+        
+;; python get_bench.py {}
 
 (define header
 "")
 
 (define sheet (stylesheet 'main.css 5))
 
-""")
+""".format(" ".join("'{}'".format(url) for url in urls)))
         self.fd.flush()
         self.ids = []
 
@@ -81,7 +83,7 @@ def get_bench_output(browser, letter, url, file):
     browser.execute_script(js, letter)
     elt = browser.find_element_by_id("--cassius-output-block");
     text = elt.text.decode("utf8")
-    file.write("dom" + letter, text)
+    file.write("dom" + letter, ";; From {}\n\n{}".format(url, text))
 
 def main(urls):
     server = make_server()
@@ -99,7 +101,7 @@ def main(urls):
         fname = "bench/{}.rkt".format(netloc)
         print "Saving layout to {}".format(fname)
         with open(fname, "wb") as f:
-            fi = CassiusInput(f)
+            fi = CassiusInput(f, urls)
             for i, url in enumerate(urls):
                 letter = chr(ord('a') + i)
                 get_bench_output(browser, letter, url, fi)

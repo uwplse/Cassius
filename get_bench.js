@@ -4,48 +4,38 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_example.js"; doc
 
 LETTER = window.LETTER || "";
 
-function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
-function is_block(elt) {
-    var cStyle = elt.currentStyle || window.getComputedStyle(elt);
-    return cStyle.display == "block";
-}
-function has_text(root) {
-    for (var i = 0; i < root.childNodes.length; i++) {
-        var elt = root.childNodes[i];
-        if (elt.textContent.strip() !== "") return true;
-    }
-    return false;
-}
-function has_normal_position(elt) {
-    var cStyle = elt.currentStyle || window.getComputedStyle(elt);
-    return elt.getBoundingClientRect().height > 0 && (cStyle.position == "static" || cStyle.position == "relative");
-}
+function r2(x) {return Math.round(10*x)/10;}
+function cs(elt) {return window.getComputedStyle(elt);}
 
-function parse_color(s) {
-    if (s.indexOf("(") > -1) {
-        var a = s.substring(s.indexOf("(") + 1, s.indexOf(")")).split(", ").map(function(s) {return parseInt(s);});
-        var hexval = (a[3] << 24) | (a[0] << 16) | (a[1] << 8) | a[2];
-        return "(color |#x" + hexval.toString(16) + "|)";
-    } else {
-        return s;
-    }
+function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
+function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
+function is_inline(elt) {return cs(elt).display == "inline";}
+function is_block(elt) {return cs(elt).display == "block";}
+function is_visible(elt) {return cs(elt).display != "none";}
+function has_normal_position(elt) {
+    return elt.getBoundingClientRect().height > 0 && (cs(elt).position == "static" || cs(elt).position == "relative");
 }
 
 function printblock(root, f) {
     var rect = root.getBoundingClientRect();
-    var bgc = parse_color(window.getComputedStyle(root).backgroundColor);
-    var fgc = parse_color(window.getComputedStyle(root).color);
-    f("open", root.nodeName, rect.width, rect.height, rect.x, rect.y, bgc, fgc);
+    f("open", root.nodeName, rect.width, rect.height, rect.x, rect.y);
 
     var lines = [];
     for (var i = 0; i < root.childNodes.length; i++) {
         var elt = root.childNodes[i];
-        if (elt.nodeType && !is_text(elt) && has_normal_position(elt) && is_block(elt)) {
-            printblock(elt, f);
-        } else if (is_text(elt) || has_normal_position(elt)) {
+        if (is_comment(elt)) {
+            continue; // Comments are part of the DOM. Why? Meh.
+        } else if (is_text(elt) || is_inline(elt)) {
             var r = new Range();
             r.selectNode(elt);
             lines = lines.concat(r.getClientRects().slice());
+        } else if (!is_visible(elt)) {
+            continue;
+        } else if (is_block(elt)) {
+            printblock(elt, f);
+        } else {
+            console.warn("Unclear element-like value", elt.nodeType, elt);
+            continue;
         }
     }
     if (lines.length > 0) printlines(root, lines, f);
@@ -62,10 +52,9 @@ function val2px(val) {
 }
 
 function printlines(root, lines, f) {
-    var rStyle = window.getComputedStyle(root);
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
-        var gap = val2px(rStyle.lineHeight) - line.height;
+        var gap = val2px(cs(root).lineHeight) - line.height;
         f("line", "", line.width, line.height, line.x, line.y, gap);
     }
 }
@@ -76,10 +65,6 @@ PADDING = "0000";
 function gensym(name) {
     s = "" + (++ID);
     return LETTER + PADDING.substring(0, PADDING.length - s.length) + s;
-}
-
-function r2(x) {
-    return Math.round(10*x)/10;
 }
 
 function go() {
@@ -100,7 +85,6 @@ function go() {
             var ELT = gensym();
 
             var idt = indent;
-            console.log(indent);
             indent = indent + " ";
             if (!quoted) {
                 idt = idt.substring(0, idt.length - 1) + "'";
