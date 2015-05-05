@@ -15,7 +15,9 @@
        #;(Clear   none left right both inherit)
        (Padding (length (padding-l Real)) #;(percentage (padding-p Real)))
        (Display block inline)
-       (TagNames <HTML> <BODY> <DIV> <H1> <P> <PRE> <svg> <>)
+       (TagNames <HTML> <BODY> <DIV> <H1> <P> <PRE> <svg> <HEADER> <HGROUP> <H2> <NAV> <A> <UL>
+                 <OL> <H3> <SPAN> <FOOTER> <SMALL> <ASIDE> <IMG> <ARTICLE> <IFRAME> <FORM>
+                 <TEXTAREA> <DL> <DT> <DD> <>)
        (Selector all (tag (tag-s TagNames)))
        (ImportanceOrigin UserAgent UserNormal AuthorNormal AuthorImportant UserImportant)
        (CascadeScore (cascadeScore (precedence ImportanceOrigin) (isFromStyle Bool)
