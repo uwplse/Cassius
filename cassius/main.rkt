@@ -112,8 +112,7 @@
                                 1 (- (string-length (symbol->string name)) 1))])]))
 
 (define (make-preamble)
-  `((set-option :produce-unsat-cores true)
-    ,@css-types
+  `(,@css-types
     ,css-rule-types
     ,@css-score-ops
     ,@math-utilities
@@ -223,7 +222,7 @@
    `(assert (= (mbn ,b) 0.0))
    `(assert (= (float ,elt) none))
    `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
-               :name ,(variable-append (dom-name dom) 'context-width)))
+               :named ,(variable-append (dom-name dom) 'context-width)))
    `(assert (= (parent (,(dom-map dom) ,(cadar (dom-tree dom)))) ,(dom-root dom)))
    `(assert (= (previous (,(dom-map dom) ,(cadar (dom-tree dom)))) (as nil ,(dom-type dom))))
    `(assert (= (first-child ,elt) ,(cadar (dom-tree dom))))
@@ -276,7 +275,7 @@
        (define fun
          (match field
            [':x 'x] [':y 'y] [':w 'w] [':h 'h] [':gap 'gap] [':vh 'box-height] [':vw 'box-width]))
-       (k `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :name ,(variable-append name fun))))
+       (k `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :named ,(variable-append name fun))))
        (interpret elt rest k)]
       [(list)
        (void)]))
