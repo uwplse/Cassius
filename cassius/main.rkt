@@ -286,6 +286,7 @@
 (define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header . doms)
   (define problem
     `(; Preamble
+      (set-option :produce-unsat-cores true)
       ,@css-types
       ,css-rule-types
       ,@css-score-ops
@@ -297,7 +298,6 @@
       ; DOMs
       ,@(dom-constraints doms)
       (check-sat)
-      (get-model)
       ))
 
   

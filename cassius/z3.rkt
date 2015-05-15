@@ -37,11 +37,15 @@
                  (error (format "Z3 error: ~a" (string-join (map ~a text) " ")) (list-ref encoding line))]
                 ['unsat
                  (write "(get-unsat-core)\n")
-                 (let ([msg2 (read-line out)])
+                 (let ([msg2 (read out)])
                    (when debug (eprintf "<- ~a\n" msg2))
                    (error "Z3 unsatisfiable" msg2))]
                 ['sat
-                 (loop rest)]
+                 (if (null? rest)
+                     (begin
+                       (write "(get-model)\n")
+                       (loop rest))
+                     (loop rest))]
                 [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
                  (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))]
                 [(? eof-object?)

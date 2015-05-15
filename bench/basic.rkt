@@ -14,4 +14,4 @@ html { background: white; }")
          ([<DIV> diva2 :x 200 :y  66 :vw 400 :vh 100])
          ([<DIV> divb2 :x 200 :y 233 :vw 400 :vh 100]))))
 
-(cassius-solve #:sheet sheet1 #:header header dom1 #:debug #f)
+(cassius-solve #:sheet sheet1 #:header header dom1)
