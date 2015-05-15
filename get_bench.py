@@ -66,14 +66,7 @@ class CassiusInput():
         self.ids.append(id)
         
     def close(self):
-        self.fd.write("""(print-rules #:stylesheet sheet #:header header
-             (solve #:debug #f
-              (append
-               (make-preamble)
-               (stylesheet-constraints sheet)\n""")
-        for id in self.ids:
-            self.fd.write("               (dom-constraints {})\n".format(id))
-        self.fd.write("               (list '(check-sat)))))\n")
+        self.fd.write("(cassius-solve #:sheet sheet #:header header {})\n".format(" ".join(self.ids)))
         self.fd.flush()
 
 def get_bench_output(browser, letter, url, file):
