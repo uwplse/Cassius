@@ -11,18 +11,47 @@
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
-(define (solve encoding #:debug [debug #f] #:model [model #f])
+(define (solve encoding #:debug [debug #f])
   (define-values (process out in err) 
     (subprocess #f #f #f (z3) "-smt2" "-in"))
-  (with-handlers ([exn:break? (lambda (e) 
-                                (subprocess-kill process #t)
-                                (error 'solve "user break"))])
-    (write-encoding encoding in #:debug debug)
-    (define sol (read-solution in out))
-    (subprocess-kill process #t)
-    (when model
-      (printf "\n~a\n\n" sol))
-    sol))
+
+  (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
+
+  (define line 0)
+  (define (write val)
+    (when debug (eprintf "~a ~a\n" (~r line #:min-width (+ 1 lines)) val))
+    (set! line (+ 1 line))
+    (fprintf in (format "~a\n" val))
+    (flush-output in))
+
+  (with-handlers ([exn:break? (lambda (e) (subprocess-kill process #t) (error 'solve "user break"))])
+    (let loop ([rest encoding])
+      (cond
+       [(byte-ready? out)
+        (if (char=? (peek-char out) #\|)
+            (begin (when debug (eprintf "<- ~a" (read-line))) (loop rest))
+            (let ([msg (read out)])
+              (when debug (eprintf "<- ~a\n" msg))
+              (match msg
+                [`(error line ,line column ,column ,text ...)
+                 (error (format "Z3 error: ~a" (string-join (map ~a text) " ")) (list-ref encoding line))]
+                ['unsat
+                 (write "(get-unsat-core)\n")
+                 (let ([msg2 (read-line out)])
+                   (when debug (eprintf "<- ~a\n" msg2))
+                   (error "Z3 unsatisfiable" msg2))]
+                ['sat
+                 (loop rest)]
+                [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
+                 (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))]
+                [(? eof-object?)
+                 (error "Premature EOF received")])))]
+       [(null? rest)
+        (sync out)
+        (loop rest)]
+       [#t
+        (write (~a (car rest)))
+        (loop (cdr rest))]))))
 
 ; Writes the given encoding to the specified port.
 (define (write-encoding encoding port #:debug [debug #f])
@@ -56,24 +85,3 @@
     [`(/ ,n ,d) (/ (de-z3ify n) (de-z3ify d))]
     [(list args ...) (map de-z3ify args)]
     [else v]))
-
-(define (read-solution in out)
-  (define (get-line)
-    (let ([line (read-line out)])
-      (if (string-contains line "|->")
-          (get-line)
-          (call-with-input-string line read))))
-  (match (get-line)
-    [(== 'sat) 
-     (fprintf in "(get-model)\n")
-     (flush-output in)
-     (match (de-z3ify (read out))
-       [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
-        (for/hash ([c const] [v val]) 
-          (values c v))]
-       [other (error 'solution "expected model, given ~a" other)])]
-    [(== 'unsat)
-     (fprintf in "(get-unsat-core)\n")
-     (flush-output in)
-     (error "No solution found; conflicting constraints:\n" (read out))] 
-    [other (error 'smt-solution "unrecognized solver output: ~a" other)]))
