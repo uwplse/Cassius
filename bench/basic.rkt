@@ -14,10 +14,4 @@ html { background: white; }")
          ([<DIV> diva2 :x 200 :y  66 :vw 400 :vh 100])
          ([<DIV> divb2 :x 200 :y 233 :vw 400 :vh 100]))))
 
-(print-rules #:stylesheet sheet1 #:header header
-             (solve
-              (append
-               (make-preamble)
-               (stylesheet-constraints sheet1)
-               (dom-constraints dom1)
-               (list '(check-sat)))))
+(cassius-solve #:sheet sheet1 #:header header dom1 #:debug #f)

@@ -2,7 +2,7 @@
 (require "z3.rkt")
 (require "dom.rkt")
 (require "css-rules.rkt")
-(require "elements.rkt")
+(require (rename-in "elements.rkt" [element-constraints element-constraints-core]))
 (require "float.rkt")
 (require unstable/sequence)
 (require srfi/1)
@@ -11,7 +11,7 @@
 
 (define maximize #f)
 
-(provide (all-defined-out) solve (all-from-out "dom.rkt"))
+(provide cassius-solve (struct-out dom) (struct-out stylesheet) (struct-out rendering-context))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
@@ -111,15 +111,7 @@
        [`(tag ,name) (substring (symbol->string name)
                                 1 (- (string-length (symbol->string name)) 1))])]))
 
-(define (make-preamble)
-  `(,@css-types
-    ,css-rule-types
-    ,@css-score-ops
-    ,@math-utilities
-    ,@box-functions
-    ,element-type))
-
-(define (dom-tree-constraints dom)
+(define (tree-constraints dom emit elt children)
   (define type (dom-type dom))
   (define map-name (dom-map dom))
   (define elt-get (curry dom-get dom))
@@ -130,104 +122,88 @@
         `(as nil ,type)
         (cadar (accessor children))))
 
-  (define constraints
-    (for/list ([(elt children) (in-tree-subtrees (dom-tree dom))])
-      (append
-       ; Parent element
-       (for/list ([child (sequence-map car children)])
-         `(assert (= (parent ,(elt-get child)) ,(cadr elt))))
-       ; Previous element
-       (for/list ([child (sequence-map car children)]
-                  [prev (sequence-append (in-value `(as nil ,type))
-                                         (sequence-map cadar children))])
-         `(assert (= (previous ,(elt-get child)) ,prev)))
-       ; First/last child
-       (list
-        `(assert (= (first-child ,(elt-get elt)) ,(get-child children first)))
-        `(assert (= (last-child ,(elt-get elt)) ,(get-child children last)))))))
+  ; Parent element
+  (for/list ([child (sequence-map car children)])
+    (emit `(assert (= (parent ,(elt-get child)) ,(cadr elt)))))
+  ; Previous element
+  (for/list ([child (sequence-map car children)]
+             [prev (sequence-append (in-value `(as nil ,type))
+                                    (sequence-map cadar children))])
+    (emit `(assert (= (previous ,(elt-get child)) ,prev))))
+  ; First/last child
+  (emit `(assert (= (first-child ,(elt-get elt)) ,(get-child children first))))
+  (emit `(assert (= (last-child ,(elt-get elt)) ,(get-child children last)))))
+
+(define (style-constraints dom emit elt children)
+  (define e (dom-get dom elt))
+  (define re `(rules ,e))
+              
+  (when (not (eq? (car elt) '<>))
+    ; Score of computed rule is >= any applicable stylesheet rule
+    (for* ([type css-properties] [property (cdr type)]
+           [rule (stylesheet-rules (dom-stylesheet dom))])
+      (emit
+       `(assert (=> (and (,(variable-append property 'enabled) ,rule)
+                         ,(css-is-applicable `(selector ,rule) e))
+                    (score-ge (,(variable-append property 'score) ,re) (score ,rule))))))
+                   
+    ; Score&value of computed rule is = some applicable stylesheet rule
+    (for* ([type css-properties] [property (cdr type)])
+      (emit `(assert (or
+                      ,@(for/list ([rule (stylesheet-rules (dom-stylesheet dom))])
+                          `(and
+                            (,(variable-append property 'enabled) ,rule)
+                            ,(css-is-applicable `(selector ,rule) e)
+                            (= (,(variable-append property 'score) ,re) (score ,rule))
+                            (= (,property ,re)
+                               (,(variable-append property 'specified) ,rule))))))))))
+
+(define (dom-root-constraints dom emit)
+  (define type (dom-type dom))
+  (define map-name (dom-map dom))
+  (define elt (list map-name (dom-root dom)))
+  (define b (list 'flow-box elt))
 
   (define names (for/list ([elt (in-tree-values (dom-tree dom))]) (cadr elt)))
-  
-  (list*
-   ; The type of element names
-   `(declare-datatypes () ((,type ,@names ,root nil)))
-   ; The element info for a name
-   `(declare-fun ,map-name (,type) (Element ,type))
-   ; Pointed map: nil goes to nil
-   `(assert (= (,map-name (as nil ,type)) (as nil (Element ,type))))
-   (apply append constraints)))
 
-(define (dom-rendering-constraints dom)
-  (apply append
-         (for/list ([elt (in-tree-values (dom-tree dom))])
-           (match elt
-             [`(,tag ,name ,constraints ...)
-              (append
-               (element-constraints tag name (dom-map dom)))]))))
+  ; The type of element names
+  (emit `(declare-datatypes () ((,type ,@names ,(dom-root dom) nil))))
+  ; The element info for a name
+  (emit `(declare-fun ,map-name (,type) (Element ,type)))
+  ; Pointed map: nil goes to nil
+  (emit `(assert (= (,map-name (as nil ,type)) (as nil (Element ,type)))))
 
-(define (dom-style-constraints dom)
-  (apply append
-         (for/list ([elt (in-tree-values (dom-tree dom))])
-           (match elt
-             [`(<> ,name ,constraints ...) '()]
-             [`(,tag ,name ,constraints ...)
-              (define e (dom-get dom elt))
-              (define re `(rules ,e))
-              
-              (append
-               ; Score of computed rule is >= any applicable stylesheet rule
-               (for*/list ([type css-properties] [property (cdr type)]
-                           [rule (stylesheet-rules (dom-stylesheet dom))])
-                 `(assert (=> (and (,(variable-append property 'enabled) ,rule)
-                           ,(css-is-applicable `(selector ,rule) e))
-                      (score-ge (,(variable-append property 'score) ,re) (score ,rule)))))
-               
-               ; Score&value of computed rule is = some applicable stylesheet rule
-               (for*/list ([type css-properties] [property (cdr type)])
-                 `(assert (or
-                   ,@(for/list ([rule (stylesheet-rules (dom-stylesheet dom))])
-                       `(and
-                         (,(variable-append property 'enabled) ,rule)
-                         ,(css-is-applicable `(selector ,rule) e)
-                         (= (,(variable-append property 'score) ,re) (score ,rule))
-                         (= (,property ,re)
-                            (,(variable-append property 'specified) ,rule))))))))]))))
-
-(define (dom-root-constraints dom)
-  (define elt (list (dom-map dom) (dom-root dom)))
-  (define b (list 'flow-box elt))
-  (list
-   `(assert (is-element ,elt))
-   `(assert (= (placement-box ,elt) (flow-box ,elt)))
-   `(assert (= (parent ,elt) (as nil ,(dom-type dom))))
-   `(assert (= (tagname ,elt) <HTML>))
-   `(assert (= (previous ,elt) (as nil ,(dom-type dom))))
-   `(assert (= (x ,b) 0.0))
-   `(assert (= (y ,b) 0.0))
-   `(assert (= (pl ,b) 0.0))
-   `(assert (= (pr ,b) 0.0))
-   `(assert (= (pt ,b) 0.0))
-   `(assert (= (pb ,b) 0.0))
-   `(assert (= (bl ,b) 0.0))
-   `(assert (= (br ,b) 0.0))
-   `(assert (= (bt ,b) 0.0))
-   `(assert (= (bb ,b) 0.0))
-   `(assert (= (ml ,b) 0.0))
-   `(assert (= (mr ,b) 0.0))
-   `(assert (= (mt ,b) 0.0))
-   `(assert (= (mb ,b) 0.0))
-   `(assert (= (mtp ,b) 0.0))
-   `(assert (= (mbp ,b) 0.0))
-   `(assert (= (mtn ,b) 0.0))
-   `(assert (= (mbn ,b) 0.0))
-   `(assert (= (float ,elt) none))
-   `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
-               :named ,(variable-append (dom-name dom) 'context-width)))
-   `(assert (= (parent (,(dom-map dom) ,(cadar (dom-tree dom)))) ,(dom-root dom)))
-   `(assert (= (previous (,(dom-map dom) ,(cadar (dom-tree dom)))) (as nil ,(dom-type dom))))
-   `(assert (= (first-child ,elt) ,(cadar (dom-tree dom))))
-   `(assert (= (parent ,elt) (as nil ,(dom-type dom))))
-   `(assert (= (previous ,elt) (as nil ,(dom-type dom))))))
+  (emit `(assert (is-element ,elt)))
+  (emit `(assert (= (placement-box ,elt) (flow-box ,elt))))
+  (emit `(assert (= (parent ,elt) (as nil ,(dom-type dom)))))
+  (emit `(assert (= (tagname ,elt) <HTML>)))
+  (emit `(assert (= (previous ,elt) (as nil ,(dom-type dom)))))
+  (emit `(assert (= (x ,b) 0.0)))
+  (emit `(assert (= (y ,b) 0.0)))
+  (emit `(assert (= (pl ,b) 0.0)))
+  (emit `(assert (= (pr ,b) 0.0)))
+  (emit `(assert (= (pt ,b) 0.0)))
+  (emit `(assert (= (pb ,b) 0.0)))
+  (emit `(assert (= (bl ,b) 0.0)))
+  (emit `(assert (= (br ,b) 0.0)))
+  (emit `(assert (= (bt ,b) 0.0)))
+  (emit `(assert (= (bb ,b) 0.0)))
+  (emit `(assert (= (ml ,b) 0.0)))
+  (emit `(assert (= (mr ,b) 0.0)))
+  (emit `(assert (= (mt ,b) 0.0)))
+  (emit `(assert (= (mb ,b) 0.0)))
+  (emit `(assert (= (mtp ,b) 0.0)))
+  (emit `(assert (= (mbp ,b) 0.0)))
+  (emit `(assert (= (mtn ,b) 0.0)))
+  (emit `(assert (= (mbn ,b) 0.0)))
+  (emit `(assert (= (float ,elt) none)))
+  (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
+                    :named ,(variable-append (dom-name dom) 'context-width))))
+  (emit `(assert (= (parent (,(dom-map dom) ,(cadar (dom-tree dom)))) ,(dom-root dom))))
+  (emit `(assert (= (previous (,(dom-map dom) ,(cadar (dom-tree dom)))) (as nil ,(dom-type dom)))))
+  (emit `(assert (= (first-child ,elt) ,(cadar (dom-tree dom)))))
+  (emit `(assert (= (parent ,elt) (as nil ,(dom-type dom)))))
+  (emit `(assert (= (previous ,elt) (as nil ,(dom-type dom))))))
 
 (define (stylesheet-rules sheet)
   (for/list ([i (in-range (stylesheet-count sheet))])
@@ -263,34 +239,67 @@
                                    :weight 3))
                    '())))))
 
-(define (dom-element-constraints dom)
-  (define (interpret elt cmds k)
-    (define name (cadr elt))
+(define (user-constraints dom emit elt children)
+  (define name (cadr elt))
+  (define cmds (cddr elt))
+
+  (let interpret ([cmds cmds])
     (match cmds
       [(list ':print rest ...)
-       (k `(declare-const ,(variable-append (cadr elt) 'placement) Box))
-       (k `(assert (= ,(variable-append (cadr elt) 'placement) (placement-box (,(dom-map dom) ,(cadr elt))))))
-       (interpret elt rest k)]
+       (emit `(declare-const ,(variable-append name 'placement) Box))
+       (emit `(assert (= ,(variable-append name 'placement) (placement-box (,(dom-map dom) ,name)))))
+       (interpret rest)]
       [(list (and (or ':x ':y ':w ':h ':vw ':vh ':gap) field) value rest ...)
        (define fun
          (match field
            [':x 'x] [':y 'y] [':w 'w] [':h 'h] [':gap 'gap] [':vh 'box-height] [':vw 'box-width]))
-       (k `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :named ,(variable-append name fun))))
-       (interpret elt rest k)]
+       (emit `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :named ,(variable-append name fun))))
+       (interpret rest)]
       [(list)
-       (void)]))
-  
-  (reap [sow]
-        (for ([elt (in-tree-values (dom-tree dom))])
-          (match elt
-            [`(,tag ,name ,cmds ...)
-             (interpret elt cmds sow)]))))
+       (void)])))
 
-(define (dom-constraints dom)
-  (append
-   (dom-tree-constraints dom)
-   (dom-element-constraints dom)
-   (dom-rendering-constraints dom)
-   (dom-element-float-constraints dom)
-   (dom-style-constraints dom)
-   (dom-root-constraints dom)))
+(define (element-constraints dom emit elt children)
+  (match elt
+    [`(,tag ,name ,constraints ...)
+     (for-each emit
+              (element-constraints-core tag name (dom-map dom)))]))
+
+(define (nofloat-constraints dom emit elt children)
+  (when (not (equal? (car elt) '<>))
+    (emit `(assert (= (float ,(dom-get dom elt)) none)))))
+
+(define (all-constraints-of dom emit . types)
+  (for* ([(elt children) (in-tree-subtrees (dom-tree dom))] [type types])
+    (type dom emit elt children)))
+
+(define (dom-constraints doms)
+  (reap [sow]
+        (for ([dom doms])
+          (dom-root-constraints dom sow)
+          (all-constraints-of dom sow tree-constraints)
+          (all-constraints-of dom sow nofloat-constraints)
+          (all-constraints-of dom sow user-constraints)
+          (all-constraints-of dom sow style-constraints)
+          (all-constraints-of dom sow element-constraints)
+          #;(map sow (dom-element-float-constraints dom)))))
+
+(define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header . doms)
+  (define problem
+    `(; Preamble
+      ,@css-types
+      ,css-rule-types
+      ,@css-score-ops
+      ,@math-utilities
+      ,@box-functions
+      ,element-type
+      ; Stylesheet
+      ,@(stylesheet-constraints sheet)
+      ; DOMs
+      ,@(dom-constraints doms)
+      (check-sat)
+      (get-model)
+      ))
+
+  
+  (print-rules #:stylesheet sheet #:header header
+               (solve #:debug debug problem)))
