@@ -3,8 +3,28 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_example.js"; doc
 */
 
 LETTER = window.LETTER || "";
+APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
 
-function r2(x) {return Math.round(10*x)/10;}
+function f2r(x) {
+    if (x == Math.floor(x)) {
+        return "" + x;
+    } else {
+        var xm = Math.round(x * APP_PIXEL_TO_PIXELS);
+        var q = APP_PIXEL_TO_PIXELS;
+        while (q > 1) {
+            var r = xm - Math.floor(xm / q) * q;
+            xm = q;
+            q = r;
+        }
+        var num = Math.round(x * APP_PIXEL_TO_PIXELS / xm),
+            den = Math.round(APP_PIXEL_TO_PIXELS / xm);
+        if (den % 3 == 0) {
+            return "(/ " + num + " " + den + ")";
+        } else {
+            return "" + (num / den);
+        }
+    }
+}
 function cs(elt) {return window.getComputedStyle(elt);}
 
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
@@ -93,10 +113,10 @@ function go() {
             
             head += "\n" + idt + "([&lt;" + type + "&gt; " + ELT;
 
-            head += " :x " + r2(x);
-            head += " :y " + r2(y);
-            head += " :vw " + r2(w);
-            head += " :vh " + r2(h);
+            head += " :x " + f2r(x);
+            head += " :y " + f2r(y);
+            head += " :vw " + f2r(w);
+            head += " :vh " + f2r(h);
             head += "]";
         } else if (call == "close") {
             head += ")";
@@ -113,11 +133,11 @@ function go() {
             
             head += "\n" + idt + "([&lt;&gt; " + ELT;
 
-            head += " :x " + r2(x);
-            head += " :y " + r2(y);
-            head += " :w " + r2(w);
-            head += " :h " + r2(h);
-            head += " :gap " + r2(gap);
+            head += " :x " + f2r(x);
+            head += " :y " + f2r(y);
+            head += " :w " + f2r(w);
+            head += " :h " + f2r(h);
+            head += " :gap " + f2r(gap);
             head += "])";
         }
     });
