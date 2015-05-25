@@ -274,13 +274,14 @@
 
 (define (dom-constraints doms)
   (reap [sow]
-        (for ([dom doms])
-          (dom-root-constraints dom sow)
-          (all-constraints-of dom sow tree-constraints)
-          (all-constraints-of dom sow nofloat-constraints)
-          (all-constraints-of dom sow user-constraints)
-          (all-constraints-of dom sow style-constraints)
-          (all-constraints-of dom sow element-constraints)
+        (for ([dom doms]) (dom-root-constraints dom sow))
+        (for* ([level (in-dom-levels doms)] [rec level])
+          (match-define (list dom elt children) rec)
+          (tree-constraints dom sow elt children)
+          (nofloat-constraints dom sow elt children)
+          (user-constraints dom sow elt children)
+          (style-constraints dom sow elt children)
+          (element-constraints dom sow elt children)
           #;(map sow (dom-element-float-constraints dom)))))
 
 (define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header . doms)

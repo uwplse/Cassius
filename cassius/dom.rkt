@@ -1,7 +1,8 @@
 #lang racket
+(require unstable/sequence)
 (provide (struct-out dom) (struct-out rendering-context) (struct-out stylesheet)
          inline-element? in-tree-subtrees in-tree-values dom-type dom-map dom-root dom-get
-         variable-append)
+         variable-append in-dom-levels)
 
 (define (variable-append var end)
   (string->symbol (string-append (symbol->string var) "-" (symbol->string end))))
@@ -22,6 +23,25 @@
   (apply sequence-append
          (in-value (car tree))
          (map in-tree-values (cdr tree))))
+
+(define (atree-init doms)
+  (map (λ (dom) (cons dom (dom-tree dom))) doms))
+
+(define (atree-next atrees)
+  (for*/list ([atree atrees] [subtree (cddr atree)])
+    (cons (car atree) subtree)))
+
+(define (atree-levels atrees)
+  (if (null? atrees)
+      '()
+      (cons
+       (sequence-map
+        (λ (atree) (list (car atree) (cadr atree) (cddr atree)))
+        (in-list atrees))
+       (atree-levels (atree-next atrees)))))
+
+(define (in-dom-levels doms)
+  (atree-levels (atree-init doms)))
 
 (define (dom-type dom) (dom-name dom))
 (define (dom-map dom) (variable-append (dom-name dom) 'map))
