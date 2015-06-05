@@ -46,13 +46,15 @@
           (> (+ (y box2) (box-height box2)) (y box1) (y box2))))))
 
 (define element-type
-  `(declare-datatypes (T)
+  `(declare-datatypes ()
       ((Element
         nil
         (element
+            (document Document)
             (tagname TagNames) (rules ComputedRule)
             (display Display) (float Float)
-            (previous T) (parent T) (first-child T) (last-child T)
+            (previous ElementName) (parent ElementName)
+            (first-child ElementName) (last-child ElementName)
             (flow-box Box) (placement-box Box))))))
 
 (define (element-constraints e-tag e-name map-name)

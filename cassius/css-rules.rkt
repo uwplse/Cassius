@@ -2,7 +2,7 @@
 (require "dom.rkt")
 
 (provide css-types math-utilities css-properties css-property-pairs css-is-applicable
-         css-score-ops css-rule-types css-shorthand-properties)
+         css-score-ops css-rule-types css-shorthand-properties css-defaults)
 
 (define css-types
   (list
@@ -22,7 +22,7 @@
        (ImportanceOrigin UserAgent UserNormal AuthorNormal AuthorImportant UserImportant)
        (CascadeScore (cascadeScore (precedence ImportanceOrigin) (isFromStyle Bool)
                                    (idNum Int) (classNum Int) (elementNum Int)
-                                   (positionNum Int)))))))
+                                   (positionNum Int)) useDefault)))))
 
 (define css-properties
   '([Width    width]
@@ -32,6 +32,14 @@
     [Float    float]
     #;[Display  display]
     #;[Border   border-top border-bottom border-left border-right]))
+
+(define css-defaults
+  #hash((width . (as auto Width))
+        (height . (as auto Height))
+        (margin-top . (as auto Margin)) (margin-bottom . (as auto Margin))
+        (margin-left . ((as length Margin) 0.0)) (margin-right . ((as length Margin) 0.0))
+        (padding-top . ((as length Padding) 0.0)) (padding-bottom . ((as length Padding) 0.0)) (padding-left . ((as length Padding) 0.0)) (padding-right . ((as length Padding) 0.0))
+        (float . (as none Float))))
 
 (define (css-is-applicable sel elt)
   `(ite (is-all ,sel)
@@ -57,17 +65,19 @@
         #;else                       4)))))
 
       (define-fun score-ge ((a CascadeScore) (b CascadeScore)) Bool
-        (or (> (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b)))
-        (and (= (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b)))
-             (or (and (isFromStyle a) (not (isFromStyle b)))
-             (and (= (isFromStyle a) (isFromStyle b))
-                  (or (> (idNum a) (idNum b))
-                  (and (= (idNum a) (idNum b))
-                       (or (> (classNum a) (classNum b))
-                       (and (= (classNum a) (classNum b))
-                            (or (> (elementNum a) (elementNum b))
-                            (and (= (elementNum a) (elementNum b))
-                                 (>= (positionNum a) (positionNum b))))))))))))))))
+        (or (is-useDefault b)
+        (and (not (is-useDefault a))
+             (or (> (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b)))
+             (and (= (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b)))
+                  (or (and (isFromStyle a) (not (isFromStyle b)))
+                  (and (= (isFromStyle a) (isFromStyle b))
+                       (or (> (idNum a) (idNum b))
+                       (and (= (idNum a) (idNum b))
+                            (or (> (classNum a) (classNum b))
+                            (and (= (classNum a) (classNum b))
+                                 (or (> (elementNum a) (elementNum b))
+                                 (and (= (elementNum a) (elementNum b))
+                                      (>= (positionNum a) (positionNum b))))))))))))))))))
 
 (define css-property-pairs
   (for*/list ([type css-properties] [prop (cdr type)])

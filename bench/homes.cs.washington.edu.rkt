@@ -432,12 +432,4 @@
        [context (rendering-context 1907)])
     (dom 'docc sheet context tree)))
 
-(print-rules #:stylesheet sheet #:header header
-             (solve #:debug #f
-              (append
-               (make-preamble)
-               (stylesheet-constraints sheet)
-               (dom-constraints doma)
-               (dom-constraints domb)
-               (dom-constraints domc)
-               (list '(check-sat)))))
+(cassius-solve #:sheet sheet #:header header #:debug '(timing sat) doma domb domc)

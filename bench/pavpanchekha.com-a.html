@@ -3,45 +3,55 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<title>Organizing Objects</title>
+<title>Installing Ubuntu on LVM</title>
 <!-- 2014-12-20 Sat 13:49 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="Pavel Panchekha" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-  ga('create', 'UA-52837940-1', 'auto');
-  ga('send', 'pageview');
-
-</script><link rel='stylesheet' href='/etc/main.css' />
+<link rel='stylesheet' href='../test.css' />
 </head>
 <body>
 <div id="content">
-<h1 class="title">Organizing Objects</h1>
+<h1 class="title">Installing Ubuntu on LVM</h1>
 <p>
-I started work on a new project recently; that means a <code>git</code> repository, a few documents worth of specifications, and emails back and forth with the other people involved.  Keeping track of all of this (the code, the specs, the emails, the people) requires organization, and sadly our current methods are not up to the task.
+From the Live CD, run:
 </p>
 
-<p>
-I'm trying to organize different types of things.  The source code lives in my file system, and has a specific organizational structure because that structure has meaning within the source code itself.  The documents live in my file system, but they aren't committed with the code, so they go into a different folder.  And they frequently arrive as attachments to emails, so getting them into the file system requires work of its own.  And the emails live on Google's server, where the organizational mechanisms of the file system don't apply, and where I instead end up replicating the folder structure as tags.
-</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">sudo apt-get install lvm2
+sudo vgchange -ay
+</pre>
+</div>
 
 <p>
-It shouldn't be this hard.  Long ago, our operating systems developed a vision of "everything is a file", a vision that would have lead to one, and only one, way of organizing things.  Sure, a heirarchical folder structure is not the right way to organize many things; but we do far worse by building more and more application-specific silos, more and more per-application databases, more and more proprietary formats.  We need to open up organizational silos, so that we can dump email straight into a project folder, along with todo lists, photographs of whiteboards, and calendar appointments.
+Then, install Ubuntu the standard way.  Once finished, do the
+following:
 </p>
 
-<p>
-Likely, no single structure is sufficient to capture the wide range of meaning "organization" has for us.  We want a richness of structures: a timeline for our photo albums, a heirarchy for source code, tags for notes and todo items.  We want smarter file browsers, so these same emails, todo lists, and photographs don't all jumble together.  We want a universal hyperlink, so the todo list can refer to a specification or an email, so a photo can refer to the calendar appointment for that meeting, and that meeting to meeting notes.
-</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">sudo mount /dev/mapper/[LVM root] /mnt
+sudo mount -o bind /dev /mnt/dev
+sudo mount -o bind /proc /mnt/proc
+sudo mount -o bind /mnt /mnt/mnt
+sudo mount /dev/[boot partition] /mnt/boot
+sudo chroot /mnt
+</pre>
+</div>
 
 <p>
-Our knowledge now lives in unconnected chunks; but its organization shouldn't weigh us down.
+This gives you a shell within the new system. We need to set up LVM
+here:
 </p>
+
+<div class="org-src-container">
+
+<pre class="src src-bash">sudo apt-get install lvm2
+sudo update-initramfs -k all -u
+</pre>
+</div>
 </div>
 <div id="postamble" class="status">
 <p>By <a href='https://pavpanchekha.com' rel='author'>Pavel Panchekha</a>.

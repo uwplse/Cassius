@@ -2,60 +2,97 @@
 
 (require racket/runtime-path racket/path)
 (require srfi/13)
+(require "common.rkt")
 
-(provide solve z3)
+(provide solve z3 check-sat z3-prepare)
 
 ; We assume that the solver is in the ../bin/ folder.
 (define-runtime-path bin (build-path ".." "bin"))
-(define z3 (make-parameter (build-path bin "z3")))
+(define z3 (make-parameter (build-path bin "z3 ")))
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
-(define (solve encoding #:debug [debug #f])
+(define (solve encoding #:debug [debug? #f])
   (define-values (process out in err) 
-    (subprocess #f #f #f (z3) "-smt2" "-in"))
+    (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
 
   (define line 0)
+
+  (define (debug #:tag [tag #f] fmt . args)
+    (when (or (not tag) (eq? debug? #t) (and (list? debug?) (member tag debug?)))
+      (apply eprintf fmt args)))
+
   (define (write val)
-    (when debug (eprintf "~a ~a\n" (~r line #:min-width (+ 1 lines)) val))
+    (debug #:tag 'input "~a ~a\n" (~r line #:min-width (+ 1 lines)) val)
     (set! line (+ 1 line))
     (fprintf in (format "~a\n" val))
     (flush-output in))
 
   (with-handlers ([exn:break? (lambda (e) (subprocess-kill process #t) (error 'solve "user break"))])
-    (let loop ([rest encoding])
+    (let loop ([rest encoding] [paused? #f])
       (cond
        [(byte-ready? out)
-        (if (char=? (peek-char out) #\|)
-            (begin (when debug (eprintf "<- ~a" (read-line))) (loop rest))
-            (let ([msg (read out)])
-              (when debug (eprintf "<- ~a\n" msg))
-              (match msg
-                [`(error line ,line column ,column ,text ...)
-                 (error (format "Z3 error: ~a" (string-join (map ~a text) " ")) (list-ref encoding line))]
-                ['unsat
-                 (write "(get-unsat-core)\n")
-                 (let ([msg2 (read out)])
-                   (when debug (eprintf "<- ~a\n" msg2))
-                   (error "Z3 unsatisfiable" msg2))]
-                ['sat
-                 (if (null? rest)
-                     (begin
-                       (write "(get-model)\n")
-                       (loop rest))
-                     (loop rest))]
-                [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
-                 (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))]
-                [(? eof-object?)
-                 (error "Premature EOF received")])))]
+        (cond
+         [(char-whitespace? (peek-char out))
+          (read-char out)
+          (loop rest paused?)]
+         [(char=? (peek-char out) #\|)
+          (debug #:tag 'optimality "<- ~a" (read-line))
+          (loop rest paused?)]
+         [else
+          (let ([msg (read out)])
+            (when paused?
+              (debug #:tag 'timing "... ~ams\n"
+                     (inexact->exact (round (- (current-inexact-milliseconds) paused?)))))
+            (debug #:tag 'output "<- ~a\n" msg)
+            (match msg
+              [`(error ,text)
+               (error (format "Z3 error: ~a" text))]
+              ['unsat
+               (write "(get-unsat-core)")
+               (let ([msg2 (read out)])
+                 (debug #:tag 'output "<- ~a\n" msg2)
+                 (error "Z3 unsatisfiable" msg2))]
+              ['sat
+               (if (null? rest)
+                   (begin
+                     (debug #:tag 'sat ">>> get-model\n")
+                     (write "(get-model)")
+                     (loop rest (current-inexact-milliseconds)))
+                   (loop rest #f))]
+              [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
+               (define result (for/hash ([c consts] [v vals]) (values c (de-z3ify v))))
+               (close-output-port in)
+               (copy-port out (current-error-port))
+               result]
+              [`(goals (goal ,args ...) ...)
+               (loop rest #f)]
+              [(? eof-object?)
+               (error "Premature EOF received")]))])]
+       [paused?
+        (sync out)
+        (loop rest paused?)]
        [(null? rest)
         (sync out)
-        (loop rest)]
+        (loop rest (current-inexact-milliseconds))]
        [#t
-        (write (~a (car rest)))
-        (loop (cdr rest))]))))
+        (match (car rest)
+          [`(check-sat :data ,data)
+           (write "(check-sat)")
+           (debug #:tag 'sat ">>> ~a\n" data)
+           (loop (cdr rest) (current-inexact-milliseconds))]
+          [`(check-sat)
+           (write "(check-sat)")
+           (loop (cdr rest) (current-inexact-milliseconds))]
+          [`(apply ,args ...)
+           (write (~a (car rest)))
+           (debug #:tag 'tactic ">>> ~a\n" (string-join (map ~a args) " "))
+           (loop (cdr rest) (current-inexact-milliseconds))]
+          [_
+           (write (~a (car rest)))
+           (loop (cdr rest) paused?)])]))))
 
 ; Writes the given encoding to the specified port.
 (define (write-encoding encoding port #:debug [debug #f])
@@ -89,3 +126,78 @@
     [`(/ ,n ,d) (/ (de-z3ify n) (de-z3ify d))]
     [(list args ...) (map de-z3ify args)]
     [else v]))
+
+(define (check-sat . args)
+  `(check-sat :data ,args))
+
+(define (z3-simplifier cmds)
+  "Simplify expressions using assertions of the form (= a b)."
+  (let* ([*store* (make-hash)] [store (curry hash-set! *store*)])
+    (define (store a b) (hash-set! *store* a b))
+    (define (lookup a [default #f]) (hash-ref *store* a default))
+    (define (simpl expr)
+      (lookup
+       (match expr
+         [(? number?) expr]
+         [(? symbol?) expr]
+         [(list f args ...)
+          (cons f (map simpl args))])))
+
+    (for ([cmd cmds])
+      (match cmd
+        [`(assert (= ,a ,b))
+         (let ([a* (simpl a)] [b* (simpl b)])
+           (cond
+            [(z3-literal? a*)
+             (store b* a*)]
+            [(z3-literal? b*)
+             (store a* b*)]))]
+        [_ 'ok]))
+
+    (define cmds*
+      (for/list ([cmd cmds])
+        (match cmd
+          [`(assert ,e)
+           `(assert ,(simpl e))]
+          [_ cmd])))
+
+    (reap [sow]
+          (for ([cmd cmds])
+            (match cmd
+              [`(assert ,e ,e) 'ok]
+              [_ (sow cmd)])))))
+
+(define (z3-literal? expr)
+  (match expr
+    [(? number?) #t]
+    [(? symbol?) #t]
+    [`(as ,val ,sort) #t]
+    [_ #f]))
+
+(define *var* 0)
+(define (gensym)
+  (begin0 (string->symbol (string-append "var-" (~a *var*)))
+    (set! *var* (+ 1 *var*))))
+
+(define ((z3-fabstract head type) cmds)
+  (let* ([store (make-hash)])
+    (define (lookhead expr)
+      (cond
+       [(not (pair? expr)) #f]
+       [(eq? (car expr) head)
+        (hash-ref! store expr gensym)
+        (for-each lookhead (cdr expr))]
+       [else
+        (for-each lookhead (cdr expr))]))
+    (for-each lookhead cmds)
+    (append
+     cmds
+     (apply append
+            (for/list ([(expr var) (in-hash store)])
+              `((declare-const ,var ,type)
+                (assert (= ,expr ,var))))))))
+
+(define *emitter-passes* (list #;(z3-fabstract 'display 'Display) z3-simplifier))
+
+(define (z3-prepare exprs)
+  (foldl (λ (action exprs*) (action exprs*)) exprs *emitter-passes*))

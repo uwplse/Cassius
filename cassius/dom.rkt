@@ -35,9 +35,8 @@
   (if (null? atrees)
       '()
       (cons
-       (sequence-map
-        (λ (atree) (list (car atree) (cadr atree) (cddr atree)))
-        (in-list atrees))
+       (for/list ([atree atrees])
+        (list (car atree) (cadr atree) (cddr atree)))
        (atree-levels (atree-next atrees)))))
 
 (define (in-dom-levels doms)
@@ -46,4 +45,6 @@
 (define (dom-type dom) (dom-name dom))
 (define (dom-map dom) (variable-append (dom-name dom) 'map))
 (define (dom-root dom) (variable-append (dom-name dom) 'root))
-(define (dom-get dom elt) `(,(dom-map dom) ,(second elt)))
+(define (dom-get dom elt)
+  #;(variable-append (second elt) 'elt)
+  `(,(dom-map dom) ,(second elt)))
