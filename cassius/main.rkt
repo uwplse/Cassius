@@ -99,6 +99,7 @@
     ['Selector
      (match value
        ['all "html *"]
+       [`(id ,id) (string-append "#" (substring (symbol->string id) 3))]
        [`(tag ,name) (substring (symbol->string name)
                                 1 (- (string-length (symbol->string name)) 1))])]))
 
@@ -167,6 +168,7 @@
       `(ite (= x ,name) ,(variable-append name 'elt) ,body)))
   (emit `(define-fun ,(dom-map dom) ((x ElementName)) Element ,body))
   (for ([name names])
+    (emit `(assert (not (is-nil (,(dom-map dom) ,name)))))
     (emit `(assert (= (,(dom-map dom) ,name) ,(variable-append name 'elt)))))
   ; Pointed map: nil goes to nil
   (emit `(assert (= (,(dom-map dom) (as nil ElementName)) (as nil Element))))
@@ -213,6 +215,8 @@
           (for/list ([i (in-naturals)] [name (stylesheet-rules sheet)])
             `((declare-const ,name SpecifiedRule)
               (assert (= (index ,name) ,i))
+              (assert (=> (is-id (selector ,name)) (not (= (id-s (selector ,name)) NoID))))
+              #;(assert (not (is-id (selector ,name))))
 
               ; Optimize for short CSS
 
@@ -247,6 +251,9 @@
       [(list ':print rest ...)
        (emit `(declare-const ,(variable-append name 'placement) Box))
        (emit `(assert (= ,(variable-append name 'placement) (placement-box (,(dom-map dom) ,name)))))
+       (interpret rest)]
+      [(list ':id id rest ...)
+       (emit `(assert (= (id ,(dom-get dom elt)) ,(variable-append 'ID id))))
        (interpret rest)]
       [(list (and (or ':x ':y ':w ':h ':vw ':vh ':gap) field) value rest ...)
        (define fun
@@ -306,10 +313,22 @@
           (for ([cns constraints])
             (cns dom sow elt children)))))
 
+(define (define-id-type doms)
+  `(declare-datatypes ()
+                      ((Id NoID
+                          ,@(map (curry variable-append 'ID)
+                                 (remove-duplicates
+                                  (reap [sow]
+                                        (for ([dom doms])
+                                          (for ([elt (in-tree-values (dom-tree dom))])
+                                            (when (memq ':id elt)
+                                              (sow (cadr (memq ':id elt)))))))))))))
+
 (define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header . doms)
   (define problem
     `(; Preamble
       (set-option :produce-unsat-cores true)
+      ,(define-id-type doms)
       ,@css-types
       ,css-rule-types
       ,@css-score-ops

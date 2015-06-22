@@ -18,7 +18,7 @@
        (TagNames <HTML> <BODY> <DIV> <H1> <P> <PRE> <svg> <HEADER> <HGROUP> <H2> <NAV> <A> <UL>
                  <OL> <H3> <SPAN> <FOOTER> <SMALL> <ASIDE> <IMG> <ARTICLE> <IFRAME> <FORM>
                  <TEXTAREA> <DL> <DT> <DD> <FIGURE> <FIGCAPTION> <>)
-       (Selector all (tag (tag-s TagNames)))
+       (Selector all (tag (tag-s TagNames)) (id (id-s Id)))
        (ImportanceOrigin UserAgent UserNormal AuthorNormal AuthorImportant UserImportant)
        (CascadeScore (cascadeScore (precedence ImportanceOrigin) (isFromStyle Bool)
                                    (idNum Int) (classNum Int) (elementNum Int)
@@ -46,16 +46,20 @@
         true
    (ite (is-tag ,sel)
         (= (tag-s ,sel) (tagname ,elt))
+   (ite (is-id ,sel)
+        (= (id-s ,sel) (id ,elt))
    ; else
-        false)))
+        false))))
 
 (define css-score-ops
   (let ([sel `(selector rule)] [idx `(index rule)])
     `((define-fun score ((rule SpecifiedRule)) CascadeScore
-       (ite (is-all ,sel)
-            ; The last entry should be 0, but it is 1 since we write `html *`
-            (cascadeScore AuthorNormal false 0 0 1 ,idx)
-            (cascadeScore AuthorNormal false 0 0 1 ,idx)))
+       (ite (is-id ,sel)
+            (cascadeScore AuthorNormal false 1 0 0 ,idx)
+            (ite (is-tag ,sel)
+                 (cascadeScore AuthorNormal false 0 0 1 ,idx)
+                 ; The * selector; last entry should be 0, but is 1 since we write `html *`
+                 (cascadeScore AuthorNormal false 0 0 1 ,idx))))
 
       (define-fun importanceOrigin-score ((io ImportanceOrigin)) Int
         (ite (is-UserAgent io)       0

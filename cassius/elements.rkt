@@ -51,7 +51,7 @@
         nil
         (element
             (document Document)
-            (tagname TagNames) (rules ComputedRule)
+            (tagname TagNames) (id Id) (rules ComputedRule)
             (display Display) (float Float)
             (previous ElementName) (parent ElementName)
             (first-child ElementName) (last-child ElementName)
@@ -190,7 +190,7 @@
                                   (- (bottom-outer ,lb) (top-content ,b))))
                         ; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
                         ; whose top margin doesn't collapse with the element's bottom margin 
-                        ; NOTE: This can happen is the box height is 0.
+                        ; NOTE: This can happen if the box height is 0.
                         ; We don't support that, so it's not an issue.
 
                         ; CSS § 10.6.3, item 4: zero, otherwise 
@@ -225,7 +225,7 @@
 
            (= (placement-box ,e) (flow-box ,e))))
 
-   ; In-flow block element layout
+   ; Floating block element layout
    ,@(map (λ (x) `(assert (=> (and (= (display ,e) block) (not (is-none (float ,e)))) ,x)))
           `(,@(for/list ([item '((width width w) (height height h)
                                  (padding-left padding pl) (padding-right padding pr)
