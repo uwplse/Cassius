@@ -253,7 +253,6 @@
        (emit `(assert (= ,(variable-append name 'placement) (placement-box (,(dom-map dom) ,name)))))
        (interpret rest)]
       [(list ':id id rest ...)
-       (emit `(assert (= (id ,(dom-get dom elt)) ,(variable-append 'ID id))))
        (interpret rest)]
       [(list (and (or ':x ':y ':w ':h ':vw ':vh ':gap) field) value rest ...)
        (define fun
@@ -273,6 +272,11 @@
 (define (nofloat-constraints dom emit elt children)
   (when (not (equal? (car elt) '<>))
     (emit `(assert (= (float (rules ,(dom-get dom elt))) none)))))
+
+(define (id-constraints dom emit elt children)
+  (if (memq ':id elt)
+      (emit `(assert (= (id ,(dom-get dom elt)) ,(variable-append 'ID (cadr (memq ':id elt))))))
+      (emit `(assert (= (id ,(dom-get dom elt)) NoID)))))
 
 (define (all-constraints-of dom emit . types)
   (for* ([(elt children) (in-tree-subtrees (dom-tree dom))] [type types])
@@ -347,7 +351,7 @@
       ; DOMs
       ,@(dfs-constraints; #:per-level-check #t #:per-dom-check #t
          doms
-         tree-constraints #;nofloat-constraints user-constraints element-constraints style-constraints)
+         tree-constraints #;nofloat-constraints id-constraints user-constraints element-constraints style-constraints)
       (apply propagate-values)
       (check-sat :data 1)))
 

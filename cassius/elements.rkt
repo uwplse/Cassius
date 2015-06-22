@@ -159,6 +159,7 @@
                        (= (ml ,b) (ite (is-auto (margin-left ,r)) 0.0 (margin-l (margin-left ,r))))
                        (= (mr ,b) (ite (is-auto (margin-right ,r)) 0.0 (margin-l (margin-right ,r)))))
                       (and
+                       (= (w ,b) (width-l (width ,r)))
                        (=> (and (is-auto (margin-left ,r)) (is-auto (margin-right ,r)))
                            (= (ml ,b) (mr ,b)))
                        (=> (is-length (margin-left ,r)) (= (ml ,b) (margin-l (margin-left ,r))))
