@@ -15,7 +15,7 @@ h1 { font-family: 'Open Sans Semibold', 'Deja Vu Sans', 'Georgia', sans; font-we
      font-size: 24px; line-height: 1; letter-spacing: -.03em; color: #555753;}
 p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}")
 
-(define sheet (stylesheet 'main.css 5))
+(define sheet (stylesheet 'main.css 3))
 
 ;; From http://pavpanchekha.com/blog/ubuntu-on-lvm.html
 
@@ -120,4 +120,4 @@ p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: aut
        [context (rendering-context 945)])
     (dom 'docb sheet context tree)))
 
-(cassius-solve #:sheet sheet #:header header #:debug '(timing sat tactic) doma #;domb)
+(cassius-solve #:sheet sheet #:header header #:debug '(timing sat tactic) doma domb)

@@ -132,25 +132,24 @@
 
 (define (z3-simplifier cmds)
   "Simplify expressions using assertions of the form (= a b)."
-  (let* ([*store* (make-hash)] [store (curry hash-set! *store*)])
+  (let* ([*store* (make-hash)])
     (define (store a b) (hash-set! *store* a b))
-    (define (lookup a [default #f]) (hash-ref *store* a default))
+    (define (lookup a) (hash-ref *store* a a))
     (define (simpl expr)
       (lookup
        (match expr
          [(? number?) expr]
          [(? symbol?) expr]
-         [(list f args ...)
-          (cons f (map simpl args))])))
+         [(? list?) (map simpl expr)])))
 
     (for ([cmd cmds])
       (match cmd
         [`(assert (= ,a ,b))
          (let ([a* (simpl a)] [b* (simpl b)])
            (cond
-            [(z3-literal? a*)
+            [(and (z3-literal? a*) (not (eq? a* b*)))
              (store b* a*)]
-            [(z3-literal? b*)
+            [(and (z3-literal? b*) (not (eq? a* b*)))
              (store a* b*)]))]
         [_ 'ok]))
 
@@ -161,11 +160,14 @@
            `(assert ,(simpl e))]
           [_ cmd])))
 
+    (define cleared-assertions 0)
+
     (reap [sow]
-          (for ([cmd cmds])
+          (for ([cmd cmds*])
             (match cmd
-              [`(assert ,e ,e) 'ok]
-              [_ (sow cmd)])))))
+              [`(assert (= ,e ,e)) (set! cleared-assertions (+ 1 cleared-assertions))]
+              [_ (sow cmd)]))
+          (printf "Cleared ~a assertions\n" cleared-assertions))))
 
 (define (z3-literal? expr)
   (match expr
@@ -173,6 +175,42 @@
     [(? symbol?) #t]
     [`(as ,val ,sort) #t]
     [_ #f]))
+
+(define (z3-dco cmds)
+  (let ([store (make-hash)])
+    (define (find-used expr)
+      (match expr
+        [(list f args ...)
+         (for-each find-used expr)]
+        [(? symbol? f)
+         (when (hash-has-key? store f)
+           (hash-set! store f #t))]
+        [else 'ok]))
+    
+    (for ([cmd cmds])
+      (match cmd
+        [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type ...)
+         (hash-set! store name #f)]
+        [_ 'ok]))
+
+    (for ([cmd cmds])
+      (match cmd
+        [`(assert ,expr)
+         (find-used expr)]
+        [(list 'define-fun name (list types ...) rtype body)
+         (list 'define-fun name types rtype (find-used body))]
+        [(list 'define-const name rtype body)
+         (list 'define-const name rtype (find-used body))]
+        [_ 'ok]))
+
+    (apply append
+           (for/list ([cmd cmds])
+             (match cmd
+               [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type ...)
+                (if (hash-ref store name #t)
+                    (list cmd)
+                    empty)]
+               [_ (list cmd)])))))
 
 (define *var* 0)
 (define (gensym)
@@ -197,7 +235,33 @@
               `((declare-const ,var ,type)
                 (assert (= ,expr ,var))))))))
 
-(define *emitter-passes* (list #;(z3-fabstract 'display 'Display) z3-simplifier))
+(define (z3-movedefs cmds)
+  "Move each definition to be right before first use."
+
+  (define (contains-var expr var)
+    (match expr
+      [(? number?) #f]
+      [(? symbol?) (eq? expr var)]
+      [(? list?) (ormap (curryr contains-var var) expr)]))
+
+  (define (def? cmd)
+    (match cmd
+      [`(declare-const ,var ,type) #t]
+      [_ #f]))
+
+  (define (split-first-use var cmds)
+    (splitf-at cmds (λ (cmd) (cond [(eq? (car cmd) 'assert) (not (contains-var (cadr cmd) var))] [else #t]))))
+
+  (define-values (defs not-defs) (partition def? cmds))
+
+  (for/fold ([not-defs not-defs]) ([def defs])
+    (let-values ([(head tail) (split-first-use (second def) not-defs)])
+      (append head (cons def tail)))))
+
+(define *emitter-passes*
+  (list #;z3-simplifier
+        z3-dco
+        z3-movedefs))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs *emitter-passes*))

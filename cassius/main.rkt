@@ -76,7 +76,7 @@
                      (hash-remove! hash subprop))))
                (printf "  ~a: ~a;\n" name
                        (string-join (map print-type (map car vals) (map cdr vals)) " "))))
-           
+
            (for ([(name value) (in-hash hash)])
              (printf "  ~a: ~a;\n" name (print-type (car value) (cdr value))))
 
@@ -127,7 +127,7 @@
 (define (style-constraints dom emit elt children)
   (define e (dom-get dom elt))
   (define re `(rules ,e))
-              
+
   (when (not (eq? (car elt) '<>))
     ; Score of computed rule is >= any applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)]
@@ -137,7 +137,7 @@
          (or (not (,(variable-append property 'enabled) ,rule))
              (=> ,(css-is-applicable `(selector ,rule) e)
                  (score-ge (,(variable-append property 'score) ,re) (score ,rule)))))))
-                   
+
     ; Score&value of computed rule is = some applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)])
       (emit `(assert (or
@@ -162,7 +162,10 @@
     (emit `(declare-const ,(variable-append name 'elt) Element))
     (emit `(assert (= (document ,(variable-append name 'elt)) ,(variable-append (dom-name dom) 'doc)))))
   ; The element info for a name
-  (emit `(declare-fun ,(dom-map dom) (ElementName) Element))
+  (define body
+    (for/fold ([body '(as nil Element)]) ([name names])
+      `(ite (= x ,name) ,(variable-append name 'elt) ,body)))
+  (emit `(define-fun ,(dom-map dom) ((x ElementName)) Element ,body))
   (for ([name names])
     (emit `(assert (= (,(dom-map dom) ,name) ,(variable-append name 'elt)))))
   ; Pointed map: nil goes to nil
@@ -325,10 +328,9 @@
       ; DOMs
       ,@(dfs-constraints; #:per-level-check #t #:per-dom-check #t
          doms
-         tree-constraints nofloat-constraints user-constraints element-constraints style-constraints)
+         tree-constraints #;nofloat-constraints user-constraints element-constraints style-constraints)
       (apply propagate-values)
       (check-sat :data 1)))
 
   (print-rules #:stylesheet sheet #:header header
                (solve #:debug debug (z3-prepare problem))))
-
