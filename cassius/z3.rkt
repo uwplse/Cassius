@@ -6,9 +6,8 @@
 
 (provide solve z3 check-sat z3-prepare)
 
-; We assume that the solver is in the ../bin/ folder.
-(define-runtime-path bin (build-path ".." "bin"))
-(define z3 (make-parameter (build-path bin "z3 ")))
+(define-runtime-path bin (build-path "/opt/z3" "bin"))
+(define z3 (make-parameter (build-path bin "z3")))
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
@@ -63,10 +62,10 @@
                      (loop rest (current-inexact-milliseconds)))
                    (loop rest #f))]
               [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
-               (define result (for/hash ([c consts] [v vals]) (values c (de-z3ify v))))
-               (close-output-port in)
-               (copy-port out (current-error-port))
-               result]
+               (begin0 (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))
+                 (close-output-port in)
+                 (when (or (eq? debug? #t) (and (list? debug?) (member 'stats debug?)))
+                   (copy-port out (current-error-port))))]
               [`(goals (goal ,args ...) ...)
                (loop rest #f)]
               [(? eof-object?)
