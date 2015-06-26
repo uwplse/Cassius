@@ -298,12 +298,12 @@
                             ':nodes (apply + (map length (in-dom-levels (list dom))))))))))
 
 
-(define (bfs-constraints doms #:per-level-check [plc? #f] . constraints)
+(define (bfs-constraints doms #:stop-at [n* #f] #:per-level-check [plc? #f] . constraints)
   (reap [sow]
         (for ([dom doms]) (dom-root-constraints dom sow))
         (eprintf "Levels: ~a\n" (length (in-dom-levels doms)))
         (for ([level (in-dom-levels doms)] [id (in-naturals)])
-          (for ([rec level])
+          (for ([rec level] [n (in-naturals)] #:break (and n* (> n n*)))
             (match-define (list dom elt children) rec)
             (for ([cns constraints])
               (cns dom sow elt children)))
@@ -349,7 +349,7 @@
       ; Stylesheet
       ,@(stylesheet-constraints sheet)
       ; DOMs
-      ,@(dfs-constraints; #:per-level-check #t #:per-dom-check #t
+      ,@(bfs-constraints #:stop-at 1 ; #:per-level-check #t #:per-dom-check #t
          doms
          tree-constraints #;nofloat-constraints id-constraints user-constraints element-constraints style-constraints)
       (apply propagate-values)
