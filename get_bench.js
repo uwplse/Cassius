@@ -1,8 +1,35 @@
 /*
-javascript:void((function(x){x.src = "http://localhost:8000/get_example.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
+javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
+Box = function(type, props) {
+    this.children = [];
+    this.name = gensym(); this.type = type; this.props = props; return this;
+}
+function curry(f, arg) { return function(arg2) { return new f(arg, arg2) }}
+Block = curry(Box, "BLOCK");
+Line = curry(Box, "LINE")
+Inline = curry(Box, "INLINE")
+Page = curry(Box, "PAGE")
+Text = curry(Box, "TEXT")
+
+Box.prototype.toString = function() {
+    var s = "[" + this.type + " " + this.name;
+    for (var i in this.props) {
+        val = this.props[i];
+        s += " :" + i + " " + (typeof val === "number" ? f2r(val) : val);
+    }
+    return s + "]";
+}
+
 LETTER = window.LETTER || "";
+ID = 0;
+PADDING = "0000";
+function gensym() {
+    s = "" + (++ID);
+    return "e" + LETTER + PADDING.substring(0, PADDING.length - s.length) + s;
+}
+
 APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
 
 function f2r(x) {
@@ -25,132 +52,159 @@ function f2r(x) {
         }
     }
 }
-function cs(elt) {return window.getComputedStyle(elt);}
-
-function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
-function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
-function is_inline(elt) {return cs(elt).display == "inline";}
-function is_block(elt) {return cs(elt).display == "block";}
-function is_visible(elt) {return cs(elt).display != "none";}
-function has_normal_position(elt) {
-    return elt.getBoundingClientRect().height > 0 && (cs(elt).position == "static" || cs(elt).position == "relative");
-}
-
-function printblock(root, f) {
-    var rect = root.getBoundingClientRect();
-    f("open", root.nodeName, rect.width, rect.height, rect.x, rect.y);
-
-    var lines = [];
-    for (var i = 0; i < root.childNodes.length; i++) {
-        var elt = root.childNodes[i];
-        if (is_comment(elt)) {
-            continue; // Comments are part of the DOM. Why? Meh.
-        } else if (is_text(elt) || is_inline(elt)) {
-            var r = new Range();
-            r.selectNode(elt);
-            lines = lines.concat(r.getClientRects().slice());
-        } else if (!is_visible(elt)) {
-            continue;
-        } else if (is_block(elt)) {
-            printblock(elt, f);
-        } else {
-            console.warn("Unclear element-like value", elt.nodeType, elt);
-            continue;
-        }
-    }
-    if (lines.length > 0) printlines(root, lines, f);
-
-    f("close");
-}
 
 function val2px(val) {
     if (val.endsWith("px")) {
         return +val.substr(0, val.length - 2);
     } else {
-        throw "Error"
+        throw "Error, " + val + " is not a pixel quantity."
     }
 }
 
-function printlines(root, lines, f) {
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        var gap = val2px(cs(root).lineHeight) - line.height;
-        f("line", "", line.width, line.height, line.x, line.y, gap);
-    }
+function cs(elt) {return window.getComputedStyle(elt);}
+function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
+function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
+function is_inline(elt) {return cs(elt).display == "inline";}
+function is_block(elt) {return cs(elt).display == "block";}
+function is_visible(elt) {return cs(elt).display != "none";}
+
+function is_flowroot(elt) {
+    // CSS3BOX §4.2
+    // Block progression possibilities ignored, because block-progression assumed to be `tb`
+    return cs(elt).float !== "none" || cs(elt).overflow !== "visible" ||
+        ["table-cell", "table-caption", "inline-block", "inline-table"].indexOf(cs(elt).display) !== -1 ||
+        ["static", "relative"].indexOf(cs(elt).position) === -1;
 }
 
-ID = 0;
-PADDING = "0000";
-
-function gensym(name) {
-    s = "" + (++ID);
-    return LETTER + PADDING.substring(0, PADDING.length - s.length) + s;
-}
-
-function go() {
-    var root = document.querySelector("body");
-    var DOC = gensym("doc");
-    var HTML = gensym("html");
-
-    var head = "(define dom" + LETTER + "\n  (let ([tree";
-    var quoted = false;
-    var indent = "         ";
-
-    var wrect = document.querySelector("html").getBoundingClientRect();
-    var tail = "]\n       [context (rendering-context " + wrect.width + ")])\n" +
-        "    (dom 'doc" + LETTER + " sheet context tree)))\n\n";
-    
-    printblock(document.querySelector("body"), function(call, type, w, h, x, y, bgc, fgc) {
-        if (call == "open") {
-            var ELT = gensym();
-
-            var idt = indent;
-            indent = indent + " ";
-            if (!quoted) {
-                idt = idt.substring(0, idt.length - 1) + "'";
-                quoted = true;
-            }
-            
-            head += "\n" + idt + "([&lt;" + type + "&gt; " + ELT;
-
-            head += " :x " + f2r(x);
-            head += " :y " + f2r(y);
-            head += " :vw " + f2r(w);
-            head += " :vh " + f2r(h);
-            head += "]";
-        } else if (call == "close") {
-            head += ")";
-            indent = indent.substring(0, indent.length - 1);
-        } else if (call == "line") {
-            var ELT = gensym();
-            var gap = bgc; // Because different calls use different numbers of arguments
-
-            var idt = indent;
-            if (!quoted) {
-                idt = idt.substring(0, idt.length - 1) + "'";
-                quoted = true;
-            }
-            
-            head += "\n" + idt + "([&lt;&gt; " + ELT;
-
-            head += " :x " + f2r(x);
-            head += " :y " + f2r(y);
-            head += " :w " + f2r(w);
-            head += " :h " + f2r(h);
-            head += " :gap " + f2r(gap);
-            head += "])";
+function get_lines(txt) {
+    function find_first_break(loff, roff) {
+        if (loff !== loff || roff !== roff) throw "Error";
+        if (roff - loff < 2) return roff;
+        if (roff - loff == 2) {
+            var r2 = new Range();
+            r2.setStart(txt, loff);
+            r2.setEnd(txt, roff);
+            if (r2.getClientRects().length > 1) return loff + 1;
+            else return loff + 2;
         }
-    });
 
+        mid = Math.round(loff + (roff - loff) / 2);
+        var r2 = new Range();
+        r2.setStart(txt, loff);
+        r2.setEnd(txt, mid);
+
+        if (r2.getClientRects().length > 1) {
+            return find_first_break(loff, mid);
+        } else {
+            return find_first_break(mid - 1, roff);
+        }
+    }
+
+    var ranges = [];
+    var cursor = 0;
+    while (cursor < txt.length) {
+        var new_cursor = find_first_break(cursor, txt.length);
+        var r = new Range();
+        r.setStart(txt, cursor);
+        r.setEnd(txt, new_cursor);
+        ranges.push(r);
+        cursor = new_cursor;
+    }
+
+    return ranges;
+}
+
+function make_boxes(elt, inflow, flows) {
+    var box;
+
+    if (is_comment(elt)) {
+        return;
+    } else if (is_text(elt)) {
+        var ranges = get_lines(elt);
+        for (var i = 0; i < ranges.length; i++) {
+            var r = ranges[i].getClientRects();
+            if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
+            r = r[0];
+            box = Text({
+                x: r.x, y: r.y, w: r.width, h: r.height,
+                text: '"' + ranges[i].toString().replace(/\s+/g, " ") + '"'
+            });
+            inflow.children.push(box);
+        }
+    } else if (!is_visible(elt)) {
+        return;
+    } else if (is_block(elt)) {
+        var r = elt.getBoundingClientRect();
+        var s = cs(elt);
+        box = Block({
+            tag: elt.tagName,
+            x: r.x, y: r.y, w: r.width, h: r.height,
+            mt: val2px(s["margin-top"]), mr: val2px(s["margin-right"]),
+            mb: val2px(s["margin-bottom"]), ml: val2px(s["margin-left"]),
+            pt: val2px(s["padding-top"]), pr: val2px(s["padding-right"]),
+            pb: val2px(s["padding-bottom"]), pl: val2px(s["padding-left"]),
+            bt: val2px(s["border-top-width"]), br: val2px(s["border-right-width"]),
+            bb: val2px(s["border-bottom-width"]), bl: val2px(s["border-left-width"])
+        });
+
+        if (elt.id) box.props.id = elt.id;
+
+        if (is_flowroot(elt)) {
+            flows.push(box);
+            inflow.children.push(Block({of: box.name}));
+        } else {
+            inflow.children.push(box);
+        }
+    } else if (is_inline (elt)) {
+        box = Inline({tag: elt.tagName});
+        inflow.children.push(box);
+    } else {
+        console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
+    }
+
+    for (var i = 0; i < elt.childNodes.length; i++) {
+        var child = elt.childNodes[i];
+        make_boxes(child, box, flows);
+    }
+}
+
+function get_boxes() {
+    var view = Page({w: window.innerWidth, h: window.innerHeight});
+    var flows = [view];
+    make_boxes(document.querySelector("html"), view, flows);
+    return flows;
+}
+
+function page2cassius(name) {
+    var flows = get_boxes();
+    var text = "(define " + name + "\n '(; " + flows.length + " flows";
+    var indent = "  ";
+
+    function recurse(box) {
+        text += "\n" + indent + "(" + box.toString();
+        var idt = indent;
+        indent += " ";
+        for (var i = 0; i < box.children.length; i++) recurse(box.children[i]);
+        indent = idt;
+        text += ")";
+    }
+
+    for (var i = 0; i < flows.length; i++) recurse(flows[i]);
+
+    return text + "))";
+}
+
+function cassius(name) {
     var pre = document.createElement("pre");
-    pre.id = "--cassius-output-block";
-    pre.innerHTML = head + tail;
-    pre.style.background = "white";
-    pre.style.color = "black";
-    pre.style.position = "absolute";
-    pre.style.top = "0";
-    pre.style.left = "0";
-    pre.style.zIndex = "1000000";
+    pre.id = "-x-cassius-output-block";
+    pre.innerHTML = page2cassius(name);
+    with (pre.style) {
+        background = "white", color = "black";
+        position = "absolute", top = "0", left = "0";
+        zIndex = "1000000";
+    }
+
+    var root = document.querySelector("html");
     root.appendChild(pre);
 
     var r = document.createRange();
@@ -161,10 +215,92 @@ function go() {
     sel.addRange(r);
 }
 
-go();
+cassius("doc-" + LETTER);
+
+/*
+function printblock(root, on) {
+    var rect = root.getBoundingClientRect();
+    on.elt(root.nodeName, cs(root).display, rect.width, rect.height, rect.x, rect.y);
+
+    var lines = [];
+    for (var i = 0; i < root.childNodes.length; i++) {
+        var elt = root.childNodes[i];
+        if (is_comment(elt)) {
+            continue; // Comments are part of the DOM.
+        } else if (is_text(elt)) {
+            var r = new Range();
+            r.selectNode(elt);
+            rects = r.getClientRects().slice();
+            for (var j = 0; j < rects.length; j++) {
+                on.text(rects[j].width, rects[j].height, rects[j].x, rects[j].y);
+            }
+        } else if (!is_visible(elt)) {
+            continue;
+        } else if (is_inline(elt) || is_block(elt)) {
+            printblock(elt, on);
+        } else {
+            console.warn("Unclear element-like value", elt.nodeType, elt);
+            continue;
+        }
+    }
+
+    on.close();
+}
+
+function go() {
+    var root = document.querySelector("html");
+
+    var head = "(define dom" + LETTER + "\n  (list\n   '([VIEWPORT :w " + window.innerWidth + " :h " + window.innerHeight + " :rules 5]";
+    var quoted = true;
+    var indent = "     ";
+
+    printblock(root, {
+        elt: function(tag, display, w, h, x, y) {
+            var name = gensym();
+
+            head += "\n" + indent + "([ELT " + name + " :tag &lt;" + tag + "&gt; :display " + display;
+            head += " :x " + f2r(x) + " :y " + f2r(y);
+            head += " :w " + f2r(w) + " :h " + f2r(h);
+            head += "]";
+
+            indent += " ";
+        },
+        close: function() {
+            head += ")";
+            indent = indent.substring(0, indent.length - 1);
+        },
+        text: function(w, h, x, y) {
+            var name = gensym();
+
+            head += "\n" + indent + "([TEXT " + name;
+
+            head += " :x " + f2r(x) + " :y " + f2r(y);
+            head += " :w " + f2r(w) + " :h " + f2r(h);
+            head += "])";
+        }
+    });
+
+    var pre = document.createElement("pre");
+    pre.id = "-x-cassius-output-block";
+    pre.innerHTML = head + "))";
+    with (pre.style) {
+        background = "white", color = "black";
+        position = "absolute", top = "0", left = "0";
+        zIndex = "1000000";
+    }
+    root.appendChild(pre);
+
+    var r = document.createRange();
+    r.selectNodeContents(pre);
+
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+}
+*/
 
 function draw_rect(rect) {
-    var d = document.createElement("flarg");
+    var d = document.createElement("CassiusRect");
     d.style.position = "absolute";
     d.style.top = rect.top + "px";
     d.style.left = rect.left + "px";
