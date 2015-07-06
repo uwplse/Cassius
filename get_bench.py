@@ -48,13 +48,11 @@ class CassiusInput():
         self.fd = fd
         self.fd.write("""#lang racket
 (require "../cassius/main.rkt")
-        
+
 ;; python get_bench.py {}
 
 (define header
 "")
-
-(define sheet (stylesheet 'main.css 5))
 
 """.format(" ".join("'{}'".format(url) for url in urls)))
         self.fd.flush()
@@ -64,9 +62,9 @@ class CassiusInput():
         self.fd.write(text + "\n\n")
         self.fd.flush()
         self.ids.append(id)
-        
+
     def close(self):
-        self.fd.write("(cassius-solve #:sheet sheet #:header header {})\n".format(" ".join(self.ids)))
+        self.fd.write("(cassius-solve #:rules 5 #:header header {})\n".format(" ".join(self.ids)))
         self.fd.flush()
 
 def get_bench_output(browser, letter, url, file):
@@ -74,8 +72,8 @@ def get_bench_output(browser, letter, url, file):
 
     browser.get(url)
     browser.execute_script(js, letter)
-    elt = browser.find_element_by_id("--cassius-output-block");
-    text = elt.text.decode("utf8")
+    elt = browser.find_element_by_id("-x-cassius-output-block");
+    text = elt.text.encode("utf8")
     file.write("dom" + letter, ";; From {}\n\n{}".format(url, text))
 
 def main(urls):
