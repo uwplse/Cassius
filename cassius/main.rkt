@@ -40,33 +40,12 @@
            (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
            (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))]
           [(list 'style rest ...)
-           (eprintf "<~a> {\n" key)
-           (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
-             (eprintf "  ~a: ~a;\n" prop (print-type type value)))
-           (eprintf "}\n")]
+           (eprintf "{~a} " key)
+           (print-type 'Style value)]
           [else '#f]))
 
       (for ([rule-value (map (curry hash-ref smt-out) (stylesheet-rules stylesheet))])
-        (match rule-value
-          [(list 'rule sel idx rest ...)
-
-           (define props
-             (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
-                        #:when enabled?)
-               (values prop (list type value))))
-
-           (unless (hash-empty? props)
-             (printf "~a {\n" (print-type 'Selector sel))
-             (define short-printed
-               (apply append
-                      (for/list ([(short parts) (in-pairs css-shorthand-properties)]
-                                 #:when (andmap (curry hash-has-key? props) parts))
-                        (define values (map (curry hash-ref props) parts))
-                        (printf "  ~a: ~a;\n" short (string-join (map (curry apply print-type) values) " "))
-                        parts)))
-             (for ([(prop value) (in-hash props)] #:when (not (member prop short-printed)))
-               (printf "  ~a: ~a;\n" prop (apply print-type value)))
-             (printf "}\n"))])))))
+        (print-type 'Rule rule-value)))))
 
 (define (css-type-ending? v)
   (lambda (x) (string=? (last (string-split (~a x) "/")) v)))
@@ -91,7 +70,31 @@
        ['sel/all "*"]
        [`(sel/id ,id) (string-append "#" (substring (symbol->string id) 3))]
        [`(sel/tag ,name)
-        (substring (symbol->string name) 1 (- (string-length (symbol->string name)) 1))])]))
+        (substring (symbol->string name) 5 (- (string-length (symbol->string name)) 1))])]
+    ['Style
+     (match-define (list 'style rest ...) value)
+     (eprintf " {\n")
+     (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
+       (eprintf "  ~a: ~a; /* ~a */ \n" prop (print-type type value) score))
+     (eprintf "}\n")]
+    ['Rule
+     (match-define (list 'rule sel idx rest ...) value)
+     (define props
+       (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
+                  #:when enabled?)
+         (values prop (list type value))))
+     (unless (hash-empty? props)
+       (printf "~a {\n" (print-type 'Selector sel))
+       (define short-printed
+         (apply append
+                (for/list ([(short parts) (in-pairs css-shorthand-properties)]
+                           #:when (andmap (curry hash-has-key? props) parts))
+                  (define values (map (curry hash-ref props) parts))
+                  (printf "  ~a: ~a;\n" short (string-join (map (curry apply print-type) values) " "))
+                  parts)))
+       (for ([(prop value) (in-hash props)] #:when (not (member prop short-printed)))
+         (printf "  ~a: ~a;\n" prop (apply print-type value)))
+       (printf "}\n"))]))
 
 (define (tree-constraints dom emit elt children)
   (define elt-get (curry dom-get dom))
@@ -224,6 +227,8 @@
       [(list ':print rest ...)
        (emit `(declare-const ,(sformat "~a-placement" name) Box))
        (emit `(assert (= ,(sformat "~a-placement" name) (placement-box (,(dom-map dom) ,name)))))
+       (emit `(declare-const ,(sformat "~a-style" name) Style))
+       (emit `(assert (= ,(sformat "~a-style" name) (rules (,(dom-map dom) ,name)))))
        (interpret rest)]
       [(list ':id id rest ...)
        (interpret rest)]
@@ -316,7 +321,7 @@
       ; Stylesheet
       ,@(stylesheet-constraints sheet)
       ; DOMs
-      ,@(dfs-constraints ; #:per-level-check #t #:per-dom-check #t
+      ,@(dfs-constraints
          doms
          tree-constraints id-constraints user-constraints element-constraints style-constraints)
       (apply propagate-values)

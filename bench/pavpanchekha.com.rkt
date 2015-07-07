@@ -1,6 +1,6 @@
 #lang racket
 (require "../cassius/main.rkt")
-        
+
 ;; python get_bench.py 'http://pavpanchekha.com/blog/ubuntu-on-lvm.html' 'http://pavpanchekha.com/blog/organization.html'
 
 ;; EDITS:
@@ -15,48 +15,49 @@ h1 { font-family: 'Open Sans Semibold', 'Deja Vu Sans', 'Georgia', sans; font-we
      font-size: 24px; line-height: 1; letter-spacing: -.03em; color: #555753;}
 p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}")
 
-(define sheet (stylesheet 'main.css 3))
+(define sheet (stylesheet 'main.css 4))
 
 ;; From http://pavpanchekha.com/blog/ubuntu-on-lvm.html
 
 (define doma
   (let ([tree
-        '([<BODY> a0003 :x 154 :y 36 :vw 650 :vh (/ 8779 12)]
-          ([<DIV> a0004 :x 164 :y 36 :vw 630 :vh 582]
-           ([<H1> a0005 :x 164 :y 36 :vw 630 :vh 24]
-            ([<> a0006 :x 164 :y 31.5 :w 273.8 :h 33 :gap -9]))
-           ([<P> a0007 :x 164 :y 78 :vw 630 :vh 24]
-            ([<> a0008 :x 164 :y 79.5 :w 215 :h 21 :gap 3]))
-           ([<DIV> a0009 :x 164 :y 123.6 :vw 630 :vh 66]
-            ([<PRE> a0010 :x 164 :y 123.6 :vw 630 :vh 66]
-             ([<> a0011 :x 173 :y 132.6 :w 199 :h 24 :gap 0])
-             ([<> a0012 :x 173 :y 156.6 :w 152 :h 24 :gap 0])))
-           ([<P> a0013 :x 164 :y 220.2 :vw 630 :vh 48]
-            ([<> a0014 :x 164 :y 221.7 :w 630 :h 21 :gap 3])
-            ([<> a0015 :x 164 :y 245.7 :w 68 :h 21 :gap 3]))
-           ([<DIV> a0016 :x 164 :y 289.8 :vw 630 :vh 162]
-            ([<PRE> a0017 :x 164 :y 289.8 :vw 630 :vh 162]
-             ([<> a0018 :x 173 :y 298.8 :w 349 :h 24 :gap 0])
-             ([<> a0019 :x 173 :y 322.8 :w 284 :h 24 :gap 0])
-             ([<> a0020 :x 173 :y 346.8 :w 302 :h 24 :gap 0])
-             ([<> a0021 :x 173 :y 370.8 :w 292 :h 24 :gap 0])
-             ([<> a0022 :x 173 :y 394.8 :w 362 :h 24 :gap 0])
-             ([<> a0023 :x 173 :y 418.8 :w 145 :h 24 :gap 0])))
-           ([<P> a0024 :x 164 :y 482.4 :vw 630 :vh 48]
-            ([<> a0025 :x 164 :y 483.9 :w 630 :h 21 :gap 3])
-            ([<> a0026 :x 164 :y 507.9 :w 97 :h 21 :gap 3]))
-           ([<DIV> a0027 :x 164 :y 552 :vw 630 :vh 66]
-            ([<PRE> a0028 :x 164 :y 552 :vw 630 :vh 66]
-             ([<> a0029 :x 173 :y 561 :w 199 :h 24 :gap 0])
-             ([<> a0030 :x 173 :y 585 :w 247 :h 24 :gap 0]))))
-          #;([<DIV> a0031 :x 164 :y 648.6 :vw 630 :vh 16]
+         '([<HTML> a0002 :x 0 :y 0 :vw 958 :vh 822]
+           ([<BODY> a0003 :x 154 :y 36 :vw 650 :vh (/ 8779 12)]
+            ([<DIV> a0004 :x 164 :y 36 :vw 630 :vh 582]
+             ([<H1> a0005 :x 164 :y 36 :vw 630 :vh 24]
+              ([<> a0006 :x 164 :y 31.5 :w 273.8 :h 33 :gap -9]))
+             ([<P> a0007 :x 164 :y 78 :vw 630 :vh 24]
+              ([<> a0008 :x 164 :y 79.5 :w 215 :h 21 :gap 3]))
+             ([<DIV> a0009 :x 164 :y 123.6 :vw 630 :vh 66]
+              ([<PRE> a0010 :x 164 :y 123.6 :vw 630 :vh 66]
+               ([<> a0011 :x 173 :y 132.6 :w 199 :h 24 :gap 0])
+               ([<> a0012 :x 173 :y 156.6 :w 152 :h 24 :gap 0])))
+             ([<P> a0013 :x 164 :y 220.2 :vw 630 :vh 48]
+              ([<> a0014 :x 164 :y 221.7 :w 630 :h 21 :gap 3])
+              ([<> a0015 :x 164 :y 245.7 :w 68 :h 21 :gap 3]))
+             ([<DIV> a0016 :x 164 :y 289.8 :vw 630 :vh 162]
+              ([<PRE> a0017 :x 164 :y 289.8 :vw 630 :vh 162]
+               ([<> a0018 :x 173 :y 298.8 :w 349 :h 24 :gap 0])
+               ([<> a0019 :x 173 :y 322.8 :w 284 :h 24 :gap 0])
+               ([<> a0020 :x 173 :y 346.8 :w 302 :h 24 :gap 0])
+               ([<> a0021 :x 173 :y 370.8 :w 292 :h 24 :gap 0])
+               ([<> a0022 :x 173 :y 394.8 :w 362 :h 24 :gap 0])
+               ([<> a0023 :x 173 :y 418.8 :w 145 :h 24 :gap 0])))
+             ([<P> a0024 :x 164 :y 482.4 :vw 630 :vh 48]
+              ([<> a0025 :x 164 :y 483.9 :w 630 :h 21 :gap 3])
+              ([<> a0026 :x 164 :y 507.9 :w 97 :h 21 :gap 3]))
+             ([<DIV> a0027 :x 164 :y 552 :vw 630 :vh 66]
+              ([<PRE> a0028 :x 164 :y 552 :vw 630 :vh 66]
+               ([<> a0029 :x 173 :y 561 :w 199 :h 24 :gap 0])
+               ([<> a0030 :x 173 :y 585 :w 247 :h 24 :gap 0])))))
+           #;([<DIV> a0031 :x 164 :y 648.6 :vw 630 :vh 16]
            ([<P> a0032 :x 164 :y 648.6 :vw 630 :vh 16]
-            ([<> a0033 :x 305.5 :y (/ 7789 12) :w 21 :h 15 :gap 1])
-            ([<> a0034 :x 326.5 :y (/ 7789 12) :w 108 :h 15 :gap 1])
-            ([<> a0035 :x 434.5 :y (/ 7789 12) :w 95 :h 15 :gap 1])
-            ([<> a0036 :x 529.5 :y (/ 7789 12) :w 119 :h 15 :gap 1])
-            ([<> a0037 :x 648.5 :y (/ 7789 12) :w 4 :h 15 :gap 1]))))]
-       [context (rendering-context 958)])
+           ([<> a0033 :x 305.5 :y (/ 7789 12) :w 21 :h 15 :gap 1])
+           ([<> a0034 :x 326.5 :y (/ 7789 12) :w 108 :h 15 :gap 1])
+           ([<> a0035 :x 434.5 :y (/ 7789 12) :w 95 :h 15 :gap 1])
+           ([<> a0036 :x 529.5 :y (/ 7789 12) :w 119 :h 15 :gap 1])
+           ([<> a0037 :x 648.5 :y (/ 7789 12) :w 4 :h 15 :gap 1]))))]
+[context (rendering-context 958)])
     (dom 'doca sheet context tree)))
 
 ;; From http://pavpanchekha.com/blog/organization.html
@@ -120,4 +121,4 @@ p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: aut
        [context (rendering-context 945)])
     (dom 'docb sheet context tree)))
 
-(cassius-solve #:sheet sheet #:header header #:debug '(timing sat tactic) doma domb)
+(cassius-solve #:sheet sheet #:header header doma #;domb)
