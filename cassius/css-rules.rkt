@@ -52,6 +52,7 @@
     (define-fun score-ge ((a CascadeScore) (b CascadeScore)) Bool
       ,(smt-cond
         [(is-useDefault b) true]
+        [(is-useDefault a) false]
         [(> (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b))) true]
         [(< (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b))) false]
         [(and (isFromStyle a) (not (isFromStyle b))) true]
