@@ -5,6 +5,7 @@
 (require (rename-in "elements.rkt" [element-constraints element-constraints-core]))
 (require "float.rkt")
 (require "common.rkt")
+(require "css-properties.rkt")
 (require unstable/sequence)
 (require srfi/1)
 (z3 "/opt/z3opt/bin/z3")
@@ -17,20 +18,19 @@
 (define (r2 x)
   (~r x #:precision 2))
 
-(define (groups-of-n l n)
-  (if (null? l)
-      '()
-      (let-values
-          ([[latest all i]
-            (for/fold
-                ([latest '()]
-                 [all '()]
-                 [i n])
-                ([item l])
-              (if (= i 0)
-                  (values (list item) (cons (reverse latest) all) (- n 1))
-                  (values (cons item latest) all (- i 1))))])
-        (reverse (cons (reverse latest) all)))))
+(define (in-empty) (in-list empty))
+
+(define (in-groups n s)
+  (if (null? s)
+      (in-empty)
+      (let-values ([(hd tail) (split-at s n)])
+        (in-sequences
+         (apply in-parallel (map in-value hd))
+         (in-groups n tail)))))
+
+(define (groups-of-2 s)
+  (for/list ([(a b) (in-groups 2 s)])
+    (list a b)))
 
 (define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
   (with-output-to-file "test.css" #:exists 'replace
@@ -45,8 +45,8 @@
                     (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
            (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
            (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))]
-          [(list 'computedRules rest ...)
-           (let ([properties (groups-of-n rest 2)])
+          [(list 'style rest ...)
+           (let ([properties (groups-of-2 rest)])
              (when (ormap cadr properties)
                (eprintf "<~a> {\n" key)
                (for ([property (map append properties css-property-pairs)])
@@ -58,49 +58,49 @@
 
       (for ([rule-value (map (curry hash-ref smt-out) (stylesheet-rules stylesheet))])
         (match rule-value
-          [(list 'specifiedRules sel idx rest ...)
-           (printf "~a /* ~a */ {\n" (print-type 'Selector sel) idx)
+          [(list 'rule sel idx rest ...)
 
-           (define hash (make-hash))
+           (define props
+             (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
+                        #:when enabled?)
+               (values prop (list type value))))
 
-           (for ([property (groups-of-n rest 2)] [(name type) (in-pairs css-property-pairs)])
-             (when (second property)
-               (hash-set! hash name (cons type (first property)))))
+           (unless (hash-empty? props)
+             (printf "~a {\n" (print-type 'Selector sel))
+             (define short-printed
+               (apply append
+                      (for/list ([(short parts) (in-pairs css-shorthand-properties)]
+                                 #:when (andmap (curry hash-has-key? props) parts))
+                        (define values (map (curry hash-ref props) parts))
+                        (printf "  ~a: ~a;\n" short (string-join (map (curry apply print-type) values) " "))
+                        parts)))
+             (for ([(prop value) (in-hash props)] #:when (not (member prop short-printed)))
+               (printf "  ~a: ~a;\n" prop (apply print-type value)))
+             (printf "}\n"))])))))
 
-           (for ([(name subproperties) (in-pairs css-shorthand-properties)])
-             (when (every (curry hash-has-key? hash) subproperties)
-               (define vals
-                 (for/list ([subprop subproperties])
-                   (begin0
-                       (hash-ref hash subprop)
-                     (hash-remove! hash subprop))))
-               (printf "  ~a: ~a;\n" name
-                       (string-join (map print-type (map car vals) (map cdr vals)) " "))))
-
-           (for ([(name value) (in-hash hash)])
-             (printf "  ~a: ~a;\n" name (print-type (car value) (cdr value))))
-
-           (printf "}\n")])))))
+(define (css-type-ending? v)
+  (lambda (x) (string=? (last (string-split (~a x) "/")) v)))
 
 (define (print-type type value)
   (match type
-    [(or 'Width 'Height 'Margin 'Padding)
+    [(or 'Width 'Height 'Margin 'Padding 'Border)
      (match value
-       [`(as auto ,_) "auto"]
-       [`(,_ 0.0) "0"]
-       [`((as length ,_) ,x) (format "~apx" x)]
-       [`((as percentage ,_) ,x) (format "~a%" (* 100 x))])]
+       [(? (css-type-ending? "auto")) "auto"]
+       [(list _ 0.0) "0"]
+       [(list (? (css-type-ending? "px")) x) (format "~apx" x)]
+       [(list (? (css-type-ending? "pct")) x) (format "~a%" x)])]
     ['Color
      (match value
        ['transparent "transparent"]
        [`(color ,n)
         (string-append "#" (~a (format "~x" n) #:width 6 #:align 'right #:pad-string "0"))])]
-    ['Float (~a value)]
+    ['Float (last (string-split (~a value) "/"))]
+    ['TextAlign (last (string-split (~a value) "/"))]
     ['Selector
      (match value
-       ['all "html *"]
-       [`(id ,id) (string-append "#" (substring (symbol->string id) 3))]
-       [`(tag ,name) (substring (symbol->string name)
+       ['sel/all "html *"]
+       [`(sel/id ,id) (string-append "#" (substring (symbol->string id) 3))]
+       [`(sel/tag ,name) (substring (symbol->string name)
                                 1 (- (string-length (symbol->string name)) 1))])]))
 
 (define (tree-constraints dom emit elt children)
@@ -341,7 +341,7 @@
       ; Stylesheet
       ,@(stylesheet-constraints sheet)
       ; DOMs
-      ,@(bfs-constraints #:stop-at 1 ; #:per-level-check #t #:per-dom-check #t
+      ,@(dfs-constraints ; #:per-level-check #t #:per-dom-check #t
          doms
          tree-constraints id-constraints user-constraints element-constraints style-constraints)
       (apply propagate-values)
