@@ -82,7 +82,7 @@
   `(; Basic element stuff
     (assert (= (display ,e) ,(if (eq? e-tag '<>) 'display/inline 'display/block)))
     (assert (not (is-nil ,pe)))
-    (assert (= (tagname ,e) ,e-tag))
+    (assert (= (tagname ,e) ,(sformat "box/~a" e-tag)))
     (assert (= (float ,e)
                (ite (is-display/inline (display ,e))
                     float/none ; Cannot float inline elements
@@ -213,7 +213,7 @@
            (= (x ,b) (+ (left-content ,pb) (ml ,b)))
            (= (y ,b)
               (ite (is-nil ,ve)
-                   (ite (and (not (= (tagname ,pe) <HTML>)) (is-float/none (float ,pe))
+                   (ite (and (not (= (tagname ,pe) box/viewport)) (is-float/none (float ,pe))
                              (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                         (top-content ,pb)
                         (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))

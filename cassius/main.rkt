@@ -88,10 +88,10 @@
     ['TextAlign (last (string-split (~a value) "/"))]
     ['Selector
      (match value
-       ['sel/all "html *"]
+       ['sel/all "*"]
        [`(sel/id ,id) (string-append "#" (substring (symbol->string id) 3))]
-       [`(sel/tag ,name) (substring (symbol->string name)
-                                1 (- (string-length (symbol->string name)) 1))])]))
+       [`(sel/tag ,name)
+        (substring (symbol->string name) 1 (- (string-length (symbol->string name)) 1))])]))
 
 (define (tree-constraints dom emit elt children)
   (define elt-get (curry dom-get dom))
@@ -166,26 +166,10 @@
 
   (emit `(assert (= (placement-box ,elt) (flow-box ,elt))))
   (emit `(assert (= (parent ,elt) (as nil ElementName))))
-  (emit `(assert (= (tagname ,elt) <HTML>)))
+  (emit `(assert (= (tagname ,elt) box/viewport)))
   (emit `(assert (= (previous ,elt) (as nil ElementName))))
-  (emit `(assert (= (x ,b) 0.0)))
-  (emit `(assert (= (y ,b) 0.0)))
-  (emit `(assert (= (pl ,b) 0.0)))
-  (emit `(assert (= (pr ,b) 0.0)))
-  (emit `(assert (= (pt ,b) 0.0)))
-  (emit `(assert (= (pb ,b) 0.0)))
-  (emit `(assert (= (bl ,b) 0.0)))
-  (emit `(assert (= (br ,b) 0.0)))
-  (emit `(assert (= (bt ,b) 0.0)))
-  (emit `(assert (= (bb ,b) 0.0)))
-  (emit `(assert (= (ml ,b) 0.0)))
-  (emit `(assert (= (mr ,b) 0.0)))
-  (emit `(assert (= (mt ,b) 0.0)))
-  (emit `(assert (= (mb ,b) 0.0)))
-  (emit `(assert (= (mtp ,b) 0.0)))
-  (emit `(assert (= (mbp ,b) 0.0)))
-  (emit `(assert (= (mtn ,b) 0.0)))
-  (emit `(assert (= (mbn ,b) 0.0)))
+  (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
+    (emit `(assert (= (,field ,b) 0.0))))
   (emit `(assert (= (float ,elt) float/none)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
@@ -315,7 +299,8 @@
       (set-option :produce-unsat-cores true)
       (declare-datatypes ()
         ((Id NoID ,@(map (curry sformat "ID-~a") (remove-duplicates ids)))
-         (TagNames <HTML> ,@(map (curry sformat "~a") (remove-duplicates tags)))
+         (TagNames box/viewport box/inline box/block
+                   ,@(map (curry sformat "box/~a") (remove-duplicates tags)))
          (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
          (ElementName
           ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (second elt))
