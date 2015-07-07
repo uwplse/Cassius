@@ -17,7 +17,7 @@
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
 
-  (define line 0)
+  (define line 1)
 
   (define (debug #:tag [tag #f] fmt . args)
     (when (or (not tag) (eq? debug? #t) (and (list? debug?) (member tag debug?)))
