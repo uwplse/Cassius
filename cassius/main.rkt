@@ -15,9 +15,6 @@
 
 (provide cassius-solve (struct-out dom) (struct-out stylesheet) (struct-out rendering-context))
 
-(define (r2 x)
-  (~r x #:precision 2))
-
 (define (in-empty) (in-list empty))
 
 (define (in-groups n s)
@@ -28,11 +25,8 @@
          (apply in-parallel (map in-value hd))
          (in-groups n tail)))))
 
-(define (groups-of-2 s)
-  (for/list ([(a b) (in-groups 2 s)])
-    (list a b)))
-
 (define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
+  (define (r2 x) (~r x #:precision 2))
   (with-output-to-file "test.css" #:exists 'replace
     (lambda ()
       (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n\n" header)
@@ -46,14 +40,10 @@
            (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
            (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))]
           [(list 'style rest ...)
-           (let ([properties (groups-of-2 rest)])
-             (when (ormap cadr properties)
-               (eprintf "<~a> {\n" key)
-               (for ([property (map append properties css-property-pairs)])
-                 (match property
-                   [`(,value ,score ,name . ,type)
-                    (eprintf "  ~a: ~a;\n" name (print-type type value))]))
-               (eprintf "}\n")))]
+           (eprintf "<~a> {\n" key)
+           (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
+             (eprintf "  ~a: ~a;\n" prop (print-type type value)))
+           (eprintf "}\n")]
           [else '#f]))
 
       (for ([rule-value (map (curry hash-ref smt-out) (stylesheet-rules stylesheet))])
