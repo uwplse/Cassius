@@ -1,114 +1,84 @@
 #lang racket
+
+(require "common.rkt")
+(require "smt.rkt")
 (require "dom.rkt")
+(require "css-properties.rkt")
 
-(provide css-types math-utilities css-properties css-property-pairs css-is-applicable
-         css-score-ops css-rule-types css-shorthand-properties css-defaults)
+(provide css-declarations css-functions
+         css-properties css-property-pairs css-defaults
+         css-shorthand-properties)
 
-(define css-types
-  (list
-   `(declare-datatypes ()
-      ((Width   auto (length (width-l Real)) #;(percentage (width-p Real)))
-       (Height  auto (length (height-l Real)))
-       (Margin  auto (length (margin-l Real)) #;(percentage (margin-p Real)))
-       #;(Border  (length (border-l Real)) (percentage (border-p Real)))
-       (Float   none left right inherit)
-       #;(Clear   none left right both inherit)
-       (Padding (length (padding-l Real)) #;(percentage (padding-p Real)))
-       (Display block inline)
-       (TagNames <HTML> <BODY> <DIV> <H1> <P> <PRE> <svg> <HEADER> <HGROUP> <H2> <NAV> <A> <UL>
-                 <OL> <H3> <SPAN> <FOOTER> <SMALL> <ASIDE> <IMG> <ARTICLE> <IFRAME> <FORM>
-                 <TEXTAREA> <DL> <DT> <DD> <FIGURE> <FIGCAPTION> <>)
-       (Selector all (tag (tag-s TagNames)) (id (id-s Id)))
+(define css-declarations
+  `((declare-datatypes () (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))))
+
+    (declare-datatypes ()
+      ((Selector sel/all (sel/tag (sel.tag TagNames)) (sel/id (sel.id Id)))
        (ImportanceOrigin UserAgent UserNormal AuthorNormal AuthorImportant UserImportant)
        (CascadeScore (cascadeScore (precedence ImportanceOrigin) (isFromStyle Bool)
                                    (idNum Int) (classNum Int) (elementNum Int)
-                                   (positionNum Int)) useDefault)))))
+                                   (positionNum Int)) useDefault)
+       (Style (style ,@(for/reap [field] ([(prop type default) (in-css-properties)])
+                                 (field `(,(sformat "style.~a" prop) ,type))
+                                 (field `(,(sformat "style.~a$" prop) CascadeScore)))))
+       (Rule (rule (selector Selector) (index Int)
+                   ,@(for/reap [field] ([(prop type default) (in-css-properties)])
+                               (field `(,(sformat "rule.~a" prop) ,type))
+                               (field `(,(sformat "rule.~a?" prop) Bool)))))))))
+
+(define css-functions
+  `((define-fun selector-applies? ((sel Selector) (elt Element)) Bool
+      ,(smt-cond
+        [(is-sel/all sel) true]
+        [(is-sel/tag sel) (= (sel.tag sel) (tagname elt))]
+        [(is-sel/id sel) (= (sel.id sel) (id elt))]
+        [else false]))
+
+    (define-fun score ((rule Rule)) CascadeScore
+      ,(smt-cond
+        [(is-sel/all (selector rule)) (cascadeScore AuthorNormal false 0 0 0 (index rule))]
+        [(is-sel/tag (selector rule)) (cascadeScore AuthorNormal false 0 0 1 (index rule))]
+        [(is-sel/id  (selector rule)) (cascadeScore AuthorNormal false 1 0 0 (index rule))]
+        [else (cascadeScore AuthorNormal false 0 0 0 0)]))
+
+    (define-fun importanceOrigin-score ((io ImportanceOrigin)) Int
+      ,(smt-cond
+        [(is-UserAgent io)       0]
+        [(is-UserNormal io)      1]
+        [(is-AuthorNormal io)    2]
+        [(is-AuthorImportant io) 3]
+        [else                    4]))
+
+    (define-fun score-ge ((a CascadeScore) (b CascadeScore)) Bool
+      ,(smt-cond
+        [(is-useDefault b) true]
+        [(> (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b))) true]
+        [(< (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b))) false]
+        [(and (isFromStyle a) (not (isFromStyle b))) true]
+        [(and (not (isFromStyle a)) (isFromStyle b)) false]
+        [(> (idNum a) (idNum b)) true]
+        [(< (idNum a) (idNum b)) false]
+        [(> (classNum a) (classNum b)) true]
+        [(< (classNum a) (classNum b)) false]
+        [(> (elementNum a) (elementNum b)) true]
+        [(< (elementNum a) (elementNum b)) false]
+        [(> (positionNum a) (positionNum b)) true]
+        [(< (positionNum a) (positionNum b)) false]
+        [else true]))))
 
 (define css-properties
-  '([Width    width]
-    [Height   height]
-    [Margin   margin-top margin-bottom margin-left margin-right]
-    [Padding  padding-top padding-bottom padding-left padding-right]
-    [Float    float]
-    #;[Display  display]
-    #;[Border   border-top border-bottom border-left border-right]))
+  (for/list ([(type decl) (in-css-types)])
+    (cons type
+          (for/list ([(prop ptype default) (in-css-properties)] #:when (eq? type ptype))
+            prop))))
 
 (define css-defaults
-  #hash((width . (as auto Width))
-        (height . (as auto Height))
-        (margin-top . (as auto Margin)) (margin-bottom . (as auto Margin))
-        (margin-left . ((as length Margin) 0.0)) (margin-right . ((as length Margin) 0.0))
-        (padding-top . ((as length Padding) 0.0)) (padding-bottom . ((as length Padding) 0.0)) (padding-left . ((as length Padding) 0.0)) (padding-right . ((as length Padding) 0.0))
-        (float . (as none Float))))
-
-(define (css-is-applicable sel elt)
-  `(ite (is-all ,sel)
-        true
-   (ite (is-tag ,sel)
-        (= (tag-s ,sel) (tagname ,elt))
-   (ite (is-id ,sel)
-        (= (id-s ,sel) (id ,elt))
-   ; else
-        false))))
-
-(define css-score-ops
-  (let ([sel `(selector rule)] [idx `(index rule)])
-    `((define-fun score ((rule SpecifiedRule)) CascadeScore
-       (ite (is-id ,sel)
-            (cascadeScore AuthorNormal false 1 0 0 ,idx)
-            (ite (is-tag ,sel)
-                 (cascadeScore AuthorNormal false 0 0 1 ,idx)
-                 ; The * selector; last entry should be 0, but is 1 since we write `html *`
-                 (cascadeScore AuthorNormal false 0 0 1 ,idx))))
-
-      (define-fun importanceOrigin-score ((io ImportanceOrigin)) Int
-        (ite (is-UserAgent io)       0
-        (ite (is-UserNormal io)      1
-        (ite (is-AuthorNormal io)    2
-        (ite (is-AuthorImportant io) 3
-        #;else                       4)))))
-
-      (define-fun score-ge ((a CascadeScore) (b CascadeScore)) Bool
-        (or (is-useDefault b)
-        (and (not (is-useDefault a))
-             (or (> (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b)))
-             (and (= (importanceOrigin-score (precedence a)) (importanceOrigin-score (precedence b)))
-                  (or (and (isFromStyle a) (not (isFromStyle b)))
-                  (and (= (isFromStyle a) (isFromStyle b))
-                       (or (> (idNum a) (idNum b))
-                       (and (= (idNum a) (idNum b))
-                            (or (> (classNum a) (classNum b))
-                            (and (= (classNum a) (classNum b))
-                                 (or (> (elementNum a) (elementNum b))
-                                 (and (= (elementNum a) (elementNum b))
-                                      (>= (positionNum a) (positionNum b))))))))))))))))))
+  (for/hash ([(prop name default) (in-css-properties)])
+    (values prop default)))
 
 (define css-property-pairs
   (for*/list ([type css-properties] [prop (cdr type)])
     (cons prop (car type))))
-
-(define css-rule-types
-  `(declare-datatypes ()
-     ((ComputedRule
-       (computedRules
-        ,@(apply append
-                 (for*/list ([cat css-properties] [property (cdr cat)])
-                   `((,property ,(car cat))
-                     (,(variable-append property 'score) CascadeScore))))))
-      (SpecifiedRule
-       (specifiedRules
-        (selector Selector)
-        (index Int)
-        ,@(apply append
-                 (for*/list ([cat css-properties] [property (cdr cat)])
-                   `((,(variable-append property 'specified) ,(car cat))
-                     (,(variable-append property 'enabled) Bool)))))))))
-
-(define math-utilities
-  (list `(define-fun max ((x Real) (y Real)) Real
-           (ite (< x y) y x))
-        `(define-fun min ((x Real) (y Real)) Real
-           (ite (< x y) x y))))
 
 (define css-shorthand-properties
   '((margin margin-top margin-right margin-bottom margin-left)

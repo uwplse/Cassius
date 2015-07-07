@@ -1,5 +1,6 @@
 #lang racket
 (require "dom.rkt")
+(require "common.rkt")
 
 (require unstable/sequence)
 
@@ -41,6 +42,9 @@
     (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
     (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
 
+    (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
+    (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
+
     (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
       (or (> (+ (y box1) (box-height box1)) (y box2) (y box1))
           (> (+ (y box2) (box-height box2)) (y box1) (y box2))))))
@@ -51,7 +55,7 @@
         nil
         (element
             (document Document)
-            (tagname TagNames) (id Id) (rules ComputedRule)
+            (tagname TagNames) (id Id) (rules Style)
             (display Display) (float Float)
             (previous ElementName) (parent ElementName)
             (first-child ElementName) (last-child ElementName)
@@ -76,15 +80,15 @@
   (define lb `(flow-box ,le))
 
   `(; Basic element stuff
-    (assert (= (display ,e) ,(if (eq? e-tag '<>) 'inline 'block)))
+    (assert (= (display ,e) ,(if (eq? e-tag '<>) 'display/inline 'display/block)))
     (assert (not (is-nil ,pe)))
     (assert (= (tagname ,e) ,e-tag))
     (assert (= (float ,e)
-               (ite (is-inline (display ,e))
-                    none ; Cannot float inline elements
-                    (ite (is-inherit (float ,r))
+               (ite (is-display/inline (display ,e))
+                    float/none ; Cannot float inline elements
+                    (ite (is-float/inherit (style.float ,r))
                          (float ,pe)
-                         (float ,r)))))
+                         (style.float ,r)))))
 
     ; Computing maximum collapsed positive and negative margin
     (assert (= (mtp ,b)
@@ -105,7 +109,7 @@
                          (if (is-element ,fe) (mbn ,fb) 0.0) 0.0))))
 
     ; Inline element layout
-   ,@(map (λ (x) `(assert (=> (= (display ,e) inline) ,x)))
+   ,@(map (λ (x) `(assert (=> (= (display ,e) display/inline) ,x)))
           `((<= (w ,b) (w ,pb))
             (= (mt ,b) (mr ,b) (mb ,b) (ml ,b) 0.0)
             (= (mtp ,b) (mbp ,b) (mtn ,b) (mbp ,b) 0.0)
@@ -122,7 +126,7 @@
             (= (placement-box ,e) (flow-box ,e))))
 
    ; In-flow block element layout
-   ,@(map (λ (x) `(assert (=> (and (= (display ,e) block) (is-none (float ,e))) ,x)))
+   ,@(map (λ (x) `(assert (=> (and (= (display ,e) display/block) (is-float/none (float ,e))) ,x)))
           `(; Set properties that are settable with lengths
             ,@(for/list ([item '((width width w) (height height h)
                                  (padding-left padding pl) (padding-right padding pr)
@@ -130,7 +134,8 @@
                                  (margin-top margin mt) (margin-bottom margin mb))])
                 (match item
                   [(list prop type field)
-                   `(=> (is-length (,prop ,r)) (= (,field ,b) (,(variable-append type 'l) (,prop ,r))))]))
+                   `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
+                        (= (,field ,b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
 
             ; Block elements don't have a gap
             (= (gap ,b) 0.0)
@@ -143,40 +148,46 @@
             ; I cannot summarize these rules; see CSS § 10.3.3
             ; Note that the implementation here is what Chrome and Firefox do,
             ; not what the standard says, which they contradict.
-            (ite (> (+ (ite (is-auto (width ,r)) 0.0 (width-l (width ,r)))
-                       (ite (is-auto (margin-left ,r)) 0.0 (margin-l (margin-left ,r)))
-                       (ite (is-auto (margin-right ,r)) 0.0 (margin-l (margin-right ,r)))
+            (ite (> (+ (ite (is-width/auto (style.width ,r))
+                            0.0
+                            (width.px (style.width ,r)))
+                       (ite (is-margin/auto (style.margin-left ,r))
+                            0.0
+                            (margin.px (style.margin-left ,r)))
+                       (ite (is-margin/auto (style.margin-right ,r))
+                            0.0
+                            (margin.px (style.margin-right ,r)))
                        (pl ,b) (pr ,b) (bl ,b) (br ,b))
                     (w ,pb))
                  (and ; It overflows. So what do we do?
                   ; Experimentally, this is what Firefox and Chrome do.
                   ; NOTE: this behavior contradicts CSS § 10.3.3.
-                  (= (w ,b) (ite (is-auto (width ,r)) 0.0 (width-l (width ,r))))
-                  (= (ml ,b) (ite (is-auto (margin-left ,r)) 0.0 (margin-l (margin-left ,r)))))
+                  (= (w ,b) (ite (is-width/auto (style.width ,r)) 0.0 (width.px (style.width ,r))))
+                  (= (ml ,b) (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r)))))
                  ; If it does not overflow, we set everything, and just figure out what to constrain.
-                 (ite (is-auto (width ,r))
+                 (ite (is-width/auto (style.width ,r))
                       (and
-                       (= (ml ,b) (ite (is-auto (margin-left ,r)) 0.0 (margin-l (margin-left ,r))))
-                       (= (mr ,b) (ite (is-auto (margin-right ,r)) 0.0 (margin-l (margin-right ,r)))))
+                       (= (ml ,b) (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r))))
+                       (= (mr ,b) (ite (is-margin/auto (style.margin-right ,r)) 0.0 (margin.px (style.margin-right ,r)))))
                       (and
-                       (= (w ,b) (width-l (width ,r)))
-                       (=> (and (is-auto (margin-left ,r)) (is-auto (margin-right ,r)))
+                       (= (w ,b) (width.px (style.width ,r)))
+                       (=> (and (is-margin/auto (style.margin-left ,r)) (is-margin/auto (style.margin-right ,r)))
                            (= (ml ,b) (mr ,b)))
-                       (=> (is-length (margin-left ,r)) (= (ml ,b) (margin-l (margin-left ,r))))
-                       (=> (and (is-length (margin-right ,r)) (is-auto (margin-left ,r)))
-                           (= (mr ,b) (margin-l (margin-right ,r)))))))
+                       (=> (is-margin/px (style.margin-left ,r)) (= (ml ,b) (margin.px (style.margin-left ,r))))
+                       (=> (and (is-margin/px (style.margin-right ,r)) (is-margin/auto (style.margin-left ,r)))
+                           (= (mr ,b) (margin.px (style.margin-right ,r)))))))
 
             ; Width and horizontal margins out of the way, let's do height and vertical margins
             ; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
-            (=> (is-auto (margin-top ,r)) (= (mt ,b) 0.0))
-            (=> (is-auto (margin-bottom ,r)) (= (mb ,b) 0.0))
+            (=> (is-margin/auto (style.margin-top ,r)) (= (mt ,b) 0.0))
+            (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,b) 0.0))
 
             ; If 'height' is 'auto', the height depends on whether the element has
             ; any block-level children and whether it has padding or borders: 
-            (=> (is-auto (height ,r))
-                (= (h ,b) 
+            (=> (is-height/auto (style.height ,r))
+                (= (h ,b)
                    (ite (is-element ,le)
-                        (ite (= (display ,le) inline)
+                        (ite (= (display ,le) display/inline)
                              ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
                              ; if the box establishes a inline formatting context with one or more lines 
                              (- (+ (box-bottom ,lb) (/ (gap ,lb) 2)) (top-content ,b))
@@ -202,7 +213,7 @@
            (= (x ,b) (+ (left-content ,pb) (ml ,b)))
            (= (y ,b)
               (ite (is-nil ,ve)
-                   (ite (and (not (= (tagname ,pe) <HTML>)) (is-none (float ,pe))
+                   (ite (and (not (= (tagname ,pe) <HTML>)) (is-float/none (float ,pe))
                              (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                         (top-content ,pb)
                         (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
@@ -227,7 +238,7 @@
            (= (placement-box ,e) (flow-box ,e))))
 
    ; Floating block element layout
-   ,@(map (λ (x) `(assert (=> (and (= (display ,e) block) (not (is-none (float ,e)))) ,x)))
+   ,@(map (λ (x) `(assert (=> (and (= (display ,e) display/block) (not (is-float/none (float ,e)))) ,x)))
           `(,@(for/list ([item '((width width w) (height height h)
                                  (padding-left padding pl) (padding-right padding pr)
                                  (padding-top padding pt) (padding-bottom padding pb)
@@ -235,16 +246,17 @@
                                  (margin-right margin mr) (margin-left margin ml))])
                 (match item
                   [(list prop type field)
-                   `(=> (is-length (,prop ,r)) (= (,field ,bp) (,(variable-append type 'l) (,prop ,r))))]))
+                   `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
+                        (= (,field ,bp) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
 
             ; Block elements don't have a gap
             (= (gap ,bp) 0.0)
 
             ; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
-            (=> (is-auto (margin-left ,r)) (= (ml ,bp) 0))
-            (=> (is-auto (margin-right ,r)) (= (mr ,bp) 0))
-            (=> (is-auto (margin-top ,r)) (= (mt ,bp) 0))
-            (=> (is-auto (margin-bottom ,r)) (= (mb ,bp) 0))
+            (=> (is-margin/auto (style.margin-left ,r)) (= (ml ,bp) 0))
+            (=> (is-margin/auto (style.margin-right ,r)) (= (mr ,bp) 0))
+            (=> (is-margin/auto (style.margin-top ,r)) (= (mt ,bp) 0))
+            (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,bp) 0))
 
             (= (mtp ,bp) (max (mt ,bp) 0.0))
             (= (mtn ,bp) (min (mt ,bp) 0.0))
@@ -265,14 +277,14 @@
             ; preferred width).
 
             ; TODO : We just don't support auto widths on floats.
-            (not (is-auto (width ,r)))
+            (not (is-width/auto (style.width ,r)))
 
             ; CSS 2.1 § 10.6.7 : In certain cases, the height of an
             ; element that establishes a block formatting context is computed as follows:
-            (=> (is-auto (height ,r))
+            (=> (is-height/auto (style.height ,r))
                 (= (h ,bp) 
                    (ite (is-element ,le)
-                        (ite (= (display ,le) inline)
+                        (ite (= (display ,le) display/inline)
                              ; If it only has inline-level children, the height is the distance between
                              ; the top of the topmost line box and the bottom of the bottommost line box.
                              (- (box-bottom ,lb) (box-top ,fb))
@@ -315,4 +327,4 @@
             (= (bt ,bp) 0.0)
             (= (bb ,bp) 0.0)
 
-            (= (float ,e) (float ,r))))))
+            (= (float ,e) (style.float ,r))))))

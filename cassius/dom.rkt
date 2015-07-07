@@ -1,11 +1,10 @@
 #lang racket
 (require unstable/sequence)
-(provide (struct-out dom) (struct-out rendering-context) (struct-out stylesheet)
-         inline-element? in-tree-subtrees in-tree-values dom-type dom-map dom-root dom-get
-         variable-append in-dom-levels)
+(require "common.rkt")
 
-(define (variable-append var end)
-  (string->symbol (string-append (symbol->string var) "-" (symbol->string end))))
+(provide (struct-out dom) (struct-out stylesheet) (struct-out rendering-context)
+         inline-element? in-tree-subtrees in-tree-values
+         in-dom-levels dom-get dom-type dom-map dom-root)
 
 (struct dom (name stylesheet context tree))
 (struct rendering-context (width))
@@ -43,8 +42,7 @@
   (atree-levels (atree-init doms)))
 
 (define (dom-type dom) (dom-name dom))
-(define (dom-map dom) (variable-append (dom-name dom) 'map))
-(define (dom-root dom) (variable-append (dom-name dom) 'root))
+(define (dom-map dom) (sformat "~a-map" (dom-name dom)))
+(define (dom-root dom) (sformat "~a-root" (dom-name dom)))
 (define (dom-get dom elt)
-  #;(variable-append (second elt) 'elt)
   `(,(dom-map dom) ,(second elt)))

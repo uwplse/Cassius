@@ -15,7 +15,7 @@
 (provide cassius-solve (struct-out dom) (struct-out stylesheet) (struct-out rendering-context))
 
 (define (r2 x)
-  (/ (round (* 100 x)) 100))
+  (~r x #:precision 2))
 
 (define (groups-of-n l n)
   (if (null? l)
@@ -135,22 +135,22 @@
            [rule (stylesheet-rules (dom-stylesheet dom))])
       (emit
        `(assert
-         (or (not (,(variable-append property 'enabled) ,rule))
-             (=> ,(css-is-applicable `(selector ,rule) e)
-                 (score-ge (,(variable-append property 'score) ,re) (score ,rule)))))))
+         (or (not (,(sformat "rule.~a?" property) ,rule))
+             (=> (selector-applies? (selector ,rule) ,e)
+                 (score-ge (,(sformat "style.~a$" property) ,re) (score ,rule)))))))
 
     ; Score&value of computed rule is = some applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)])
       (emit `(assert (or
-                      (and (is-useDefault (,(variable-append property 'score) ,re))
-                           (= (,property ,re) ,(hash-ref css-defaults property)))
+                      (and (is-useDefault (,(sformat "style.~a$" property) ,re))
+                           (= (,(sformat "style.~a" property) ,re) ,(hash-ref css-defaults property)))
                       ,@(for/list ([rule (stylesheet-rules (dom-stylesheet dom))])
                           `(and
-                            (,(variable-append property 'enabled) ,rule)
-                            ,(css-is-applicable `(selector ,rule) e)
-                            (= (,(variable-append property 'score) ,re) (score ,rule))
-                            (= (,property ,re)
-                               (,(variable-append property 'specified) ,rule))))))))))
+                            (,(sformat "rule.~a?" property) ,rule)
+                            (selector-applies? (selector ,rule) ,e)
+                            (= (,(sformat "style.~a$" property) ,re) (score ,rule))
+                            (= (,(sformat "style.~a" property) ,re)
+                               (,(sformat "rule.~a" property) ,rule))))))))))
 
 (define (dom-root-constraints dom emit)
   (define elt (list (dom-map dom) (dom-root dom)))
@@ -160,19 +160,19 @@
 
   ; The type of element names
   (for ([name names])
-    (emit `(declare-const ,(variable-append name 'elt) Element))
-    (emit `(assert (= (document ,(variable-append name 'elt)) ,(variable-append (dom-name dom) 'doc)))))
+    (emit `(declare-const ,(sformat "~a-elt" name) Element))
+    (emit `(assert (= (document ,(sformat "~a-elt" name)) ,(sformat "~a-doc" (dom-name dom))))))
   ; The element info for a name
   (define body
     (for/fold ([body '(as nil Element)]) ([name names])
-      `(ite (= x ,name) ,(variable-append name 'elt) ,body)))
+      `(ite (= x ,name) ,(sformat "~a-elt" name) ,body)))
   (emit `(define-fun ,(dom-map dom) ((x ElementName)) Element ,body))
   (for ([name names])
     (emit `(assert (not (is-nil (,(dom-map dom) ,name)))))
-    (emit `(assert (= (,(dom-map dom) ,name) ,(variable-append name 'elt)))))
+    (emit `(assert (= (,(dom-map dom) ,name) ,(sformat "~a-elt" name)))))
   ; Pointed map: nil goes to nil
   (emit `(assert (= (,(dom-map dom) (as nil ElementName)) (as nil Element))))
-  (emit `(assert (= ,elt ,(variable-append (dom-root dom) 'elt))))
+  (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
 
   (emit `(assert (= (placement-box ,elt) (flow-box ,elt))))
   (emit `(assert (= (parent ,elt) (as nil ElementName))))
@@ -196,9 +196,9 @@
   (emit `(assert (= (mbp ,b) 0.0)))
   (emit `(assert (= (mtn ,b) 0.0)))
   (emit `(assert (= (mbn ,b) 0.0)))
-  (emit `(assert (= (float ,elt) none)))
+  (emit `(assert (= (float ,elt) float/none)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
-                    :named ,(variable-append (dom-name dom) 'context-width))))
+                    :named ,(sformat "~a-context-width" (dom-name dom)))))
   (emit `(assert (= (parent (,(dom-map dom) ,(cadar (dom-tree dom)))) ,(dom-root dom))))
   (emit `(assert (= (previous (,(dom-map dom) ,(cadar (dom-tree dom)))) (as nil ElementName))))
   (emit `(assert (= (first-child ,elt) ,(cadar (dom-tree dom)))))
@@ -213,24 +213,23 @@
   (append
    (apply append
           (for/list ([i (in-naturals)] [name (stylesheet-rules sheet)])
-            `((declare-const ,name SpecifiedRule)
+            `((declare-const ,name Rule)
               (assert (= (index ,name) ,i))
-              (assert (=> (is-id (selector ,name)) (not (= (id-s (selector ,name)) NoID))))
-              #;(assert (not (is-id (selector ,name))))
+              (assert (=> (is-sel/id (selector ,name)) (not (= (sel.id (selector ,name)) NoID))))
 
               ; Optimize for short CSS
 
               ; Each enabled property costs one line
               ,@(if maximize
                     (for*/list ([type css-properties] [property (cdr type)])
-                      `(assert-soft (not (,(variable-append property 'enabled) ,name)) :weight 1))
+                      `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1))
                     '())
 
               ; Each block with an enabled property costs two line (open/selector and close brace)
               ,@(if maximize
                     `((assert-soft (and
                                     ,@(for*/list ([type css-properties] [property (cdr type)])
-                                        `(not (,(variable-append property 'enabled) ,name))))
+                                        `(not (,(sformat "rule.~a?" property) ,name))))
                                    :weight 2))
                     '())
 
@@ -238,7 +237,7 @@
               ,@(if maximize
                     (for/list ([(short-name subproperties) (in-pairs css-shorthand-properties)])
                       `(assert-soft (and ,@(for/list ([subprop subproperties])
-                                             (list (variable-append subprop 'enabled) name)))
+                                             (list (sformat "rule.~a?" subprop) name)))
                                     :weight 3))
                     '()))))))
 
@@ -249,8 +248,8 @@
   (let interpret ([cmds cmds])
     (match cmds
       [(list ':print rest ...)
-       (emit `(declare-const ,(variable-append name 'placement) Box))
-       (emit `(assert (= ,(variable-append name 'placement) (placement-box (,(dom-map dom) ,name)))))
+       (emit `(declare-const ,(sformat "~a-placement" name) Box))
+       (emit `(assert (= ,(sformat "~a-placement" name) (placement-box (,(dom-map dom) ,name)))))
        (interpret rest)]
       [(list ':id id rest ...)
        (interpret rest)]
@@ -258,7 +257,7 @@
        (define fun
          (match field
            [':x 'x] [':y 'y] [':w 'w] [':h 'h] [':gap 'gap] [':vh 'box-height] [':vw 'box-width]))
-       (emit `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :named ,(variable-append name fun))))
+       (emit `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :named ,(sformat "~a-~a" name fun))))
        (interpret rest)]
       [(list)
        (void)])))
@@ -269,13 +268,9 @@
      (for-each emit
               (element-constraints-core tag name (dom-map dom)))]))
 
-(define (nofloat-constraints dom emit elt children)
-  (when (not (equal? (car elt) '<>))
-    (emit `(assert (= (float (rules ,(dom-get dom elt))) none)))))
-
 (define (id-constraints dom emit elt children)
   (if (memq ':id elt)
-      (emit `(assert (= (id ,(dom-get dom elt)) ,(variable-append 'ID (cadr (memq ':id elt))))))
+      (emit `(assert (= (id ,(dom-get dom elt)) ,(sformat "ID-~a" (cadr (memq ':id elt))))))
       (emit `(assert (= (id ,(dom-get dom elt)) NoID)))))
 
 (define (all-constraints-of dom emit . types)
@@ -317,41 +312,38 @@
           (for ([cns constraints])
             (cns dom sow elt children)))))
 
-(define (define-id-type doms)
-  `(declare-datatypes ()
-                      ((Id NoID
-                          ,@(map (curry variable-append 'ID)
-                                 (remove-duplicates
-                                  (reap [sow]
-                                        (for ([dom doms])
-                                          (for ([elt (in-tree-values (dom-tree dom))])
-                                            (when (memq ':id elt)
-                                              (sow (cadr (memq ':id elt)))))))))))))
-
 (define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header . doms)
+  (define ids
+    (for*/reap [id] ([dom doms] [elt (in-tree-values (dom-tree dom))] #:when (memq ':id elt))
+               (id (cadr (memq ':id elt)))))
+  (define tags
+    (for*/reap [tag] ([dom doms] [elt (in-tree-values (dom-tree dom))])
+               (tag (car elt))))
+
   (define problem
     `(; Preamble
       (set-option :produce-unsat-cores true)
-      ,(define-id-type doms)
-      ,@css-types
-      ,css-rule-types
-      ,@css-score-ops
-      ,@math-utilities
-      ,@box-functions
-
-      ; Defining some terms
       (declare-datatypes ()
-        ((Document ,@(for/list ([dom doms]) (variable-append (dom-name dom) 'doc)))
-         (ElementName ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (second elt))
-                      ,@(for/list ([dom doms]) (dom-root dom))
-                      nil)))
+        ((Id NoID ,@(map (curry sformat "ID-~a") (remove-duplicates ids)))
+         (TagNames <HTML> ,@(map (curry sformat "~a") (remove-duplicates tags)))
+         (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
+         (ElementName
+          ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (second elt))
+          ,@(for/list ([dom doms]) (dom-root dom))
+          nil)))
+      ,@css-declarations
+
+      ,@box-functions
+      ; Defining some terms
       ,element-type
+      ,@css-functions
+
       ; Stylesheet
       ,@(stylesheet-constraints sheet)
       ; DOMs
       ,@(bfs-constraints #:stop-at 1 ; #:per-level-check #t #:per-dom-check #t
          doms
-         tree-constraints #;nofloat-constraints id-constraints user-constraints element-constraints style-constraints)
+         tree-constraints id-constraints user-constraints element-constraints style-constraints)
       (apply propagate-values)
       (check-sat :data 1)))
 
