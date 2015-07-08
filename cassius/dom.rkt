@@ -4,7 +4,7 @@
 
 (provide (struct-out dom) (struct-out stylesheet) (struct-out rendering-context)
          inline-element? in-tree-subtrees in-tree-values
-         in-dom-levels dom-get dom-type dom-map dom-root)
+         in-dom-levels dom-get dom-type dom-map dom-root elt-name)
 
 (struct dom (name stylesheet context tree))
 (struct rendering-context (width))
@@ -45,4 +45,8 @@
 (define (dom-map dom) (sformat "~a-map" (dom-name dom)))
 (define (dom-root dom) (sformat "~a-root" (dom-name dom)))
 (define (dom-get dom elt)
-  `(,(dom-map dom) ,(second elt)))
+  `(,(dom-map dom) ,(elt-name elt)))
+
+(define elt-names (make-hash))
+(define (elt-name def)
+  (hash-ref! elt-names def (lambda () (sformat "elt$~a" (hash-count elt-names)))))

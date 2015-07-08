@@ -103,15 +103,15 @@
   (define (get-child children accessor)
     (if (null? children)
         '(as nil ElementName)
-        (cadar (accessor children))))
+        (elt-name (car (accessor children)))))
 
   ; Parent element
   (for ([child (sequence-map car children)])
-    (emit `(assert (= (parent ,(elt-get child)) ,(cadr elt)))))
+    (emit `(assert (= (parent ,(elt-get child)) ,(elt-name elt)))))
   ; Previous element
   (for ([child (sequence-map car children)]
         [prev (sequence-append (in-value '(as nil ElementName))
-                               (sequence-map cadar children))])
+                               (sequence-map (compose elt-name car) children))])
     (emit `(assert (= (previous ,(elt-get child)) ,prev))))
 
   ; First/last child
@@ -149,7 +149,7 @@
   (define elt (list (dom-map dom) (dom-root dom)))
   (define b (list 'flow-box elt))
 
-  (define names (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (second elt))))
+  (define names (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt))))
 
   ; The type of element names
   (for ([name names])
@@ -176,9 +176,9 @@
   (emit `(assert (= (float ,elt) float/none)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
-  (emit `(assert (= (parent (,(dom-map dom) ,(cadar (dom-tree dom)))) ,(dom-root dom))))
-  (emit `(assert (= (previous (,(dom-map dom) ,(cadar (dom-tree dom)))) (as nil ElementName))))
-  (emit `(assert (= (first-child ,elt) ,(cadar (dom-tree dom)))))
+  (emit `(assert (= (parent (,(dom-map dom) ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
+  (emit `(assert (= (previous (,(dom-map dom) ,(elt-name (car (dom-tree dom))))) (as nil ElementName))))
+  (emit `(assert (= (first-child ,elt) ,(elt-name (car (dom-tree dom))))))
   (emit `(assert (= (parent ,elt) (as nil ElementName))))
   (emit `(assert (= (previous ,elt) (as nil ElementName)))))
 
@@ -219,8 +219,8 @@
                     '()))))))
 
 (define (user-constraints dom emit elt children)
-  (define name (cadr elt))
-  (define cmds (cddr elt))
+  (define name (elt-name elt))
+  (define cmds (match elt [(list 'BLOCK _ cmds ...) cmds] [(list 'TEXT cmds ...) cmds]))
 
   (let interpret ([cmds cmds])
     (match cmds
@@ -243,9 +243,10 @@
 
 (define (element-constraints dom emit elt children)
   (match elt
-    [`(,tag ,name ,constraints ...)
-     (for-each emit
-              (element-constraints-core tag name (dom-map dom)))]))
+    [(list 'BLOCK tag constraints ...)
+     (for-each emit (element-constraints-core tag (elt-name elt) (dom-map dom)))]
+    [(list 'TEXT constraints ...)
+     (for-each emit (element-constraints-core '<> (elt-name elt) (dom-map dom)))]))
 
 (define (id-constraints dom emit elt children)
   (if (memq ':id elt)
@@ -296,19 +297,21 @@
     (for*/reap [id] ([dom doms] [elt (in-tree-values (dom-tree dom))] #:when (memq ':id elt))
                (id (cadr (memq ':id elt)))))
   (define tags
-    (for*/reap [tag] ([dom doms] [elt (in-tree-values (dom-tree dom))])
-               (tag (car elt))))
+    (for*/reap [save] ([dom doms] [elt (in-tree-values (dom-tree dom))])
+               (match elt
+                 [(list 'BLOCK tag cmds ...) (save tag)]
+                 [(list 'TEXT cmds ...) (void)])))
 
   (define problem
     `(; Preamble
       (set-option :produce-unsat-cores true)
       (declare-datatypes ()
         ((Id NoID ,@(map (curry sformat "ID-~a") (remove-duplicates ids)))
-         (TagNames box/viewport box/inline box/block
+         (TagNames box/viewport box/<> box/inline box/block
                    ,@(map (curry sformat "box/~a") (remove-duplicates tags)))
          (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
          (ElementName
-          ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (second elt))
+          ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (elt-name elt))
           ,@(for/list ([dom doms]) (dom-root dom))
           nil)))
       ,@css-declarations
