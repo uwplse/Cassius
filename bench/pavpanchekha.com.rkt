@@ -71,7 +71,8 @@ p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: aut
               ([TEXT :x 157.5 :y 31.5 :w 205.1 :h 33 :gap -9]))
              ([BLOCK <P> :x 157.5 :y 78 :vw 630 :vh 120.5]
               ([TEXT :x 157.5 :w (/ 3235 6) #|:y 80 :h 21 :gap 3|#])
-              ([TEXT :x (/ 2090 3) :w 19 #|:y 78 :h 24 :gap 0|#])
+              ([INLINE <SPAN> :x (/ 2090 3) :w 19]
+               ([TEXT :x (/ 2090 3) :w 19 #|:y 78 :h 24 :gap 0|#]))
               ([TEXT :x (/ 2147 3) :w (/ 431 6) #|:y 80 :h 21 :gap 3|#])
               ([TEXT :x 157.5 :y 104 :w 630 :h 21 :gap 3])
               ([TEXT :x 157.5 :y 128 :w 630 :h 21 :gap 3])
@@ -122,4 +123,4 @@ p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: aut
        [context (rendering-context 945)])
     (dom 'docb sheet context tree)))
 
-(cassius-solve #:sheet sheet #:header header doma #;domb)
+(cassius-solve #:sheet sheet #:header header #;doma domb)
