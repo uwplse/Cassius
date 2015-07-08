@@ -80,9 +80,9 @@
   (define lb `(flow-box ,le))
 
   `(; Basic element stuff
-    (assert (= (display ,e) ,(if (eq? e-tag '<>) 'display/inline 'display/block)))
+    (assert (= (display ,e) ,(if (eq? e-tag 'box/text) 'display/inline 'display/block)))
     (assert (not (is-nil ,pe)))
-    (assert (= (tagname ,e) ,(sformat "box/~a" e-tag)))
+    (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
     (assert (= (float ,e)
                (ite (is-display/inline (display ,e))
                     float/none ; Cannot float inline elements
@@ -183,29 +183,29 @@
             (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,b) 0.0))
 
             ; If 'height' is 'auto', the height depends on whether the element has
-            ; any block-level children and whether it has padding or borders: 
+            ; any block-level children and whether it has padding or borders:
             (=> (is-height/auto (style.height ,r))
                 (= (h ,b)
                    (ite (is-element ,le)
                         (ite (= (display ,le) display/inline)
                              ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
-                             ; if the box establishes a inline formatting context with one or more lines 
+                             ; if the box establishes a inline formatting context with one or more lines
                              (- (+ (box-bottom ,lb) (/ (gap ,lb) 2)) (top-content ,b))
                              ; CSS § 10.6.3, item 2: the bottom edge of the bottom
                              ; (possibly collapsed) margin of its last in-flow child,
                              ; if the child's bottom margin does not collapse with the
-                             ; element's bottom margin 
+                             ; element's bottom margin
                              (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0))
                                   ; Collapsed margin
-                                  (- (box-bottom ,lb) (top-content ,b)) 
+                                  (- (box-bottom ,lb) (top-content ,b))
                                   ; No collapsed margin
                                   (- (bottom-outer ,lb) (top-content ,b))))
                         ; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
-                        ; whose top margin doesn't collapse with the element's bottom margin 
+                        ; whose top margin doesn't collapse with the element's bottom margin
                         ; NOTE: This can happen if the box height is 0.
                         ; We don't support that, so it's not an issue.
 
-                        ; CSS § 10.6.3, item 4: zero, otherwise 
+                        ; CSS § 10.6.3, item 4: zero, otherwise
                         0.0)))
 
            ; Computing X and Y position
@@ -282,7 +282,7 @@
             ; CSS 2.1 § 10.6.7 : In certain cases, the height of an
             ; element that establishes a block formatting context is computed as follows:
             (=> (is-height/auto (style.height ,r))
-                (= (h ,bp) 
+                (= (h ,bp)
                    (ite (is-element ,le)
                         (ite (= (display ,le) display/inline)
                              ; If it only has inline-level children, the height is the distance between
@@ -298,12 +298,12 @@
             ; is below the element's bottom content edge, then the height is increased to include
             ; those edges. Only floats that participate in this block formatting context are taken
             ; into account, e.g., floats inside absolutely positioned descendants or other floats
-            ; are not. 
+            ; are not.
 
             ; Positivity constraint
             ; CSS 2.1 § 9.5.1 : When the float occurs between two collapsing margins, the float is
             ; positioned as if it had an otherwise empty anonymous block parent taking part in the flow.
-            ; The position of such a parent is defined by the rules in the section on margin collapsing. 
+            ; The position of such a parent is defined by the rules in the section on margin collapsing.
             (= (flow-box ,e)
                ; TODO : Handle the margin collapsing nonsense
                (ite (is-nil ,ve)
@@ -315,7 +315,7 @@
                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                          0.0)))
-            
+
             (>= (w ,bp) 0.0)
             (>= (h ,bp) 0.0)
             (>= (pl ,bp) 0.0)

@@ -122,7 +122,7 @@
   (define e (dom-get dom elt))
   (define re `(rules ,e))
 
-  (when (not (eq? (car elt) '<>))
+  (when (not (eq? (car elt) 'text))
     ; Score of computed rule is >= any applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)]
            [rule (stylesheet-rules (dom-stylesheet dom))])
@@ -244,9 +244,9 @@
 (define (element-constraints dom emit elt children)
   (match elt
     [(list 'BLOCK tag constraints ...)
-     (for-each emit (element-constraints-core tag (elt-name elt) (dom-map dom)))]
+     (for-each emit (element-constraints-core (sformat "box/~a" tag) (elt-name elt) (dom-map dom)))]
     [(list 'TEXT constraints ...)
-     (for-each emit (element-constraints-core '<> (elt-name elt) (dom-map dom)))]))
+     (for-each emit (element-constraints-core 'box/text (elt-name elt) (dom-map dom)))]))
 
 (define (id-constraints dom emit elt children)
   (if (memq ':id elt)
@@ -307,7 +307,7 @@
       (set-option :produce-unsat-cores true)
       (declare-datatypes ()
         ((Id NoID ,@(map (curry sformat "ID-~a") (remove-duplicates ids)))
-         (TagNames box/viewport box/<> box/inline box/block
+         (TagNames box/viewport box/text box/inline box/block
                    ,@(map (curry sformat "box/~a") (remove-duplicates tags)))
          (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
          (ElementName
