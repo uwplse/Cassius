@@ -122,7 +122,7 @@
   (define e (dom-get dom elt))
   (define re `(rules ,e))
 
-  (when (not (eq? (car elt) 'text))
+  (when (not (eq? (car elt) 'TEXT))
     ; Score of computed rule is >= any applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)]
            [rule (stylesheet-rules (dom-stylesheet dom))])
@@ -220,7 +220,11 @@
 
 (define (user-constraints dom emit elt children)
   (define name (elt-name elt))
-  (define cmds (match elt [(list 'BLOCK _ cmds ...) cmds] [(list 'TEXT cmds ...) cmds]))
+  (define cmds
+    (match elt
+      [(list 'BLOCK tag cmds ...) cmds]
+      [(list 'INLINE tag cmds ...) cmds]
+      [(list 'TEXT cmds ...) cmds]))
 
   (let interpret ([cmds cmds])
     (match cmds
@@ -245,6 +249,8 @@
   (match elt
     [(list 'BLOCK tag constraints ...)
      (for-each emit (element-block-constraints (sformat "box/~a" tag) (elt-name elt) (dom-map dom)))]
+    [(list 'INLINE tag constraints ...)
+     (for-each emit (element-inline-constraints (sformat "box/~a" tag) (elt-name elt) (dom-map dom)))]
     [(list 'TEXT constraints ...)
      (for-each emit (element-inline-constraints 'box/text (elt-name elt) (dom-map dom)))]))
 
@@ -300,6 +306,7 @@
     (for*/reap [save] ([dom doms] [elt (in-tree-values (dom-tree dom))])
                (match elt
                  [(list 'BLOCK tag cmds ...) (save tag)]
+                 [(list 'INLINE tag cmds ...) (save tag)]
                  [(list 'TEXT cmds ...) (void)])))
 
   (define problem
@@ -316,8 +323,8 @@
           nil)))
       ,@css-declarations
 
-      ,@box-functions
       ; Defining some terms
+      ,@box-functions
       ,element-type
       ,@css-functions
 
