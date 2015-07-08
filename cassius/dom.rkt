@@ -4,7 +4,7 @@
 
 (provide (struct-out dom) (struct-out stylesheet) (struct-out rendering-context)
          inline-element? in-tree-subtrees in-tree-values
-         in-dom-levels dom-get dom-type dom-root elt-name)
+         in-dom-levels dom-get dom-type dom-root elt-name elt-from-name)
 
 (struct dom (name stylesheet context tree))
 (struct rendering-context (width))
@@ -48,3 +48,7 @@
 (define elt-names (make-hash))
 (define (elt-name def)
   (hash-ref! elt-names def (lambda () (sformat "elt$~a" (hash-count elt-names)))))
+
+(define (elt-from-name name)
+  (for/first ([(key val) (in-hash elt-names)] #:when (eq? val name))
+    key))

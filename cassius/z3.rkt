@@ -11,8 +11,8 @@
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
-(define (solve encoding #:debug [debug? #f])
-  (define-values (process out in err) 
+(define (solve encoding #:debug [debug? #f] #:get-unsat [get-unsat identity])
+  (define-values (process out in err)
     (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
@@ -55,7 +55,10 @@
                (write "(get-unsat-core)")
                (let ([msg2 (read out)])
                  (debug #:tag 'output "<- ~a\n" msg2)
-                 (error "Z3 unsatisfiable" msg2))]
+                 (error (format "Z3 unsatisfiable: ~a\n~a" msg2
+                                (string-join
+                                 (for/list ([var msg2])
+                                   (format "  ~a: ~a" var (get-unsat var))) "\n"))))]
               ['sat
                (if (null? rest)
                    (begin
@@ -111,13 +114,13 @@
   (flush-output port))
 
 ; Reads the SMT solution from the given input port.
-; The solution consist of 'sat or 'unsat, followed by  
-; followed by a suitably formatted s-expression.  The 
-; output of this procedure is a hashtable from constant 
+; The solution consist of 'sat or 'unsat, followed by
+; followed by a suitably formatted s-expression.  The
+; output of this procedure is a hashtable from constant
 ; identifiers to their values (if the solution is 'sat);
 ; a non-empty list of assertion identifiers that form an
-; unsatisfiable core (if the solution is 'unsat and a 
-; core was extracted); or #f (if the solution is 
+; unsatisfiable core (if the solution is 'unsat and a
+; core was extracted); or #f (if the solution is
 ; 'unsat and no core was extracted).
 (define (de-z3ify v)
   (match v
@@ -187,7 +190,7 @@
          (when (hash-has-key? store f)
            (hash-set! store f #t))]
         [else 'ok]))
-    
+
     (for ([cmd cmds])
       (match cmd
         [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type ...)
@@ -260,9 +263,7 @@
       (append head (cons def tail)))))
 
 (define *emitter-passes*
-  (list #;z3-simplifier
-        z3-dco
-        z3-movedefs))
+  (list #;z3-simplifier z3-dco z3-movedefs))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs *emitter-passes*))

@@ -318,4 +318,9 @@
       (check-sat :data solve)))
 
   (print-rules #:stylesheet sheet #:header header
-               (solve #:debug debug (z3-prepare problem))))
+               (solve
+                (z3-prepare problem)
+                #:get-unsat
+                (lambda (v)
+                  (elt-from-name (string->symbol (first (string-split (~a v) "-")))))
+                #:debug debug)))
