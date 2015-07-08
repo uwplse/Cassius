@@ -61,8 +61,8 @@
             (first-child ElementName) (last-child ElementName)
             (flow-box Box) (placement-box Box))))))
 
-(define (element-block-constraints e-tag e-name map-name)
-  (define (elt name) `(,map-name ,name))
+(define (element-block-constraints e-tag e-name)
+  (define (elt name) `(get/elt ,name))
 
   (define e (elt e-name))
   (define ve (elt `(previous ,e)))
@@ -306,8 +306,8 @@
 
             (= (float ,e) (style.float ,r))))))
 
-(define (element-inline-constraints e-tag e-name map-name)
-  (define (elt name) `(,map-name ,name))
+(define (element-inline-constraints e-tag e-name)
+  (define (elt name) `(get/elt ,name))
 
   (define e (elt e-name))
   (define ve (elt `(previous ,e)))

@@ -10,7 +10,7 @@
               '()]
              [(list tag name cmds ...)
               (define e (dom-get dom elt))
-              (define pe `(,(dom-map dom) (parent ,(dom-get dom elt))))
+              (define pe `(get/elt (parent ,(dom-get dom elt))))
               (define b `(placement-box ,e))
               (define pb `(placement-box ,pe))
 

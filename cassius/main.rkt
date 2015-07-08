@@ -145,28 +145,31 @@
                             (= (,(sformat "style.~a" property) ,re)
                                (,(sformat "rule.~a" property) ,rule))))))))))
 
-(define (dom-root-constraints dom emit)
-  (define elt (list (dom-map dom) (dom-root dom)))
-  (define b (list 'flow-box elt))
-
-  (define names (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt))))
+(define (dom-define-get doms emit)
+  (define dom-names
+    (for/list ([dom doms])
+      (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt)))))
 
   ; The type of element names
-  (for ([name names])
+  (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-elt" name) Element))
     (emit `(assert (= (document ,(sformat "~a-elt" name)) ,(sformat "~a-doc" (dom-name dom))))))
   ; The element info for a name
   (define body
-    (for/fold ([body '(as nil Element)]) ([name names])
+    (for*/fold ([body '(as nil Element)]) ([names dom-names] [name names])
       `(ite (= x ,name) ,(sformat "~a-elt" name) ,body)))
-  (emit `(define-fun ,(dom-map dom) ((x ElementName)) Element ,body))
-  (for ([name names])
-    (emit `(assert (not (is-nil (,(dom-map dom) ,name)))))
-    (emit `(assert (= (,(dom-map dom) ,name) ,(sformat "~a-elt" name)))))
+  (emit `(define-fun get/elt ((x ElementName)) Element ,body))
+  (for* ([names dom-names] [name names])
+    (emit `(assert (not (is-nil (get/elt ,name)))))
+    (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name)))))
   ; Pointed map: nil goes to nil
-  (emit `(assert (= (,(dom-map dom) (as nil ElementName)) (as nil Element))))
-  (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
+  (emit `(assert (= (get/elt (as nil ElementName)) (as nil Element)))))
 
+(define (dom-root-constraints dom emit)
+  (define elt `(get/elt ,(dom-root dom)))
+  (define b (list 'flow-box elt))
+
+  (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (placement-box ,elt) (flow-box ,elt))))
   (emit `(assert (= (parent ,elt) (as nil ElementName))))
   (emit `(assert (= (tagname ,elt) box/viewport)))
@@ -176,8 +179,8 @@
   (emit `(assert (= (float ,elt) float/none)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
-  (emit `(assert (= (parent (,(dom-map dom) ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
-  (emit `(assert (= (previous (,(dom-map dom) ,(elt-name (car (dom-tree dom))))) (as nil ElementName))))
+  (emit `(assert (= (parent (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
+  (emit `(assert (= (previous (get/elt ,(elt-name (car (dom-tree dom))))) (as nil ElementName))))
   (emit `(assert (= (first-child ,elt) ,(elt-name (car (dom-tree dom))))))
   (emit `(assert (= (parent ,elt) (as nil ElementName))))
   (emit `(assert (= (previous ,elt) (as nil ElementName)))))
@@ -230,9 +233,9 @@
     (match cmds
       [(list ':print rest ...)
        (emit `(declare-const ,(sformat "~a-placement" name) Box))
-       (emit `(assert (= ,(sformat "~a-placement" name) (placement-box (,(dom-map dom) ,name)))))
+       (emit `(assert (= ,(sformat "~a-placement" name) (placement-box (get/elt ,name)))))
        (emit `(declare-const ,(sformat "~a-style" name) Style))
-       (emit `(assert (= ,(sformat "~a-style" name) (rules (,(dom-map dom) ,name)))))
+       (emit `(assert (= ,(sformat "~a-style" name) (rules (get/elt ,name)))))
        (interpret rest)]
       [(list ':id id rest ...)
        (interpret rest)]
@@ -248,11 +251,11 @@
 (define (element-constraints dom emit elt children)
   (match elt
     [(list 'BLOCK tag constraints ...)
-     (for-each emit (element-block-constraints (sformat "box/~a" tag) (elt-name elt) (dom-map dom)))]
+     (for-each emit (element-block-constraints (sformat "box/~a" tag) (elt-name elt)))]
     [(list 'INLINE tag constraints ...)
-     (for-each emit (element-inline-constraints (sformat "box/~a" tag) (elt-name elt) (dom-map dom)))]
+     (for-each emit (element-inline-constraints (sformat "box/~a" tag) (elt-name elt)))]
     [(list 'TEXT constraints ...)
-     (for-each emit (element-inline-constraints 'box/text (elt-name elt) (dom-map dom)))]))
+     (for-each emit (element-inline-constraints 'box/text (elt-name elt)))]))
 
 (define (id-constraints dom emit elt children)
   (if (memq ':id elt)
@@ -263,36 +266,9 @@
   (for* ([(elt children) (in-tree-subtrees (dom-tree dom))] [type types])
     (type dom emit elt children)))
 
-(define (bfs*-constraints doms #:per-dom-check [pdc? #f] #:per-level-check [plc? #f] . constraints)
-  (reap [sow]
-        (for ([dom doms])
-          (dom-root-constraints dom sow)
-          (for ([level (in-dom-levels (list dom))] [id (in-naturals)])
-            (for ([rec level])
-              (match-define (list dom elt children) rec)
-              (for ([cns constraints])
-                (cns dom sow elt children)))
-            (when plc?
-              (sow (check-sat ':level id ':width (length level) ':heads (map caadr level)))))
-          (when pdc?
-            (sow (check-sat ':height (length (in-dom-levels (list dom)))
-                            ':nodes (apply + (map length (in-dom-levels (list dom))))))))))
-
-
-(define (bfs-constraints doms #:stop-at [n* #f] #:per-level-check [plc? #f] . constraints)
-  (reap [sow]
-        (for ([dom doms]) (dom-root-constraints dom sow))
-        (eprintf "Levels: ~a\n" (length (in-dom-levels doms)))
-        (for ([level (in-dom-levels doms)] [id (in-naturals)])
-          (for ([rec level] [n (in-naturals)] #:break (and n* (> n n*)))
-            (match-define (list dom elt children) rec)
-            (for ([cns constraints])
-              (cns dom sow elt children)))
-          (when plc?
-            (sow (check-sat ':level id ':width (length level) ':heads (map caadr level)))))))
-
 (define (dfs-constraints doms . constraints)
   (reap [sow]
+        (dom-define-get doms sow)
         (for ([dom doms]) (dom-root-constraints dom sow))
         (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
           (for ([cns constraints])
@@ -308,6 +284,8 @@
                  [(list 'BLOCK tag cmds ...) (save tag)]
                  [(list 'INLINE tag cmds ...) (save tag)]
                  [(list 'TEXT cmds ...) (void)])))
+
+  (define constraints (list tree-constraints id-constraints user-constraints element-constraints style-constraints))
 
   (define problem
     `(; Preamble
@@ -331,11 +309,9 @@
       ; Stylesheet
       ,@(stylesheet-constraints sheet)
       ; DOMs
-      ,@(dfs-constraints
-         doms
-         tree-constraints id-constraints user-constraints element-constraints style-constraints)
+      ,@(apply dfs-constraints doms constraints)
       (apply propagate-values)
-      (check-sat :data 1)))
+      (check-sat :data solve)))
 
   (print-rules #:stylesheet sheet #:header header
                (solve #:debug debug (z3-prepare problem))))
