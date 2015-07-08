@@ -25,38 +25,55 @@ p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: aut
            ([BLOCK <BODY> :x 154 :y 36 :vw 650 :vh (/ 8779 12)]
             ([BLOCK <DIV> :x 164 :y 36 :vw 630 :vh 582]
              ([BLOCK <H1> :x 164 :y 36 :vw 630 :vh 24]
-              ([TEXT :x 164 :y 31.5 :w 273.8 :h 33 :gap -9]))
+              ([LINE :x 164 :y 36 :w 630 :h 24 :gap 0]
+               ([TEXT :x 164 :y 31.5 :w 273.8 :h 33 :gap -9])))
              ([BLOCK <P> :x 164 :y 78 :vw 630 :vh 24]
-              ([TEXT :x 164 :y 79.5 :w 215 :h 21 :gap 3]))
+              ([LINE :x 164 :y 78 :w 630 :h 24 :gap 0]
+               ([TEXT :x 164 :y 79.5 :w 215 :h 21 :gap 3])))
              ([BLOCK <DIV> :x 164 :y 123.6 :vw 630 :vh 66]
               ([BLOCK <PRE> :x 164 :y 123.6 :vw 630 :vh 66]
-               ([TEXT :x 173 :y 132.6 :w 199 :h 24 :gap 0])
-               ([TEXT :x 173 :y 156.6 :w 152 :h 24 :gap 0])))
+               ([LINE :x 173 :y 132.6 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 132.6 :w 199 :h 24 :gap 0]))
+               ([LINE :x 173 :y 156.6 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 156.6 :w 152 :h 24 :gap 0]))))
              ([BLOCK <P> :x 164 :y 220.2 :vw 630 :vh 48]
-              ([TEXT :x 164 :y 221.7 :w 630 :h 21 :gap 3])
-              ([TEXT :x 164 :y 245.7 :w 68 :h 21 :gap 3]))
+              ([LINE :x 164 :y 220.2 :w 630 :h 24 :gap 0]
+               ([TEXT :x 164 :y 221.7 :w 630 :h 21 :gap 3]))
+              ([LINE :x 164 :y 244.2 :w 630 :h 24 :gap 0]
+               ([TEXT :x 164 :y 245.7 :w 68 :h 21 :gap 3])))
              ([BLOCK <DIV> :x 164 :y 289.8 :vw 630 :vh 162]
               ([BLOCK <PRE> :x 164 :y 289.8 :vw 630 :vh 162]
-               ([TEXT :x 173 :y 298.8 :w 349 :h 24 :gap 0])
-               ([TEXT :x 173 :y 322.8 :w 284 :h 24 :gap 0])
-               ([TEXT :x 173 :y 346.8 :w 302 :h 24 :gap 0])
-               ([TEXT :x 173 :y 370.8 :w 292 :h 24 :gap 0])
-               ([TEXT :x 173 :y 394.8 :w 362 :h 24 :gap 0])
-               ([TEXT :x 173 :y 418.8 :w 145 :h 24 :gap 0])))
+               ([LINE :x 173 :y 298.8 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 298.8 :w 349 :h 24 :gap 0]))
+               ([LINE :x 173 :y 322.8 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 322.8 :w 284 :h 24 :gap 0]))
+               ([LINE :x 173 :y 346.8 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 346.8 :w 302 :h 24 :gap 0]))
+               ([LINE :x 173 :y 370.8 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 370.8 :w 292 :h 24 :gap 0]))
+               ([LINE :x 173 :y 394.8 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 394.8 :w 362 :h 24 :gap 0]))
+               ([LINE :x 173 :y 418.8 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 418.8 :w 145 :h 24 :gap 0]))))
              ([BLOCK <P> :x 164 :y 482.4 :vw 630 :vh 48]
-              ([TEXT :x 164 :y 483.9 :w 630 :h 21 :gap 3])
-              ([TEXT :x 164 :y 507.9 :w 97 :h 21 :gap 3]))
+              ([LINE :x 164 :y 482.4 :w 630 :h 24 :gap 0]
+               ([TEXT :x 164 :y 483.9 :w 630 :h 21 :gap 3]))
+              ([LINE :x 164 :y 506.4 :w 630 :h 24 :gap 0]
+               ([TEXT :x 164 :y 507.9 :w 97 :h 21 :gap 3])))
              ([BLOCK <DIV> :x 164 :y 552 :vw 630 :vh 66]
               ([BLOCK <PRE> :x 164 :y 552 :vw 630 :vh 66]
-               ([TEXT :x 173 :y 561 :w 199 :h 24 :gap 0])
-               ([TEXT :x 173 :y 585 :w 247 :h 24 :gap 0])))))
+               ([LINE :x 173 :y 561 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 561 :w 199 :h 24 :gap 0]))
+               ([LINE :x 173 :y 585 :w 612 :h 24 :gap 0]
+                ([TEXT :x 173 :y 585 :w 247 :h 24 :gap 0])))))
            #;([BLOCK <DIV> :x 164 :y 648.6 :vw 630 :vh 16]
-           ([BLOCK <P> :x 164 :y 648.6 :vw 630 :vh 16]
-           ([TEXT :x 305.5 :y (/ 7789 12) :w 21 :h 15 :gap 1])
-           ([TEXT :x 326.5 :y (/ 7789 12) :w 108 :h 15 :gap 1])
-           ([TEXT :x 434.5 :y (/ 7789 12) :w 95 :h 15 :gap 1])
-           ([TEXT :x 529.5 :y (/ 7789 12) :w 119 :h 15 :gap 1])
-           ([TEXT :x 648.5 :y (/ 7789 12) :w 4 :h 15 :gap 1]))))]
+            ([BLOCK <P> :x 164 :y 648.6 :vw 630 :vh 16]
+             ([LINE :x 305.5 :y (/ 7789 12) :w 630 :h 16 :gap 0]
+              ([TEXT :x 305.5 :y (/ 7789 12) :w 21 :h 15 :gap 1])
+              ([TEXT :x 326.5 :y (/ 7789 12) :w 108 :h 15 :gap 1])
+              ([TEXT :x 434.5 :y (/ 7789 12) :w 95 :h 15 :gap 1])
+              ([TEXT :x 529.5 :y (/ 7789 12) :w 119 :h 15 :gap 1])
+              ([TEXT :x 648.5 :y (/ 7789 12) :w 4 :h 15 :gap 1]))))))]
 [context (rendering-context 958)])
     (dom 'doca sheet context tree)))
 
@@ -123,4 +140,4 @@ p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: aut
        [context (rendering-context 945)])
     (dom 'docb sheet context tree)))
 
-(cassius-solve #:sheet sheet #:header header #;doma domb)
+(cassius-solve #:sheet sheet #:header header doma #;domb)

@@ -227,6 +227,7 @@
     (match elt
       [(list 'BLOCK tag cmds ...) cmds]
       [(list 'INLINE tag cmds ...) cmds]
+      [(list 'LINE cmds ...) cmds]
       [(list 'TEXT cmds ...) cmds]))
 
   (let interpret ([cmds cmds])
@@ -254,6 +255,8 @@
      (for-each emit (element-block-constraints (sformat "box/~a" tag) (elt-name elt)))]
     [(list 'INLINE tag constraints ...)
      (for-each emit (element-inline-constraints (sformat "box/~a" tag) (elt-name elt)))]
+    [(list 'LINE tag constraints ...)
+     (for-each emit (element-inline-constraints "box/line" (elt-name elt)))]
     [(list 'TEXT constraints ...)
      (for-each emit (element-inline-constraints 'box/text (elt-name elt)))]))
 
@@ -283,6 +286,7 @@
                (match elt
                  [(list 'BLOCK tag cmds ...) (save tag)]
                  [(list 'INLINE tag cmds ...) (save tag)]
+                 [(list 'LINE tag cmds ...) (void)]
                  [(list 'TEXT cmds ...) (void)])))
 
   (define constraints (list tree-constraints id-constraints user-constraints element-constraints style-constraints))
@@ -292,7 +296,7 @@
       (set-option :produce-unsat-cores true)
       (declare-datatypes ()
         ((Id NoID ,@(map (curry sformat "ID-~a") (remove-duplicates ids)))
-         (TagNames box/viewport box/text box/inline box/block
+         (TagNames box/viewport box/text box/inline box/block box/line
                    ,@(map (curry sformat "box/~a") (remove-duplicates tags)))
          (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
          (ElementName
