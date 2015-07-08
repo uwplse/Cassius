@@ -2,7 +2,7 @@
 (require "z3.rkt")
 (require "dom.rkt")
 (require "css-rules.rkt")
-(require (rename-in "elements.rkt" [element-constraints element-constraints-core]))
+(require "elements.rkt")
 (require "float.rkt")
 (require "common.rkt")
 (require "css-properties.rkt")
@@ -244,9 +244,9 @@
 (define (element-constraints dom emit elt children)
   (match elt
     [(list 'BLOCK tag constraints ...)
-     (for-each emit (element-constraints-core (sformat "box/~a" tag) (elt-name elt) (dom-map dom)))]
+     (for-each emit (element-block-constraints (sformat "box/~a" tag) (elt-name elt) (dom-map dom)))]
     [(list 'TEXT constraints ...)
-     (for-each emit (element-constraints-core 'box/text (elt-name elt) (dom-map dom)))]))
+     (for-each emit (element-inline-constraints 'box/text (elt-name elt) (dom-map dom)))]))
 
 (define (id-constraints dom emit elt children)
   (if (memq ':id elt)

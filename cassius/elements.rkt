@@ -4,7 +4,7 @@
 
 (require unstable/sequence)
 
-(provide box-functions element-type element-constraints)
+(provide box-functions element-type element-block-constraints element-inline-constraints)
 
 (define box-functions
   `((declare-datatypes ()
@@ -61,7 +61,7 @@
             (first-child ElementName) (last-child ElementName)
             (flow-box Box) (placement-box Box))))))
 
-(define (element-constraints e-tag e-name map-name)
+(define (element-block-constraints e-tag e-name map-name)
   (define (elt name) `(,map-name ,name))
 
   (define e (elt e-name))
@@ -80,15 +80,9 @@
   (define lb `(flow-box ,le))
 
   `(; Basic element stuff
-    (assert (= (display ,e) ,(if (eq? e-tag 'box/text) 'display/inline 'display/block)))
-    (assert (not (is-nil ,pe)))
+    (assert (= (display ,e) display/block))
     (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
-    (assert (= (float ,e)
-               (ite (is-display/inline (display ,e))
-                    float/none ; Cannot float inline elements
-                    (ite (is-float/inherit (style.float ,r))
-                         (float ,pe)
-                         (style.float ,r)))))
+    (assert (= (float ,e) (ite (is-float/inherit (style.float ,r)) (float ,pe) (style.float ,r))))
 
     ; Computing maximum collapsed positive and negative margin
     (assert (= (mtp ,b)
@@ -108,25 +102,8 @@
                     (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0))
                          (if (is-element ,fe) (mbn ,fb) 0.0) 0.0))))
 
-    ; Inline element layout
-   ,@(map (λ (x) `(assert (=> (= (display ,e) display/inline) ,x)))
-          `((<= (w ,b) (w ,pb))
-            (= (mt ,b) (mr ,b) (mb ,b) (ml ,b) 0.0)
-            (= (mtp ,b) (mbp ,b) (mtn ,b) (mbp ,b) 0.0)
-            (= (pt ,b) (pr ,b) (pb ,b) (pl ,b) 0.0)
-            (= (bt ,b) (br ,b) (bb ,b) (bl ,b) 0.0)
-            (ite (is-nil ,ve)
-                 (and (= (x ,b) (left-content ,pb))
-                      (= (y ,b) (+ (top-content ,pb) (/ (gap ,b) 2))))
-                 (or
-                  (and (= (x ,b) (left-content ,pb)) ; We might break line
-                       (= (y ,b) (+ (box-bottom ,vb) (/ (+ (gap ,b) (gap ,vb)) 2))))
-                  (and (= (x ,b) (box-right ,vb)) ; Or we might not
-                       (= (- (y ,b) (/ (gap ,b) 2)) (- (y ,vb) (/ (gap ,vb) 2))))))
-            (= (placement-box ,e) (flow-box ,e))))
-
    ; In-flow block element layout
-   ,@(map (λ (x) `(assert (=> (and (= (display ,e) display/block) (is-float/none (float ,e))) ,x)))
+   ,@(map (λ (x) `(assert (=> (is-float/none (float ,e)) ,x)))
           `(; Set properties that are settable with lengths
             ,@(for/list ([item '((width width w) (height height h)
                                  (padding-left padding pl) (padding-right padding pr)
@@ -238,7 +215,7 @@
            (= (placement-box ,e) (flow-box ,e))))
 
    ; Floating block element layout
-   ,@(map (λ (x) `(assert (=> (and (= (display ,e) display/block) (not (is-float/none (float ,e)))) ,x)))
+   ,@(map (λ (x) `(assert (=> (not (is-float/none (float ,e))) ,x)))
           `(,@(for/list ([item '((width width w) (height height h)
                                  (padding-left padding pl) (padding-right padding pr)
                                  (padding-top padding pt) (padding-bottom padding pb)
@@ -328,3 +305,50 @@
             (= (bb ,bp) 0.0)
 
             (= (float ,e) (style.float ,r))))))
+
+(define (element-inline-constraints e-tag e-name map-name)
+  (define (elt name) `(,map-name ,name))
+
+  (define e (elt e-name))
+  (define ve (elt `(previous ,e)))
+  (define pe (elt `(parent ,e)))
+  (define fe (elt `(first-child ,e)))
+  (define le (elt `(last-child ,e)))
+
+  (define r `(rules ,e))
+
+  (define b  `(flow-box ,e))
+  (define bp `(placement-box ,e))
+  (define vb `(flow-box ,ve))
+  (define pb `(placement-box ,pe))
+  (define fb `(flow-box ,fe))
+  (define lb `(flow-box ,le))
+
+  `(; Basic element stuff
+    (assert (= (display ,e) display/inline))
+    (assert (not (is-nil ,pe)))
+    (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
+    (assert (= (float ,e) float/none))
+
+    ; Computing maximum collapsed positive and negative margin
+    (assert (= (mtp ,b) 0.0))
+    (assert (= (mtn ,b) 0.0))
+    (assert (= (mbp ,b) 0.0))
+    (assert (= (mbn ,b) 0.0))
+
+    ; Inline element layout
+   ,@(map (λ (x) `(assert (=> (= (display ,e) display/inline) ,x)))
+          `((<= (w ,b) (w ,pb))
+            (= (mt ,b) (mr ,b) (mb ,b) (ml ,b) 0.0)
+            (= (mtp ,b) (mbp ,b) (mtn ,b) (mbp ,b) 0.0)
+            (= (pt ,b) (pr ,b) (pb ,b) (pl ,b) 0.0)
+            (= (bt ,b) (br ,b) (bb ,b) (bl ,b) 0.0)
+            (ite (is-nil ,ve)
+                 (and (= (x ,b) (left-content ,pb))
+                      (= (y ,b) (+ (top-content ,pb) (/ (gap ,b) 2))))
+                 (or
+                  (and (= (x ,b) (left-content ,pb)) ; We might break line
+                       (= (y ,b) (+ (box-bottom ,vb) (/ (+ (gap ,b) (gap ,vb)) 2))))
+                  (and (= (x ,b) (box-right ,vb)) ; Or we might not
+                       (= (- (y ,b) (/ (gap ,b) 2)) (- (y ,vb) (/ (gap ,vb) 2))))))
+            (= (placement-box ,e) (flow-box ,e))))))
