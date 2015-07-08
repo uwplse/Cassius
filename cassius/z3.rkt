@@ -48,7 +48,9 @@
             (debug #:tag 'output "<- ~a\n" msg)
             (match msg
               [`(error ,text)
-               (error (format "Z3 error: ~a" text))]
+               (match (map string-split (string-split text ":"))
+                 [`(("line" ,l "column" ,c) ,rest)
+                  (error (format "Z3 error: ~a\n  line:" text) (list-ref encoding (- (string->number l) 1)))])]
               ['unsat
                (write "(get-unsat-core)")
                (let ([msg2 (read out)])
