@@ -1,10 +1,12 @@
 #lang racket
 (require "dom.rkt")
+(require "smt.rkt")
 (require "common.rkt")
 
 (require unstable/sequence)
 
-(provide box-functions element-type element-block-constraints element-inline-constraints)
+(provide box-functions element-type
+         element-block-constraints element-inline-constraints element-line-constraints)
 
 (define box-functions
   `((declare-datatypes ()
@@ -12,8 +14,7 @@
                   (mt Real) (mr Real) (mb Real) (ml Real)
                   (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                   (pt Real) (pr Real) (pb Real) (pl Real)
-                  (bt Real) (br Real) (bb Real) (bl Real)
-                  (gap Real)))))
+                  (bt Real) (br Real) (bb Real) (bl Real)))))
 
     (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
     (define-fun left-border ((box Box)) Real (x box))
@@ -44,6 +45,8 @@
 
     (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
     (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
+    (define-fun between ((x Real) (y Real) (z Real)) Bool
+      (or (<= x y z) (>= x y z)))
 
     (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
       (or (> (+ (y box1) (box-height box1)) (y box2) (y box1))
@@ -56,7 +59,7 @@
         (element
             (document Document)
             (tagname TagNames) (id Id) (rules Style)
-            (display Display) (float Float)
+            (display Display) (float Float) (textalign TextAlign)
             (previous ElementName) (parent ElementName)
             (first-child ElementName) (last-child ElementName)
             (flow-box Box) (placement-box Box))))))
@@ -83,24 +86,26 @@
     (assert (= (display ,e) display/block))
     (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
     (assert (= (float ,e) (ite (is-float/inherit (style.float ,r)) (float ,pe) (style.float ,r))))
+    (assert (= (textalign ,e)
+               (ite (is-text-align/inherit (style.text-align ,r)) (textalign ,pe) (style.text-align ,r))))
 
     ; Computing maximum collapsed positive and negative margin
     (assert (= (mtp ,b)
                (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-                    (ite (and (= (pt ,b) 0.0) (= (bt ,b) 0.0))
-                         (if (is-element ,fe) (mtp ,fb) 0.0) 0.0))))
+                    (ite (and (not (= (tagname ,e) box/<HTML>)) (is-element ,fe)
+                              (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0))))
     (assert (= (mtn ,b)
                (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-                    (ite (and (= (pt ,b) 0.0) (= (bt ,b) 0.0))
-                         (if (is-element ,fe) (mtn ,fb) 0.0) 0.0))))
+                    (ite (and (not (= (tagname ,e) box/<HTML>)) (is-element ,fe)
+                              (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0))))
     (assert (= (mbp ,b)
                (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
-                    (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0))
-                         (if (is-element ,fe) (mbp ,fb) 0.0) 0.0))))
+                    (ite (and (not (= (tagname ,e) box/<HTML>)) (is-element ,le)
+                              (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0))))
     (assert (= (mbn ,b)
                (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
-                    (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0))
-                         (if (is-element ,fe) (mbn ,fb) 0.0) 0.0))))
+                    (ite (and (not (= (tagname ,e) box/<HTML>)) (is-element ,le)
+                              (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0))))
 
    ; In-flow block element layout
    ,@(map (λ (x) `(assert (=> (is-float/none (float ,e)) ,x)))
@@ -113,9 +118,6 @@
                   [(list prop type field)
                    `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
                         (= (,field ,b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
-
-            ; Block elements don't have a gap
-            (= (gap ,b) 0.0)
 
             ; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
             ; The following constraints must hold among the used values of the other properties:
@@ -162,35 +164,34 @@
             ; If 'height' is 'auto', the height depends on whether the element has
             ; any block-level children and whether it has padding or borders:
             (=> (is-height/auto (style.height ,r))
-                (= (h ,b)
-                   (ite (is-element ,le)
-                        (ite (= (display ,le) display/inline)
-                             ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
-                             ; if the box establishes a inline formatting context with one or more lines
-                             (- (+ (box-bottom ,lb) (/ (gap ,lb) 2)) (top-content ,b))
-                             ; CSS § 10.6.3, item 2: the bottom edge of the bottom
-                             ; (possibly collapsed) margin of its last in-flow child,
-                             ; if the child's bottom margin does not collapse with the
-                             ; element's bottom margin
-                             (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0))
-                                  ; Collapsed margin
-                                  (- (box-bottom ,lb) (top-content ,b))
-                                  ; No collapsed margin
-                                  (- (bottom-outer ,lb) (top-content ,b))))
-                        ; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
-                        ; whose top margin doesn't collapse with the element's bottom margin
-                        ; NOTE: This can happen if the box height is 0.
-                        ; We don't support that, so it's not an issue.
+                ,(smt-cond
+                  ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
+                  ; if the box establishes a inline formatting context with one or more lines
+                  [(and (is-element ,le) (= (display ,le) display/inline))
+                   (= (bottom-content ,b) (bottom-border ,lb))]
+                  [(and (is-element ,le) (= (display ,le) display/block))
+                   (= (bottom-content ,b)
+                      ; CSS § 10.6.3, item 2: the bottom edge of the bottom
+                      ; (possibly collapsed) margin of its last in-flow child,
+                      ; if the child's bottom margin does not collapse with the
+                      ; element's bottom margin
+                      (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0) (not (= (tagname ,e) box/<HTML>)))
+                           (bottom-border ,lb) ; Collapsed bottom margin
+                           (bottom-outer ,lb)))] ; No collapsed bottom margin
+                  ; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
+                  ; whose top margin doesn't collapse with the element's bottom margin
+                  ; NOTE: This can happen if the box height is 0.
+                  ; We don't support that, so it's not an issue.
 
-                        ; CSS § 10.6.3, item 4: zero, otherwise
-                        0.0)))
+                  ; CSS § 10.6.3, item 4: zero, otherwise
+                  [else (= (h ,b) 0.0)]))
 
            ; Computing X and Y position
 
            (= (x ,b) (+ (left-content ,pb) (ml ,b)))
            (= (y ,b)
               (ite (is-nil ,ve)
-                   (ite (and (not (= (tagname ,pe) box/viewport)) (is-float/none (float ,pe))
+                   (ite (and (not (= (tagname ,pe) box/<HTML>)) (is-float/none (float ,pe))
                              (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                         (top-content ,pb)
                         (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
@@ -225,9 +226,6 @@
                   [(list prop type field)
                    `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
                         (= (,field ,bp) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
-
-            ; Block elements don't have a gap
-            (= (gap ,bp) 0.0)
 
             ; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
             (=> (is-margin/auto (style.margin-left ,r)) (= (ml ,bp) 0))
@@ -264,7 +262,7 @@
                         (ite (= (display ,le) display/inline)
                              ; If it only has inline-level children, the height is the distance between
                              ; the top of the topmost line box and the bottom of the bottommost line box.
-                             (- (box-bottom ,lb) (box-top ,fb))
+                             (- (bottom-border ,lb) (top-border ,fb))
                              ; If it has block-level children, the height is the distance between the
                              ; top margin-edge of the topmost block-level child box and the
                              ; bottom margin-edge of the bottommost block-level child box.
@@ -286,12 +284,10 @@
                (ite (is-nil ,ve)
                     (box (left-content ,pb) (top-content ,pb) (w ,pb) 0.0
                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+                    (box (left-content ,pb) (bottom-border ,vb) (w ,pb) 0.0
                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                         0.0)
-                    (box (left-content ,pb) (box-bottom ,vb) (w ,pb) 0.0
-                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                         0.0)))
+                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)))
 
             (>= (w ,bp) 0.0)
             (>= (h ,bp) 0.0)
@@ -330,25 +326,58 @@
     (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
     (assert (= (float ,e) float/none))
 
+    (assert (= (textalign ,e) text-align/inherit))
+
     ; Computing maximum collapsed positive and negative margin
-    (assert (= (mtp ,b) 0.0))
-    (assert (= (mtn ,b) 0.0))
-    (assert (= (mbp ,b) 0.0))
-    (assert (= (mbn ,b) 0.0))
+    ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+        `(assert (= (,field ,b) 0.0)))
+
+    (assert (between (top-content ,pb) (y ,b) (+ (top-content ,pb) (h ,pb) (- (h ,b)))))
 
     ; Inline element layout
-   ,@(map (λ (x) `(assert (=> (= (display ,e) display/inline) ,x)))
-          `((<= (w ,b) (w ,pb))
-            (= (mt ,b) (mr ,b) (mb ,b) (ml ,b) 0.0)
-            (= (mtp ,b) (mbp ,b) (mtn ,b) (mbp ,b) 0.0)
-            (= (pt ,b) (pr ,b) (pb ,b) (pl ,b) 0.0)
-            (= (bt ,b) (br ,b) (bb ,b) (bl ,b) 0.0)
-            (ite (is-nil ,ve)
-                 (and (= (x ,b) (left-content ,pb))
-                      (= (y ,b) (+ (top-content ,pb) (/ (gap ,b) 2))))
-                 (or
-                  (and (= (x ,b) (left-content ,pb)) ; We might break line
-                       (= (y ,b) (+ (box-bottom ,vb) (/ (+ (gap ,b) (gap ,vb)) 2))))
-                  (and (= (x ,b) (box-right ,vb)) ; Or we might not
-                       (= (- (y ,b) (/ (gap ,b) 2)) (- (y ,vb) (/ (gap ,vb) 2))))))
-            (= (placement-box ,e) (flow-box ,e))))))
+    (assert (=> (not (is-nil ,ve)) (= (x ,b) (right-border ,vb))))
+    (assert (= (placement-box ,e) (flow-box ,e)))))
+
+(define (element-line-constraints e-tag e-name)
+  (define (elt name) `(get/elt ,name))
+
+  (define e (elt e-name))
+  (define ve (elt `(previous ,e)))
+  (define pe (elt `(parent ,e)))
+  (define fe (elt `(first-child ,e)))
+  (define le (elt `(last-child ,e)))
+
+  (define r `(rules ,e))
+
+  (define b  `(flow-box ,e))
+  (define bp `(placement-box ,e))
+  (define vb `(flow-box ,ve))
+  (define pb `(placement-box ,pe))
+  (define fb `(flow-box ,fe))
+  (define lb `(flow-box ,le))
+
+  `(; Basic element stuff
+    (assert (= (display ,e) display/inline))
+    (assert (not (is-nil ,pe)))
+    (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
+    (assert (= (float ,e) float/none))
+    (assert (= (textalign ,e) (textalign ,pe)))
+
+    ; Computing maximum collapsed positive and negative margin
+    ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+        `(assert (= (,field ,b) 0.0)))
+
+    (assert (= (x ,b) (left-content ,pb)))
+    (assert (= (y ,b) (ite (is-nil ,ve) (top-content ,pb) (bottom-border ,vb))))
+    (assert (= (w ,b) (w ,pb)))
+
+    (assert (not (is-nil ,fe)))
+    (assert
+     ,(smt-cond
+       [(is-text-align/left (textalign ,e)) (= (left-border ,fb) (left-content ,b))]
+       [(is-text-align/right (textalign ,e)) (= (right-border ,lb) (right-content ,b))]
+       [(is-text-align/center (textalign ,e))
+        (= (- (right-content ,b) (right-border ,lb)) (- (left-border ,fb) (left-content ,b)))]
+       [else true]))
+
+    (assert (= (placement-box ,e) (flow-box ,e)))))

@@ -32,7 +32,7 @@
       (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n\n" header)
       (for ([(key value) (in-hash smt-out)])
         (match value
-          [`(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,gap)
+          [`(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl)
            (eprintf "~a ~a×~a at (~a, ~a)\n" key (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
            (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
                     (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
@@ -257,11 +257,10 @@
        (interpret rest)]
       [(list ':id id rest ...)
        (interpret rest)]
-      [(list (and (or ':x ':y ':w ':h ':vw ':vh ':gap) field) value rest ...)
-       (define fun
-         (match field
-           [':x 'x] [':y 'y] [':w 'w] [':h 'h] [':gap 'gap] [':vh 'box-height] [':vw 'box-width]))
-       (emit `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :named ,(sformat "~a-~a" name fun))))
+      [(list (and (or ':x ':y ':w ':h) field) value rest ...)
+       (define fun (match field [':x 'x] [':y 'y] [':h 'box-height] [':w 'box-width]))
+       (when (memq (car elt) '(LINE TEXT INLINE BLOCK))
+         (emit `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :named ,(sformat "~a-~a" name fun)))))
        (interpret rest)]
       [(list)
        (void)])))
