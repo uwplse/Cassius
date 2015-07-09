@@ -44,7 +44,8 @@
            (print-type 'Style value)]
           [else '#f]))
 
-      (for ([rule-value (map (curry hash-ref smt-out) (stylesheet-rules stylesheet))])
+      (for ([rule-value (map (curry hash-ref smt-out)
+                             (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "rule-~a" i)))])
         (print-type 'Rule rule-value)))))
 
 (define (css-type-ending? v)
@@ -122,10 +123,11 @@
   (define e (dom-get dom elt))
   (define re `(rules ,e))
 
-  (when (not (eq? (car elt) 'TEXT))
+  (when (member (car elt) '(INLINE BLOCK))
     ; Score of computed rule is >= any applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)]
-           [rule (stylesheet-rules (dom-stylesheet dom))])
+           [rule
+            (for/list ([i (in-naturals)] [rule (dom-stylesheet dom)]) (sformat "rule-~a" i))])
       (emit
        `(assert
          (or (not (,(sformat "rule.~a?" property) ,rule))
@@ -137,7 +139,9 @@
       (emit `(assert (or
                       (and (is-useDefault (,(sformat "style.~a$" property) ,re))
                            (= (,(sformat "style.~a" property) ,re) ,(hash-ref css-defaults property)))
-                      ,@(for/list ([rule (stylesheet-rules (dom-stylesheet dom))])
+                      ,@(for/list ([rule
+                                    (for/list ([i (in-naturals)] [rule (dom-stylesheet dom)])
+                                      (sformat "rule-~a" i))])
                           `(and
                             (,(sformat "rule.~a?" property) ,rule)
                             (selector-applies? (selector ,rule) ,e)
@@ -177,6 +181,7 @@
   (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
     (emit `(assert (= (,field ,b) 0.0))))
   (emit `(assert (= (float ,elt) float/none)))
+  (emit `(assert (= (textalign ,elt) text-align/left)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
   (emit `(assert (= (parent (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
@@ -185,17 +190,29 @@
   (emit `(assert (= (parent ,elt) (as nil ElementName))))
   (emit `(assert (= (previous ,elt) (as nil ElementName)))))
 
-(define (stylesheet-rules sheet)
-  (for/list ([i (in-range (stylesheet-count sheet))])
-    (string->symbol (format "~a-rule-~a" (stylesheet-name sheet) i))))
-
 (define (stylesheet-constraints sheet)
   (append
    (apply append
-          (for/list ([i (in-naturals)] [name (stylesheet-rules sheet)])
+          (for/list ([i (in-naturals)] [rule sheet])
+            (define name (sformat "rule-~a" i))
             `((declare-const ,name Rule)
               (assert (= (index ,name) ,i))
               (assert (=> (is-sel/id (selector ,name)) (not (= (sel.id (selector ,name)) NoID))))
+
+              ,@(reap [emit]
+                      (match rule
+                        [#f (void)]
+                        [(list sel pairs ...)
+                         (emit `(assert (= (selector ,name) ,sel)))
+                         (for ([(a-prop type default) (in-css-properties)])
+                           (cond
+                             [(assoc a-prop pairs)
+                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
+                              (match (cadr (assoc a-prop pairs))
+                                [#f (void)]
+                                [val (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))])]
+                             [else
+                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) false)))]))]))
 
               ; Optimize for short CSS
 
@@ -253,10 +270,10 @@
   (match elt
     [(list 'BLOCK tag constraints ...)
      (for-each emit (element-block-constraints (sformat "box/~a" tag) (elt-name elt)))]
+    [(list 'LINE tag constraints ...)
+     (for-each emit (element-line-constraints "box/line" (elt-name elt)))]
     [(list 'INLINE tag constraints ...)
      (for-each emit (element-inline-constraints (sformat "box/~a" tag) (elt-name elt)))]
-    [(list 'LINE tag constraints ...)
-     (for-each emit (element-inline-constraints "box/line" (elt-name elt)))]
     [(list 'TEXT constraints ...)
      (for-each emit (element-inline-constraints 'box/text (elt-name elt)))]))
 

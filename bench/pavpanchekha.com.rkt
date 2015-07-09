@@ -15,7 +15,47 @@ h1 { font-family: 'Open Sans Semibold', 'Deja Vu Sans', 'Georgia', sans; font-we
      font-size: 24px; line-height: 1; letter-spacing: -.03em; color: #555753;}
 p { text-align: justify; -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}")
 
-(define sheet (stylesheet 'main.css 4))
+(define sheet '(#f #f #f #f))
+#;(define sheet
+  '(((sel/tag box/<HTML>)
+     [margin-top (margin/px 0)]
+     [margin-right (margin/px 0)]
+     [margin-bottom (margin/px 0)]
+     [margin-left (margin/px 0)]
+     [padding-top (padding/px 0)]
+     [padding-right (padding/px 0)]
+     [padding-bottom (padding/px 0)]
+     [padding-left (padding/px 0)])
+    ((sel/tag box/<BODY>)
+     [margin-top (margin/px 0)]
+     [margin-right margin/auto]
+     [margin-bottom (margin/px 0)]
+     [margin-left margin/auto]
+     [padding-top (padding/px 0)]
+     [padding-right (padding/px 10)]
+     [padding-bottom (padding/px 90)]
+     [padding-left (padding/px 10)]
+     [width (width/px 630)])
+    ((sel/tag box/<PRE>)
+     [margin-top (margin/px 21.6)]
+     [margin-right (margin/px 0)]
+     [margin-bottom (margin/px 30.6)]
+     [margin-left (margin/px 0)]
+     [padding-top (padding/px 9)]
+     [padding-right (padding/px 9)]
+     [padding-bottom (padding/px 9)]
+     [padding-left (padding/px 9)])
+    ((sel/tag box/<H1>)
+     [margin-top (margin/px 36)])
+    ((sel/tag box/<P>)
+     [text-align text-align/inherit]
+     [margin-top (margin/px 18)]
+     [margin-right (margin/px 0)]
+     [margin-bottom (margin/px 18)]
+     [margin-left (margin/px 0)])
+    ((sel/id ID-postamble)
+     [text-align text-align/center]
+     [margin-top (margin/px 18)])))
 
 ;; From http://pavpanchekha.com/blog/ubuntu-on-lvm.html
 
