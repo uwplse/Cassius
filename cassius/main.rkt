@@ -8,7 +8,7 @@
 (require "css-properties.rkt")
 (require unstable/sequence)
 (require srfi/1)
-(z3 "/opt/z3opt/bin/z3")
+(z3 "./z3.sh")
 ;(z3 "/usr/bin/z3")
 
 (define maximize #f)
@@ -269,7 +269,7 @@
   (match elt
     [(list 'BLOCK tag constraints ...)
      (for-each emit (element-block-constraints (sformat "box/~a" tag) (elt-name elt)))]
-    [(list 'LINE tag constraints ...)
+    [(list 'LINE constraints ...)
      (for-each emit (element-line-constraints "box/line" (elt-name elt)))]
     [(list 'INLINE tag constraints ...)
      (for-each emit (element-inline-constraints (sformat "box/~a" tag) (elt-name elt)))]
@@ -289,8 +289,8 @@
   (reap [sow]
         (dom-define-get doms sow)
         (for ([dom doms]) (dom-root-constraints dom sow))
-        (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
-          (for ([cns constraints])
+        (for ([cns constraints])
+          (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
             (cns dom sow elt children)))))
 
 (define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header . doms)
@@ -305,7 +305,8 @@
                  [(list 'LINE tag cmds ...) (void)]
                  [(list 'TEXT cmds ...) (void)])))
 
-  (define constraints (list tree-constraints id-constraints user-constraints element-constraints style-constraints))
+  (define constraints
+    (list tree-constraints id-constraints user-constraints element-constraints style-constraints))
 
   (define problem
     `(; Preamble

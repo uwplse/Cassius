@@ -220,4 +220,4 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        [context (rendering-context 945)])
     (dom 'docb sheet context tree)))
 
-(cassius-solve #:sheet sheet #:header header #:debug #f doma domb)
+(cassius-solve #:sheet sheet #:header header #:debug '(stats) doma domb)
