@@ -4,16 +4,17 @@
 (require srfi/13)
 (require "common.rkt")
 
-(provide solve z3 check-sat z3-prepare)
+(provide solve z3)
 
 (define-runtime-path bin (build-path "/opt/z3" "bin"))
 (define z3 (make-parameter (build-path bin "z3")))
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
-(define (solve encoding #:debug [debug? #f] #:get-unsat [get-unsat identity])
+(define (solve query #:debug [debug? #f] #:get-unsat [get-unsat identity])
   (define-values (process out in err)
     (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
+  (define encoding (z3-prepare query))
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
 
@@ -83,12 +84,9 @@
         (loop rest (current-inexact-milliseconds))]
        [#t
         (match (car rest)
-          [`(check-sat :data ,data)
-           (write "(check-sat)")
-           (debug #:tag 'sat ">>> ~a\n" data)
-           (loop (cdr rest) (current-inexact-milliseconds))]
           [`(check-sat)
            (write "(check-sat)")
+           (debug #:tag 'tactic ">>> sat\n")
            (loop (cdr rest) (current-inexact-milliseconds))]
           [`(apply ,args ...)
            (write (~a (car rest)))
@@ -130,9 +128,6 @@
     [`(/ ,n ,d) (/ (de-z3ify n) (de-z3ify d))]
     [(list args ...) (map de-z3ify args)]
     [else v]))
-
-(define (check-sat . args)
-  `(check-sat :data ,args))
 
 (define (z3-simplifier cmds)
   "Simplify expressions using assertions of the form (= a b)."
@@ -328,14 +323,6 @@
   (for/fold ([not-defs not-defs]) ([def defs])
     (let-values ([(head tail) (split-first-use (second def) not-defs)])
       (append head (cons def tail)))))
-
-#;
-(define (z3-ddt cmds)
-  "Turn Z3 datatypes into collections of variables"
-  (define datatypes (make-hash))
-  (for ([cmd cmds] [i (in-naturals)])
-    )
-  )
 
 (define *emitter-passes*
   (list #;z3-simplifier

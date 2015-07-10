@@ -338,12 +338,9 @@
       ; DOMs
       ,@(apply dfs-constraints doms constraints)
       (apply propagate-values)
-      (check-sat :data solve)))
+      (check-sat)))
 
   (print-rules #:stylesheet sheet #:header header
-               (solve
-                (z3-prepare problem)
-                #:get-unsat
-                (lambda (v)
-                  (elt-from-name (string->symbol (first (string-split (~a v) "-")))))
-                #:debug debug)))
+               (solve problem #:debug debug
+                      #:get-unsat
+                      (lambda (v) (elt-from-name (string->symbol (first (string-split (~a v) "-"))))))))
