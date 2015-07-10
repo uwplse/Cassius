@@ -217,7 +217,7 @@
                [_ (list cmd)])))))
 
 (define (z3-check-datatypes cmds)
-  "Check that no two records have identically-named fields or variants"
+  "Check that no two records have identically-named fields or variants."
   (define all-names (make-hash))
   (for ([cmd cmds] [i (in-naturals 1)])
     (match cmd
@@ -237,6 +237,38 @@
              (when (hash-has-key? all-names name)
                (eprintf "Z3: Reused name ~a on line ~a\n  line: ~a\n" name i cmd))
              (hash-set! all-names name #t))))]
+      [_ (void)]))
+  cmds)
+
+(define (z3-check-fields cmds)
+  "Check that no fields of a function output are taken (fields of fields allowed)."
+  (define all-names (make-hash))
+  (for ([cmd cmds])
+    (match cmd
+      [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
+       (for ([name names] [vars varss] #:when #t [var vars])
+         (match var
+           [(? symbol?) (void)]
+           [(list name (list fields types) ...)
+            (for ([field fields]) (hash-set! all-names field #t))]))]
+      [else (void)]))
+  (define (only-fields? expr)
+    (match expr
+      [(? symbol?) #t]
+      [(list f arg)
+       (and (hash-has-key? all-names f) (only-fields? arg))]
+      [_ #f]))
+  (define (valid-expr? expr)
+    (match expr
+      [(list f arg) (if (hash-has-key? all-names f) (only-fields? arg) (valid-expr? arg))]
+      [(list f args ...)
+       (and (not (hash-has-key? all-names f)) (andmap valid-expr? args))]
+      [_ #t]))
+  (for ([cmd cmds] [i (in-naturals 1)])
+    (match cmd
+      [(list 'assert expr)
+       (unless (valid-expr? expr)
+         (eprintf "Z3: Improperly guarded field reference on line ~a\n  line: ~a\n" i cmd))]
       [_ (void)]))
   cmds)
 
@@ -308,7 +340,8 @@
 (define *emitter-passes*
   (list #;z3-simplifier
    (z3-resolve-fns 'get/elt 'first-child 'last-child 'parent 'previous)
-   z3-dco z3-movedefs z3-check-datatypes z3-check-functions))
+   z3-dco z3-movedefs
+   z3-check-datatypes z3-check-functions z3-check-fields))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs *emitter-passes*))
