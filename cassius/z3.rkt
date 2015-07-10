@@ -252,7 +252,6 @@
   (for ([cmd cmds] [i (in-naturals)])
     (match cmd
       [`(assert (= (,(== f) ,input) ,output))
-       (eprintf "~a: ~a\n"  f cmd)
        (hash-set! values input output)]
       [_ (void)]))
   (for/list ([cmd cmds] [i (in-naturals)])
