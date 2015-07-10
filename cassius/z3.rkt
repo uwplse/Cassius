@@ -216,6 +216,30 @@
                     empty)]
                [_ (list cmd)])))))
 
+(define (z3-check-datatypes cmds)
+  "Check that no two records have identically-named fields or variants"
+  (define all-names (make-hash))
+  (for ([cmd cmds] [i (in-naturals 1)])
+    (match cmd
+      [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
+       (when (not (null? params))
+         (eprintf "Z3: Parameters on types ~a on line ~a\n  line: ~a" names i cmd))
+       (for ([name names] [vars varss])
+         (when (hash-has-key? all-names name)
+           (eprintf "Z3: Reused name ~a on line ~a\n  line: ~a" name i cmd))
+         (hash-set! all-names name #t)
+         (for ([var vars])
+           (define var-names
+             (match var
+               [(? symbol?) (list var)]
+               [(list var (list fields types) ...) (cons var fields)]))
+           (for ([name var-names])
+             (when (hash-has-key? all-names name)
+               (eprintf "Z3: Reused name ~a on line ~a\n  line: ~a" name i cmd))
+             (hash-set! all-names name #t))))]
+      [_ (void)]))
+  cmds)
+
 (define *var* 0)
 (define (gensym)
   (begin0 (string->symbol (string-append "var-" (~a *var*)))
@@ -263,7 +287,7 @@
       (append head (cons def tail)))))
 
 (define *emitter-passes*
-  (list #;z3-simplifier z3-dco z3-movedefs))
+  (list z3-check-datatypes #;z3-simplifier z3-dco z3-movedefs))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs *emitter-passes*))

@@ -110,17 +110,14 @@
   (define root (dom-root dom))
 
   (define (get-child children accessor)
-    (if (null? children)
-        '(as nil ElementName)
-        (elt-name (car (accessor children)))))
+    (if (null? children) 'nil (elt-name (car (accessor children)))))
 
   ; Parent element
   (for ([child (sequence-map car children)])
     (emit `(assert (= (parent ,(elt-get child)) ,(elt-name elt)))))
   ; Previous element
   (for ([child (sequence-map car children)]
-        [prev (sequence-append (in-value '(as nil ElementName))
-                               (sequence-map (compose elt-name car) children))])
+        [prev (sequence-append (in-value 'nil) (sequence-map (compose elt-name car) children))])
     (emit `(assert (= (previous ,(elt-get child)) ,prev))))
 
   ; First/last child
@@ -168,14 +165,14 @@
     (emit `(assert (= (document ,(sformat "~a-elt" name)) ,(sformat "~a-doc" (dom-name dom))))))
   ; The element info for a name
   (define body
-    (for*/fold ([body '(as nil Element)]) ([names dom-names] [name names])
+    (for*/fold ([body 'elt/nil]) ([names dom-names] [name names])
       `(ite (= x ,name) ,(sformat "~a-elt" name) ,body)))
   (emit `(define-fun get/elt ((x ElementName)) Element ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (not (is-nil (get/elt ,name)))))
+    (emit `(assert (not (is-elt/nil (get/elt ,name)))))
     (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name)))))
   ; Pointed map: nil goes to nil
-  (emit `(assert (= (get/elt (as nil ElementName)) (as nil Element)))))
+  (emit `(assert (= (get/elt nil) elt/nil))))
 
 (define (dom-root-constraints dom emit)
   (define elt `(get/elt ,(dom-root dom)))
@@ -183,9 +180,9 @@
 
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (placement-box ,elt) (flow-box ,elt))))
-  (emit `(assert (= (parent ,elt) (as nil ElementName))))
+  (emit `(assert (= (parent ,elt) nil)))
   (emit `(assert (= (tagname ,elt) box/viewport)))
-  (emit `(assert (= (previous ,elt) (as nil ElementName))))
+  (emit `(assert (= (previous ,elt) nil)))
   (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
     (emit `(assert (= (,field ,b) 0.0))))
   (emit `(assert (= (float ,elt) float/none)))
@@ -193,10 +190,10 @@
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
   (emit `(assert (= (parent (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
-  (emit `(assert (= (previous (get/elt ,(elt-name (car (dom-tree dom))))) (as nil ElementName))))
+  (emit `(assert (= (previous (get/elt ,(elt-name (car (dom-tree dom))))) nil)))
   (emit `(assert (= (first-child ,elt) ,(elt-name (car (dom-tree dom))))))
-  (emit `(assert (= (parent ,elt) (as nil ElementName))))
-  (emit `(assert (= (previous ,elt) (as nil ElementName)))))
+  (emit `(assert (= (parent ,elt) nil)))
+  (emit `(assert (= (previous ,elt) nil))))
 
 (define (stylesheet-constraints sheet)
   (append
