@@ -223,10 +223,10 @@
     (match cmd
       [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
        (when (not (null? params))
-         (eprintf "Z3: Parameters on types ~a on line ~a\n  line: ~a" names i cmd))
+         (eprintf "Z3: Parameters on types ~a on line ~a\n  line: ~a\n" names i cmd))
        (for ([name names] [vars varss])
          (when (hash-has-key? all-names name)
-           (eprintf "Z3: Reused name ~a on line ~a\n  line: ~a" name i cmd))
+           (eprintf "Z3: Reused name ~a on line ~a\n  line: ~a\n" name i cmd))
          (hash-set! all-names name #t)
          (for ([var vars])
            (define var-names
@@ -235,59 +235,84 @@
                [(list var (list fields types) ...) (cons var fields)]))
            (for ([name var-names])
              (when (hash-has-key? all-names name)
-               (eprintf "Z3: Reused name ~a on line ~a\n  line: ~a" name i cmd))
+               (eprintf "Z3: Reused name ~a on line ~a\n  line: ~a\n" name i cmd))
              (hash-set! all-names name #t))))]
       [_ (void)]))
   cmds)
 
-(define *var* 0)
-(define (gensym)
-  (begin0 (string->symbol (string-append "var-" (~a *var*)))
-    (set! *var* (+ 1 *var*))))
+(define ((fixpoint-1 f) x)
+  (let ([x* (f x)])
+    (if (equal? x* x) x ((fixpoint f) x*))))
 
-(define ((z3-fabstract head type) cmds)
-  (let* ([store (make-hash)])
-    (define (lookhead expr)
-      (cond
-       [(not (pair? expr)) #f]
-       [(eq? (car expr) head)
-        (hash-ref! store expr gensym)
-        (for-each lookhead (cdr expr))]
-       [else
-        (for-each lookhead (cdr expr))]))
-    (for-each lookhead cmds)
-    (append
-     cmds
-     (apply append
-            (for/list ([(expr var) (in-hash store)])
-              `((declare-const ,var ,type)
-                (assert (= ,expr ,var))))))))
+(define (fixpoint . fs) (fixpoint-1 (apply compose fs)))
+
+(define ((z3-resolve-fn f) cmds)
+  "Resolve applications of a function f using asserted equalities"
+  (define values (make-hash))
+  (for ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [`(assert (= (,(== f) ,input) ,output))
+       (eprintf "~a: ~a\n"  f cmd)
+       (hash-set! values input output)]
+      [_ (void)]))
+  (for/list ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [(list 'assert expr)
+       (list 'assert
+             (let loop ([expr expr])
+               (match expr
+                 [`(= (,(== f) ,input) ,output) expr]
+                 [(list (== f) arg)
+                  (define out (hash-ref values arg (lambda () `(,f ,(loop arg)))))
+                  (when (not (equal? out expr))
+                    (eprintf "~a: ~a → ~a\n" f arg out))
+                  out]
+                 [(list fn args ...) (cons fn (map loop args))]
+                 [_ expr])))]
+      [_ cmd])))
+
+(define (z3-resolve-fns . fs)
+  (apply fixpoint (map z3-resolve-fn fs)))
+
+(define (z3-check-functions cmds)
+  "Check that we have no uninterpreted functions"
+  (for ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [`(declare-fun ,name (,itypes ...) ,otype)
+       (eprintf "Z3: Uninterpreted function ~a on line ~a\n  line: ~a\n" name i cmd)]
+      [_ (void)]))
+  cmds)
 
 (define (z3-movedefs cmds)
   "Move each definition to be right before first use."
-
   (define (contains-var expr var)
     (match expr
       [(? number?) #f]
       [(? symbol?) (eq? expr var)]
       [(? list?) (ormap (curryr contains-var var) expr)]))
-
   (define (def? cmd)
     (match cmd
       [`(declare-const ,var ,type) #t]
       [_ #f]))
-
   (define (split-first-use var cmds)
     (splitf-at cmds (λ (cmd) (cond [(eq? (car cmd) 'assert) (not (contains-var (cadr cmd) var))] [else #t]))))
-
   (define-values (defs not-defs) (partition def? cmds))
-
   (for/fold ([not-defs not-defs]) ([def defs])
     (let-values ([(head tail) (split-first-use (second def) not-defs)])
       (append head (cons def tail)))))
 
+#;
+(define (z3-ddt cmds)
+  "Turn Z3 datatypes into collections of variables"
+  (define datatypes (make-hash))
+  (for ([cmd cmds] [i (in-naturals)])
+    )
+  )
+
 (define *emitter-passes*
-  (list z3-check-datatypes #;z3-simplifier z3-dco z3-movedefs))
+  (list #;z3-simplifier
+   (z3-resolve-fns 'get/elt 'first-child 'last-child 'parent 'previous)
+   z3-dco z3-movedefs z3-check-datatypes z3-check-functions))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs *emitter-passes*))
