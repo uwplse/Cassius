@@ -8,8 +8,6 @@
 (require "css-properties.rkt")
 (require unstable/sequence)
 (require srfi/1)
-(z3 "./z3.sh")
-;(z3 "/usr/bin/z3")
 
 (define maximize #f)
 

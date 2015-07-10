@@ -4,10 +4,10 @@
 (require srfi/13)
 (require "common.rkt")
 
-(provide solve z3)
+(provide solve)
 
-(define-runtime-path bin (build-path "/opt/z3" "bin"))
-(define z3 (make-parameter (build-path bin "z3")))
+(define-runtime-path bin "..")
+(define z3 (make-parameter (build-path bin "z3.sh")))
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
