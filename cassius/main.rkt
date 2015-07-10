@@ -16,10 +16,8 @@
 (define-syntax-rule (define-stylesheet name rules ...)
   (define name '(rules ...)))
 
-(define-syntax define-document
-  (syntax-rules ()
-    [(define-document (name #:sheet sheet #:width width) tree)
-     (define name (dom 'name sheet (rendering-context width) 'tree))]))
+(define-syntax-rule (define-document (name #:sheet sheet #:width width) tree)
+  (define name (dom 'name sheet (rendering-context width) 'tree)))
 
 (define (in-empty) (in-list empty))
 
