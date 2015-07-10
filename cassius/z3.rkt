@@ -262,10 +262,7 @@
                (match expr
                  [`(= (,(== f) ,input) ,output) expr]
                  [(list (== f) arg)
-                  (define out (hash-ref values arg (lambda () `(,f ,(loop arg)))))
-                  (when (not (equal? out expr))
-                    (eprintf "~a: ~a → ~a\n" f arg out))
-                  out]
+                  (hash-ref values arg (lambda () `(,f ,(loop arg))))]
                  [(list fn args ...) (cons fn (map loop args))]
                  [_ expr])))]
       [_ cmd])))
