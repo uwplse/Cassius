@@ -13,7 +13,15 @@
 
 (define maximize #f)
 
-(provide cassius-solve (struct-out dom) (struct-out stylesheet) (struct-out rendering-context))
+(provide cassius-solve define-stylesheet define-document)
+
+(define-syntax-rule (define-stylesheet name rules ...)
+  (define name '(rules ...)))
+
+(define-syntax define-document
+  (syntax-rules ()
+    [(define-document (name #:sheet sheet #:width width) tree)
+     (define name (dom 'name sheet (rendering-context width) 'tree))]))
 
 (define (in-empty) (in-list empty))
 
@@ -201,7 +209,7 @@
 
               ,@(reap [emit]
                       (match rule
-                        [#f (void)]
+                        ['? (void)]
                         [(list sel pairs ...)
                          (emit `(assert (= (selector ,name) ,sel)))
                          (for ([(a-prop type default) (in-css-properties)])
@@ -209,10 +217,11 @@
                              [(assoc a-prop pairs)
                               (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
                               (match (cadr (assoc a-prop pairs))
-                                [#f (void)]
+                                ['? (void)]
                                 [val (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))])]
-                             [else
-                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) false)))]))]))
+                             [(not (member '? pairs))
+                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) false)))]
+                             [else (void)]))]))
 
               ; Optimize for short CSS
 

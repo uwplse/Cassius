@@ -2,13 +2,12 @@
 (require unstable/sequence)
 (require "common.rkt")
 
-(provide (struct-out dom) (struct-out stylesheet) (struct-out rendering-context)
+(provide (struct-out dom) (struct-out rendering-context)
          inline-element? in-tree-subtrees in-tree-values
          in-dom-levels dom-get dom-type dom-root elt-name elt-from-name)
 
 (struct dom (name stylesheet context tree))
 (struct rendering-context (width))
-(struct stylesheet (name count))
 
 (define (inline-element? elt)
   (eq? (car elt) '<>))
