@@ -1,13 +1,10 @@
-#lang racket
-(require "../cassius/main.rkt")
-
 ;; python get_bench.py 'http://pavpanchekha.com/blog/ubuntu-on-lvm.html' 'http://pavpanchekha.com/blog/organization.html'
 
 ;; EDITS:
 ; - Height of <HTML> and <BODY> incorrect
 ; - Browser styles reset in the header
 
-(define header
+(define-header header
 "html { background-color: #f1f1f1; color: #2E3436; margin-top: 0 /* Browser reset? */; }
 body { font-size: 18px; line-height: 1.333; text-rendering: optimizeLegibility; font-family: 'PT Serif', serif;}
 pre { font-family: 'Open Sans Light', 'Inconsolata', 'Deja Vu Sans Mono', monospace; font-weight: 300;}
@@ -17,8 +14,10 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 #content p {text-align: justify}
 #postamble p {font-size: 13px; line-height: 1.23;}")
 
-#;(define-stylesheet sheet ? ? ? ?)
-(define-stylesheet sheet
+(define-stylesheet unknown-sheet
+  ? ? ? ?)
+
+(define-stylesheet good-sheet
   ((sel/tag box/<HTML>)
    [margin-top (margin/px 0)]
    [margin-right (margin/px 0)]
@@ -61,7 +60,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 
 ;; From http://pavpanchekha.com/blog/ubuntu-on-lvm.html
 
-(define-document (doma #:sheet sheet #:width 958)
+(define-document (doma #:width 958)
   ([BLOCK <HTML> :x 0 :y 0 :w 958 #|:h (/ 10291 12)|#]
    ([BLOCK <BODY> :x 154 :y 36 :w 650 #|:h (/ 8779 12)|#]
     ([BLOCK <DIV> :id content :x 164 :y 36 :w 630 :h 582]
@@ -118,7 +117,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 
 ;; From http://pavpanchekha.com/blog/organization.html
 
-(define-document (domb #:sheet sheet #:width 945)
+(define-document (domb #:width 945)
   ([BLOCK <HTML> :x 0 :y 0 :w 945]
    ([BLOCK <BODY> :x 147.5 :y 36 :w 650 #|:h (/ 33465 30)|#]
     ([BLOCK <DIV> :id content :x 157.5 :y 36 :w 630 :h 978.5]
@@ -214,4 +213,12 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 523 :y 1033 :w 119 :h 15])
        ([TEXT :x 642 :y 1033 :w 4 :h 15])))))))
 
-(cassius-solve #:sheet sheet #:header header doma domb)
+(define-problem verify
+  #:header header
+  #:sheet good-sheet
+  #:documents doma domb)
+
+(define-problem synthesize
+  #:header header
+  #:sheet unknown-sheet
+  #:documents doma domb)

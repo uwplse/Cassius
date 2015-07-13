@@ -11,13 +11,7 @@
 
 (define maximize #f)
 
-(provide cassius-solve define-stylesheet define-document)
-
-(define-syntax-rule (define-stylesheet name rules ...)
-  (define name '(rules ...)))
-
-(define-syntax-rule (define-document (name #:sheet sheet #:width width) tree)
-  (define name (dom 'name sheet (rendering-context width) 'tree)))
+(provide cassius-solve)
 
 (define (in-empty) (in-list empty))
 
@@ -120,7 +114,7 @@
   (emit `(assert (= (first-child ,(elt-get elt)) ,(get-child children first))))
   (emit `(assert (= (last-child ,(elt-get elt)) ,(get-child children last)))))
 
-(define (style-constraints dom emit elt children)
+(define ((style-constraints sheet) dom emit elt children)
   (define e (dom-get dom elt))
   (define re `(rules ,e))
 
@@ -128,7 +122,7 @@
     ; Score of computed rule is >= any applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)]
            [rule
-            (for/list ([i (in-naturals)] [rule (dom-stylesheet dom)]) (sformat "rule-~a" i))])
+            (for/list ([i (in-naturals)] [rule sheet]) (sformat "rule-~a" i))])
       (emit
        `(assert
          (or (not (,(sformat "rule.~a?" property) ,rule))
@@ -141,7 +135,7 @@
                       (and (is-useDefault (,(sformat "style.~a$" property) ,re))
                            (= (,(sformat "style.~a" property) ,re) ,(hash-ref css-defaults property)))
                       ,@(for/list ([rule
-                                    (for/list ([i (in-naturals)] [rule (dom-stylesheet dom)])
+                                    (for/list ([i (in-naturals)] [rule sheet])
                                       (sformat "rule-~a" i))])
                           `(and
                             (,(sformat "rule.~a?" property) ,rule)
@@ -295,8 +289,8 @@
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
             (cns dom sow elt children)))))
 
-(define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header . doms)
-  (define-values (ids tags)
+(define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header doms)
+  (define-values (tags ids)
     (reap [save-tag save-id]
           (for* ([dom doms] [elt (in-tree-values (dom-tree dom))])
             (when (memq ':id elt) (save-id (sformat "ID-~a" (cadr (memq ':id elt)))))
@@ -312,7 +306,8 @@
               [`((sel/id ,id) ,_ ...) (save-id id)]))))
 
   (define constraints
-    (list tree-constraints id-constraints user-constraints element-constraints style-constraints))
+    (list tree-constraints id-constraints user-constraints element-constraints
+          (style-constraints sheet)))
 
   (define problem
     `(; Preamble
