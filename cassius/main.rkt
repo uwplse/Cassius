@@ -323,10 +323,7 @@
           ,@(for/list ([dom doms]) (dom-root dom))
           nil)))
       ,@css-declarations
-
-      ; Defining some terms
-      ,@box-functions
-      ,element-type
+      ,@dom-definitions
       ,@css-functions
 
       ; Stylesheet
