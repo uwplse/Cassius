@@ -296,16 +296,20 @@
             (cns dom sow elt children)))))
 
 (define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header . doms)
-  (define ids
-    (for*/reap [id] ([dom doms] [elt (in-tree-values (dom-tree dom))] #:when (memq ':id elt))
-               (id (cadr (memq ':id elt)))))
-  (define tags
-    (for*/reap [save] ([dom doms] [elt (in-tree-values (dom-tree dom))])
-               (match elt
-                 [(list 'BLOCK tag cmds ...) (save tag)]
-                 [(list 'INLINE tag cmds ...) (save tag)]
-                 [(list 'LINE tag cmds ...) (void)]
-                 [(list 'TEXT cmds ...) (void)])))
+  (define-values (ids tags)
+    (reap [save-tag save-id]
+          (for* ([dom doms] [elt (in-tree-values (dom-tree dom))])
+            (when (memq ':id elt) (save-id (sformat "ID-~a" (cadr (memq ':id elt)))))
+            (match elt
+              [(list 'BLOCK tag cmds ...) (save-tag (sformat "box/~a" tag))]
+              [(list 'INLINE tag cmds ...) (save-tag (sformat "box/~a" tag))]
+              [(list 'LINE tag cmds ...) (void)]
+              [(list 'TEXT cmds ...) (void)]))
+          (for ([rule sheet])
+            (match rule
+              ['? (void)]
+              [`((sel/tag ,tag) ,_ ...) (save-tag tag)]
+              [`((sel/id ,id) ,_ ...) (save-id id)]))))
 
   (define constraints
     (list tree-constraints id-constraints user-constraints element-constraints style-constraints))
@@ -314,9 +318,9 @@
     `(; Preamble
       (set-option :produce-unsat-cores true)
       (declare-datatypes ()
-        ((Id NoID ,@(map (curry sformat "ID-~a") (remove-duplicates ids)))
+        ((Id NoID ,@(remove-duplicates ids))
          (TagNames box/viewport box/text box/inline box/block box/line
-                   ,@(map (curry sformat "box/~a") (remove-duplicates tags)))
+                   ,@(remove-duplicates tags))
          (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
          (ElementName
           ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (elt-name elt))
@@ -330,7 +334,6 @@
       ,@(stylesheet-constraints sheet)
       ; DOMs
       ,@(apply dfs-constraints doms constraints)
-      (apply propagate-values)
       (check-sat)))
 
   (print-rules #:stylesheet sheet #:header header

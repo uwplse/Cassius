@@ -17,6 +17,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 #content p {text-align: justify}
 #postamble p {font-size: 13px; line-height: 1.23;}")
 
+#;(define-stylesheet sheet ? ? ? ?)
 (define-stylesheet sheet
   ((sel/tag box/<HTML>)
    [margin-top (margin/px 0)]
@@ -213,4 +214,4 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 523 :y 1033 :w 119 :h 15])
        ([TEXT :x 642 :y 1033 :w 4 :h 15])))))))
 
-(cassius-solve #:sheet sheet #:header header #:debug '(stats) doma domb)
+(cassius-solve #:sheet sheet #:header header doma domb)
