@@ -1,8 +1,8 @@
 ;; python get_bench.py 'http://pavpanchekha.com/blog/ubuntu-on-lvm.html' 'http://pavpanchekha.com/blog/organization.html'
 
 ;; EDITS:
-; - Height of <HTML> and <BODY> incorrect
-; - Browser styles reset in the header
+; - <HTML> and <BODY> have :h turned off; no idea why it doesn't work
+; - Browser styles reset in the header; should add the Firefox styles instead
 
 (define-header header
 "html { background-color: #f1f1f1; color: #2E3436; margin-top: 0 /* Browser reset? */; }
