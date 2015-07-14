@@ -4,14 +4,14 @@
 (require srfi/13)
 (require "common.rkt")
 
-(provide solve)
+(provide z3-solve z3-prepare)
 
 (define-runtime-path bin "..")
 (define z3 (make-parameter (build-path bin "z3.sh")))
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
-(define (solve query #:debug [debug? #f] #:get-unsat [get-unsat identity])
+(define (z3-solve query #:debug [debug? #f] #:get-unsat [get-unsat identity])
   (define-values (process out in err)
     (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
   (define encoding (z3-prepare query))

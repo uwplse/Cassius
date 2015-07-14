@@ -1,5 +1,4 @@
 #lang racket
-(require "z3.rkt")
 (require "dom.rkt")
 (require "css-rules.rkt")
 (require "elements.rkt")
@@ -11,7 +10,7 @@
 
 (define maximize #f)
 
-(provide cassius-solve)
+(provide all-constraints unsat-constraint-info print-rules)
 
 (define (in-empty) (in-list empty))
 
@@ -25,26 +24,26 @@
 
 (define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
   (define (r2 x) (~r x #:precision 2))
-  (with-output-to-file "test.css" #:exists 'replace
-    (lambda ()
-      (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n\n" header)
-      (for ([(key value) (in-hash smt-out)])
-        (match value
-          [`(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl)
-           (eprintf "~a ~a×~a at (~a, ~a)\n" key (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
-           (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
-                    (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
-                    (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
-           (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-           (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))]
-          [(list 'style rest ...)
-           (eprintf "{~a} " key)
-           (print-type 'Style value)]
-          [else '#f]))
 
-      (for ([rule-value (map (curry hash-ref smt-out)
-                             (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "rule-~a" i)))])
-        (print-type 'Rule rule-value)))))
+  (for ([(key value) (in-hash smt-out)])
+    (match value
+      [`(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl)
+       (eprintf "~a ~a×~a at (~a, ~a)\n" key (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
+       (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
+                (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
+                (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
+       (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
+       (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))]
+      [(list 'style rest ...)
+       (eprintf "{~a} " key)
+       (print-type 'Style value)]
+      [else '#f]))
+
+  (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header)
+
+  (for ([rule-value (map (curry hash-ref smt-out)
+                         (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "rule-~a" i)))])
+    (printf "\n~a\n" (print-type 'Rule rule-value))))
 
 (define (css-type-ending? v)
   (lambda (x) (string=? (last (string-split (~a x) "/")) v)))
@@ -82,18 +81,20 @@
        (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
                   #:when enabled?)
          (values prop (list type value))))
-     (unless (hash-empty? props)
-       (printf "~a {\n" (print-type 'Selector sel))
-       (define short-printed
-         (apply append
-                (for/list ([(short parts) (in-pairs css-shorthand-properties)]
-                           #:when (andmap (curry hash-has-key? props) parts))
-                  (define values (map (curry hash-ref props) parts))
-                  (printf "  ~a: ~a;\n" short (string-join (map (curry apply print-type) values) " "))
-                  parts)))
-       (for ([(prop value) (in-hash props)] #:when (not (member prop short-printed)))
-         (printf "  ~a: ~a;\n" prop (apply print-type value)))
-       (printf "}\n"))]))
+     (with-output-to-string
+       (lambda ()
+         (unless (hash-empty? props)
+           (printf "~a {\n" (print-type 'Selector sel))
+           (define short-printed
+             (apply append
+                    (for/list ([(short parts) (in-pairs css-shorthand-properties)]
+                               #:when (andmap (curry hash-has-key? props) parts))
+                      (define values (map (curry hash-ref props) parts))
+                      (printf "  ~a: ~a;\n" short (string-join (map (curry apply print-type) values) " "))
+                      parts)))
+           (for ([(prop value) (in-hash props)] #:when (not (member prop short-printed)))
+             (printf "  ~a: ~a;\n" prop (apply print-type value)))
+           (printf "}"))))]))
 
 (define (tree-constraints dom emit elt children)
   (define elt-get (curry dom-get dom))
@@ -289,7 +290,7 @@
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
             (cns dom sow elt children)))))
 
-(define (cassius-solve #:debug [debug #f] #:sheet sheet #:header header doms)
+(define (all-constraints sheet doms)
   (define-values (tags ids)
     (reap [save-tag save-id]
           (for* ([dom doms] [elt (in-tree-values (dom-tree dom))])
@@ -309,29 +310,25 @@
     (list tree-constraints id-constraints user-constraints element-constraints
           (style-constraints sheet)))
 
-  (define problem
-    `(; Preamble
-      (set-option :produce-unsat-cores true)
-      (declare-datatypes ()
-        ((Id NoID ,@(remove-duplicates ids))
-         (TagNames box/viewport box/text box/inline box/block box/line
-                   ,@(remove-duplicates tags))
-         (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
-         (ElementName
-          ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (elt-name elt))
-          ,@(for/list ([dom doms]) (dom-root dom))
-          nil)))
-      ,@css-declarations
-      ,@dom-definitions
-      ,@css-functions
+  `((set-option :produce-unsat-cores true)
+    (declare-datatypes ()
+                       ((Id NoID ,@(remove-duplicates ids))
+                        (TagNames box/viewport box/text box/inline box/block box/line
+                                  ,@(remove-duplicates tags))
+                        (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
+                        (ElementName
+                         ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (elt-name elt))
+                         ,@(for/list ([dom doms]) (dom-root dom))
+                         nil)))
+    ,@css-declarations
+    ,@dom-definitions
+    ,@css-functions
 
-      ; Stylesheet
-      ,@(stylesheet-constraints sheet)
-      ; DOMs
-      ,@(apply dfs-constraints doms constraints)
-      (check-sat)))
+    ; Stylesheet
+    ,@(stylesheet-constraints sheet)
+    ; DOMs
+    ,@(apply dfs-constraints doms constraints)
+    (check-sat)))
 
-  (print-rules #:stylesheet sheet #:header header
-               (solve problem #:debug debug
-                      #:get-unsat
-                      (lambda (v) (elt-from-name (string->symbol (first (string-split (~a v) "-"))))))))
+(define (unsat-constraint-info constraint)
+  (elt-from-name (string->symbol (first (string-split (~a constraint) "-")))))
