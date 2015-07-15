@@ -18,7 +18,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
   ? ? ? ?)
 
 (define-stylesheet good-sheet
-  ((sel/tag box/<HTML>)
+  ((sel/tag tag/<HTML>)
    [margin-top (margin/px 0)]
    [margin-right (margin/px 0)]
    [margin-bottom (margin/px 0)]
@@ -27,7 +27,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-right (padding/px 0)]
    [padding-bottom (padding/px 0)]
    [padding-left (padding/px 0)])
-  ((sel/tag box/<BODY>)
+  ((sel/tag tag/<BODY>)
    [margin-top (margin/px 0)]
    [margin-right margin/auto]
    [margin-bottom (margin/px 0)]
@@ -37,7 +37,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-bottom (padding/px 90)]
    [padding-left (padding/px 10)]
    [width (width/px 630)])
-  ((sel/tag box/<PRE>)
+  ((sel/tag tag/<PRE>)
    [margin-top (margin/px 21.6)]
    [margin-right (margin/px 0)]
    [margin-bottom (margin/px 30.6)]
@@ -46,9 +46,9 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-right (padding/px 9)]
    [padding-bottom (padding/px 9)]
    [padding-left (padding/px 9)])
-  ((sel/tag box/<H1>)
+  ((sel/tag tag/<H1>)
    [margin-top (margin/px 36)])
-  ((sel/tag box/<P>)
+  ((sel/tag tag/<P>)
    [text-align text-align/inherit]
    [margin-top (margin/px 18)]
    [margin-right (margin/px 0)]

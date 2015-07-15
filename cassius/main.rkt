@@ -265,11 +265,11 @@
 (define (element-constraints dom emit elt children)
   (match elt
     [(list 'BLOCK tag constraints ...)
-     (for-each emit (element-block-constraints (sformat "box/~a" tag) (elt-name elt)))]
+     (for-each emit (element-block-constraints (sformat "tag/~a" tag) (elt-name elt)))]
     [(list 'LINE constraints ...)
      (for-each emit (element-line-constraints "box/line" (elt-name elt)))]
     [(list 'INLINE tag constraints ...)
-     (for-each emit (element-inline-constraints (sformat "box/~a" tag) (elt-name elt)))]
+     (for-each emit (element-inline-constraints (sformat "tag/~a" tag) (elt-name elt)))]
     [(list 'TEXT constraints ...)
      (for-each emit (element-inline-constraints 'box/text (elt-name elt)))]))
 
@@ -296,8 +296,8 @@
           (for* ([dom doms] [elt (in-tree-values (dom-tree dom))])
             (when (memq ':id elt) (save-id (sformat "ID-~a" (cadr (memq ':id elt)))))
             (match elt
-              [(list 'BLOCK tag cmds ...) (save-tag (sformat "box/~a" tag))]
-              [(list 'INLINE tag cmds ...) (save-tag (sformat "box/~a" tag))]
+              [(list 'BLOCK tag cmds ...) (save-tag (sformat "tag/~a" tag))]
+              [(list 'INLINE tag cmds ...) (save-tag (sformat "tag/~a" tag))]
               [(list 'LINE tag cmds ...) (void)]
               [(list 'TEXT cmds ...) (void)]))
           (for ([rule sheet])

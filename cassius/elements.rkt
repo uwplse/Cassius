@@ -4,7 +4,6 @@
 (require "common.rkt")
 
 (require unstable/sequence)
-
 (provide element-block-constraints element-inline-constraints element-line-constraints)
 
 (define (element-block-constraints e-tag e-name)
@@ -35,19 +34,19 @@
     ; Computing maximum collapsed positive and negative margin
     (assert (= (mtp ,b)
                (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) box/<HTML>)) (is-element ,fe)
+                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-element ,fe)
                               (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0))))
     (assert (= (mtn ,b)
                (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) box/<HTML>)) (is-element ,fe)
+                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-element ,fe)
                               (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0))))
     (assert (= (mbp ,b)
                (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) box/<HTML>)) (is-element ,le)
+                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-element ,le)
                               (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0))))
     (assert (= (mbn ,b)
                (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
-                    (ite (and (not (= (tagname ,e) box/<HTML>)) (is-element ,le)
+                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-element ,le)
                               (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0))))
 
    ; In-flow block element layout
@@ -118,7 +117,7 @@
                       ; (possibly collapsed) margin of its last in-flow child,
                       ; if the child's bottom margin does not collapse with the
                       ; element's bottom margin
-                      (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0) (not (= (tagname ,e) box/<HTML>)))
+                      (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0) (not (= (tagname ,e) tag/<HTML>)))
                            (bottom-border ,lb) ; Collapsed bottom margin
                            (bottom-outer ,lb)))] ; No collapsed bottom margin
                   ; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
@@ -134,7 +133,7 @@
            (= (x ,b) (+ (left-content ,pb) (ml ,b)))
            (= (y ,b)
               (ite (is-nil (previous ,e))
-                   (ite (and (not (= (tagname ,pe) box/<HTML>)) (is-float/none (float ,pe))
+                   (ite (and (not (= (tagname ,pe) tag/<HTML>)) (is-float/none (float ,pe))
                              (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                         (top-content ,pb)
                         (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
