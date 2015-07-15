@@ -4,7 +4,7 @@
 
 (provide (struct-out dom) (struct-out rendering-context)
          inline-element? in-tree-subtrees in-tree-values
-         in-dom-levels dom-get dom-type dom-root elt-name elt-from-name
+         dom-get dom-type dom-root elt-name elt-from-name
          dom-definitions)
 
 (struct dom (name stylesheet context tree))
@@ -22,24 +22,6 @@
   (apply sequence-append
          (in-value (car tree))
          (map in-tree-values (cdr tree))))
-
-(define (atree-init doms)
-  (map (λ (dom) (cons dom (dom-tree dom))) doms))
-
-(define (atree-next atrees)
-  (for*/list ([atree atrees] [subtree (cddr atree)])
-    (cons (car atree) subtree)))
-
-(define (atree-levels atrees)
-  (if (null? atrees)
-      '()
-      (cons
-       (for/list ([atree atrees])
-        (list (car atree) (cadr atree) (cddr atree)))
-       (atree-levels (atree-next atrees)))))
-
-(define (in-dom-levels doms)
-  (atree-levels (atree-init doms)))
 
 (define (dom-type dom) (dom-name dom))
 (define (dom-root dom) (sformat "~a-root" (dom-name dom)))
