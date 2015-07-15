@@ -3,15 +3,12 @@
 (require "common.rkt")
 
 (provide (struct-out dom) (struct-out rendering-context)
-         inline-element? in-tree-subtrees in-tree-values
+         in-tree-subtrees in-tree-values
          dom-get dom-type dom-root elt-name elt-from-name
          dom-definitions)
 
 (struct dom (name stylesheet context tree))
 (struct rendering-context (width))
-
-(define (inline-element? elt)
-  (eq? (car elt) '<>))
 
 (define (in-tree-subtrees tree)
   (apply sequence-append
