@@ -152,18 +152,18 @@
 
   ; The type of element names
   (for ([dom doms] [names dom-names] #:when #t [name names])
-    (emit `(declare-const ,(sformat "~a-elt" name) Element))
+    (emit `(declare-const ,(sformat "~a-elt" name) Box))
     (emit `(assert (= (document ,(sformat "~a-elt" name)) ,(sformat "~a-doc" (dom-name dom))))))
   ; The element info for a name
   (define body
-    (for*/fold ([body 'elt/nil]) ([names dom-names] [name names])
+    (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       `(ite (= x ,name) ,(sformat "~a-elt" name) ,body)))
-  (emit `(define-fun get/elt ((x ElementName)) Element ,body))
+  (emit `(define-fun get/elt ((x ElementName)) Box ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (not (is-elt/nil (get/elt ,name)))))
+    (emit `(assert (not (is-no-box (get/elt ,name)))))
     (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name)))))
   ; Pointed map: nil goes to nil
-  (emit `(assert (= (get/elt nil) elt/nil))))
+  (emit `(assert (= (get/elt nil) no-box))))
 
 (define (dom-root-constraints dom emit)
   (define elt `(get/elt ,(dom-root dom)))

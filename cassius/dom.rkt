@@ -42,10 +42,8 @@
                     (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                     (pt Real) (pr Real) (pb Real) (pl Real)
                     (bt Real) (br Real) (bb Real) (bl Real)))
-        (Element elt/nil
-                 (element
-                  (document Document)
-                  (tagname TagNames) (id Id) (rules Style)
+        (Box no-box
+             (box (document Document) (tagname TagNames) (id Id) (rules Style)
                   (display Display) (float Float) (textalign TextAlign)
                   (previous ElementName) (parent ElementName)
                   (first-child ElementName) (last-child ElementName)

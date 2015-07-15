@@ -27,7 +27,7 @@
                                (field `(,(sformat "rule.~a?" prop) Bool)))))))))
 
 (define css-functions
-  `((define-fun selector-applies? ((sel Selector) (elt Element)) Bool
+  `((define-fun selector-applies? ((sel Selector) (elt Box)) Bool
       ,(smt-cond
         [(is-sel/all sel) true]
         [(is-sel/tag sel) (= (sel.tag sel) (tagname elt))]
