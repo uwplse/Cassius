@@ -27,7 +27,7 @@
 
   (for ([(key value) (in-hash smt-out)])
     (match value
-      [`(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl)
+      [`(rect ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl)
        (eprintf "~a ~a×~a at (~a, ~a)\n" key (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
        (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
                 (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
@@ -247,7 +247,7 @@
   (let interpret ([cmds cmds])
     (match cmds
       [(list ':print rest ...)
-       (emit `(declare-const ,(sformat "~a-placement" name) Box))
+       (emit `(declare-const ,(sformat "~a-placement" name) Rect))
        (emit `(assert (= ,(sformat "~a-placement" name) (placement-box (get/elt ,name)))))
        (emit `(declare-const ,(sformat "~a-style" name) Style))
        (emit `(assert (= ,(sformat "~a-style" name) (rules (get/elt ,name)))))

@@ -218,12 +218,12 @@
             (= (flow-box ,e)
                ; TODO : Handle the margin collapsing nonsense
                (ite (is-nil (previous ,e))
-                    (box (left-content ,pb) (top-content ,pb) (w ,pb) 0.0
-                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
-                    (box (left-content ,pb) (bottom-border ,vb) (w ,pb) 0.0
-                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                         0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)))
+                    (rect (left-content ,pb) (top-content ,pb) (w ,pb) 0.0
+                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+                    (rect (left-content ,pb) (bottom-border ,vb) (w ,pb) 0.0
+                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)))
 
             ,@(for/list ([field '(pl pr pb pt w h)])
                 `(>= (,field ,bp) 0.0))
