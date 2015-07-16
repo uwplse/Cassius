@@ -105,15 +105,15 @@
 
   ; Parent element
   (for ([child (sequence-map car children)])
-    (emit `(assert (= (parent ,(elt-get child)) ,(elt-name elt)))))
+    (emit `(assert (= (parent-name ,(elt-get child)) ,(elt-name elt)))))
   ; Previous element
   (for ([child (sequence-map car children)]
         [prev (sequence-append (in-value 'nil) (sequence-map (compose elt-name car) children))])
-    (emit `(assert (= (previous ,(elt-get child)) ,prev))))
+    (emit `(assert (= (previous-name ,(elt-get child)) ,prev))))
 
   ; First/last child
-  (emit `(assert (= (first-child ,(elt-get elt)) ,(get-child children first))))
-  (emit `(assert (= (last-child ,(elt-get elt)) ,(get-child children last)))))
+  (emit `(assert (= (first-child-name ,(elt-get elt)) ,(get-child children first))))
+  (emit `(assert (= (last-child-name ,(elt-get elt)) ,(get-child children last)))))
 
 (define ((style-constraints sheet) dom emit elt children)
   (define e (dom-get dom elt))
@@ -171,20 +171,18 @@
 
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (placement-box ,elt) (flow-box ,elt))))
-  (emit `(assert (= (parent ,elt) nil)))
   (emit `(assert (= (tagname ,elt) box/viewport)))
-  (emit `(assert (= (previous ,elt) nil)))
   (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
     (emit `(assert (= (,field ,b) 0.0))))
   (emit `(assert (= (float ,elt) float/none)))
   (emit `(assert (= (textalign ,elt) text-align/left)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
-  (emit `(assert (= (parent (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
-  (emit `(assert (= (previous (get/elt ,(elt-name (car (dom-tree dom))))) nil)))
-  (emit `(assert (= (first-child ,elt) ,(elt-name (car (dom-tree dom))))))
-  (emit `(assert (= (parent ,elt) nil)))
-  (emit `(assert (= (previous ,elt) nil))))
+  (emit `(assert (= (parent-name (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
+  (emit `(assert (= (previous-name (get/elt ,(elt-name (car (dom-tree dom))))) nil)))
+  (emit `(assert (= (first-child-name ,elt) ,(elt-name (car (dom-tree dom))))))
+  (emit `(assert (= (parent-name ,elt) nil)))
+  (emit `(assert (= (previous-name ,elt) nil))))
 
 (define (stylesheet-constraints sheet)
   (append

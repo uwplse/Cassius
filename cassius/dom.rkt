@@ -42,8 +42,8 @@
         (Box no-box
              (box (document Document) (tagname TagNames) (id Id) (rules Style)
                   (display Display) (float Float) (textalign TextAlign)
-                  (previous ElementName) (parent ElementName)
-                  (first-child ElementName) (last-child ElementName)
+                  (previous-name ElementName) (parent-name ElementName)
+                  (first-child-name ElementName) (last-child-name ElementName)
                   (flow-box Rect) (placement-box Rect)))))
 
     (define-fun left-outer ((box Rect)) Real (- (x box) (ml box)))
@@ -80,4 +80,9 @@
 
     (define-fun horizontally-adjacent ((box1 Rect) (box2 Rect)) Bool
       (or (> (+ (y box1) (box-height box1)) (y box2) (y box1))
-          (> (+ (y box2) (box-height box2)) (y box1) (y box2))))))
+          (> (+ (y box2) (box-height box2)) (y box1) (y box2))))
+
+    (define-fun previous ((box Box)) Box (get/elt (previous-name box)))
+    (define-fun parent   ((box Box)) Box (get/elt (parent-name box)))
+    (define-fun fchild   ((box Box)) Box (get/elt (first-child-name box)))
+    (define-fun lchild   ((box Box)) Box (get/elt (last-child-name box)))))

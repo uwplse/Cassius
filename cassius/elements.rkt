@@ -7,13 +7,11 @@
 (provide element-block-constraints element-inline-constraints element-line-constraints)
 
 (define (element-block-constraints e-tag e-name)
-  (define (elt name) `(get/elt ,name))
-
-  (define e (elt e-name))
-  (define ve (elt `(previous ,e)))
-  (define pe (elt `(parent ,e)))
-  (define fe (elt `(first-child ,e)))
-  (define le (elt `(last-child ,e)))
+  (define e `(get/elt e-name))
+  (define ve `(previous ,e))
+  (define pe `(parent ,e))
+  (define fe `(fchild ,e))
+  (define le `(lchild ,e))
 
   (define r `(rules ,e))
 
@@ -132,7 +130,7 @@
 
            (= (x ,b) (+ (left-content ,pb) (ml ,b)))
            (= (y ,b)
-              (ite (is-nil (previous ,e))
+              (ite (is-no-box ,ve)
                    (ite (and (not (= (tagname ,pe) tag/<HTML>)) (is-float/none (float ,pe))
                              (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                         (top-content ,pb)
@@ -217,7 +215,7 @@
             ; The position of such a parent is defined by the rules in the section on margin collapsing.
             (= (flow-box ,e)
                ; TODO : Handle the margin collapsing nonsense
-               (ite (is-nil (previous ,e))
+               (ite (is-no-box ,ve)
                     (rect (left-content ,pb) (top-content ,pb) (w ,pb) 0.0
                           0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                           0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
@@ -233,13 +231,11 @@
             (= (float ,e) (style.float ,r))))))
 
 (define (element-inline-constraints e-tag e-name)
-  (define (elt name) `(get/elt ,name))
-
-  (define e (elt e-name))
-  (define ve (elt `(previous ,e)))
-  (define pe (elt `(parent ,e)))
-  (define fe (elt `(first-child ,e)))
-  (define le (elt `(last-child ,e)))
+  (define e `(get/elt ,e-name))
+  (define ve `(previous ,e))
+  (define pe `(parent ,e))
+  (define fe `(fchild ,e))
+  (define le `(lchild ,e))
 
   (define r `(rules ,e))
 
@@ -252,7 +248,7 @@
 
   `(; Basic element stuff
     (assert (= (display ,e) display/inline))
-    (assert (not (is-nil (parent ,e))))
+    (assert (not (is-no-box ,pe)))
     (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
     (assert (= (float ,e) float/none))
 
@@ -265,30 +261,20 @@
     (assert (between (top-content ,pb) (y ,b) (+ (top-content ,pb) (h ,pb) (- (h ,b)))))
 
     ; Inline element layout
-    (assert (=> (not (is-nil (previous ,e))) (= (x ,b) (right-border ,vb))))
+    (assert (=> (not (is-no-box ,ve)) (= (x ,b) (right-border ,vb))))
     (assert (= (placement-box ,e) (flow-box ,e)))))
 
 (define (element-line-constraints e-tag e-name)
-  (define (elt name) `(get/elt ,name))
-
-  (define e (elt e-name))
-  (define ve (elt `(previous ,e)))
-  (define pe (elt `(parent ,e)))
-  (define fe (elt `(first-child ,e)))
-  (define le (elt `(last-child ,e)))
-
-  (define r `(rules ,e))
-
+  (define e `(get/elt ,e-name))
   (define b  `(flow-box ,e))
-  (define bp `(placement-box ,e))
-  (define vb `(flow-box ,ve))
-  (define pb `(placement-box ,pe))
-  (define fb `(flow-box ,fe))
-  (define lb `(flow-box ,le))
+  (define vb `(flow-box (previous ,e)))
+  (define pb `(placement-box (parent ,e)))
+  (define fb `(flow-box (fchild ,e)))
+  (define lb `(flow-box (lchild ,e)))
 
   `(; Basic element stuff
     (assert (= (display ,e) display/inline))
-    (assert (not (is-nil (parent ,e))))
+    (assert (not (is-no-box ,pe)))
     (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
     (assert (= (float ,e) float/none))
     (assert (= (textalign ,e) (textalign ,pe)))
@@ -298,10 +284,10 @@
         `(assert (= (,field ,b) 0.0)))
 
     (assert (= (x ,b) (left-content ,pb)))
-    (assert (= (y ,b) (ite (is-nil (previous ,e)) (top-content ,pb) (bottom-border ,vb))))
+    (assert (= (y ,b) (ite (is-no-box (previous ,e)) (top-content ,pb) (bottom-border ,vb))))
     (assert (= (w ,b) (w ,pb)))
 
-    (assert (not (is-nil (first-child ,e))))
+    (assert (not (is-no-box (fchild ,e))))
     (assert
      ,(smt-cond
        [(is-text-align/left (textalign ,e)) (= (left-border ,fb) (left-content ,b))]
