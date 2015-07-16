@@ -11,10 +11,9 @@
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
-(define (z3-solve query #:debug [debug? #f] #:get-unsat [get-unsat identity])
+(define (z3-solve encoding #:debug [debug? #f] #:get-unsat [get-unsat identity])
   (define-values (process out in err)
     (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
-  (define encoding (z3-prepare query))
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
 
@@ -211,6 +210,45 @@
                     empty)]
                [_ (list cmd)])))))
 
+(define ((fixpoint-1 f) x)
+  (let ([x* (f x)])
+    (if (equal? x* x) x ((fixpoint f) x*))))
+
+(define (fixpoint . fs) (fixpoint-1 (apply compose fs)))
+
+(define ((z3-resolve-fn f) cmds)
+  "Resolve applications of a function f using asserted equalities"
+  (define values (make-hash))
+  (for ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [`(assert (= (,(== f) ,input) ,output))
+       (hash-set! values input output)]
+      [_ (void)]))
+  (for/list ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [(list 'assert expr)
+       (list 'assert
+             (let loop ([expr expr])
+               (match expr
+                 [`(= (,(== f) ,input) ,output) expr]
+                 [(list (== f) arg)
+                  (hash-ref values arg (lambda () `(,f ,(loop arg))))]
+                 [(list fn args ...) (cons fn (map loop args))]
+                 [_ expr])))]
+      [_ cmd])))
+
+(define (z3-resolve-fns . fs)
+  (apply fixpoint (map z3-resolve-fn fs)))
+
+(define (z3-check-functions cmds)
+  "Check that we have no uninterpreted functions"
+  (for ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [`(declare-fun ,name (,itypes ...) ,otype)
+       (eprintf "Z3: Uninterpreted function ~a on line ~a\n  line: ~a\n" name i cmd)]
+      [_ (void)]))
+  cmds)
+
 (define (z3-check-datatypes cmds)
   "Check that no two records have identically-named fields or variants."
   (define all-names (make-hash))
@@ -267,45 +305,6 @@
       [_ (void)]))
   cmds)
 
-(define ((fixpoint-1 f) x)
-  (let ([x* (f x)])
-    (if (equal? x* x) x ((fixpoint f) x*))))
-
-(define (fixpoint . fs) (fixpoint-1 (apply compose fs)))
-
-(define ((z3-resolve-fn f) cmds)
-  "Resolve applications of a function f using asserted equalities"
-  (define values (make-hash))
-  (for ([cmd cmds] [i (in-naturals)])
-    (match cmd
-      [`(assert (= (,(== f) ,input) ,output))
-       (hash-set! values input output)]
-      [_ (void)]))
-  (for/list ([cmd cmds] [i (in-naturals)])
-    (match cmd
-      [(list 'assert expr)
-       (list 'assert
-             (let loop ([expr expr])
-               (match expr
-                 [`(= (,(== f) ,input) ,output) expr]
-                 [(list (== f) arg)
-                  (hash-ref values arg (lambda () `(,f ,(loop arg))))]
-                 [(list fn args ...) (cons fn (map loop args))]
-                 [_ expr])))]
-      [_ cmd])))
-
-(define (z3-resolve-fns . fs)
-  (apply fixpoint (map z3-resolve-fn fs)))
-
-(define (z3-check-functions cmds)
-  "Check that we have no uninterpreted functions"
-  (for ([cmd cmds] [i (in-naturals)])
-    (match cmd
-      [`(declare-fun ,name (,itypes ...) ,otype)
-       (eprintf "Z3: Uninterpreted function ~a on line ~a\n  line: ~a\n" name i cmd)]
-      [_ (void)]))
-  cmds)
-
 (define (z3-movedefs cmds)
   "Move each definition to be right before first use."
   (define (contains-var expr var)
@@ -324,11 +323,50 @@
     (let-values ([(head tail) (split-first-use (second def) not-defs)])
       (append head (cons def tail)))))
 
+(define ctr 1)
+(define (gensym name)
+  (begin0 (sformat "~a$~a" name ctr)
+    (set! ctr (+ ctr 1))))
+
+(define (capture-avoiding-substitute body bindings)
+  (match body
+    [(? symbol?) (cdr (or (assoc body bindings) (cons body body)))]
+    [`(let ((,names ,vals) ...) ,rest)
+     (capture-avoiding-substitute body (filter (lambda (v) (not (member (car v) names))) bindings))]
+    [(? list?)
+     (map (curryr capture-avoiding-substitute bindings) body)]
+    [_ body]))
+
+(define-syntax-rule (matches? expr pattern)
+  (match expr [pattern #t] [_ #f]))
+
+(define ((z3-expand name) cmds)
+  (match-define `((,names ,body))
+    (for/reap [save] ([line cmds])
+              (match line
+                [`(define-fun ,(== name) ((,names ,types) ...) ,rtype ,body)
+                 (save (list names body))]
+                [_ (void)])))
+
+  (for/list ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [(list 'assert expr)
+       (list 'assert
+             (let loop ([expr expr])
+               (match expr
+                 [(list (== name) args ...)
+                  (capture-avoiding-substitute body (map cons names args))]
+                 [(? list?)
+                  (map loop expr)]
+                 [_ expr])))]
+      [_ cmd])))
+
 (define *emitter-passes*
   (list #;z3-simplifier
-   (z3-resolve-fns 'get/elt 'first-child 'last-child 'parent 'previous)
+   (map z3-expand '(previous parent fchild lchild))
+   (z3-resolve-fns 'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name)
    z3-dco z3-movedefs
    z3-check-datatypes z3-check-functions z3-check-fields))
 
 (define (z3-prepare exprs)
-  (foldl (λ (action exprs*) (action exprs*)) exprs *emitter-passes*))
+  (foldl (λ (action exprs*) (action exprs*)) exprs (flatten *emitter-passes*)))
