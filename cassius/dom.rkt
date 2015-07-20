@@ -38,7 +38,8 @@
                     (mt Real) (mr Real) (mb Real) (ml Real)
                     (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                     (pt Real) (pr Real) (pb Real) (pl Real)
-                    (bt Real) (br Real) (bb Real) (bl Real)))
+                    (bt Real) (br Real) (bb Real) (bl Real)
+                    (element ElementName)))
         (Box no-box
              (box (document Document) (tagname TagNames) (id Id) (rules Style)
                   (display Display) (float Float) (textalign TextAlign)

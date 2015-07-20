@@ -4,10 +4,28 @@
 (require "common.rkt")
 
 (require unstable/sequence)
-(provide element-block-constraints element-inline-constraints element-line-constraints)
+(provide element-general-constraints
+         element-block-constraints element-inline-constraints element-line-constraints)
 
-(define (element-block-constraints e-tag e-name)
-  (define e `(get/elt e-name))
+(define (element-general-constraints e-name)
+  (define e `(get/elt ,e-name))
+  (define r `(rules ,e))
+
+  `((assert (= (element (flow-box ,e)) ,e-name))
+    (assert (= (element (placement-box ,e)) ,e-name))
+    (assert (= (textalign ,e)
+               (ite (is-text-align/inherit (style.text-align ,r))
+                    (textalign (parent ,e))
+                    (style.text-align ,r))))
+    (assert (= (float ,e)
+               ,(smt-cond
+                 [(is-display/inline (display ,e)) float/none]
+                 [(is-box/line (tagname ,e)) float/none]
+                 [(is-float/inherit (style.float ,r)) (float (parent ,e))]
+                 [else (style.float ,r)])))))
+
+(define (element-block-constraints b)
+  (define e `(get/elt (element ,b)))
   (define ve `(previous ,e))
   (define pe `(parent ,e))
   (define fe `(fchild ,e))
@@ -15,21 +33,13 @@
 
   (define r `(rules ,e))
 
-  (define b  `(flow-box ,e))
   (define bp `(placement-box ,e))
   (define vb `(flow-box ,ve))
   (define pb `(placement-box ,pe))
   (define fb `(flow-box ,fe))
   (define lb `(flow-box ,le))
 
-  `(; Basic element stuff
-    (assert (= (display ,e) display/block))
-    (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
-    (assert (= (float ,e) (ite (is-float/inherit (style.float ,r)) (float ,pe) (style.float ,r))))
-    (assert (= (textalign ,e)
-               (ite (is-text-align/inherit (style.text-align ,r)) (textalign ,pe) (style.text-align ,r))))
-
-    ; Computing maximum collapsed positive and negative margin
+  `(; Computing maximum collapsed positive and negative margin
     (assert (= (mtp ,b)
                (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
                     (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fe)
@@ -213,25 +223,15 @@
             ; CSS 2.1 § 9.5.1 : When the float occurs between two collapsing margins, the float is
             ; positioned as if it had an otherwise empty anonymous block parent taking part in the flow.
             ; The position of such a parent is defined by the rules in the section on margin collapsing.
-            (= (flow-box ,e)
-               ; TODO : Handle the margin collapsing nonsense
-               (ite (is-no-box ,ve)
-                    (rect (left-content ,pb) (top-content ,pb) (w ,pb) 0.0
-                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
-                    (rect (left-content ,pb) (bottom-border ,vb) (w ,pb) 0.0
-                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                          0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)))
+            ; TODO
 
             ,@(for/list ([field '(pl pr pb pt w h)])
                 `(>= (,field ,bp) 0.0))
             ,@(for/list ([field '(bl br bt bb)])
-                `(= (,field ,bp) 0.0))
+                `(= (,field ,bp) 0.0))))))
 
-            (= (float ,e) (style.float ,r))))))
-
-(define (element-inline-constraints e-tag e-name)
-  (define e `(get/elt ,e-name))
+(define (element-inline-constraints b)
+  (define e `(get/elt (element ,b)))
   (define ve `(previous ,e))
   (define pe `(parent ,e))
   (define fe `(fchild ,e))
@@ -239,22 +239,13 @@
 
   (define r `(rules ,e))
 
-  (define b  `(flow-box ,e))
   (define bp `(placement-box ,e))
   (define vb `(flow-box ,ve))
   (define pb `(placement-box ,pe))
   (define fb `(flow-box ,fe))
   (define lb `(flow-box ,le))
 
-  `(; Basic element stuff
-    (assert (= (display ,e) display/inline))
-    (assert (not (is-no-box ,pe)))
-    (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
-    (assert (= (float ,e) float/none))
-
-    (assert (= (textalign ,e) text-align/inherit))
-
-    ; Computing maximum collapsed positive and negative margin
+  `(; Computing maximum collapsed positive and negative margin
     ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
         `(assert (= (,field ,b) 0.0)))
 
@@ -264,22 +255,14 @@
     (assert (=> (not (is-no-box ,ve)) (= (x ,b) (right-border ,vb))))
     (assert (= (placement-box ,e) (flow-box ,e)))))
 
-(define (element-line-constraints e-tag e-name)
-  (define e `(get/elt ,e-name))
-  (define b  `(flow-box ,e))
+(define (element-line-constraints b)
+  (define e `(get/elt (element ,b)))
   (define vb `(flow-box (previous ,e)))
   (define pb `(placement-box (parent ,e)))
   (define fb `(flow-box (fchild ,e)))
   (define lb `(flow-box (lchild ,e)))
 
-  `(; Basic element stuff
-    (assert (= (display ,e) display/inline))
-    (assert (not (is-no-box ,pe)))
-    (assert (= (tagname ,e) ,(sformat "~a" e-tag)))
-    (assert (= (float ,e) float/none))
-    (assert (= (textalign ,e) (textalign ,pe)))
-
-    ; Computing maximum collapsed positive and negative margin
+  `(; Computing maximum collapsed positive and negative margin
     ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
         `(assert (= (,field ,b) 0.0)))
 

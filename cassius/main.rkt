@@ -261,20 +261,30 @@
        (void)])))
 
 (define (element-constraints dom emit elt children)
-  (match elt
-    [(list 'BLOCK tag constraints ...)
-     (for-each emit (element-block-constraints (sformat "tag/~a" tag) (elt-name elt)))]
-    [(list 'LINE constraints ...)
-     (for-each emit (element-line-constraints "box/line" (elt-name elt)))]
-    [(list 'INLINE tag constraints ...)
-     (for-each emit (element-inline-constraints (sformat "tag/~a" tag) (elt-name elt)))]
-    [(list 'TEXT constraints ...)
-     (for-each emit (element-inline-constraints 'box/text (elt-name elt)))]))
+  (for-each emit (element-general-constraints (elt-name elt)))
+  (for-each emit
+            ((match elt
+               [(list 'BLOCK tag constraints ...) element-block-constraints]
+               [(list 'LINE constraints ...) element-line-constraints]
+               [(list 'INLINE tag constraints ...) element-inline-constraints]
+               [(list 'TEXT constraints ...) element-inline-constraints])
+             `(flow-box (get/elt ,(elt-name elt))))))
 
-(define (id-constraints dom emit elt children)
-  (if (memq ':id elt)
-      (emit `(assert (= (id ,(dom-get dom elt)) ,(sformat "ID-~a" (cadr (memq ':id elt))))))
-      (emit `(assert (= (id ,(dom-get dom elt)) NoID)))))
+(define (info-constraints dom emit elt children)
+  (define-values (tagname idname display)
+    (match elt
+      [(list 'BLOCK tagname ':id idname _ ...)
+       (values (sformat "tag/~a" tagname) (sformat "ID-~a" idname) 'display/block)]
+      [(list 'INLINE tagname ':id idname _ ...)
+       (values (sformat "tag/~a" tagname) (sformat "ID-~a" idname) 'display/inline)]
+      [(list 'BLOCK tagname _ ...) (values (sformat "tag/~a" tagname) 'NoID 'display/block)]
+      [(list 'INLINE tagname _ ...) (values (sformat "tag/~a" tagname) 'NoID 'display/inline)]
+      [(list 'LINE _ ...) (values 'box/line 'NoID 'display/block)]
+      [(list 'TEXT _ ...) (values 'box/text 'NoID 'display/inline)]))
+
+  (emit `(assert (= (tagname ,(dom-get dom elt)) ,tagname)))
+  (emit `(assert (= (id ,(dom-get dom elt)) ,idname)))
+  (emit `(assert (= (display ,(dom-get dom elt)) ,display))))
 
 (define (all-constraints-of dom emit . types)
   (for* ([(elt children) (in-tree-subtrees (dom-tree dom))] [type types])
@@ -305,7 +315,7 @@
               [`((sel/id ,id) ,_ ...) (save-id id)]))))
 
   (define constraints
-    (list tree-constraints id-constraints user-constraints element-constraints
+    (list tree-constraints info-constraints user-constraints element-constraints
           (style-constraints sheet)))
 
   `((set-option :produce-unsat-cores true)
