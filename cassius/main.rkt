@@ -1,5 +1,6 @@
 #lang racket
 (require "dom.rkt")
+(require "smt.rkt")
 (require "css-rules.rkt")
 (require "elements.rkt")
 (require "float.rkt")
@@ -101,14 +102,14 @@
   (define root (dom-root dom))
 
   (define (get-child children accessor)
-    (if (null? children) 'nil (elt-name (car (accessor children)))))
+    (if (null? children) 'nil-elt (elt-name (car (accessor children)))))
 
   ; Parent element
   (for ([child (sequence-map car children)])
     (emit `(assert (= (parent-name ,(elt-get child)) ,(elt-name elt)))))
   ; Previous element
   (for ([child (sequence-map car children)]
-        [prev (sequence-append (in-value 'nil) (sequence-map (compose elt-name car) children))])
+        [prev (sequence-append (in-value 'nil-elt) (sequence-map (compose elt-name car) children))])
     (emit `(assert (= (previous-name ,(elt-get child)) ,prev))))
 
   ; First/last child
@@ -145,7 +146,7 @@
                             (= (,(sformat "style.~a" property) ,re)
                                (,(sformat "rule.~a" property) ,rule))))))))))
 
-(define (dom-define-get doms emit)
+(define (dom-define-get/elt doms emit)
   (define dom-names
     (for/list ([dom doms])
       (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt)))))
@@ -163,14 +164,44 @@
     (emit `(assert (not (is-no-box (get/elt ,name)))))
     (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name)))))
   ; Pointed map: nil goes to nil
-  (emit `(assert (= (get/elt nil) no-box))))
+  (emit `(assert (= (get/elt nil-elt) no-box))))
+
+(define (dom-define-get/box doms emit)
+  (define dom-names
+    (for/list ([dom doms])
+      (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt)))))
+
+  ; The type of element names
+  (for ([dom doms] [names dom-names] #:when #t [name names])
+    (emit `(declare-const ,(sformat "~a-flow-box" name) Box))
+    (emit `(declare-const ,(sformat "~a-real-box" name) Box))
+    (emit `(assert (= (element ,(sformat "~a-flow-box" name)) ,name)))
+    (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name))))
+  ; The element info for a name
+  (define body
+    (for*/fold ([body 'no-rect]) ([names dom-names] [name names])
+      (smt-cond
+       [(= x ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)]
+       [(= x ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name)]
+       [else ,body])))
+  (emit `(define-fun get/box ((x BoxName)) Rect ,body))
+  (for* ([names dom-names] [name names])
+    (emit `(assert (not (is-no-rect ,(sformat "~a-flow-box" name)))))
+    (emit `(assert (not (is-no-rect ,(sformat "~a-real-box" name)))))
+    (emit `(assert (= (get/box ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name))))
+    (emit `(assert (= (get/box ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)))))
+  ; Pointed map: nil goes to nil
+  (emit `(assert (= (get/box nil-box) no-rect)))
+  (emit `(assert (= (flow-box no-box) nil-box)))
+  (emit `(assert (= (placement-box no-box) nil-box))))
 
 (define (dom-root-constraints dom emit)
   (define elt `(get/elt ,(dom-root dom)))
-  (define b (list 'flow-box elt))
+  (define b `(flow-box ,elt))
 
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
-  (emit `(assert (= (placement-box ,elt) (flow-box ,elt))))
+  (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
+  (emit `(assert (= (placement-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-real" (dom-root dom)))))
   (emit `(assert (= (tagname ,elt) box/viewport)))
   (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
     (emit `(assert (= (,field ,b) 0.0))))
@@ -179,10 +210,10 @@
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
   (emit `(assert (= (parent-name (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
-  (emit `(assert (= (previous-name (get/elt ,(elt-name (car (dom-tree dom))))) nil)))
+  (emit `(assert (= (previous-name (get/elt ,(elt-name (car (dom-tree dom))))) nil-elt)))
   (emit `(assert (= (first-child-name ,elt) ,(elt-name (car (dom-tree dom))))))
-  (emit `(assert (= (parent-name ,elt) nil)))
-  (emit `(assert (= (previous-name ,elt) nil))))
+  (emit `(assert (= (parent-name ,elt) nil-elt)))
+  (emit `(assert (= (previous-name ,elt) nil-elt))))
 
 (define (stylesheet-constraints sheet)
   (append
@@ -268,7 +299,7 @@
                [(list 'LINE constraints ...) element-line-constraints]
                [(list 'INLINE tag constraints ...) element-inline-constraints]
                [(list 'TEXT constraints ...) element-inline-constraints])
-             `(flow-box (get/elt ,(elt-name elt))))))
+             (sformat "~a-flow-box" (elt-name elt)))))
 
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display)
@@ -292,7 +323,8 @@
 
 (define (dfs-constraints doms . constraints)
   (reap [sow]
-        (dom-define-get doms sow)
+        (dom-define-get/elt doms sow)
+        (dom-define-get/box doms sow)
         (for ([dom doms]) (dom-root-constraints dom sow))
         (for ([cns constraints])
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
@@ -314,6 +346,11 @@
               [`((sel/tag ,tag) ,_ ...) (save-tag tag)]
               [`((sel/id ,id) ,_ ...) (save-id id)]))))
 
+  (define elt-names
+    (append
+     (for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (elt-name elt))
+     (for/list ([dom doms]) (dom-root dom))))
+
   (define constraints
     (list tree-constraints info-constraints user-constraints element-constraints
           (style-constraints sheet)))
@@ -324,10 +361,11 @@
                         (TagNames box/viewport box/text box/inline box/block box/line
                                   ,@(remove-duplicates tags))
                         (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
-                        (ElementName
-                         ,@(for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (elt-name elt))
-                         ,@(for/list ([dom doms]) (dom-root dom))
-                         nil)))
+                        (ElementName ,@elt-names nil-elt)
+                        (BoxName
+                         ,@(map (curry sformat "~a-flow") elt-names)
+                         ,@(map (curry sformat "~a-real") elt-names)
+                         nil-box)))
     ,@css-declarations
     ,@dom-definitions
     ,@css-functions

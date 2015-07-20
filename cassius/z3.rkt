@@ -362,9 +362,12 @@
       [_ cmd])))
 
 (define *emitter-passes*
-  (list #;z3-simplifier
+  (list
    (map z3-expand '(previous parent fchild lchild))
-   (z3-resolve-fns 'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name 'element)
+   (z3-resolve-fns
+    'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
+    'get/box 'flow-box 'placement-box 'element)
+   #;z3-simplifier
    z3-dco z3-movedefs
    z3-check-datatypes z3-check-functions z3-check-fields))
 

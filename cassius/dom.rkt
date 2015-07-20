@@ -34,7 +34,8 @@
 
 (define dom-definitions
   `((declare-datatypes ()
-       ((Rect (rect (x Real) (y Real) (w Real) (h Real)
+       ((Rect no-rect
+              (rect (x Real) (y Real) (w Real) (h Real)
                     (mt Real) (mr Real) (mb Real) (ml Real)
                     (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                     (pt Real) (pr Real) (pb Real) (pl Real)
@@ -45,7 +46,7 @@
                   (display Display) (float Float) (textalign TextAlign)
                   (previous-name ElementName) (parent-name ElementName)
                   (first-child-name ElementName) (last-child-name ElementName)
-                  (flow-box Rect) (placement-box Rect)))))
+                  (flow-box BoxName) (placement-box BoxName)))))
 
     (define-fun left-outer ((box Rect)) Real (- (x box) (ml box)))
     (define-fun left-border ((box Rect)) Real (x box))
