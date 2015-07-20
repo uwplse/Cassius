@@ -23,22 +23,13 @@
          (apply in-parallel (map in-value hd))
          (in-groups n tail)))))
 
-(define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
-  (define (r2 x) (~r x #:precision 2))
+(define (r2 x) (~r x #:precision 2))
 
-  (for ([(key value) (in-hash smt-out)])
-    (match value
-      [`(rect ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl)
-       (eprintf "~a ~a×~a at (~a, ~a)\n" key (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
-       (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
-                (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
-                (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
-       (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-       (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))]
-      [(list 'style rest ...)
-       (eprintf "{~a} " key)
-       (print-type 'Style value)]
-      [else '#f]))
+(define boxes-to-print (hash))
+
+(define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
+  (for ([key (in-hash-keys boxes-to-print)])
+    (eprintf "~a ~a" key (print-type 'Box (hash-ref smt-out (sformat "~a-real-box" key)))))
 
   (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header)
 
@@ -49,53 +40,51 @@
 (define (css-type-ending? v)
   (lambda (x) (string=? (last (string-split (~a x) "/")) v)))
 
-(define (print-type type value)
-  (match type
-    [(or 'Width 'Height 'Margin 'Padding 'Border)
-     (match value
-       [(? (css-type-ending? "auto")) "auto"]
-       [(list _ 0.0) "0"]
-       [(list (? (css-type-ending? "px")) x) (format "~apx" x)]
-       [(list (? (css-type-ending? "pct")) x) (format "~a%" x)])]
-    ['Color
-     (match value
-       ['transparent "transparent"]
-       [`(color ,n)
-        (string-append "#" (~a (format "~x" n) #:width 6 #:align 'right #:pad-string "0"))])]
-    ['Float (last (string-split (~a value) "/"))]
-    ['TextAlign (last (string-split (~a value) "/"))]
-    ['Selector
-     (match value
-       ['sel/all "*"]
-       [`(sel/id ,id) (string-append "#" (substring (symbol->string id) 3))]
-       [`(sel/tag ,name)
-        (substring (symbol->string name) 5 (- (string-length (symbol->string name)) 1))])]
-    ['Style
-     (match-define (list 'style rest ...) value)
-     (eprintf " {\n")
-     (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
-       (eprintf "  ~a: ~a; /* ~a */ \n" prop (print-type type value) score))
-     (eprintf "}\n")]
-    ['Rule
-     (match-define (list 'rule sel idx rest ...) value)
-     (define props
-       (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
-                  #:when enabled?)
-         (values prop (list type value))))
-     (with-output-to-string
-       (lambda ()
-         (unless (hash-empty? props)
-           (printf "~a {\n" (print-type 'Selector sel))
-           (define short-printed
-             (apply append
-                    (for/list ([(short parts) (in-pairs css-shorthand-properties)]
-                               #:when (andmap (curry hash-has-key? props) parts))
-                      (define values (map (curry hash-ref props) parts))
-                      (printf "  ~a: ~a;\n" short (string-join (map (curry apply print-type) values) " "))
-                      parts)))
-           (for ([(prop value) (in-hash props)] #:when (not (member prop short-printed)))
-             (printf "  ~a: ~a;\n" prop (apply print-type value)))
-           (printf "}"))))]))
+(define/match (print-type type value)
+  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "auto"))) "auto"]
+  [((or 'Width 'Height 'Margin 'Padding 'Border) (list _ 0.0)) "0"]
+  [((or 'Width 'Height 'Margin 'Padding 'Border) (list (? (css-type-ending? "px")) x)) (format "~apx" x)]
+  [((or 'Width 'Height 'Margin 'Padding 'Border) (list (? (css-type-ending? "pct")) x)) (format "~a%" x)]
+  [('Float _) (last (string-split (~a value) "/"))]
+  [('TextAlign _) (last (string-split (~a value) "/"))]
+  [('Selector 'sel/all) "*"]
+  [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
+  [('Selector `(sel/tag ,tag)) (substring (~a tag) 5 (- (string-length (~a tag)) 1))]
+  [('Box `(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,_))
+   (with-output-to-string
+     (lambda ()
+       (eprintf "~a×~a at (~a, ~a)\n" (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
+       (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
+                (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
+                (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
+       (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
+       (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))))]
+  [('Style (list 'style rest ...))
+   (with-output-to-string
+     (lambda ()
+       (eprintf " {\n")
+       (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
+         (eprintf "  ~a: ~a; /* ~a */ \n" prop (print-type type value) score))
+       (eprintf "}\n")))]
+  [('Rule (list 'rule sel idx rest ...))
+   (define props
+     (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
+                #:when enabled?)
+       (values prop (list type value))))
+   (with-output-to-string
+     (lambda ()
+       (unless (hash-empty? props)
+         (printf "~a {\n" (print-type 'Selector sel))
+         (define short-printed
+           (apply append
+                  (for/list ([(short parts) (in-pairs css-shorthand-properties)]
+                             #:when (andmap (curry hash-has-key? props) parts))
+                    (define values (map (curry hash-ref props) parts))
+                    (printf "  ~a: ~a;\n" short (string-join (map (curry apply print-type) values) " "))
+                    parts)))
+         (for ([(prop value) (in-hash props)] #:when (not (member prop short-printed)))
+           (printf "  ~a: ~a;\n" prop (apply print-type value)))
+         (printf "}"))))])
 
 (define (tree-constraints dom emit elt children)
   (define elt-get (curry dom-get dom))
@@ -172,23 +161,23 @@
       (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt)))))
 
   (for ([dom doms] [names dom-names] #:when #t [name names])
-    (emit `(declare-const ,(sformat "~a-flow-box" name) Rect))
-    (emit `(declare-const ,(sformat "~a-real-box" name) Rect))
+    (emit `(declare-const ,(sformat "~a-flow-box" name) Box))
+    (emit `(declare-const ,(sformat "~a-real-box" name) Box))
     (emit `(assert (= (element ,(sformat "~a-flow-box" name)) ,name)))
     (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name))))
   (define body
-    (for*/fold ([body 'no-rect]) ([names dom-names] [name names])
+    (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       (smt-cond
        [(= x ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)]
        [(= x ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name)]
        [else ,body])))
-  (emit `(define-fun get/box ((x BoxName)) Rect ,body))
+  (emit `(define-fun get/box ((x BoxName)) Box ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (not (is-no-rect ,(sformat "~a-flow-box" name)))))
-    (emit `(assert (not (is-no-rect ,(sformat "~a-real-box" name)))))
+    (emit `(assert (not (is-no-box ,(sformat "~a-flow-box" name)))))
+    (emit `(assert (not (is-no-box ,(sformat "~a-real-box" name)))))
     (emit `(assert (= (get/box ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name))))
     (emit `(assert (= (get/box ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)))))
-  (emit `(assert (= (get/box nil-box) no-rect)))
+  (emit `(assert (= (get/box nil-box) no-box)))
   (emit `(assert (= (flow-box no-elt) nil-box)))
   (emit `(assert (= (placement-box no-elt) nil-box))))
 
@@ -273,17 +262,14 @@
   (let interpret ([cmds cmds])
     (match cmds
       [(list ':print rest ...)
-       (emit `(declare-const ,(sformat "~a-placement" name) Rect))
-       (emit `(assert (= ,(sformat "~a-placement" name) (placement-box (get/elt ,name)))))
-       (emit `(declare-const ,(sformat "~a-style" name) Style))
-       (emit `(assert (= ,(sformat "~a-style" name) (rules (get/elt ,name)))))
+       (hash-set! boxes-to-print name #t)
        (interpret rest)]
       [(list ':id id rest ...)
        (interpret rest)]
       [(list (and (or ':x ':y ':w ':h) field) value rest ...)
        (define fun (match field [':x 'x] [':y 'y] [':h 'box-height] [':w 'box-width]))
        (when (memq (car elt) '(LINE TEXT INLINE BLOCK))
-         (emit `(assert (! (= (,fun (placement-box ,(dom-get dom elt))) ,value) :named ,(sformat "~a-~a" name fun)))))
+         (emit `(assert (! (= (,fun (get/box (placement-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
        (interpret rest)]
       [(list)
        (void)])))
