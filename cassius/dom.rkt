@@ -41,8 +41,8 @@
                     (pt Real) (pr Real) (pb Real) (pl Real)
                     (bt Real) (br Real) (bb Real) (bl Real)
                     (element ElementName)))
-        (Box no-box
-             (box (document Document) (tagname TagNames) (id Id) (rules Style)
+        (Element no-elt
+             (elt (document Document) (tagname TagNames) (id Id) (rules Style)
                   (display Display) (float Float) (textalign TextAlign)
                   (previous-name ElementName) (parent-name ElementName)
                   (first-child-name ElementName) (last-child-name ElementName)
@@ -84,7 +84,7 @@
       (or (> (+ (y box1) (box-height box1)) (y box2) (y box1))
           (> (+ (y box2) (box-height box2)) (y box1) (y box2))))
 
-    (define-fun previous ((box Box)) Box (get/elt (previous-name box)))
-    (define-fun parent   ((box Box)) Box (get/elt (parent-name box)))
-    (define-fun fchild   ((box Box)) Box (get/elt (first-child-name box)))
-    (define-fun lchild   ((box Box)) Box (get/elt (last-child-name box)))))
+    (define-fun previous ((elt Element)) Element (get/elt (previous-name elt)))
+    (define-fun parent   ((elt Element)) Element (get/elt (parent-name elt)))
+    (define-fun fchild   ((elt Element)) Element (get/elt (first-child-name elt)))
+    (define-fun lchild   ((elt Element)) Element (get/elt (last-child-name elt)))))

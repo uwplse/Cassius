@@ -153,31 +153,29 @@
 
   ; The type of element names
   (for ([dom doms] [names dom-names] #:when #t [name names])
-    (emit `(declare-const ,(sformat "~a-elt" name) Box))
+    (emit `(declare-const ,(sformat "~a-elt" name) Element))
     (emit `(assert (= (document ,(sformat "~a-elt" name)) ,(sformat "~a-doc" (dom-name dom))))))
   ; The element info for a name
   (define body
-    (for*/fold ([body 'no-box]) ([names dom-names] [name names])
+    (for*/fold ([body 'no-elt]) ([names dom-names] [name names])
       `(ite (= x ,name) ,(sformat "~a-elt" name) ,body)))
-  (emit `(define-fun get/elt ((x ElementName)) Box ,body))
+  (emit `(define-fun get/elt ((x ElementName)) Element ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (not (is-no-box (get/elt ,name)))))
+    (emit `(assert (not (is-no-elt (get/elt ,name)))))
     (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name)))))
   ; Pointed map: nil goes to nil
-  (emit `(assert (= (get/elt nil-elt) no-box))))
+  (emit `(assert (= (get/elt nil-elt) no-elt))))
 
 (define (dom-define-get/box doms emit)
   (define dom-names
     (for/list ([dom doms])
       (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt)))))
 
-  ; The type of element names
   (for ([dom doms] [names dom-names] #:when #t [name names])
-    (emit `(declare-const ,(sformat "~a-flow-box" name) Box))
-    (emit `(declare-const ,(sformat "~a-real-box" name) Box))
+    (emit `(declare-const ,(sformat "~a-flow-box" name) Rect))
+    (emit `(declare-const ,(sformat "~a-real-box" name) Rect))
     (emit `(assert (= (element ,(sformat "~a-flow-box" name)) ,name)))
     (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name))))
-  ; The element info for a name
   (define body
     (for*/fold ([body 'no-rect]) ([names dom-names] [name names])
       (smt-cond
@@ -190,10 +188,9 @@
     (emit `(assert (not (is-no-rect ,(sformat "~a-real-box" name)))))
     (emit `(assert (= (get/box ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name))))
     (emit `(assert (= (get/box ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)))))
-  ; Pointed map: nil goes to nil
   (emit `(assert (= (get/box nil-box) no-rect)))
-  (emit `(assert (= (flow-box no-box) nil-box)))
-  (emit `(assert (= (placement-box no-box) nil-box))))
+  (emit `(assert (= (flow-box no-elt) nil-box)))
+  (emit `(assert (= (placement-box no-elt) nil-box))))
 
 (define (dom-root-constraints dom emit)
   (define elt `(get/elt ,(dom-root dom)))

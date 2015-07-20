@@ -42,19 +42,19 @@
   `(; Computing maximum collapsed positive and negative margin
     (assert (= (mtp ,b)
                (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fe)
+                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
                               (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0))))
     (assert (= (mtn ,b)
                (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fe)
+                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
                               (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0))))
     (assert (= (mbp ,b)
                (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,le)
+                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
                               (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0))))
     (assert (= (mbn ,b)
                (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
-                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,le)
+                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
                               (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0))))
 
    ; In-flow block element layout
@@ -117,9 +117,9 @@
                 ,(smt-cond
                   ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
                   ; if the box establishes a inline formatting context with one or more lines
-                  [(and (is-box ,le) (= (display ,le) display/inline))
+                  [(and (is-elt ,le) (= (display ,le) display/inline))
                    (= (bottom-content ,b) (bottom-border ,lb))]
-                  [(and (is-box ,le) (= (display ,le) display/block))
+                  [(and (is-elt ,le) (= (display ,le) display/block))
                    (= (bottom-content ,b)
                       ; CSS § 10.6.3, item 2: the bottom edge of the bottom
                       ; (possibly collapsed) margin of its last in-flow child,
@@ -140,7 +140,7 @@
 
            (= (x ,b) (+ (left-content ,pb) (ml ,b)))
            (= (y ,b)
-              (ite (is-no-box ,ve)
+              (ite (is-no-elt ,ve)
                    (ite (and (not (= (tagname ,pe) tag/<HTML>)) (is-float/none (float ,pe))
                              (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                         (top-content ,pb)
@@ -202,7 +202,7 @@
             ; element that establishes a block formatting context is computed as follows:
             (=> (is-height/auto (style.height ,r))
                 (= (h ,bp)
-                   (ite (is-box ,le)
+                   (ite (is-elt ,le)
                         (ite (= (display ,le) display/inline)
                              ; If it only has inline-level children, the height is the distance between
                              ; the top of the topmost line box and the bottom of the bottommost line box.
@@ -252,7 +252,7 @@
     (assert (between (top-content ,pb) (y ,b) (+ (top-content ,pb) (h ,pb) (- (h ,b)))))
 
     ; Inline element layout
-    (assert (=> (not (is-no-box ,ve)) (= (x ,b) (right-border ,vb))))
+    (assert (=> (not (is-no-elt ,ve)) (= (x ,b) (right-border ,vb))))
     (assert (= (get/box (placement-box ,e)) (get/box (flow-box ,e))))))
 
 (define (element-line-constraints b)
@@ -267,10 +267,10 @@
         `(assert (= (,field ,b) 0.0)))
 
     (assert (= (x ,b) (left-content ,pb)))
-    (assert (= (y ,b) (ite (is-no-box (previous ,e)) (top-content ,pb) (bottom-border ,vb))))
+    (assert (= (y ,b) (ite (is-no-elt (previous ,e)) (top-content ,pb) (bottom-border ,vb))))
     (assert (= (w ,b) (w ,pb)))
 
-    (assert (not (is-no-box (fchild ,e))))
+    (assert (not (is-no-elt (fchild ,e))))
     (assert
      ,(smt-cond
        [(is-text-align/left (textalign ,e)) (= (left-border ,fb) (left-content ,b))]
