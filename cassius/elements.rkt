@@ -14,9 +14,12 @@
   `((assert (= (flow-box ,e) ,(sformat "~a-flow" e-name)))
     (assert (= (placement-box ,e) ,(sformat "~a-real" e-name)))
     (assert (= (textalign ,e)
-               (ite (is-text-align/inherit (style.text-align ,r))
-                    (textalign (parent ,e))
-                    (style.text-align ,r))))
+               ,(smt-cond
+                 [(is-box/line (tagname ,e)) (textalign (parent ,e))]
+                 [(is-text-align/inherit (style.text-align ,r))
+                  (textalign (parent ,e))]
+                 [else
+                  (style.text-align ,r)])))
     (assert (= (float ,e)
                ,(smt-cond
                  [(is-display/inline (display ,e)) float/none]
