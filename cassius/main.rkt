@@ -279,13 +279,14 @@
 
 (define (element-constraints dom emit elt children)
   (for-each emit (element-general-constraints (elt-name elt)))
-  (for-each emit
-            ((match elt
-               [(list 'BLOCK tag constraints ...) element-block-constraints]
-               [(list 'LINE constraints ...) element-line-constraints]
-               [(list 'INLINE tag constraints ...) element-inline-constraints]
-               [(list 'TEXT constraints ...) element-inline-constraints])
-             (sformat "~a-flow-box" (elt-name elt)))))
+  (define box-constraints
+    (match elt
+      [(list 'BLOCK tag constraints ...) element-block-constraints]
+      [(list 'LINE constraints ...) element-line-constraints]
+      [(list 'INLINE tag constraints ...) element-inline-constraints]
+      [(list 'TEXT constraints ...) element-inline-constraints]))
+  (for-each emit (box-constraints (sformat "~a-flow-box" (elt-name elt))))
+  (for-each emit (box-constraints (sformat "~a-real-box" (elt-name elt)))))
 
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display)
