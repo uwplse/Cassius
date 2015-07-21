@@ -25,11 +25,11 @@
 
 (define (r2 x) (~r x #:precision 2))
 
-(define boxes-to-print (hash))
+(define boxes-to-print (make-hash))
 
 (define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
-  (for ([key (in-hash-keys boxes-to-print)])
-    (eprintf "~a ~a" key (print-type 'Box (hash-ref smt-out (sformat "~a-real-box" key)))))
+  (for ([(name type) (in-hash boxes-to-print)])
+    (eprintf "~a ~a" name (print-type type (hash-ref smt-out name))))
 
   (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header)
 
@@ -53,19 +53,19 @@
   [('Box `(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,_))
    (with-output-to-string
      (lambda ()
-       (eprintf "~a×~a at (~a, ~a)\n" (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
-       (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
+       (printf "~a×~a at (~a, ~a)\n" (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
+       (printf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
                 (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
                 (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
-       (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-       (eprintf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))))]
+       (printf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
+       (printf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))))]
   [('Style (list 'style rest ...))
    (with-output-to-string
      (lambda ()
-       (eprintf " {\n")
+       (printf " {\n")
        (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
-         (eprintf "  ~a: ~a; /* ~a */ \n" prop (print-type type value) score))
-       (eprintf "}\n")))]
+         (printf "  ~a: ~a; /* ~a */ \n" prop (print-type type value) score))
+       (printf "}\n")))]
   [('Rule (list 'rule sel idx rest ...))
    (define props
      (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
@@ -262,7 +262,10 @@
   (let interpret ([cmds cmds])
     (match cmds
       [(list ':print rest ...)
-       (hash-set! boxes-to-print name #t)
+       (hash-set! boxes-to-print (sformat "~a-real-box" name) 'Box)
+       (hash-set! boxes-to-print (sformat "~a.style" name) 'Style)
+       (emit `(declare-const ,(sformat "~a.style" name) Style))
+       (emit `(assert (= ,(sformat "~a.style" name) (rules ,(dom-get dom elt)))))
        (interpret rest)]
       [(list ':id id rest ...)
        (interpret rest)]
