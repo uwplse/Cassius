@@ -4,28 +4,62 @@
 (require "common.rkt")
 
 (require unstable/sequence)
-(provide element-general-constraints
-         element-block-constraints element-inline-constraints element-line-constraints)
+(provide box-constraints flow-definitions)
 
-(define (element-general-constraints e-name)
-  (define e `(get/elt ,e-name))
-  (define r `(rules ,e))
+(define flow-definitions
+  `((define-fun has-element-properties ((elt Element)) Bool
+      (let ((r (rules elt)))
+        (and
+         (= (textalign elt)
+            ,(smt-cond
+              [(is-box/line (tagname elt)) (textalign (parent elt))]
+              [(is-text-align/inherit (style.text-align r)) (textalign (parent elt))]
+              [else (style.text-align r)]))
+         (= (float elt)
+            ,(smt-cond
+              [(is-display/inline (display elt)) float/none]
+              [(is-box/line (tagname elt)) float/none]
+              [(is-float/inherit (style.float r)) (float (parent elt))]
+              [else (style.float r)])))))
 
-  `((assert (= (flow-box ,e) ,(sformat "~a-flow" e-name)))
-    (assert (= (placement-box ,e) ,(sformat "~a-real" e-name)))
-    (assert (= (textalign ,e)
-               ,(smt-cond
-                 [(is-box/line (tagname ,e)) (textalign (parent ,e))]
-                 [(is-text-align/inherit (style.text-align ,r))
-                  (textalign (parent ,e))]
-                 [else
-                  (style.text-align ,r)])))
-    (assert (= (float ,e)
-               ,(smt-cond
-                 [(is-display/inline (display ,e)) float/none]
-                 [(is-box/line (tagname ,e)) float/none]
-                 [(is-float/inherit (style.float ,r)) (float (parent ,e))]
-                 [else (style.float ,r)])))))
+    (define-fun has-line-box-properties
+      ((e Element) (b Box) (bp Box) (vb Box) (pb Box) (fb Box) (lb Box)) Bool
+      (and
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+           `(= (,field b) 0.0))
+        (= (x b) (left-content pb))
+        (= (y b) (ite (is-no-elt (previous e)) (top-content pb) (bottom-border vb)))
+        (= (w b) (w pb))
+        ,(smt-cond
+          [(is-text-align/left (textalign e)) (= (left-border fb) (left-content b))]
+          [(is-text-align/right (textalign e)) (= (right-border lb) (right-content b))]
+          [(is-text-align/center (textalign e))
+           (= (- (right-content b) (right-border lb)) (- (left-border fb) (left-content b)))]
+          [else true])
+        (= b bp)))
+
+    (define-fun has-inline-box-properties
+      ((e Element) (b Box) (bp Box) (vb Box) (pb Box) (fb Box) (lb Box)) Bool
+      (and
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+           `(= (,field b) 0.0))
+      (between (top-content pb) (y b) (+ (top-content pb) (h pb) (- (h b))))
+      ; Inline element layout
+      (=> (not (is-no-box vb)) (= (x b) (right-border vb)))
+      (= b bp)))))
+
+(define (box-constraints b e)
+  (define bp `(get/box (placement-box ,e)))
+  (define vb `(get/box (flow-box (previous ,e))))
+  (define pb `(get/box (placement-box (parent ,e))))
+  (define fb `(get/box (flow-box (fchild ,e))))
+  (define lb `(get/box (flow-box (lchild ,e))))
+  (smt-cond
+   [(is-box/line (tagname ,e))
+    (has-line-box-properties ,e ,b ,bp ,vb ,pb ,fb ,lb)]
+   [(is-display/inline (display ,e))
+    (has-inline-box-properties ,e ,b ,bp ,vb ,pb ,fb ,lb)]
+   [else ,(element-block-constraints b)]))
 
 (define (element-block-constraints b)
   (define e `(get/elt (element ,b)))
@@ -42,26 +76,26 @@
   (define fb `(get/box (flow-box ,fe)))
   (define lb `(get/box (flow-box ,le)))
 
-  `(; Computing maximum collapsed positive and negative margin
-    (assert (= (mtp ,b)
-               (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
-                              (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0))))
-    (assert (= (mtn ,b)
-               (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
-                              (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0))))
-    (assert (= (mbp ,b)
+  `(and; Computing maximum collapsed positive and negative margin
+    (= (mtp ,b)
+       (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
+            (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
+                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0)))
+    (= (mtn ,b)
+       (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
+            (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
+                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0)))
+    (= (mbp ,b)
                (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
                     (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
-                              (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0))))
-    (assert (= (mbn ,b)
+                              (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0)))
+    (= (mbn ,b)
                (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
                     (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
-                              (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0))))
+                              (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0)))
 
    ; In-flow block element layout
-   ,@(map (λ (x) `(assert (=> (is-float/none (float ,e)) ,x)))
+   ,@(map (λ (x) `(=> (is-float/none (float ,e)) ,x))
           `(; Set properties that are settable with lengths
             ,@(for/list ([item '((width width w) (height height h)
                                  (padding-left padding pl) (padding-right padding pr)
@@ -163,7 +197,7 @@
            (= (get/box (placement-box ,e)) (get/box (flow-box ,e)))))
 
    ; Floating block element layout
-   ,@(map (λ (x) `(assert (=> (not (is-float/none (float ,e))) ,x)))
+   ,@(map (λ (x) `(=> (not (is-float/none (float ,e))) ,x))
           `(,@(for/list ([item '((width width w) (height height h)
                                  (padding-left padding pl) (padding-right padding pr)
                                  (padding-top padding pt) (padding-bottom padding pb)
@@ -232,54 +266,3 @@
                 `(>= (,field ,bp) 0.0))
             ,@(for/list ([field '(bl br bt bb)])
                 `(= (,field ,bp) 0.0))))))
-
-(define (element-inline-constraints b)
-  (define e `(get/elt (element ,b)))
-  (define ve `(previous ,e))
-  (define pe `(parent ,e))
-  (define fe `(fchild ,e))
-  (define le `(lchild ,e))
-
-  (define r `(rules ,e))
-
-  (define bp `(get/box (placement-box ,e)))
-  (define vb `(get/box (flow-box ,ve)))
-  (define pb `(get/box (placement-box ,pe)))
-  (define fb `(get/box (flow-box ,fe)))
-  (define lb `(get/box (flow-box ,le)))
-
-  `(; Computing maximum collapsed positive and negative margin
-    ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-        `(assert (= (,field ,b) 0.0)))
-
-    (assert (between (top-content ,pb) (y ,b) (+ (top-content ,pb) (h ,pb) (- (h ,b)))))
-
-    ; Inline element layout
-    (assert (=> (not (is-no-elt ,ve)) (= (x ,b) (right-border ,vb))))
-    (assert (= (get/box (placement-box ,e)) (get/box (flow-box ,e))))))
-
-(define (element-line-constraints b)
-  (define e `(get/elt (element ,b)))
-  (define vb `(get/box (flow-box (previous ,e))))
-  (define pb `(get/box (placement-box (parent ,e))))
-  (define fb `(get/box (flow-box (fchild ,e))))
-  (define lb `(get/box (flow-box (lchild ,e))))
-
-  `(; Computing maximum collapsed positive and negative margin
-    ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-        `(assert (= (,field ,b) 0.0)))
-
-    (assert (= (x ,b) (left-content ,pb)))
-    (assert (= (y ,b) (ite (is-no-elt (previous ,e)) (top-content ,pb) (bottom-border ,vb))))
-    (assert (= (w ,b) (w ,pb)))
-
-    (assert (not (is-no-elt (fchild ,e))))
-    (assert
-     ,(smt-cond
-       [(is-text-align/left (textalign ,e)) (= (left-border ,fb) (left-content ,b))]
-       [(is-text-align/right (textalign ,e)) (= (right-border ,lb) (right-content ,b))]
-       [(is-text-align/center (textalign ,e))
-        (= (- (right-content ,b) (right-border ,lb)) (- (left-border ,fb) (left-content ,b)))]
-       [else true]))
-
-    (assert (= (get/box (placement-box ,e)) (get/box (flow-box ,e))))))

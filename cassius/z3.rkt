@@ -317,7 +317,7 @@
       [`(declare-const ,var ,type) #t]
       [_ #f]))
   (define (split-first-use var cmds)
-    (splitf-at cmds (λ (cmd) (cond [(eq? (car cmd) 'assert) (not (contains-var (cadr cmd) var))] [else #t]))))
+    (splitf-at cmds (match-lambda [(list 'assert (? (curryr contains-var var))) #f] [_ #t])))
   (define-values (defs not-defs) (partition def? cmds))
   (for/fold ([not-defs not-defs]) ([def defs])
     (let-values ([(head tail) (split-first-use (second def) not-defs)])
@@ -367,8 +367,7 @@
    (z3-resolve-fns
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
     'get/box 'flow-box 'placement-box 'element)
-   #;z3-simplifier
-   z3-dco z3-movedefs
+   #;z3-simplifier z3-dco
    z3-check-datatypes z3-check-functions z3-check-fields))
 
 (define (z3-prepare exprs)
