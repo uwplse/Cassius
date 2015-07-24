@@ -215,18 +215,27 @@
               ,@(reap [emit]
                       (match rule
                         ['? (void)]
+                        [(list sel pairs ... '?)
+                         (emit `(assert (= (selector ,name) ,sel)))
+                         (for ([(a-prop type default) (in-css-properties)])
+                           (match (assoc a-prop pairs)
+                             [(list _ '?)
+                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
+                             [(list _ val)
+                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
+                              (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
+                             [#f (void)]))]
                         [(list sel pairs ...)
                          (emit `(assert (= (selector ,name) ,sel)))
                          (for ([(a-prop type default) (in-css-properties)])
-                           (cond
-                             [(assoc a-prop pairs)
+                           (match (assoc a-prop pairs)
+                             [(list _ '?)
+                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
+                             [(list _ val)
                               (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
-                              (match (cadr (assoc a-prop pairs))
-                                ['? (void)]
-                                [val (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))])]
-                             [(not (member '? pairs))
-                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) false)))]
-                             [else (void)]))]))
+                              (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
+                             [#f
+                               (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) false)))]))]))
 
               ; Optimize for short CSS
 

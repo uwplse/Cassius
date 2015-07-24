@@ -6,7 +6,7 @@
 
 (define-header header
 "html { background-color: #f1f1f1; color: #2E3436; margin-top: 0 /* Browser reset? */; }
-body { font-size: 18px; line-height: 1.333; text-rendering: optimizeLegibility; font-family: 'PT Serif', serif;}
+body { font-size: 18px; line-height: 1.333; text-rendering: optimizeLegibility; font-family: 'PT Serif', serif; margin-top: 0 /* Browser reset? */; }
 pre { font-family: 'Open Sans Light', 'Inconsolata', 'Deja Vu Sans Mono', monospace; font-weight: 300;}
 h1 { font-family: 'Open Sans Semibold', 'Deja Vu Sans', 'Georgia', sans; font-weight: 600;
      font-size: 24px; line-height: 1; letter-spacing: -.03em; color: #555753;}
@@ -16,6 +16,56 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 
 (define-stylesheet unknown-sheet
   ? ? ? ?)
+
+(define-stylesheet partial-good-sheet
+  ((sel/tag tag/<HTML>) ?)
+  ((sel/tag tag/<BODY>) ?)
+  ((sel/tag tag/<PRE>) ?)
+  ((sel/tag tag/<H1>) ?)
+  ((sel/tag tag/<P>) ?)
+  ((sel/id ID-postamble) ?))
+
+(define-stylesheet good-sheet
+  ((sel/tag tag/<HTML>)
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)])
+  ((sel/tag tag/<BODY>)
+   [margin-top (margin/px 0)]
+   [margin-right margin/auto]
+   [margin-bottom (margin/px 0)]
+   [margin-left margin/auto]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 10)]
+   [padding-bottom (padding/px 90)]
+   [padding-left (padding/px 10)]
+   [width (width/px 630)])
+  ((sel/tag tag/<PRE>)
+   [margin-top (margin/px 21.6)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 30.6)]
+   [margin-left (margin/px 0)]
+   [padding-top (padding/px 9)]
+   [padding-right (padding/px 9)]
+   [padding-bottom (padding/px 9)]
+   [padding-left (padding/px 9)])
+  ((sel/tag tag/<H1>)
+   [margin-top (margin/px 36)])
+  ((sel/tag tag/<P>)
+   [text-align text-align/inherit]
+   [margin-top (margin/px 18)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 18)]
+   [margin-left (margin/px 0)])
+  ((sel/id ID-postamble)
+   [text-align text-align/center]
+   [margin-top (margin/px 18)]))
+
 
 (define-stylesheet good-sheet
   ((sel/tag tag/<HTML>)
@@ -216,6 +266,11 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 (define-problem verify
   #:header header
   #:sheet good-sheet
+  #:documents doma domb)
+
+(define-problem sketch
+  #:header header
+  #:sheet partial-good-sheet
   #:documents doma domb)
 
 (define-problem synthesize
