@@ -178,6 +178,9 @@
   (let ([store (make-hash)])
     (define (find-used expr)
       (match expr
+        [`(let ((,_ ,vals) ...) ,body)
+         (for-each find-used vals)
+         (find-used body)]
         [(list f args ...)
          (for-each find-used expr)]
         [(? symbol? f)
@@ -230,6 +233,8 @@
        (list 'assert
              (let loop ([expr expr])
                (match expr
+                 [`(let ((,vars ,vals) ...) ,body)
+                  `(let (,@(for/list ([var vars] [val vals]) `(,var ,(loop val)))) ,(loop body))]
                  [`(= (,(== f) ,input) ,output) expr]
                  [(list (== f) arg)
                   (hash-ref values arg (lambda () `(,f ,(loop arg))))]
@@ -354,6 +359,8 @@
        (list 'assert
              (let loop ([expr expr])
                (match expr
+                 [`(let ((,vars ,vals) ...) ,body)
+                  `(let (,@(for/list ([var vars] [val vals]) `(,var ,(loop val)))) ,(loop body))]
                  [(list (== name) args ...)
                   (capture-avoiding-substitute body (map cons names args))]
                  [(? list?)
