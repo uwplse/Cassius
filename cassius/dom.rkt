@@ -5,7 +5,7 @@
 (provide (struct-out dom) (struct-out rendering-context)
          in-tree-subtrees in-tree-values
          dom-get dom-type dom-root elt-name elt-from-name
-         dom-definitions dom-declarations)
+         dom-definitions)
 
 (struct dom (name stylesheet context tree))
 (struct rendering-context (width))
@@ -32,7 +32,7 @@
   (for/first ([(key val) (in-hash elt-names)] #:when (eq? val name))
     key))
 
-(define dom-declarations
+(define dom-definitions
   `((declare-datatypes ()
        ((Box no-box
              (box (x Real) (y Real) (w Real) (h Real)
@@ -46,10 +46,9 @@
                   (display Display) (float Float) (textalign TextAlign)
                   (previous-name ElementName) (parent-name ElementName)
                   (first-child-name ElementName) (last-child-name ElementName)
-                  (flow-box BoxName) (placement-box BoxName)))))))
+                  (flow-box BoxName) (placement-box BoxName)))))
 
-(define dom-definitions
-  `((define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
+    (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
     (define-fun left-border ((box Box)) Real (x box))
     (define-fun box-left ((box Box)) Real (+ (x box) (bl box)))
     (define-fun left-padding ((box Box)) Real (+ (x box) (bl box)))

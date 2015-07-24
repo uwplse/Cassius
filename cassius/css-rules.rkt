@@ -5,7 +5,7 @@
 (require "dom.rkt")
 (require "css-properties.rkt")
 
-(provide css-declarations css-definitions
+(provide css-declarations css-functions
          css-properties css-property-pairs css-defaults
          css-shorthand-properties)
 
@@ -26,7 +26,7 @@
                                (field `(,(sformat "rule.~a" prop) ,type))
                                (field `(,(sformat "rule.~a?" prop) Bool)))))))))
 
-(define css-definitions
+(define css-functions
   `((define-fun selector-applies? ((sel Selector) (elt Element)) Bool
       ,(smt-cond
         [(is-sel/all sel) true]
