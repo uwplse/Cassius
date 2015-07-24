@@ -7,7 +7,10 @@
 (provide box-constraints flow-definitions)
 
 (define flow-definitions
-  `((define-fun has-element-properties ((elt Element)) Bool
+  `((define-fun box-properties-zeroed ((b Box)) Bool
+      (= ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)]) `(,field b)) 0.0))
+
+    (define-fun has-element-properties ((elt Element)) Bool
       (let ((r (rules elt)))
         (and
          (= (textalign elt)
@@ -25,179 +28,152 @@
     (define-fun has-line-box-properties
       ((e Element) (b Box) (bp Box) (vb Box) (pb Box) (fb Box) (lb Box)) Bool
       (and
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-           `(= (,field b) 0.0))
-        (= (x b) (left-content pb))
-        (= (y b) (ite (is-no-elt (previous e)) (top-content pb) (bottom-border vb)))
-        (= (w b) (w pb))
-        ,(smt-cond
-          [(is-text-align/left (textalign e)) (= (left-border fb) (left-content b))]
-          [(is-text-align/right (textalign e)) (= (right-border lb) (right-content b))]
-          [(is-text-align/center (textalign e))
-           (= (- (right-content b) (right-border lb)) (- (left-border fb) (left-content b)))]
-          [else true])
-        (= b bp)))
+       (box-properties-zeroed b)
+       (= (x b) (left-content pb))
+       (= (y b) (ite (is-no-elt (previous e)) (top-content pb) (bottom-border vb)))
+       (= (w b) (w pb))
+       ,(smt-cond
+         [(is-text-align/left (textalign e)) (= (left-border fb) (left-content b))]
+         [(is-text-align/right (textalign e)) (= (right-border lb) (right-content b))]
+         [(is-text-align/center (textalign e))
+          (= (- (right-content b) (right-border lb)) (- (left-border fb) (left-content b)))]
+         [else true])
+       (= b bp)))
 
     (define-fun has-inline-box-properties
       ((e Element) (b Box) (bp Box) (vb Box) (pb Box) (fb Box) (lb Box)) Bool
       (and
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-           `(= (,field b) 0.0))
-      (between (top-content pb) (y b) (+ (top-content pb) (h pb) (- (h b))))
-      ; Inline element layout
-      (=> (not (is-no-box vb)) (= (x b) (right-border vb)))
-      (= b bp)))))
+       (box-properties-zeroed b)
+       (between (top-content pb) (y b) (+ (top-content pb) (h pb) (- (h b))))
+       ; Inline element layout
+       (=> (not (is-no-box vb)) (= (x b) (right-border vb)))
+       (= b bp)))
 
-(define (box-constraints b e)
-  (define bp `(get/box (placement-box ,e)))
-  (define vb `(get/box (flow-box (previous ,e))))
-  (define pb `(get/box (placement-box (parent ,e))))
-  (define fb `(get/box (flow-box (fchild ,e))))
-  (define lb `(get/box (flow-box (lchild ,e))))
-  (smt-cond
-   [(is-box/line (tagname ,e))
-    (has-line-box-properties ,e ,b ,bp ,vb ,pb ,fb ,lb)]
-   [(is-display/inline (display ,e))
-    (has-inline-box-properties ,e ,b ,bp ,vb ,pb ,fb ,lb)]
-   [else ,(element-block-constraints b)]))
+    (define-fun has-block-box-properties
+      ((e Element) (b Box) (bp Box) (vb Box) (pb Box) (fb Box) (lb Box)) Bool
+      (let ((r (rules e)))
+        (and; Computing maximum collapsed positive and negative margin
+         (= (mtp b)
+            (max (ite (> (mt b) 0.0) (mt b) 0.0)
+                 (ite (and (not (= (tagname e) tag/<HTML>)) (is-box fb)
+                           (= (pt b) 0.0) (= (bt b) 0.0)) (mtp fb) 0.0)))
+         (= (mtn b)
+            (min (ite (< (mt b) 0.0) (mt b) 0.0)
+                 (ite (and (not (= (tagname e) tag/<HTML>)) (is-box fb)
+                           (= (pt b) 0.0) (= (bt b) 0.0)) (mtn fb) 0.0)))
+         (= (mbp b)
+            (max (ite (> (mb b) 0.0) (mb b) 0.0)
+                 (ite (and (not (= (tagname e) tag/<HTML>)) (is-box lb)
+                           (= (pb b) 0.0) (= (bb b) 0.0)) (mbp lb) 0.0)))
+         (= (mbn b)
+            (min (ite (< (mb b) 0.0) (mb b) 0)
+                 (ite (and (not (= (tagname e) tag/<HTML>)) (is-elt lb)
+                           (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)))
 
-(define (element-block-constraints b)
-  (define e `(get/elt (element ,b)))
-  (define ve `(previous ,e))
-  (define pe `(parent ,e))
-  (define fe `(fchild ,e))
-  (define le `(lchild ,e))
+         ; In-flow block element layout
+         ,@(map (λ (x) `(=> (is-float/none (float e)) ,x))
+                `(; Set properties that are settable with lengths
+                  ,@(for/list ([item '((width width w) (height height h)
+                                       (padding-left padding pl) (padding-right padding pr)
+                                       (padding-top padding pt) (padding-bottom padding pb)
+                                       (margin-top margin mt) (margin-bottom margin mb))])
+                      (match item
+                        [(list prop type field)
+                         `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+                              (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))]))
 
-  (define r `(rules ,e))
-
-  (define bp `(get/box (placement-box ,e)))
-  (define vb `(get/box (flow-box ,ve)))
-  (define pb `(get/box (placement-box ,pe)))
-  (define fb `(get/box (flow-box ,fe)))
-  (define lb `(get/box (flow-box ,le)))
-
-  `(and; Computing maximum collapsed positive and negative margin
-    (= (mtp ,b)
-       (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-            (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
-                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0)))
-    (= (mtn ,b)
-       (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-            (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
-                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0)))
-    (= (mbp ,b)
-               (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
-                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
-                              (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0)))
-    (= (mbn ,b)
-               (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
-                    (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
-                              (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0)))
-
-   ; In-flow block element layout
-   ,@(map (λ (x) `(=> (is-float/none (float ,e)) ,x))
-          `(; Set properties that are settable with lengths
-            ,@(for/list ([item '((width width w) (height height h)
-                                 (padding-left padding pl) (padding-right padding pr)
-                                 (padding-top padding pt) (padding-bottom padding pb)
-                                 (margin-top margin mt) (margin-bottom margin mb))])
-                (match item
-                  [(list prop type field)
-                   `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
-                        (= (,field ,b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
-
-            ; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
-            ; The following constraints must hold among the used values of the other properties:
-            ; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
-            (= (w ,pb) (+ (ml ,b) (box-width ,b) (mr ,b)))
+                  ; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
+                  ; The following constraints must hold among the used values of the other properties:
+                  ; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
+                  (= (w pb) (+ (ml b) (box-width b) (mr b)))
 
             ; I cannot summarize these rules; see CSS § 10.3.3
             ; Note that the implementation here is what Chrome and Firefox do,
             ; not what the standard says, which they contradict.
-            (ite (> (+ (ite (is-width/auto (style.width ,r))
+            (ite (> (+ (ite (is-width/auto (style.width r))
                             0.0
-                            (width.px (style.width ,r)))
-                       (ite (is-margin/auto (style.margin-left ,r))
+                            (width.px (style.width r)))
+                       (ite (is-margin/auto (style.margin-left r))
                             0.0
-                            (margin.px (style.margin-left ,r)))
-                       (ite (is-margin/auto (style.margin-right ,r))
+                            (margin.px (style.margin-left r)))
+                       (ite (is-margin/auto (style.margin-right r))
                             0.0
-                            (margin.px (style.margin-right ,r)))
-                       (pl ,b) (pr ,b) (bl ,b) (br ,b))
-                    (w ,pb))
+                            (margin.px (style.margin-right r)))
+                       (pl b) (pr b) (bl b) (br b))
+                    (w pb))
                  (and ; It overflows. So what do we do?
                   ; Experimentally, this is what Firefox and Chrome do.
                   ; NOTE: this behavior contradicts CSS § 10.3.3.
-                  (= (w ,b) (ite (is-width/auto (style.width ,r)) 0.0 (width.px (style.width ,r))))
-                  (= (ml ,b) (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r)))))
+                  (= (w b) (ite (is-width/auto (style.width r)) 0.0 (width.px (style.width r))))
+                  (= (ml b) (ite (is-margin/auto (style.margin-left r)) 0.0 (margin.px (style.margin-left r)))))
                  ; If it does not overflow, we set everything, and just figure out what to constrain.
-                 (ite (is-width/auto (style.width ,r))
+                 (ite (is-width/auto (style.width r))
                       (and
-                       (= (ml ,b) (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r))))
-                       (= (mr ,b) (ite (is-margin/auto (style.margin-right ,r)) 0.0 (margin.px (style.margin-right ,r)))))
+                       (= (ml b) (ite (is-margin/auto (style.margin-left r)) 0.0 (margin.px (style.margin-left r))))
+                       (= (mr b) (ite (is-margin/auto (style.margin-right r)) 0.0 (margin.px (style.margin-right r)))))
                       (and
-                       (= (w ,b) (width.px (style.width ,r)))
-                       (=> (and (is-margin/auto (style.margin-left ,r)) (is-margin/auto (style.margin-right ,r)))
-                           (= (ml ,b) (mr ,b)))
-                       (=> (is-margin/px (style.margin-left ,r)) (= (ml ,b) (margin.px (style.margin-left ,r))))
-                       (=> (and (is-margin/px (style.margin-right ,r)) (is-margin/auto (style.margin-left ,r)))
-                           (= (mr ,b) (margin.px (style.margin-right ,r)))))))
+                       (= (w b) (width.px (style.width r)))
+                       (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                           (= (ml b) (mr b)))
+                       (=> (is-margin/px (style.margin-left r)) (= (ml b) (margin.px (style.margin-left r))))
+                       (=> (and (is-margin/px (style.margin-right r)) (is-margin/auto (style.margin-left r)))
+                           (= (mr b) (margin.px (style.margin-right r)))))))
 
             ; Width and horizontal margins out of the way, let's do height and vertical margins
             ; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
-            (=> (is-margin/auto (style.margin-top ,r)) (= (mt ,b) 0.0))
-            (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,b) 0.0))
+            (=> (is-margin/auto (style.margin-top r)) (= (mt b) 0.0))
+            (=> (is-margin/auto (style.margin-bottom r)) (= (mb b) 0.0))
 
             ; If 'height' is 'auto', the height depends on whether the element has
             ; any block-level children and whether it has padding or borders:
-            (=> (is-height/auto (style.height ,r))
+            (=> (is-height/auto (style.height r))
                 ,(smt-cond
                   ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
                   ; if the box establishes a inline formatting context with one or more lines
-                  [(and (is-elt ,le) (= (display ,le) display/inline))
-                   (= (bottom-content ,b) (bottom-border ,lb))]
-                  [(and (is-elt ,le) (= (display ,le) display/block))
-                   (= (bottom-content ,b)
+                  [(and (is-box lb) (= (display (get/elt (element lb))) display/inline))
+                   (= (bottom-content b) (bottom-border lb))]
+                  [(and (is-box lb) (= (display (get/elt (element lb))) display/block))
+                   (= (bottom-content b)
                       ; CSS § 10.6.3, item 2: the bottom edge of the bottom
                       ; (possibly collapsed) margin of its last in-flow child,
                       ; if the child's bottom margin does not collapse with the
                       ; element's bottom margin
-                      (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0) (not (= (tagname ,e) tag/<HTML>)))
-                           (bottom-border ,lb) ; Collapsed bottom margin
-                           (bottom-outer ,lb)))] ; No collapsed bottom margin
+                      (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (= (tagname e) tag/<HTML>)))
+                           (bottom-border lb) ; Collapsed bottom margin
+                           (bottom-outer lb)))] ; No collapsed bottom margin
                   ; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
                   ; whose top margin doesn't collapse with the element's bottom margin
                   ; NOTE: This can happen if the box height is 0.
                   ; We don't support that, so it's not an issue.
 
                   ; CSS § 10.6.3, item 4: zero, otherwise
-                  [else (= (h ,b) 0.0)]))
+                  [else (= (h b) 0.0)]))
 
            ; Computing X and Y position
 
-           (= (x ,b) (+ (left-content ,pb) (ml ,b)))
-           (= (y ,b)
-              (ite (is-no-elt ,ve)
-                   (ite (and (not (= (tagname ,pe) tag/<HTML>)) (is-float/none (float ,pe))
-                             (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
-                        (top-content ,pb)
-                        (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
-                   (+ (bottom-border ,vb) (max (mbp ,vb) (mtp ,b)) (min (mbn ,vb) (mtn ,b)))))
+           (= (x b) (+ (left-content pb) (ml b)))
+           (= (y b)
+              (ite (is-no-box vb)
+                   (ite (and (not (= (tagname (get/elt (element pb))) tag/<HTML>)) (is-float/none (float (get/elt (element pb))))
+                             (= (pt pb) 0.0) (= (bt pb) 0.0))
+                        (top-content pb)
+                        (+ (top-content pb) (+ (mtp b) (mtn b))))
+                   (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b)))))
 
            ; Positivity constraint---otherwise floats can overlap
-           (> (box-height ,b) 0.0)
+           (> (box-height b) 0.0)
 
             ,@(for/list ([field '(pl pr pb pt w h)])
-                `(>= (,field ,bp) 0.0))
+                `(>= (,field bp) 0.0))
             ,@(for/list ([field '(bl br bt bb)])
-                `(= (,field ,bp) 0.0))
+                `(= (,field bp) 0.0))
 
            ; Place at the float box
 
-           (= (get/box (placement-box ,e)) (get/box (flow-box ,e)))))
+           (= b bp)))
 
    ; Floating block element layout
-   ,@(map (λ (x) `(=> (not (is-float/none (float ,e))) ,x))
+   ,@(map (λ (x) `(=> (not (is-float/none (float e))) ,x))
           `(,@(for/list ([item '((width width w) (height height h)
                                  (padding-left padding pl) (padding-right padding pr)
                                  (padding-top padding pt) (padding-bottom padding pb)
@@ -205,19 +181,19 @@
                                  (margin-right margin mr) (margin-left margin ml))])
                 (match item
                   [(list prop type field)
-                   `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
-                        (= (,field ,bp) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
+                   `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+                        (= (,field bp) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))]))
 
             ; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
-            (=> (is-margin/auto (style.margin-left ,r)) (= (ml ,bp) 0))
-            (=> (is-margin/auto (style.margin-right ,r)) (= (mr ,bp) 0))
-            (=> (is-margin/auto (style.margin-top ,r)) (= (mt ,bp) 0))
-            (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,bp) 0))
+            (=> (is-margin/auto (style.margin-left r)) (= (ml bp) 0))
+            (=> (is-margin/auto (style.margin-right r)) (= (mr bp) 0))
+            (=> (is-margin/auto (style.margin-top r)) (= (mt bp) 0))
+            (=> (is-margin/auto (style.margin-bottom r)) (= (mb bp) 0))
 
-            (= (mtp ,bp) (max (mt ,bp) 0.0))
-            (= (mtn ,bp) (min (mt ,bp) 0.0))
-            (= (mbp ,bp) (max (mb ,bp) 0.0))
-            (= (mbn ,bp) (min (mb ,bp) 0.0))
+            (= (mtp bp) (max (mt bp) 0.0))
+            (= (mtn bp) (min (mt bp) 0.0))
+            (= (mbp bp) (max (mb bp) 0.0))
+            (= (mbn bp) (min (mb bp) 0.0))
 
             ; CSS § 10.3.5 : If 'width' is computed as 'auto', the used value is the "shrink-to-fit"
             ; width.
@@ -233,21 +209,21 @@
             ; preferred width).
 
             ; TODO : We just don't support auto widths on floats.
-            (not (is-width/auto (style.width ,r)))
+            (not (is-width/auto (style.width r)))
 
             ; CSS 2.1 § 10.6.7 : In certain cases, the height of an
             ; element that establishes a block formatting context is computed as follows:
-            (=> (is-height/auto (style.height ,r))
-                (= (h ,bp)
-                   (ite (is-elt ,le)
-                        (ite (= (display ,le) display/inline)
+            (=> (is-height/auto (style.height r))
+                (= (h bp)
+                   (ite (is-box lb)
+                        (ite (= (display (get/elt (element lb))) display/inline)
                              ; If it only has inline-level children, the height is the distance between
                              ; the top of the topmost line box and the bottom of the bottommost line box.
-                             (- (bottom-border ,lb) (top-border ,fb))
+                             (- (bottom-border lb) (top-border fb))
                              ; If it has block-level children, the height is the distance between the
                              ; top margin-edge of the topmost block-level child box and the
                              ; bottom margin-edge of the bottommost block-level child box.
-                             (- (bottom-outer ,lb) (top-outer ,fb)))
+                             (- (bottom-outer lb) (top-outer fb)))
                         0.0)))
 
             ; TODO : In addition, if the element has any floating descendants whose bottom margin edge
@@ -263,6 +239,22 @@
             ; TODO
 
             ,@(for/list ([field '(pl pr pb pt w h)])
-                `(>= (,field ,bp) 0.0))
+                `(>= (,field bp) 0.0))
             ,@(for/list ([field '(bl br bt bb)])
-                `(= (,field ,bp) 0.0))))))
+                `(= (,field bp) 0.0)))))))
+
+    (define-fun has-box-properties ((e Element) (b Box)) Bool
+      ,(let ([bp `(get/box (placement-box e))]
+             [vb `(get/box (flow-box (previous e)))]
+             [pb `(get/box (placement-box (parent e)))]
+             [fb `(get/box (flow-box (fchild e)))]
+             [lb `(get/box (flow-box (lchild e)))])
+         (smt-cond
+          [(is-box/line (tagname e))
+           (has-line-box-properties e b ,bp ,vb ,pb ,fb ,lb)]
+          [(is-display/inline (display e))
+           (has-inline-box-properties e b ,bp ,vb ,pb ,fb ,lb)]
+          [else (has-block-box-properties e b ,bp ,vb ,pb ,fb ,lb)])))))
+
+(define (box-constraints b e)
+  `(has-box-properties ,e ,b))

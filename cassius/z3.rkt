@@ -370,7 +370,7 @@
 
 (define *emitter-passes*
   (list
-   (map z3-expand '(previous parent fchild lchild))
+   (map z3-expand '(has-box-properties previous parent fchild lchild))
    (z3-resolve-fns
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
     'get/box 'flow-box 'placement-box 'element)
