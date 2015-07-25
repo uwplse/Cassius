@@ -370,10 +370,11 @@
 
 (define *emitter-passes*
   (list
-   (map z3-expand '(previous parent fchild lchild))
+   (map z3-expand '(previous parent fchild lchild pbox vbox fbox lbox))
    (z3-resolve-fns
+    'flow-box 'placement-box 'element
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
-    'get/box 'flow-box 'placement-box 'element)
+    'get/box 'p-name 'v-name 'f-name 'l-name)
    #;z3-simplifier
    z3-dco z3-movedefs
    z3-check-datatypes z3-check-functions z3-check-fields))

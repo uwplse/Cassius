@@ -19,6 +19,11 @@
 
    (= ,bp ,bf)
 
+   (= (p-name ,bf) (flow-box (parent ,e)))
+   (= (v-name ,bf) (flow-box (previous ,e)))
+   (= (f-name ,bf) (flow-box (fchild ,e)))
+   (= (l-name ,bf) (flow-box (lchild ,e)))
+
    (= (textalign ,e)
       ,(smt-cond
         [(is-box/line (tagname ,e)) (textalign (parent ,e))]
@@ -42,11 +47,10 @@
 
   (define r `(rules ,e))
 
-  (define bp `(get/box (placement-box ,e)))
-  (define vb `(get/box (flow-box ,ve)))
-  (define pb `(get/box (placement-box ,pe)))
-  (define fb `(get/box (flow-box ,fe)))
-  (define lb `(get/box (flow-box ,le)))
+  (define pb `(pbox ,b))
+  (define vb `(vbox ,b))
+  (define fb `(fbox ,b))
+  (define lb `(lbox ,b))
 
   (asserts
    ; Computing maximum collapsed positive and negative margin
@@ -268,13 +272,10 @@
   (define fe `(fchild ,e))
   (define le `(lchild ,e))
 
-  (define r `(rules ,e))
-
-  (define bp `(get/box (placement-box ,e)))
-  (define vb `(get/box (flow-box ,ve)))
-  (define pb `(get/box (placement-box ,pe)))
-  (define fb `(get/box (flow-box ,fe)))
-  (define lb `(get/box (flow-box ,le)))
+  (define pb `(pbox ,b))
+  (define vb `(vbox ,b))
+  (define fb `(fbox ,b))
+  (define lb `(lbox ,b))
 
   (asserts
    ; Computing maximum collapsed positive and negative margin
@@ -284,15 +285,14 @@
    (between (top-content ,pb) (y ,b) (+ (top-content ,pb) (h ,pb) (- (h ,b))))
 
    ; Inline element layout
-   (=> (not (is-no-elt ,ve)) (= (x ,b) (right-border ,vb)))
-   (= (get/box (placement-box ,e)) (get/box (flow-box ,e)))))
+   (=> (not (is-no-box ,vb)) (= (x ,b) (right-border ,vb)))))
 
 (define (element-line-constraints b)
   (define e `(get/elt (element ,b)))
-  (define vb `(get/box (flow-box (previous ,e))))
-  (define pb `(get/box (placement-box (parent ,e))))
-  (define fb `(get/box (flow-box (fchild ,e))))
-  (define lb `(get/box (flow-box (lchild ,e))))
+  (define pb `(pbox ,b))
+  (define vb `(vbox ,b))
+  (define fb `(fbox ,b))
+  (define lb `(lbox ,b))
 
   (asserts
    ; Computing maximum collapsed positive and negative margin
@@ -303,12 +303,10 @@
    (= (y ,b) (ite (is-no-elt (previous ,e)) (top-content ,pb) (bottom-border ,vb)))
    (= (w ,b) (w ,pb))
 
-   (not (is-no-elt (fchild ,e)))
+   (not (is-no-box ,fb))
    ,(smt-cond
      [(is-text-align/left (textalign ,e)) (= (left-border ,fb) (left-content ,b))]
      [(is-text-align/right (textalign ,e)) (= (right-border ,lb) (right-content ,b))]
      [(is-text-align/center (textalign ,e))
       (= (- (right-content ,b) (right-border ,lb)) (- (left-border ,fb) (left-content ,b)))]
-     [else true])
-
-   (= (get/box (placement-box ,e)) (get/box (flow-box ,e)))))
+     [else true])))

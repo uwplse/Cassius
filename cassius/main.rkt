@@ -294,8 +294,7 @@
       [(list 'LINE constraints ...) element-line-constraints]
       [(list 'INLINE tag constraints ...) element-inline-constraints]
       [(list 'TEXT constraints ...) element-inline-constraints]))
-  (for-each emit (box-constraints (sformat "~a-flow-box" (elt-name elt))))
-  (for-each emit (box-constraints (sformat "~a-real-box" (elt-name elt)))))
+  (for-each emit (box-constraints (sformat "~a-flow-box" (elt-name elt)))))
 
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display)
@@ -320,10 +319,13 @@
   (for* ([(elt children) (in-tree-subtrees (dom-tree dom))] [type types])
     (type dom emit elt children)))
 
-(define (dfs-constraints doms . constraints)
+(define (getter-definitions doms)
   (reap [sow]
         (dom-define-get/elt doms sow)
-        (dom-define-get/box doms sow)
+        (dom-define-get/box doms sow)))
+
+(define (dfs-constraints doms . constraints)
+  (reap [sow]
         (for ([dom doms]) (dom-root-constraints dom sow))
         (for ([cns constraints])
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
@@ -367,6 +369,8 @@
                          ,@(map (curry sformat "~a-real") elt-names)
                          nil-box)))
     ,@css-declarations
+    ,@dom-declarations
+    ,@(getter-definitions doms)
     ,@dom-definitions
     ,@css-functions
 
