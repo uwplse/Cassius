@@ -372,7 +372,7 @@
   (list
    (map z3-expand '(previous parent fchild lchild pbox vbox fbox lbox))
    (z3-resolve-fns
-    'flow-box 'placement-box 'element
+    'flow-box 'child-box 'element
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
     'get/box 'p-name 'v-name 'f-name 'l-name)
    #;z3-simplifier

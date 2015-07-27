@@ -10,12 +10,12 @@
 (define (element-general-constraints e-name)
   (define e `(get/elt ,e-name))
   (define r `(rules ,e))
-  (define bp `(get/box (placement-box ,e)))
+  (define bp `(get/box (child-box ,e)))
   (define bf `(get/box (flow-box ,e)))
 
   (asserts
    (= (flow-box ,e) ,(sformat "~a-flow" e-name))
-   (= (placement-box ,e) ,(sformat "~a-real" e-name))
+   (= (child-box ,e) ,(sformat "~a-real" e-name))
 
    (= ,bp ,bf)
 
@@ -170,9 +170,9 @@
 
   (define r `(rules ,e))
 
-  (define bp `(get/box (placement-box ,e)))
+  (define bp `(get/box (child-box ,e)))
   (define vb `(get/box (flow-box ,ve)))
-  (define pb `(get/box (placement-box ,pe)))
+  (define pb `(get/box (child-box ,pe)))
   (define fb `(get/box (flow-box ,fe)))
   (define lb `(get/box (flow-box ,le)))
 

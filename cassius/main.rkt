@@ -179,7 +179,7 @@
     (emit `(assert (= (get/box ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)))))
   (emit `(assert (= (get/box nil-box) no-box)))
   (emit `(assert (= (flow-box no-elt) nil-box)))
-  (emit `(assert (= (placement-box no-elt) nil-box))))
+  (emit `(assert (= (child-box no-elt) nil-box))))
 
 (define (dom-root-constraints dom emit)
   (define elt `(get/elt ,(dom-root dom)))
@@ -187,7 +187,7 @@
 
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
-  (emit `(assert (= (placement-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-real" (dom-root dom)))))
+  (emit `(assert (= (child-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-real" (dom-root dom)))))
   (emit `(assert (= (tagname ,elt) box/viewport)))
   (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
     (emit `(assert (= (,field ,b) 0.0))))
@@ -281,7 +281,7 @@
       [(list (and (or ':x ':y ':w ':h) field) value rest ...)
        (define fun (match field [':x 'x] [':y 'y] [':h 'box-height] [':w 'box-width]))
        (when (memq (car elt) '(LINE TEXT INLINE BLOCK))
-         (emit `(assert (! (= (,fun (get/box (placement-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
+         (emit `(assert (! (= (,fun (get/box (child-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
        (interpret rest)]
       [(list)
        (void)])))

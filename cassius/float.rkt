@@ -11,8 +11,8 @@
              [(list tag name cmds ...)
               (define e (dom-get dom elt))
               (define pe `(get/elt (parent ,(dom-get dom elt))))
-              (define b `(placement-box ,e))
-              (define pb `(placement-box ,pe))
+              (define b `(child-box ,e))
+              (define pb `(child-box ,pe))
 
               (list*
                ; CSS 2.1, § 9.5.1, item 1: The left outer edge of a left-floating box
@@ -28,7 +28,7 @@
                              (= (y ,b) (y (flow-box ,e)))
                              ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
                                  (define e* (dom-get dom elt*))
-                                 (define b* `(placement-box ,(dom-get dom elt*)))
+                                 (define b* `(child-box ,(dom-get dom elt*)))
                                  `(and (not (is-none (float ,e*)))
                                        (or (= (top-outer ,b) (top-outer ,b*))
                                            (= (top-outer ,b) (bottom-outer ,b*))))))))
@@ -42,7 +42,7 @@
                              (= (left-outer ,b) (left-content ,pb))
                              ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
                                  (define e* (dom-get dom elt*))
-                                 (define b* `(placement-box ,(dom-get dom elt*)))
+                                 (define b* `(child-box ,(dom-get dom elt*)))
                                  `(and (is-left (float ,e*))
                                        (= (left-outer ,b) (right-outer ,b*)))))))
                `(assert (=> (is-right (float ,e))
@@ -50,7 +50,7 @@
                              (= (right-outer ,b) (right-content ,pb))
                              ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
                                  (define e* (dom-get dom elt*))
-                                 (define b* `(placement-box ,(dom-get dom elt*)))
+                                 (define b* `(child-box ,(dom-get dom elt*)))
                                  `(and (is-right (float ,e*))
                                        (= (right-outer ,b) (left-outer ,b*)))))))
 
@@ -74,7 +74,7 @@
                       ; The #:break ensures these are only preceding elements
                       (for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
                         (define e* (dom-get dom elt*))
-                        (define b* `(placement-box ,(dom-get dom elt*)))
+                        (define b* `(child-box ,(dom-get dom elt*)))
 
                         (list
                          ; CSS 2.1, § 9.5.1, item 2: If the current box is left-floating,
