@@ -162,20 +162,25 @@
 
   (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-flow-box" name) Box))
+    (emit `(declare-const ,(sformat "~a-float-box" name) Box))
     (emit `(declare-const ,(sformat "~a-real-box" name) Box))
     (emit `(assert (= (element ,(sformat "~a-flow-box" name)) ,name)))
+    (emit `(assert (= (element ,(sformat "~a-float-box" name)) ,name)))
     (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name))))
   (define body
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       (smt-cond
+       [(= x ,(sformat "~a-float" name)) ,(sformat "~a-float-box" name)]
        [(= x ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)]
        [(= x ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name)]
        [else ,body])))
   (emit `(define-fun get/box ((x BoxName)) Box ,body))
   (for* ([names dom-names] [name names])
     (emit `(assert (not (is-no-box ,(sformat "~a-flow-box" name)))))
+    (emit `(assert (not (is-no-box ,(sformat "~a-float-box" name)))))
     (emit `(assert (not (is-no-box ,(sformat "~a-real-box" name)))))
     (emit `(assert (= (get/box ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name))))
+    (emit `(assert (= (get/box ,(sformat "~a-float" name)) ,(sformat "~a-float-box" name))))
     (emit `(assert (= (get/box ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)))))
   (emit `(assert (= (get/box nil-box) no-box)))
   (emit `(assert (= (flow-box no-elt) nil-box)))
@@ -187,6 +192,7 @@
 
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
+  (emit `(assert (= (float-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-float" (dom-root dom)))))
   (emit `(assert (= (child-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-real" (dom-root dom)))))
   (emit `(assert (= (tagname ,elt) box/viewport)))
   (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
@@ -288,13 +294,15 @@
 
 (define (element-constraints dom emit elt children)
   (for-each emit (element-general-constraints (elt-name elt)))
-  (define box-constraints
+  (define-values (flow-box-constraints float-box-constraints)
     (match elt
-      [(list 'BLOCK tag constraints ...) element-block-constraints]
-      [(list 'LINE constraints ...) element-line-constraints]
-      [(list 'INLINE tag constraints ...) element-inline-constraints]
-      [(list 'TEXT constraints ...) element-inline-constraints]))
-  (for-each emit (box-constraints (sformat "~a-flow-box" (elt-name elt)))))
+      [(list 'BLOCK tag constraints ...)
+       (values element-block-constraints element-float-constraints)]
+      [(list 'LINE constraints ...) (values element-line-constraints (const empty))]
+      [(list 'INLINE tag constraints ...) (values element-inline-constraints (const empty))]
+      [(list 'TEXT constraints ...) (values element-inline-constraints (const empty))]))
+  (for-each emit (flow-box-constraints (sformat "~a-flow-box" (elt-name elt))))
+  #;(for-each emit (float-box-constraints (sformat "~a-float-box" (elt-name elt)))))
 
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display)
@@ -366,6 +374,7 @@
                         (ElementName ,@elt-names nil-elt)
                         (BoxName
                          ,@(map (curry sformat "~a-flow") elt-names)
+                         ,@(map (curry sformat "~a-float") elt-names)
                          ,@(map (curry sformat "~a-real") elt-names)
                          nil-box)))
     ,@css-declarations

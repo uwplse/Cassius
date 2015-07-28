@@ -377,7 +377,7 @@
     'get/box 'p-name 'v-name 'f-name 'l-name)
    #;z3-simplifier
    z3-dco z3-movedefs
-   z3-check-datatypes z3-check-functions z3-check-fields))
+   z3-check-datatypes z3-check-functions #;z3-check-fields))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs (flatten *emitter-passes*)))

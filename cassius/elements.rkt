@@ -5,24 +5,27 @@
 
 (require unstable/sequence)
 (provide element-general-constraints
-         element-block-constraints element-inline-constraints element-line-constraints)
+         element-block-constraints element-inline-constraints element-line-constraints
+         element-float-constraints)
 
 (define (element-general-constraints e-name)
   (define e `(get/elt ,e-name))
   (define r `(rules ,e))
   (define bp `(get/box (child-box ,e)))
   (define bf `(get/box (flow-box ,e)))
+  (define bl `(get/box (float-box ,e)))
 
   (asserts
    (= (flow-box ,e) ,(sformat "~a-flow" e-name))
+   (= (float-box ,e) ,(sformat "~a-float" e-name))
    (= (child-box ,e) ,(sformat "~a-real" e-name))
 
-   (= ,bp ,bf)
+   (= ,bp (ite (is-float/none (float ,e)) ,bf ,bl))
 
-   (= (p-name ,bf) (flow-box (parent ,e)))
+   (= (p-name ,bf) (child-box (parent ,e)))
    (= (v-name ,bf) (flow-box (previous ,e)))
-   (= (f-name ,bf) (flow-box (fchild ,e)))
-   (= (l-name ,bf) (flow-box (lchild ,e)))
+   (= (f-name ,bf) (ite (is-float/none (float ,e)) (flow-box (fchild ,e)) nil-box))
+   (= (l-name ,bf) (ite (is-float/none (float ,e)) (flow-box (lchild ,e)) nil-box))
 
    (= (textalign ,e)
       ,(smt-cond
@@ -40,13 +43,7 @@
 
 (define (element-block-constraints b)
   (define e `(get/elt (element ,b)))
-  (define ve `(previous ,e))
-  (define pe `(parent ,e))
-  (define fe `(fchild ,e))
-  (define le `(lchild ,e))
-
   (define r `(rules ,e))
-
   (define pb `(pbox ,b))
   (define vb `(vbox ,b))
   (define fb `(fbox ,b))
@@ -56,19 +53,19 @@
    ; Computing maximum collapsed positive and negative margin
    (= (mtp ,b)
       (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
+           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fb)
                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0)))
    (= (mtn ,b)
       (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
+           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fb)
                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0)))
    (= (mbp ,b)
       (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
+           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,lb)
                      (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0)))
    (= (mbn ,b)
       (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
+           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,lb)
                      (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0)))
 
    ; Set properties that are settable with lengths
@@ -123,9 +120,9 @@
        ,(smt-cond
          ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
          ; if the box establishes a inline formatting context with one or more lines
-         [(and (is-elt ,le) (= (display ,le) display/inline))
+         [(and (is-box ,lb) (= (display (element ,lb)) display/inline))
           (= (bottom-content ,b) (bottom-border ,lb))]
-         [(and (is-elt ,le) (= (display ,le) display/block))
+         [(and (is-box ,lb) (= (display (element ,lb)) display/block))
           (= (bottom-content ,b)
              ; CSS § 10.6.3, item 2: the bottom edge of the bottom
              ; (possibly collapsed) margin of its last in-flow child,
@@ -146,8 +143,8 @@
 
    (= (x ,b) (+ (left-content ,pb) (ml ,b)))
    (= (y ,b)
-      (ite (is-no-elt ,ve)
-           (ite (and (not (= (tagname ,pe) tag/<HTML>)) (is-float/none (float ,pe))
+      (ite (is-no-box ,vb)
+           (ite (and (not (= (tagname (element ,pb)) tag/<HTML>)) (is-float/none (float (element ,pb)))
                      (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                 (top-content ,pb)
                 (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
@@ -163,37 +160,18 @@
 
 (define (element-float-constraints b)
   (define e `(get/elt (element ,b)))
-  (define ve `(previous ,e))
-  (define pe `(parent ,e))
-  (define fe `(fchild ,e))
-  (define le `(lchild ,e))
-
   (define r `(rules ,e))
-
-  (define bp `(get/box (child-box ,e)))
-  (define vb `(get/box (flow-box ,ve)))
-  (define pb `(get/box (child-box ,pe)))
-  (define fb `(get/box (flow-box ,fe)))
-  (define lb `(get/box (flow-box ,le)))
+  (define pb `(pbox ,e))
+  (define vb `(vbox ,e))
+  (define fb `(fbox ,e))
+  (define lb `(lbox ,e))
 
   (asserts
    ; Copied from above
-   (= (mtp ,b)
-      (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
-                     (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0)))
-   (= (mtn ,b)
-      (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,fe)
-                     (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0)))
-   (= (mbp ,b)
-      (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
-                     (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0)))
-   (= (mbn ,b)
-      (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-elt ,le)
-                     (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0)))
+   (= (mtp ,b) (max (mt ,b) 0.0))
+   (= (mtn ,b) (min (mt ,b) 0.0))
+   (= (mbp ,b) (max (mb ,b) 0.0))
+   (= (mbn ,b) (min (mb ,b) 0.0))
 
    ; Floating block element layout
    ,@(for/list ([item '((width width w) (height height h)
@@ -204,18 +182,13 @@
        (match item
          [(list prop type field)
           `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
-               (= (,field ,bp) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
+               (= (,field ,b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
 
    ; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
-   (=> (is-margin/auto (style.margin-left ,r)) (= (ml ,bp) 0))
-   (=> (is-margin/auto (style.margin-right ,r)) (= (mr ,bp) 0))
-   (=> (is-margin/auto (style.margin-top ,r)) (= (mt ,bp) 0))
-   (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,bp) 0))
-
-   (= (mtp ,bp) (max (mt ,bp) 0.0))
-   (= (mtn ,bp) (min (mt ,bp) 0.0))
-   (= (mbp ,bp) (max (mb ,bp) 0.0))
-   (= (mbn ,bp) (min (mb ,bp) 0.0))
+   (=> (is-margin/auto (style.margin-left ,r)) (= (ml ,b) 0))
+   (=> (is-margin/auto (style.margin-right ,r)) (= (mr ,b) 0))
+   (=> (is-margin/auto (style.margin-top ,r)) (= (mt ,b) 0))
+   (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,b) 0))
 
    ; CSS § 10.3.5 : If 'width' is computed as 'auto', the used value is the "shrink-to-fit"
    ; width.
@@ -236,9 +209,9 @@
    ; CSS 2.1 § 10.6.7 : In certain cases, the height of an
    ; element that establishes a block formatting context is computed as follows:
    (=> (is-height/auto (style.height ,r))
-       (= (h ,bp)
-          (ite (is-elt ,le)
-               (ite (= (display ,le) display/inline)
+       (= (h ,b)
+          (ite (is-box ,lb)
+               (ite (= (display (element ,lb)) display/inline)
                     ; If it only has inline-level children, the height is the distance between
                     ; the top of the topmost line box and the bottom of the bottommost line box.
                     (- (bottom-border ,lb) (top-border ,fb))
@@ -261,17 +234,12 @@
    ; TODO
 
    ,@(for/list ([field '(pl pr pb pt w h)])
-       `(>= (,field ,bp) 0.0))
+       `(>= (,field ,b) 0.0))
    ,@(for/list ([field '(bl br bt bb)])
-       `(= (,field ,bp) 0.0))))
+       `(= (,field ,b) 0.0))))
 
 (define (element-inline-constraints b)
   (define e `(get/elt (element ,b)))
-  (define ve `(previous ,e))
-  (define pe `(parent ,e))
-  (define fe `(fchild ,e))
-  (define le `(lchild ,e))
-
   (define pb `(pbox ,b))
   (define vb `(vbox ,b))
   (define fb `(fbox ,b))
