@@ -24,8 +24,13 @@
 
    (= (p-name ,bf) (child-box (parent ,e)))
    (= (v-name ,bf) (flow-box (previous ,e)))
-   (= (f-name ,bf) (ite (is-float/none (float ,e)) (flow-box (fchild ,e)) nil-box))
-   (= (l-name ,bf) (ite (is-float/none (float ,e)) (flow-box (lchild ,e)) nil-box))
+   (= (f-name ,bf) (flow-box (fchild ,e)))
+   (= (l-name ,bf) (flow-box (lchild ,e)))
+
+   (= (p-name ,bl) (child-box (parent ,e)))
+   (= (v-name ,bl) (flow-box (previous ,e)))
+   (= (f-name ,bl) (flow-box (fchild ,e)))
+   (= (l-name ,bl) (flow-box (lchild ,e)))
 
    (= (textalign ,e)
       ,(smt-cond
@@ -161,10 +166,10 @@
 (define (element-float-constraints b)
   (define e `(get/elt (element ,b)))
   (define r `(rules ,e))
-  (define pb `(pbox ,e))
-  (define vb `(vbox ,e))
-  (define fb `(fbox ,e))
-  (define lb `(lbox ,e))
+  (define pb `(pbox ,b))
+  (define vb `(vbox ,b))
+  (define fb `(fbox ,b))
+  (define lb `(lbox ,b))
 
   (asserts
    ; Copied from above
@@ -203,8 +208,7 @@
    ; Then the shrink-to-fit width is: min(max(preferred minimum width, available width),
    ; preferred width).
 
-   ; TODO : We just don't support auto widths on floats.
-   (not (is-width/auto (style.width ,r)))
+   ; TODO : Auto widths on floats.
 
    ; CSS 2.1 § 10.6.7 : In certain cases, the height of an
    ; element that establishes a block formatting context is computed as follows:

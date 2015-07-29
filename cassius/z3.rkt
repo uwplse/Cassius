@@ -290,25 +290,60 @@
            [(list name (list fields types) ...)
             (for ([field fields]) (hash-set! all-names field #t))]))]
       [else (void)]))
-  (define (only-fields? expr)
+  (define (only-fields? expr fail)
     (match expr
       [(? symbol?) #t]
       [(list f arg)
-       (and (hash-has-key? all-names f) (only-fields? arg))]
+       (if (hash-has-key? all-names f)
+           (only-fields? arg fail)
+           (fail expr))]
       [_ #f]))
-  (define (valid-expr? expr)
+  (define (valid-expr? expr fail)
     (match expr
-      [(list f arg) (if (hash-has-key? all-names f) (only-fields? arg) (valid-expr? arg))]
+      [(list f arg) (if (hash-has-key? all-names f) (only-fields? arg fail) (valid-expr? arg fail))]
       [(list f args ...)
-       (and (not (hash-has-key? all-names f)) (andmap valid-expr? args))]
+       (and (not (hash-has-key? all-names f)) (andmap (curryr valid-expr? fail) args))]
       [_ #t]))
+  (define problems (make-hash))
   (for ([cmd cmds] [i (in-naturals 1)])
     (match cmd
       [(list 'assert expr)
-       (unless (valid-expr? expr)
-         (eprintf "Z3: Improperly guarded field reference on line ~a\n  line: ~a\n" i cmd))]
+       (define failures (reap [fail] (valid-expr? expr fail)))
+       (unless (null? failures)
+         (for ([err failures])
+           (hash-set! problems err (cons (cons i cmd) (hash-ref problems err '())))))]
       [_ (void)]))
+  (for ([(key vals) (in-hash problems)])
+    (eprintf "Z3: Improperly guarded field reference ~a on ~a lines\n" key (length vals))
+    (eprintf "  line ~a: ~a\n" (caar vals) (cdar vals)))
   cmds)
+
+(define (z3-sink-fields cmds)
+  "Turn (fld (ite c x y)) into (ite c (fld x) (fld y))."
+  (define all-names (make-hash))
+  (for ([cmd cmds])
+    (match cmd
+      [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
+       (for ([name names] [vars varss] #:when #t [var vars])
+         (match var
+           [(? symbol?) (void)]
+           [(list _ (list fields _) ...)
+            (for ([field fields]) (hash-set! all-names field #t))]))]
+      [_ (void)]))
+
+  (define (field? x) (hash-has-key? all-names x))
+
+  (define (sink-field expr)
+    (match expr
+      [`(,(? field? fld) (ite ,c ,x ,y))
+       `(ite ,(sink-field c) ,(sink-field (list fld x)) ,(sink-field (list fld x)))]
+      [(? list?) (cons (car expr) (map sink-field (cdr expr)))]
+      [_ expr]))
+
+  (for/list ([cmd cmds] [i (in-naturals 1)])
+    (match cmd
+      [(list 'assert expr) `(assert ,(sink-field expr))]
+      [_ cmd])))
 
 (define (z3-movedefs cmds)
   "Move each definition to be right before first use."
@@ -372,12 +407,13 @@
   (list
    (map z3-expand '(previous parent fchild lchild pbox vbox fbox lbox))
    (z3-resolve-fns
-    'flow-box 'child-box 'element
+    'flow-box 'float-box 'child-box 'element
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
     'get/box 'p-name 'v-name 'f-name 'l-name)
    #;z3-simplifier
    z3-dco z3-movedefs
-   z3-check-datatypes z3-check-functions #;z3-check-fields))
+   z3-check-datatypes z3-check-functions
+   z3-sink-fields z3-check-fields))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs (flatten *emitter-passes*)))

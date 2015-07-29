@@ -302,7 +302,7 @@
       [(list 'INLINE tag constraints ...) (values element-inline-constraints (const empty))]
       [(list 'TEXT constraints ...) (values element-inline-constraints (const empty))]))
   (for-each emit (flow-box-constraints (sformat "~a-flow-box" (elt-name elt))))
-  #;(for-each emit (float-box-constraints (sformat "~a-float-box" (elt-name elt)))))
+  (for-each emit (float-box-constraints (sformat "~a-float-box" (elt-name elt)))))
 
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display)
