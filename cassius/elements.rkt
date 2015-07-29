@@ -5,8 +5,8 @@
 
 (require unstable/sequence)
 (provide element-general-constraints
-         element-block-constraints element-inline-constraints element-line-constraints
-         element-float-constraints)
+         box-block-constraints box-inline-constraints box-line-constraints
+         box-float-constraints)
 
 (define (element-general-constraints e-name)
   (define e `(get/elt ,e-name))
@@ -24,8 +24,8 @@
 
    (= (p-name ,bf) (child-box (parent ,e)))
    (= (v-name ,bf) (flow-box (previous ,e)))
-   (= (f-name ,bf) (flow-box (fchild ,e)))
-   (= (l-name ,bf) (flow-box (lchild ,e)))
+   (= (f-name ,bf) (ite (is-float/none (float ,e)) (flow-box (fchild ,e)) nil-box))
+   (= (l-name ,bf) (ite (is-float/none (float ,e)) (flow-box (lchild ,e)) nil-box))
 
    (= (p-name ,bl) (child-box (parent ,e)))
    (= (v-name ,bl) (flow-box (previous ,e)))
@@ -46,7 +46,7 @@
         [(is-float/inherit (style.float ,r)) (float (parent ,e))]
         [else (style.float ,r)]))))
 
-(define (element-block-constraints b)
+(define (box-block-constraints b)
   (define e `(get/elt (element ,b)))
   (define r `(rules ,e))
   (define pb `(pbox ,b))
@@ -163,7 +163,7 @@
    ,@(for/list ([field '(bl br bt bb)])
        `(= (,field ,b) 0.0))))
 
-(define (element-float-constraints b)
+(define (box-float-constraints b)
   (define e `(get/elt (element ,b)))
   (define r `(rules ,e))
   (define pb `(pbox ,b))
@@ -235,14 +235,13 @@
    ; CSS 2.1 § 9.5.1 : When the float occurs between two collapsing margins, the float is
    ; positioned as if it had an otherwise empty anonymous block parent taking part in the flow.
    ; The position of such a parent is defined by the rules in the section on margin collapsing.
-   ; TODO
 
    ,@(for/list ([field '(pl pr pb pt w h)])
        `(>= (,field ,b) 0.0))
    ,@(for/list ([field '(bl br bt bb)])
        `(= (,field ,b) 0.0))))
 
-(define (element-inline-constraints b)
+(define (box-inline-constraints b)
   (define e `(get/elt (element ,b)))
   (define pb `(pbox ,b))
   (define vb `(vbox ,b))
@@ -259,7 +258,7 @@
    ; Inline element layout
    (=> (not (is-no-box ,vb)) (= (x ,b) (right-border ,vb)))))
 
-(define (element-line-constraints b)
+(define (box-line-constraints b)
   (define e `(get/elt (element ,b)))
   (define pb `(pbox ,b))
   (define vb `(vbox ,b))

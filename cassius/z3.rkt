@@ -318,6 +318,20 @@
     (eprintf "  line ~a: ~a\n" (caar vals) (cdar vals)))
   cmds)
 
+(define ((z3-sink-functions . fns ) cmds)
+  "Turn (fld (ite c x y)) into (ite c (fld x) (fld y))."
+  (define (field? x) (member x fns))
+  (define (sink-field expr)
+    (match expr
+      [`(,(? field? fld) (ite ,c ,x ,y))
+       `(ite ,(sink-field c) ,(sink-field (list fld x)) ,(sink-field (list fld x)))]
+      [(? list?) (cons (car expr) (map sink-field (cdr expr)))]
+      [_ expr]))
+  (for/list ([cmd cmds] [i (in-naturals 1)])
+    (match cmd
+      [`(assert ,expr) `(assert ,(sink-field expr))]
+      [_ cmd])))
+
 (define (z3-sink-fields cmds)
   "Turn (fld (ite c x y)) into (ite c (fld x) (fld y))."
   (define all-names (make-hash))
@@ -330,20 +344,7 @@
            [(list _ (list fields _) ...)
             (for ([field fields]) (hash-set! all-names field #t))]))]
       [_ (void)]))
-
-  (define (field? x) (hash-has-key? all-names x))
-
-  (define (sink-field expr)
-    (match expr
-      [`(,(? field? fld) (ite ,c ,x ,y))
-       `(ite ,(sink-field c) ,(sink-field (list fld x)) ,(sink-field (list fld x)))]
-      [(? list?) (cons (car expr) (map sink-field (cdr expr)))]
-      [_ expr]))
-
-  (for/list ([cmd cmds] [i (in-naturals 1)])
-    (match cmd
-      [(list 'assert expr) `(assert ,(sink-field expr))]
-      [_ cmd])))
+  ((apply z3-sink-functions (hash-keys all-names)) cmds))
 
 (define (z3-movedefs cmds)
   "Move each definition to be right before first use."
@@ -413,7 +414,12 @@
    #;z3-simplifier
    z3-dco z3-movedefs
    z3-check-datatypes z3-check-functions
-   z3-sink-fields z3-check-fields))
+   z3-sink-fields (z3-sink-functions 'get/box 'get/elt)
+   (z3-resolve-fns
+    'flow-box 'float-box 'child-box 'element
+    'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
+    'get/box 'p-name 'v-name 'f-name 'l-name)
+   z3-check-fields))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs (flatten *emitter-passes*)))

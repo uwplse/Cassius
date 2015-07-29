@@ -297,10 +297,10 @@
   (define-values (flow-box-constraints float-box-constraints)
     (match elt
       [(list 'BLOCK tag constraints ...)
-       (values element-block-constraints element-float-constraints)]
-      [(list 'LINE constraints ...) (values element-line-constraints (const empty))]
-      [(list 'INLINE tag constraints ...) (values element-inline-constraints (const empty))]
-      [(list 'TEXT constraints ...) (values element-inline-constraints (const empty))]))
+       (values box-block-constraints box-float-constraints)]
+      [(list 'LINE constraints ...) (values box-line-constraints (const empty))]
+      [(list 'INLINE tag constraints ...) (values box-inline-constraints (const empty))]
+      [(list 'TEXT constraints ...) (values box-inline-constraints (const empty))]))
   (for-each emit (flow-box-constraints (sformat "~a-flow-box" (elt-name elt))))
   (for-each emit (float-box-constraints (sformat "~a-float-box" (elt-name elt)))))
 
@@ -319,9 +319,6 @@
   (emit `(assert (= (tagname ,(dom-get dom elt)) ,tagname)))
   (emit `(assert (= (id ,(dom-get dom elt)) ,idname)))
   (emit `(assert (= (display ,(dom-get dom elt)) ,display))))
-
-(define (nofloat-constraints dom emit elt children)
-  (emit `(assert (= (float ,(dom-get dom elt)) float/none))))
 
 (define (all-constraints-of dom emit . types)
   (for* ([(elt children) (in-tree-subtrees (dom-tree dom))] [type types])
@@ -361,9 +358,7 @@
      (for/list ([dom doms]) (dom-root dom))))
 
   (define constraints
-    (list tree-constraints info-constraints user-constraints element-constraints
-          nofloat-constraints
-          (style-constraints sheet)))
+    (list tree-constraints info-constraints user-constraints element-constraints (style-constraints sheet)))
 
   `((set-option :produce-unsat-cores true)
     (declare-datatypes ()
