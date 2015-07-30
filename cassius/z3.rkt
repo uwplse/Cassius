@@ -222,29 +222,25 @@
 (define ((z3-resolve-fn f) cmds)
   "Resolve applications of a function f using asserted equalities"
   (define values (make-hash))
-  (define lines '())
   (for ([cmd cmds] [i (in-naturals)])
     (match cmd
       [`(assert (= (,(== f) ,input) ,output))
-       (unless (hash-has-key? values input)
-         (set! lines (cons i lines))
-         (hash-set! values input output))]
+       (hash-set! values input output)]
       [_ (void)]))
   (for/list ([cmd cmds] [i (in-naturals)])
-    (if (member i lines)
-        cmd
-        (match cmd
-          [(list 'assert expr)
-           (list 'assert
-                 (let loop ([expr expr])
-                   (match expr
-                     [`(let ((,vars ,vals) ...) ,body)
-                      `(let (,@(for/list ([var vars] [val vals]) `(,var ,(loop val)))) ,(loop body))]
-                     [(list (== f) arg)
-                      (hash-ref values arg (lambda () `(,f ,(loop arg))))]
-                     [(list fn args ...) (cons fn (map loop args))]
-                     [_ expr])))]
-          [_ cmd]))))
+    (match cmd
+      [(list 'assert expr)
+       (list 'assert
+             (let loop ([expr expr])
+               (match expr
+                 [`(let ((,vars ,vals) ...) ,body)
+                  `(let (,@(for/list ([var vars] [val vals]) `(,var ,(loop val)))) ,(loop body))]
+                 [`(= (,(== f) ,input) ,output) expr]
+                 [(list (== f) arg)
+                  (hash-ref values arg (lambda () `(,f ,(loop arg))))]
+                 [(list fn args ...) (cons fn (map loop args))]
+                 [_ expr])))]
+      [_ cmd])))
 
 (define (z3-resolve-fns . fs)
   (apply fixpoint (map z3-resolve-fn fs)))
@@ -460,6 +456,7 @@
     'flow-box 'float-box 'child-box 'element
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
     'get/box 'p-name 'v-name 'f-name 'l-name)
+   #;z3-print-all
    #;z3-simplifier
    z3-sink-fields (z3-sink-functions 'get/box 'get/elt)
    (z3-resolve-fns
