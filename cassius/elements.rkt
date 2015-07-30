@@ -53,19 +53,19 @@
    ; Computing maximum collapsed positive and negative margin
    (= (mtp ,b)
       (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fb)
+           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fb) (is-float/none (float ,e))
                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0)))
    (= (mtn ,b)
       (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fb)
+           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fb) (is-float/none (float ,e))
                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0)))
    (= (mbp ,b)
       (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,lb)
+           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,lb) (is-float/none (float ,e))
                      (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0)))
    (= (mbn ,b)
       (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,lb)
+           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,lb) (is-float/none (float ,e))
                      (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0)))
 
    ; Set properties that are settable with lengths
@@ -208,14 +208,14 @@
    ; 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
    ; Then the shrink-to-fit width is: min(max(preferred minimum width, available width),
    ; preferred width).
-
-   ; TODO : Auto widths on floats.
+   ; TODO : We just don't allow auto widths on floats
+   (=> (not (is-float/none (float ,e))) (not (is-width/auto (style.width ,r))))
 
    ; CSS 2.1 § 10.6.7 : In certain cases, the height of an
    ; element that establishes a block formatting context is computed as follows:
    (=> (is-height/auto (style.height ,r))
        (= (h ,b)
-          (ite (is-box ,lb)
+          (ite (is-box ,fb)
                (ite (= (display (element ,lb)) display/inline)
                     ; If it only has inline-level children, the height is the distance between
                     ; the top of the topmost line box and the bottom of the bottommost line box.
@@ -240,7 +240,29 @@
    ,@(for/list ([field '(pl pr pb pt w h)])
        `(>= (,field ,b) 0.0))
    ,@(for/list ([field '(bl br bt bb)])
-       `(= (,field ,b) 0.0))))
+       `(= (,field ,b) 0.0))
+
+
+   ; CSS 2.1, § 9.5.1, item 1: The left outer edge of a left-floating box
+   ; may not be to the left of the left edge of its containing block.
+   ; An analogous rule holds for right-floating elements. 
+   (=> (is-float/left (float ,e)) (>= (left-outer ,b) (left-content ,pb)))
+   (=> (is-float/right (float ,e)) (<= (right-outer ,b) (right-content ,pb)))
+
+   ; TODO : The current float spec doesn't capture the notion that we must place
+   ; a box as high as possible, which may lead to boxes overlapping.
+   ; For now, we ban negative margins.
+   (>= (mt ,b) 0.0)
+   (>= (mb ,b) 0.0)
+   (>= (ml ,b) 0.0)
+   (>= (mr ,b) 0.0)
+
+   ; CSS 2.1, § 9.5.1, item 4: A floating box's outer top may not be higher
+   ; than the top of its containing block. When the float occurs between
+   ; two collapsing margins, the float is positioned as if it had an otherwise
+   ; empty anonymous block parent taking part in the flow. The position of such
+   ; a parent is defined by the rules in the section on margin collapsing. 
+   (>= (top-outer ,b) (top-content ,pb))))
 
 (define (box-inline-constraints b)
   (define e `(get/elt (element ,b)))
