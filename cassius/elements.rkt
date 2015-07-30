@@ -10,34 +10,33 @@
 
 (define element-definitions
   `((define-fun is-an-element ((e Element)) Bool
-      ,(smt-let ((r (rules e))
-                 (bp (get/box (child-box e)))
-                 (bf (get/box (flow-box e)))
-                 (bl (get/box (float-box e))))
-                (= bp (ite (is-float/none (float e)) bf bl))
-                (= (p-name bf) (child-box (parent e)))
-                (= (v-name bf) (flow-box (previous e)))
-                (= (f-name bf) (ite (is-float/none (float e)) (flow-box (fchild e)) nil-box))
-                (= (l-name bf) (ite (is-float/none (float e)) (flow-box (lchild e)) nil-box))
+      ,(smt-let
+        ((r (rules e)) (bp (get/box (child-box e))) (bf (get/box (flow-box e))) (bl (get/box (float-box e))))
 
-                (= (p-name bl) (child-box (parent e)))
-                (= (v-name bl) (flow-box (previous e)))
-                (= (f-name bl) (flow-box (fchild e)))
-                (= (l-name bl) (flow-box (lchild e)))
+        (= bp (ite (is-float/none (float e)) bf bl))
+        (= (p-name bf) (child-box (parent e)))
+        (= (v-name bf) (flow-box (previous e)))
+        (= (f-name bf) (ite (is-float/none (float e)) (flow-box (fchild e)) nil-box))
+        (= (l-name bf) (ite (is-float/none (float e)) (flow-box (lchild e)) nil-box))
 
-                (= (textalign e)
-                   ,(smt-cond
-                     [(is-box/line (tagname e)) (textalign (parent e))]
-                     [(is-text-align/inherit (style.text-align r))
-                      (textalign (parent e))]
-                     [else
-                      (style.text-align r)]))
-                (= (float e)
-                   ,(smt-cond
-                     [(is-display/inline (display e)) float/none]
-                     [(is-box/line (tagname e)) float/none]
-                     [(is-float/inherit (style.float r)) (float (parent e))]
-                     [else (style.float r)]))))))
+        (= (p-name bl) (child-box (parent e)))
+        (= (v-name bl) (flow-box (previous e)))
+        (= (f-name bl) (flow-box (fchild e)))
+        (= (l-name bl) (flow-box (lchild e)))
+
+        (= (textalign e)
+           ,(smt-cond
+             [(is-box/line (tagname e)) (textalign (parent e))]
+             [(is-text-align/inherit (style.text-align r))
+              (textalign (parent e))]
+             [else
+              (style.text-align r)]))
+        (= (float e)
+           ,(smt-cond
+             [(is-display/inline (display e)) float/none]
+             [(is-box/line (tagname e)) float/none]
+             [(is-float/inherit (style.float r)) (float (parent e))]
+             [else (style.float r)]))))))
 
 (define (element-general-constraints e-name)
   `(assert (is-an-element (get/elt ,e-name))))
@@ -70,54 +69,58 @@
                      (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0)))
 
    ; Set properties that are settable with lengths
-   ,@(for/list ([item '((width width w) (height height h)
-                        (padding-left padding pl) (padding-right padding pr)
-                        (padding-top padding pt) (padding-bottom padding pb)
-                        (margin-top margin mt) (margin-bottom margin mb))])
-       (match item
-         [(list prop type field)
-          `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
-               (= (,field ,b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))))]))
+   ,@(for/list ([prop '(width height padding-left padding-right padding-top padding-bottom margin-top margin-bottom)]
+                [type '(width height padding padding padding padding margin margin)]
+                [field '(w h pl pr pt pb mt mb)])
+       `(=> (and (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r)) (is-float/none (float ,e)))
+            (= (,field ,b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r)))))
+
+   ; The flow boxe of a float is an empty anonymous block box
+   (=> (not (is-float/none (float ,e)))
+       (and
+        ,@(for/list ([field '(h pl pr pt pb mt mb ml mr bl br bt bb)])
+            `(= (,field ,b) 0))))
 
    ; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
    ; The following constraints must hold among the used values of the other properties:
    ; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
    (= (w ,pb) (+ (ml ,b) (box-width ,b) (mr ,b)))
 
-   ; I cannot summarize these rules; see CSS § 10.3.3
-   ; Note that the implementation here is what Chrome and Firefox do,
-   ; not what the standard says, which they contradict.
-   (ite (> (+ (ite (is-width/auto (style.width ,r)) 0.0 (width.px (style.width ,r)))
-              (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r)))
-              (ite (is-margin/auto (style.margin-right ,r)) 0.0 (margin.px (style.margin-right ,r)))
-              (pl ,b) (pr ,b) (bl ,b) (br ,b))
-           (w ,pb))
-        (and ; It overflows. So what do we do?
-         ; Experimentally, this is what Firefox and Chrome do.
-         ; NOTE: this behavior contradicts CSS § 10.3.3.
-         (= (w ,b) (ite (is-width/auto (style.width ,r)) 0.0 (width.px (style.width ,r))))
-         (= (ml ,b) (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r)))))
-        ; If it does not overflow, we set everything, and just figure out what to constrain.
-        (ite (is-width/auto (style.width ,r))
-             (and
-              (= (ml ,b) (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r))))
-              (= (mr ,b) (ite (is-margin/auto (style.margin-right ,r)) 0.0 (margin.px (style.margin-right ,r)))))
-             (and
-              (= (w ,b) (width.px (style.width ,r)))
-              (=> (and (is-margin/auto (style.margin-left ,r)) (is-margin/auto (style.margin-right ,r)))
-                  (= (ml ,b) (mr ,b)))
-              (=> (is-margin/px (style.margin-left ,r)) (= (ml ,b) (margin.px (style.margin-left ,r))))
-              (=> (and (is-margin/px (style.margin-right ,r)) (is-margin/auto (style.margin-left ,r)))
-                  (= (mr ,b) (margin.px (style.margin-right ,r)))))))
+   ,(smt-cond
+     [(not (is-float/none (float ,e)))
+      true]
+     ; See CSS § 10.3.3
+     [(> (+ (ite (is-width/auto (style.width ,r)) 0.0 (width.px (style.width ,r)))
+            (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r)))
+            (ite (is-margin/auto (style.margin-right ,r)) 0.0 (margin.px (style.margin-right ,r)))
+            (pl ,b) (pr ,b) (bl ,b) (br ,b))
+         (w ,pb))
+      ; It overflows. So what do we do? This is what Chrome & Firefox do (but see CSS § 10.3.3)
+      (and
+       (= (w ,b) (ite (is-width/auto (style.width ,r)) 0.0 (width.px (style.width ,r))))
+       (= (ml ,b) (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r)))))]
+     [(is-width/auto (style.width ,r))
+      ; If it does not overflow, we set everything, and just figure out what to constrain.
+      (and
+       (= (ml ,b) (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r))))
+       (= (mr ,b) (ite (is-margin/auto (style.margin-right ,r)) 0.0 (margin.px (style.margin-right ,r)))))]
+     [else
+      (and
+       (= (w ,b) (width.px (style.width ,r)))
+       (=> (and (is-margin/auto (style.margin-left ,r)) (is-margin/auto (style.margin-right ,r)))
+           (= (ml ,b) (mr ,b)))
+       (=> (is-margin/px (style.margin-left ,r)) (= (ml ,b) (margin.px (style.margin-left ,r))))
+       (=> (and (is-margin/px (style.margin-right ,r)) (is-margin/auto (style.margin-left ,r)))
+           (= (mr ,b) (margin.px (style.margin-right ,r)))))])
 
    ; Width and horizontal margins out of the way, let's do height and vertical margins
    ; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
-   (=> (is-margin/auto (style.margin-top ,r)) (= (mt ,b) 0.0))
-   (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,b) 0.0))
+   (=> (and (is-float/none (float ,e)) (is-margin/auto (style.margin-top ,r))) (= (mt ,b) 0.0))
+   (=> (and (is-float/none (float ,e)) (is-margin/auto (style.margin-bottom ,r))) (= (mb ,b) 0.0))
 
    ; If 'height' is 'auto', the height depends on whether the element has
    ; any block-level children and whether it has padding or borders:
-   (=> (is-height/auto (style.height ,r))
+   (=> (and (is-height/auto (style.height ,r)) (is-float/none (float ,e)))
        ,(smt-cond
          ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
          ; if the box establishes a inline formatting context with one or more lines
@@ -142,14 +145,16 @@
 
    ; Computing X and Y position
 
-   (= (x ,b) (+ (left-content ,pb) (ml ,b)))
-   (= (y ,b)
-      (ite (is-no-box ,vb)
-           (ite (and (not (= (tagname (element ,pb)) tag/<HTML>)) (is-float/none (float (element ,pb)))
-                     (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
-                (top-content ,pb)
-                (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
-           (+ (bottom-border ,vb) (max (mbp ,vb) (mtp ,b)) (min (mbn ,vb) (mtn ,b)))))
+   (=> (is-float/none (float ,e))
+       (and
+        (= (x ,b) (+ (left-content ,pb) (ml ,b)))
+        (= (y ,b)
+           (ite (is-no-box ,vb)
+                (ite (and (not (= (tagname (element ,pb)) tag/<HTML>)) (is-float/none (float (element ,pb)))
+                          (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
+                     (top-content ,pb)
+                     (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
+                (+ (bottom-border ,vb) (max (mbp ,vb) (mtp ,b)) (min (mbn ,vb) (mtn ,b)))))))
 
    ; Positivity constraint---otherwise floats can overlap
    (> (box-height ,b) 0.0)
