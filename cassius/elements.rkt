@@ -6,45 +6,41 @@
 (require unstable/sequence)
 (provide element-general-constraints
          box-block-constraints box-inline-constraints box-line-constraints
-         box-float-constraints)
+         box-float-constraints element-definitions)
+
+(define element-definitions
+  `((define-fun is-an-element ((e Element)) Bool
+      ,(smt-let ((r (rules e))
+                 (bp (get/box (child-box e)))
+                 (bf (get/box (flow-box e)))
+                 (bl (get/box (float-box e))))
+                (= bp (ite (is-float/none (float e)) bf bl))
+                (= (p-name bf) (child-box (parent e)))
+                (= (v-name bf) (flow-box (previous e)))
+                (= (f-name bf) (ite (is-float/none (float e)) (flow-box (fchild e)) nil-box))
+                (= (l-name bf) (ite (is-float/none (float e)) (flow-box (lchild e)) nil-box))
+
+                (= (p-name bl) (child-box (parent e)))
+                (= (v-name bl) (flow-box (previous e)))
+                (= (f-name bl) (flow-box (fchild e)))
+                (= (l-name bl) (flow-box (lchild e)))
+
+                (= (textalign e)
+                   ,(smt-cond
+                     [(is-box/line (tagname e)) (textalign (parent e))]
+                     [(is-text-align/inherit (style.text-align r))
+                      (textalign (parent e))]
+                     [else
+                      (style.text-align r)]))
+                (= (float e)
+                   ,(smt-cond
+                     [(is-display/inline (display e)) float/none]
+                     [(is-box/line (tagname e)) float/none]
+                     [(is-float/inherit (style.float r)) (float (parent e))]
+                     [else (style.float r)]))))))
 
 (define (element-general-constraints e-name)
-  (define e `(get/elt ,e-name))
-  (define r `(rules ,e))
-  (define bp `(get/box (child-box ,e)))
-  (define bf `(get/box (flow-box ,e)))
-  (define bl `(get/box (float-box ,e)))
-
-  (asserts
-   (= (flow-box ,e) ,(sformat "~a-flow" e-name))
-   (= (float-box ,e) ,(sformat "~a-float" e-name))
-   (= (child-box ,e) ,(sformat "~a-real" e-name))
-
-   (= ,bp (ite (is-float/none (float ,e)) ,bf ,bl))
-
-   (= (p-name ,bf) (child-box (parent ,e)))
-   (= (v-name ,bf) (flow-box (previous ,e)))
-   (= (f-name ,bf) (ite (is-float/none (float ,e)) (flow-box (fchild ,e)) nil-box))
-   (= (l-name ,bf) (ite (is-float/none (float ,e)) (flow-box (lchild ,e)) nil-box))
-
-   (= (p-name ,bl) (child-box (parent ,e)))
-   (= (v-name ,bl) (flow-box (previous ,e)))
-   (= (f-name ,bl) (flow-box (fchild ,e)))
-   (= (l-name ,bl) (flow-box (lchild ,e)))
-
-   (= (textalign ,e)
-      ,(smt-cond
-        [(is-box/line (tagname ,e)) (textalign (parent ,e))]
-        [(is-text-align/inherit (style.text-align ,r))
-         (textalign (parent ,e))]
-        [else
-         (style.text-align ,r)]))
-   (= (float ,e)
-      ,(smt-cond
-        [(is-display/inline (display ,e)) float/none]
-        [(is-box/line (tagname ,e)) float/none]
-        [(is-float/inherit (style.float ,r)) (float (parent ,e))]
-        [else (style.float ,r)]))))
+  `(assert (is-an-element (get/elt ,e-name))))
 
 (define (box-block-constraints b)
   (define e `(get/elt (element ,b)))

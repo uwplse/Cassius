@@ -166,7 +166,11 @@
     (emit `(declare-const ,(sformat "~a-real-box" name) Box))
     (emit `(assert (= (element ,(sformat "~a-flow-box" name)) ,name)))
     (emit `(assert (= (element ,(sformat "~a-float-box" name)) ,name)))
-    (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name))))
+    (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name)))
+    (emit `(assert (= (flow-box  ,(sformat "~a-elt" name)) ,(sformat "~a-flow" name))))
+    (emit `(assert (= (float-box ,(sformat "~a-elt" name)) ,(sformat "~a-float" name))))
+    (emit `(assert (= (child-box ,(sformat "~a-elt" name)) ,(sformat "~a-real" name)))))
+
   (define body
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       (smt-cond
@@ -293,7 +297,7 @@
        (void)])))
 
 (define (element-constraints dom emit elt children)
-  (for-each emit (element-general-constraints (elt-name elt)))
+  (emit (element-general-constraints (elt-name elt)))
   (define-values (flow-box-constraints float-box-constraints)
     (match elt
       [(list 'BLOCK tag constraints ...)
@@ -377,6 +381,7 @@
     ,@(getter-definitions doms)
     ,@dom-definitions
     ,@css-functions
+    ,@element-definitions
 
     ; Stylesheet
     ,@(stylesheet-constraints sheet)

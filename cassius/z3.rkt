@@ -222,25 +222,29 @@
 (define ((z3-resolve-fn f) cmds)
   "Resolve applications of a function f using asserted equalities"
   (define values (make-hash))
+  (define lines '())
   (for ([cmd cmds] [i (in-naturals)])
     (match cmd
       [`(assert (= (,(== f) ,input) ,output))
-       (hash-set! values input output)]
+       (unless (hash-has-key? values input)
+         (set! lines (cons i lines))
+         (hash-set! values input output))]
       [_ (void)]))
   (for/list ([cmd cmds] [i (in-naturals)])
-    (match cmd
-      [(list 'assert expr)
-       (list 'assert
-             (let loop ([expr expr])
-               (match expr
-                 [`(let ((,vars ,vals) ...) ,body)
-                  `(let (,@(for/list ([var vars] [val vals]) `(,var ,(loop val)))) ,(loop body))]
-                 [`(= (,(== f) ,input) ,output) expr]
-                 [(list (== f) arg)
-                  (hash-ref values arg (lambda () `(,f ,(loop arg))))]
-                 [(list fn args ...) (cons fn (map loop args))]
-                 [_ expr])))]
-      [_ cmd])))
+    (if (member i lines)
+        cmd
+        (match cmd
+          [(list 'assert expr)
+           (list 'assert
+                 (let loop ([expr expr])
+                   (match expr
+                     [`(let ((,vars ,vals) ...) ,body)
+                      `(let (,@(for/list ([var vars] [val vals]) `(,var ,(loop val)))) ,(loop body))]
+                     [(list (== f) arg)
+                      (hash-ref values arg (lambda () `(,f ,(loop arg))))]
+                     [(list fn args ...) (cons fn (map loop args))]
+                     [_ expr])))]
+          [_ cmd]))))
 
 (define (z3-resolve-fns . fs)
   (apply fixpoint (map z3-resolve-fn fs)))
@@ -372,8 +376,11 @@
 (define (capture-avoiding-substitute body bindings)
   (match body
     [(? symbol?) (cdr (or (assoc body bindings) (cons body body)))]
-    [`(let ((,names ,vals) ...) ,rest)
-     (capture-avoiding-substitute body (filter (lambda (v) (not (member (car v) names))) bindings))]
+    [`(let ((,names ,vals) ...) ,body)
+     (define body*
+       (capture-avoiding-substitute body (filter (lambda (v) (not (member (car v) names))) bindings)))
+     `(let (,@(for/list ([name names] [val vals])
+                `(,name ,(capture-avoiding-substitute val bindings)))) ,body*)]
     [(? list?)
      (map (curryr capture-avoiding-substitute bindings) body)]
     [_ body]))
@@ -404,22 +411,63 @@
                  [_ expr])))]
       [_ cmd])))
 
+(define (z3-unlet cmds)
+  (define (de-let expr)
+    (match expr
+      [`(let ([,vars ,vals] ...) ,body)
+       (de-let (capture-avoiding-substitute body (map cons vars vals)))]
+      [(? list?) (cons (car expr) (map de-let (cdr expr)))]
+      [_ expr]))
+
+  (for/list ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [(list 'assert expr)
+       (list 'assert (de-let expr))]
+      [_ cmd])))
+
+(define (z3-check-let cmds)
+  (for ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [(list 'assert expr)
+       (let loop ([expr expr])
+         (match expr
+           [`(let ,_ ,_) (eprintf "Z3: Let found\n  line ~a: ~a\n" i cmd)]
+           [`(f ,args ...) (for-each loop args)]
+           [_ (void)]))]
+      [_ (void)]))
+  cmds)
+
+(define (z3-assert-and cmds)
+  (for/reap (sow) ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [`(assert (and ,exprs ...))
+       (for ([expr exprs])
+         (sow `(assert ,expr)))]
+      [_ (sow cmd)])))
+
+(define (z3-print-all cmds)
+  (for ([cmd cmds] [i (in-naturals)])
+    (eprintf "  ~a: ~a\n" i cmd)))
+
 (define *emitter-passes*
   (list
+   z3-assert-and
+   (map z3-expand '(is-an-element))
    (map z3-expand '(previous parent fchild lchild pbox vbox fbox lbox))
+   z3-unlet
+   z3-assert-and
    (z3-resolve-fns
     'flow-box 'float-box 'child-box 'element
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
     'get/box 'p-name 'v-name 'f-name 'l-name)
    #;z3-simplifier
-   z3-dco z3-movedefs
-   z3-check-datatypes z3-check-functions
    z3-sink-fields (z3-sink-functions 'get/box 'get/elt)
    (z3-resolve-fns
     'flow-box 'float-box 'child-box 'element
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
     'get/box 'p-name 'v-name 'f-name 'l-name)
-   z3-check-fields))
+   z3-dco z3-movedefs
+   z3-check-datatypes z3-check-functions z3-check-let z3-check-fields))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs (flatten *emitter-passes*)))
