@@ -218,7 +218,7 @@
             (define name (sformat "rule-~a" i))
             `((declare-const ,name Rule)
               (assert (= (index ,name) ,i))
-              (assert (=> (is-sel/id (selector ,name)) (not (= (sel.id (selector ,name)) NoID))))
+              (assert (is-a-rule ,name))
 
               ,@(reap [emit]
                       (match rule

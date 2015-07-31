@@ -453,7 +453,7 @@
 (define *emitter-passes*
   (list
    z3-assert-and
-   (map z3-expand '(is-an-element))
+   (map z3-expand '(is-an-element is-a-rule))
    (map z3-expand '(previous parent fchild lchild pbox vbox fbox lbox))
    z3-unlet
    z3-assert-and
