@@ -308,6 +308,9 @@
   (for-each emit (flow-box-constraints (sformat "~a-flow-box" (elt-name elt))))
   (for-each emit (float-box-constraints (sformat "~a-float-box" (elt-name elt)))))
 
+(define (float-constraints dom emit)
+  (for-each (curry for-each emit) (general-float-constraints dom)))
+
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display)
     (match elt
@@ -338,7 +341,8 @@
         (for ([dom doms]) (dom-root-constraints dom sow))
         (for ([cns constraints])
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
-            (cns dom sow elt children)))))
+            (cns dom sow elt children)))
+        #;(for ([dom doms]) (float-constraints dom sow))))
 
 (define (all-constraints sheet doms)
   (define-values (tags ids)
