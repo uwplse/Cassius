@@ -124,9 +124,9 @@
        ,(smt-cond
          ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
          ; if the box establishes a inline formatting context with one or more lines
-         [(and (is-box ,lb) (= (display (element ,lb)) display/inline))
+         [(and (is-box ,lb) (is-display/inline (display (get/elt (element ,lb)))))
           (= (bottom-content ,b) (bottom-border ,lb))]
-         [(and (is-box ,lb) (= (display (element ,lb)) display/block))
+         [(and (is-box ,lb) (is-display/block (display (get/elt (element ,lb)))))
           (= (bottom-content ,b)
              ; CSS § 10.6.3, item 2: the bottom edge of the bottom
              ; (possibly collapsed) margin of its last in-flow child,
@@ -150,7 +150,7 @@
         (= (x ,b) (+ (left-content ,pb) (ml ,b)))
         (= (y ,b)
            (ite (is-no-box ,vb)
-                (ite (and (not (= (tagname (element ,pb)) tag/<HTML>)) (is-float/none (float (element ,pb)))
+                (ite (and (not (= (tagname (get/elt (element ,pb))) tag/<HTML>)) (is-float/none (float (get/elt (element ,pb))))
                           (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                      (top-content ,pb)
                      (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))

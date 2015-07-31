@@ -325,6 +325,11 @@
     (match expr
       [`(,(? field? fld) (ite ,c ,x ,y))
        `(ite ,(sink-field c) ,(sink-field (list fld x)) ,(sink-field (list fld x)))]
+      [`(,(? field? fld) ,arg)
+       (define arg* (sink-field arg))
+       (match arg*
+         [`(ite ,c ,x ,y) (sink-field `(,fld ,arg*))]
+         [_ (list fld arg*)])]
       [(? list?) (cons (car expr) (map sink-field (cdr expr)))]
       [_ expr]))
   (for/list ([cmd cmds] [i (in-naturals 1)])
@@ -332,7 +337,7 @@
       [`(assert ,expr) `(assert ,(sink-field expr))]
       [_ cmd])))
 
-(define (z3-sink-fields cmds)
+(define ((z3-sink-fields-and . fns) cmds)
   "Turn (fld (ite c x y)) into (ite c (fld x) (fld y))."
   (define all-names (make-hash))
   (for ([cmd cmds])
@@ -344,7 +349,7 @@
            [(list _ (list fields _) ...)
             (for ([field fields]) (hash-set! all-names field #t))]))]
       [_ (void)]))
-  ((apply z3-sink-functions (hash-keys all-names)) cmds))
+  ((apply z3-sink-functions (append fns (hash-keys all-names))) cmds))
 
 (define (z3-movedefs cmds)
   "Move each definition to be right before first use."
@@ -458,7 +463,7 @@
     'get/box 'p-name 'v-name 'f-name 'l-name)
    #;z3-print-all
    #;z3-simplifier
-   z3-sink-fields (z3-sink-functions 'get/box 'get/elt)
+   (z3-sink-fields-and 'get/box 'get/elt)
    (z3-resolve-fns
     'flow-box 'float-box 'child-box 'element
     'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name

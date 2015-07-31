@@ -56,7 +56,7 @@
    (=> (is-height/auto (style.height ,r))
        (= (h ,b)
           (ite (is-box ,fb)
-               (ite (is-display/inline (display (element ,lb)))
+               (ite (is-display/inline (display (get/elt (element ,lb))))
                     ; If it only has inline-level children, the height is the distance between
                     ; the top of the topmost line box and the bottom of the bottommost line box.
                     (- (bottom-border ,lb) (top-border ,fb))
@@ -134,7 +134,7 @@
        (or (= (y ,b) (y (flow-box ,e)))
            ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
                (define b* `(flow-box ,(dom-get dom elt*)))
-               `(and (not (is-float/none (float (element ,b*))))
+               `(and (not (is-float/none (float (get/elt (element ,b*)))))
                      (or (= (top-outer ,b) (top-outer ,b*))
                          (= (top-outer ,b) (bottom-outer ,b*)))))))
 
@@ -146,14 +146,14 @@
        (or (= (left-outer ,b) (left-content ,p))
            ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
                (define b* `(child-box ,(dom-get dom elt*)))
-               `(and (is-float/left (float (element ,b*)))
+               `(and (is-float/left (float (get/elt (element ,b*))))
                      (= (left-outer ,b) (right-outer ,b*))))))
 
      `(assert
        (or (= (right-outer ,b) (right-content ,p))
            ,@(for/list ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
                (define b* `(child-box ,(dom-get dom elt*)))
-               `(and (is-float/right (float (element ,b*)))
+               `(and (is-float/right (float (get/elt (element ,b*))))
                      (= (right-outer ,b) (left-outer ,b*)))))))
 
      (apply append
