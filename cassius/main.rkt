@@ -147,7 +147,7 @@
   ; The element info for a name
   (define body
     (for*/fold ([body 'no-elt]) ([names dom-names] [name names])
-      `(ite (= x ,name) ,(sformat "~a-elt" name) ,body)))
+      `(ite (,(sformat "is-~a" name) x) ,(sformat "~a-elt" name) ,body)))
   (emit `(define-fun get/elt ((x ElementName)) Element ,body))
   (for* ([names dom-names] [name names])
     (emit `(assert (not (is-no-elt (get/elt ,name)))))
@@ -174,9 +174,9 @@
   (define body
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       (smt-cond
-       [(= x ,(sformat "~a-float" name)) ,(sformat "~a-float-box" name)]
-       [(= x ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)]
-       [(= x ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name)]
+       [(,(sformat "is-~a-float" name) x) ,(sformat "~a-float-box" name)]
+       [(,(sformat "is-~a-real" name) x) ,(sformat "~a-real-box" name)]
+       [(,(sformat "is-~a-flow" name) x) ,(sformat "~a-flow-box" name)]
        [else ,body])))
   (emit `(define-fun get/box ((x BoxName)) Box ,body))
   (for* ([names dom-names] [name names])
