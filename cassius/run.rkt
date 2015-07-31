@@ -33,22 +33,33 @@
     [(problem header sheet documents)
      (define constraints (all-constraints sheet documents))
      (define time-constraints (current-inexact-milliseconds))
+     (eprintf "[~as] Produced ~a constraints\n"
+              (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
+              (length constraints))
 
      (define query (z3-prepare constraints))
      (define time-prepare (current-inexact-milliseconds))
+     (eprintf "[~as] Prepared ~a constraints\n"
+              (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
+              (length query))
 
-     (define model (z3-solve query #:debug debug? #:get-unsat unsat-constraint-info))
+     (define z3-result
+       (with-handlers ([exn:break? (lambda (e) 'break)])
+         (list 'solved
+               (z3-solve query #:debug debug? #:get-unsat unsat-constraint-info))))
      (define time-solve (current-inexact-milliseconds))
 
-     (with-output-to-file outname #:exists 'replace
-       (lambda () (print-rules #:stylesheet sheet #:header header model)))
+     (match z3-result
+       [(list 'solved model)
+        (with-output-to-file outname #:exists 'replace
+          (lambda () (print-rules #:stylesheet sheet #:header header model)))
 
-     (eprintf "Solved in ~as: [~as] constraints [~as] prepare [~as] solve\n"
-              (~r #:precision '(= 3) (/ (- (current-inexact-milliseconds) time-start) 1000))
-              (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
-              (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
-              (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
-     (eprintf "Used ~a constraints (compiled to ~a)\n" (length constraints) (length query))]))
+        (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
+                 (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
+                 (hash-count model))]
+       ['break
+        (eprintf "[~as] Query terminated\nFailure.\n"
+                 (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))])]))
 
 (module+ main
   (define debug '())

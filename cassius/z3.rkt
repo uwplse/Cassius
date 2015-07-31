@@ -29,7 +29,7 @@
     (fprintf in (format "~a\n" val))
     (flush-output in))
 
-  (with-handlers ([exn:break? (lambda (e) (subprocess-kill process #t) (error 'solve "user break"))])
+  (with-handlers ([exn:break? (lambda (e) (subprocess-kill process #t) (raise e))])
     (let loop ([rest encoding] [paused? #f])
       (cond
        [(byte-ready? out)
@@ -76,10 +76,10 @@
               [(? eof-object?)
                (error "Premature EOF received")]))])]
        [paused?
-        (sync out)
+        (sync/enable-break out)
         (loop rest paused?)]
        [(null? rest)
-        (sync out)
+        (sync/enable-break out)
         (loop rest (current-inexact-milliseconds))]
        [#t
         (match (car rest)
