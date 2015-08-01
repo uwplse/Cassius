@@ -213,37 +213,30 @@
                     empty)]
                [_ (list cmd)])))))
 
-(define ((fixpoint-1 f) x)
-  (let ([x* (f x)])
-    (if (equal? x* x) x ((fixpoint f) x*))))
+(define ((z3-resolve-fns . fns) cmds)
+  (define resolutions (make-hash))
 
-(define (fixpoint . fs) (fixpoint-1 (apply compose fs)))
+  (define (save input output)
+    (hash-set! resolutions input output))
 
-(define ((z3-resolve-fn f) cmds)
-  "Resolve applications of a function f using asserted equalities"
-  (define values (make-hash))
-  (for ([cmd cmds] [i (in-naturals)])
-    (match cmd
-      [`(assert (= (,(== f) ,input) ,output))
-       (hash-set! values input output)]
-      [_ (void)]))
+  (define (resolve expr)
+    (match expr
+      [`(,f ,args ...)
+       (define args* (map resolve args))
+       (define expr* (cons f args*))
+       (hash-ref resolutions expr* expr*)]
+      [_ expr]))
+
   (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
-      [(list 'assert expr)
-       (list 'assert
-             (let loop ([expr expr])
-               (match expr
-                 [`(let ((,vars ,vals) ...) ,body)
-                  `(let (,@(for/list ([var vars] [val vals]) `(,var ,(loop val)))) ,(loop body))]
-                 [`(= (,(== f) ,input) ,output) expr]
-                 [(list (== f) arg)
-                  (hash-ref values arg (lambda () `(,f ,(loop arg))))]
-                 [(list fn args ...) (cons fn (map loop args))]
-                 [_ expr])))]
+      [`(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
+       (define input (cons fn (map resolve args)))
+       (define output (resolve value))
+       (save input output)
+       `(assert (= ,input ,output))]
+      [`(assert ,expr)
+       `(assert ,(resolve expr))]
       [_ cmd])))
-
-(define (z3-resolve-fns . fs)
-  (apply fixpoint (map z3-resolve-fn fs)))
 
 (define (z3-check-functions cmds)
   "Check that we have no uninterpreted functions"
