@@ -9,8 +9,6 @@
 (require unstable/sequence)
 (require srfi/1)
 
-(define maximize #f)
-
 (provide all-constraints unsat-constraint-info print-rules)
 
 (define (in-empty) (in-list empty))
@@ -212,62 +210,55 @@
   (emit `(assert (= (previous-name ,elt) nil-elt))))
 
 (define (stylesheet-constraints sheet)
-  (append
-   (apply append
-          (for/list ([i (in-naturals)] [rule sheet])
+  (reap [emit]
+        (for ([i (in-naturals)] [rule sheet])
             (define name (sformat "rule-~a" i))
-            `((declare-const ,name Rule)
-              (assert (= (index ,name) ,i))
-              (assert (is-a-rule ,name))
 
-              ,@(reap [emit]
-                      (match rule
-                        ['? (void)]
-                        [(list sel pairs ... '?)
-                         (emit `(assert (= (selector ,name) ,sel)))
-                         (for ([(a-prop type default) (in-css-properties)])
-                           (match (assoc a-prop pairs)
-                             [(list _ '?)
-                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
-                             [(list _ val)
-                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
-                              (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
-                             [#f (void)]))]
-                        [(list sel pairs ...)
-                         (emit `(assert (= (selector ,name) ,sel)))
-                         (for ([(a-prop type default) (in-css-properties)])
-                           (match (assoc a-prop pairs)
-                             [(list _ '?)
-                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
-                             [(list _ val)
-                              (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
-                              (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
-                             [#f
-                               (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) false)))]))]))
+            (emit `(declare-const ,name Rule))
+            (emit `(assert (= (index ,name) ,i)))
+            (emit `(assert (is-a-rule ,name)))
+
+            (match rule
+              ['? (void)]
+              [(list sel pairs ... '?)
+               (emit `(assert (= (selector ,name) ,sel)))
+               (for ([(a-prop type default) (in-css-properties)])
+                 (match (assoc a-prop pairs)
+                   [(list _ '?)
+                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
+                   [(list _ val)
+                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
+                    (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
+                   [#f (void)]))]
+              [(list sel pairs ...)
+               (emit `(assert (= (selector ,name) ,sel)))
+               (for ([(a-prop type default) (in-css-properties)])
+                 (match (assoc a-prop pairs)
+                   [(list _ '?)
+                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
+                   [(list _ val)
+                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
+                    (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
+                   [#f
+                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) false)))]))])
 
               ; Optimize for short CSS
-
+            (when (memq 'opt (flags))
               ; Each enabled property costs one line
-              ,@(if maximize
-                    (for*/list ([type css-properties] [property (cdr type)])
-                      `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1))
-                    '())
-
+              (for* ([type css-properties] [property (cdr type)])
+                (emit `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1)))
               ; Each block with an enabled property costs two line (open/selector and close brace)
-              ,@(if maximize
-                    `((assert-soft (and
-                                    ,@(for*/list ([type css-properties] [property (cdr type)])
-                                        `(not (,(sformat "rule.~a?" property) ,name))))
-                                   :weight 2))
-                    '())
-
+              (emit
+               `(assert-soft
+                 (and ,@(for*/list ([type css-properties] [property (cdr type)])
+                          `(not (,(sformat "rule.~a?" property) ,name))))
+                 :weight 2))
               ; Each shorthand rule can save space if all its properties exist
-              ,@(if maximize
-                    (for/list ([(short-name subproperties) (in-pairs css-shorthand-properties)])
-                      `(assert-soft (and ,@(for/list ([subprop subproperties])
-                                             (list (sformat "rule.~a?" subprop) name)))
-                                    :weight 3))
-                    '()))))))
+              (for ([(short-name subproperties) (in-pairs css-shorthand-properties)])
+                (emit `(assert-soft
+                        (and ,@(for/list ([subprop subproperties])
+                                 (list (sformat "rule.~a?" subprop) name)))
+                        :weight 3)))))))
 
 (define (user-constraints dom emit elt children)
   (define name (elt-name elt))
@@ -342,7 +333,8 @@
         (for ([cns constraints])
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
             (cns dom sow elt children)))
-        #;(for ([dom doms]) (float-constraints dom sow))))
+        (when (memq 'float (flags))
+          (for ([dom doms]) (float-constraints dom sow)))))
 
 (define (all-constraints sheet doms)
   (define-values (tags ids)

@@ -2,6 +2,7 @@
 
 (require racket/runtime-path racket/path)
 (require racket/cmdline)
+(require "common.rkt")
 (require "dom.rkt")
 (require "z3.rkt")
 (require "main.rkt")
@@ -31,13 +32,14 @@
   (define time-start (current-inexact-milliseconds))
   (match (hash-ref (parse-file (open-input-file fname)) (string->symbol pname))
     [(problem header sheet documents)
-     (define constraints (all-constraints sheet documents))
+     (define query (all-constraints sheet documents))
      (define time-constraints (current-inexact-milliseconds))
      (eprintf "[~as] Produced ~a constraints\n"
               (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
-              (length constraints))
+              (length query))
 
-     (define query (z3-prepare constraints))
+     (when (memq 'z3c (flags))
+       (set! query (z3-prepare query)))
      (define time-prepare (current-inexact-milliseconds))
      (eprintf "[~as] Prepared ~a constraints\n"
               (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
@@ -71,6 +73,13 @@
    #:multi
    [("-d" "--debug") type "Turn on debug information"
     (set! debug (cons (string->symbol type) debug))]
+   [("-f" "--feature") name "Toggle a feature; use -name and +name to unset or set"
+    (cond
+      [(equal? (substring name 0 1) "+") (flags (cons (string->symbol (substring name 1)) (flags)))]
+      [(equal? (substring name 0 1) "-") (flags (remove (string->symbol (substring name 1)) (flags)))]
+      [else
+       (define name* (string->symbol name))
+       (flags (if (memq name* (flags)) (remove name* (flags)) (cons name* (flags))))])]
    #:once-each
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
