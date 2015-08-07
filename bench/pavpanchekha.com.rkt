@@ -111,28 +111,28 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 ;; From http://pavpanchekha.com/blog/ubuntu-on-lvm.html
 
 (define-document (doma #:width 958)
-  ([BLOCK <HTML> :x 0 :y 0 :w 958 #|:h (/ 10291 12)|#]
-   ([BLOCK <BODY> :x 154 :y 36 :w 650 #|:h (/ 8779 12)|#]
-    ([BLOCK <DIV> :id content :x 164 :y 36 :w 630 :h 582]
-     ([BLOCK <H1> :x 164 :y 36 :w 630 :h 24]
+  ([BLOCK :tag HTML :x 0 :y 0 :w 958 #|:h (/ 10291 12)|#]
+   ([BLOCK :tag BODY :x 154 :y 36 :w 650 #|:h (/ 8779 12)|#]
+    ([BLOCK :tag DIV :id content :x 164 :y 36 :w 630 :h 582]
+     ([BLOCK :tag H1 :x 164 :y 36 :w 630 :h 24]
       ([LINE  :x 164 :y 36 :w 630 :h 24]
        ([TEXT :x 164 :y 31.5 :w 273.8 :h 33])))
-     ([BLOCK <P> :x 164 :y 78 :w 630 :h 24]
+     ([BLOCK :tag P :x 164 :y 78 :w 630 :h 24]
       ([LINE  :x 164 :y 78 :w 630 :h 24]
        ([TEXT :x 164 :y 79.5 :w 215 :h 21])))
-     ([BLOCK <DIV> :x 164 :y 123.6 :w 630 :h 66]
-      ([BLOCK <PRE> :x 164 :y 123.6 :w 630 :h 66]
+     ([BLOCK :tag DIV :x 164 :y 123.6 :w 630 :h 66]
+      ([BLOCK :tag PRE :x 164 :y 123.6 :w 630 :h 66]
        ([LINE  :x 173 :y 132.6 :w 612 :h 24]
         ([TEXT :x 173 :y 132.6 :w 199 :h 24]))
        ([LINE  :x 173 :y 156.6 :w 612 :h 24]
         ([TEXT :x 173 :y 156.6 :w 152 :h 24]))))
-     ([BLOCK <P> :x 164 :y 220.2 :w 630 :h 48]
+     ([BLOCK :tag P :x 164 :y 220.2 :w 630 :h 48]
       ([LINE  :x 164 :y 220.2 :w 630 :h 24]
        ([TEXT :x 164 :y 221.7 :w 630 :h 21]))
       ([LINE  :x 164 :y 244.2 :w 630 :h 24]
        ([TEXT :x 164 :y 245.7 :w 68 :h 21])))
-     ([BLOCK <DIV> :x 164 :y 289.8 :w 630 :h 162]
-      ([BLOCK <PRE> :x 164 :y 289.8 :w 630 :h 162]
+     ([BLOCK :tag DIV :x 164 :y 289.8 :w 630 :h 162]
+      ([BLOCK :tag PRE :x 164 :y 289.8 :w 630 :h 162]
        ([LINE  :x 173 :y 298.8 :w 612 :h 24]
         ([TEXT :x 173 :y 298.8 :w 349 :h 24]))
        ([LINE  :x 173 :y 322.8 :w 612 :h 24]
@@ -145,19 +145,19 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
         ([TEXT :x 173 :y 394.8 :w 362 :h 24]))
        ([LINE  :x 173 :y 418.8 :w 612 :h 24]
         ([TEXT :x 173 :y 418.8 :w 145 :h 24]))))
-     ([BLOCK <P> :x 164 :y 482.4 :w 630 :h 48]
+     ([BLOCK :tag P :x 164 :y 482.4 :w 630 :h 48]
       ([LINE  :x 164 :y 482.4 :w 630 :h 24]
        ([TEXT :x 164 :y 483.9 :w 630 :h 21]))
       ([LINE  :x 164 :y 506.4 :w 630 :h 24]
        ([TEXT :x 164 :y 507.9 :w 97 :h 21])))
-     ([BLOCK <DIV> :x 164 :y 552 :w 630 :h 66]
-      ([BLOCK <PRE> :x 164 :y 552 :w 630 :h 66]
+     ([BLOCK :tag DIV :x 164 :y 552 :w 630 :h 66]
+      ([BLOCK :tag PRE :x 164 :y 552 :w 630 :h 66]
        ([LINE  :x 173 :y 561 :w 612 :h 24]
         ([TEXT :x 173 :y 561 :w 199 :h 24]))
        ([LINE  :x 173 :y 585 :w 612 :h 24]
         ([TEXT :x 173 :y 585 :w 247 :h 24])))))
-    ([BLOCK <DIV> :id postamble :x 164 :y 648.6 :w 630 :h 16]
-     ([BLOCK <P> :x 164 :y 648.6 :w 630 :h 16]
+    ([BLOCK :tag DIV :id postamble :x 164 :y 648.6 :w 630 :h 16]
+     ([BLOCK :tag P :x 164 :y 648.6 :w 630 :h 16]
       ([LINE  :x 164 :y 648.6 :w 630 :h 16]
        ([TEXT :x 305.5 :y (/ 7789 12) :w 21  :h 15])
        ([TEXT :x 326.5 :y (/ 7789 12) :w 108 :h 15])
@@ -168,16 +168,16 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 ;; From http://pavpanchekha.com/blog/organization.html
 
 (define-document (domb #:width 945)
-  ([BLOCK <HTML> :x 0 :y 0 :w 945]
-   ([BLOCK <BODY> :x 147.5 :y 36 :w 650 #|:h (/ 33465 30)|#]
-    ([BLOCK <DIV> :id content :x 157.5 :y 36 :w 630 :h 978.5]
-     ([BLOCK <H1> :x 157.5 :y 36 :w 630 :h 24]
+  ([BLOCK :tag HTML :x 0 :y 0 :w 945]
+   ([BLOCK :tag BODY :x 147.5 :y 36 :w 650 #|:h (/ 33465 30)|#]
+    ([BLOCK :tag DIV :id content :x 157.5 :y 36 :w 630 :h 978.5]
+     ([BLOCK :tag H1 :x 157.5 :y 36 :w 630 :h 24]
       ([LINE :x 157.5 :y 36 :w 630 :h 24]
        ([TEXT :x 157.5 :y 31.5 :w 205.1 :h 33])))
-     ([BLOCK <P> :x 157.5 :y 78 :w 630 :h 120.5]
+     ([BLOCK :tag P :x 157.5 :y 78 :w 630 :h 120.5]
       ([LINE :x 157.5 :w 630 :y 78 :h 24.5]
        ([TEXT :x 157.5 :w (/ 3235 6):y 80 :h 21])
-       ([INLINE  <SPAN> :x (/ 2090 3) :w 19]
+       ([INLINE :tag SPAN :x (/ 2090 3) :w 19]
         ([TEXT :x (/ 2090 3) :w 19 :y 78 :h 24]))
        ([TEXT :x (/ 2147 3) :w (/ 431 6) :y 80 :h 21]))
       ([LINE :x 157.5 :y 102.5 :w 630 :h 24]
@@ -188,7 +188,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 157.5 :y 152 :w 630 :h 21]))
       ([LINE :x 157.5 :y 174.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 176 :w 506 :h 21])))
-     ([BLOCK <P> :x 157.5 :y 216.5 :w 630 :h 240]
+     ([BLOCK :tag P :x 157.5 :y 216.5 :w 630 :h 240]
       ([LINE :x 157.5 :y 216.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 218 :w 630 :h 21]))
       ([LINE :x 157.5 :y 240.5 :w 630 :h 24]
@@ -209,7 +209,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 157.5 :y 410 :w 630 :h 21]))
       ([LINE :x 157.5 :y 432.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 434 :w 228 :h 21])))
-     ([BLOCK <P> :x 157.5 :y 474.5 :w 630 :h 240]
+     ([BLOCK :tag P :x 157.5 :y 474.5 :w 630 :h 240]
       ([LINE :x 157.5 :y 474.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 476 :w 630 :h 21]))
       ([LINE :x 157.5 :y 498.5 :w 630 :h 24]
@@ -230,7 +230,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 157.5 :y 668 :w 630 :h 21]))
       ([LINE :x 157.5 :y 690.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 692 :w 62 :h 21])))
-     ([BLOCK <P> :x 157.5 :y 732.5 :w 630 :h 216]
+     ([BLOCK :tag P :x 157.5 :y 732.5 :w 630 :h 216]
       ([LINE :x 157.5 :y 732.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 734 :w 630 :h 21]))
       ([LINE :x 157.5 :y 756.5 :w 630 :h 24]
@@ -249,13 +249,13 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 157.5 :y 902 :w 630 :h 21]))
       ([LINE :x 157.5 :y 924.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 926 :w 93 :h 21])))
-     ([BLOCK <P> :x 157.5 :y 966.5 :w 630 :h 48]
+     ([BLOCK :tag P :x 157.5 :y 966.5 :w 630 :h 48]
       ([LINE :x 157.5 :y 966.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 968 :w 630 :h 21]))
       ([LINE :x 157.5 :y 990.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 992 :w 281 :h 21]))))
-    ([BLOCK <DIV> :id postamble :x 157.5 :y 1032.5 :w 630 :h 16]
-     ([BLOCK <P> :x 157.5 :y 1032.5 :w 630 :h 16]
+    ([BLOCK :tag DIV :id postamble :x 157.5 :y 1032.5 :w 630 :h 16]
+     ([BLOCK :tag P :x 157.5 :y 1032.5 :w 630 :h 16]
       ([LINE :x 157.5 :y 1032.5 :w 630 :h 16]
        ([TEXT :x 299 :y 1033 :w 21 :h 15])
        ([TEXT :x 320 :y 1033 :w 108 :h 15])
