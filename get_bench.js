@@ -4,7 +4,7 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; docum
 
 Box = function(type, props) {
     this.children = [];
-    this.name = gensym(); this.type = type; this.props = props; return this;
+    this.type = type; this.props = props; return this;
 }
 function curry(f, arg) { return function(arg2) { return new f(arg, arg2) }}
 Block = curry(Box, "BLOCK");
@@ -14,7 +14,7 @@ Page = curry(Box, "PAGE")
 Text = curry(Box, "TEXT")
 
 Box.prototype.toString = function() {
-    var s = "[" + this.type + " " + this.name;
+    var s = "[" + this.type;
     for (var i in this.props) {
         val = this.props[i];
         s += " :" + i + " " + (typeof val === "number" ? f2r(val) : val);
@@ -127,7 +127,9 @@ function make_boxes(elt, inflow, flows) {
             r = r[0];
             box = Text({
                 x: r.x, y: r.y, w: r.width, h: r.height,
+                /*
                 text: '"' + ranges[i].toString().replace(/\s+/g, " ") + '"'
+                */
             });
             inflow.children.push(box);
         }
@@ -139,17 +141,19 @@ function make_boxes(elt, inflow, flows) {
         box = Block({
             tag: elt.tagName,
             x: r.x, y: r.y, w: r.width, h: r.height,
+            /*
             mt: val2px(s["margin-top"]), mr: val2px(s["margin-right"]),
             mb: val2px(s["margin-bottom"]), ml: val2px(s["margin-left"]),
             pt: val2px(s["padding-top"]), pr: val2px(s["padding-right"]),
             pb: val2px(s["padding-bottom"]), pl: val2px(s["padding-left"]),
             bt: val2px(s["border-top-width"]), br: val2px(s["border-right-width"]),
-            bb: val2px(s["border-bottom-width"]), bl: val2px(s["border-left-width"])
+            bb: val2px(s["border-bottom-width"]), bl: val2px(s["border-left-width"]),
+            */
         });
 
         if (elt.id) box.props.id = elt.id;
 
-        if (is_flowroot(elt)) {
+        if (false && is_flowroot(elt)) {
             flows.push(box);
             inflow.children.push(Block({of: box.name}));
         } else {
@@ -177,7 +181,8 @@ function get_boxes() {
 
 function page2cassius(name) {
     var flows = get_boxes();
-    var text = "(define " + name + "\n '(; " + flows.length + " flows";
+    var page = flows[0];
+    var text = "(define-document (" + name + " #:width " + page.props.w +  ")";
     var indent = "  ";
 
     function recurse(box) {
@@ -189,9 +194,9 @@ function page2cassius(name) {
         text += ")";
     }
 
-    for (var i = 0; i < flows.length; i++) recurse(flows[i]);
+    for (var i = 0; i < page.children.length; i++) recurse(page.children[i]);
 
-    return text + "))";
+    return text + ")";
 }
 
 function cassius(name) {

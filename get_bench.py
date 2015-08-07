@@ -7,6 +7,7 @@ Opens a page in Firefox, causes it to execute get_bench.js, and saves the result
 
 from selenium import webdriver
 import SimpleHTTPServer, SocketServer, socket
+import warnings
 import threading
 import os, sys, shutil
 import urlparse, urllib
@@ -46,13 +47,12 @@ def make_browser():
 class CassiusInput():
     def __init__(self, fd, urls):
         self.fd = fd
-        self.fd.write("""#lang racket
-(require "../cassius/main.rkt")
+        self.fd.write(""";; python get_bench.py {}
 
-;; python get_bench.py {}
-
-(define header
+(define-header header
 "")
+
+(define-stylesheet unknown-sheet ? ? ? ? ?)
 
 """.format(" ".join("'{}'".format(url) for url in urls)))
         self.fd.flush()
@@ -64,7 +64,7 @@ class CassiusInput():
         self.ids.append(id)
 
     def close(self):
-        self.fd.write("(cassius-solve #:rules 5 #:header header {})\n".format(" ".join(self.ids)))
+        self.fd.write("(define-problem synthesize\n  #:header header\n  #:sheet unknown-sheet\n  #:documents {})\n".format(" ".join(self.ids)))
         self.fd.flush()
 
 def get_bench_output(browser, letter, url, file):
@@ -74,7 +74,7 @@ def get_bench_output(browser, letter, url, file):
     browser.execute_script(js, letter)
     elt = browser.find_element_by_id("-x-cassius-output-block");
     text = elt.text.encode("utf8")
-    file.write("dom" + letter, ";; From {}\n\n{}".format(url, text))
+    file.write("doc-" + letter, ";; From {}\n\n{}".format(url, text))
 
 def main(urls):
     server = make_server()
@@ -85,8 +85,7 @@ def main(urls):
         scheme, netloc, _, _, _, _ = urlparse.urlparse(url)
         if scheme != "http":
             warnings.warn("Only http scheme supported (not {})".format(url), UserWarning)
-        else:
-            site_to_pages[netloc].append(url)
+        site_to_pages[netloc].append(url)
 
     for (netloc, urls) in site_to_pages.items():
         fname = "bench/{}.rkt".format(netloc)
