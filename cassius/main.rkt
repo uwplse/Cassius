@@ -188,7 +188,7 @@
 
 (define (dom-root-constraints dom emit)
   (define elt `(get/elt ,(dom-root dom)))
-  (define b `(flow-box ,elt))
+  (define b `(get/box (flow-box ,elt)))
 
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
