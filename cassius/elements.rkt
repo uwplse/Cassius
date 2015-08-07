@@ -161,10 +161,10 @@
 (define (element-float-constraints b)
   (define e `(get/elt (element ,b)))
   (define r `(rules ,e))
-  (define pb `(pbox ,e))
-  (define vb `(vbox ,e))
-  (define fb `(fbox ,e))
-  (define lb `(lbox ,e))
+  (define pb `(pbox ,b))
+  (define vb `(vbox ,b))
+  (define fb `(fbox ,b))
+  (define lb `(lbox ,b))
 
   (asserts
    ; Copied from above
@@ -211,7 +211,7 @@
    (=> (is-height/auto (style.height ,r))
        (= (h ,b)
           (ite (is-box ,lb)
-               (ite (= (display (element ,lb)) display/inline)
+               (ite (= (display (get/elt (element ,lb))) display/inline)
                     ; If it only has inline-level children, the height is the distance between
                     ; the top of the topmost line box and the bottom of the bottommost line box.
                     (- (bottom-border ,lb) (top-border ,fb))

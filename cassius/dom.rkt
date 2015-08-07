@@ -24,7 +24,7 @@
 (define (dom-root dom) (sformat "~a-root" (dom-name dom)))
 (define (dom-get dom elt) `(get/elt ,(elt-name elt)))
 
-(define elt-names (make-hash))
+(define elt-names (make-hasheq))
 (define (elt-name def)
   (hash-ref! elt-names def (lambda () (sformat "elt$~a" (hash-count elt-names)))))
 

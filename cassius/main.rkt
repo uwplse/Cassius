@@ -320,9 +320,6 @@
   (emit `(assert (= (id ,(dom-get dom elt)) ,idname)))
   (emit `(assert (= (display ,(dom-get dom elt)) ,display))))
 
-(define (nofloat-constraints dom emit elt children)
-  (emit `(assert (= (float ,(dom-get dom elt)) float/none))))
-
 (define (all-constraints-of dom emit . types)
   (for* ([(elt children) (in-tree-subtrees (dom-tree dom))] [type types])
     (type dom emit elt children)))
@@ -361,9 +358,7 @@
      (for/list ([dom doms]) (dom-root dom))))
 
   (define constraints
-    (list tree-constraints info-constraints user-constraints element-constraints
-          nofloat-constraints
-          (style-constraints sheet)))
+    (list tree-constraints info-constraints user-constraints element-constraints (style-constraints sheet)))
 
   `((set-option :produce-unsat-cores true)
     (declare-datatypes ()
