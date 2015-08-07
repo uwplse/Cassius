@@ -145,7 +145,7 @@
   ; The element info for a name
   (define body
     (for*/fold ([body 'no-elt]) ([names dom-names] [name names])
-      `(ite (= x ,name) ,(sformat "~a-elt" name) ,body)))
+      `(ite (,(sformat "is-~a" name) x) ,(sformat "~a-elt" name) ,body)))
   (emit `(define-fun get/elt ((x ElementName)) Element ,body))
   (for* ([names dom-names] [name names])
     (emit `(assert (not (is-no-elt (get/elt ,name)))))
@@ -164,13 +164,18 @@
     (emit `(declare-const ,(sformat "~a-real-box" name) Box))
     (emit `(assert (= (element ,(sformat "~a-flow-box" name)) ,name)))
     (emit `(assert (= (element ,(sformat "~a-float-box" name)) ,name)))
-    (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name))))
+    (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name)))
+    (emit `(assert (= (flow-box  ,(sformat "~a-elt" name)) ,(sformat "~a-flow" name))))
+    (emit `(assert (= (float-box ,(sformat "~a-elt" name)) ,(sformat "~a-float" name))))
+    (emit `(assert (= (child-box ,(sformat "~a-elt" name)) ,(sformat "~a-real" name)))))
+  (emit `(assert (= (element no-box) nil-elt)))
+
   (define body
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       (smt-cond
-       [(= x ,(sformat "~a-float" name)) ,(sformat "~a-float-box" name)]
-       [(= x ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)]
-       [(= x ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name)]
+       [(,(sformat "is-~a-float" name) x) ,(sformat "~a-float-box" name)]
+       [(,(sformat "is-~a-real" name) x) ,(sformat "~a-real-box" name)]
+       [(,(sformat "is-~a-flow" name) x) ,(sformat "~a-flow-box" name)]
        [else ,body])))
   (emit `(define-fun get/box ((x BoxName)) Box ,body))
   (for* ([names dom-names] [name names])
@@ -279,16 +284,19 @@
        (void)])))
 
 (define (element-constraints dom emit elt children)
-  (for-each emit (element-general-constraints (elt-name elt)))
+  (emit (element-general-constraints (elt-name elt)))
   (define-values (flow-box-constraints float-box-constraints)
     (match elt
       [(list 'BLOCK :tag tag constraints ...)
-       (values element-block-constraints element-float-constraints)]
-      [(list 'LINE constraints ...) (values element-line-constraints (const empty))]
-      [(list 'INLINE :tag tag constraints ...) (values element-inline-constraints (const empty))]
-      [(list 'TEXT constraints ...) (values element-inline-constraints (const empty))]))
+       (values box-block-constraints box-float-constraints)]
+      [(list 'LINE constraints ...) (values box-line-constraints (const empty))]
+      [(list 'INLINE :tag tag constraints ...) (values box-inline-constraints (const empty))]
+      [(list 'TEXT constraints ...) (values box-inline-constraints (const empty))]))
   (for-each emit (flow-box-constraints (sformat "~a-flow-box" (elt-name elt))))
-  #;(for-each emit (float-box-constraints (sformat "~a-float-box" (elt-name elt)))))
+  (for-each emit (float-box-constraints (sformat "~a-float-box" (elt-name elt)))))
+
+(define (float-constraints dom emit)
+  (for-each (curry for-each emit) (general-float-constraints dom)))
 
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display)
@@ -320,7 +328,9 @@
         (for ([dom doms]) (dom-root-constraints dom sow))
         (for ([cns constraints])
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
-            (cns dom sow elt children)))))
+            (cns dom sow elt children)))
+        (when (memq 'float (flags))
+          (for ([dom doms]) (float-constraints dom sow)))))
 
 (define (all-constraints sheet doms)
   (define-values (tags ids)
@@ -363,6 +373,7 @@
     ,@(getter-definitions doms)
     ,@dom-definitions
     ,@css-functions
+    ,@element-definitions
 
     ; Stylesheet
     ,@(stylesheet-constraints sheet)

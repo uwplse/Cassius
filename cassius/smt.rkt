@@ -2,7 +2,7 @@
 
 (require "common.rkt")
 
-(provide smt-cond asserts)
+(provide smt-cond asserts smt-let)
 
 (define-syntax smt-cond
   (syntax-rules (else)
@@ -12,4 +12,8 @@
      `(ite test body ,(smt-cond rest ...))]))
 
 (define-syntax-rule (asserts constraints ...)
-  (map (curry list 'assert) `(constraints ...)))
+  (list `(assert (and constraints ...)))
+  #;(map (curry list 'assert) `(constraints ...)))
+
+(define-syntax-rule (smt-let bindings constraints ...)
+  `(let bindings (and constraints ...)))
