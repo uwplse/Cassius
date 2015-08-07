@@ -1,6 +1,9 @@
 #lang racket
 
-(provide reap sformat for/reap for*/reap)
+(provide reap sformat for/reap for*/reap flags all-flags)
+
+(define flags (make-parameter '(z3c)))
+(define all-flags '(opt float z3c))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
