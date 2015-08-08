@@ -211,8 +211,7 @@
   (emit `(assert (= (previous-name ,elt) nil-elt))))
 
 (define (stylesheet-constraints sheet)
-  (reap [emit]
-        (for ([i (in-naturals)] [rule sheet])
+  (for/reap [emit] ([i (in-naturals)] [rule sheet])
             (define name (sformat "rule-~a" i))
 
             (emit `(declare-const ,name Rule))
@@ -259,7 +258,7 @@
                 (emit `(assert-soft
                         (and ,@(for/list ([subprop subproperties])
                                  (list (sformat "rule.~a?" subprop) name)))
-                        :weight 3)))))))
+                        :weight 3))))))
 
 (define (user-constraints dom emit elt children)
   (define name (elt-name elt))
