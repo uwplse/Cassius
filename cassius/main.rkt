@@ -47,7 +47,7 @@
   [('TextAlign _) (last (string-split (~a value) "/"))]
   [('Selector 'sel/all) "*"]
   [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
-  [('Selector `(sel/tag ,tag)) (substring (~a tag) 5 (- (string-length (~a tag)) 1))]
+  [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
   [('Box `(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,_))
    (with-output-to-string
      (lambda ()
@@ -197,7 +197,7 @@
   (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
   (emit `(assert (= (float-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-float" (dom-root dom)))))
   (emit `(assert (= (child-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-real" (dom-root dom)))))
-  (emit `(assert (= (tagname ,elt) box/viewport)))
+  (emit `(assert (= (tagname ,elt) no-tag)))
   (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
     (emit `(assert (= (,field ,b) 0.0))))
   (emit `(assert (= (float ,elt) float/none)))
@@ -302,13 +302,15 @@
   (define-values (tagname idname display)
     (match elt
       [(list 'BLOCK :tag tagname ':id idname _ ...)
-       (values (sformat "tag/<~a>" tagname) (sformat "ID-~a" idname) 'display/block)]
+       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/block)]
       [(list 'INLINE :tag tagname ':id idname _ ...)
-       (values (sformat "tag/<~a>" tagname) (sformat "ID-~a" idname) 'display/inline)]
-      [(list 'BLOCK :tag tagname _ ...) (values (sformat "tag/<~a>" tagname) 'NoID 'display/block)]
-      [(list 'INLINE :tag tagname _ ...) (values (sformat "tag/<~a>" tagname) 'NoID 'display/inline)]
-      [(list 'LINE _ ...) (values 'box/line 'NoID 'display/block)]
-      [(list 'TEXT _ ...) (values 'box/text 'NoID 'display/inline)]))
+       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/inline)]
+      [(list 'BLOCK :tag tagname _ ...)
+       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/block)]
+      [(list 'INLINE :tag tagname _ ...)
+       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/inline)]
+      [(list 'LINE _ ...) (values 'no-tag 'no-id 'display/block)]
+      [(list 'TEXT _ ...) (values 'no-tag 'no-id 'display/inline)]))
 
   (emit `(assert (= (tagname ,(dom-get dom elt)) ,tagname)))
   (emit `(assert (= (id ,(dom-get dom elt)) ,idname)))
@@ -336,10 +338,10 @@
   (define-values (tags ids)
     (reap [save-tag save-id]
           (for* ([dom doms] [elt (in-tree-values (dom-tree dom))])
-            (when (memq ':id elt) (save-id (sformat "ID-~a" (cadr (memq ':id elt)))))
+            (when (memq ':id elt) (save-id (sformat "id/~a" (cadr (memq ':id elt)))))
             (match elt
-              [(list 'BLOCK :tag tag cmds ...) (save-tag (sformat "tag/<~a>" tag))]
-              [(list 'INLINE :tag tag cmds ...) (save-tag (sformat "tag/<~a>" tag))]
+              [(list 'BLOCK :tag tag cmds ...) (save-tag (sformat "tag/~a" (slower tag)))]
+              [(list 'INLINE :tag tag cmds ...) (save-tag (sformat "tag/~a" (slower tag)))]
               [(list 'LINE cmds ...) (void)]
               [(list 'TEXT cmds ...) (void)]))
           (for ([rule sheet])
@@ -358,9 +360,8 @@
 
   `((set-option :produce-unsat-cores true)
     (declare-datatypes ()
-                       ((Id NoID ,@(remove-duplicates ids))
-                        (TagNames box/viewport box/text box/inline box/block box/line
-                                  ,@(remove-duplicates tags))
+                       ((Id no-id ,@(remove-duplicates ids))
+                        (TagNames no-tag ,@(remove-duplicates tags))
                         (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
                         (ElementName ,@elt-names nil-elt)
                         (BoxName

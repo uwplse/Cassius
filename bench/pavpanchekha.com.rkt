@@ -18,15 +18,15 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
   ? ? ? ?)
 
 (define-stylesheet partial-good-sheet
-  ((sel/tag tag/<HTML>) ?)
-  ((sel/tag tag/<BODY>) ?)
-  ((sel/tag tag/<PRE>) ?)
-  ((sel/tag tag/<H1>) ?)
-  ((sel/tag tag/<P>) ?)
-  ((sel/id ID-postamble) ?))
+  ((sel/tag tag/html) ?)
+  ((sel/tag tag/body) ?)
+  ((sel/tag tag/pre) ?)
+  ((sel/tag tag/h1) ?)
+  ((sel/tag tag/p) ?)
+  ((sel/id id/postamble) ?))
 
 (define-stylesheet good-sheet
-  ((sel/tag tag/<HTML>)
+  ((sel/tag tag/html)
    [margin-top (margin/px 0)]
    [margin-right (margin/px 0)]
    [margin-bottom (margin/px 0)]
@@ -35,7 +35,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-right (padding/px 0)]
    [padding-bottom (padding/px 0)]
    [padding-left (padding/px 0)])
-  ((sel/tag tag/<BODY>)
+  ((sel/tag tag/body)
    [margin-top (margin/px 0)]
    [margin-right margin/auto]
    [margin-bottom (margin/px 0)]
@@ -45,7 +45,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-bottom (padding/px 90)]
    [padding-left (padding/px 10)]
    [width (width/px 630)])
-  ((sel/tag tag/<PRE>)
+  ((sel/tag tag/pre)
    [margin-top (margin/px 21.6)]
    [margin-right (margin/px 0)]
    [margin-bottom (margin/px 30.6)]
@@ -54,57 +54,15 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-right (padding/px 9)]
    [padding-bottom (padding/px 9)]
    [padding-left (padding/px 9)])
-  ((sel/tag tag/<H1>)
+  ((sel/tag tag/h1)
    [margin-top (margin/px 36)])
-  ((sel/tag tag/<P>)
+  ((sel/tag tag/p)
    [text-align text-align/inherit]
    [margin-top (margin/px 18)]
    [margin-right (margin/px 0)]
    [margin-bottom (margin/px 18)]
    [margin-left (margin/px 0)])
-  ((sel/id ID-postamble)
-   [text-align text-align/center]
-   [margin-top (margin/px 18)]))
-
-
-(define-stylesheet good-sheet
-  ((sel/tag tag/<HTML>)
-   [margin-top (margin/px 0)]
-   [margin-right (margin/px 0)]
-   [margin-bottom (margin/px 0)]
-   [margin-left (margin/px 0)]
-   [padding-top (padding/px 0)]
-   [padding-right (padding/px 0)]
-   [padding-bottom (padding/px 0)]
-   [padding-left (padding/px 0)])
-  ((sel/tag tag/<BODY>)
-   [margin-top (margin/px 0)]
-   [margin-right margin/auto]
-   [margin-bottom (margin/px 0)]
-   [margin-left margin/auto]
-   [padding-top (padding/px 0)]
-   [padding-right (padding/px 10)]
-   [padding-bottom (padding/px 90)]
-   [padding-left (padding/px 10)]
-   [width (width/px 630)])
-  ((sel/tag tag/<PRE>)
-   [margin-top (margin/px 21.6)]
-   [margin-right (margin/px 0)]
-   [margin-bottom (margin/px 30.6)]
-   [margin-left (margin/px 0)]
-   [padding-top (padding/px 9)]
-   [padding-right (padding/px 9)]
-   [padding-bottom (padding/px 9)]
-   [padding-left (padding/px 9)])
-  ((sel/tag tag/<H1>)
-   [margin-top (margin/px 36)])
-  ((sel/tag tag/<P>)
-   [text-align text-align/inherit]
-   [margin-top (margin/px 18)]
-   [margin-right (margin/px 0)]
-   [margin-bottom (margin/px 18)]
-   [margin-left (margin/px 0)])
-  ((sel/id ID-postamble)
+  ((sel/id id/postamble)
    [text-align text-align/center]
    [margin-top (margin/px 18)]))
 

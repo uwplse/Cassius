@@ -68,13 +68,8 @@
         [else true]))
 
     (define-fun is-a-rule ((r Rule)) Bool
-      (and (=> (is-sel/id (selector r)) (not (is-NoID (sel.id (selector r)))))
-           (=> (is-sel/tag (selector r))
-               (not (or (is-box/viewport (sel.tag (selector r)))
-                        (is-box/text (sel.tag (selector r)))
-                        (is-box/block (sel.tag (selector r)))
-                        (is-box/line (sel.tag (selector r)))
-                        (is-box/inline (sel.tag (selector r))))))))))
+      (and (=> (is-sel/id (selector r)) (not (is-no-id (sel.id (selector r)))))
+           (=> (is-sel/tag (selector r)) (not (is-no-tag (sel.tag (selector r)))))))))
 
 (define css-properties
   (for/list ([(type decl) (in-css-types)])

@@ -1,6 +1,9 @@
 #lang racket
 
-(provide reap sformat for/reap for*/reap flags all-flags)
+(provide
+ reap for/reap for*/reap
+ sformat slower
+ flags all-flags)
 
 (define flags (make-parameter '(z3c)))
 (define all-flags '(opt float z3c))
@@ -22,3 +25,6 @@
 
 (define (sformat templ . args)
   (string->symbol (apply format templ args)))
+
+(define (slower sym)
+  (string->symbol (string-foldcase (symbol->string sym))))

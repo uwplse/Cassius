@@ -26,7 +26,7 @@
 
         (= (textalign e)
            ,(smt-cond
-             [(is-box/line (tagname e)) (textalign (parent e))]
+             [(is-no-tag (tagname e)) (textalign (parent e))]
              [(is-text-align/inherit (style.text-align r))
               (textalign (parent e))]
              [else
@@ -34,7 +34,7 @@
         (= (float e)
            ,(smt-cond
              [(is-display/inline (display e)) float/none]
-             [(is-box/line (tagname e)) float/none]
+             [(is-no-tag (tagname e)) float/none]
              [(is-float/inherit (style.float r)) (float (parent e))]
              [else (style.float r)]))))))
 
@@ -53,19 +53,19 @@
    ; Computing maximum collapsed positive and negative margin
    (= (mtp ,b)
       (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fb) (is-float/none (float ,e))
+           (ite (and (not (= (tagname ,e) tag/html)) (is-box ,fb) (is-float/none (float ,e))
                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtp ,fb) 0.0)))
    (= (mtn ,b)
       (min (ite (< (mt ,b) 0.0) (mt ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,fb) (is-float/none (float ,e))
+           (ite (and (not (= (tagname ,e) tag/html)) (is-box ,fb) (is-float/none (float ,e))
                      (= (pt ,b) 0.0) (= (bt ,b) 0.0)) (mtn ,fb) 0.0)))
    (= (mbp ,b)
       (max (ite (> (mb ,b) 0.0) (mb ,b) 0.0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,lb) (is-float/none (float ,e))
+           (ite (and (not (= (tagname ,e) tag/html)) (is-box ,lb) (is-float/none (float ,e))
                      (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbp ,lb) 0.0)))
    (= (mbn ,b)
       (min (ite (< (mb ,b) 0.0) (mb ,b) 0)
-           (ite (and (not (= (tagname ,e) tag/<HTML>)) (is-box ,lb) (is-float/none (float ,e))
+           (ite (and (not (= (tagname ,e) tag/html)) (is-box ,lb) (is-float/none (float ,e))
                      (= (pb ,b) 0.0) (= (bb ,b) 0.0)) (mbn ,lb) 0.0)))
 
    ; Set properties that are settable with lengths
@@ -132,7 +132,7 @@
              ; (possibly collapsed) margin of its last in-flow child,
              ; if the child's bottom margin does not collapse with the
              ; element's bottom margin
-             (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0) (not (= (tagname ,e) tag/<HTML>)))
+             (ite (and (= (pb ,b) 0.0) (= (bb ,b) 0.0) (not (= (tagname ,e) tag/html)))
                   (bottom-border ,lb) ; Collapsed bottom margin
                   (bottom-outer ,lb)))] ; No collapsed bottom margin
          ; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
@@ -150,7 +150,7 @@
         (= (x ,b) (+ (left-content ,pb) (ml ,b)))
         (= (y ,b)
            (ite (is-no-box ,vb)
-                (ite (and (not (= (tagname (get/elt (element ,pb))) tag/<HTML>)) (is-float/none (float (get/elt (element ,pb))))
+                (ite (and (not (= (tagname (get/elt (element ,pb))) tag/html)) (is-float/none (float (get/elt (element ,pb))))
                           (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
                      (top-content ,pb)
                      (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
