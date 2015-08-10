@@ -56,7 +56,7 @@
    (=> (is-height/auto (style.height ,r))
        (= (h ,b)
           (ite (is-box ,fb)
-               (ite (is-display/inline (display (get/elt (element ,lb))))
+               (ite (is-box/line (type ,lb))
                     ; If it only has inline-level children, the height is the distance between
                     ; the top of the topmost line box and the bottom of the bottommost line box.
                     (- (bottom-border ,lb) (top-border ,fb))

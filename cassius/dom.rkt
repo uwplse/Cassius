@@ -35,13 +35,15 @@
 (define dom-declarations
   `((declare-datatypes ()
        ((Box no-box
-             (box (x Real) (y Real) (w Real) (h Real)
+             (box (type BoxType)
+                  (x Real) (y Real) (w Real) (h Real)
                   (mt Real) (mr Real) (mb Real) (ml Real)
                   (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                   (pt Real) (pr Real) (pb Real) (pl Real)
                   (bt Real) (br Real) (bb Real) (bl Real)
                   (p-name BoxName) (v-name BoxName) (f-name BoxName) (l-name BoxName)
                   (element ElementName)))
+        (BoxType box/viewport box/text box/inline box/block box/line)
         (Element no-elt
              (elt (document Document) (tagname TagNames) (id Id) (rules Style)
                   (display Display) (float Float) (textalign TextAlign)

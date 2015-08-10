@@ -50,6 +50,8 @@
   (define lb `(lbox ,b))
 
   (asserts
+   (= (type ,b) box/block)
+
    ; Computing maximum collapsed positive and negative margin
    (= (mtp ,b)
       (max (ite (> (mt ,b) 0.0) (mt ,b) 0.0)
@@ -124,9 +126,9 @@
        ,(smt-cond
          ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
          ; if the box establishes a inline formatting context with one or more lines
-         [(and (is-box ,lb) (is-display/inline (display (get/elt (element ,lb)))))
+         [(and (is-box ,lb) (is-box/line (type ,lb)))
           (= (bottom-content ,b) (bottom-border ,lb))]
-         [(and (is-box ,lb) (is-display/block (display (get/elt (element ,lb)))))
+         [(and (is-box ,lb) (is-box/block (type ,lb)))
           (= (bottom-content ,b)
              ; CSS § 10.6.3, item 2: the bottom edge of the bottom
              ; (possibly collapsed) margin of its last in-flow child,
@@ -172,6 +174,8 @@
   (define lb `(lbox ,b))
 
   (asserts
+   (= (type ,b) box/inline)
+
    ; Computing maximum collapsed positive and negative margin
    ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
        `(= (,field ,b) 0.0))
@@ -189,6 +193,8 @@
   (define lb `(lbox ,b))
 
   (asserts
+   (= (type ,b) box/line)
+
    ; Computing maximum collapsed positive and negative margin
    ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
        `(= (,field ,b) 0.0))
