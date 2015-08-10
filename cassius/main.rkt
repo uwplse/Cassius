@@ -160,30 +160,24 @@
 
   (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-flow-box" name) Box))
-    (emit `(declare-const ,(sformat "~a-float-box" name) Box))
     (emit `(declare-const ,(sformat "~a-real-box" name) Box))
     (emit `(assert (= (element ,(sformat "~a-flow-box" name)) ,name)))
-    (emit `(assert (= (element ,(sformat "~a-float-box" name)) ,name)))
     (emit `(assert (= (element ,(sformat "~a-real-box" name)) ,name)))
     (emit `(assert (= (flow-box  ,(sformat "~a-elt" name)) ,(sformat "~a-flow" name))))
-    (emit `(assert (= (float-box ,(sformat "~a-elt" name)) ,(sformat "~a-float" name))))
     (emit `(assert (= (child-box ,(sformat "~a-elt" name)) ,(sformat "~a-real" name)))))
   (emit `(assert (= (element no-box) nil-elt)))
 
   (define body
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       (smt-cond
-       [(,(sformat "is-~a-float" name) x) ,(sformat "~a-float-box" name)]
        [(,(sformat "is-~a-real" name) x) ,(sformat "~a-real-box" name)]
        [(,(sformat "is-~a-flow" name) x) ,(sformat "~a-flow-box" name)]
        [else ,body])))
   (emit `(define-fun get/box ((x BoxName)) Box ,body))
   (for* ([names dom-names] [name names])
     (emit `(assert (not (is-no-box ,(sformat "~a-flow-box" name)))))
-    (emit `(assert (not (is-no-box ,(sformat "~a-float-box" name)))))
     (emit `(assert (not (is-no-box ,(sformat "~a-real-box" name)))))
     (emit `(assert (= (get/box ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name))))
-    (emit `(assert (= (get/box ,(sformat "~a-float" name)) ,(sformat "~a-float-box" name))))
     (emit `(assert (= (get/box ,(sformat "~a-real" name)) ,(sformat "~a-real-box" name)))))
   (emit `(assert (= (get/box nil-box) no-box)))
   (emit `(assert (= (flow-box no-elt) nil-box)))
@@ -195,7 +189,6 @@
 
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
-  (emit `(assert (= (float-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-float" (dom-root dom)))))
   (emit `(assert (= (child-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-real" (dom-root dom)))))
   (emit `(assert (= (tagname ,elt) no-tag)))
   (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
@@ -291,8 +284,7 @@
       [(list 'LINE constraints ...) (values box-line-constraints (const empty))]
       [(list 'INLINE :tag tag constraints ...) (values box-inline-constraints (const empty))]
       [(list 'TEXT constraints ...) (values box-inline-constraints (const empty))]))
-  (for-each emit (flow-box-constraints (sformat "~a-flow-box" (elt-name elt))))
-  (for-each emit (float-box-constraints (sformat "~a-float-box" (elt-name elt)))))
+  (for-each emit (flow-box-constraints (sformat "~a-flow-box" (elt-name elt)))))
 
 (define (float-constraints dom emit)
   (for-each (curry for-each emit) (general-float-constraints dom)))
