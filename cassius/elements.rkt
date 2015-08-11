@@ -72,20 +72,12 @@
        `(=> (and (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r)) (is-float/none (float ,e)))
             (= (,field ,b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r)))))
 
-   ; The flow boxe of a float is an empty anonymous block box
-   (=> (not (is-float/none (float ,e)))
-       (and
-        ,@(for/list ([field '(h pl pr pt pb mt mb ml mr bl br bt bb)])
-            `(= (,field ,b) 0))))
-
    ; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
    ; The following constraints must hold among the used values of the other properties:
    ; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
    (= (w ,pb) (+ (ml ,b) (box-width ,b) (mr ,b)))
 
    ,(smt-cond
-     [(not (is-float/none (float ,e)))
-      true]
      ; See CSS § 10.3.3
      [(> (+ (ite (is-width/auto (style.width ,r)) 0.0 (width.px (style.width ,r)))
             (ite (is-margin/auto (style.margin-left ,r)) 0.0 (margin.px (style.margin-left ,r)))
@@ -112,12 +104,12 @@
 
    ; Width and horizontal margins out of the way, let's do height and vertical margins
    ; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
-   (=> (and (is-float/none (float ,e)) (is-margin/auto (style.margin-top ,r))) (= (mt ,b) 0.0))
-   (=> (and (is-float/none (float ,e)) (is-margin/auto (style.margin-bottom ,r))) (= (mb ,b) 0.0))
+   (=> (is-margin/auto (style.margin-top ,r)) (= (mt ,b) 0.0))
+   (=> (is-margin/auto (style.margin-bottom ,r)) (= (mb ,b) 0.0))
 
    ; If 'height' is 'auto', the height depends on whether the element has
    ; any block-level children and whether it has padding or borders:
-   (=> (and (is-height/auto (style.height ,r)) (is-float/none (float ,e)))
+   (=> (is-height/auto (style.height ,r))
        ,(smt-cond
          ; CSS § 10.6.3, item 1: the bottom edge of the last line box,
          ; if the box establishes a inline formatting context with one or more lines
@@ -142,16 +134,15 @@
 
    ; Computing X and Y position
 
-   (=> (is-float/none (float ,e))
-       (and
-        (= (x ,b) (+ (left-content ,pb) (ml ,b)))
-        (= (y ,b)
-           (ite (is-no-box ,vb)
-                (ite (and (not (= (tagname (get/elt (element ,pb))) tag/html)) (is-float/none (float (get/elt (element ,pb))))
-                          (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
-                     (top-content ,pb)
-                     (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
-                (+ (bottom-border ,vb) (max (mbp ,vb) (mtp ,b)) (min (mbn ,vb) (mtn ,b)))))))
+   (= (x ,b) (+ (left-content ,pb) (ml ,b)))
+   (= (y ,b)
+      (ite (is-no-box ,vb)
+           (ite (and (not (= (tagname (get/elt (element ,pb))) tag/html))
+                     (is-float/none (float (get/elt (element ,pb))))
+                     (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
+                (top-content ,pb)
+                (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
+           (+ (bottom-border ,vb) (max (mbp ,vb) (mtp ,b)) (min (mbn ,vb) (mtn ,b)))))
 
    ; Positivity constraint---otherwise floats can overlap
    (> (box-height ,b) 0.0)
