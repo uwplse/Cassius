@@ -31,7 +31,17 @@
              [(is-display/inline (display e)) float/none]
              [(is-no-tag (tagname e)) float/none]
              [(is-float/inherit (style.float r)) (float (parent e))]
-             [else (style.float r)]))))))
+             [else (style.float r)]))))
+
+    (define-fun flow-compute-y ((b Box)) Real
+      (let ([vb (vbox b)] [pb (pbox b)])
+        (ite (is-no-box vb)
+             (ite (and (not (= (tagname (get/elt (element pb))) tag/html))
+                       (is-float/none (float (get/elt (element pb))))
+                       (= (pt pb) 0.0) (= (bt pb) 0.0))
+                  (top-content pb)
+                  (+ (top-content pb) (+ (mtp b) (mtn b))))
+             (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))))))
 
 (define (element-general-constraints e-name)
   `(assert (is-an-element (get/elt ,e-name))))
@@ -135,14 +145,7 @@
    ; Computing X and Y position
 
    (= (x ,b) (+ (left-content ,pb) (ml ,b)))
-   (= (y ,b)
-      (ite (is-no-box ,vb)
-           (ite (and (not (= (tagname (get/elt (element ,pb))) tag/html))
-                     (is-float/none (float (get/elt (element ,pb))))
-                     (= (pt ,pb) 0.0) (= (bt ,pb) 0.0))
-                (top-content ,pb)
-                (+ (top-content ,pb) (+ (mtp ,b) (mtn ,b))))
-           (+ (bottom-border ,vb) (max (mbp ,vb) (mtp ,b)) (min (mbn ,vb) (mtn ,b)))))
+   (= (y ,b) (flow-compute-y ,b))
 
    ; Positivity constraint---otherwise floats can overlap
    (> (box-height ,b) 0.0)

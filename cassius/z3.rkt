@@ -511,24 +511,23 @@
     (eprintf "  ~a: ~a\n" i cmd))
   cmds)
 
+(define to-resolve
+  '(flow-box float-box child-box element
+             get/elt first-child-name last-child-name parent-name previous-name
+             get/box p-name v-name f-name l-name))
+
 (define *emitter-passes*
   (list
    (map z3-expand '(is-an-element))
    (map z3-expand '(previous parent fchild lchild pbox vbox fbox lbox))
    z3-unlet
    z3-assert-and
-   (z3-resolve-fns
-    'flow-box 'float-box 'child-box 'element
-    'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
-    'get/box 'p-name 'v-name 'f-name 'l-name)
+   (apply z3-lift-arguments to-resolve)
+   (apply z3-resolve-fns to-resolve)
    #;z3-print-all
    #;z3-simplifier
    (z3-sink-fields-and 'get/box 'get/elt)
-   (z3-resolve-fns
-    'flow-box 'float-box 'child-box 'element
-    'get/elt 'first-child-name 'last-child-name 'parent-name 'previous-name
-    'get/box 'p-name 'v-name 'f-name 'l-name)
-   z3-dco z3-movedefs
+   (apply z3-resolve-fns to-resolve)
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields))
 
 (define (z3-prepare exprs)
