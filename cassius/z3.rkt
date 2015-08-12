@@ -382,27 +382,29 @@
 (define-syntax-rule (matches? expr pattern)
   (match expr [pattern #t] [_ #f]))
 
-(define ((z3-expand name) cmds)
-  (match-define `((,names ,body))
-    (for/reap [save] ([line cmds])
-              (match line
-                [`(define-fun ,(== name) ((,names ,types) ...) ,rtype ,body)
-                 (save (list names body))]
-                [_ (void)])))
+(define ((z3-expand . fn-names) cmds)
+  (define fns (make-hash))
 
-  (for/list ([cmd cmds] [i (in-naturals)])
+  (define (expand-term expr)
+    (match expr
+      [`(let ((,vars ,vals) ...) ,body)
+       `(let (,@(for/list ([var vars] [val vals]) `(,var ,(expand-term val)))) ,(expand-term body))]
+      [(list (? (curry hash-has-key? fns) name) args ...)
+       (match-define (list names body) (hash-ref fns name))
+       (capture-avoiding-substitute body (map cons names args))]
+      [(? list?)
+       (map expand-term expr)]
+      [_ expr]))
+
+  (for/list ([cmd cmds])
     (match cmd
+      [`(define-fun ,(? (curryr memq fn-names) name) ((,names ,types) ...) ,rtype ,body)
+       (hash-set! fns name (list names (expand-term body)))
+       `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-term body))]
+      [`(define-fun ,name ((,names ,types) ...) ,rtype ,body)
+       `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-term body))]
       [(list 'assert expr)
-       (list 'assert
-             (let loop ([expr expr])
-               (match expr
-                 [`(let ((,vars ,vals) ...) ,body)
-                  `(let (,@(for/list ([var vars] [val vals]) `(,var ,(loop val)))) ,(loop body))]
-                 [(list (== name) args ...)
-                  (capture-avoiding-substitute body (map cons names args))]
-                 [(? list?)
-                  (map loop expr)]
-                 [_ expr])))]
+       (list 'assert (expand-term expr))]
       [_ cmd])))
 
 (define (z3-unlet cmds)
