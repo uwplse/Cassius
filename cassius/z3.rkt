@@ -417,6 +417,8 @@
 
   (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
+      [`(define-fun ,name (,signature) ,rtype ,body)
+       `(define-fun ,name (,signature) ,rtype ,(de-let body))]
       [(list 'assert expr)
        (list 'assert (de-let expr))]
       [_ cmd])))
