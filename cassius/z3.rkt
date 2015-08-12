@@ -443,6 +443,69 @@
          (sow `(assert ,expr)))]
       [_ (sow cmd)])))
 
+(define ((z3-lift-arguments . fn-names) cmds)
+  (define lifted (make-hash))
+  (define fns (make-hash))
+
+  (define (fn? x) (memq x fn-names))
+
+  (define (find-funs expr sow)
+    (match expr
+      [`(let ((,vars ,vals) ...) ,body)
+       (for-each (curryr find-funs sow) vals)
+       (find-funs body sow)]
+      [`(,(? fn? f) ,args ...)
+       (sow expr)]
+      [(? list?) (for-each (curryr find-funs sow) (cdr expr))]
+      [_ (void)]))
+
+  (define (replace-terms expr bindings)
+    (match expr
+      [(? (curryr assoc bindings))
+       (cdr (assoc expr bindings))]
+      [`(let ((,vars ,vals) ...) ,body)
+       `(let (,@(map list vars (map (curryr replace-terms bindings) vals)))
+          ,(replace-terms body bindings))]
+      [(? list?) (map (curryr replace-terms bindings) expr)]
+      [_ expr]))
+
+  (define (expand-calls expr)
+    (match expr
+      [`(,(? (curry hash-has-key? lifted) f) ,args ...)
+       `(,f ,@args ,@(apply (hash-ref lifted f) args))]
+      [(? list?) (map expand-calls expr)]
+      [_ expr]))
+
+  (for/list([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
+       (for ([name names] [vars varss] #:when #t [var vars])
+         (match var
+           [(? symbol?) (void)]
+           [(list _ (list fields types) ...)
+            (for ([field fields] [type types])
+              (hash-set! fns field type))]))
+       cmd]
+      [`(define-fun ,(? fn? name) ((,args ,types) ...) ,rtype ,body)
+       (hash-set! fns name rtype)
+       cmd]
+      [`(define-fun ,name ((,args ,types) ...) ,rtype ,body)
+       ; TODO: Doesn't do capture avoidance
+       (define insts (remove-duplicates (reap [sow] (find-funs body sow))))
+       (define-values (eargs etypes)
+         (for/lists (args types) ([inst insts])
+           (define fn (car inst))
+           (values (gensym fn) (hash-ref fns fn))))
+       (hash-set! lifted name
+                  (lambda oargs
+                    (for/list ([inst insts])
+                      (replace-terms inst (map cons args oargs)))))
+       `(define-fun ,name (,@(map list args types) ,@(map list eargs etypes)) ,rtype
+          ,(replace-terms (expand-calls body) (map cons insts eargs)))]
+      [`(assert ,expr)
+       `(assert ,(expand-calls expr))]
+      [_ cmd])))
+
 (define (z3-print-all cmds)
   (for ([cmd cmds] [i (in-naturals)])
     (eprintf "  ~a: ~a\n" i cmd))
