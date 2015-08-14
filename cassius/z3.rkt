@@ -52,6 +52,8 @@
                (match (map string-split (string-split text ":"))
                  [`(("line" ,l "column" ,c) ,rest)
                   (error (format "Z3 error: ~a\n  line:" text) (list-ref encoding (- (string->number l) 1)))])]
+              ['unsupported
+               (error "Z3 error: unsupported\n")]
               ['unsat
                (write "(get-unsat-core)")
                (let ([msg2 (read out)])
