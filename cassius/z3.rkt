@@ -84,6 +84,9 @@
         (loop rest (current-inexact-milliseconds))]
        [#t
         (match (car rest)
+          [`(echo ,x)
+           (write (format "; ~a" x))
+           (loop (cdr rest) paused?)]
           [`(check-sat)
            (write "(check-sat)")
            (debug #:tag 'tactic ">>> sat\n")

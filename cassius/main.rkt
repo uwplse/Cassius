@@ -320,9 +320,11 @@
   (reap [sow]
         (for ([dom doms]) (dom-root-constraints dom sow))
         (for ([cns constraints])
+          (sow `(echo ,(format "Generating ~a" (object-name cns))))
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
             (cns dom sow elt children)))
         (when (memq 'float (flags))
+          (sow `(echo ,(format "Generating Float constraints")))
           (for ([dom doms]) (float-constraints dom sow)))))
 
 (define (all-constraints sheet doms)
@@ -350,6 +352,7 @@
     (list tree-constraints info-constraints user-constraints element-constraints (style-constraints sheet)))
 
   `((set-option :produce-unsat-cores true)
+    (echo "Basic definitions")
     (declare-datatypes ()
                        ((Id no-id ,@(remove-duplicates ids))
                         (TagNames no-tag ,@(remove-duplicates tags))
@@ -368,6 +371,7 @@
     ,@element-definitions
 
     ; Stylesheet
+    (echo "Defining the stylesheet")
     ,@(stylesheet-constraints sheet)
     ; DOMs
     ,@(apply dfs-constraints doms constraints)
