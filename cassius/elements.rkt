@@ -188,9 +188,10 @@
    ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
        `(= (,field ,b) 0.0))
 
-   (= (x ,b) (left-content ,pb))
+   #;(= (left-outer ,b) (left-content ,pb))
+   #;(= (right-outer ,b) (right-content ,pb))
    (= (y ,b) (ite (is-no-box ,vb) (top-content ,pb) (bottom-border ,vb)))
-   (= (w ,b) (w ,pb))
+   #;(= (w ,b) (w ,pb))
 
    (not (is-no-box ,fb))
    ,(smt-cond
