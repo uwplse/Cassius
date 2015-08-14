@@ -277,39 +277,44 @@
 
 (define (element-constraints dom emit elt children)
   (emit (element-general-constraints (elt-name elt)))
-  (define-values (flow-box-constraints float-box-constraints)
+  (define box-constraints
     (match elt
       [(list 'BLOCK :tag tag constraints ...)
-       (values box-block-constraints box-float-constraints)]
-      [(list 'LINE constraints ...) (values box-line-constraints (const empty))]
-      [(list 'INLINE :tag tag constraints ...) (values box-inline-constraints (const empty))]
-      [(list 'TEXT constraints ...) (values box-inline-constraints (const empty))]))
-  (for-each emit (flow-box-constraints (sformat "~a-flow-box" (elt-name elt)))))
+       box-block-constraints]
+      [(list 'FLOAT :tag tag constraints ...)
+       box-float-constraints]
+      [(list 'LINE constraints ...) box-line-constraints]
+      [(list 'INLINE :tag tag constraints ...) box-inline-constraints]
+      [(list 'TEXT constraints ...) box-inline-constraints]))
+  (for-each emit (box-constraints (sformat "~a-flow-box" (elt-name elt)))))
 
 (define (float-constraints dom emit)
-  (for-each (curry for-each emit) (general-float-constraints dom)))
+  (for ([(elt children) (in-tree-subtrees (dom-tree dom))])
+    (when (eq? (car elt) 'FLOAT)
+      (for-each emit (general-float-constraints dom elt)))))
 
 (define (info-constraints dom emit elt children)
-  (define-values (tagname idname display)
+  (define-values (tagname idname display float)
     (match elt
       [(list 'BLOCK :tag tagname ':id idname _ ...)
-       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/block)]
+       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/block 'float/none)]
+      [(list 'FLOAT :tag tagname ':id idname _ ...)
+       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/block 'float/left)]
       [(list 'INLINE :tag tagname ':id idname _ ...)
-       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/inline)]
+       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/inline 'float/none)]
       [(list 'BLOCK :tag tagname _ ...)
-       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/block)]
+       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/block 'float/none)]
+      [(list 'FLOAT :tag tagname _ ...)
+       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/block 'float/left)]
       [(list 'INLINE :tag tagname _ ...)
-       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/inline)]
-      [(list 'LINE _ ...) (values 'no-tag 'no-id 'display/block)]
-      [(list 'TEXT _ ...) (values 'no-tag 'no-id 'display/inline)]))
+       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/inline 'float/none)]
+      [(list 'LINE _ ...) (values 'no-tag 'no-id 'display/block 'float/none)]
+      [(list 'TEXT _ ...) (values 'no-tag 'no-id 'display/inline 'float/none)]))
 
   (emit `(assert (= (tagname ,(dom-get dom elt)) ,tagname)))
   (emit `(assert (= (id ,(dom-get dom elt)) ,idname)))
-  (emit `(assert (= (display ,(dom-get dom elt)) ,display))))
-
-(define (all-constraints-of dom emit . types)
-  (for* ([(elt children) (in-tree-subtrees (dom-tree dom))] [type types])
-    (type dom emit elt children)))
+  (emit `(assert (= (display ,(dom-get dom elt)) ,display)))
+  (emit `(assert (= (float ,(dom-get dom elt)) ,float))))
 
 (define (getter-definitions doms)
   (reap [sow]
@@ -334,6 +339,7 @@
             (when (memq ':id elt) (save-id (sformat "id/~a" (cadr (memq ':id elt)))))
             (match elt
               [(list 'BLOCK :tag tag cmds ...) (save-tag (sformat "tag/~a" (slower tag)))]
+              [(list 'FLOAT :tag tag cmds ...) (save-tag (sformat "tag/~a" (slower tag)))]
               [(list 'INLINE :tag tag cmds ...) (save-tag (sformat "tag/~a" (slower tag)))]
               [(list 'LINE cmds ...) (void)]
               [(list 'TEXT cmds ...) (void)]))
@@ -349,7 +355,8 @@
      (for/list ([dom doms]) (dom-root dom))))
 
   (define constraints
-    (list tree-constraints info-constraints user-constraints element-constraints (style-constraints sheet)))
+    (list tree-constraints info-constraints user-constraints element-constraints
+          (procedure-rename (style-constraints sheet) 'style-constraints)))
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")
