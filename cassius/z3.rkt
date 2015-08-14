@@ -16,6 +16,7 @@
     (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
+  (define asserts (make-hash))
 
   (define line 1)
 
@@ -58,7 +59,7 @@
                  (error (format "Z3 unsatisfiable: ~a\n~a" msg2
                                 (string-join
                                  (for/list ([var msg2])
-                                   (format "  ~a: ~a" var (get-unsat var))) "\n"))))]
+                                           (format "  ~a: ~a" var (or (get-unsat var) (hash-ref asserts var)))) "\n"))))]
               ['sat
                (if (null? rest)
                    (begin
@@ -91,6 +92,10 @@
            (write (~a (car rest)))
            (debug #:tag 'tactic ">>> ~a\n" (string-join (map ~a args) " "))
            (loop (cdr rest) (current-inexact-milliseconds))]
+          [`(assert (! ,expr :named ,name))
+           (write (~a (car rest)))
+           (hash-set! asserts name expr)
+           (loop (cdr rest) paused?)]
           [_
            (write (~a (car rest)))
            (loop (cdr rest) paused?)])]))))
@@ -511,6 +516,16 @@
     (eprintf "  ~a: ~a\n" i cmd))
   cmds)
 
+(define (z3-debughelp cmds)
+  (when (memq 'debug (flags))
+    (for/list ([cmd cmds] [i (in-naturals)])
+      (match cmd
+        [`(assert (! ,expr :named ,name))
+         cmd]
+        [`(assert ,expr)
+         `(assert (! ,expr :named ,(gensym (format "line$~a" i))))]
+        [_ cmd]))))
+
 (define to-resolve
   '(flow-box float-box child-box element
              get/elt first-child-name last-child-name parent-name previous-name
@@ -528,7 +543,8 @@
    #;z3-simplifier
    (z3-sink-fields-and 'get/box 'get/elt)
    (apply z3-resolve-fns to-resolve)
-   z3-check-datatypes z3-check-functions z3-check-let z3-check-fields))
+   z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
+   z3-debughelp))
 
 (define (z3-prepare exprs)
   (foldl (λ (action exprs*) (action exprs*)) exprs (flatten *emitter-passes*)))
