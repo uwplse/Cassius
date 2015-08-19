@@ -529,7 +529,8 @@
          cmd]
         [`(assert ,expr)
          `(assert (! ,expr :named ,(gensym (format "line$~a" i))))]
-        [_ cmd]))))
+        [_ cmd])))
+  cmds)
 
 (define to-resolve
   '(flow-box float-box child-box element

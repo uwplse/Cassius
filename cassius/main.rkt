@@ -48,10 +48,10 @@
   [('Selector 'sel/all) "*"]
   [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
   [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
-  [('Box `(box ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,_))
+  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,_ ,_ ,_ ,_ ,_))
    (with-output-to-string
      (lambda ()
-       (printf "~a×~a at (~a, ~a)\n" (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
+       (printf "~a ~a×~a at (~a, ~a)\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
        (printf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
                 (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
                 (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
@@ -107,7 +107,7 @@
   (define e (dom-get dom elt))
   (define re `(rules ,e))
 
-  (when (member (car elt) '(INLINE BLOCK))
+  (when (member (car elt) '(INLINE BLOCK FLOAT))
     ; Score of computed rule is >= any applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)]
            [rule
@@ -367,7 +367,6 @@
                         (ElementName ,@elt-names nil-elt)
                         (BoxName
                          ,@(map (curry sformat "~a-flow") elt-names)
-                         ,@(map (curry sformat "~a-float") elt-names)
                          ,@(map (curry sformat "~a-real") elt-names)
                          nil-box)))
     ,@css-declarations
