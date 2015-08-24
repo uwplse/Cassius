@@ -160,7 +160,7 @@
    ; CSS 2.1, § 9.5.1, item 8: A floating box must be placed as high as possible.
    ; SIMPL: at its normal position, or the same y-position as previous float
    ; TODO: What is the normal position
-   (or (= (top-outer ,b) ,(smt-cond [(is-no-box ,bnf) (top-content ,pb)] [else (bottom-border ,bnf)]))
+   (or (= (top-outer ,b) (ite (is-no-box ,bnf) (top-content ,pb) (bottom-border (vbox ,b))))
        (and (is-box ,bff) (= (top-outer ,b) (top-outer ,bff)))
        (and (is-box ,bff) (= (top-outer ,b) (bottom-outer ,bff))))
 
