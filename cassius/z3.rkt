@@ -522,15 +522,15 @@
   cmds)
 
 (define (z3-debughelp cmds)
-  (when (memq 'debug (flags))
-    (for/list ([cmd cmds] [i (in-naturals)])
-      (match cmd
-        [`(assert (! ,expr :named ,name))
-         cmd]
-        [`(assert ,expr)
-         `(assert (! ,expr :named ,(gensym (format "line$~a" i))))]
-        [_ cmd])))
-  cmds)
+  (if (memq 'debug (flags))
+      (for/list ([cmd cmds] [i (in-naturals)])
+        (match cmd
+          [`(assert (! ,expr :named ,name))
+           cmd]
+          [`(assert ,expr)
+           `(assert (! ,expr :named ,(string->symbol (format "line$~a" i))))]
+          [_ cmd]))
+      cmds))
 
 (define to-resolve
   '(flow-box float-box child-box element
