@@ -532,6 +532,63 @@
           [_ cmd]))
       cmds))
 
+(define (z3-injectivity cmds)
+  (define constructors (make-hash))
+  (define types (make-hash))
+
+  (define (constructor? name)
+    (hash-has-key? types name))
+
+  (define (constructor-tester? name)
+    (define parts (string-split (~a name) "-"))
+    (and (string=? (first parts) "is")
+         (constructor? (string->symbol (string-join (rest parts) "-")))))
+
+  (define (injectivity expr)
+    (match expr
+      [`(,(? constructor-tester? tester) (,(? constructor? constructor) ,args ...))
+       (if (equal? (string-join (rest (string-split (~a tester) "-")) "-") (~a constructor))
+           'true
+           'false)]
+      [`(,(? constructor-tester? tester) ,(? constructor? constructor))
+       (if (equal? (string-join (rest (string-split (~a tester) "-")) "-") (~a constructor))
+           'true
+           'false)]
+      [(? list?)
+       (map injectivity expr)]
+      [_ expr]))
+
+  (for/list ([cmd cmds])
+    (match cmd
+      [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
+       (for ([name names] [vars varss])
+         (hash-set! constructors name
+                    (for/list ([var vars])
+                      (define constructor (match var [(? symbol?) var] [(list name _ ...) name]))
+                      (hash-set! types constructor name)
+                      constructor)))
+       cmd]
+      [`(assert ,expr)
+       `(assert ,(injectivity expr))]
+      [_ cmd])))
+
+(define (z3-simplify-if cmds)
+  (define (simplify-if expr)
+    (match expr
+      [`(ite false ,a ,b) (simplify-if b)]
+      [`(ite true ,a ,b) (simplify-if a)]
+      [(list 'and _ ... 'false _ ...) 'false]
+      [(list 'and _ ... 'true _ ...) (cons 'and (remove 'true (rest expr)))]
+      [(list 'or _ ... 'true _ ...) 'true]
+      [(list 'or _ ... 'false _ ...) (cons 'or (remove 'false (rest expr)))]
+      [(? list?) (map simplify-if expr)]
+      [_ expr]))
+  (for/list ([cmd cmds])
+    (match cmd
+      [`(assert ,expr)
+       `(assert ,(simplify-if expr))]
+      [_ cmd])))
+
 (define to-resolve
   '(flow-box float-box child-box element
              get/elt first-child-name last-child-name parent-name previous-name
@@ -549,6 +606,10 @@
    #;z3-simplifier
    (z3-sink-fields-and 'get/box 'get/elt)
    (apply z3-resolve-fns to-resolve)
+   ; It's important to lift and expand earlier up to make these passes fast.
+   (map z3-expand '(get/box get/elt)) z3-injectivity z3-simplify-if
+   ; Among other things, this eliminates the get/box and get/elt functions entirely
+   z3-dco z3-movedefs
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
    z3-debughelp))
 
