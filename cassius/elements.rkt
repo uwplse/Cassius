@@ -14,7 +14,11 @@
 
         (= bp bf)
         (= (p-name bf) (flow-box (parent e)))
-        (= (v-name bf) (flow-box (previous e)))
+        (= (v-name bf)
+           ,(smt-cond
+             [(is-no-elt (previous e)) nil-box]
+             [(is-float/none (float (previous e))) (flow-box (previous e))]
+             [else (v-name (get/box (flow-box (previous e))))]))
         (= (f-name bf) (flow-box (fchild e)))
         (= (l-name bf) (flow-box (lchild e)))
 
