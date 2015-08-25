@@ -273,8 +273,8 @@
       [(list ':tag tag rest ...) (interpret rest)]
       [(list (and (or ':x ':y ':w ':h) field) value rest ...)
        (define fun (match field [':x 'x] [':y 'y] [':h 'box-height] [':w 'box-width]))
-       (when (memq (car elt) '(LINE TEXT INLINE BLOCK))
-         (emit `(assert (! (= (,fun (get/box (child-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
+       (when (memq (car elt) '(LINE TEXT INLINE BLOCK FLOAT))
+         (emit `(assert (! (= (,fun (get/box (flow-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
        (interpret rest)]
       [(list)
        (void)])))
