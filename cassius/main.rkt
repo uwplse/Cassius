@@ -48,7 +48,7 @@
   [('Selector 'sel/all) "*"]
   [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
   [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
-  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,_ ,_ ,_ ,_ ,_))
+  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,p ,v ,f ,l ,e))
    (with-output-to-string
      (lambda ()
        (printf "~a ~a×~a at (~a, ~a)\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
@@ -56,7 +56,9 @@
                 (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
                 (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
        (printf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-       (printf "padding: ~a ~a ~a ~a\n\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))))]
+       (printf "padding: ~a ~a ~a ~a\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))
+       (printf "elt ~a parent ~a previous ~a\n" e p v)
+       (printf "first ~a last ~a\n\n" f l)))]
   [('Style (list 'style rest ...))
    (with-output-to-string
      (lambda ()
@@ -260,7 +262,9 @@
   (let interpret ([cmds cmds])
     (match cmds
       [(list ':print rest ...)
-       (hash-set! boxes-to-print (sformat "~a-real-box" name) 'Box)
+       (hash-set! boxes-to-print (sformat "~a-flow-box" name) 'Box)
+       (interpret rest)]
+      [(list ':style rest ...)
        (hash-set! boxes-to-print (sformat "~a.style" name) 'Style)
        (emit `(declare-const ,(sformat "~a.style" name) Style))
        (emit `(assert (= ,(sformat "~a.style" name) (rules ,(dom-get dom elt)))))
@@ -381,6 +385,7 @@
     ,@(stylesheet-constraints sheet)
     ; DOMs
     ,@(apply dfs-constraints doms constraints)
+
     (check-sat)))
 
 (define (unsat-constraint-info constraint)

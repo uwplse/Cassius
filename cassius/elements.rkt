@@ -10,8 +10,7 @@
 
 (define element-definitions
   `((define-fun is-an-element ((e Element)) Bool
-      ,(smt-let
-        ((r (rules e)) (bp (get/box (child-box e))) (bf (get/box (flow-box e))))
+      ,(smt-let ([r (rules e)] [bp (get/box (child-box e))] [bf (get/box (flow-box e))])
 
         (= bp bf)
         (= (p-name bf) (flow-box (parent e)))
@@ -26,12 +25,9 @@
               (textalign (parent e))]
              [else
               (style.text-align r)]))
+        (=> (is-display/inline (display e)) (is-float/none (float e)))
         (= (float e)
-           ,(smt-cond
-             [(is-display/inline (display e)) float/none]
-             [(is-no-tag (tagname e)) float/none]
-             [(is-float/inherit (style.float r)) (float (parent e))]
-             [else (style.float r)]))))
+           (ite (is-float/inherit (style.float r)) (float (parent e)) (style.float r)))))
 
     (define-fun flow-compute-y ((b Box)) Real
       (let ([vb (vbox b)] [pb (pbox b)])
