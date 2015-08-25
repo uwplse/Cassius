@@ -521,6 +521,10 @@
     (eprintf "  ~a: ~a\n" i cmd))
   cmds)
 
+(define ((z3-print-line text n) cmds)
+  (eprintf "~a: ~a\n" text (list-ref cmds n))
+  cmds)
+
 (define (z3-debughelp cmds)
   (if (memq 'debug (flags))
       (for/list ([cmd cmds] [i (in-naturals)])
@@ -546,14 +550,12 @@
 
   (define (injectivity expr)
     (match expr
-      [`(,(? constructor-tester? tester) (,(? constructor? constructor) ,args ...))
-       (if (equal? (string-join (rest (string-split (~a tester) "-")) "-") (~a constructor))
-           'true
-           'false)]
-      [`(,(? constructor-tester? tester) ,(? constructor? constructor))
-       (if (equal? (string-join (rest (string-split (~a tester) "-")) "-") (~a constructor))
-           'true
-           'false)]
+      [`(,(? constructor-tester? tester)
+         (or (,(? constructor? constructor) ,_ ...) ,(? constructor? constructor)))
+       (define test-variant (string-join (rest (string-split (~a tester) "-")) "-"))
+       (when (not (member test-variant (hash-ref constructors (hash-ref types constructor))))
+         (error "Invalid tester/constructor combination" tester constructor))
+       (if (equal? test-variant (~a constructor)) 'true 'false)]
       [(? list?)
        (map injectivity expr)]
       [_ expr]))
