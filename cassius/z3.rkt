@@ -322,12 +322,12 @@
   cmds)
 
 (define ((z3-sink-functions . fns ) cmds)
-  "Turn (fld (ite c x y)) into (ite c (fld x) (fld y))."
+  "Turn (fn (ite c x y)) into (ite c (fn x) (fn y))."
   (define (field? x) (member x fns))
   (define (sink-field expr)
     (match expr
       [`(,(? field? fld) (ite ,c ,x ,y))
-       `(ite ,(sink-field c) ,(sink-field (list fld x)) ,(sink-field (list fld x)))]
+       `(ite ,(sink-field c) ,(sink-field (list fld x)) ,(sink-field (list fld y)))]
       [`(,(? field? fld) ,arg)
        (define arg* (sink-field arg))
        (match arg*
