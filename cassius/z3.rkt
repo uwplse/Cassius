@@ -599,7 +599,7 @@
 
 (define *emitter-passes*
   (list
-   (z3-expand 'an-element 'a-block-flow-box 'an-inline-box 'a-line-box)
+   (z3-expand 'an-element 'a-block-flow-box 'an-inline-box 'a-line-box 'a-block-float-box)
    (z3-expand 'previous 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'vnfbox 'vffbox)
    z3-unlet
    z3-assert-and
