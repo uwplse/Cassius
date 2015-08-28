@@ -14,11 +14,16 @@
 
         (= bp bf)
         (= (p-name bf) (flow-box (parent e)))
-        (= (v-name bf)
+        (= (vnf-name bf)
            ,(smt-cond
              [(is-no-elt (previous e)) nil-box]
              [(is-float/none (float (previous e))) (flow-box (previous e))]
-             [else (v-name (get/box (flow-box (previous e))))]))
+             [else (vnf-name (get/box (flow-box (previous e))))]))
+        (= (vff-name bf)
+           ,(smt-cond
+             [(is-no-elt (previous e)) (vff-name (get/box (flow-box (parent e))))]
+             [(is-float/none (float (previous e))) (vff-name (get/box (flow-box (previous e))))]
+             [else (flow-box (previous e))]))
         (= (f-name bf) (flow-box (fchild e)))
         (= (l-name bf) (flow-box (lchild e)))
 
@@ -178,6 +183,7 @@
   (define e `(get/elt (element ,b)))
   (define pb `(pbox ,b))
   (define vb `(vbox ,b))
+  (define vff `(vffbox ,b))
   (define fb `(fbox ,b))
   (define lb `(lbox ,b))
 
@@ -188,10 +194,15 @@
    ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
        `(= (,field ,b) 0.0))
 
-   #;(= (left-outer ,b) (left-content ,pb))
-   #;(= (right-outer ,b) (right-content ,pb))
-   (= (y ,b) (ite (is-no-box ,vb) (top-content ,pb) (bottom-border ,vb)))
-   #;(= (w ,b) (w ,pb))
+   (ite (>= (top-outer ,b) (bottom-outer ,vff))
+        (= (left-outer ,b) (left-content ,pb))
+        (= (left-outer ,b) (right-outer ,vff)))
+   (= (right-outer ,b) (right-content ,pb))
+   (ite (and
+         (> (- (right-outer ,lb) (left-outer ,fb)) (- (right-content ,pb) (right-outer ,vff)))
+         (= (vnfbox ,b) (vnfbox ,vff)))
+        (= (top-outer ,b) (bottom-outer ,vff))
+        (= (y ,b) (ite (is-no-box ,vb) (top-content ,pb) (bottom-border ,vb))))
 
    (not (is-no-box ,fb))
    ,(smt-cond

@@ -95,20 +95,12 @@
    (>= (ml ,b) 0.0)
    (>= (mr ,b) 0.0)))
 
-(define (general-float-constraints dom elt)
-  (define e (dom-get dom elt))
+(define (general-float-constraints e)
   (define b `(get/box (flow-box ,e)))
   (define pb `(pbox ,b))
 
-  (define enf #f)
-  (define eff #f)
-  (for ([elt* (in-tree-values (dom-tree dom))] #:break (eq? elt elt*))
-    (match elt*
-      [(list 'FLOAT x ...) (set! eff elt*)]
-      [_ (set! enf elt*)]))
-
-  (define bnf (if enf `(get/box (flow-box ,(dom-get dom enf))) 'no-box))
-  (define bff (if eff `(get/box (flow-box ,(dom-get dom eff))) 'no-box))
+  (define bnf `(vnfbox ,b))
+  (define bff `(vffbox ,b))
 
   (asserts
 
@@ -174,4 +166,9 @@
    ; SIMPL: at the left/right or next to an existing floating box
    ; TODO: Analogous for right-floating boxes
    (or (= (left-outer ,b) (left-content ,pb))
-       (and (is-box ,bff) (= (left-outer ,b) (right-outer ,bff))))))
+       (and (is-box ,bff) (= (left-outer ,b) (right-outer ,bff))))
+
+   ; Two restrictions on floats to make solving efficient
+   (> (bottom-outer ,b) (bottom-outer ,bff))
+   (=> (= (top-outer ,b) (bottom-outer ,bff))
+       (= (right-outer ,bff) (right-content ,pb)))))

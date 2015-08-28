@@ -48,7 +48,7 @@
   [('Selector 'sel/all) "*"]
   [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
   [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
-  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,p ,v ,f ,l ,e))
+  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,p ,vnf ,vff ,f ,l ,e))
    (with-output-to-string
      (lambda ()
        (printf "~a ~a×~a at (~a, ~a)\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
@@ -56,9 +56,7 @@
                 (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
                 (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
        (printf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-       (printf "padding: ~a ~a ~a ~a\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))
-       (printf "elt ~a parent ~a previous ~a\n" e p v)
-       (printf "first ~a last ~a\n\n" f l)))]
+       (printf "padding: ~a ~a ~a ~a\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))))]
   [('Style (list 'style rest ...))
    (with-output-to-string
      (lambda ()
@@ -203,7 +201,9 @@
   (emit `(assert (= (previous-name (get/elt ,(elt-name (car (dom-tree dom))))) nil-elt)))
   (emit `(assert (= (first-child-name ,elt) ,(elt-name (car (dom-tree dom))))))
   (emit `(assert (= (parent-name ,elt) nil-elt)))
-  (emit `(assert (= (previous-name ,elt) nil-elt))))
+  (emit `(assert (= (previous-name ,elt) nil-elt)))
+  (emit `(assert (= (vff-name ,b) nil-box)))
+  (emit `(assert (= (vnf-name ,b) nil-box))))
 
 (define (stylesheet-constraints sheet)
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
@@ -292,10 +292,9 @@
       [(list 'TEXT constraints ...) box-inline-constraints]))
   (for-each emit (box-constraints (sformat "~a-flow-box" (elt-name elt)))))
 
-(define (float-constraints dom emit)
-  (for ([(elt children) (in-tree-subtrees (dom-tree dom))])
-    (when (eq? (car elt) 'FLOAT)
-      (for-each emit (general-float-constraints dom elt)))))
+(define (float-constraints dom emit elt children)
+  (when (eq? (car elt) 'FLOAT)
+    (for-each emit (general-float-constraints (dom-get dom elt)))))
 
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display float)
@@ -332,7 +331,7 @@
           (sow `(echo ,(format "Generating ~a" (object-name cns))))
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
             (cns dom sow elt children)))
-        (when (memq 'float (flags))
+        #;(when (memq 'float (flags))
           (sow `(echo ,(format "Generating Float constraints")))
           (for ([dom doms]) (float-constraints dom sow)))))
 
@@ -360,7 +359,7 @@
 
   (define constraints
     (list tree-constraints info-constraints user-constraints element-constraints
-          (procedure-rename (style-constraints sheet) 'style-constraints)))
+          (procedure-rename (style-constraints sheet) 'style-constraints) float-constraints))
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")

@@ -20,32 +20,32 @@
 
 (define-document (doc-a #:width 1015)
   ([BLOCK :tag HTML :x 0 :y 0 :w 1015 #|:h 355|#]
-   ([BLOCK :tag BODY :x 8 :y 16 :w 800 #|:h 323|#]
-    ([FLOAT :tag DIV :x 18 :y 16 :w 200 :h 200])
+   ([BLOCK :tag BODY :x 8 :y 16 :w 800 #|:h 323|# :print]
+    ([FLOAT :tag DIV :x 18 :y 16 :w 200 :h 200 :print])
     ([BLOCK :tag P :x 8 :y 16 :w 800 :h 323]
-     ([LINE :x 228 :w 572 :y 16 :h 19]
+     ([LINE :x 228 :w 580 :y 16 :h 19 :print]
       ([TEXT :x 228 :y 17.5 :w 568 :h 16]))
-     ([LINE :x 228 :w 572 :y 35 :h 19]
+     ([LINE :x 228 :w 580 :y 35 :h 19]
       ([TEXT :x 228 :y 36.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 54 :h 19]
+     ([LINE :x 228 :w 580 :y 54 :h 19]
       ([TEXT :x 228 :y 55.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 73 :h 19]
+     ([LINE :x 228 :w 580 :y 73 :h 19]
       ([TEXT :x 228 :y 74.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 92 :h 19]
+     ([LINE :x 228 :w 580 :y 92 :h 19]
       ([TEXT :x 228 :y 93.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 111 :h 19]
+     ([LINE :x 228 :w 580 :y 111 :h 19]
       ([TEXT :x 228 :y 112.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 130 :h 19]
+     ([LINE :x 228 :w 580 :y 130 :h 19]
       ([TEXT :x 228 :y 131.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 149 :h 19]
+     ([LINE :x 228 :w 580 :y 149 :h 19]
       ([TEXT :x 228 :y 150.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 168 :h 19]
+     ([LINE :x 228 :w 580 :y 168 :h 19]
       ([TEXT :x 228 :y 169.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 187 :h 19]
+     ([LINE :x 228 :w 580 :y 187 :h 19]
       ([TEXT :x 228 :y 188.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 206 :h 19]
+     ([LINE :x 228 :w 580 :y 206 :h 19]
       ([TEXT :x 228 :y 207.5 :w 565 :h 16]))
-     ([LINE :x 228 :w 572 :y 225 :h 19]
+     ([LINE :x 228 :w 580 :y 225 :h 19]
       ([TEXT :x 228 :y 226.5 :w 565 :h 16]))
      ([LINE :x 8 :w 800 :y 244 :h 19]
       ([TEXT :x 8 :y 245.5 :w 793 :h 16]))

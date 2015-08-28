@@ -41,7 +41,8 @@
                   (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                   (pt Real) (pr Real) (pb Real) (pl Real)
                   (bt Real) (br Real) (bb Real) (bl Real)
-                  (p-name BoxName) (v-name BoxName) (f-name BoxName) (l-name BoxName)
+                  (p-name BoxName) (f-name BoxName) (l-name BoxName)
+                  (vnf-name BoxName) (vff-name BoxName)
                   (element ElementName)))
         (BoxType box/viewport box/text box/inline box/block box/line)
         (Element no-elt
@@ -94,6 +95,8 @@
     (define-fun lchild   ((elt Element)) Element (get/elt (last-child-name elt)))
 
     (define-fun pbox ((box Box)) Box (get/box (p-name box)))
-    (define-fun vbox ((box Box)) Box (get/box (v-name box)))
+    (define-fun vbox ((box Box)) Box (get/box (vnf-name box)))
+    (define-fun vnfbox ((box Box)) Box (get/box (vnf-name box)))
+    (define-fun vffbox ((box Box)) Box (get/box (vff-name box)))
     (define-fun fbox ((box Box)) Box (get/box (f-name box)))
     (define-fun lbox ((box Box)) Box (get/box (l-name box)))))
