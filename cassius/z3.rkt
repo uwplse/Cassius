@@ -536,7 +536,7 @@
           [_ cmd]))
       cmds))
 
-(define (z3-injectivity cmds)
+(define (z3-simplif cmds)
   (define constructors (make-hash))
   (define types (make-hash))
 
@@ -548,19 +548,34 @@
     (and (string=? (first parts) "is")
          (constructor? (string->symbol (string-join (rest parts) "-")))))
 
-  (define (injectivity expr)
+  (define (simpl expr)
     (match expr
       [`(,(? constructor-tester? tester)
-         (or (,(? constructor? constructor) ,_ ...) ,(? constructor? constructor)))
-       (define test-variant (string-join (rest (string-split (~a tester) "-")) "-"))
-       (when (not (member test-variant (hash-ref constructors (hash-ref types constructor))))
+         ,(or (list (? constructor? constructor) _ ...) (? constructor? constructor)))
+       (define test-variant (string->symbol (string-join (rest (string-split (~a tester) "-")) "-")))
+       (unless (member test-variant (hash-ref constructors (hash-ref types constructor)))
          (error "Invalid tester/constructor combination" tester constructor))
-       (if (equal? test-variant (~a constructor)) 'true 'false)]
-      [(? list?)
-       (map injectivity expr)]
+       (if (equal? test-variant constructor) 'true 'false)]
+      [`(ite false ,a ,b) (simpl b)]
+      [`(ite true ,a ,b) (simpl a)]
+      [(list 'and rest ... )
+       (define rest* (map simpl rest))
+       (if (member 'false rest*) 'false (cons 'and rest*))]
+      [(list 'or rest ... )
+       (define rest* (map simpl rest))
+       (if (member 'true rest*) 'true (cons 'or rest*))]
+      [(list '= rest ...)
+       (define rest* (map simpl rest))
+       (if (and (= (length rest*) 2) (apply equal? rest*)) 'true (cons '= rest*))]
+      [`(ite ,c ,a ,b)
+       (let ([c* (simpl c)])
+         (if (equal? c c*)
+             `(ite ,c ,(simpl a) ,(simpl b))
+             (simpl `(ite ,c* ,a ,b))))]
+      [(? list?) (map simpl expr)]
       [_ expr]))
 
-  (for/list ([cmd cmds])
+  (for/reap [sow] ([cmd cmds])
     (match cmd
       [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
        (for ([name names] [vars varss])
@@ -569,37 +584,23 @@
                       (define constructor (match var [(? symbol?) var] [(list name _ ...) name]))
                       (hash-set! types constructor name)
                       constructor)))
-       cmd]
+       (sow cmd)]
+      [`(define-fun ,names ((,args ,atypes)) ,rtype ,body)
+       (sow `(define-fun ,names ((,args ,atypes)) ,rtype ,(simpl body)))]
       [`(assert ,expr)
-       `(assert ,(injectivity expr))]
-      [_ cmd])))
-
-(define (z3-simplify-if cmds)
-  (define (simplify-if expr)
-    (match expr
-      [`(ite false ,a ,b) (simplify-if b)]
-      [`(ite true ,a ,b) (simplify-if a)]
-      [(list 'and _ ... 'false _ ...) 'false]
-      [(list 'and _ ... 'true _ ...) (cons 'and (remove 'true (rest expr)))]
-      [(list 'or _ ... 'true _ ...) 'true]
-      [(list 'or _ ... 'false _ ...) (cons 'or (remove 'false (rest expr)))]
-      [(? list?) (map simplify-if expr)]
-      [_ expr]))
-  (for/list ([cmd cmds])
-    (match cmd
-      [`(assert ,expr)
-       `(assert ,(simplify-if expr))]
-      [_ cmd])))
+       (define s (simpl expr))
+       (when (not (eq? s 'true)) (sow `(assert ,s)))]
+      [_ (sow cmd)])))
 
 (define to-resolve
   '(flow-box float-box child-box element
              get/elt first-child-name last-child-name parent-name previous-name
-             get/box p-name v-name f-name l-name))
+             get/box p-name vnf-name vff-name f-name l-name))
 
 (define *emitter-passes*
   (list
-   (map z3-expand '(is-an-element))
-   (map z3-expand '(previous parent fchild lchild pbox vbox fbox lbox))
+   (z3-expand 'is-an-element)
+   (z3-expand 'previous 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'vnfbox 'vffbox)
    z3-unlet
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
@@ -609,11 +610,14 @@
    (z3-sink-fields-and 'get/box 'get/elt)
    (apply z3-resolve-fns to-resolve)
    ; It's important to lift and expand earlier up to make these passes fast.
-   (map z3-expand '(get/box get/elt)) z3-injectivity z3-simplify-if
+   #;(z3-expand 'get/box 'get/elt) z3-simplif
    ; Among other things, this eliminates the get/box and get/elt functions entirely
-   z3-dco z3-movedefs
+   z3-dco
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
    z3-debughelp))
 
 (define (z3-prepare exprs)
-  (foldl (λ (action exprs*) (action exprs*)) exprs (flatten *emitter-passes*)))
+  (define start (current-inexact-milliseconds))
+  (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
+    #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
+    (action exprs)))
