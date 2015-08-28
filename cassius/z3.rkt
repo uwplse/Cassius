@@ -599,13 +599,12 @@
 
 (define *emitter-passes*
   (list
-   (z3-expand 'is-an-element)
+   (z3-expand 'an-element 'a-block-flow-box 'an-inline-box 'a-line-box)
    (z3-expand 'previous 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'vnfbox 'vffbox)
    z3-unlet
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
    (apply z3-resolve-fns to-resolve)
-   #;z3-print-all
    #;z3-simplifier
    (z3-sink-fields-and 'get/box 'get/elt)
    (apply z3-resolve-fns to-resolve)
