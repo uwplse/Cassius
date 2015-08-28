@@ -356,15 +356,16 @@
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")
-    (declare-datatypes ()
-                       ((Id no-id ,@(remove-duplicates ids))
-                        (TagNames no-tag ,@(remove-duplicates tags))
-                        (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
-                        (ElementName ,@elt-names nil-elt)
-                        (BoxName
-                         ,@(map (curry sformat "~a-flow") elt-names)
-                         ,@(map (curry sformat "~a-real") elt-names)
-                         nil-box)))
+    (declare-datatypes
+     () ; No parameters
+     ((Id no-id ,@(remove-duplicates ids))
+      (TagNames no-tag ,@(remove-duplicates tags))
+      (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
+      (ElementName ,@elt-names nil-elt)
+      (BoxName
+       ,@(map (curry sformat "~a-flow") elt-names)
+       ,@(map (curry sformat "~a-real") elt-names)
+       nil-box)))
     ,@css-declarations
     ,@dom-declarations
     ,@(getter-definitions doms)
