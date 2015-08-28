@@ -35,16 +35,16 @@
 
   (define query (all-constraints sheet documents))
   (define time-constraints (current-inexact-milliseconds))
-  (eprintf "[~as] Produced ~a constraints\n"
+  (eprintf "[~as] Produced ~a constraints of ~a terms\n"
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
-           (length query))
+           (length query) (tree-size query))
 
   (when (memq 'z3c (flags))
     (set! query (z3-prepare query)))
   (define time-prepare (current-inexact-milliseconds))
-  (eprintf "[~as] Prepared ~a constraints\n"
+  (eprintf "[~as] Prepared ~a constraints of ~a terms\n"
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
-           (length query))
+           (length query) (tree-size query))
 
   (define z3-result
     (with-handlers ([exn:break? (lambda (e) 'break)])

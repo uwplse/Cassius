@@ -3,7 +3,8 @@
 (provide
  reap for/reap for*/reap
  sformat slower
- flags all-flags)
+ flags all-flags
+ tree-size)
 
 (define flags (make-parameter '(z3c)))
 (define all-flags '(opt float z3c))
@@ -28,3 +29,8 @@
 
 (define (slower sym)
   (string->symbol (string-foldcase (symbol->string sym))))
+
+(define (tree-size l)
+  (if (list? l)
+      (apply + (map tree-size l))
+      1))
