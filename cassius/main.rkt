@@ -292,10 +292,6 @@
       [(list 'TEXT constraints ...) box-inline-constraints]))
   (for-each emit (box-constraints (sformat "~a-flow-box" (elt-name elt)))))
 
-(define (float-constraints dom emit elt children)
-  (when (eq? (car elt) 'FLOAT)
-    (for-each emit (general-float-constraints (dom-get dom elt)))))
-
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display float)
     (match elt
@@ -330,10 +326,7 @@
         (for ([cns constraints])
           (sow `(echo ,(format "Generating ~a" (object-name cns))))
           (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
-            (cns dom sow elt children)))
-        #;(when (memq 'float (flags))
-          (sow `(echo ,(format "Generating Float constraints")))
-          (for ([dom doms]) (float-constraints dom sow)))))
+            (cns dom sow elt children)))))
 
 (define (all-constraints sheet doms)
   (define-values (tags ids)
@@ -359,7 +352,7 @@
 
   (define constraints
     (list tree-constraints info-constraints user-constraints element-constraints
-          (procedure-rename (style-constraints sheet) 'style-constraints) float-constraints))
+          (procedure-rename (style-constraints sheet) 'style-constraints)))
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")
