@@ -50,7 +50,7 @@
                   (display Display) (float Float) (textalign TextAlign)
                   (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
                   (first-child-name ElementName) (last-child-name ElementName)
-                  (flow-box BoxName) #;(float-box BoxName) (child-box BoxName)))))))
+                  (flow-box BoxName)))))))
 
 (define dom-definitions
   `((define-fun left-outer ((box Box)) Real (- (x box) (ml box)))

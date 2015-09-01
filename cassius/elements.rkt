@@ -10,9 +10,8 @@
 
 (define element-definitions
   `((define-fun an-element ((e Element)) Bool
-      ,(smt-let ([r (rules e)] [bp (get/box (child-box e))] [bf (get/box (flow-box e))])
+      ,(smt-let ([r (rules e)] [bf (get/box (flow-box e))])
 
-        (= bp bf)
         (= (p-name bf) (flow-box (parent e)))
         (= (vnf-name bf)
            ,(smt-cond
@@ -44,13 +43,13 @@
            (ite (is-float/inherit (style.float r)) (float (parent e)) (style.float r)))))
 
     (define-fun flow-compute-y ((b Box)) Real
-      (let ([vb (vbox b)] [pb (pbox b)])
+      (let ([vb (vbox b)] [p (pbox b)])
         (ite (is-no-box vb)
-             (ite (and (not (= (tagname (get/elt (element pb))) tag/html))
-                       (is-float/none (float (get/elt (element pb))))
-                       (= (pt pb) 0.0) (= (bt pb) 0.0))
-                  (top-content pb)
-                  (+ (top-content pb) (+ (mtp b) (mtn b))))
+             (ite (and (not (= (tagname (get/elt (element p))) tag/html))
+                       (is-float/none (float (get/elt (element p))))
+                       (= (pt p) 0.0) (= (bt p) 0.0))
+                  (top-content p)
+                  (+ (top-content p) (+ (mtp b) (mtn b))))
              (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))))
 
     (define-fun a-block-flow-box ((b Box)) Bool

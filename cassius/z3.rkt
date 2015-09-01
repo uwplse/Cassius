@@ -593,9 +593,9 @@
       [_ (sow cmd)])))
 
 (define to-resolve
-  '(flow-box float-box child-box element
-             get/elt first-child-name last-child-name parent-name previous-name next-name
-             get/box p-name vnf-name vff-name f-name l-name n-name))
+  (append
+   '(get/elt flow-box first-child-name last-child-name parent-name previous-name next-name)
+   '(get/box element p-name vnf-name vff-name f-name l-name n-name)))
 
 (define *emitter-passes*
   (list
@@ -609,8 +609,7 @@
    (z3-sink-fields-and 'get/box 'get/elt)
    (apply z3-resolve-fns to-resolve)
    ; It's important to lift and expand earlier up to make these passes fast.
-   #;(z3-expand 'get/box 'get/elt) z3-simplif
-   ; Among other things, this eliminates the get/box and get/elt functions entirely
+   (z3-expand 'get/box 'get/elt) z3-simplif
    z3-dco
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
    z3-debughelp))
