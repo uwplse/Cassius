@@ -19,6 +19,11 @@
              [(is-no-elt (previous e)) nil-box]
              [(is-float/none (float (previous e))) (flow-box (previous e))]
              [else (vnf-name (get/box (flow-box (previous e))))]))
+        (= (n-name bf)
+           ,(smt-cond
+             [(is-no-elt (next e)) nil-box]
+             [(is-float/none (float (next e))) (flow-box (next e))]
+             [else (n-name (get/box (flow-box (next e))))]))
         (= (vff-name bf)
            ,(smt-cond
              [(is-no-elt (previous e)) (vff-name (get/box (flow-box (parent e))))]

@@ -594,13 +594,13 @@
 
 (define to-resolve
   '(flow-box float-box child-box element
-             get/elt first-child-name last-child-name parent-name previous-name
-             get/box p-name vnf-name vff-name f-name l-name))
+             get/elt first-child-name last-child-name parent-name previous-name next-name
+             get/box p-name vnf-name vff-name f-name l-name n-name))
 
 (define *emitter-passes*
   (list
    (z3-expand 'an-element 'a-block-flow-box 'an-inline-box 'a-line-box 'a-block-float-box)
-   (z3-expand 'previous 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'vnfbox 'vffbox)
+   (z3-expand 'previous 'next 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'nbox 'vnfbox 'vffbox)
    z3-unlet
    z3-assert-and
    (apply z3-lift-arguments to-resolve)

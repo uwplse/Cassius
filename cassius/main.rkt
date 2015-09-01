@@ -47,7 +47,7 @@
   [('Selector 'sel/all) "*"]
   [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
   [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
-  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,p ,vnf ,vff ,f ,l ,e))
+  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,p ,f ,l ,n ,vnf ,vff ,e))
    (with-output-to-string
      (lambda ()
        (printf "~a ~a×~a at (y ~a, x ~a)\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
@@ -95,8 +95,10 @@
     (emit `(assert (= (parent-name ,(elt-get child)) ,(elt-name elt)))))
   ; Previous element
   (for ([child (sequence-map car children)]
-        [prev (sequence-append (in-value 'nil-elt) (sequence-map (compose elt-name car) children))])
-    (emit `(assert (= (previous-name ,(elt-get child)) ,prev))))
+        [prev (sequence-append (in-value 'nil-elt) (sequence-map (compose elt-name car) children))]
+        [next (sequence-append (sequence-map (compose elt-name car) children) (in-value 'nil-elt))])
+    (emit `(assert (= (previous-name ,(elt-get child)) ,prev)))
+    (emit `(assert (= (next-name ,(elt-get child)) ,next))))
 
   ; First/last child
   (emit `(assert (= (first-child-name ,(elt-get elt)) ,(get-child children first))))
@@ -198,9 +200,11 @@
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
   (emit `(assert (= (parent-name (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
   (emit `(assert (= (previous-name (get/elt ,(elt-name (car (dom-tree dom))))) nil-elt)))
+  (emit `(assert (= (next-name (get/elt ,(elt-name (car (dom-tree dom))))) nil-elt)))
   (emit `(assert (= (first-child-name ,elt) ,(elt-name (car (dom-tree dom))))))
   (emit `(assert (= (parent-name ,elt) nil-elt)))
   (emit `(assert (= (previous-name ,elt) nil-elt)))
+  (emit `(assert (= (next-name ,elt) nil-elt)))
   (emit `(assert (= (vff-name ,b) nil-box)))
   (emit `(assert (= (vnf-name ,b) nil-box))))
 

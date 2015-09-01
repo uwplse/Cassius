@@ -42,13 +42,13 @@
                   (pt Real) (pr Real) (pb Real) (pl Real)
                   (bt Real) (br Real) (bb Real) (bl Real)
                   (p-name BoxName) (f-name BoxName) (l-name BoxName)
-                  (vnf-name BoxName) (vff-name BoxName)
+                  (n-name BoxName) (vnf-name BoxName) (vff-name BoxName)
                   (element ElementName)))
         (BoxType box/viewport box/text box/inline box/block box/line)
         (Element no-elt
              (elt (document Document) (tagname TagNames) (id Id) (rules Style)
                   (display Display) (float Float) (textalign TextAlign)
-                  (previous-name ElementName) (parent-name ElementName)
+                  (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
                   (first-child-name ElementName) (last-child-name ElementName)
                   (flow-box BoxName) #;(float-box BoxName) (child-box BoxName)))))))
 
@@ -90,11 +90,13 @@
           (> (bottom-outer box2) (top-outer box1) (top-outer box2))))
 
     (define-fun previous ((elt Element)) Element (get/elt (previous-name elt)))
+    (define-fun next ((elt Element)) Element (get/elt (next-name elt)))
     (define-fun parent   ((elt Element)) Element (get/elt (parent-name elt)))
     (define-fun fchild   ((elt Element)) Element (get/elt (first-child-name elt)))
     (define-fun lchild   ((elt Element)) Element (get/elt (last-child-name elt)))
 
     (define-fun pbox ((box Box)) Box (get/box (p-name box)))
+    (define-fun nbox ((box Box)) Box (get/box (n-name box)))
     (define-fun vbox ((box Box)) Box (get/box (vnf-name box)))
     (define-fun vnfbox ((box Box)) Box (get/box (vnf-name box)))
     (define-fun vffbox ((box Box)) Box (get/box (vff-name box)))
