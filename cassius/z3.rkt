@@ -58,7 +58,7 @@
                (write "(get-unsat-core)")
                (let ([msg2 (read out)])
                  (debug #:tag 'output "<- ~a\n" msg2)
-                 (error (format "Z3 unsatisfiable: ~a\n~a" msg2
+                 (error (format "Z3 unsatisfiable (core is ~a constraints)\n~a" (length msg2)
                                 (string-join
                                  (for/list ([var msg2])
                                            (format "  ~a: ~a" var (or (get-unsat var) (hash-ref asserts var)))) "\n"))))]

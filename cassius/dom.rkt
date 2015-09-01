@@ -86,8 +86,8 @@
       (or (<= x y z) (>= x y z)))
 
     (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
-      (or (> (+ (y box1) (box-height box1)) (y box2) (y box1))
-          (> (+ (y box2) (box-height box2)) (y box1) (y box2))))
+      (or (> (bottom-outer box1) (top-outer box2) (top-outer box1))
+          (> (bottom-outer box2) (top-outer box1) (top-outer box2))))
 
     (define-fun previous ((elt Element)) Element (get/elt (previous-name elt)))
     (define-fun parent   ((elt Element)) Element (get/elt (parent-name elt)))
