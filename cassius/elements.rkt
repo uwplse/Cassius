@@ -53,8 +53,7 @@
              (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))))
 
     (define-fun margin-collapse ((b Box)) Bool
-      ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
-                 [p (pbox b)]
+      ,(smt-let ([e (get/elt (element b))] [p (pbox b)]
                  [fb (ite (is-float/none (float (get/elt (element (fbox b))))) (fbox b) (nbox (fbox b)))]
                  [lb (ite (is-float/none (float (get/elt (element (lbox b))))) (lbox b) (vbox (lbox b)))])
 
@@ -78,7 +77,8 @@
 
     (define-fun a-block-flow-box ((b Box)) Bool
       ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
-                 [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
+                 [p (pbox b)]
+                 [lb (ite (is-float/none (float (get/elt (element (lbox b))))) (lbox b) (vbox (lbox b)))])
                 (= (type b) box/block)
                 (margin-collapse b)
 
