@@ -401,7 +401,7 @@
        `(let (,@(for/list ([var vars] [val vals]) `(,var ,(expand-term val)))) ,(expand-term body))]
       [(list (? (curry hash-has-key? fns) name) args ...)
        (match-define (list names body) (hash-ref fns name))
-       (capture-avoiding-substitute body (map cons names args))]
+       (expand-term (capture-avoiding-substitute body (map cons names args)))]
       [(? list?)
        (map expand-term expr)]
       [_ expr]))

@@ -52,28 +52,35 @@
                   (+ (top-content p) (+ (mtp b) (mtn b))))
              (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))))
 
-    (define-fun a-block-flow-box ((b Box)) Bool
+    (define-fun margin-collapse ((b Box)) Bool
       ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
-                 [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
-                (= (type b) box/block)
+                 [p (pbox b)]
+                 [fb (ite (is-float/none (float (get/elt (element (fbox b))))) (fbox b) (nbox (fbox b)))]
+                 [lb (ite (is-float/none (float (get/elt (element (lbox b))))) (lbox b) (vbox (lbox b)))])
 
                 ; Computing maximum collapsed positive and negative margin
                 (= (mtp b)
                    (max (ite (> (mt b) 0.0) (mt b) 0.0)
-                        (ite (and (not (= (tagname e) tag/html)) (is-box fb) (is-float/none (float e))
+                        (ite (and (not (= (tagname e) tag/html)) (is-box fb)
                                   (= (pt b) 0.0) (= (bt b) 0.0)) (mtp fb) 0.0)))
                 (= (mtn b)
                    (min (ite (< (mt b) 0.0) (mt b) 0.0)
-                        (ite (and (not (= (tagname e) tag/html)) (is-box fb) (is-float/none (float e))
+                        (ite (and (not (= (tagname e) tag/html)) (is-box fb)
                                   (= (pt b) 0.0) (= (bt b) 0.0)) (mtn fb) 0.0)))
                 (= (mbp b)
                    (max (ite (> (mb b) 0.0) (mb b) 0.0)
-                        (ite (and (not (= (tagname e) tag/html)) (is-box lb) (is-float/none (float e))
+                        (ite (and (not (= (tagname e) tag/html)) (is-box lb)
                                   (= (pb b) 0.0) (= (bb b) 0.0)) (mbp lb) 0.0)))
                 (= (mbn b)
                    (min (ite (< (mb b) 0.0) (mb b) 0)
-                        (ite (and (not (= (tagname e) tag/html)) (is-box lb) (is-float/none (float e))
-                                  (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)))
+                        (ite (and (not (= (tagname e) tag/html)) (is-box lb)
+                                  (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)))))
+
+    (define-fun a-block-flow-box ((b Box)) Bool
+      ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
+                 [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
+                (= (type b) box/block)
+                (margin-collapse b)
 
                 ; Set properties that are settable with lengths
                 ,@(for/list ([prop '(width height padding-left padding-right padding-top padding-bottom margin-top margin-bottom)]
