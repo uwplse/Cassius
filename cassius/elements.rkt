@@ -171,6 +171,7 @@
       ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [vff (vffbox b)]
                  [f (fbox b)] [l (lbox b)] [vfe (get/elt (element (vffbox b)))])
                 (= (type b) box/line)
+                (= (float e) float/none) ; Where else would we set this?
 
                 ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
                     `(= (,field b) 0.0))
