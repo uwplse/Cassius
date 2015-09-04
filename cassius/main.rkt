@@ -177,6 +177,7 @@
   (define elt `(get/elt ,(dom-root dom)))
   (define b `(get/box (flow-box ,elt)))
 
+  (emit `(echo ,(format "Defining the ~a root element" (dom-name dom))))
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
   (emit `(assert (= (tagname ,elt) no-tag)))
@@ -260,15 +261,15 @@
        (emit `(declare-const ,(sformat "~a.style" name) Style))
        (emit `(assert (= ,(sformat "~a.style" name) (rules ,(dom-get dom elt)))))
        (interpret rest)]
-      [(list ':id id rest ...) (interpret rest)]
-      [(list ':tag tag rest ...) (interpret rest)]
       [(list (and (or ':x ':y ':w ':h) field) value rest ...)
        (define fun (match field [':x 'x] [':y 'y] [':h 'box-height] [':w 'box-width]))
-       (when (memq (car elt) '(LINE TEXT INLINE BLOCK))
+       (when (or true (memq (car elt) '(TEXT MAGIC)))
          (emit `(assert (! (= (,fun (get/box (flow-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
        (interpret rest)]
-      [(list)
-       (void)])))
+      [(list ':id id rest ...) (interpret rest)]
+      [(list ':tag tag rest ...) (interpret rest)]
+      [(list ':text txt rest ...) (interpret rest)]
+      [(list) (void)])))
 
 (define (element-constraints dom emit elt children)
   (emit (element-general-constraints (elt-name elt))))
@@ -284,18 +285,17 @@
   (for-each emit (cns (sformat "~a-flow-box" (elt-name elt)))))
 
 (define (info-constraints dom emit elt children)
-  (define-values (tagname idname display)
-    (match elt
-      [(list 'BLOCK :tag tagname ':id idname _ ...)
-       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/block)]
-      [(list 'INLINE ':tag tagname ':id idname _ ...)
-       (values (sformat "tag/~a" (slower tagname)) (sformat "id/~a" (slower idname)) 'display/inline)]
-      [(list 'BLOCK ':tag tagname _ ...)
-       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/block)]
-      [(list 'INLINE ':tag tagname _ ...)
-       (values (sformat "tag/~a" (slower tagname)) 'no-id 'display/inline)]
-      [(list 'LINE _ ...) (values 'no-tag 'no-id 'display/block)]
-      [(list 'TEXT _ ...) (values 'no-tag 'no-id 'display/inline)]))
+  (define tagname
+    (if (memq ':tag elt) (sformat "tag/~a" (slower (cadr (memq ':tag elt)))) 'no-tag))
+  (define idname
+    (if (memq ':id elt) (sformat "id/~a" (slower (cadr (memq ':id elt)))) 'no-id))
+  (define display
+    (match (car elt)
+      ['BLOCK 'display/block]
+      ['MAGIC 'display/block]
+      ['INLINE 'display/inline]
+      ['TEXT 'display/inline]
+      ['LINE 'display/block]))
 
   (emit `(assert (= (tagname ,(dom-get dom elt)) ,tagname)))
   (emit `(assert (= (id ,(dom-get dom elt)) ,idname)))
@@ -318,12 +318,8 @@
   (define-values (tags ids)
     (reap [save-tag save-id]
           (for* ([dom doms] [elt (in-tree-values (dom-tree dom))])
-            (when (memq ':id elt) (save-id (sformat "id/~a" (cadr (memq ':id elt)))))
-            (match elt
-              [(list 'BLOCK ':tag tag cmds ...) (save-tag (sformat "tag/~a" (slower tag)))]
-              [(list 'INLINE ':tag tag cmds ...) (save-tag (sformat "tag/~a" (slower tag)))]
-              [(list 'LINE cmds ...) (void)]
-              [(list 'TEXT cmds ...) (void)]))
+            (when (memq ':id elt) (save-id (sformat "id/~a" (slower (cadr (memq ':id elt))))))
+            (when (memq ':tag elt) (save-tag (sformat "tag/~a" (slower (cadr (memq ':tag elt)))))))
           (for ([rule sheet])
             (match rule
               ['? (void)]

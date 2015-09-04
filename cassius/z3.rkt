@@ -448,6 +448,14 @@
 (define (z3-assert-and cmds)
   (for/reap (sow) ([cmd cmds] [i (in-naturals)])
     (match cmd
+      [`(assert (ite ,c (and ,exprs1 ...) (and ,exprs2 ...)))
+       (let loop ([exprs1 exprs1] [exprs2 exprs2])
+         (unless (and (null? exprs1) (null? exprs2))
+           (sow `(assert
+                  (ite ,c
+                       ,(if (null? exprs1) 'true (car exprs1))
+                       ,(if (null? exprs2) 'true (car exprs2)))))
+           (loop (cdr exprs1) (cdr exprs1))))]
       [`(assert (and ,exprs ...))
        (for ([expr exprs])
          (sow `(assert ,expr)))]
@@ -599,17 +607,18 @@
 
 (define *emitter-passes*
   (list
-   (z3-expand 'an-element 'a-block-flow-box 'an-inline-box 'a-line-box 'a-block-float-box)
+   (z3-expand 'an-element)
    (z3-expand 'previous 'next 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'nbox 'vnfbox 'vffbox)
    z3-unlet
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
    (apply z3-resolve-fns to-resolve)
    #;z3-simplifier
+   z3-simplif
    (z3-sink-fields-and 'get/box 'get/elt)
    (apply z3-resolve-fns to-resolve)
    ; It's important to lift and expand earlier up to make these passes fast.
-   #;(z3-expand 'get/box 'get/elt) z3-simplif
+   #;(z3-expand 'get/box 'get/elt)
    z3-dco
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
    z3-debughelp))

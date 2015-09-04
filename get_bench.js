@@ -12,6 +12,7 @@ Line = curry(Box, "LINE")
 Inline = curry(Box, "INLINE")
 Page = curry(Box, "PAGE")
 Text = curry(Box, "TEXT")
+Magic = curry(Box, "MAGIC")
 
 Box.prototype.toString = function() {
     var s = "[" + this.type;
@@ -61,7 +62,10 @@ function val2px(val) {
     }
 }
 
-function cs(elt) {return window.getComputedStyle(elt);}
+function cs(elt) {
+    if (elt.nodeType !== document.ELEMENT_NODE) console.trace();
+    return window.getComputedStyle(elt);
+}
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
 function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt).display == "inline";}
@@ -70,14 +74,14 @@ function is_visible(elt) {return cs(elt).display != "none";}
 
 function is_flowroot(elt) {
     // CSS3BOX §4.2
-    // Block progression possibilities ignored, because block-progression assumed to be `tb`
+    // Block progression possibilities ignored, because block;-progression assumed to be `tb`
     return cs(elt).float !== "none" || cs(elt).overflow !== "visible" ||
-        ["table-cell", "table-caption", "inline-block", "inline-table"].indexOf(cs(elt).display) !== -1 ||
+        ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt).display) !== -1 ||
         ["static", "relative"].indexOf(cs(elt).position) === -1;
 }
 
 function get_lines(txt) {
-    function find_first_break(loff, roff) {
+    function find_first_break(txt, loff, roff) {
         if (loff !== loff || roff !== roff) throw "Error";
         if (roff - loff < 2) return roff;
         if (roff - loff == 2) {
@@ -94,16 +98,16 @@ function get_lines(txt) {
         r2.setEnd(txt, mid);
 
         if (r2.getClientRects().length > 1) {
-            return find_first_break(loff, mid);
+            return find_first_break(txt, loff, mid);
         } else {
-            return find_first_break(mid - 1, roff);
+            return find_first_break(txt, mid - 1, roff);
         }
     }
 
     var ranges = [];
     var cursor = 0;
     while (cursor < txt.length) {
-        var new_cursor = find_first_break(cursor, txt.length);
+        var new_cursor = find_first_break(txt, cursor, txt.length);
         var r = new Range();
         r.setStart(txt, cursor);
         r.setEnd(txt, new_cursor);
@@ -114,9 +118,91 @@ function get_lines(txt) {
     return ranges;
 }
 
-function make_boxes(elt, inflow, flows) {
-    var box;
+function is_text_container(elt) {
+    var has_inline = false, has_nf_block = false, has_text = false;
+    for (var i = 0; i < elt.childNodes.length; i++) {
+        var child = elt.childNodes[i];
+        if (is_comment(child)) continue
+        else if (is_text(child) && child.textContent.search(/^\s+$/) === -1) has_text = true;
+        else if (is_text(child)) continue;
+        else if (is_block(child) && !is_flowroot(child)) has_nf_block = true;
+        else if (is_inline(child)) has_inline = true;
+        else continue;
+    }
+    if ((has_inline || has_text) && has_nf_block) {
+        console.warn("Element has blocks and text", elt);
+    }
+    return (has_inline || has_text) && !has_nf_block;
+}
 
+function infer_lines(box, parent) {
+    function last_line() {
+        if (parent.children.length === 0 || parent.children[parent.children.length - 1].type !== "LINE") {
+            return null;
+        } else {
+            return parent.children[parent.children.length - 1];
+        }
+    }
+
+    function new_line() {
+        var l = Line({});
+        parent.children.push(l);
+        return l;
+    }
+
+    function fits(txt, line) {
+        if (!line) return false;
+        var prev = line;
+        while (prev.children.length) {
+            prev = prev.children[prev.children.length - 1];
+        }
+        var horiz_adj = (
+            txt.props.y + txt.props.h > prev.props.y && prev.props.y >= txt.props.y
+            || prev.props.y + prev.props.h > txt.props.y && txt.props.y >= prev.props.y)
+
+        return horiz_adj && txt.props.x >= prev.props.x + prev.props.w;
+    }
+
+    var stack = [];
+    var sstack = [];
+    function go(b) {
+        if (b.type == "TEXT") {
+            var l = last_line();
+            if (!fits(b, l)) {
+                l = new_line();
+                sstack = [];
+            }
+            for (var i = 0; i < stack.length; i++) {
+                if (!sstack[i]) {
+                    var sselt = new Box(stack[i].type, stack[i].props);
+                    (i == 0 ? l : sstack[i - 1]).children.push(sselt);
+                    sstack.push(sselt);
+                }
+            }
+            (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
+        } else if (b.type == "BLOCK") {
+            parent.children.push(b);
+        } else if (b.type == "INLINE") {
+            stack.push(b);
+            for (var i = 0; i < b.children.length; i++) {
+                var child = b.children[i];
+                go(child);
+            }
+            stack.pop(b);
+            sstack = sstack.slice(0, stack.length);
+        } else {
+            console.trace();
+            console.warn("Unknown box type", b);
+        }
+    }
+
+    for (var i = 0; i < box.children.length; i++) {
+        var child = box.children[i];
+        go(child);
+    }
+}
+
+function make_boxes(elt, inflow) {
     if (is_comment(elt)) {
         return;
     } else if (is_text(elt)) {
@@ -125,11 +211,11 @@ function make_boxes(elt, inflow, flows) {
             var r = ranges[i].getClientRects();
             if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
             r = r[0];
-            box = Text({
+            // Whitespace only line
+            if (r.width == 0 && r.height == 0) continue;
+            var box = Text({
                 x: r.x, y: r.y, w: r.width, h: r.height,
-                /*
                 text: '"' + ranges[i].toString().replace(/\s+/g, " ") + '"'
-                */
             });
             inflow.children.push(box);
         }
@@ -138,7 +224,7 @@ function make_boxes(elt, inflow, flows) {
     } else if (is_block(elt)) {
         var r = elt.getBoundingClientRect();
         var s = cs(elt);
-        box = Block({
+        var box = Block({
             tag: elt.tagName,
             x: r.x, y: r.y, w: r.width, h: r.height,
             /*
@@ -153,36 +239,54 @@ function make_boxes(elt, inflow, flows) {
 
         if (elt.id) box.props.id = elt.id;
 
-        if (false && is_flowroot(elt)) {
-            flows.push(box);
-            inflow.children.push(Block({of: box.name}));
+        inflow.children.push(box);
+
+        if (is_text_container(elt)) {
+            // Make a subtree under a fake box
+            var fake_parent = new Box("Fake", {});
+            for (var i = 0; i < elt.childNodes.length; i++) {
+                var child = elt.childNodes[i];
+                make_boxes(child, fake_parent);
+            }
+            // Then break it into lines
+            infer_lines(fake_parent, box);
         } else {
-            inflow.children.push(box);
+            for (var i = 0; i < elt.childNodes.length; i++) {
+                var child = elt.childNodes[i];
+                make_boxes(child, box);
+            }
         }
     } else if (is_inline (elt)) {
-        box = Inline({tag: elt.tagName});
+        var r = elt.getBoundingClientRect();
+        var box = Inline({tag: elt.tagName/*, x: r.x, y: r.y, w: r.width, h: r.height*/});
         inflow.children.push(box);
+
+        for (var i = 0; i < elt.childNodes.length; i++) {
+            var child = elt.childNodes[i];
+            make_boxes(child, box);
+        }
     } else {
         console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
-    }
+        // Quit iterating downward, who knows what is in this element
+        var r = elt.getBoundingClientRect();
+        var s = cs(elt);
+        var box = Magic({tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,});
 
-    for (var i = 0; i < elt.childNodes.length; i++) {
-        var child = elt.childNodes[i];
-        make_boxes(child, box, flows);
+        if (elt.id) box.props.id = elt.id;
+
+        inflow.children.push(box);
     }
 }
 
 function get_boxes() {
     var view = Page({w: window.innerWidth, h: window.innerHeight});
-    var flows = [view];
-    make_boxes(document.querySelector("html"), view, flows);
-    return flows;
+    make_boxes(document.querySelector("html"), view);
+    return view;
 }
 
 function page2cassius(name) {
-    var flows = get_boxes();
-    var page = flows[0];
-    var text = "(define-document (" + name + " #:width " + page.props.w +  ")";
+    var page = get_boxes();
+    var text = "(define-document (" + name + " #:width " + page.props.w +  " #:browser firefox)";
     var indent = "  ";
 
     function recurse(box) {

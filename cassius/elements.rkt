@@ -25,6 +25,7 @@
              [else (n-name (get/box (flow-box (next e))))]))
         (= (vff-name bf)
            ,(smt-cond
+             [(and (is-no-elt (previous e)) (not (is-float/none (float (parent e))))) nil-box]
              [(is-no-elt (previous e)) (vff-name (get/box (flow-box (parent e))))]
              [(is-float/none (float (previous e))) (vff-name (get/box (flow-box (previous e))))]
              [else (flow-box (previous e))]))
@@ -32,12 +33,9 @@
         (= (l-name bf) (flow-box (lchild e)))
 
         (= (textalign e)
-           ,(smt-cond
-             [(is-no-tag (tagname e)) (textalign (parent e))]
-             [(is-text-align/inherit (style.text-align r))
-              (textalign (parent e))]
-             [else
-              (style.text-align r)]))
+           (ite (is-text-align/inherit (style.text-align r))
+                 (textalign (parent e))
+                 (style.text-align r)))
         (=> (is-display/inline (display e)) (is-float/none (float e)))
         (= (float e)
            (ite (is-float/inherit (style.float r)) (float (parent e)) (style.float r)))))
@@ -86,7 +84,7 @@
                 ,@(for/list ([prop '(width height padding-left padding-right padding-top padding-bottom margin-top margin-bottom)]
                              [type '(width height padding padding padding padding margin margin)]
                              [field '(w h pl pr pt pb mt mb)])
-                    `(=> (and (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r)) (is-float/none (float e)))
+                    `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                          (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
 
                 ; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
