@@ -5,7 +5,7 @@
 
 (require unstable/sequence)
 (provide element-general-constraints
-         box-block-constraints box-inline-constraints box-line-constraints
+         box-block-constraints box-inline-constraints box-line-constraints box-text-constraints
          element-definitions)
 
 (define element-definitions
@@ -162,7 +162,7 @@
                 ,@(for/list ([field '(bl br bt bb)])
                     `(= (,field b) 0.0))))
 
-    (define-fun an-inline-box ((b Box)) Bool
+    (define-fun a-text-box ((b Box)) Bool
       ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)])
                 (= (type b) box/inline)
 
@@ -174,11 +174,25 @@
                 ; Inline element layout
                 (=> (is-box v) (= (x b) (right-border v)))))
 
+    (define-fun an-inline-box ((b Box)) Bool
+      ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)])
+                (= (type b) box/inline)
+
+                ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+                    `(= (,field b) 0.0))
+
+                (= (left-outer (fbox b)) (left-content b))
+                (= (right-outer (lbox b)) (right-content b))
+                (between (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
+
+                ; Inline element layout
+                (=> (is-box v) (= (x b) (right-border v)))))
+
     (define-fun a-line-box ((b Box)) Bool
-      ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [vff (vffbox b)]
+      ,(smt-let ([e (get/elt (element (pbox b)))] [p (pbox b)] [v (vbox b)] [vff (vffbox b)]
                  [f (fbox b)] [l (lbox b)] [vfe (get/elt (element (vffbox b)))])
-                (= (type b) box/line)
-                (= (float e) float/none) ; Where else would we set this?
+                (is-box/line (type b))
+                (is-float/none (float e)) ; Where else would we set this?
 
                 ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
                     `(= (,field b) 0.0))
@@ -377,4 +391,5 @@
 (define (element-general-constraints e-name) `(assert (an-element (get/elt ,e-name))))
 (define (box-block-constraints b) `((assert (a-block-box ,b))))
 (define (box-inline-constraints b) `((assert (an-inline-box ,b))))
+(define (box-text-constraints b) `((assert (a-text-box ,b))))
 (define (box-line-constraints b) `((assert (a-line-box ,b))))

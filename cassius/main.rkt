@@ -271,15 +271,17 @@
        (void)])))
 
 (define (element-constraints dom emit elt children)
-  (emit (element-general-constraints (elt-name elt)))
-  (define box-constraints
-    (match elt
-      [(list 'BLOCK :tag tag constraints ...)
-       box-block-constraints]
-      [(list 'LINE constraints ...) box-line-constraints]
-      [(list 'INLINE :tag tag constraints ...) box-inline-constraints]
-      [(list 'TEXT constraints ...) box-inline-constraints]))
-  (for-each emit (box-constraints (sformat "~a-flow-box" (elt-name elt)))))
+  (emit (element-general-constraints (elt-name elt))))
+
+(define (box-constraints dom emit elt children)
+  (define cns
+    (match (car elt)
+      ['BLOCK box-block-constraints]
+      ['MAGIC box-block-constraints]
+      ['LINE box-line-constraints]
+      ['INLINE box-inline-constraints]
+      ['TEXT box-text-constraints]))
+  (for-each emit (cns (sformat "~a-flow-box" (elt-name elt)))))
 
 (define (info-constraints dom emit elt children)
   (define-values (tagname idname display)
