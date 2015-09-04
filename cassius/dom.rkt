@@ -8,7 +8,7 @@
          dom-definitions dom-declarations)
 
 (struct dom (name stylesheet context tree))
-(struct rendering-context (width))
+(struct rendering-context (width browser))
 
 (define (in-tree-subtrees tree)
   (apply sequence-append

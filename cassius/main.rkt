@@ -5,6 +5,7 @@
 (require "elements.rkt")
 (require "common.rkt")
 (require "css-properties.rkt")
+(require "browser-style.rkt")
 (require unstable/sequence)
 (require srfi/1)
 
@@ -31,7 +32,7 @@
   (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header)
 
   (for ([rule-value (map (curry hash-ref smt-out)
-                         (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "rule-~a" i)))])
+                         (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "rule-user-~a" i)))])
     (printf "\n~a\n" (print-type 'Rule rule-value))))
 
 (define (css-type-ending? v)
@@ -63,7 +64,7 @@
        (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
          (printf "  ~a: ~a; /* ~a */ \n" prop (print-type type value) score))
        (printf "}\n")))]
-  [('Rule (list 'rule sel idx rest ...))
+  [('Rule (list 'rule sel idx origin rest ...))
    (define props
      (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
                 #:when enabled?)
@@ -104,15 +105,14 @@
   (emit `(assert (= (first-child-name ,(elt-get elt)) ,(get-child children first))))
   (emit `(assert (= (last-child-name ,(elt-get elt)) ,(get-child children last)))))
 
-(define ((style-constraints sheet) dom emit elt children)
+(define ((style-constraints rules) dom emit elt children)
   (define e (dom-get dom elt))
   (define re `(rules ,e))
 
   (when (member (car elt) '(INLINE BLOCK))
     ; Score of computed rule is >= any applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)]
-           [rule
-            (for/list ([i (in-naturals)] [rule sheet]) (sformat "rule-~a" i))])
+           [rule (rules)])
       (emit
        `(assert
          (or (not (,(sformat "rule.~a?" property) ,rule))
@@ -124,9 +124,7 @@
       (emit `(assert (or
                       (and (is-useDefault (,(sformat "style.~a$" property) ,re))
                            (= (,(sformat "style.~a" property) ,re) ,(hash-ref css-defaults property)))
-                      ,@(for/list ([rule
-                                    (for/list ([i (in-naturals)] [rule sheet])
-                                      (sformat "rule-~a" i))])
+                      ,@(for/list ([rule (rules)])
                           `(and
                             (,(sformat "rule.~a?" property) ,rule)
                             (selector-applies? (selector ,rule) ,e)
@@ -198,13 +196,13 @@
   (emit `(assert (= (vff-name ,b) nil-box)))
   (emit `(assert (= (vnf-name ,b) nil-box))))
 
-(define (stylesheet-constraints sheet)
+(define (stylesheet-constraints sname sheet save-rule #:browser [browser? #f])
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
-            (define name (sformat "rule-~a" i))
+            (define name (sformat "rule-~a-~a" sname i))
+            (save-rule name)
 
             (emit `(declare-const ,name Rule))
-            (emit `(assert (= (index ,name) ,i)))
-            (emit `(assert (is-a-rule ,name)))
+            (emit `(assert (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)))
 
             (match rule
               ['? (void)]
@@ -330,14 +328,28 @@
               [`((sel/tag ,tag) ,_ ...) (save-tag (slower tag))]
               [`((sel/id ,id) ,_ ...) (save-id (slower id))]))))
 
+  (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
+  (unless (= (length browsers) 1)
+    (error "Different browsers on different documents not yet supported"))
+
+  (define browser-style
+    (for/reap [save] ([(sel props) (in-pairs (get-sheet (car browsers)))])
+              (match sel
+                ['sel/any (save (cons sel props))]
+                [`(sel/tag ,tag)
+                 (when (memq (slower tag) tags) (save (cons sel props)))])))
+
   (define elt-names
     (append
      (for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (elt-name elt))
      (for/list ([dom doms]) (dom-root dom))))
 
+  (define rules '())
+  (define (save-rule x) (set! rules (cons x rules)))
+
   (define constraints
-    (list tree-constraints info-constraints user-constraints element-constraints
-          (procedure-rename (style-constraints sheet) 'style-constraints)))
+    (list tree-constraints info-constraints user-constraints element-constraints box-constraints
+          (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)))
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")
@@ -358,8 +370,10 @@
     ,@element-definitions
 
     ; Stylesheet
+    (echo "Browser stylesheet")
+    ,@(stylesheet-constraints (car browsers) browser-style save-rule #:browser #t)
     (echo "Defining the stylesheet")
-    ,@(stylesheet-constraints sheet)
+    ,@(stylesheet-constraints 'user sheet save-rule)
     ; DOMs
     ,@(apply dfs-constraints doms constraints)
 

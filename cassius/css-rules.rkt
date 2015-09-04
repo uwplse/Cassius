@@ -21,7 +21,7 @@
        (Style (style ,@(for/reap [field] ([(prop type default) (in-css-properties)])
                                  (field `(,(sformat "style.~a" prop) ,type))
                                  (field `(,(sformat "style.~a$" prop) CascadeScore)))))
-       (Rule (rule (selector Selector) (index Int)
+       (Rule (rule (selector Selector) (index Int) (origin ImportanceOrigin)
                    ,@(for/reap [field] ([(prop type default) (in-css-properties)])
                                (field `(,(sformat "rule.~a" prop) ,type))
                                (field `(,(sformat "rule.~a?" prop) Bool)))))))))
@@ -36,9 +36,9 @@
 
     (define-fun score ((rule Rule)) CascadeScore
       ,(smt-cond
-        [(is-sel/all (selector rule)) (cascadeScore AuthorNormal false 0 0 0 (index rule))]
-        [(is-sel/tag (selector rule)) (cascadeScore AuthorNormal false 0 0 1 (index rule))]
-        [(is-sel/id  (selector rule)) (cascadeScore AuthorNormal false 1 0 0 (index rule))]
+        [(is-sel/all (selector rule)) (cascadeScore (origin rule) false 0 0 0 (index rule))]
+        [(is-sel/tag (selector rule)) (cascadeScore (origin rule) false 0 0 1 (index rule))]
+        [(is-sel/id  (selector rule)) (cascadeScore (origin rule) false 1 0 0 (index rule))]
         [else (cascadeScore AuthorNormal false 0 0 0 0)]))
 
     (define-fun importanceOrigin-score ((io ImportanceOrigin)) Int
@@ -67,9 +67,12 @@
         [(< (positionNum a) (positionNum b)) false]
         [else true]))
 
-    (define-fun is-a-rule ((r Rule)) Bool
-      (and (=> (is-sel/id (selector r)) (not (is-no-id (sel.id (selector r)))))
-           (=> (is-sel/tag (selector r)) (not (is-no-tag (sel.tag (selector r)))))))))
+    (define-fun is-a-rule ((r Rule) (o ImportanceOrigin) (i Int)) Bool
+      (and
+       (= (origin r) o)
+       (= (index r) i)
+       (=> (is-sel/id (selector r)) (not (is-no-id (sel.id (selector r)))))
+       (=> (is-sel/tag (selector r)) (not (is-no-tag (sel.tag (selector r)))))))))
 
 (define css-properties
   (for/list ([(type decl) (in-css-types)])
