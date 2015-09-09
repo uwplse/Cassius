@@ -71,6 +71,9 @@
                    (loop rest #f))]
               [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
                (begin0 (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))
+                 (for ([cmd rest])
+                   (write (~a cmd))
+                   (debug #:tag 'eval ">>> ~a → ~a\n" cmd (read out)))
                  (close-output-port in)
                  (when (or (eq? debug? #t) (and (list? debug?) (member 'stats debug?)))
                    (copy-port out (current-error-port))))]
@@ -227,6 +230,9 @@
   (define resolutions (make-hash))
 
   (define (save input output)
+    (when (and (hash-has-key? resolutions input) (not (equal? output (hash-ref resolutions input))))
+      (eprintf "Z3: Double definitions of ~a\n  def: ~a\n  def: ~a\n"
+               input (hash-ref resolutions input) output))
     (hash-set! resolutions input output))
 
   (define (resolve expr)
@@ -234,7 +240,9 @@
       [`(,f ,args ...)
        (define args* (map resolve args))
        (define expr* (cons f args*))
-       (hash-ref resolutions expr* expr*)]
+       (if (hash-has-key? resolutions expr*)
+           (resolve (hash-ref resolutions expr*))
+           expr*)]
       [_ expr]))
 
   (for/list ([cmd cmds] [i (in-naturals)])
@@ -281,6 +289,15 @@
       [_ (void)]))
   cmds)
 
+(define-syntax-rule (reap-problems [problem name] body ...)
+  (let ((problems (make-hash)))
+    (define (problem i expr line)
+      (hash-set! problems expr (cons (cons i line) (hash-ref problems expr '()))))
+    body ...
+    (for ([(key vals) (in-hash problems)])
+      (eprintf "Z3: ~a reference ~a on ~a lines\n" name key (length vals))
+      (eprintf "  line ~a: ~a\n" (caar vals) (cdar vals)))))
+
 (define (z3-check-fields cmds)
   "Check that no fields of a function output are taken (fields of fields allowed)."
   (define all-names (make-hash))
@@ -307,21 +324,15 @@
       [(list f args ...)
        (and (not (hash-has-key? all-names f)) (andmap (curryr valid-expr? fail) args))]
       [_ #t]))
-  (define problems (make-hash))
-  (for ([cmd cmds] [i (in-naturals 1)])
-    (match cmd
-      [(list 'assert expr)
-       (define failures (reap [fail] (valid-expr? expr fail)))
-       (unless (null? failures)
-         (for ([err failures])
-           (hash-set! problems err (cons (cons i cmd) (hash-ref problems err '())))))]
-      [_ (void)]))
-  (for ([(key vals) (in-hash problems)])
-    (eprintf "Z3: Improperly guarded field reference ~a on ~a lines\n" key (length vals))
-    (eprintf "  line ~a: ~a\n" (caar vals) (cdar vals)))
+  (reap-problems [problem "Improperly guarded field reference"]
+    (for ([cmd cmds] [i (in-naturals 1)])
+      (match cmd
+        [(list 'assert expr)
+         (valid-expr? expr (lambda (expr) (problem i expr cmd)))]
+        [_ (void)])))
   cmds)
 
-(define ((z3-sink-functions . fns ) cmds)
+(define ((z3-sink-functions . fns) cmds)
   "Turn (fn (ite c x y)) into (ite c (fn x) (fn y))."
   (define (field? x) (member x fns))
   (define (sink-field expr)
@@ -388,9 +399,6 @@
     [(? list?)
      (map (curryr capture-avoiding-substitute bindings) body)]
     [_ body]))
-
-(define-syntax-rule (matches? expr pattern)
-  (match expr [pattern #t] [_ #f]))
 
 (define ((z3-expand . fn-names) cmds)
   (define fns (make-hash))
@@ -524,6 +532,29 @@
        `(assert ,(expand-calls expr))]
       [_ cmd])))
 
+(define ((z3-check-trivial-calls . fns) cmds)
+  (define (check-no-calls expr sow)
+    (cond
+     [(and (list? expr) (member (car expr) fns)) (sow expr)]
+     [(list? expr) (for-each (curryr check-no-calls sow) expr)]
+     [else #f]))
+
+  (define (check-trivial-calls expr sow)
+    (cond
+     [(and (list? expr) (member (car expr) fns) (not (andmap symbol? (cdr expr)))) (sow expr)]
+     [(list? expr) (for-each (curryr check-trivial-calls sow) expr)]
+     [else #f]))
+
+  (reap-problems [problem "Nontrivial forbidden call"]
+    (for/list([cmd cmds] [i (in-naturals)])
+      (match cmd
+        [`(define-fun ,name ((,args ,types) ...) ,rtype ,body)
+         (check-no-calls body (lambda (expr) (problem i expr cmd)))]
+        [`(assert ,expr)
+         (check-trivial-calls expr (lambda (expr) (problem i expr cmd)))]
+        [_ (void)])))
+  cmds)
+
 (define (z3-print-all cmds)
   (for ([cmd cmds] [i (in-naturals)])
     (eprintf "  ~a: ~a\n" i cmd))
@@ -558,29 +589,28 @@
 
   (define (simpl expr)
     (match expr
+      [(? list?) (simpl1 (map simpl expr))]
+      [_ expr]))
+
+  (define (simpl1 expr)
+    (match expr
       [`(,(? constructor-tester? tester)
          ,(or (list (? constructor? constructor) _ ...) (? constructor? constructor)))
        (define test-variant (string->symbol (string-join (rest (string-split (~a tester) "-")) "-")))
        (unless (member test-variant (hash-ref constructors (hash-ref types constructor)))
          (error "Invalid tester/constructor combination" tester constructor))
        (if (equal? test-variant constructor) 'true 'false)]
-      [`(ite false ,a ,b) (simpl b)]
-      [`(ite true ,a ,b) (simpl a)]
+      [`(ite false ,a ,b) b]
+      [`(ite true ,a ,b) a]
       [(list 'and rest ... )
-       (define rest* (map simpl rest))
-       (if (member 'false rest*) 'false (cons 'and rest*))]
+       (if (member 'false rest)
+           'false
+           (filter (lambda (x) (not (equal? x 'true))) (cons 'and rest)))]
       [(list 'or rest ... )
-       (define rest* (map simpl rest))
-       (if (member 'true rest*) 'true (cons 'or rest*))]
-      [(list '= rest ...)
-       (define rest* (map simpl rest))
-       (if (and (= (length rest*) 2) (apply equal? rest*)) 'true (cons '= rest*))]
-      [`(ite ,c ,a ,b)
-       (let ([c* (simpl c)])
-         (if (equal? c c*)
-             `(ite ,c ,(simpl a) ,(simpl b))
-             (simpl `(ite ,c* ,a ,b))))]
-      [(? list?) (map simpl expr)]
+       (if (member 'true rest)
+           'true
+           (filter (lambda (x) (not (equal? x 'false))) (cons 'or rest)))]
+      [(list '= a a) 'true]
       [_ expr]))
 
   (for/reap [sow] ([cmd cmds])
@@ -607,18 +637,18 @@
 
 (define *emitter-passes*
   (list
-   (z3-expand 'an-element)
+   z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
+   (z3-expand 'an-element 'an-inline-box 'a-text-box 'a-line-box 'a-block-box
+              'a-block-flow-box 'a-block-float-box 'margin-collapse 'flow-compute-y)
    (z3-expand 'previous 'next 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'nbox 'vnfbox 'vffbox)
-   z3-unlet
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
    (apply z3-resolve-fns to-resolve)
-   #;z3-simplifier
-   z3-simplif
    (z3-sink-fields-and 'get/box 'get/elt)
    (apply z3-resolve-fns to-resolve)
-   ; It's important to lift and expand earlier up to make these passes fast.
-   #;(z3-expand 'get/box 'get/elt)
+   ;; It's important to lift and expand earlier up to make these passes fast.
+   (z3-check-trivial-calls 'get/box 'get/elt)
+   (z3-expand 'get/box 'get/elt)
    z3-dco
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
    z3-debughelp))
