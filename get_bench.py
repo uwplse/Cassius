@@ -12,6 +12,7 @@ import threading
 import os, sys, shutil
 import urlparse, urllib
 import collections
+import argparse
 
 PORT=8000
 PATH="/home/pavpan/cassius"
@@ -45,16 +46,16 @@ def make_browser():
     return webdriver.Firefox()
 
 class CassiusInput():
-    def __init__(self, fd, urls):
+    def __init__(self, fd, urls, name):
         self.fd = fd
-        self.fd.write(""";; python get_bench.py {}
+        self.fd.write(""";; python get_bench.py --name {} {}
 
 (define-header header
 "")
 
 (define-stylesheet unknown-sheet ? ? ? ? ?)
 
-""".format(" ".join("'{}'".format(url) for url in urls)))
+""".format(name, " ".join("'{}'".format(url) for url in urls)))
         self.fd.flush()
         self.ids = []
 
@@ -76,22 +77,28 @@ def get_bench_output(browser, letter, url, file):
     text = elt.text.encode("utf8")
     file.write("doc-" + letter, ";; From {}\n\n{}".format(url, text))
 
-def main(urls):
+def main(urls, name=None):
     server = make_server()
     browser = make_browser()
 
-    site_to_pages = collections.defaultdict(list)
     for url in urls:
-        scheme, netloc, _, _, _, _ = urlparse.urlparse(url)
+        scheme, _, _, _, _, _ = urlparse.urlparse(url)
         if scheme != "http":
-            warnings.warn("Only http scheme supported (not {})".format(url), UserWarning)
-        site_to_pages[netloc].append(url)
+            warnings.warn("Only http scheme supported (not {})".format(url))
+
+    if name:
+        site_to_pages = {name:urls}
+    else:
+        site_to_pages = collections.defaultdict(list)
+        for url in urls:
+            _, netloc, _, _, _, _ = urlparse.urlparse(url)
+            site_to_pages[netloc].append(url)
 
     for (netloc, urls) in site_to_pages.items():
         fname = "bench/{}.rkt".format(netloc)
         print "Saving layout to {}".format(fname)
         with open(fname, "wb") as f:
-            fi = CassiusInput(f, urls)
+            fi = CassiusInput(f, urls, netloc)
             for i, url in enumerate(urls):
                 letter = chr(ord('a') + i)
                 get_bench_output(browser, letter, url, fi)
@@ -106,4 +113,9 @@ def main(urls):
     server.quit()
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
+    p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
+    p.add_argument("--name", dest="name", default=None, type=str, help="File name under bench/.")
+    args = p.parse_args()
+
+    main(args.urls, name=args.name)
