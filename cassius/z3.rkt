@@ -141,45 +141,6 @@
     [(list args ...) (map de-z3ify args)]
     [else v]))
 
-(define (z3-simplifier cmds)
-  "Simplify expressions using assertions of the form (= a b)."
-  (let* ([*store* (make-hash)])
-    (define (store a b) (hash-set! *store* a b))
-    (define (lookup a) (hash-ref *store* a a))
-    (define (simpl expr)
-      (lookup
-       (match expr
-         [(? number?) expr]
-         [(? symbol?) expr]
-         [(? list?) (map simpl expr)])))
-
-    (for ([cmd cmds])
-      (match cmd
-        [`(assert (= ,a ,b))
-         (let ([a* (simpl a)] [b* (simpl b)])
-           (cond
-            [(and (z3-literal? a*) (not (eq? a* b*)))
-             (store b* a*)]
-            [(and (z3-literal? b*) (not (eq? a* b*)))
-             (store a* b*)]))]
-        [_ 'ok]))
-
-    (define cmds*
-      (for/list ([cmd cmds])
-        (match cmd
-          [`(assert ,e)
-           `(assert ,(simpl e))]
-          [_ cmd])))
-
-    (define cleared-assertions 0)
-
-    (reap [sow]
-          (for ([cmd cmds*])
-            (match cmd
-              [`(assert (= ,e ,e)) (set! cleared-assertions (+ 1 cleared-assertions))]
-              [_ (sow cmd)]))
-          (printf "Cleared ~a assertions\n" cleared-assertions))))
-
 (define (z3-literal? expr)
   (match expr
     [(? number?) #t]
@@ -616,7 +577,7 @@
       [(list '= a a) 'true]
       [_ expr]))
 
-  (for/reap [sow] ([cmd cmds])
+  (for/reap [sow] ([i (in-naturals)] [cmd cmds])
     (match cmd
       [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
        (for ([name names] [vars varss])

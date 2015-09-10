@@ -1,6 +1,6 @@
 ;; python get_bench.py 'file:///home/pavpan/cassius/bench/test-float-a.html'
 
-(define-header header "div {background: red} p {margin: 0}")
+(define-header header "div {background: red}")
 
 (define-stylesheet unknown-sheet ? ? ?)
 

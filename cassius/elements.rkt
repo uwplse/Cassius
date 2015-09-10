@@ -91,10 +91,14 @@
                 (= (type b) box/block)
                 (margin-collapse b)
 
-                ; Set properties that are settable with lengths
-                ,@(for/list ([prop '(width height padding-left padding-right padding-top padding-bottom margin-top margin-bottom)]
-                             [type '(width height padding padding padding padding margin margin)]
-                             [field '(w h pl pr pt pb mt mb)])
+                ,@(for/list ([item '((width width w) (height height h)
+                                     (padding-left padding pl) (padding-right padding pr)
+                                     (padding-top padding pt) (padding-bottom padding pb)
+                                     (border-top border bt) (border-right border br)
+                                     (border-bottom border bb) (border-left border bl)
+                                     (margin-top margin mt) (margin-bottom margin mb))])
+                    ;; Set properties that are settable with lengths
+                    (match-define (list prop type field) item)
                     `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                          (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
 
@@ -262,10 +266,9 @@
                                      (border-bottom border bb) (border-left border bl)
                                      (margin-top margin mt) (margin-bottom margin mb)
                                      (margin-right margin mr) (margin-left margin ml))])
-                    (match item
-                      [(list prop type field)
-                       `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-                            (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))]))
+                    (match-define (list prop type field) item)
+                    `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+                         (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
 
                 ; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
                 (=> (is-margin/auto (style.margin-left r)) (= (ml b) 0))
