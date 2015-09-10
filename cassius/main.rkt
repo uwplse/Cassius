@@ -264,8 +264,11 @@
        (emit `(declare-const ,(sformat "~a.style" name) Style))
        (emit `(assert (= ,(sformat "~a.style" name) (rules ,(dom-get dom elt)))))
        (interpret rest)]
-      [(list (and (or ':x ':y ':w ':h) field) value rest ...)
-       (define fun (match field [':x 'x] [':y 'y] [':h 'box-height] [':w 'box-width]))
+      [(list (and (or ':x ':y ':w ':h ':ml ':mr ':mt ':mb) field) value rest ...)
+       (define mapping
+         '((:x x) (:y y) (:h box-height) (:w box-width)
+           (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
+       (define fun (cadr (assoc field mapping)))
        (when (or true (memq (car elt) '(TEXT MAGIC)))
          (emit `(assert (! (= (,fun (get/box (flow-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
        (interpret rest)]

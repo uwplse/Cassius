@@ -271,7 +271,11 @@ function make_boxes(elt, inflow) {
         // Quit iterating downward, who knows what is in this element
         var r = elt.getBoundingClientRect();
         var s = cs(elt);
-        var box = Magic(elt, {tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,});
+        var box = Magic(elt, {
+            tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,
+            mt: elt.style.marginTop, mr: elt.style.marginRight, 
+            mb: elt.style.marginBottom, ml: elt.style.marginLeft, 
+        });
 
         if (elt.id) box.props.id = elt.id;
 
