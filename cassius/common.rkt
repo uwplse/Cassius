@@ -4,7 +4,7 @@
  reap for/reap for*/reap
  sformat slower
  flags all-flags
- tree-size)
+ tree-size sdiff)
 
 (define flags (make-parameter '(z3c)))
 (define all-flags '(opt float z3c))
@@ -34,3 +34,14 @@
   (if (list? l)
       (apply + (map tree-size l))
       1))
+
+(define (sdiff a b sow)
+  (cond
+   [(and (not (list? a)) (not (list? b)))
+    (when (not (equal? a b)) (sow a b))]
+   [(and (list? a) (list? b))
+    (if (not (equal? (car a) (car b)))
+        (sow a b)
+        (map (curryr sdiff sow) a b))]
+   [else
+    (sow a b)]))

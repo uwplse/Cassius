@@ -295,7 +295,7 @@
       (hash-set! problems expr (cons (cons i line) (hash-ref problems expr '()))))
     body ...
     (for ([(key vals) (in-hash problems)])
-      (eprintf "Z3: ~a reference ~a on ~a lines\n" name key (length vals))
+      (eprintf "Z3: ~a in ~a on ~a lines\n" name key (length vals))
       (eprintf "  line ~a: ~a\n" (caar vals) (cdar vals)))))
 
 (define (z3-check-fields cmds)
@@ -463,7 +463,8 @@
                   (ite ,c
                        ,(if (null? exprs1) 'true (car exprs1))
                        ,(if (null? exprs2) 'true (car exprs2)))))
-           (loop (cdr exprs1) (cdr exprs1))))]
+           (loop (if (null? exprs1) exprs1 (cdr exprs1))
+                 (if (null? exprs2) exprs2 (cdr exprs2)))))]
       [`(assert (and ,exprs ...))
        (for ([expr exprs])
          (sow `(assert ,expr)))]
