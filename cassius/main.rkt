@@ -97,7 +97,7 @@
   ; Previous element
   (for ([child (sequence-map car children)]
         [prev (sequence-append (in-value 'nil-elt) (sequence-map (compose elt-name car) children))]
-        [next (sequence-append (sequence-map (compose elt-name car) children) (in-value 'nil-elt))])
+        [next (sequence-tail (sequence-append (sequence-map (compose elt-name car) children) (in-value 'nil-elt)) 1)])
     (emit `(assert (= (previous-name ,(elt-get child)) ,prev)))
     (emit `(assert (= (next-name ,(elt-get child)) ,next))))
 
@@ -194,6 +194,9 @@
   (emit `(assert (= (parent-name ,elt) nil-elt)))
   (emit `(assert (= (previous-name ,elt) nil-elt)))
   (emit `(assert (= (next-name ,elt) nil-elt)))
+  (emit `(assert (= (type ,b) box/root)))
+  (emit `(assert (= (p-name ,b) nil-box)))
+  (emit `(assert (= (n-name ,b) nil-box)))
   (emit `(assert (= (vff-name ,b) nil-box)))
   (emit `(assert (= (vnf-name ,b) nil-box))))
 

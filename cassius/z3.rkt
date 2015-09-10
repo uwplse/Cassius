@@ -602,6 +602,8 @@
        (if (equal? test-variant constructor) 'true 'false)]
       [`(ite false ,a ,b) b]
       [`(ite true ,a ,b) a]
+      [`(=> false ,a) 'true]
+      [`(=> true ,a) a]
       [(list 'and rest ... )
        (if (member 'false rest)
            'false
@@ -647,8 +649,10 @@
    (z3-sink-fields-and 'get/box 'get/elt)
    (apply z3-resolve-fns to-resolve)
    ;; It's important to lift and expand earlier up to make these passes fast.
+   z3-simplif
    (z3-check-trivial-calls 'get/box 'get/elt)
    (z3-expand 'get/box 'get/elt)
+   z3-simplif
    z3-dco
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
    z3-debughelp))

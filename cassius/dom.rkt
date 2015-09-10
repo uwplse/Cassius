@@ -44,7 +44,7 @@
                   (p-name BoxName) (f-name BoxName) (l-name BoxName)
                   (n-name BoxName) (vnf-name BoxName) (vff-name BoxName)
                   (element ElementName)))
-        (BoxType box/viewport box/text box/inline box/block box/line)
+        (BoxType box/root box/text box/inline box/block box/line)
         (Element no-elt
              (elt (document Document) (tagname TagNames) (id Id) (rules Style)
                   (display Display) (float Float) (textalign TextAlign)

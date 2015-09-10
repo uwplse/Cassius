@@ -41,19 +41,28 @@
            (ite (is-float/inherit (style.float r)) (float (parent e)) (style.float r)))))
 
     (define-fun flow-compute-y ((b Box)) Real
-      (let ([vb (vbox b)] [p (pbox b)])
+      (let ([vb (vnfbox b)] [p (pbox b)])
         (ite (is-no-box vb)
-             (ite (and (not (= (tagname (get/elt (element p))) tag/html))
-                       (is-float/none (float (get/elt (element p))))
-                       (= (pt p) 0.0) (= (bt p) 0.0))
+             (ite (and
+                   ;; Margins of the root element's box do not collapse. 
+                   (not (is-box/root (type (pbox p))))
+                   ;; Margins between a floated box and any other box do not collapse
+                   ;; (not even between a float and its in-flow children). 
+                   (is-float/none (float (get/elt (element p))))
+                   ;; The top margin of an in-flow block element collapses with
+                   ;; its first in-flow block-level child's top margin if the element
+                   ;; has no top border, no top padding, and the child has no clearance. 
+                   (= (pt p) 0.0) (= (bt p) 0.0))
                   (top-content p)
                   (+ (top-content p) (+ (mtp b) (mtn b))))
              (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))))
 
     (define-fun margin-collapse ((b Box)) Bool
       ,(smt-let ([e (get/elt (element b))] [p (pbox b)]
-                 [fb (ite (is-float/none (float (get/elt (element (fbox b))))) (fbox b) (nbox (fbox b)))]
-                 [lb (ite (is-float/none (float (get/elt (element (lbox b))))) (lbox b) (vbox (lbox b)))])
+                 [fb (ite (=> (is-box (fbox b)) (is-float/none (float (get/elt (element (fbox b))))))
+                          (fbox b) (nbox (fbox b)))]
+                 [lb (ite (=> (is-box (lbox b)) (is-float/none (float (get/elt (element (lbox b))))))
+                          (lbox b) (vbox (lbox b)))])
 
                 ; Computing maximum collapsed positive and negative margin
                 (= (mtp b)
@@ -76,7 +85,9 @@
     (define-fun a-block-flow-box ((b Box)) Bool
       ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
                  [p (pbox b)]
-                 [lb (ite (is-float/none (float (get/elt (element (lbox b))))) (lbox b) (vbox (lbox b)))])
+                 [lb (ite (=> (is-box (lbox b)) (is-float/none (float (get/elt (element (lbox b))))))
+                          (lbox b)
+                          (vbox (lbox b)))])
                 (= (type b) box/block)
                 (margin-collapse b)
 
@@ -181,7 +192,10 @@
 
                 (= (left-outer (fbox b)) (left-content b))
                 (= (right-outer (lbox b)) (right-content b))
-                (between (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
+                ;; This is maybe too loose
+                (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
+                ;; This is maybe too tight
+                ;(= (- (top-outer b) (top-content p)) (- (bottom-content p) (bottom-outer b)))
 
                 ; Inline element layout
                 (=> (is-box v) (= (x b) (right-border v)))))
@@ -203,6 +217,9 @@
                           (is-float/right (float vfe)))
                      (= (right-outer b) (left-outer vff))
                      (= (right-outer b) (right-content p)))
+
+                ;; Hack: line height of each line must be the same
+                (=> (is-box v) (= (h v) (h b)))
 
                 (ite (and
                       ; Space left for the line of text
