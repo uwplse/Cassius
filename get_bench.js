@@ -2,9 +2,10 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Box = function(type, props) {
+Box = function(node, type, props) {
     this.children = [];
     this.type = type; this.props = props; return this;
+    this.node = node;
 }
 function curry(f, arg) { return function(arg2) { return new f(arg, arg2) }}
 Block = curry(Box, "BLOCK");
@@ -145,7 +146,7 @@ function infer_lines(box, parent) {
     }
 
     function new_line() {
-        var l = Line({});
+        var l = Line(null, {h: cs(parent.node)["line-height"]});
         parent.children.push(l);
         return l;
     }
@@ -213,7 +214,7 @@ function make_boxes(elt, inflow) {
             r = r[0];
             // Whitespace only line
             if (r.width == 0 && r.height == 0) continue;
-            var box = Text({
+            var box = Text(elt, {
                 x: r.x, y: r.y, w: r.width, h: r.height,
                 text: '"' + ranges[i].toString().replace(/\s+/g, " ") + '"'
             });
@@ -224,7 +225,7 @@ function make_boxes(elt, inflow) {
     } else if (is_block(elt)) {
         var r = elt.getBoundingClientRect();
         var s = cs(elt);
-        var box = Block({
+        var box = Block(elt, {
             tag: elt.tagName,
             x: r.x, y: r.y, w: r.width, h: r.height,
             /*
@@ -258,7 +259,7 @@ function make_boxes(elt, inflow) {
         }
     } else if (is_inline (elt)) {
         var r = elt.getBoundingClientRect();
-        var box = Inline({tag: elt.tagName/*, x: r.x, y: r.y, w: r.width, h: r.height*/});
+        var box = Inline(elt, {tag: elt.tagName/*, x: r.x, y: r.y, w: r.width, h: r.height*/});
         inflow.children.push(box);
 
         for (var i = 0; i < elt.childNodes.length; i++) {
@@ -270,7 +271,7 @@ function make_boxes(elt, inflow) {
         // Quit iterating downward, who knows what is in this element
         var r = elt.getBoundingClientRect();
         var s = cs(elt);
-        var box = Magic({tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,});
+        var box = Magic(elt, {tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,});
 
         if (elt.id) box.props.id = elt.id;
 
@@ -279,7 +280,7 @@ function make_boxes(elt, inflow) {
 }
 
 function get_boxes() {
-    var view = Page({w: window.innerWidth, h: window.innerHeight});
+    var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     make_boxes(document.querySelector("html"), view);
     return view;
 }
