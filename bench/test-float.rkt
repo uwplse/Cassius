@@ -62,7 +62,7 @@
      ([LINE :h 19]
       ([TEXT :x 8 :y 264.5 :w 565 :h 16 :text "test test test test test test test test test test test test test test test "])))
     ([BLOCK :tag DIV :x 598 :y 292 :w 200 :h 200 :id right])
-    ([BLOCK :tag P :x 8 :y 282 :w 800 :h 76 :print]
+    ([BLOCK :tag P :x 8 :y 282 :w 800 :h 76]
      ([LINE :h 19]
       ([TEXT :x 8 :y 283.5 :w 565 :h 16 :text " test test test test test test test test test test test test test test test "]))
      ([LINE :h 19]
