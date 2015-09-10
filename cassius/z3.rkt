@@ -591,8 +591,24 @@
        (sow `(define-fun ,names ((,args ,atypes)) ,rtype ,(simpl body)))]
       [`(assert ,expr)
        (define s (simpl expr))
-       (when (not (eq? s 'true)) (sow `(assert ,s)))]
+       (unless (equal? s 'true)
+         (sow `(assert ,s)))]
       [_ (sow cmd)])))
+
+(define (z3-if-and cmds)
+  (define (if-and expr)
+    (match expr
+      [`(and (ite ,c ,a1 ,b1) (ite ,c ,a2, b2))
+       `(ite ,c ,(if-and `(and ,a1 ,a2)) ,(if-and `(and ,b1 ,b2)))]
+      [(? list?)
+       (map if-and expr)]
+      [_ expr]))
+
+  (for/list ([i (in-naturals)] [cmd cmds])
+    (match cmd
+      [`(assert ,expr)
+       `(assert ,(if-and expr))]
+      [_ cmd])))
 
 (define to-resolve
   (append
@@ -608,13 +624,14 @@
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
    (apply z3-resolve-fns to-resolve)
-   (z3-sink-fields-and 'get/box 'get/elt)
+   (z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
    (apply z3-resolve-fns to-resolve)
    ;; It's important to lift and expand earlier up to make these passes fast.
+   z3-if-and
    z3-simplif
    (z3-check-trivial-calls 'get/box 'get/elt)
-   (z3-expand 'get/box 'get/elt)
-   z3-simplif
+   #;(z3-expand 'get/box 'get/elt)
+   #;z3-simplif
    z3-dco
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
    z3-debughelp))
