@@ -370,7 +370,6 @@
     ,@css-declarations
     ,@dom-declarations
     ,@(getter-definitions doms)
-    ,@dom-definitions
     ,@tree-helpers
     ,@css-functions
     ,@layout-definitions

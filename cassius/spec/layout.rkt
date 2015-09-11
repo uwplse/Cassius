@@ -7,6 +7,43 @@
 (provide layout-definitions)
 
 (define-constraints layout-definitions
+
+  (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
+  (define-fun left-border ((box Box)) Real (x box))
+  (define-fun box-left ((box Box)) Real (+ (x box) (bl box)))
+  (define-fun left-padding ((box Box)) Real (+ (x box) (bl box)))
+  (define-fun left-content ((box Box)) Real (+ (x box) (bl box) (pl box)))
+
+  (define-fun right-content ((box Box)) Real (+ (x box) (bl box) (pl box) (w box)))
+  (define-fun right-padding ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box)))
+  (define-fun box-right ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box)))
+  (define-fun right-border ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box)))
+  (define-fun right-outer ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box) (mr box)))
+
+  (define-fun top-outer ((box Box)) Real (- (y box) (mtn box) (mtp box)))
+  (define-fun top-border ((box Box)) Real (y box))
+  (define-fun box-top ((box Box)) Real (+ (y box) (bt box)))
+  (define-fun top-padding ((box Box)) Real (+ (y box) (bt box)))
+  (define-fun top-content ((box Box)) Real (+ (y box) (bt box) (pt box)))
+
+  (define-fun bottom-content ((box Box)) Real (+ (y box) (bt box) (pt box) (h box)))
+  (define-fun bottom-padding ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box)))
+  (define-fun box-bottom ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box)))
+  (define-fun bottom-border ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box)))
+  (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
+
+  (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
+  (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
+
+  (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
+  (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
+  (define-fun between ((x Real) (y Real) (z Real)) Bool
+    (or (<= x y z) (>= x y z)))
+
+  (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
+    (or (> (bottom-outer box1) (top-outer box2) (top-outer box1))
+        (> (bottom-outer box2) (top-outer box1) (top-outer box2))))
+
   (define-fun an-element ((e Element)) Bool
     ,(smt-let ([r (rules e)] [bf (get/box (flow-box e))])
        (= (p-name bf) (flow-box (parent e)))
@@ -37,29 +74,16 @@
        (= (float e)
           (ite (is-float/inherit (style.float r)) (float (parent e)) (style.float r)))))
 
-  (define-fun flow-compute-y ((b Box)) Real
-    (let ([vb (vnfbox b)] [p (pbox b)])
-      (ite (is-no-box vb)
-           (ite (and
-                 ;; Margins of the root element's box do not collapse. 
-                 (not (is-box/root (type (pbox p))))
-                 ;; Margins between a floated box and any other box do not collapse
-                 ;; (not even between a float and its in-flow children). 
-                 (is-float/none (float (get/elt (element p))))
-                 ;; The top margin of an in-flow block element collapses with
-                 ;; its first in-flow block-level child's top margin if the element
-                 ;; has no top border, no top padding, and the child has no clearance. 
-                 (= (pt p) 0.0) (= (bt p) 0.0))
-                (top-content p)
-                (+ (top-content p) (+ (mtp b) (mtn b))))
-           (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))))
-
-  (define-fun margin-collapse ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [p (pbox b)]
+  (define-fun a-block-flow-box ((b Box)) Bool
+    ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
+               [p (pbox b)] [vb (vnfbox b)]
                [fb (ite (=> (is-box (fbox b)) (is-float/none (float (get/elt (element (fbox b))))))
                         (fbox b) (nbox (fbox b)))]
                [lb (ite (=> (is-box (lbox b)) (is-float/none (float (get/elt (element (lbox b))))))
-                        (lbox b) (vbox (lbox b)))])
+                        (lbox b)
+                        (vbox (lbox b)))])
+
+       (= (type b) box/block)
 
        ;; Computing maximum collapsed positive and negative margin
        (= (mtp b)
@@ -77,17 +101,8 @@
        (= (mbn b)
           (min (ite (< (mb b) 0.0) (mb b) 0)
                (ite (and (not (= (tagname e) tag/html)) (is-box lb)
-                         (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)))))
+                         (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)))
 
-  (define-fun a-block-flow-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
-               [p (pbox b)]
-               [lb (ite (=> (is-box (lbox b)) (is-float/none (float (get/elt (element (lbox b))))))
-                        (lbox b)
-                        (vbox (lbox b)))])
-              (= (type b) box/block)
-
-       (margin-collapse b)
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
@@ -161,7 +176,21 @@
 
        ;; Computing X and Y position
        (= (x b) (+ (left-content p) (ml b)))
-       (= (y b) (flow-compute-y b))
+       (= (y b)
+          (ite (is-no-box vb)
+           (ite (and
+                 ;; Margins of the root element's box do not collapse. 
+                 (not (is-box/root (type (pbox p))))
+                 ;; Margins between a floated box and any other box do not collapse
+                 ;; (not even between a float and its in-flow children). 
+                 (is-float/none (float (get/elt (element p))))
+                 ;; The top margin of an in-flow block element collapses with
+                 ;; its first in-flow block-level child's top margin if the element
+                 ;; has no top border, no top padding, and the child has no clearance. 
+                 (= (pt p) 0.0) (= (bt p) 0.0))
+                (top-content p)
+                (+ (top-content p) (+ (mtp b) (mtn b))))
+           (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b)))))
 
        ;; Positivity constraint---otherwise floats can overlap
        (> (box-height b) 0.0)
