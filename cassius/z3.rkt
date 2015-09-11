@@ -618,8 +618,8 @@
 (define *emitter-passes*
   (list
    z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
-   (z3-expand 'an-element 'an-inline-box 'a-text-box 'a-line-box 'a-block-box
-              'a-block-flow-box 'a-block-float-box)
+   (z3-expand 'an-element 'a-root-element
+              'an-inline-box 'a-text-box 'a-line-box 'a-block-box 'a-block-flow-box 'a-block-float-box)
    (z3-expand 'previous 'next 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'nbox 'vnfbox 'vffbox)
    z3-assert-and
    (apply z3-lift-arguments to-resolve)

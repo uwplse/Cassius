@@ -74,6 +74,19 @@
        (= (float e)
           (ite (is-float/inherit (style.float r)) (float (parent e)) (style.float r)))))
 
+  (define-fun a-root-element ((e Element)) Bool
+    ,(smt-let ([b (get/box (flow-box e))])
+       (= (tagname e) no-tag)
+       (= (float e) float/none)
+       (= (textalign e) text-align/left)
+       ,@(for/list ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
+           `(= (,field b) 0.0))
+       (= (type b) box/root)
+       (= (p-name b) nil-box)
+       (= (n-name b) nil-box)
+       (= (vff-name b) nil-box)
+       (= (vnf-name b) nil-box)))
+
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
                [p (pbox b)] [vb (vnfbox b)]
