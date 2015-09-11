@@ -1,7 +1,7 @@
 #lang racket
-(require "dom.rkt")
-(require "smt.rkt")
-(require "common.rkt")
+(require "../common.rkt")
+(require "../smt.rkt")
+(require "../dom.rkt")
 
 (require unstable/sequence)
 (provide element-general-constraints
@@ -351,7 +351,8 @@
                 ; SIMPL: May not be higher than the top of the previous float or flow box
                 (=> (is-box vff) (>= (top-outer b) (top-outer vff)))
                 (=> (is-box vb) (>= (top-outer b) (top-outer vb)))
-                (=> (and (is-box vb) (is-box (lbox vb))) (>= (top-outer b) (top-outer (lbox vb))))
+                (=> (and (is-box vb) (is-box (lbox vb)))
+                    (>= (top-outer b) (top-outer (lbox (ite (is-box vb) vb b)))))
 
 
                 ; CSS 2.1, § 9.5.1, item 7: A left-floating box that has another

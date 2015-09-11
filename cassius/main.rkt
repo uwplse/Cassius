@@ -2,7 +2,7 @@
 (require "dom.rkt")
 (require "smt.rkt")
 (require "css-rules.rkt")
-(require "elements.rkt")
+(require "spec/layout.rkt")
 (require "common.rkt")
 (require "css-properties.rkt")
 (require "browser-style.rkt")
