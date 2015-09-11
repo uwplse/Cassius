@@ -4,9 +4,7 @@
 (require "../dom.rkt")
 
 (require unstable/sequence)
-(provide element-general-constraints
-         box-block-constraints box-inline-constraints box-line-constraints box-text-constraints
-         element-definitions)
+(provide element-definitions)
 
 (define element-definitions
   `((define-fun an-element ((e Element)) Bool
@@ -406,9 +404,3 @@
         (ite (is-float/none (float e))
              (a-block-flow-box b)
              (a-block-float-box b))))))
-
-(define (element-general-constraints e-name) `(assert (an-element (get/elt ,e-name))))
-(define (box-block-constraints b) `((assert (a-block-box ,b))))
-(define (box-inline-constraints b) `((assert (an-inline-box ,b))))
-(define (box-text-constraints b) `((assert (a-text-box ,b))))
-(define (box-line-constraints b) `((assert (a-line-box ,b))))

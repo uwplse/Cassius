@@ -278,17 +278,13 @@
       [(list) (void)])))
 
 (define (element-constraints dom emit elt children)
-  (emit (element-general-constraints (elt-name elt))))
+  (emit `(assert (an-element ,(dom-get dom elt)))))
 
 (define (box-constraints dom emit elt children)
-  (define cns
-    (match (car elt)
-      ['BLOCK box-block-constraints]
-      ['MAGIC box-block-constraints]
-      ['LINE box-line-constraints]
-      ['INLINE box-inline-constraints]
-      ['TEXT box-text-constraints]))
-  (for-each emit (cns (sformat "~a-flow-box" (elt-name elt)))))
+  (define type-to-constraint
+    #hash((BLOCK . a-block-box) (MAGIC . a-block-box) (INLINE . an-inline-box)
+          (LINE . a-line-box) (TEXT . a-text-box)))
+  (emit `(assert (,(hash-ref type-to-constraint (car elt)) ,(sformat "~a-flow-box" (elt-name elt))))))
 
 (define (info-constraints dom emit elt children)
   (define tagname
