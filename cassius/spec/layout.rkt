@@ -4,9 +4,9 @@
 (require "../dom.rkt")
 
 (require unstable/sequence)
-(provide element-definitions)
+(provide layout-definitions)
 
-(define element-definitions
+(define layout-definitions
   `((define-fun an-element ((e Element)) Bool
       ,(smt-let ([r (rules e)] [bf (get/box (flow-box e))])
 

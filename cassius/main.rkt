@@ -2,6 +2,7 @@
 (require "dom.rkt")
 (require "smt.rkt")
 (require "css-rules.rkt")
+(require "spec/tree.rkt")
 (require "spec/layout.rkt")
 (require "common.rkt")
 (require "css-properties.rkt")
@@ -281,10 +282,14 @@
   (emit `(assert (an-element ,(dom-get dom elt)))))
 
 (define (box-constraints dom emit elt children)
-  (define type-to-constraint
-    #hash((BLOCK . a-block-box) (MAGIC . a-block-box) (INLINE . an-inline-box)
-          (LINE . a-line-box) (TEXT . a-text-box)))
-  (emit `(assert (,(hash-ref type-to-constraint (car elt)) ,(sformat "~a-flow-box" (elt-name elt))))))
+  (define cns
+    (match (car elt)
+      ['BLOCK 'a-block-box]
+      ['MAGIC 'a-block-box]
+      ['LINE 'a-line-box]
+      ['INLINE 'an-inline-box]
+      ['TEXT 'a-text-box]))
+  (emit `(assert (,cns ,(sformat "~a-flow-box" (elt-name elt))))))
 
 (define (info-constraints dom emit elt children)
   (define tagname
@@ -366,8 +371,9 @@
     ,@dom-declarations
     ,@(getter-definitions doms)
     ,@dom-definitions
+    ,@tree-helpers
     ,@css-functions
-    ,@element-definitions
+    ,@layout-definitions
 
     ; Stylesheet
     (echo "Browser stylesheet")
