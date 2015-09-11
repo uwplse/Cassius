@@ -30,7 +30,8 @@
                            (map (curry hash-ref docs) documents)))]))
   problems)
 
-(define (run-file fname pname #:debug debug? #:output outname)
+(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
+  (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
   (define time-start (current-inexact-milliseconds))
   (match-define (problem header sheet documents)
     (hash-ref (parse-file (open-input-file fname)) (string->symbol pname)))
@@ -48,33 +49,42 @@
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
            (length query) (tree-size query))
 
-  (define z3-result
-    (with-handlers ([exn:break? (lambda (e) 'break)])
-      (list 'solved
-            (z3-solve query #:debug debug? #:get-unsat unsat-constraint-info))))
-  (define time-solve (current-inexact-milliseconds))
-
-  (match z3-result
-    [(list 'solved model)
-     (with-output-to-file outname #:exists 'replace
-       (lambda () (print-rules #:stylesheet sheet #:header header model)))
-     (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
-              (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
-              (hash-count model))]
-    ['break
-     (eprintf "[~as] Query terminated\nFailure.\n"
-              (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))]))
+  (parameterize ([current-output-port out])
+    (match solve
+      [#f
+       (for ([cmd query])
+         (match cmd
+           [(list 'echo comment) (printf "; ~a\n" comment)]
+           [_ (printf "~a\n" cmd)]))]
+      [#t
+       (define z3-result
+         (with-handlers ([exn:break? (lambda (e) 'break)])
+           (list 'solved
+                 (z3-solve query #:debug debug #:get-unsat unsat-constraint-info))))
+       (define time-solve (current-inexact-milliseconds))
+          
+       (match z3-result
+         [(list 'solved model)
+          (print-rules #:stylesheet sheet #:header header model)
+          (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
+                   (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
+                   (hash-count model))]
+         ['break
+          (eprintf "[~as] Query terminated\nFailure.\n"
+                   (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))])])))
 
 (module+ main
+  (define solve? #t)
   (define debug '())
-  (define-runtime-path default-out-file "../test.css")
-  (define out-file default-out-file)
+  (define out-file #f)
 
   (command-line
    #:program "cassius"
    #:multi
    [("-d" "--debug") type "Turn on debug information"
     (set! debug (cons (string->symbol type) debug))]
+   [("-c" "--constraints") "Don't solve the constraints, just output them"
+    (set! solve? #f)]
    [("-f" "--feature") name "Toggle a feature; use -name and +name to unset or set"
     (cond
       [(equal? (substring name 0 1) "+") (flags (cons (string->symbol (substring name 1)) (flags)))]
@@ -86,4 +96,4 @@
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
    #:args (fname problem)
-   (run-file fname problem #:output out-file #:debug debug)))
+   (run-file fname problem #:output out-file #:debug debug #:solve solve?)))
