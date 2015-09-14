@@ -3,6 +3,7 @@
 (require "smt.rkt")
 (require "css-rules.rkt")
 (require "spec/tree.rkt")
+(require "spec/link.rkt")
 (require "spec/layout.rkt")
 (require "common.rkt")
 (require "css-properties.rkt")
@@ -273,6 +274,16 @@
 (define (element-constraints dom emit elt children)
   (emit `(assert (an-element ,(dom-get dom elt)))))
 
+(define (box-link-constraints dom emit elt children)
+  (define cns
+    (match (car elt)
+      ['BLOCK 'link-block-box]
+      ['MAGIC 'link-block-box]
+      ['LINE 'link-line-box]
+      ['INLINE 'link-inline-box]
+      ['TEXT 'link-text-box]))
+  (emit `(assert (,cns (get/box (flow-box ,(dom-get dom elt)))))))
+
 (define (box-constraints dom emit elt children)
   (define cns
     (match (car elt)
@@ -345,7 +356,8 @@
   (define (save-rule x) (set! rules (cons x rules)))
 
   (define constraints
-    (list tree-constraints info-constraints user-constraints element-constraints box-constraints
+    (list tree-constraints info-constraints user-constraints element-constraints
+          box-link-constraints box-constraints
           (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)))
 
   `((set-option :produce-unsat-cores true)
@@ -364,6 +376,7 @@
     ,@(getter-definitions doms)
     ,@tree-helpers
     ,@css-functions
+    ,@link-definitions
     ,@layout-definitions
 
     ; Stylesheet

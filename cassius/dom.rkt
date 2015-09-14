@@ -41,6 +41,7 @@
                   (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                   (pt Real) (pr Real) (pb Real) (pl Real)
                   (bt Real) (br Real) (bb Real) (bl Real)
+                  (pb-name BoxName)
                   (p-name BoxName) (f-name BoxName) (l-name BoxName)
                   (n-name BoxName) (vnf-name BoxName) (vff-name BoxName)
                   (element ElementName)))

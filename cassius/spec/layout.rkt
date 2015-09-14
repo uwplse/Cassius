@@ -45,26 +45,10 @@
         (> (bottom-outer box2) (top-outer box1) (top-outer box2))))
 
   (define-fun an-element ((e Element)) Bool
-    ,(smt-let ([r (rules e)] [bf (get/box (flow-box e))])
-       (= (p-name bf) (flow-box (parent e)))
-       (= (vnf-name bf)
-          ,(smt-cond
-            [(is-no-elt (previous e)) nil-box]
-            [(is-float/none (float (previous e))) (flow-box (previous e))]
-            [else (vnf-name (get/box (flow-box (previous e))))]))
-       (= (n-name bf)
-          ,(smt-cond
-            [(is-no-elt (next e)) nil-box]
-            [(is-float/none (float (next e))) (flow-box (next e))]
-            [else (n-name (get/box (flow-box (next e))))]))
-       (= (vff-name bf)
-          ,(smt-cond
-            [(and (is-no-elt (previous e)) (not (is-float/none (float (parent e))))) nil-box]
-            [(is-no-elt (previous e)) (vff-name (get/box (flow-box (parent e))))]
-            [(is-float/none (float (previous e))) (vff-name (get/box (flow-box (previous e))))]
-            [else (flow-box (previous e))]))
-       (= (f-name bf) (flow-box (fchild e)))
-       (= (l-name bf) (flow-box (lchild e)))
+    ,(smt-let ([r (rules e)] [b (get/box (flow-box e))])
+       (= (p-name b) (flow-box (parent e)))
+       (= (f-name b) (flow-box (fchild e)))
+       (= (l-name b) (flow-box (lchild e)))
 
        (= (textalign e)
           (ite (is-text-align/inherit (style.text-align r))

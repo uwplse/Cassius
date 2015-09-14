@@ -11,6 +11,7 @@
   (define-fun lchild   ((elt Element)) Element (get/elt (last-child-name elt)))
 
   (define-fun pbox ((box Box)) Box (get/box (p-name box)))
+  (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
   (define-fun nbox ((box Box)) Box (get/box (n-name box)))
   (define-fun vbox ((box Box)) Box (get/box (vnf-name box)))
   (define-fun vnfbox ((box Box)) Box (get/box (vnf-name box)))

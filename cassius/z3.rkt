@@ -564,6 +564,7 @@
        (if (equal? test-variant constructor) 'true 'false)]
       [`(ite false ,a ,b) b]
       [`(ite true ,a ,b) a]
+      [`(ite ,c ,a ,a) a]
       [`(=> false ,a) 'true]
       [`(=> true ,a) a]
       [(list 'and rest ... )
@@ -613,14 +614,18 @@
 (define to-resolve
   (append
    '(get/elt flow-box first-child-name last-child-name parent-name previous-name next-name)
-   '(get/box element p-name vnf-name vff-name f-name l-name n-name)))
+   '(get/box element p-name pb-name vnf-name vff-name f-name l-name n-name 'pbbox)))
+(define to-expand
+  (append
+   '(link-block-box link-inline-box link-text-box link-line-box)
+   '(an-element a-root-element)
+   '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box)
+   '(previous next parent fchild lchild pbox pbbox vbox fbox lbox nbox vnfbox vffbox)))
 
 (define *emitter-passes*
   (list
    z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
-   (z3-expand 'an-element 'a-root-element
-              'an-inline-box 'a-text-box 'a-line-box 'a-block-box 'a-block-flow-box 'a-block-float-box)
-   (z3-expand 'previous 'next 'parent 'fchild 'lchild 'pbox 'vbox 'fbox 'lbox 'nbox 'vnfbox 'vffbox)
+   (apply z3-expand to-expand)
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
    (apply z3-resolve-fns to-resolve)
