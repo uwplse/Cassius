@@ -4,8 +4,7 @@
 
 (provide (struct-out dom) (struct-out rendering-context)
          in-tree-subtrees in-tree-values
-         dom-get dom-type dom-root elt-name elt-from-name
-         dom-declarations)
+         dom-get dom-type dom-root elt-name elt-from-name)
 
 (struct dom (name stylesheet context tree))
 (struct rendering-context (width browser))
@@ -31,25 +30,4 @@
 (define (elt-from-name name)
   (for/first ([(key val) (in-hash elt-names)] #:when (eq? val name))
     key))
-
-(define dom-declarations
-  `((declare-datatypes ()
-       ((Box no-box
-             (box (type BoxType)
-                  (x Real) (y Real) (w Real) (h Real)
-                  (mt Real) (mr Real) (mb Real) (ml Real)
-                  (mtp Real) (mtn Real) (mbp Real) (mbn Real)
-                  (pt Real) (pr Real) (pb Real) (pl Real)
-                  (bt Real) (br Real) (bb Real) (bl Real)
-                  (pb-name BoxName)
-                  (p-name BoxName) (f-name BoxName) (l-name BoxName)
-                  (n-name BoxName) (vnf-name BoxName) (vff-name BoxName)
-                  (element ElementName)))
-        (BoxType box/root box/text box/inline box/block box/line)
-        (Element no-elt
-             (elt (document Document) (tagname TagNames) (id Id) (rules Style)
-                  (display Display) (float Float) (textalign TextAlign)
-                  (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
-                  (first-child-name ElementName) (last-child-name ElementName)
-                  (flow-box BoxName)))))))
 

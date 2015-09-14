@@ -3,7 +3,6 @@
 (require "smt.rkt")
 (require "css-rules.rkt")
 (require "spec/tree.rkt")
-(require "spec/link.rkt")
 (require "spec/layout.rkt")
 (require "common.rkt")
 (require "css-properties.rkt")
@@ -149,7 +148,7 @@
       `(ite (,(sformat "is-~a" name) x) ,(sformat "~a-elt" name) ,body)))
   (emit `(define-fun get/elt ((x ElementName)) Element ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (not (is-no-elt (get/elt ,name)))))
+    (emit `(assert (is-elt (get/elt ,name))))
     (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name)))))
   ; Pointed map: nil goes to nil
   (emit `(assert (= (get/elt nil-elt) no-elt))))

@@ -614,13 +614,16 @@
 (define to-resolve
   (append
    '(get/elt flow-box first-child-name last-child-name parent-name previous-name next-name)
-   '(get/box element p-name pb-name vnf-name vff-name f-name l-name n-name 'pbbox)))
+   '(get/box element pb-name v-name flt-name n-name)))
 (define to-expand
   (append
    '(link-block-box link-inline-box link-text-box link-line-box)
    '(an-element a-root-element)
    '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box)
-   '(previous next parent fchild lchild pbox pbbox vbox fbox lbox nbox vnfbox vffbox)))
+   '(previous next parent fchild lchild)
+   '(real-pbox real-fbox real-lbox real-vbox real-nbox)
+   '(pbox pbbox vbox fbox lbox nbox vbox fltbox)
+   ))
 
 (define *emitter-passes*
   (list

@@ -46,10 +46,6 @@
 
   (define-fun an-element ((e Element)) Bool
     ,(smt-let ([r (rules e)] [b (get/box (flow-box e))])
-       (= (p-name b) (flow-box (parent e)))
-       (= (f-name b) (flow-box (fchild e)))
-       (= (l-name b) (flow-box (lchild e)))
-
        (= (textalign e)
           (ite (is-text-align/inherit (style.text-align r))
                (textalign (parent e))
@@ -66,19 +62,13 @@
        ,@(for/list ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
            `(= (,field b) 0.0))
        (= (type b) box/root)
-       (= (p-name b) nil-box)
        (= (n-name b) nil-box)
-       (= (vff-name b) nil-box)
-       (= (vnf-name b) nil-box)))
+       (= (flt-name b) nil-box)
+       (= (v-name b) nil-box)))
 
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
-               [p (pbox b)] [vb (vnfbox b)]
-               [fb (ite (=> (is-box (fbox b)) (is-float/none (float (get/elt (element (fbox b))))))
-                        (fbox b) (nbox (fbox b)))]
-               [lb (ite (=> (is-box (lbox b)) (is-float/none (float (get/elt (element (lbox b))))))
-                        (lbox b)
-                        (vbox (lbox b)))])
+               [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
 
        (= (type b) box/block)
 
@@ -197,76 +187,10 @@
        ,@(for/list ([field '(bl br bt bb)])
            `(= (,field b) 0.0))))
 
-  (define-fun a-text-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)])
-       (= (type b) box/inline)
-
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-           `(= (,field b) 0.0))
-
-       (between (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
-       (=> (is-box v) (= (x b) (right-border v)))))
-
-  (define-fun an-inline-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)])
-       (= (type b) box/inline)
-
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-           `(= (,field b) 0.0))
-
-       (= (left-outer (fbox b)) (left-content b))
-       (= (right-outer (lbox b)) (right-content b))
-       ;; This is maybe too loose
-       (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
-       ;; This is maybe too tight
-       ;;(= (- (top-outer b) (top-content p)) (- (bottom-content p) (bottom-outer b)))
-       (=> (is-box v) (= (x b) (right-border v)))))
-
-  (define-fun a-line-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element (pbox b)))] [p (pbox b)] [v (vbox b)] [vff (vffbox b)]
-               [f (fbox b)] [l (lbox b)] [vfe (get/elt (element (vffbox b)))])
-       (is-box/line (type b))
-       (is-float/none (float e)) ; Where else would we set this?
-
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-           `(= (,field b) 0.0))
-
-       (ite (and (is-box vff) (< (top-outer b) (bottom-outer vff))
-                 (is-float/left (float vfe)))
-            (= (left-outer b) (right-outer vff))
-            (= (left-outer b) (left-content p)))
-       (ite (and (is-box vff) (< (top-outer b) (bottom-outer vff))
-                 (is-float/right (float vfe)))
-            (= (right-outer b) (left-outer vff))
-            (= (right-outer b) (right-content p)))
-
-       ;; Hack: line height of each line must be the same
-       (=> (is-box v) (= (h v) (h b)))
-
-       (ite (and
-             ;; Space left for the line of text
-             (> (- (right-outer l) (left-outer f))
-                (ite (is-float/left (float vfe))
-                     (- (right-content p) (right-outer vff))
-                     (- (left-outer vff) (left-content p))))
-             ;; Previous element is a float; see restrictions on floats
-             (is-box vff)
-             (= (vnf-name b) (vnf-name vff)))
-            (= (top-outer b) (bottom-outer vff))
-            (= (y b) (ite (is-no-box v) (top-content p) (bottom-border v))))
-
-       (not (is-no-box f))
-       ,(smt-cond
-         [(is-text-align/left (textalign e)) (= (left-border f) (left-content b))]
-         [(is-text-align/right (textalign e)) (= (right-border l) (right-content b))]
-         [(is-text-align/center (textalign e))
-          (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b)))]
-         [else true])))
-
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
-               [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [vff (vffbox b)]
-               [vfe (get/elt (element (vffbox b)))])
+               [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [flt (fltbox b)]
+               [flte (get/elt (element (fltbox b)))])
 
        (= (type b) box/block)
        (= (mtp b) (max (mt b) 0.0))
@@ -340,10 +264,10 @@
        ;; than the bottom of the earlier box.
        ;; TODO: Analogous rules hold for right-floating boxes.
        ;; SIMPL: either to the right of the previous float, or below it.
-       (or (is-no-box vff)
+       (or (is-no-box flt)
            (ite (is-float/left (float e))
-                (or (= (left-outer b) (right-outer vff)) (>= (box-top b) (bottom-outer vff)))
-                (or (= (right-outer b) (left-outer vff)) (>= (box-top b) (bottom-outer vff)))))
+                (or (= (left-outer b) (right-outer flt)) (>= (box-top b) (bottom-outer flt)))
+                (or (= (right-outer b) (left-outer flt)) (>= (box-top b) (bottom-outer flt)))))
 
 
        ;; CSS 2.1, § 9.5.1, item 3: The right outer edge of a left-floating box
@@ -365,7 +289,7 @@
        ;; may not be higher than the top of any line-box containing a box
        ;; generated by an element earlier in the source document.
        ;; SIMPL: May not be higher than the top of the previous float or flow box
-       (=> (is-box vff) (>= (top-outer b) (top-outer vff)))
+       (=> (is-box flt) (>= (top-outer b) (top-outer flt)))
        (=> (is-box vb) (>= (top-outer b) (top-outer vb)))
        (=> (and (is-box vb) (is-box (lbox vb)))
            (>= (top-outer b) (top-outer (lbox (ite (is-box vb) vb b)))))
@@ -375,18 +299,18 @@
        ;; to the right of its containing block's right edge.
        ;; (Loosely: a left float may not stick out at the right edge,
        ;; unless it is already as far to the left as possible.)
-       (=> (and (is-box vff) (< (x vff) (x b)) (horizontally-adjacent b vff)
+       (=> (and (is-box flt) (< (x flt) (x b)) (horizontally-adjacent b flt)
                 (is-float/left (float e)))
            (<= (right-outer b) (right-content p)))
-       (=> (and (is-box vff) (> (x vff) (x b)) (horizontally-adjacent b vff)
+       (=> (and (is-box flt) (> (x flt) (x b)) (horizontally-adjacent b flt)
                 (is-float/right (float e)))
            (>= (left-outer b) (left-content p)))
 
        ;; CSS 2.1, § 9.5.1, item 8: A floating box must be placed as high as possible.
        ;; SIMPL: at its normal position, or the same y-position as previous float
        (or (= (top-outer b) (ite (is-no-box vb) (top-content p) (bottom-outer (vbox b))))
-           (and (is-box vff) (= (top-outer b) (top-outer vff)))
-           (and (is-box vff) (= (top-outer b) (bottom-outer vff))))
+           (and (is-box flt) (= (top-outer b) (top-outer flt)))
+           (and (is-box flt) (= (top-outer b) (bottom-outer flt))))
 
        ;; CSS 2.1, § 9.5.1, item 9: A left-floating box must be put as far to the left
        ;; as possible, a right-floating box as far to the right as possible. A higher
@@ -394,10 +318,10 @@
        ;; SIMPL: at the left/right or next to an existing floating box
        (=> (is-float/left (float e))
            (or (= (left-outer b) (left-content p))
-               (and (is-box vff) (= (left-outer b) (right-outer vff)))))
+               (and (is-box flt) (= (left-outer b) (right-outer flt)))))
        (=> (is-float/right (float e))
            (or (= (right-outer b) (right-content p))
-               (and (is-box vff) (= (right-outer b) (left-outer vff)))))
+               (and (is-box flt) (= (right-outer b) (left-outer flt)))))
 
        ;; Three restrictions on floats to make solving efficient
 
@@ -405,16 +329,79 @@
        ,@(for/list ([m '(mt mr mb ml)]) `(>= (,m b) 0.0))
        ;; The bottom of a box is farther down than the bottom of the previous box
        ;; Otherwise, they can make little pyramids
-       (=> (is-box vff) (>= (bottom-outer b) (bottom-outer vff)))
+       (=> (is-box flt) (>= (bottom-outer b) (bottom-outer flt)))
        ;; If a float wraps to the next line, the previous line must be full
-       (=> (and (is-box vff) (= (top-outer b) (bottom-outer vff)))
+       (=> (and (is-box flt) (= (top-outer b) (bottom-outer flt)))
            (ite (is-float/left (float e))
-                (= (right-outer vff) (right-content p))
-                (= (left-outer vff) (left-content p))))
+                (= (right-outer flt) (right-content p))
+                (= (left-outer flt) (left-content p))))
        ;; If this and the previous float float to different sides,
        ;; they are not horizontally adjacent
-       (=> (and (is-box vff) (not (= (float vfe) (float e))))
-           (not (horizontally-adjacent vff b)))))
+       (=> (and (is-box flt) (not (= (float flte) (float e))))
+           (not (horizontally-adjacent flt b)))))
+
+  (define-fun an-inline-box ((b Box)) Bool
+    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)])
+       (= (type b) box/inline)
+
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+           `(= (,field b) 0.0))
+
+       (= (left-outer (fbox b)) (left-content b))
+       (= (right-outer (lbox b)) (right-content b))
+       ;; This is maybe too loose
+       (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
+       ;; This is maybe too tight
+       ;;(= (- (top-outer b) (top-content p)) (- (bottom-content p) (bottom-outer b)))
+       (=> (is-box v) (= (x b) (right-border v)))))
+
+  (define-fun a-text-box ((b Box)) Bool
+    ,(smt-let ([p (pbox b)] [v (vbox b)])
+       (= (type b) box/inline)
+
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+           `(= (,field b) 0.0))
+
+       (between (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
+       (=> (is-box v) (= (x b) (right-border v)))))
+
+  (define-fun a-line-box ((b Box)) Bool
+    ,(smt-let ([e (get/elt (element (pbox b)))] [p (pbox b)] [v (vbox b)] [flt (fltbox b)]
+               [f (fbox b)] [l (lbox b)] [flte (get/elt (element (fltbox b)))])
+       (is-box/line (type b))
+       (is-float/none (float e)) ; Where else would we set this?
+
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+           `(= (,field b) 0.0))
+
+       (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
+                 (is-float/left (float flte)))
+            (= (left-outer b) (right-outer flt))
+            (= (left-outer b) (left-content p)))
+       (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
+                 (is-float/right (float flte)))
+            (= (right-outer b) (left-outer flt))
+            (= (right-outer b) (right-content p)))
+
+       (ite (and
+             ;; Space left for the line of text
+             (> (- (right-outer l) (left-outer f))
+                (ite (is-float/left (float flte))
+                     (- (right-content p) (right-outer flt))
+                     (- (left-outer flt) (left-content p))))
+             ;; Previous element is a float; see restrictions on floats
+             (is-box flt)
+             (= (v-name b) (v-name flt)))
+            (= (top-outer b) (bottom-outer flt))
+            (= (y b) (ite (is-no-box v) (top-content p) (bottom-border v))))
+
+       (not (is-no-box f))
+       ,(smt-cond
+         [(is-text-align/left (textalign e)) (= (left-border f) (left-content b))]
+         [(is-text-align/right (textalign e)) (= (right-border l) (right-content b))]
+         [(is-text-align/center (textalign e))
+          (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b)))]
+         [else true])))
 
   (define-fun a-block-box ((b Box)) Bool
     (let ((e (get/elt (element b))))
