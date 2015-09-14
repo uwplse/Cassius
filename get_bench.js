@@ -2,12 +2,12 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Box = function(node, type, props) {
+Box = function(type, node, props) {
     this.children = [];
-    this.type = type; this.props = props; return this;
-    this.node = node;
+    this.type = type; this.props = props; this.node = node;
+    return this;
 }
-function curry(f, arg) { return function(arg2) { return new f(arg, arg2) }}
+function curry(f, arg) { return function(arg1, arg2) { return new f(arg, arg1, arg2) }}
 Block = curry(Box, "BLOCK");
 Line = curry(Box, "LINE")
 Inline = curry(Box, "INLINE")
@@ -146,7 +146,7 @@ function infer_lines(box, parent) {
     }
 
     function new_line() {
-        var l = Line(null, {h: cs(parent.node)["line-height"]});
+        var l = Line(null, {h: val2px(cs(parent.node)["line-height"])});
         parent.children.push(l);
         return l;
     }

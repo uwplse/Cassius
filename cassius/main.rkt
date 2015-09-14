@@ -371,9 +371,8 @@
        ,@(map (curry sformat "~a-flow") elt-names)
        nil-box)))
     ,@css-declarations
-    ,@dom-declarations
+    ,@tree-types
     ,@(getter-definitions doms)
-    ,@tree-helpers
     ,@css-functions
     ,@link-definitions
     ,@layout-definitions
