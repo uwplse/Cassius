@@ -4,7 +4,7 @@
 
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
-         z3-check-let z3-check-fields z3-debughelp)
+         z3-check-let z3-check-fields z3-debughelp z3-print-all)
 
 (define (z3-dco cmds)
   (let ([store (make-hash)])
@@ -398,6 +398,7 @@
 (define (z3-simplif cmds)
   (define constructors (make-hash))
   (define types (make-hash))
+  (define known-constructors (make-hash))
 
   (define (constructor? name)
     (hash-has-key? types name))
@@ -420,19 +421,23 @@
        (unless (member test-variant (hash-ref constructors (hash-ref types constructor)))
          (error "Invalid tester/constructor combination" tester constructor))
        (if (equal? test-variant constructor) 'true 'false)]
+      [`(,(? constructor-tester? tester) ,(? (curry hash-has-key? known-constructors) var))
+       (if (equal? tester (hash-ref known-constructors var)) 'true 'false)]
       [`(ite false ,a ,b) b]
       [`(ite true ,a ,b) a]
       [`(ite ,c ,a ,a) a]
       [`(=> false ,a) 'true]
       [`(=> true ,a) a]
       [(list 'and rest ... )
-       (if (member 'false rest)
+       (if (or (member 'false rest) (null? rest))
            'false
-           (filter (lambda (x) (not (equal? x 'true))) (cons 'and rest)))]
+           (let ([rest* (filter (lambda (x) (not (equal? x 'true))) rest)])
+             (if (null? rest*) 'true (cons 'and rest*))))]
       [(list 'or rest ... )
-       (if (member 'true rest)
+       (if (or (member 'true rest) (null? rest))
            'true
-           (filter (lambda (x) (not (equal? x 'false))) (cons 'or rest)))]
+           (let ([rest* (filter (lambda (x) (not (equal? x 'false))) rest)])
+             (if (null? rest*) 'false (cons 'or rest*))))]
       [(list '= a a) 'true]
       [_ expr]))
 
@@ -448,6 +453,15 @@
        (sow cmd)]
       [`(define-fun ,names ((,args ,atypes)) ,rtype ,body)
        (sow `(define-fun ,names ((,args ,atypes)) ,rtype ,(simpl body)))]
+      [`(assert (,(? constructor-tester? tester) ,tested))
+       (define s (simpl tested))
+       (hash-set! known-constructors (simpl tested) tester)
+       (sow cmd)]
+      [(or
+        `(assert (= ,tested ,(or (? constructor? name) (list (? constructor? name) _ ...))))
+        `(assert (= ,(or (? constructor? name) (list (? constructor? name) _ ...)) ,tested)))
+       (hash-set! known-constructors (simpl tested) (sformat "is-~a" name))
+       (sow cmd)]
       [`(assert ,expr)
        (define s (simpl expr))
        (unless (equal? s 'true)

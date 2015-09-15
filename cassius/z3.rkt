@@ -167,6 +167,7 @@
   (list
    z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
    (apply z3-expand to-expand)
+   z3-simplif
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
    (apply z3-resolve-fns to-resolve)
@@ -185,5 +186,5 @@
 (define (z3-prepare exprs)
   (define start (current-inexact-milliseconds))
   (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
-    (eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
+    #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
     (action exprs)))
