@@ -2,7 +2,8 @@
 (require "dom.rkt")
 (require "smt.rkt")
 (require "css-rules.rkt")
-(require "elements.rkt")
+(require "spec/tree.rkt")
+(require "spec/layout.rkt")
 (require "common.rkt")
 (require "css-properties.rkt")
 (require "browser-style.rkt")
@@ -147,8 +148,8 @@
       `(ite (,(sformat "is-~a" name) x) ,(sformat "~a-elt" name) ,body)))
   (emit `(define-fun get/elt ((x ElementName)) Element ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (not (is-no-elt (get/elt ,name)))))
-    (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name)))))
+    (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name))))
+    (emit `(assert (is-elt (get/elt ,name)))))
   ; Pointed map: nil goes to nil
   (emit `(assert (= (get/elt nil-elt) no-elt))))
 
@@ -168,8 +169,8 @@
       `(ite (,(sformat "is-~a-flow" name) x) ,(sformat "~a-flow-box" name) ,body)))
   (emit `(define-fun get/box ((x BoxName)) Box ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (not (is-no-box ,(sformat "~a-flow-box" name)))))
-    (emit `(assert (= (get/box ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name)))))
+    (emit `(assert (= (get/box ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name))))
+    (emit `(assert (is-box ,(sformat "~a-flow-box" name)))))
   (emit `(assert (= (get/box nil-box) no-box)))
   (emit `(assert (= (flow-box no-elt) nil-box))))
 
@@ -180,11 +181,7 @@
   (emit `(echo ,(format "Defining the ~a root element" (dom-name dom))))
   (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
   (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
-  (emit `(assert (= (tagname ,elt) no-tag)))
-  (for ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
-    (emit `(assert (= (,field ,b) 0.0))))
   (emit `(assert (= (float ,elt) float/none)))
-  (emit `(assert (= (textalign ,elt) text-align/left)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
   (emit `(assert (= (parent-name (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
@@ -194,11 +191,7 @@
   (emit `(assert (= (parent-name ,elt) nil-elt)))
   (emit `(assert (= (previous-name ,elt) nil-elt)))
   (emit `(assert (= (next-name ,elt) nil-elt)))
-  (emit `(assert (= (type ,b) box/root)))
-  (emit `(assert (= (p-name ,b) nil-box)))
-  (emit `(assert (= (n-name ,b) nil-box)))
-  (emit `(assert (= (vff-name ,b) nil-box)))
-  (emit `(assert (= (vnf-name ,b) nil-box))))
+  (emit `(assert (a-root-element ,elt))))
 
 (define (stylesheet-constraints sname sheet save-rule #:browser [browser? #f])
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
@@ -278,17 +271,27 @@
       [(list) (void)])))
 
 (define (element-constraints dom emit elt children)
-  (emit (element-general-constraints (elt-name elt))))
+  (emit `(assert (an-element ,(dom-get dom elt)))))
+
+(define (box-link-constraints dom emit elt children)
+  (define cns
+    (match (car elt)
+      ['BLOCK 'link-block-box]
+      ['MAGIC 'link-block-box]
+      ['LINE 'link-line-box]
+      ['INLINE 'link-inline-box]
+      ['TEXT 'link-text-box]))
+  (emit `(assert (,cns (get/box (flow-box ,(dom-get dom elt)))))))
 
 (define (box-constraints dom emit elt children)
   (define cns
     (match (car elt)
-      ['BLOCK box-block-constraints]
-      ['MAGIC box-block-constraints]
-      ['LINE box-line-constraints]
-      ['INLINE box-inline-constraints]
-      ['TEXT box-text-constraints]))
-  (for-each emit (cns (sformat "~a-flow-box" (elt-name elt)))))
+      ['BLOCK 'a-block-box]
+      ['MAGIC 'a-block-box]
+      ['LINE 'a-line-box]
+      ['INLINE 'an-inline-box]
+      ['TEXT 'a-text-box]))
+  (emit `(assert (,cns ,(sformat "~a-flow-box" (elt-name elt))))))
 
 (define (info-constraints dom emit elt children)
   (define tagname
@@ -352,7 +355,8 @@
   (define (save-rule x) (set! rules (cons x rules)))
 
   (define constraints
-    (list tree-constraints info-constraints user-constraints element-constraints box-constraints
+    (list tree-constraints info-constraints user-constraints element-constraints
+          box-link-constraints box-constraints
           (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)))
 
   `((set-option :produce-unsat-cores true)
@@ -367,11 +371,11 @@
        ,@(map (curry sformat "~a-flow") elt-names)
        nil-box)))
     ,@css-declarations
-    ,@dom-declarations
+    ,@tree-types
     ,@(getter-definitions doms)
-    ,@dom-definitions
     ,@css-functions
-    ,@element-definitions
+    ,@link-definitions
+    ,@layout-definitions
 
     ; Stylesheet
     (echo "Browser stylesheet")
