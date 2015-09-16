@@ -2,3 +2,8 @@ test.css
 test.html
 z3.sh
 papers/
+*.aux
+*.d
+*.vo
+*.glob
+*/.coq-native/

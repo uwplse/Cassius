@@ -1,4 +1,4 @@
-Require Export MoreForall Arith Tactic Omega Program.
+Require Export CoqCore.MoreForall Arith CoqCore.Tactic Omega Program.
 Require Recdef.
 Variable Rest : Type.
 Inductive expr := If (a b c : expr) | And (a b : expr) | Unknown (R : Rest) (l : list expr).
