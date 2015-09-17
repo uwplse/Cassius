@@ -3,6 +3,8 @@
 (define-header header
 "")
 
+(define-stylesheet unknown-sheet ? ? ?)
+
 (define-stylesheet good-sheet
   ((sel/tag tag/body)
    [width (width/px 800)]
@@ -59,7 +61,17 @@
      ([LINE :h 19]
       ([TEXT :x 8 :y 283.5 :w 223 :h 16 :text "test test test test test test "]))))))
 
+(define-problem synthesize
+  #:header header
+  #:sheet unknown-sheet
+  #:documents doc-a)
+
 (define-problem verify
   #:header header
   #:sheet good-sheet
   #:documents doc-a)
+
+(define-problem render
+  #:header header
+  #:sheet good-sheet
+  #:documents (print-all (strip-positions doc-a)))
