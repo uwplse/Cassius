@@ -63,7 +63,7 @@
           ,(smt-cond
             [(is-no-elt (previous e)) nil-box]
             [(is-float/none (float (previous e))) (flow-box (previous e))]
-            [else (flt-name (get/box (flow-box (previous e))))]))
+            [else (v-name (get/box (flow-box (previous e))))]))
        (= (n-name b)
           ,(smt-cond
             [(is-no-elt (next e)) nil-box]
