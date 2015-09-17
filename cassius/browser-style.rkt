@@ -26,6 +26,11 @@
      [margin-top (margin/px 16)]
      [margin-bottom (margin/px 16)])
     ; Fieldset
+    ((sel/tag tag/figure)
+     [margin-top (margin/px 16)]
+     [margin-right (margin/px 40)]
+     [margin-bottom (margin/px 16)]
+     [margin-left (margin/px 40)])
     ; Form
     ((sel/tag tag/h1)
      [margin-top (margin/px (/ 643 30))]
