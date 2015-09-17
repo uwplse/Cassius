@@ -1,10 +1,11 @@
 #lang racket
 (require srfi/13)
+(require racket/set)
 (require "common.rkt")
 
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
-         z3-check-let z3-check-fields z3-debughelp z3-print-all)
+         z3-check-let z3-check-fields z3-print-all)
 
 (define (z3-dco cmds)
   (let ([store (make-hash)])
@@ -276,14 +277,12 @@
   (for/reap (sow) ([cmd cmds] [i (in-naturals)])
     (match cmd
       [`(assert (ite ,c (and ,exprs1 ...) (and ,exprs2 ...)))
-       (let loop ([exprs1 exprs1] [exprs2 exprs2])
-         (unless (and (null? exprs1) (null? exprs2))
-           (sow `(assert
-                  (ite ,c
-                       ,(if (null? exprs1) 'true (car exprs1))
-                       ,(if (null? exprs2) 'true (car exprs2)))))
-           (loop (if (null? exprs1) exprs1 (cdr exprs1))
-                 (if (null? exprs2) exprs2 (cdr exprs2)))))]
+       (define both (set-intersect exprs1 exprs2))
+       (define left (set-subtract exprs1 both))
+       (define right (set-subtract exprs2 both))
+       (for ([expr both]) (sow `(assert ,expr)))
+       (for ([expr left]) (sow `(assert (=> ,c ,expr))))
+       (for ([expr right]) (sow `(assert (=> (not ,c) ,expr))))]
       [`(assert (and ,exprs ...))
        (for ([expr exprs])
          (sow `(assert ,expr)))]
@@ -384,17 +383,6 @@
   (eprintf "~a: ~a\n" text (list-ref cmds n))
   cmds)
 
-(define (z3-debughelp cmds)
-  (if (memq 'debug (flags))
-      (for/list ([cmd cmds] [i (in-naturals)])
-        (match cmd
-          [`(assert (! ,expr :named ,name))
-           cmd]
-          [`(assert ,expr)
-           `(assert (! ,expr :named ,(string->symbol (format "line$~a" i))))]
-          [_ cmd]))
-      cmds))
-
 (define (z3-simplif cmds)
   (define constructors (make-hash))
   (define types (make-hash))
@@ -426,8 +414,11 @@
       [`(ite false ,a ,b) b]
       [`(ite true ,a ,b) a]
       [`(ite ,c ,a ,a) a]
+      [`(ite ,c false true) `(not ,c)]
+      [`(ite ,c true false) c]
       [`(=> false ,a) 'true]
       [`(=> true ,a) a]
+      [`(not (not ,a)) a]
       [(list 'and rest ... )
        (if (or (member 'false rest) (null? rest))
            'false

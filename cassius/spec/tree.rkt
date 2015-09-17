@@ -45,16 +45,16 @@
         (get/box (flow-box (next (get/elt (element box)))))))
 
   (define-fun pbox ((box Box)) Box (real-pbox box))
-  (define-fun fbox ((box Box)) Box
-    (ite (=> (is-box (real-fbox b)) (is-float/none (float (get/elt (element (real-fbox b))))))
-         (real-fbox b) (nbox (real-fbox b))))
-  (define-fun lbox ((box Box)) Box
-    (ite (=> (is-box (real-lbox b)) (is-float/none (float (get/elt (element (real-lbox b))))))
-         (real-lbox b) (vbox (real-lbox b))))
-  (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
   (define-fun nbox ((box Box)) Box (get/box (n-name box)))
   (define-fun vbox ((box Box)) Box (get/box (v-name box)))
   (define-fun fltbox ((box Box)) Box (get/box (flt-name box)))
+  (define-fun fbox ((b Box)) Box
+    (ite (=> (is-box (real-fbox b)) (is-float/none (float (get/elt (element (real-fbox b))))))
+         (real-fbox b) (nbox (real-fbox b))))
+  (define-fun lbox ((b Box)) Box
+    (ite (=> (is-box (real-lbox b)) (is-float/none (float (get/elt (element (real-lbox b))))))
+         (real-lbox b) (vbox (real-lbox b))))
+  (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
 
   (define-fun link-block-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))])

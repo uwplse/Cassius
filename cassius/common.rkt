@@ -6,8 +6,8 @@
  flags all-flags
  tree-size sdiff)
 
-(define flags (make-parameter '(z3c)))
-(define all-flags '(opt float z3c))
+(define flags (make-parameter '(z3o)))
+(define all-flags '(opt float z3o))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])

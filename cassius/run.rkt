@@ -42,13 +42,17 @@
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
            (length query) (tree-size query))
 
-  (when (memq 'z3c (flags))
+  (when (memq 'z3o (flags))
     (set! query (z3-prepare query)))
+
+  (when (memq 'debug (flags))
+    (set! query (z3-namelines query)))
+
   (define time-prepare (current-inexact-milliseconds))
   (eprintf "[~as] Prepared ~a constraints of ~a terms\n"
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
            (length query) (tree-size query))
-
+  
   (parameterize ([current-output-port out])
     (match solve
       [#f

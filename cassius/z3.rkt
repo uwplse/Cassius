@@ -4,7 +4,7 @@
 (require "common.rkt")
 (require "z3o.rkt")
 
-(provide z3-solve z3-prepare)
+(provide z3-solve z3-prepare z3-namelines)
 
 (define-runtime-path bin "..")
 (define z3 (make-parameter (build-path bin "z3.sh")))
@@ -167,6 +167,7 @@
   (list
    z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
    (apply z3-expand to-expand)
+   z3-dco
    z3-simplif
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
@@ -180,8 +181,16 @@
    #;(z3-expand 'get/box 'get/elt)
    #;z3-simplif
    z3-dco
-   z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
-   z3-debughelp))
+   z3-check-datatypes z3-check-functions z3-check-let z3-check-fields))
+
+(define (z3-namelines cmds)
+  (for/list ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [`(assert (! ,expr :named ,name))
+       cmd]
+      [`(assert ,expr)
+       `(assert (! ,expr :named ,(string->symbol (format "line$~a" i))))]
+      [_ cmd])))
 
 (define (z3-prepare exprs)
   (define start (current-inexact-milliseconds))
