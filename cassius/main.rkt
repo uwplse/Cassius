@@ -49,7 +49,7 @@
   [('Selector 'sel/all) "*"]
   [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
   [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
-  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,pbname ,n ,v ,flt ,e))
+  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,pbname ,n ,v ,flt ,flt-up ,e))
    (with-output-to-string
      (lambda ()
        (printf "~a ~a×~a at (y ~a, x ~a)\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))

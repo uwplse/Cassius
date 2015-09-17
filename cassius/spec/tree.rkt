@@ -13,7 +13,7 @@
                   (pt Real) (pr Real) (pb Real) (pl Real)
                   (bt Real) (br Real) (bb Real) (bl Real)
                   (pb-name BoxName)
-                  (n-name BoxName) (v-name BoxName) (flt-name BoxName)
+                  (n-name BoxName) (v-name BoxName) (flt-name BoxName) (flt-up-name BoxName)
                   (element ElementName)))
         (BoxType box/root box/text box/inline box/block box/line)
         (Element no-elt
@@ -73,26 +73,33 @@
           ,(smt-cond
             [(and (is-no-elt (previous e)) (not (is-float/none (float (parent e))))) nil-box]
             [(is-no-elt (previous e)) (flt-name (get/box (flow-box (parent e))))]
-            [(is-float/none (float (previous e))) (flt-name (get/box (flow-box (previous e))))]
-            [else (flow-box (previous e))]))))
+            [else (flt-up-name (get/box (flow-box (previous e))))]))
+       (= (flt-up-name b)
+          ,(smt-cond
+            [(not (is-float/none (float e))) (flow-box e)]
+            [(is-no-elt (lchild e)) (flt-name b)]
+            [else (flt-up-name (get/box (flow-box (lchild e))))]))))
 
   (define-fun link-inline-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))])
        (= (pb-name b) (pb-name (pbox b)))
        (= (v-name b) (ite (is-no-elt (previous e)) nil-box (flow-box (previous e))))
        (= (n-name b) (ite (is-no-elt (next e)) nil-box (flow-box (next e))))
-       (= (flt-name b) (flt-name (pbbox b)))))
+       (= (flt-name b) (flt-name (pbbox b)))
+       (= (flt-up-name b) (flt-name b))))
 
   (define-fun link-line-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))])
        (= (pb-name b) (pb-name (pbox b)))
        (= (v-name b) (ite (is-no-elt (previous e)) nil-box (flow-box (previous e))))
        (= (n-name b) (ite (is-no-elt (next e)) nil-box (flow-box (next e))))
-       (= (flt-name b) (flt-name (pbbox b)))))
+       (= (flt-name b) (flt-name (pbbox b)))
+       (= (flt-up-name b) (flt-name b))))
 
   (define-fun link-text-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))])
        (= (pb-name b) (pb-name (pbox b)))
        (= (v-name b) (ite (is-no-elt (previous e)) nil-box (flow-box (previous e))))
        (= (n-name b) (ite (is-no-elt (next e)) nil-box (flow-box (next e))))
-       (= (flt-name b) (flt-name (pbbox b))))))
+       (= (flt-name b) (flt-name (pbbox b)))
+       (= (flt-up-name b) (flt-name b)))))
