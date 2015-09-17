@@ -74,4 +74,4 @@ Definition IfAndPreserve : forall e, BDenote (IfAnd e) = BDenote e.
   intros; eapply Forall_forall in H; eauto.
 Qed.
 Extraction Language Scheme.
-Extraction "z30.rkt" IfAnd.
+Extraction "z3o" IfAnd.

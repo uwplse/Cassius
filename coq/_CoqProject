@@ -1,1 +1,1 @@
-Mini.v -R . Cassius -o Makefile
+Mini.v -R . Cassius -o CoqMakefile

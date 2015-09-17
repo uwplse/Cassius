@@ -12,7 +12,6 @@
   (syntax-rules ()
     [(match e) void]
     [(match e ((t as ...) f) cs ...)
-      (if (eq? 't (car e)) 
+      (if (eq? 't (car e))
         (apply (lambda (as ...) f) (cdr e))
         (match e cs ...))]))
- 
