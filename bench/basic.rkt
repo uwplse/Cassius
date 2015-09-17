@@ -28,7 +28,7 @@
   ([BLOCK :tag HTML :x 0 :y 0 :w 800]
    ([BLOCK :tag BODY :x 100 :y   0 :w 600 :h 400]
     ([BLOCK :tag DIV :id short :x 200 :y  66 :w 400 :h 100])
-    ([BLOCK :tag DIV :x 200 :y 233 :w 400 :h 100 :print]))))
+    ([BLOCK :tag DIV :x 200 :y 233 :w 400 :h 100]))))
 
 (define-problem verify
   #:header header
