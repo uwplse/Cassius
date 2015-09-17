@@ -7,3 +7,4 @@ papers/
 *.vo
 *.glob
 */.coq-native/
+coq/compiled
