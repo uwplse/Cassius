@@ -74,6 +74,6 @@ Definition IfAndPreserve : forall e, BDenote (IfAnd e) = BDenote e.
   intros; eapply Forall_forall in H; eauto.
 Qed.
 Extraction Language Scheme.
-Extract Constant RestEqDec => "(lambdas (l r) (if (eq? l r) `Left `Right))".
+Extract Constant RestEqDec => "(lambdas (l r) (if (eq? l r) `(Left) `(Right)))".
 Extraction "z3o" IfAnd.
 
