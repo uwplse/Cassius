@@ -35,7 +35,7 @@
 (define-document (doc-a #:width 958 #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 958 :h 317]
    ([BLOCK :tag BODY :x 8 :y 16 :w 800 :h 285]
-    ([BLOCK :tag FIGURE :x 48 :print :y 16 :w 720 :h 0]
+    ([BLOCK :tag FIGURE :x 48 :y 16 :w 720 :h 0]
      ([BLOCK :tag DIV :x 58 :y 26 :w 200 :h 200 :id left]))
     ([BLOCK :tag P :x 8 :y 16 :w 800 :h 285]
      ([LINE :h 19]
