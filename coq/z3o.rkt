@@ -24,7 +24,7 @@
      ((Nil) `(Nil))
      ((Cons a t) `(Cons ,(f a) ,(@ map f t))))))
   
-(define restEqDec (lambdas (l r) (if (eq? l r) `Left `Right)))
+(define restEqDec (lambdas (l r) (if (eq? l r) `(Left) `(Right))))
 
 (define exprEqDec (lambdas (l r)
   (match l

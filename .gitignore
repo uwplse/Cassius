@@ -9,3 +9,5 @@ papers/
 */.coq-native/
 coq/compiled
 coq/CoqMakefile
+*~
+cassius/compiled
