@@ -363,7 +363,7 @@
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-line-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element (pbox b)))] [p (pbox b)] [v (vbox b)] [flt (fltbox b)]
+    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [flt (fltbox b)]
                [f (fbox b)] [l (lbox b)] [flte (get/elt (element (fltbox b)))])
        (is-box/line (type b))
        (is-float/none (float e)) ; Where else would we set this?
