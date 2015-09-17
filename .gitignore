@@ -8,3 +8,4 @@ papers/
 *.glob
 */.coq-native/
 coq/compiled
+coq/CoqMakefile
