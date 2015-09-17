@@ -6,6 +6,7 @@
 (require "dom.rkt")
 (require "z3.rkt")
 (require "main.rkt")
+(require "modify-dom.rkt")
 
 (struct problem (header sheet documents))
 
@@ -14,6 +15,13 @@
   (define headers (make-hash))
   (define sheets (make-hash))
   (define docs (make-hash))
+
+  (define (parse-document name)
+    (match name
+      [`(strip-positions ,x) (dom-strip-positions (parse-document x))]
+      [`(print-all ,x) (dom-print-all (parse-document x))]
+      [(? symbol?) (hash-ref docs name)]))
+
   (for ([expr (in-port read port)])
     (match expr
       [`(define-stylesheet ,name ,rules ...)
@@ -27,7 +35,7 @@
       [`(define-problem ,name #:header ,header #:sheet ,sheet #:documents ,documents ...)
        (hash-set! problems name
                   (problem (hash-ref headers header) (hash-ref sheets sheet)
-                           (map (curry hash-ref docs) documents)))]))
+                           (map parse-document documents)))]))
   problems)
 
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
