@@ -42,20 +42,25 @@
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
            (length query) (tree-size query))
 
-  (when (memq 'z3c (flags))
+  (when (memq 'z3o (flags))
     (set! query (z3-prepare query)))
+
+  (when (memq 'debug (flags))
+    (set! query (z3-namelines query)))
+
   (define time-prepare (current-inexact-milliseconds))
   (eprintf "[~as] Prepared ~a constraints of ~a terms\n"
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
            (length query) (tree-size query))
-
+  
   (parameterize ([current-output-port out])
     (match solve
       [#f
        (for ([cmd query])
          (match cmd
            [(list 'echo comment) (printf "; ~a\n" comment)]
-           [_ (printf "~a\n" cmd)]))]
+           [_ (printf "~a\n" cmd)]))
+       #t]
       [#t
        (define z3-result
          (with-handlers ([exn:break? (lambda (e) 'break)])
@@ -68,10 +73,12 @@
           (print-rules #:stylesheet sheet #:header header model)
           (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
-                   (hash-count model))]
+                   (hash-count model))
+          #t]
          ['break
           (eprintf "[~as] Query terminated\nFailure.\n"
-                   (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))])])))
+                   (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
+          #f])])))
 
 (module+ main
   (define solve? #t)
@@ -96,4 +103,4 @@
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
    #:args (fname problem)
-   (run-file fname problem #:output out-file #:debug debug #:solve solve?)))
+   (exit (if (run-file fname problem #:output out-file #:debug debug #:solve solve?) 0 1))))

@@ -179,9 +179,6 @@
                 (+ (top-content p) (+ (mtp b) (mtn b))))
            (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b)))))
 
-       ;; Positivity constraint---otherwise floats can overlap
-       (> (box-height b) 0.0)
-
        ,@(for/list ([field '(pl pr pb pt w h)])
            `(>= (,field b) 0.0))
        ,@(for/list ([field '(bl br bt bb)])

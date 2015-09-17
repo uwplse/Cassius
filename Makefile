@@ -1,5 +1,10 @@
+TEST_FILES=$(wildcard bench/*.rkt)
+TESTS=$(TEST_FILES:bench/%.rkt=%:verify)
 
 .PHONY: download deploy
+
+test:
+	bash test.sh $(TESTS)
 
 deploy:
 	rsync -r www/ $(shell ~/uwplse/getdir)
