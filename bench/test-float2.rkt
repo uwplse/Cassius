@@ -20,7 +20,15 @@
    [margin-top (margin/px 10)]
    [margin-left (margin/px 10)]
    [margin-bottom (margin/px 10)]
-   [margin-right (margin/px 10)]))
+   [margin-right (margin/px 10)])
+  ;; This is a workaround: we don't handle margin-collapse
+  ;; for zero-height boxes correctly, and this makes it work anyway
+  ((sel/tag tag/figure)
+   [margin-top (margin/px 0)]
+   [margin-bottom (margin/px 0)])
+  ((sel/tag tag/p)
+   [margin-top (margin/px 0)]
+   [margin-bottom (margin/px 0)]))
 
 ;; From file:/home/pavpan/cassius/bench/test-float2-a.html
 
