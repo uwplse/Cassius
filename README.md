@@ -15,14 +15,13 @@ Cassius implementation has just begun;
 For now, the focus is on implementing the CSS box model.
 
 Cassius currently models:
-+ Widths, padding, and margins
-+ `auto` margins
-+ Margin collapse
++ Widths, padding, and margins, including `auto` margins
++ Margin collapsing
++ Floats
 
 Cassius does not model:
 + Percentage margins, widths, or padding
 + Borders
-+ Floats
 + Positioning
 
 Cassius development is tracked
@@ -39,4 +38,4 @@ It works best on Linux.
 Running Tests
 -------------
 
-We don’t have tests yet.
+Run `make test` to run tests.
