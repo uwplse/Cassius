@@ -261,7 +261,6 @@ function make_boxes(elt, inflow) {
         var r = elt.getBoundingClientRect();
         var box = Inline(elt, {tag: elt.tagName/*, x: r.x, y: r.y, w: r.width, h: r.height*/});
         inflow.children.push(box);
-
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
             make_boxes(child, box);
@@ -273,8 +272,8 @@ function make_boxes(elt, inflow) {
         var s = cs(elt);
         var box = Magic(elt, {
             tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,
-            mt: elt.style.marginTop, mr: elt.style.marginRight, 
-            mb: elt.style.marginBottom, ml: elt.style.marginLeft, 
+            mt: val2px(s["margin-top"]), mr: val2px(s["margin-right"]), 
+            mb: val2px(s["margin-bottom"]), ml: val2px(s["margin-left"]),
         });
 
         if (elt.id) box.props.id = elt.id;
