@@ -14,6 +14,7 @@ Inline = curry(Box, "INLINE")
 Page = curry(Box, "PAGE")
 Text = curry(Box, "TEXT")
 Magic = curry(Box, "MAGIC")
+Anon = curry(Box, "ANON")
 
 Box.prototype.toString = function() {
     var s = "[" + this.type;
@@ -130,10 +131,37 @@ function is_text_container(elt) {
         else if (is_inline(child)) has_inline = true;
         else continue;
     }
-    if ((has_inline || has_text) && has_nf_block) {
-        console.warn("Element has blocks and text", elt);
-    }
     return (has_inline || has_text) && !has_nf_block;
+}
+
+function contains_text(elt) {
+    var has_inline = false, has_nf_block = false, has_text = false;
+    for (var i = 0; i < elt.childNodes.length; i++) {
+        var child = elt.childNodes[i];
+        if (is_comment(child)) continue
+        else if (is_text(child) && child.textContent.search(/^\s+$/) === -1) has_text = true;
+        else if (is_text(child)) continue;
+        else if (is_inline(child)) has_inline = true;
+        else continue;
+    }
+    return has_inline || has_text;
+}
+
+function infer_anons(box, parent) {
+    var anon_box = false;
+    for (var i = 0; i < box.children.length; i++) {
+        var child = box.children[i];
+        if (child.type == "BLOCK" || child.type == "MAGIC") {
+            parent.children.push(child);
+            anon_box = false;
+        } else if (child.type == "ANON") {
+            parent.children.push(child);
+            anon_box = child;
+        } else {
+            anon_box = anon_box || Anon(null, {});
+            anon_box.children.push(child);
+        }
+    }
 }
 
 function infer_lines(box, parent) {
@@ -251,7 +279,16 @@ function make_boxes(elt, inflow) {
             }
             // Then break it into lines
             infer_lines(fake_parent, box);
-        } else {
+        }  else if (contains_text(elt)) {
+            // Make a subtree under a fake box
+            var fake_parent = new Box("Fake", {});
+            for (var i = 0; i < elt.childNodes.length; i++) {
+                var child = elt.childNodes[i];
+                make_boxes(child, fake_parent);
+            }
+            // Then add anonymous boxes
+            infer_anons(fake_parent, box);
+        }  else {
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
                 make_boxes(child, box);

@@ -280,6 +280,7 @@
   (define cns
     (match (car elt)
       ['BLOCK 'link-block-box]
+      ['ANON 'link-block-box]
       ['MAGIC 'link-block-box]
       ['LINE 'link-line-box]
       ['INLINE 'link-inline-box]
@@ -290,6 +291,7 @@
   (define cns
     (match (car elt)
       ['BLOCK 'a-block-box]
+      ['ANON 'a-block-box]
       ['MAGIC 'a-block-box]
       ['LINE 'a-line-box]
       ['INLINE 'an-inline-box]
@@ -304,6 +306,7 @@
   (define display
     (match (car elt)
       ['BLOCK 'display/block]
+      ['ANON 'display/block]
       ['MAGIC 'display/block]
       ['INLINE 'display/inline]
       ['TEXT 'display/inline]
