@@ -1,0 +1,6 @@
+[submodule "coq/CoqCore"]
+	path = coq/CoqCore
+	url = https://github.com/lolisa/CoqCore.git
+[submodule "coq/CoqCommon"]
+	path = coq/CoqCommon
+	url = https://github.com/lolisa/CoqCommon.git

@@ -2,3 +2,12 @@ test.css
 test.html
 z3.sh
 papers/
+*.aux
+*.d
+*.vo
+*.glob
+*/.coq-native/
+coq/compiled
+coq/CoqMakefile
+*~
+cassius/compiled
