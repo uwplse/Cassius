@@ -461,8 +461,14 @@
       [_ (sow cmd)])))
 
 (define (z3-if-and cmds)
-  (define (if-and expr) (FromCoq (ifAnd (ToCoq expr))))
-
+  (define (if-and-old expr)
+    (match expr
+      [`(and (ite ,c ,a1 ,b1) (ite ,c ,a2, b2))
+       `(ite ,c ,(if-and `(and ,a1 ,a2)) ,(if-and `(and ,b1 ,b2)))]
+      [(? list?)
+       (map if-and expr)]
+      [_ expr]))
+  (define (if-and expr) (coq->sexpr (ifAnd (sexpr->coq expr))))
   (for/list ([i (in-naturals)] [cmd cmds])
     (match cmd
       [`(assert ,expr)
