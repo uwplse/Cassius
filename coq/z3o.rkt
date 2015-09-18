@@ -81,21 +81,24 @@
 (define ifAndR (lambda (ex)
   (match ex
      ((If a b c) `(If ,a ,b ,c))
-     ((And a0 b0)
-       (match a0
+     ((And l r)
+       (match l
           ((If a b c)
-            (match b0
+            (match r
                ((If d e f)
                  (match (@ exprEqDec a d)
                     ((Left) `(If ,a ,(ifAndR `(And ,b ,e))
                       ,(ifAndR `(And ,c ,f))))
                     ((Right) `(And ,`(If ,a ,b ,c) ,`(If ,d ,e ,f)))))
-               ((And a1 b1) `(And ,`(If ,a ,b ,c) ,`(And ,a1 ,b1)))
-               ((Unknown r l) `(And ,`(If ,a ,b ,c) ,`(Unknown ,r ,l)))
-               ((UnknownAtom r) `(And ,`(If ,a ,b ,c) ,`(UnknownAtom ,r)))))
-          ((And a b) `(And ,`(And ,a ,b) ,b0))
-          ((Unknown r l) `(And ,`(Unknown ,r ,l) ,b0))
-          ((UnknownAtom r) `(And ,`(UnknownAtom ,r) ,b0))))
+               ((And a0 b0) `(And ,(ifAndR `(If ,a ,b ,c))
+                 ,(ifAndR `(And ,a0 ,b0))))
+               ((Unknown r0 l0) `(And ,(ifAndR `(If ,a ,b ,c))
+                 ,(ifAndR `(Unknown ,r0 ,l0))))
+               ((UnknownAtom r0) `(And ,(ifAndR `(If ,a ,b ,c))
+                 ,(ifAndR `(UnknownAtom ,r0))))))
+          ((And a b) `(And ,(ifAndR `(And ,a ,b)) ,(ifAndR r)))
+          ((Unknown r0 l0) `(And ,(ifAndR `(Unknown ,r0 ,l0)) ,(ifAndR r)))
+          ((UnknownAtom r0) `(And ,(ifAndR `(UnknownAtom ,r0)) ,(ifAndR r)))))
      ((Unknown r l) `(Unknown ,r ,l))
      ((UnknownAtom r) `(UnknownAtom ,r)))))
   

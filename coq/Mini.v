@@ -9,8 +9,9 @@ Inductive expr :=
 Variable UnknownDenote : Rest -> list expr -> bool.
 Variable UnknownAtomDenote : Rest -> bool.
 Variable RestEqDec : forall l r : Rest, { l = r } + { l <> r }.
+Hint Resolve list_eq_dec RestEqDec.
 Fixpoint exprEqDec (l r : expr) : { l = r } + { l <> r }.
-  decide equality; [apply list_eq_dec; apply exprEqDec|apply RestEqDec|apply RestEqDec].
+  decide equality; auto.
 Qed.
 
 Fixpoint BDenote (e : expr) : bool :=
@@ -46,6 +47,7 @@ Function IfAndR (ex : expr) { measure Size ex } : expr :=
   match ex with
   | And (If a b c) (If d e f) =>
       if exprEqDec a d then (If a (IfAndR (And b e)) (IfAndR (And c f))) else ex
+  | And l r => And (IfAndR l) (IfAndR r)
   | _ => ex
   end.
   all: intros; simpl; subst; omega.
@@ -89,7 +91,4 @@ Definition IfAndPreserve : forall e, BDenote (IfAnd e) = BDenote e.
   apply RestBDenoteModular; rewrite map_map; apply map_ext_in.
   intros; eapply Forall_forall in H; eauto.
 Qed.
-Extraction Language Scheme.
-Extract Constant RestEqDec => "(lambdas (l r) (if (eq? l r) `(Left) `(Right)))".
-Extraction "z3o" IfAnd.
 

@@ -1,4 +1,5 @@
 #lang racket/base
+(provide lambdas @ match)
 (define-syntax lambdas
   (syntax-rules ()
     [(lambdas (a) es ...) (lambda (a) es ...)]
@@ -16,4 +17,4 @@
       (if (eq? 't (car e))
         (apply (lambda (as ...) f) (cdr e))
         (match e cs ...))]))
-(provide lambdas @ match)
+
