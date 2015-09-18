@@ -65,7 +65,7 @@ function val2px(val) {
 }
 
 function cs(elt) {
-    if (elt.nodeType !== document.ELEMENT_NODE) console.trace();
+    if (!elt || elt.nodeType !== document.ELEMENT_NODE) console.trace();
     return window.getComputedStyle(elt);
 }
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
@@ -148,20 +148,31 @@ function contains_text(elt) {
 }
 
 function infer_anons(box, parent) {
+    function save_anon_box() {
+        if (!anon_box) return;
+        var real_anon = Anon(box.node, {});
+        infer_lines(anon_box, real_anon);
+        parent.children.push(real_anon);
+    }
     var anon_box = false;
     for (var i = 0; i < box.children.length; i++) {
         var child = box.children[i];
         if (child.type == "BLOCK" || child.type == "MAGIC") {
+            save_anon_box();
             parent.children.push(child);
             anon_box = false;
         } else if (child.type == "ANON") {
+            save_anon_box();
             parent.children.push(child);
-            anon_box = child;
+            anon_box = false;
         } else {
-            anon_box = anon_box || Anon(null, {});
+            if (!anon_box) {
+                anon_box = new Box("Fake", box.node, {});
+            }
             anon_box.children.push(child);
         }
     }
+    save_anon_box();
 }
 
 function infer_lines(box, parent) {
@@ -174,6 +185,7 @@ function infer_lines(box, parent) {
     }
 
     function new_line() {
+        console.log(parent);
         var l = Line(null, {h: val2px(cs(parent.node)["line-height"])});
         parent.children.push(l);
         return l;
@@ -272,7 +284,7 @@ function make_boxes(elt, inflow) {
 
         if (is_text_container(elt)) {
             // Make a subtree under a fake box
-            var fake_parent = new Box("Fake", {});
+            var fake_parent = new Box("Fake", elt, {});
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
                 make_boxes(child, fake_parent);
@@ -281,7 +293,7 @@ function make_boxes(elt, inflow) {
             infer_lines(fake_parent, box);
         }  else if (contains_text(elt)) {
             // Make a subtree under a fake box
-            var fake_parent = new Box("Fake", {});
+            var fake_parent = new Box("Fake", elt, {});
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
                 make_boxes(child, fake_parent);
