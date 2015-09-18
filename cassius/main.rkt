@@ -208,10 +208,13 @@
                (for ([(a-prop type default) (in-css-properties)])
                  (match (assoc a-prop pairs)
                    [(list _ '?)
-                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
+                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))]
                    [(list _ val)
-                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
-                    (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
+                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))
+                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
+                                      :named ,(sformat "rule-~a-~a-~a-val" name i a-prop))))]
                    [#f (void)]))]
               [(list sel pairs ...)
                (emit `(assert (= (selector ,name) ,sel)))
