@@ -356,8 +356,9 @@
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-text-box ((b Box)) Bool
-    ,(smt-let ([p (pbox b)] [v (vbox b)])
-       (= (type b) box/inline)
+    ,(smt-let ([p (pbox b)] [v (vbox b)] [e (get/elt (element b))])
+       (is-box/inline (type b))
+       (is-float/none (float e))
 
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (stfwidth v)))
