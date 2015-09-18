@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>UW PLSE</title>
+  <link rel="stylesheet" type="text/css" href="dash.css">
+  <!-- icons -->
+  <link rel="apple-touch-icon" sizes="57x57" href="icons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="icons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="icons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="icons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="icons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="icons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="icons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="icons/favicon-194x194.png" sizes="194x194">
+  <link rel="icon" type="image/png" href="icons/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/png" href="icons/android-chrome-192x192.png" sizes="192x192">
+  <link rel="icon" type="image/png" href="icons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="icons/manifest.json">
+  <link rel="shortcut icon" href="icons/favicon.ico">
+  <meta name="msapplication-TileColor" content="#00aba9">
+  <meta name="msapplication-TileImage" content="icons/mstile-144x144.png">
+  <meta name="msapplication-config" content="icons/browserconfig.xml">
+  <meta name="theme-color" content="#5f327c">
+  <!-- end icons -->
+  <script>
+    function show_more(evt) {
+    lis = document.querySelectorAll("#news li");
+    for (var i = 0; i < lis.length; i++) {lis[i].style.display = "block"}
+    document.getElementById("more").style.display = "none";
+    evt.preventDefault();
+    return false;
+    }
+
+    function show_less() {
+    lis = document.querySelectorAll("#news li");
+    for (var i = 5; i < lis.length; i++) {lis[i].style.display = "none"}
+    document.getElementById("more").style.display = "block";
+    }
+
+    function onload() {
+    show_less();
+    var more = document.querySelector("#more a");
+    more.addEventListener("click", show_more);
+    }
+
+    window.addEventListener("load", onload);
+  </script>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    
+    ga('create', 'UA-65215143-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+</head>
+<body>
+  <header>
+    <h1>UW PLSE</h1>
+    <nav>
+      <li><a href="#news">News</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#faculty">People</a></li>
+      <li><a href="https://github.com/uwplse">Github</a></li>
+    </nav>
+  </header>
+
+  <section>
+  <p>
+    UW CSE’s Programming Languages and Software Engineering group
+    advances fun­damental research and prac­tical appli­cations in
+    program­ming environ­ments, program anal­ysis, language design,
+    run­-time sys­tems, compilers, testing, verifi­cation, and security.
+    We have strong ties to research­ers from Cray, Microsoft Research, NVIDIA,
+    and others. Several of us also participate in the
+    <a href="https://sampa.cs.washington.edu/">SAMPA group</a>.
+  </p>
+  </section>
+
+  <section id="news">
+  <h2>News</h2>
+  <ol>
+    <li><time>July 20</time> The PLSE group has <em>five</em> papers accepted to <a href="http://ase2015.unl.edu/">ASE’15</a>, from IDE history to race detection. Don’t miss it!</li>
+    <li><time>June 27</time> <a href="https://github.com/burg/replay-staging/" class="project">Timelapse</a> has been accepted to UIST’15. Come find out about diffing web interfaces.</li>
+    <li><time>June 16</time> The <a class="project" href="http://herbie.uwplse.org">Herbie</a> and <a class="project" href="http://verdi.uwplse.org">Verdi</a> projects killed it at <a href="http://conf.researchr.org/home/pldi2015">PLDI’15</a>. Didn't make the talks? Check out the project pages.</li>
+    <li><time>May 7</time> The <a class="project" href="http://herbie.uwplse.org">Herbie</a> paper <a href="https://news.cs.washington.edu/2015/05/07/uw-cse-scores-best-paper-at-pldi-15/">won Distinguished Paper</a> at PLDI. Make sure you go see the talk!</li>
+    <li><time>May 4</time> UW PLSE at <a href="http://snapl.org/2015/index.html">SNAPL’15</a>: a dependency case language for a neutron therapy machine, and hardware-software co-design!</li>
+    <li><time>April 7</time> <a href="http://www.cs.berkeley.edu/~bodik/">Ras Bodik</a> is <a href="https://news.cs.washington.edu/2015/04/07/ras-bodik-joins-uw-cse-creating-a-world-class-programming-languages-group/">joining UW PLSE</a>. We're so incredibly excited to work with him!</li>
+    <li><time>March 31</time> Congrats <a class="project" href="http://www.dougwoos.com">Doug Woos</a> and <a class="project" href="https://pavpanchekha.com">Pavel Panchekha</a>, two students in UW PLSE, who just <a href="https://news.cs.washington.edu/2015/03/31/2015-nsf-graduate-research-fellowships-uw-cse-rocks/">became NSF fellows</a>.</li>
+    <li><time>Jan 18</time> <span class="project">Verso</span> presenting first steps toward low-level optimizations in CompCert, at <a href="https://coqpl.cs.washington.edu/program/">CoqPL’15</a>.</li>
+    <li id="more" style="display:none"><a href="?more">See all News posts</a></li>
+  </ol>
+  </section>
+
+  <section id="projects">
+  <h2>Projects</h2>
+  <ul class="project-list">
+    <li> <h3>Automatic Memory Models</h3> Automatically synthesizing specifications for relaxed memory consistency. </li>
+    <li> <h3>Approximate Synthesis</h3> Discovering the best balance of quality and efficiency, automatically. </li>
+    <li class="site"> <a href='http://konne.me/bagpipe'> <h3>Bagpipe</h3> Bagpipe verifies the correctness of BGP router configurations. </a> </li>
+    <li> <h3>Cassius</h3> Automatically generate CSS to make a webpage match a mock-up. </li>
+    <li> <h3>Crust</h3> Verify memory invariants for Rust <code>unsafe</code> blocks. </li>
+    <li> <h3>Data Structure Synthesis</h3> Synthesizing high-performance data-structure implementations. </li>
+    <li> <h3>dbcert</h3> A library for writing and verifying crash-resistant applications. </li>
+    <li> <h3>defects4j</h3> Testing the tests that test your tests with a database of real bugs from open-source projects. </li>
+    <li class="site"> <a href='http://herbie.uwplse.org'> <h3>Herbie</h3> Find more accurate ways to write a floating point expression, automatically. </a> </li>
+    <li class="site"> <a href="http://incarnate3d.tumblr.com/"> <h3>Incarnate</h3> Reason about objects in the real world by reasoning about the programs that print them. </a> </li>
+    <li class="site"> <a href='http://neutrons.uwplse.org'> <h3>Neutrons</h3> Verifying the control software for a radiation device used to treat cancers of the throat. </a> </li>
+    <li> <h3>Retroactive Debugging</h3> Capture how a program executes, then go back in time with the debugger to see what happened. </li>
+    <li> <h3>Staccato</h3> Dynamically finding bugs in software configuration update code. </li>
+    <li class="site"> <a href="https://github.com/burg/replay-staging/"> <h3>Timelapse</h3> The first user interface for capturing and replaying web application executions directly from the browser's developer tools. </a> </li>
+    <li class="site"> <a href='http://verdi.uwplse.org'> <h3>Verdi</h3> Prove distributed systems correct in Coq, and extract them into fast running code. </a> </li>
+    <li> <h3>Verso</h3> Prove assembly-level peephole optimizations correct in CompCert. </li>
+    <li> <h3>Timing Models</h3> Automatically detecting side-channel attacks. </li>
+  </ul>
+  </section>
+
+  <section id="faculty">
+  <h2>Faculty</h2>
+  <ul class="photo-list">
+  <li><a href='http://www.cs.berkeley.edu/~bodik/'><img src="http://www.cs.berkeley.edu/~bodik/images/ras.jpg" /><span class="caption">Rastislav Bodik</span></a></li>
+  <li><a href="http://homes.cs.washington.edu/~luisceze/"><img src="http://www.cs.washington.edu/sites/default/files/luis_ceze_100x100.jpg"/><span class="caption">Luis Ceze</span></a></li>
+  <li><a href='http://homes.cs.washington.edu/~akcheung/'><img src="http://www.cs.washington.edu/sites/default/files/akcheung_thumb.jpg" /><span class="caption">Alvin Cheung</span></a></li>
+  <li><a href='http://www.cs.washington.edu/homes/mernst/'><img src="http://www.cs.washington.edu/sites/default/files/mernst.jpg" /><span class="caption">Michael D. Ernst</span></a></li>
+  <li><a href='http://homes.cs.washington.edu/~djg/'><img src="http://www.cs.washington.edu/sites/default/files/djg.jpg" /><span class="caption">Dan Grossman</span></a></li>
+  <li><a href="https://faculty.washington.edu/ajko/"><img src="https://faculty.washington.edu/ajko/media/mug.jpg"/><span class="caption">Andrew J. Ko</span></a></li>
+  <li><a href='http://homes.cs.washington.edu/~ztatlock/'><img src="im/ztatlock.png" /><span class="caption">Zachary Tatlock</span></a></li>
+  <li><a href='http://homes.cs.washington.edu/~emina/'><img src="http://www.cs.washington.edu/sites/default/files/emina_thumb.png" /><span class="caption">Emina Torlak</span></a></li>
+  <li><a href='https://homes.cs.washington.edu/~xi/'><img src="http://www.cs.washington.edu/sites/default/files/XiWang_headshot2.png" /><span class="caption">Xi Wang</span></a></li>
+  </ul>
+  </section>
+
+
+  <section id="students">
+  <h2>Students</h2>
+  <ul class="photo-list">
+  <li><a href='https://homes.cs.washington.edu/~bornholt/'><img src="http://homes.cs.washington.edu/~bornholt/img/me_square.jpg"/><span class="caption">James Bornholt</span></a></li>
+  <li><a href='http://homes.cs.washington.edu/~bholt/'><img src="http://grappa.io/images/holt.jpg"/><span class="caption">Brandon Holt</span></a></li>
+  <li><a href="http://darioush.github.io/"><img src="http://darioush.github.io/images/darioush.jpg"/><span class="caption">Darioush Jalali</span></a></li>
+  <li><a href="http://homes.cs.washington.edu/~loncaric/"><img src="http://homes.cs.washington.edu/~loncaric/resources/portrait-sm.jpg" style="height:100%;width:auto;left:-3px"/><span class="caption">Calvin Loncaric</span></a></li>
+  <li><a href="http://homes.cs.washington.edu/~kmorton/"><img src="http://homes.cs.washington.edu/~kmorton/kristi-sandboarding.jpg" style="top:-10px"/><span class="caption">Kristi Morton</span></a></li>
+  <li><a href='http://homes.cs.washington.edu/~emullen/'><img src="http://homes.cs.washington.edu/~emullen/Eric_Mullen.jpg" style="top:-20px;"/><span class="caption">Eric Mullen</span></a></li>
+  <li><a href='http://pavpanchekha.com'><img src="http://pavpanchekha.com/im/me-small.png" style="height:100%;width:auto;margin:auto"/><span class="caption">Pavel Panchekha</span></a></li>
+  <li><a><img src="im/stuart.jpg"><span class="caption">Stuart Pernsteiner</span></a></li>
+  <li><a href="http://www.alexpolozov.com/"><img src="im/polozov.jpg" style="height:100%;width:auto"><span class="caption">Alex Polozov</span></a></li>
+  <li><a href="http://pjreddie.com"><img src='http://pjreddie.com/media/files/me.jpg' /><span class="caption">Joe Redmon</span></a></li>
+  <li><a href='http://alex.uwplse.org'><img src="http://alex.uwplse.org/images/me.jpg" style="height:100%;width:auto;left:-5px"/><span class="caption">Alex Sanchez - Stern</span></a></li>
+  <li><a href="http://homes.cs.washington.edu/~jtoman/"><img src="http://homes.cs.washington.edu/~jtoman/assets/self.jpg"/><span class="caption">John Toman</span></a></li>
+  <li><a href="http://www.konne.me"><img src='http://www.konne.me/assets/profile.png' style="top:-10px;"/><span class="caption">Konstantin Weitz<span></a></li>
+  <li><a href="http://homes.cs.washington.edu/~jrw12/"><img src='http://homes.cs.washington.edu/~jrw12/me-thumb.jpg' style="top:-10px"/><span class="caption">James Wilcox</span></a></li>
+  <li><a href="http://dougwoos.com"><img src='http://www.dougwoos.com/assets/me.jpeg' style="top:-10px"/><span class="caption">Doug Woos</span></a></li>
+  <li><a><img src="im/billzorn.jpg"/><span class="caption">William A. Zorn</span></a></li>
+  </ul>
+  </section>
+
+
+  <section id="staff">
+  <h2>Staff</h2>
+  <ul class="photo-list">
+    <li><a><img src="im/nophoto.png"/><span class="caption">Dan Brown</span></a></li>
+    <li><a><img style="top:-15px" src="im/jburke.png"/><span class="caption">Jonathan Burke</span></a></li>
+    <li><a><img src="im/nophoto.png"/><span class="caption">Suzanne Millstein</span></a></li>
+    <li><a><img style="top:-20px" src="im/markro.jpg"/><span class="caption">Mark Roberts</span></a></li>
+    <li><a><img src="im/jthaine.png"/><span class="caption">Javier Thaine</span></a></li>
+  </ul>
+  </section>
+
+
+  <section id="phd-alumni">
+  <h2>Ph.D. Alumni</h2>
+  <ul class="long-list">
+  <li><a href="http://www-2.cs.cmu.edu/%7Ealdrich/">Jonathan Aldrich</a> <span>CMU</span></li>
+  <li>Gail Alverson <span>Cray</span></li>
+  <li>Tom Bergan <span>Google</span></li>
+  <li><a href="http://www.cs.ubc.ca/~bestchai/">Ivan Beschastnikh</a> <span>UBC</span></li>
+  <li><a href='http://homes.cs.washington.edu/~burg/'>Brian Burg</a> <span>Apple</span></li>
+  <li>William Chan <span>1972-1999</span></li>
+  <li>Kingsum Chow</li>
+  <li>Sung K. Chung</li>
+  <li><a href="http://research.google.com/people/jeff/">Jeff Dean</a> <span>Google</span> </li>
+  <li><a href="http://www.cis.upenn.edu/~devietti/">Joe Devietti</a> <span>Penn</span></li>
+  <li>Laura Effinger-Dean <span>Google</span> </li>
+  <li><a href="http://homes.cs.washington.edu/~mernst/">Michael Ernst</a> <span>UW</span></li>
+  <li><a href="http://csgordon.github.io">Colin Gordon</a> <span>Drexel University</span></li>
+  <li><a href="http://cseweb.ucsd.edu/users/wgg/">Bill Griswold</a> <span>UCSD</span></li>
+  <li><a href="http://researcher.watson.ibm.com/researcher/view.php?person=us-groved">David Grove</a> <span>IBM Research</span></li>
+  <li><a href="http://www.cs.ucla.edu/~miryung/">Miryung Kim</a>  <span>UCLA</span></li>
+  <li><a href="http://www.ccs.neu.edu/home/blerner/">Benjamin Lerner</a> <span>Northeastern</span></li>
+  <li><a href="http://cseweb.ucsd.edu/~lerner/">Sorin Lerner</a> <span>UCSD</span></li>
+  <li><a href="http://sites.google.com/site/supervass/Home">Vass Litvinov</a> <span>Cray</span></li>
+  <li>Amir Michail</li>
+  <li><a href="http://www.cs.ubc.ca/~murphy/">Gail C. Murphy</a> <span>U. British Columbia</span></li>
+  <li><a href="http://www.cs.ucla.edu/%7Etodd/">Todd Millstein</a> <span>UCLA</span></li>
+  <li><a href="http://people.cs.pitt.edu/~mock/">Markus Mock</a> <span>Google</span></li>
+  <li><a href='http://www.kivancmuslu.com/'>Kıvanç Muşlu</a> <span>MSR</span></li>
+  <li><a href='https://homes.cs.washington.edu/~perelman/'>Daniel Perelman</a> <span>Microsoft</span></li>
+  <li><a href="http://homes.cs.washington.edu/~matthai/">Matthai Philipose</a> <span>Microsoft</span></li>
+  <li>Will Portnoy <span>Microsoft</span></li>
+  <li><a href="http://homes.cs.washington.edu/~miker/">Michael Ringenburg</a> <span>Cray</span></li>
+  <li><a href='http://homes.cs.washington.edu/~asampson/'>Adrian Sampson</a> <span>Cornell</span></li>
+  <li>Vibha Sazawal</li>
+  <li><a href="https://toddschiller.com/">Todd Schiller</a> <span>Bridgewater</span></li>
+  <li>Marty Sirkin</li>
+  <li><a href="http://www.cs.virginia.edu/~sullivan/">Kevin Sullivan</a> <span>U. Virginia</span></li>
+   <li><a href="http://www.cse.fau.edu/~mike/">Michael VanHilst</a> <span>Florida Atlantic U.</span></li>
+  <li>Doug Wiebe <span>Apple</span></li>
+  <li><a href="http://web.engr.illinois.edu/~taoxie/">Tao Xie </a> <span>U. Illinois</span></li>
+  <li><a href="http://homes.cs.washington.edu/~bpw/">Benjamin P. Wood</a> <span>Wellesley</span></li>
+  <li>Yoshi Yamane</li>
+  <li><a href="http://zhang-sai.github.io/">Sai Zhang</a> <span>Google</span></li>
+  </ul>
+  </section>
+
+
+</body>
+</html>
