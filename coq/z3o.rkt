@@ -1,5 +1,6 @@
 #lang racket
 (require "macros_extr.rkt")
+(provide ifAnd)
 
 
 (define list_eq_dec (lambdas (eq_dec l l~)
@@ -41,7 +42,8 @@
                     ((Right) `(Right))))
                ((Right) `(Right))))
           ((And a0 b0) `(Right))
-          ((Unknown r0 l0) `(Right))))
+          ((Unknown r0 l0) `(Right))
+          ((UnknownAtom r0) `(Right))))
      ((And a b)
        (match r
           ((If a0 b0 c) `(Right))
@@ -52,7 +54,8 @@
                     ((Left) `(Left))
                     ((Right) `(Right))))
                ((Right) `(Right))))
-          ((Unknown r0 l0) `(Right))))
+          ((Unknown r0 l0) `(Right))
+          ((UnknownAtom r0) `(Right))))
      ((Unknown r0 l0)
        (match r
           ((If a b c) `(Right))
@@ -63,6 +66,16 @@
                  (match (@ list_eq_dec exprEqDec l0 l1)
                     ((Left) `(Left))
                     ((Right) `(Right))))
+               ((Right) `(Right))))
+          ((UnknownAtom r1) `(Right))))
+     ((UnknownAtom r0)
+       (match r
+          ((If a b c) `(Right))
+          ((And a b) `(Right))
+          ((Unknown r1 l0) `(Right))
+          ((UnknownAtom r1)
+            (match (@ restEqDec r0 r1)
+               ((Left) `(Left))
                ((Right) `(Right)))))))))
   
 (define ifAndR (lambda (ex)
@@ -78,14 +91,18 @@
                       ,(ifAndR `(And ,c ,f))))
                     ((Right) `(And ,`(If ,a ,b ,c) ,`(If ,d ,e ,f)))))
                ((And a1 b1) `(And ,`(If ,a ,b ,c) ,`(And ,a1 ,b1)))
-               ((Unknown r l) `(And ,`(If ,a ,b ,c) ,`(Unknown ,r ,l)))))
+               ((Unknown r l) `(And ,`(If ,a ,b ,c) ,`(Unknown ,r ,l)))
+               ((UnknownAtom r) `(And ,`(If ,a ,b ,c) ,`(UnknownAtom ,r)))))
           ((And a b) `(And ,`(And ,a ,b) ,b0))
-          ((Unknown r l) `(And ,`(Unknown ,r ,l) ,b0))))
-     ((Unknown r l) `(Unknown ,r ,l)))))
+          ((Unknown r l) `(And ,`(Unknown ,r ,l) ,b0))
+          ((UnknownAtom r) `(And ,`(UnknownAtom ,r) ,b0))))
+     ((Unknown r l) `(Unknown ,r ,l))
+     ((UnknownAtom r) `(UnknownAtom ,r)))))
   
 (define ifAnd (lambda (ex)
   (match ex
      ((If a b c) `(If ,(ifAnd a) ,(ifAnd b) ,(ifAnd c)))
      ((And l r) (ifAndR ex))
-     ((Unknown r l) `(Unknown ,r ,(@ map ifAnd l))))))
+     ((Unknown r l) `(Unknown ,r ,(@ map ifAnd l)))
+     ((UnknownAtom r) `(UnknownAtom ,r)))))
   
