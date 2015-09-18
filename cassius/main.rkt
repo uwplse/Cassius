@@ -49,7 +49,7 @@
   [('Selector 'sel/all) "*"]
   [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
   [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
-  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,pbname ,n ,v ,flt ,flt-up ,e))
+  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,stfw ,pbname ,n ,v ,flt ,flt-up ,e))
    (with-output-to-string
      (lambda ()
        (printf "~a ~a×~a at (y ~a, x ~a)\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
@@ -208,10 +208,13 @@
                (for ([(a-prop type default) (in-css-properties)])
                  (match (assoc a-prop pairs)
                    [(list _ '?)
-                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
+                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))]
                    [(list _ val)
-                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
-                    (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
+                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))
+                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
+                                      :named ,(sformat "rule-~a-~a-~a-val" name i a-prop))))]
                    [#f (void)]))]
               [(list sel pairs ...)
                (emit `(assert (= (selector ,name) ,sel)))
@@ -277,6 +280,7 @@
   (define cns
     (match (car elt)
       ['BLOCK 'link-block-box]
+      ['ANON 'link-block-box]
       ['MAGIC 'link-block-box]
       ['LINE 'link-line-box]
       ['INLINE 'link-inline-box]
@@ -287,6 +291,7 @@
   (define cns
     (match (car elt)
       ['BLOCK 'a-block-box]
+      ['ANON 'a-block-box]
       ['MAGIC 'a-block-box]
       ['LINE 'a-line-box]
       ['INLINE 'an-inline-box]
@@ -301,6 +306,7 @@
   (define display
     (match (car elt)
       ['BLOCK 'display/block]
+      ['ANON 'display/block]
       ['MAGIC 'display/block]
       ['INLINE 'display/inline]
       ['TEXT 'display/inline]

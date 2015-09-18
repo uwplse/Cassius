@@ -130,6 +130,7 @@
            (=> (is-margin/px (style.margin-left r)) (= (ml b) (margin.px (style.margin-left r))))
            (=> (and (is-margin/px (style.margin-right r)) (is-margin/auto (style.margin-left r)))
                (= (mr b) (margin.px (style.margin-right r)))))])
+       (= (stfwidth b) (max (min (w lb) (stfwidth lb)) (stfwidth vb)))
 
        ;; Width and horizontal margins out of the way, let's do height and vertical margins
        ;; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
@@ -214,7 +215,8 @@
        (=> (is-margin/auto (style.margin-bottom r)) (= (mb b) 0))
 
        ;; TODO : We don't allow auto widths (CSS § 10.3.5) on floats, it's too hard to compute
-       (not (is-width/auto (style.width r)))
+       (=> (is-width/auto (style.width r)) (= (w b) (stfwidth lb)))
+       (= (stfwidth b) (max (min (w lb) (stfwidth lb)) (stfwidth vb)))
 
        ;; CSS 2.1 § 10.6.7 : In certain cases, the height of an
        ;; element that establishes a block formatting context is computed as follows:
@@ -259,12 +261,12 @@
        ;; either the left outer edge of the current box must be to the right
        ;; of the right outer edge of the earlier box, or its top must be lower
        ;; than the bottom of the earlier box.
-       ;; TODO: Analogous rules hold for right-floating boxes.
        ;; SIMPL: either to the right of the previous float, or below it.
+       ;; TODO: Is top-padding the right thing here? Seems like it, but weird
        (or (is-no-box flt)
            (ite (is-float/left (float e))
-                (or (= (left-outer b) (right-outer flt)) (>= (box-top b) (bottom-outer flt)))
-                (or (= (right-outer b) (left-outer flt)) (>= (box-top b) (bottom-outer flt)))))
+                (or (= (left-outer b) (right-outer flt)) (>= (top-border b) (bottom-outer flt)))
+                (or (= (right-outer b) (left-outer flt)) (>= (top-border b) (bottom-outer flt)))))
 
 
        ;; CSS 2.1, § 9.5.1, item 3: The right outer edge of a left-floating box
@@ -338,11 +340,12 @@
            (not (horizontally-adjacent flt b)))))
 
   (define-fun an-inline-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)])
+    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)])
        (= (type b) box/inline)
 
        ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
            `(= (,field b) 0.0))
+       (= (stfwidth b) (max (stfwidth l) (stfwidth v)))
 
        (= (left-outer (fbox b)) (left-content b))
        (= (right-outer (lbox b)) (right-content b))
@@ -353,8 +356,12 @@
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-text-box ((b Box)) Bool
-    ,(smt-let ([p (pbox b)] [v (vbox b)])
-       (= (type b) box/inline)
+    ,(smt-let ([p (pbox b)] [v (vbox b)] [e (get/elt (element b))])
+       (is-box/inline (type b))
+       (is-float/none (float e))
+
+       ;; Only true if there are no wrapping opportunities in the box
+       (= (stfwidth b) (max (w b) (stfwidth v)))
 
        ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
            `(= (,field b) 0.0))
@@ -363,7 +370,7 @@
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-line-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element (pbox b)))] [p (pbox b)] [v (vbox b)] [flt (fltbox b)]
+    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [flt (fltbox b)]
                [f (fbox b)] [l (lbox b)] [flte (get/elt (element (fltbox b)))])
        (is-box/line (type b))
        (is-float/none (float e)) ; Where else would we set this?
@@ -393,6 +400,8 @@
             (= (y b) (ite (is-no-box v) (top-content p) (bottom-border v))))
 
        (not (is-no-box f))
+       (= (stfwidth b) (min (w b) (max (stfwidth l) (stfwidth v))))
+
        ,(smt-cond
          [(is-text-align/left (textalign e)) (= (left-border f) (left-content b))]
          [(is-text-align/right (textalign e)) (= (right-border l) (right-content b))]

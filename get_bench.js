@@ -14,6 +14,7 @@ Inline = curry(Box, "INLINE")
 Page = curry(Box, "PAGE")
 Text = curry(Box, "TEXT")
 Magic = curry(Box, "MAGIC")
+Anon = curry(Box, "ANON")
 
 Box.prototype.toString = function() {
     var s = "[" + this.type;
@@ -64,7 +65,7 @@ function val2px(val) {
 }
 
 function cs(elt) {
-    if (elt.nodeType !== document.ELEMENT_NODE) console.trace();
+    if (!elt || elt.nodeType !== document.ELEMENT_NODE) console.trace();
     return window.getComputedStyle(elt);
 }
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
@@ -130,10 +131,48 @@ function is_text_container(elt) {
         else if (is_inline(child)) has_inline = true;
         else continue;
     }
-    if ((has_inline || has_text) && has_nf_block) {
-        console.warn("Element has blocks and text", elt);
-    }
     return (has_inline || has_text) && !has_nf_block;
+}
+
+function contains_text(elt) {
+    var has_inline = false, has_nf_block = false, has_text = false;
+    for (var i = 0; i < elt.childNodes.length; i++) {
+        var child = elt.childNodes[i];
+        if (is_comment(child)) continue
+        else if (is_text(child) && child.textContent.search(/^\s+$/) === -1) has_text = true;
+        else if (is_text(child)) continue;
+        else if (is_inline(child)) has_inline = true;
+        else continue;
+    }
+    return has_inline || has_text;
+}
+
+function infer_anons(box, parent) {
+    function save_anon_box() {
+        if (!anon_box) return;
+        var real_anon = Anon(box.node, {});
+        infer_lines(anon_box, real_anon);
+        parent.children.push(real_anon);
+    }
+    var anon_box = false;
+    for (var i = 0; i < box.children.length; i++) {
+        var child = box.children[i];
+        if (child.type == "BLOCK" || child.type == "MAGIC") {
+            save_anon_box();
+            parent.children.push(child);
+            anon_box = false;
+        } else if (child.type == "ANON") {
+            save_anon_box();
+            parent.children.push(child);
+            anon_box = false;
+        } else {
+            if (!anon_box) {
+                anon_box = new Box("Fake", box.node, {});
+            }
+            anon_box.children.push(child);
+        }
+    }
+    save_anon_box();
 }
 
 function infer_lines(box, parent) {
@@ -146,6 +185,7 @@ function infer_lines(box, parent) {
     }
 
     function new_line() {
+        console.log(parent);
         var l = Line(null, {h: val2px(cs(parent.node)["line-height"])});
         parent.children.push(l);
         return l;
@@ -244,14 +284,23 @@ function make_boxes(elt, inflow) {
 
         if (is_text_container(elt)) {
             // Make a subtree under a fake box
-            var fake_parent = new Box("Fake", {});
+            var fake_parent = new Box("Fake", elt, {});
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
                 make_boxes(child, fake_parent);
             }
             // Then break it into lines
             infer_lines(fake_parent, box);
-        } else {
+        }  else if (contains_text(elt)) {
+            // Make a subtree under a fake box
+            var fake_parent = new Box("Fake", elt, {});
+            for (var i = 0; i < elt.childNodes.length; i++) {
+                var child = elt.childNodes[i];
+                make_boxes(child, fake_parent);
+            }
+            // Then add anonymous boxes
+            infer_anons(fake_parent, box);
+        }  else {
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
                 make_boxes(child, box);
@@ -261,7 +310,6 @@ function make_boxes(elt, inflow) {
         var r = elt.getBoundingClientRect();
         var box = Inline(elt, {tag: elt.tagName/*, x: r.x, y: r.y, w: r.width, h: r.height*/});
         inflow.children.push(box);
-
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
             make_boxes(child, box);
@@ -273,8 +321,8 @@ function make_boxes(elt, inflow) {
         var s = cs(elt);
         var box = Magic(elt, {
             tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,
-            mt: elt.style.marginTop, mr: elt.style.marginRight, 
-            mb: elt.style.marginBottom, ml: elt.style.marginLeft, 
+            mt: val2px(s["margin-top"]), mr: val2px(s["margin-right"]), 
+            mb: val2px(s["margin-bottom"]), ml: val2px(s["margin-left"]),
         });
 
         if (elt.id) box.props.id = elt.id;
