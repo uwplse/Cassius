@@ -4,6 +4,7 @@ Variable Rest : Type.
 Inductive expr := 
 | If (a b c : expr) 
 | And (a b : expr) 
+| Imply (a b : expr)
 | Unknown (R : Rest) (l : list expr)
 | UnknownAtom (R : Rest).
 Variable UnknownDenote : Rest -> list expr -> bool.
@@ -18,16 +19,9 @@ Fixpoint BDenote (e : expr) : bool :=
   match e with
   | If a b c => if BDenote a then BDenote b else BDenote c
   | And a b => BDenote a && BDenote b
+  | Imply a b => implb (BDenote a) (BDenote b)
   | Unknown R l => UnknownDenote R l
   | UnknownAtom R => UnknownAtomDenote R
-  end.
-
-Fixpoint NumIf (e : expr) :=
-  match e with
-  | If a b c => S (max (max (NumIf a) (NumIf b)) (NumIf c))
-  | And a b => max (NumIf a) (NumIf b)
-  | Unknown R l => fold_left max (map NumIf l) 0
-  | UnknownAtom R => 0
   end.
 
 Fixpoint Size (e : expr) :=
@@ -35,6 +29,7 @@ Fixpoint Size (e : expr) :=
     match e with
     | If a b c => (Size a + Size b + Size c)
     | And a b => (Size a + Size b)
+    | Imply a b => (Size a + Size b)
     | Unknown R l => (fold_left plus (map Size l) 0)
     | UnknownAtom R => 0
     end.
@@ -63,6 +58,7 @@ Fixpoint IfAnd (ex : expr) : expr :=
   match ex with
   | If a b c => If (IfAnd a) (IfAnd b) (IfAnd c)
   | And l r => IfAndR ex
+  | Imply l r => Imply (IfAnd l) (IfAnd r)
   | Unknown r l => Unknown r (map IfAnd l)
   | UnknownAtom r => UnknownAtom r
   end.
@@ -74,21 +70,23 @@ Program Fixpoint expr_ind_Forall
   (P : expr -> Prop)
   (PIf : forall a b c, P a -> P b -> P c -> P (If a b c))
   (PAnd : forall a b, P a -> P b -> P (And a b))
+  (PImply : forall a b, P a -> P b -> P (Imply a b))
   (PUnknown : forall R l, Forall P l -> P (Unknown R l))
   (PUnknownAtom : forall R, P (UnknownAtom R)) e : P e :=
-  let F := (expr_ind_Forall P PIf PAnd PUnknown PUnknownAtom) in
+  let F := (expr_ind_Forall P PIf PAnd PImply PUnknown PUnknownAtom) in
     match e with
     | If a b c => PIf a b c (F a) (F b) (F c)
     | And a b => PAnd a b (F a) (F b)
+    | Imply a b => PImply a b (F a) (F b)
     | Unknown R l => PUnknown R l (list_ind _ _ (fun ex _ _ => Forall_cons ex (F ex) _) l)
     | UnknownAtom R => PUnknownAtom R
     end.
 
+Hint Resolve IfAndRPreserve.
 Definition IfAndPreserve : forall e, BDenote (IfAnd e) = BDenote e.
-  eapply expr_ind_Forall; intros; simpl in *; trivial.
-  repeat (try match_destruct; subst; simpl in *; try congruence).
-  apply IfAndRPreserve.
-  apply RestBDenoteModular; rewrite map_map; apply map_ext_in.
+  eapply expr_ind_Forall; intros; simpl in *; unfold implb; 
+  repeat (try match_destruct; subst; simpl in *; try congruence); eauto.
+  apply RestBDenoteModular; rewrite map_map; apply map_ext_in;
   intros; eapply Forall_forall in H; eauto.
 Qed.
 
