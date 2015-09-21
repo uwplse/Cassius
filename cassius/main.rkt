@@ -265,7 +265,9 @@
          '((:x x) (:y y) (:h box-height) (:w box-width)
            (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
        (define fun (cadr (assoc field mapping)))
-       (when (or true (memq (car elt) '(TEXT MAGIC)))
+       (when (and (or true (memq (car elt) '(TEXT MAGIC)))
+                  ;; HTML elements have weird heights
+                  (not (and (eq? field ':h) (member ':tag elt) (eq? (cadr (member ':tag elt)) 'html))))
          (emit `(assert (! (= (,fun (get/box (flow-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
        (interpret rest)]
       [(list ':id id rest ...) (interpret rest)]
