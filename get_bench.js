@@ -2,6 +2,8 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top border-right border-bottom border-left float display text-align".split(" ");
+
 Box = function(type, node, props) {
     this.children = [];
     this.type = type; this.props = props; this.node = node;
@@ -243,7 +245,7 @@ function infer_lines(box, parent) {
     }
 }
 
-function make_boxes(elt, inflow) {
+function make_boxes(elt, inflow, styles) {
     if (is_comment(elt)) {
         return;
     } else if (is_text(elt)) {
@@ -279,6 +281,11 @@ function make_boxes(elt, inflow) {
         });
 
         if (elt.id) box.props.id = elt.id;
+        if (elt.style.length) {
+            var eid = gensym();
+            if (!elt.id) box.props.id = eid;
+            styles[eid] = elt.style;
+        }
 
         inflow.children.push(box);
 
@@ -287,7 +294,7 @@ function make_boxes(elt, inflow) {
             var fake_parent = new Box("Fake", elt, {});
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
-                make_boxes(child, fake_parent);
+                make_boxes(child, fake_parent, styles);
             }
             // Then break it into lines
             infer_lines(fake_parent, box);
@@ -296,23 +303,28 @@ function make_boxes(elt, inflow) {
             var fake_parent = new Box("Fake", elt, {});
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
-                make_boxes(child, fake_parent);
+                make_boxes(child, fake_parent, styles);
             }
             // Then add anonymous boxes
             infer_anons(fake_parent, box);
         }  else {
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
-                make_boxes(child, box);
+                make_boxes(child, box, styles);
             }
         }
     } else if (is_inline (elt)) {
         var r = elt.getBoundingClientRect();
         var box = Inline(elt, {tag: elt.tagName/*, x: r.x, y: r.y, w: r.width, h: r.height*/});
+        if (elt.style.length) {
+            var eid = gensym();
+            if (!elt.id) box.props.id = eid;
+            styles[eid] = elt.style;
+        }
         inflow.children.push(box);
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
-            make_boxes(child, box);
+            make_boxes(child, box, styles);
         }
     } else {
         console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
@@ -333,13 +345,39 @@ function make_boxes(elt, inflow) {
 
 function get_boxes() {
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
-    make_boxes(document.querySelector("html"), view);
-    return view;
+    var style = {};
+    make_boxes(document.querySelector("html"), view, style);
+    return {view: view, style: style};
 }
 
 function page2cassius(name) {
-    var page = get_boxes();
-    var text = "(define-document (" + name + " #:width " + page.props.w +  " #:browser firefox)";
+    var out = get_boxes();
+    var page = out.view;
+    var style = out.style;
+    var text = "";
+    text += "(define-stylesheet " + name;
+    for (var eid in style) {
+        if (!style.hasOwnProperty(eid)) continue;
+        text += "\n  ((sel/id id/" + eid + ")";
+        for (var i = 0; i < style[eid].length; i++) {
+            var sname = style[eid][i];
+            if (Props.indexOf(sname) === -1) continue;
+            var val = style[eid][sname];
+            var tname = sname;
+            if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
+                var tname = tname.split("-", 2);
+            }
+            if (val.endsWith("px")) {
+                val = "(" + tname + "/px " + val2px(val) + ")";
+            } else {
+                val = tname + "/" + val;
+            }
+            text += "\n   [" + sname + " " + val + "]";
+        }
+        text += ")";
+    }
+    text += ")\n\n";
+    text += "(define-document (" + name + " #:width " + page.props.w +  " #:browser firefox)";
     var indent = "  ";
 
     function recurse(box) {
