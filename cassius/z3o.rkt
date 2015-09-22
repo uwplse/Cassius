@@ -420,18 +420,16 @@
       [`(=> false ,a) 'true]
       [`(=> true ,a) a]
       [`(not (not ,a)) a]
-      [`(and) `true]
       [(list 'and rest ... )
-       (if (member 'false rest)
+       (if (or (member 'false rest) (null? rest))
            'false
            (let ([rest* (filter (lambda (x) (not (equal? x 'true))) rest)])
              (if (null? rest*) 'true (cons 'and rest*))))]
       [(list 'or rest ... )
-       (if (member 'true rest)
+       (if (or (member 'true rest) (null? rest))
            'true
            (let ([rest* (filter (lambda (x) (not (equal? x 'false))) rest)])
              (if (null? rest*) 'false (cons 'or rest*))))]
-      [`(or) `false]
       [(list '= a a) 'true]
       [_ expr]))
 
