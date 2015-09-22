@@ -8,9 +8,13 @@ Inductive expr :=
 | Imply (a b : expr)
 | Not (a : expr)
 <<<<<<< HEAD
+<<<<<<< HEAD
 | ETrue | EFalse
 =======
 >>>>>>> 73a23e6... fix ffi
+=======
+| ETrue | EFalse
+>>>>>>> f2ada7e... model a part of simpl1
 | Unknown (R : Rest) (l : list expr)
 | UnknownAtom (R : Rest).
 
@@ -30,10 +34,15 @@ Fixpoint BDenote (e : expr) : bool :=
   | Imply a b => implb (BDenote a) (BDenote b)
   | Not a => negb (BDenote a)
 <<<<<<< HEAD
+<<<<<<< HEAD
   | ETrue => true
   | EFalse => false
 =======
 >>>>>>> 73a23e6... fix ffi
+=======
+  | ETrue => true
+  | EFalse => false
+>>>>>>> f2ada7e... model a part of simpl1
   | Unknown R l => UnknownDenote R l
   | UnknownAtom R => UnknownAtomDenote R
   end.
@@ -47,10 +56,15 @@ Fixpoint Size (e : expr) :=
     | Imply a b => (Size a + Size b)
     | Not a => Size a
 <<<<<<< HEAD
+<<<<<<< HEAD
     | ETrue => 0
     | EFalse => 0
 =======
 >>>>>>> 73a23e6... fix ffi
+=======
+    | ETrue => 0
+    | EFalse => 0
+>>>>>>> f2ada7e... model a part of simpl1
     | Unknown R l => (fold_left plus (map Size l) 0)
     | UnknownAtom R => 0
     end.
@@ -83,10 +97,15 @@ Fixpoint IfAnd (ex : expr) : expr :=
   | Imply l r => Imply (IfAnd l) (IfAnd r)
   | Not a => Not (IfAnd a)
 <<<<<<< HEAD
+<<<<<<< HEAD
   | ETrue => ETrue
   | EFalse => EFalse
 =======
 >>>>>>> 73a23e6... fix ffi
+=======
+  | ETrue => ETrue
+  | EFalse => EFalse
+>>>>>>> f2ada7e... model a part of simpl1
   | Unknown r l => Unknown r (map IfAnd l)
   | UnknownAtom r => UnknownAtom r
   end.
@@ -102,6 +121,7 @@ Program Fixpoint expr_ind_Forall
   (PImply : forall a b, P a -> P b -> P (Imply a b))
   (PNot : forall a, P a -> P (Not a))
 <<<<<<< HEAD
+<<<<<<< HEAD
   (PETrue : P ETrue) (PEFalse : P EFalse)
   (PUnknown : forall R l, Forall P l -> P (Unknown R l))
   (PUnknownAtom : forall R, P (UnknownAtom R)) e : P e :=
@@ -111,6 +131,12 @@ Program Fixpoint expr_ind_Forall
   (PUnknownAtom : forall R, P (UnknownAtom R)) e : P e :=
   let F := (expr_ind_Forall P PIf PAnd POr PImply PNot PUnknown PUnknownAtom) in
 >>>>>>> 73a23e6... fix ffi
+=======
+  (PETrue : P ETrue) (PEFalse : P EFalse)
+  (PUnknown : forall R l, Forall P l -> P (Unknown R l))
+  (PUnknownAtom : forall R, P (UnknownAtom R)) e : P e :=
+  let F := (expr_ind_Forall P PIf PAnd POr PImply PNot PETrue PEFalse PUnknown PUnknownAtom) in
+>>>>>>> f2ada7e... model a part of simpl1
     match e with
     | If a b c => PIf a b c (F a) (F b) (F c)
     | And l => PAnd l (list_ind _ _ (fun ex _ _ => Forall_cons ex (F ex) _) l)
@@ -118,10 +144,15 @@ Program Fixpoint expr_ind_Forall
     | Imply a b => PImply a b (F a) (F b)
     | Not a => PNot a (F a)
 <<<<<<< HEAD
+<<<<<<< HEAD
     | ETrue => PETrue
     | EFalse => PEFalse
 =======
 >>>>>>> 73a23e6... fix ffi
+=======
+    | ETrue => PETrue
+    | EFalse => PEFalse
+>>>>>>> f2ada7e... model a part of simpl1
     | Unknown R l => PUnknown R l (list_ind _ _ (fun ex _ _ => Forall_cons ex (F ex) _) l)
     | UnknownAtom R => PUnknownAtom R
     end.
@@ -137,6 +168,9 @@ Definition IfAndPreserve : forall e, BDenote (IfAnd e) = BDenote e.
   apply RestBDenoteModular; simpl; rewrite H2; f_equal.
   rewrite map_map; apply map_ext_in; intros; eapply Forall_forall in H3; eauto.
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> f2ada7e... model a part of simpl1
 Qed.
 
 Definition Simpl1 e :=
@@ -172,6 +206,9 @@ Theorem Simpl1Preserve e : BDenote (Simpl1 e) = BDenote e.
     unfold negb in *; unfold andb in *; unfold orb in *;
     try match goal with H : _ :: _ = _ :: _ |- _ => invcs H end;
     try match_destruct; subst; simpl in *; try congruence).
+<<<<<<< HEAD
 =======
 >>>>>>> 73a23e6... fix ffi
+=======
+>>>>>>> f2ada7e... model a part of simpl1
 Qed.
