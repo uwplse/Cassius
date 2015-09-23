@@ -8,7 +8,9 @@
 (require "main.rkt")
 (require "modify-dom.rkt")
 
-(struct problem (header sheet documents))
+(provide parse-file run-file (struct-out problem))
+
+(struct problem (desc url header sheet documents))
 
 (define (parse-file port)
   (define problems (make-hash))
@@ -34,16 +36,20 @@
        (hash-set! headers name header)]
       [`(define-problem ,name #:header ,header #:sheet ,sheet #:documents ,documents ...)
        (hash-set! problems name
-                  (problem (hash-ref headers header) (hash-ref sheets sheet)
+                  (problem #f #f (hash-ref headers header) (hash-ref sheets sheet)
+                           (map parse-document documents)))]
+      [`(define-problem ,name ,desc #:url ,url #:header ,header #:sheet ,sheet #:documents ,documents ...)
+       (hash-set! problems name
+                  (problem desc url (hash-ref headers header) (hash-ref sheets sheet)
                            (map parse-document documents)))]))
   problems)
 
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
-  (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
-  (define time-start (current-inexact-milliseconds))
-  (match-define (problem header sheet documents)
+  (match-define (problem desc url header sheet documents)
     (hash-ref (parse-file (open-input-file fname)) (string->symbol pname)))
 
+  (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
+  (define time-start (current-inexact-milliseconds))
   (define query (all-constraints sheet documents))
   (define time-constraints (current-inexact-milliseconds))
   (eprintf "[~as] Produced ~a constraints of ~a terms\n"
@@ -61,32 +67,41 @@
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
            (length query) (tree-size query))
   
-  (parameterize ([current-output-port out])
-    (match solve
-      [#f
-       (for ([cmd query])
-         (match cmd
-           [(list 'echo comment) (printf "; ~a\n" comment)]
-           [_ (printf "~a\n" cmd)]))
-       #t]
-      [#t
-       (define z3-result
-         (with-handlers ([exn:break? (lambda (e) 'break)])
-           (list 'solved
-                 (z3-solve query #:debug debug #:get-unsat unsat-constraint-info))))
-       (define time-solve (current-inexact-milliseconds))
-          
-       (match z3-result
-         [(list 'solved model)
-          (print-rules #:stylesheet sheet #:header header model)
-          (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
-                   (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
-                   (hash-count model))
-          #t]
-         ['break
-          (eprintf "[~as] Query terminated\nFailure.\n"
-                   (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
-          #f])])))
+  (define res
+   (parameterize ([current-output-port out])
+     (match solve
+       [#f
+        (for ([cmd query])
+          (match cmd
+            [(list 'echo comment) (printf "; ~a\n" comment)]
+            [_ (printf "~a\n" cmd)]))
+        #t]
+       [#t
+        (define z3-result
+          (with-handlers ([exn:break? (lambda (e) 'break)] [exn:fail? (λ (e) (list 'error e))])
+            (list 'solved
+                  (z3-solve query #:debug debug #:get-unsat unsat-constraint-info))))
+        (define time-solve (current-inexact-milliseconds))
+           
+        (match z3-result
+          [(list 'solved model)
+           (print-rules #:stylesheet sheet #:header header model)
+           (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
+                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
+                    (hash-count model))
+           #t]
+          [(list 'error e)
+           (eprintf "[~as] ~a\n"
+                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
+                    (exn-message e))
+           #f]
+          ['break
+           (eprintf "[~as] Query terminated\nFailure.\n"
+                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
+           #f])])))
+
+  (when outname (close-output-port out))
+  res)
 
 (module+ main
   (define solve? #t)
