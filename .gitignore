@@ -11,3 +11,4 @@ coq/compiled
 coq/CoqMakefile
 *~
 cassius/compiled
+reports/*.html
