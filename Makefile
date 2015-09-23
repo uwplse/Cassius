@@ -1,5 +1,6 @@
 TEST_FILES=$(wildcard bench/*.rkt)
 TESTS=$(TEST_FILES:bench/%.rkt=%:verify)
+SRC=$(wildcard cassius/*)
 
 .PHONY: download deploy
 
@@ -12,10 +13,10 @@ deploy:
 download:
 	grep ';; python get_bench.py' -R bench/ | cut '-d:' -f2- | cut -c4- | xargs -n1 bash -c
 
-bench/css/%.rkt: Makefile get_bench.py get_bench.js
+bench/css/%.rkt: get_bench.py get_bench.js
 	python get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard /home/pavpan/src/csswg-test/css21/$*/*.xht))
 
-get-csswg: bench/css/floats.rkt bench/css/margin-padding-clear.rkt
+reports/%.html: bench/css/%.rkt $(SRC)
+	racket cassius/report.rkt -o $@ $<
 
-test-csswg-%: #bench/css/%.rkt
-	bash test.sh -j8 $(shell seq -f css/$*:doc-%g 76 500)
+get-csswg: bench/css/floats.rkt bench/css/margin-padding-clear.rkt
