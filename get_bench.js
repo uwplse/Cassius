@@ -258,7 +258,7 @@ function make_boxes(elt, inflow, styles) {
             if (r.width == 0 && r.height == 0) continue;
             var box = Text(elt, {
                 x: r.x, y: r.y, w: r.width, h: r.height,
-                text: '"' + ranges[i].toString().replace(/\s+/g, " ") + '"'
+                //text: '"' + ranges[i].toString().replace(/\s+/g, " ") + '"'
             });
             inflow.children.push(box);
         }
@@ -365,7 +365,7 @@ function page2cassius(name) {
             var val = style[eid][sname];
             var tname = sname;
             if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
-                var tname = tname.split("-", 2);
+                var tname = tname.split("-", 2)[0];
             }
             if (val.endsWith("px")) {
                 val = "(" + tname + "/px " + val2px(val) + ")";
@@ -390,8 +390,11 @@ function page2cassius(name) {
     }
 
     for (var i = 0; i < page.children.length; i++) recurse(page.children[i]);
+    text += ")\n\n";
 
-    return text + ")";
+    var title = document.title.replace("\\", "\\\\").replace("\"", "\\\"");
+    text += "(define-problem " + name + "\n  \"" + title + "\"\n  #:url \"" + location + "\"\n  #:header header\n  #:sheet " + name  + "\n  #:documents " + name + ")";
+    return text;
 }
 
 function cassius(name) {

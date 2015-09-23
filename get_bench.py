@@ -53,8 +53,6 @@ class CassiusInput():
 (define-header header
 "")
 
-(define-stylesheet unknown-sheet ? ? ? ? ?)
-
 """.format(name, " ".join("'{}'".format(url) for url in urls)))
         self.fd.flush()
         self.ids = []
@@ -65,7 +63,6 @@ class CassiusInput():
         self.ids.append(id)
 
     def close(self):
-        self.fd.write("(define-problem synthesize\n  #:header header\n  #:sheet unknown-sheet\n  #:documents {})\n".format(" ".join(self.ids)))
         self.fd.flush()
 
 def get_bench_output(browser, letter, url, file):
@@ -100,13 +97,15 @@ def main(urls, name=None):
         with open(fname, "wb") as f:
             fi = CassiusInput(f, urls, netloc)
             for i, url in enumerate(urls):
-                letter = chr(ord('a') + i)
+                letter = str(i+1).rjust(len(str(len(url))), "0")
                 get_bench_output(browser, letter, url, fi)
-                src = urllib.urlopen(url)
-                fname2 = "bench/{}-{}.html".format(netloc, letter)
-                print "Saving source to {}".format(fname2)
-                with open(fname2, "wb") as f2:
-                    shutil.copyfileobj(src, f2)
+                scheme, _, _, _, _, _ = urlparse.urlparse(url)
+                if scheme == "http":
+                    src = urllib.urlopen(url)
+                    fname2 = "bench/{}-{}.html".format(netloc, letter)
+                    print "Saving source to {}".format(fname2)
+                    with open(fname2, "wb") as f2:
+                        shutil.copyfileobj(src, f2)
             fi.close()
 
     browser.quit()
