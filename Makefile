@@ -1,6 +1,7 @@
 TEST_FILES=$(wildcard bench/*.rkt)
 TESTS=$(TEST_FILES:bench/%.rkt=%:verify)
 SRC=$(wildcard cassius/*)
+TIME=$(shell date +%s)
 
 .PHONY: download deploy
 
@@ -9,6 +10,10 @@ test:
 
 deploy:
 	rsync -r www/ $(shell ~/uwplse/getdir)
+
+publish:
+	rsync -rv reports uwplse.org:/var/www/cassius/reports-$(TIME)
+	ssh uwplse.org chmod -R a+r /var/www/cassius/reports-$(TIME)/
 
 download:
 	grep ';; python get_bench.py' -R bench/ | cut '-d:' -f2- | cut -c4- | xargs -n1 bash -c
