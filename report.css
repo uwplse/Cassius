@@ -1,0 +1,10 @@
+body { width: 900px; margin: 3em 0; padding: 0 10px; }
+table { width: 100%; vertical-align: top; }
+td.out { position: fixed; left: 900px; right: 10px; padding: 20px; top: 0; bottom: 0; }
+td.out pre { display: none; overflow: auto; width: 100%; padding: 2em 0; }
+tr td:nth-child(3) { font-size: 80%; max-width: 400px; height: 2em; }
+tr:hover .out { height: calc(100% - 10px); }
+tr:hover .out pre { display: block; }
+.fail, .success {text-align: center;}
+.fail    {background-color: #ff5e3a; color: #f7f7f7;}
+.success {background-color: #0bd318;}
