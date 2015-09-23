@@ -151,7 +151,7 @@
 (define to-resolve
   (append
    '(get/elt flow-box first-child-name last-child-name parent-name previous-name next-name)
-   '(get/box element pb-name v-name flt-name n-name)))
+   '(get/box element pb-name v-name flt-name flt-up-name n-name)))
 
 (define to-expand
   (append
