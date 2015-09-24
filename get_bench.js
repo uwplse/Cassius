@@ -349,31 +349,68 @@ function get_boxes() {
     return {view: view, style: style};
 }
 
+function dump_selector(sel) {
+    var match;
+    if (match = sel.match(/^[\w-]*#([\w-]+)$/)) {
+        return "(sel/id id/" + match[1] + ")";
+    } else if (match = sel.match(/^([\w-]+)$/)) {
+        return "(sel/tag tag/" + match[1] + ")";
+    } else if (match = sel.match(/^\*$/)) {
+        return "sel/any";
+    } else {
+        console.warn("Invalid selector `" + sel + "`");
+        return false;
+    }
+}
+
+function dump_rule(sel, style) {
+    var sel_text = dump_selector(sel);
+    if (!sel_text) return "";
+    var text = "\n  (" + sel_text;
+    for (var i = 0; i < style.length; i++) {
+        var sname = style[i];
+        if (sname.startsWith("-")) continue; // Skip browser-specific styles for now.
+        var val = style[sname];
+        if (!val) { console.log(style, i, sname)}
+        var tname = sname;
+        if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
+            var tname = tname.split("-", 2)[0];
+        }
+        if (val.endsWith("px")) {
+            val = "(" + tname + "/px " + val2px(val) + ")";
+        } else {
+            val = tname + "/" + val;
+        }
+        if (Props.indexOf(sname) === -1) {
+            text += "\n   #;[" + sname + " " + val + "]";
+        } else {
+            text += "\n   [" + sname + " " + val + "]";
+        }
+    }
+    text += ")";
+    return text;
+}
+
 function page2cassius(name) {
     var out = get_boxes();
     var page = out.view;
     var style = out.style;
     var text = "";
     text += "(define-stylesheet " + name;
+    for (var sid in document.styleSheets) {
+        var ss = document.styleSheets[sid];
+        for (var rid in ss.cssRules) {
+            var r = ss.cssRules[rid];
+            if (r.type !== CSSRule.STYLE_RULE) {
+                console.warn("Skipping non-style rule", r);
+                continue;
+            }
+            text += dump_rule(r.selectorText, r.style);
+        }
+    }
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
-        text += "\n  ((sel/id id/" + eid + ")";
-        for (var i = 0; i < style[eid].length; i++) {
-            var sname = style[eid][i];
-            if (Props.indexOf(sname) === -1) continue;
-            var val = style[eid][sname];
-            var tname = sname;
-            if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
-                var tname = tname.split("-", 2)[0];
-            }
-            if (val.endsWith("px")) {
-                val = "(" + tname + "/px " + val2px(val) + ")";
-            } else {
-                val = tname + "/" + val;
-            }
-            text += "\n   [" + sname + " " + val + "]";
-        }
-        text += ")";
+        text += dump_rule("#" + eid, style[eid]);
     }
     text += ")\n\n";
     text += "(define-document (" + name + " #:width " + page.props.w +  " #:browser firefox)";
