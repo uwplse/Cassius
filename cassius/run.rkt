@@ -46,7 +46,7 @@
 
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
   (match-define (problem desc url header sheet documents)
-    (hash-ref (parse-file (open-input-file fname)) (string->symbol pname)))
+    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
   (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
   (define time-start (current-inexact-milliseconds))

@@ -14,6 +14,10 @@
 (define (z3-solve encoding #:debug [debug? #f] #:get-unsat [get-unsat identity])
   (define-values (process out in err)
     (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
+  (define (close-fds)
+    (close-output-port in)
+    (close-input-port out)
+    (close-input-port err))
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
   (define asserts (make-hash))
@@ -30,83 +34,87 @@
     (fprintf in (format "~a\n" val))
     (flush-output in))
 
-  (with-handlers ([exn:break? (lambda (e) (subprocess-kill process #t) (raise e))])
-    (let loop ([rest encoding] [paused? #f])
-      (cond
-       [(byte-ready? out)
-        (cond
-         [(char-whitespace? (peek-char out))
-          (read-char out)
-          (loop rest paused?)]
-         [(char=? (peek-char out) #\|)
-          (debug #:tag 'optimality "<- ~a" (read-line))
-          (loop rest paused?)]
-         [else
-          (let ([msg (read out)])
-            (when paused?
-              (debug #:tag 'timing "... ~ams\n"
-                     (inexact->exact (round (- (current-inexact-milliseconds) paused?)))))
-            (debug #:tag 'output "<- ~a\n" msg)
-            (match msg
-              [`(error ,text)
-               (match (map string-split (string-split text ":"))
-                 [`(("line" ,l "column" ,c) ,rest)
-                  (error (format "Z3 error: ~a\n  line:" text) (list-ref encoding (- (string->number l) 1)))])]
-              ['unsupported
-               (error "Z3 error: unsupported\n")]
-              ['unsat
-               (write "(get-unsat-core)")
-               (let ([msg2 (read out)])
-                 (debug #:tag 'output "<- ~a\n" msg2)
-                 (error (format "Z3 unsatisfiable (core is ~a constraints)\n~a" (length msg2)
-                                (string-join
-                                 (for/list ([var msg2])
-                                           (format "  ~a: ~a" var (or (get-unsat var) (hash-ref asserts var)))) "\n"))))]
-              ['sat
-               (if (null? rest)
-                   (begin
-                     (debug #:tag 'sat ">>> get-model\n")
-                     (write "(get-model)")
-                     (loop rest (current-inexact-milliseconds)))
-                   (loop rest #f))]
-              [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
-               (begin0 (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))
-                 (for ([cmd rest])
-                   (write (~a cmd))
-                   (debug #:tag 'eval ">>> ~a → ~a\n" cmd (read out)))
-                 (close-output-port in)
-                 (when (or (eq? debug? #t) (and (list? debug?) (member 'stats debug?)))
-                   (copy-port out (current-error-port))))]
-              [`(goals (goal ,args ...) ...)
-               (loop rest #f)]
-              [(? eof-object?)
-               (error "Premature EOF received")]))])]
-       [paused?
-        (sync/enable-break out)
-        (loop rest paused?)]
-       [(null? rest)
-        (sync/enable-break out)
-        (loop rest (current-inexact-milliseconds))]
-       [#t
-        (match (car rest)
-          [`(echo ,x)
-           (write (format "; ~a" x))
-           (loop (cdr rest) paused?)]
-          [`(check-sat)
-           (write "(check-sat)")
-           (debug #:tag 'tactic ">>> sat\n")
-           (loop (cdr rest) (current-inexact-milliseconds))]
-          [`(apply ,args ...)
-           (write (~a (car rest)))
-           (debug #:tag 'tactic ">>> ~a\n" (string-join (map ~a args) " "))
-           (loop (cdr rest) (current-inexact-milliseconds))]
-          [`(assert (! ,expr :named ,name))
-           (write (~a (car rest)))
-           (hash-set! asserts name expr)
-           (loop (cdr rest) paused?)]
-          [_
-           (write (~a (car rest)))
-           (loop (cdr rest) paused?)])]))))
+  (dynamic-wind
+    (λ () (void))
+    (λ ()
+      (with-handlers ([exn:break? (lambda (e) (subprocess-kill process #t) (raise e))])
+        (let loop ([rest encoding] [paused? #f])
+          (cond
+           [(byte-ready? out)
+            (cond
+             [(char-whitespace? (peek-char out))
+              (read-char out)
+              (loop rest paused?)]
+             [(char=? (peek-char out) #\|)
+              (debug #:tag 'optimality "<- ~a" (read-line))
+              (loop rest paused?)]
+             [else
+              (let ([msg (read out)])
+                (when paused?
+                  (debug #:tag 'timing "... ~ams\n"
+                         (inexact->exact (round (- (current-inexact-milliseconds) paused?)))))
+                (debug #:tag 'output "<- ~a\n" msg)
+                (match msg
+                  [`(error ,text)
+                   (match (map string-split (string-split text ":"))
+                     [`(("line" ,l "column" ,c) ,rest)
+                      (error (format "Z3 error: ~a\n  line:" text) (list-ref encoding (- (string->number l) 1)))])]
+                  ['unsupported
+                   (error "Z3 error: unsupported\n")]
+                  ['unsat
+                   (write "(get-unsat-core)")
+                   (let ([msg2 (read out)])
+                     (debug #:tag 'output "<- ~a\n" msg2)
+                     (error (format "Z3 unsatisfiable (core is ~a constraints)\n~a" (length msg2)
+                                    (string-join
+                                     (for/list ([var msg2])
+                                       (format "  ~a: ~a" var (or (get-unsat var) (hash-ref asserts var)))) "\n"))))]
+                  ['sat
+                   (if (null? rest)
+                       (begin
+                         (debug #:tag 'sat ">>> get-model\n")
+                         (write "(get-model)")
+                         (loop rest (current-inexact-milliseconds)))
+                       (loop rest #f))]
+                  [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
+                   (begin0 (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))
+                     (for ([cmd rest])
+                       (write (~a cmd))
+                       (debug #:tag 'eval ">>> ~a → ~a\n" cmd (read out)))
+                     (close-output-port in)
+                     (when (or (eq? debug? #t) (and (list? debug?) (member 'stats debug?)))
+                       (copy-port out (current-error-port))))]
+                  [`(goals (goal ,args ...) ...)
+                   (loop rest #f)]
+                  [(? eof-object?)
+                   (error "Premature EOF received")]))])]
+           [paused?
+            (sync/enable-break out)
+            (loop rest paused?)]
+           [(null? rest)
+            (sync/enable-break out)
+            (loop rest (current-inexact-milliseconds))]
+           [#t
+            (match (car rest)
+              [`(echo ,x)
+               (write (format "; ~a" x))
+               (loop (cdr rest) paused?)]
+              [`(check-sat)
+               (write "(check-sat)")
+               (debug #:tag 'tactic ">>> sat\n")
+               (loop (cdr rest) (current-inexact-milliseconds))]
+              [`(apply ,args ...)
+               (write (~a (car rest)))
+               (debug #:tag 'tactic ">>> ~a\n" (string-join (map ~a args) " "))
+               (loop (cdr rest) (current-inexact-milliseconds))]
+              [`(assert (! ,expr :named ,name))
+               (write (~a (car rest)))
+               (hash-set! asserts name expr)
+               (loop (cdr rest) paused?)]
+              [_
+               (write (~a (car rest)))
+               (loop (cdr rest) paused?)])]))))
+    close-fds))
 
 ; Writes the given encoding to the specified port.
 (define (write-encoding encoding port #:debug [debug #f])
