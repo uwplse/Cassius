@@ -26,10 +26,13 @@
                                (field `(,(sformat "rule.~a" prop) ,type))
                                (field `(,(sformat "rule.~a?" prop) Bool)))))))
 
-    (define-const border/thin (border/px 1))
-    (define-const border/medium (border/px 3))
-    (define-const border/thick (border/px 5))
-    ))
+    (define-const margin/0% Margin (margin/px 0))
+    (define-const width/0% Width (width/px 0))
+    (define-const padding/0% Padding (padding/px 0))
+    ;; Firefox's values
+    (define-const border/thin Border (border/px 1))
+    (define-const border/medium Border (border/px 3))
+    (define-const border/thick Border (border/px 5))))
 
 (define css-functions
   `((define-fun selector-applies? ((sel Selector) (elt Element)) Bool

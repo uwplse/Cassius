@@ -59,7 +59,11 @@ function f2r(x) {
 }
 
 function val2px(val) {
-    if (val.endsWith("px")) {
+    if (val == "0") {
+        return 0;
+    } else if (val.match(/^0[^0-9]/)) {
+        return 0;
+    } else if (val.endsWith("px")) {
         return +val.substr(0, val.length - 2);
     } else if (val.endsWith("pt")) {
         return +val.substr(0, val.length - 2)*72/96;

@@ -19,19 +19,19 @@
 (define (in-css-types)
   (in-hash css-types-hash))
 
-(define-css-type (Width width/auto (width/px (width.px Real)))
+(define-css-type (Width width/auto (width/px (width.px Real)) width/100%)
   [width width/auto])
 
 (define-css-type (Height height/auto (height/px (height.px Real)))
   [height height/auto])
 
-(define-css-type (Margin margin/auto (margin/px (margin.px Real)))
+(define-css-type (Margin margin/auto (margin/px (margin.px Real)) margin/50%)
   [margin-top margin/auto]
   [margin-right (margin/px 0)]
   [margin-bottom margin/auto]
   [margin-left (margin/px 0)])
 
-(define-css-type (Padding (padding/px (padding.px Real)))
+(define-css-type (Padding (padding/px (padding.px Real)) padding/1% padding/2% padding/50%)
   [padding-top (padding/px 0)]
   [padding-right (padding/px 0)]
   [padding-bottom (padding/px 0)]

@@ -100,6 +100,19 @@
            (match-define (list prop type field) item)
            `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
+
+       ;; %ages
+       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+           `(and
+             (=> (is-margin/50% (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) (/ (w p) 2)))
+             (=> (is-padding/1% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 100)))
+             (=> (is-padding/2% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 50)))
+             (=> (is-padding/50% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 2)))))
+       (=> (is-width/100% (style.width r)) (= (w b) (w p)))
        
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
@@ -207,10 +220,21 @@
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
-       (=> (is-margin/auto (style.margin-left r)) (= (ml b) 0))
-       (=> (is-margin/auto (style.margin-right r)) (= (mr b) 0))
-       (=> (is-margin/auto (style.margin-top r)) (= (mt b) 0))
-       (=> (is-margin/auto (style.margin-bottom r)) (= (mb b) 0))
+       ;; %ages
+       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+           `(and
+             (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) 0))
+             (=> (is-margin/50% (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) (/ (w p) 2)))
+             (=> (is-padding/1% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 100)))
+             (=> (is-padding/2% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 50)))
+             (=> (is-padding/50% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 2)))))
+       (=> (is-width/100% (style.width r)) (= (w b) (w p)))
+            
 
        ;; TODO : We don't allow auto widths (CSS § 10.3.5) on floats, it's too hard to compute
        (=> (is-width/auto (style.width r)) (= (w b) (stfwidth lb)))
