@@ -80,8 +80,8 @@ def main(urls, name=None):
 
     for url in urls:
         scheme, _, _, _, _, _ = urlparse.urlparse(url)
-        if scheme != "http":
-            warnings.warn("Only http scheme supported (not {})".format(url))
+        if scheme not in ["http", "file"]:
+            warnings.warn("Only http and file scheme supported (not {})".format(url))
 
     if name:
         site_to_pages = {name:urls}

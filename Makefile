@@ -12,14 +12,15 @@ deploy:
 	rsync -r www/ $(shell ~/uwplse/getdir)
 
 publish:
-	rsync -rv reports uwplse.org:/var/www/cassius/reports-$(TIME)
+	rsync -rv reports/ uwplse.org:/var/www/cassius/reports-$(TIME)/
 	ssh uwplse.org chmod -R a+r /var/www/cassius/reports-$(TIME)/
+	@ echo "Uploaded to http://cassius.uwplse.org/reports-$(TIME)"
 
 download:
 	grep ';; python get_bench.py' -R bench/ | cut '-d:' -f2- | cut -c4- | xargs -n1 bash -c
 
 bench/css/%.rkt: get_bench.py get_bench.js
-	python get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard /home/pavpan/src/csswg-test/css21/$*/*.xht))
+	@ python get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard /home/pavpan/src/csswg-test/css21/$*/*.xht))
 
 reports/%.html: bench/css/%.rkt $(SRC)
 	racket cassius/report.rkt -o $@ $<

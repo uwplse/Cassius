@@ -27,10 +27,11 @@
 (define boxes-to-print (make-hash))
 
 (define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
-  (for ([(name type) (in-hash boxes-to-print)])
+  (for ([(name type) (in-pairs (sort (hash->list boxes-to-print) symbol<? #:key car))])
     (eprintf "~a ~a" name (print-type type (hash-ref smt-out name))))
 
-  (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header)
+  (when (> (string-length header) 0)
+    (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header))
 
   (for ([rule-value (map (curry hash-ref smt-out)
                          (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "rule-user-~a" i)))])
@@ -52,7 +53,7 @@
   [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,stfw ,pbname ,n ,v ,flt ,flt-up ,e))
    (with-output-to-string
      (lambda ()
-       (printf "~a ~a×~a at (y ~a, x ~a)\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 y) (r2 x))
+       (printf "~a ~a×~a at x ~a / y ~a\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 x) (r2 y))
        (printf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
                 (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
                 (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
