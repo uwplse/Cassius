@@ -24,7 +24,12 @@
        (Rule (rule (selector Selector) (index Int) (origin ImportanceOrigin)
                    ,@(for/reap [field] ([(prop type default) (in-css-properties)])
                                (field `(,(sformat "rule.~a" prop) ,type))
-                               (field `(,(sformat "rule.~a?" prop) Bool)))))))))
+                               (field `(,(sformat "rule.~a?" prop) Bool)))))))
+
+    (define-const border/thin (border/px 1))
+    (define-const border/medium (border/px 3))
+    (define-const border/thick (border/px 5))
+    ))
 
 (define css-functions
   `((define-fun selector-applies? ((sel Selector) (elt Element)) Bool

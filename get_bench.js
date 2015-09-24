@@ -61,6 +61,16 @@ function f2r(x) {
 function val2px(val) {
     if (val.endsWith("px")) {
         return +val.substr(0, val.length - 2);
+    } else if (val.endsWith("pt")) {
+        return +val.substr(0, val.length - 2)*72/96;
+    } else if (val.endsWith("pc")) {
+        return +val.substr(0, val.length - 2)*72/96/12;
+    } else if (val.endsWith("mm")) {
+        return +val.substr(0, val.length - 2)*96/25.4;
+    } else if (val.endsWith("cm")) {
+        return +val.substr(0, val.length - 2)*96/2.54;
+    } else if (val.endsWith("in")) {
+        return +val.substr(0, val.length - 2)*96;
     } else {
         throw "Error, " + val + " is not a pixel quantity."
     }
@@ -376,9 +386,9 @@ function dump_rule(sel, style) {
         if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
             var tname = tname.split("-", 2)[0];
         }
-        if (val.endsWith("px")) {
+        try {
             val = "(" + tname + "/px " + val2px(val) + ")";
-        } else {
+        } catch (e) {
             val = tname + "/" + val;
         }
         if (Props.indexOf(sname) === -1) {
