@@ -91,13 +91,13 @@ def main(urls, name=None):
             _, netloc, _, _, _, _ = urlparse.urlparse(url)
             site_to_pages[netloc].append(url)
 
-    for (netloc, urls) in site_to_pages.items():
+    for (netloc, urls) in sorted(site_to_pages.items()):
         fname = "bench/{}.rkt".format(netloc)
         print "Saving layout to {}".format(fname)
         with open(fname, "wb") as f:
             fi = CassiusInput(f, urls, netloc)
             for i, url in enumerate(urls):
-                letter = str(i+1).rjust(len(str(len(url))), "0")
+                letter = str(i+1).rjust(len(str(len(urls))), "0")
                 get_bench_output(browser, letter, url, fi)
                 scheme, _, _, _, _, _ = urlparse.urlparse(url)
                 if scheme == "http":
