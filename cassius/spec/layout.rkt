@@ -258,7 +258,9 @@
        ;; of the right outer edge of the earlier box, or its top must be lower
        ;; than the bottom of the earlier box.
        ;; SIMPL: either to the right of the previous float, or below it.
-       ;; TODO: Is top-padding the right thing here? Seems like it, but weird
+
+       ;; TODO: This doesn't take into account that it's just interactions of
+       ;; left floats with left floats, right floats with right floats
        (or (is-no-box flt)
            (ite (is-float/left (float e))
                 (or (= (left-outer b) (right-outer flt)) (>= (top-border b) (bottom-outer flt)))
@@ -294,6 +296,9 @@
        ;; to the right of its containing block's right edge.
        ;; (Loosely: a left float may not stick out at the right edge,
        ;; unless it is already as far to the left as possible.)
+
+       ;; TODO: This doesn't take into account that it's just interactions of
+       ;; left floats with left floats, right floats with right floats
        (=> (and (is-box flt) (< (x flt) (x b)) (horizontally-adjacent b flt)
                 (is-float/left (float e)))
            (<= (right-outer b) (right-content p)))
@@ -311,6 +316,9 @@
        ;; as possible, a right-floating box as far to the right as possible. A higher
        ;; position is preferred over one that is further to the left/right.
        ;; SIMPL: at the left/right or next to an existing floating box
+
+       ;; TODO: This doesn't take into account that it's just interactions of
+       ;; left floats with left floats, right floats with right floats
        (=> (is-float/left (float e))
            (or (= (left-outer b) (left-content p))
                (and (is-box flt) (= (left-outer b) (right-outer flt)))))
@@ -320,17 +328,17 @@
 
        ;; Three restrictions on floats to make solving efficient
 
-       ;; No negative margins on floats; otherwise they can overlap
+       ;; R1: No negative margins on floats; otherwise they can overlap
        ,@(for/list ([m '(mt mr mb ml)]) `(>= (,m b) 0.0))
-       ;; The bottom of a box is farther down than the bottom of the previous box
+       ;; R2: The bottom of a box is farther down than the bottom of the previous box
        ;; Otherwise, they can make little pyramids
        (=> (is-box flt) (>= (bottom-outer b) (bottom-outer flt)))
-       ;; If a float wraps to the next line, the previous line must be full
+       ;; R3: If a float wraps to the next line, the previous line must be full
        (=> (and (is-box flt) (= (top-outer b) (bottom-outer flt)))
            (ite (is-float/left (float e))
                 (= (right-outer flt) (right-content p))
                 (= (left-outer flt) (left-content p))))
-       ;; If this and the previous float float to different sides,
+       ;; R4: If this and the previous float float to different sides,
        ;; they are not horizontally adjacent
        (=> (and (is-box flt) (not (= (float flte) (float e))))
            (not (horizontally-adjacent flt b)))))
