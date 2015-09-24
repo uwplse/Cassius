@@ -201,7 +201,8 @@ function infer_lines(box, parent) {
     }
 
     function new_line() {
-        var l = Line(null, {h: val2px(cs(parent.node)["line-height"])});
+        // The line-height idea was cute, but doesn't actually work.
+        var l = Line(null, {/*h: val2px(cs(parent.node)["line-height"])*/});
         parent.children.push(l);
         return l;
     }
