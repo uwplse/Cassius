@@ -123,17 +123,17 @@ function get_lines(txt) {
 }
 
 function is_text_container(elt) {
-    var has_inline = false, has_nf_block = false, has_text = false;
+    var has_inline = false, has_block = false, has_text = false;
     for (var i = 0; i < elt.childNodes.length; i++) {
         var child = elt.childNodes[i];
         if (is_comment(child)) continue
         else if (is_text(child) && child.textContent.search(/^\s+$/) === -1) has_text = true;
         else if (is_text(child)) continue;
-        else if (is_block(child) && !is_flowroot(child)) has_nf_block = true;
+        else if (is_block(child)) has_block = true;
         else if (is_inline(child)) has_inline = true;
         else continue;
     }
-    return (has_inline || has_text) && !has_nf_block;
+    return (has_inline || has_text) && !has_block;
 }
 
 function contains_text(elt) {
