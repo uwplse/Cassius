@@ -91,4 +91,4 @@
 (define css-shorthand-properties
   '((margin margin-top margin-right margin-bottom margin-left)
     (padding padding-top padding-right padding-bottom padding-left)
-    #;(border border-top border-right border-bottom border-left)))
+    (border-width border-top-width border-right-width border-bottom-width border-left-width)))

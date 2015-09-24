@@ -2,7 +2,7 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top border-right border-bottom border-left float display text-align".split(" ");
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align".split(" ");
 
 Box = function(type, node, props) {
     this.children = [];
@@ -187,7 +187,6 @@ function infer_lines(box, parent) {
     }
 
     function new_line() {
-        console.log(parent);
         var l = Line(null, {h: val2px(cs(parent.node)["line-height"])});
         parent.children.push(l);
         return l;

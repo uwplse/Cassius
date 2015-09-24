@@ -93,8 +93,8 @@
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
-                            (border-top border bt) (border-right border br)
-                            (border-bottom border bb) (border-left border bl)
+                            (border-top-width border bt) (border-right-width border br)
+                            (border-bottom-width border bb) (border-left-width border bl)
                             (margin-top margin mt) (margin-bottom margin mb))])
            ;; Set properties that are settable with lengths
            (match-define (list prop type field) item)
@@ -180,10 +180,8 @@
                 (+ (top-content p) (+ (mtp b) (mtn b))))
            (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b)))))
 
-       ,@(for/list ([field '(pl pr pb pt w h)])
-           `(>= (,field b) 0.0))
-       ,@(for/list ([field '(bl br bt bb)])
-           `(= (,field b) 0.0))))
+       ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
+           `(>= (,field b) 0.0))))
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
@@ -200,8 +198,8 @@
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
-                            (border-top border bt) (border-right border br)
-                            (border-bottom border bb) (border-left border bl)
+                            (border-top-width border bt) (border-right-width border br)
+                            (border-bottom-width border bb) (border-left-width border bl)
                             (margin-top margin mt) (margin-bottom margin mb)
                             (margin-right margin mr) (margin-left margin ml))])
            (match-define (list prop type field) item)
@@ -244,10 +242,8 @@
        ;; positioned as if it had an otherwise empty anonymous block parent taking part in the flow.
        ;; The position of such a parent is defined by the rules in the section on margin collapsing.
 
-       ,@(for/list ([field '(pl pr pb pt w h)])
+       ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
            `(>= (,field b) 0.0))
-       ,@(for/list ([field '(bl br bt bb)])
-           `(= (,field b) 0.0))
 
        ;; CSS 2.1, § 9.5.1, item 1: The left outer edge of a left-floating box
        ;; may not be to the left of the left edge of its containing block.

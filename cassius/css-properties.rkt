@@ -38,10 +38,10 @@
   [padding-left (padding/px 0)])
 
 (define-css-type (Border (border/px (border.px Real)))
-  [border-top (border/px 0)]
-  [border-right (border/px 0)]
-  [border-bottom (border/px 0)]
-  [border-left (border/px 0)])
+  [border-top-width (border/px 0)]
+  [border-right-width (border/px 0)]
+  [border-bottom-width (border/px 0)]
+  [border-left-width (border/px 0)])
 
 (define-css-type (Float float/none float/left float/right float/inherit)
  [float float/none])
