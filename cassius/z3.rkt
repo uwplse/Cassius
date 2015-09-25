@@ -14,10 +14,6 @@
 (define (z3-solve encoding #:debug [debug? #f] #:get-unsat [get-unsat identity])
   (define-values (process out in err)
     (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
-  (define (close-fds)
-    (close-output-port in)
-    (close-input-port out)
-    (close-input-port err))
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
   (define asserts (make-hash))
@@ -114,7 +110,11 @@
               [_
                (write (~a (car rest)))
                (loop (cdr rest) paused?)])]))))
-    close-fds))
+    (λ ()
+      (close-output-port in)
+      (close-input-port out)
+      (close-input-port err)
+      (subprocess-kill process #t))))
 
 ; Writes the given encoding to the specified port.
 (define (write-encoding encoding port #:debug [debug #f])

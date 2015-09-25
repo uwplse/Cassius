@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/path)
+(require racket/engine)
 (require unstable/sequence)
 (require racket/cmdline)
 (require "common.rkt")
@@ -21,11 +22,20 @@
         (eprintf "~a\t~a\t" fname pname)
         (define-values (ubase uname udir?) (split-path (problem-url prob)))
         (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='out'><pre>" pname uname (problem-desc prob))
-        (define solve? 
+        (define status
           (parameterize ([current-error-port (current-output-port)])
-            (run-file fname (~a pname) #:debug debug)))
-        (eprintf "~a\n" (if solve? "✔" "✘"))
-        (printf "</pre></td><td class='~a'>~a</td></tr>\n" (if solve? 'success 'fail) (if solve? "✔" "✘")))
+            (define eng (engine (λ (_) (run-file fname (~a pname) #:debug debug))))
+            (define timeout? (not (engine-run 10000 eng))) ; Run for 10s max
+            (engine-kill eng)
+            (cond
+             [timeout?
+              (printf "[10.00s] Timed out\n")
+              'timeout]
+             [(engine-result eng) 'success]
+             [else 'fail])))
+        (eprintf "~a\n" status)
+        (printf "</pre></td><td class='~a'>~a</td></tr>\n" status
+                (match status ['success "✔"] ['fail "✘"] ['timeout "🕡"])))
       (printf "</table>\n"))
     (printf "</body>\n")
     (printf "</html>\n"))
