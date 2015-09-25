@@ -13,6 +13,7 @@ deploy:
 
 publish:
 	rsync -rv reports/ uwplse.org:/var/www/cassius/reports-$(TIME)/
+	ssh uwplse.org chmod a+x /var/www/cassius/reports-$(TIME)/
 	ssh uwplse.org chmod -R a+r /var/www/cassius/reports-$(TIME)/
 	@ echo "Uploaded to http://cassius.uwplse.org/reports-$(TIME)"
 
