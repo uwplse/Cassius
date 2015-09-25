@@ -3,7 +3,7 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; docum
 */
 
 Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align".split(" ");
-BadProps = "position clear".split(" ");
+BadProps = "position clear float".split(" ");
 
 Box = function(type, node, props) {
     this.children = [];
@@ -59,7 +59,7 @@ function f2r(x) {
     }
 }
 
-function val2px(val) {
+function val2px(val, features) {
     if (val == "0") {
         return 0;
     } else if (val.match(/^0[^0-9]/)) {
@@ -76,6 +76,9 @@ function val2px(val) {
         return +val.substr(0, val.length - 2)*96/2.54;
     } else if (val.endsWith("in")) {
         return +val.substr(0, val.length - 2)*96;
+    } else if (match = val.endsWith(/^(\d+)(\D+)$/)) {
+        features[match[1]] = true;
+        throw "Error, " + val + " is not a known unit";
     } else {
         throw "Error, " + val + " is not a pixel quantity."
     }
@@ -357,8 +360,8 @@ function make_boxes(elt, inflow, styles, features) {
         var s = cs(elt);
         var box = Magic(elt, {
             tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,
-            mt: val2px(s["margin-top"]), mr: val2px(s["margin-right"]), 
-            mb: val2px(s["margin-bottom"]), ml: val2px(s["margin-left"]),
+            mt: val2px(s["margin-top"], features), mr: val2px(s["margin-right"], features), 
+            mb: val2px(s["margin-bottom"], features), ml: val2px(s["margin-left"], features),
         });
 
         if (elt.id) box.props.id = elt.id;
@@ -405,7 +408,7 @@ function dump_rule(sel, style, features) {
             var tname = tname.split("-", 2)[0];
         }
         try {
-            val = "(" + tname + "/px " + val2px(val) + ")";
+            val = "(" + tname + "/px " + val2px(val, features) + ")";
         } catch (e) {
             val = tname + "/" + val;
         }
