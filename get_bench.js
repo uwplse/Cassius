@@ -3,6 +3,7 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; docum
 */
 
 Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align".split(" ");
+BadProps = "position clear".split(" ");
 
 Box = function(type, node, props) {
     this.children = [];
@@ -259,7 +260,7 @@ function infer_lines(box, parent) {
     }
 }
 
-function make_boxes(elt, inflow, styles) {
+function make_boxes(elt, inflow, styles, features) {
     if (is_comment(elt)) {
         return;
     } else if (is_text(elt)) {
@@ -308,7 +309,7 @@ function make_boxes(elt, inflow, styles) {
             var fake_parent = new Box("Fake", elt, {});
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
-                make_boxes(child, fake_parent, styles);
+                make_boxes(child, fake_parent, styles, features);
             }
             // Then break it into lines
             infer_lines(fake_parent, box);
@@ -317,14 +318,14 @@ function make_boxes(elt, inflow, styles) {
             var fake_parent = new Box("Fake", elt, {});
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
-                make_boxes(child, fake_parent, styles);
+                make_boxes(child, fake_parent, styles, features);
             }
             // Then add anonymous boxes
             infer_anons(fake_parent, box);
         }  else {
             for (var i = 0; i < elt.childNodes.length; i++) {
                 var child = elt.childNodes[i];
-                make_boxes(child, box, styles);
+                make_boxes(child, box, styles, features);
             }
         }
     } else if (is_inline (elt)) {
@@ -338,10 +339,19 @@ function make_boxes(elt, inflow, styles) {
         inflow.children.push(box);
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
-            make_boxes(child, box, styles);
+            make_boxes(child, box, styles, features);
         }
     } else {
         console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
+
+        if (cs(elt).display.startsWith("table")) {
+            features["tables"] = true;
+        } else if (cs(elt).display == "inline-block") {
+            features["inline-block"] = true;
+        } else {
+            features["unknown-display"] = true;
+        }
+
         // Quit iterating downward, who knows what is in this element
         var r = elt.getBoundingClientRect();
         var s = cs(elt);
@@ -357,10 +367,10 @@ function make_boxes(elt, inflow, styles) {
     }
 }
 
-function get_boxes() {
+function get_boxes(features) {
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
-    make_boxes(document.querySelector("html"), view, style);
+    make_boxes(document.querySelector("html"), view, style, features);
     return {view: view, style: style};
 }
 
@@ -378,9 +388,12 @@ function dump_selector(sel) {
     }
 }
 
-function dump_rule(sel, style) {
+function dump_rule(sel, style, features) {
     var sel_text = dump_selector(sel);
-    if (!sel_text) return "";
+    if (!sel_text) {
+        features["unknown-selector"] = true;
+        return "";
+    }
     var text = "\n  (" + sel_text;
     for (var i = 0; i < style.length; i++) {
         var sname = style[i];
@@ -397,6 +410,7 @@ function dump_rule(sel, style) {
             val = tname + "/" + val;
         }
         if (Props.indexOf(sname) === -1) {
+            if (BadProps.indexOf(sname) !== -1) features[sname] = true;
             text += "\n   #;[" + sname + " " + val + "]";
         } else {
             text += "\n   [" + sname + " " + val + "]";
@@ -406,8 +420,18 @@ function dump_rule(sel, style) {
     return text;
 }
 
+function dump_features(features) {
+    var text = "";
+    for (var f in features) {
+        if (!features.hasOwnProperty(f)) continue;
+        text += f + " ";
+    }
+    return "(" + text.trim() + ")";
+}
+
 function page2cassius(name) {
-    var out = get_boxes();
+    var features = {};
+    var out = get_boxes(features);
     var page = out.view;
     var style = out.style;
     var text = "";
@@ -420,12 +444,12 @@ function page2cassius(name) {
                 console.warn("Skipping non-style rule", r);
                 continue;
             }
-            text += dump_rule(r.selectorText, r.style);
+            text += dump_rule(r.selectorText, r.style, features);
         }
     }
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
-        text += dump_rule("#" + eid, style[eid]);
+        text += dump_rule("#" + eid, style[eid], features);
     }
     text += ")\n\n";
     text += "(define-document (" + name + " #:width " + page.props.w +  " #:browser firefox)";
@@ -444,7 +468,7 @@ function page2cassius(name) {
     text += ")\n\n";
 
     var title = document.title.replace("\\", "\\\\").replace("\"", "\\\"");
-    text += "(define-problem " + name + "\n  \"" + title + "\"\n  #:url \"" + location + "\"\n  #:header header\n  #:sheet " + name  + "\n  #:documents " + name + ")";
+    text += "(define-problem " + name + "\n  \"" + title + "\"\n  #:url \"" + location + "\"\n  #:header header\n  #:sheet " + name  + "\n  #:documents " + name + "\n  #:features " + dump_features(features) + ")";
     return text;
 }
 
