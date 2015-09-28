@@ -392,12 +392,8 @@ function dump_selector(sel) {
 }
 
 function dump_rule(sel, style, features) {
-    var sel_text = dump_selector(sel);
-    if (!sel_text) {
-        features["unknown-selector"] = true;
-        return "";
-    }
-    var text = "\n  (" + sel_text;
+    var text = "";
+    var has_good_prop = false;
     for (var i = 0; i < style.length; i++) {
         var sname = style[i];
         if (sname.startsWith("-")) continue; // Skip browser-specific styles for now.
@@ -416,11 +412,18 @@ function dump_rule(sel, style, features) {
             if (BadProps.indexOf(sname) !== -1) features[sname] = true;
             text += "\n   #;[" + sname + " " + val + "]";
         } else {
+            has_good_prop = true;
             text += "\n   [" + sname + " " + val + "]";
         }
     }
-    text += ")";
-    return text;
+
+    var sel_text = dump_selector(sel);
+    if (!sel_text) {
+        if (has_good_prop) features["unknown-selector"] = true;
+        return "";
+    } else {
+        return "\n  (" + sel_text + text + ")";
+    }
 }
 
 function dump_features(features) {
