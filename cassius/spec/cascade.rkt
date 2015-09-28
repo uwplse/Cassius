@@ -41,7 +41,8 @@
     [`(id ,id) `(sel/id ,(sformat "id/~a" id))]
     [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
     [`(selector ,name) sel]
-    [`* `sel/any]))
+    [`* `sel/any]
+    [_ #f]))
 
 (define (selector-matches? sel elt)
   (match sel
@@ -49,8 +50,8 @@
     [`(id ,id) (if (equal? id (element-get elt ':id)) 'true 'false)]
     [`(tag ,tag) (if (equal? tag (element-get elt ':tag)) 'true 'false)]
     [`* 'true]
-    #;[`(or ,sels ...) (ormap (curryr selector-matches elt) sels)]
-    #;[`(desc ,sel*) (selector-matches sel* elt)]
-    #;[`(desc ,ansc ... ,sel*)
-     (and (selector-matches sel* elt)
-          (ormap (curry selector-matches `(desc ,@ansc)) (element-anscestors elt)))]))
+    [`(or ,sels ...) `(or ,@(map (curryr selector-matches? elt) sels))]
+    [`(desc ,sel*) (selector-matches? sel* elt)]
+    [`(desc ,ansc ... ,sel*)
+     `(and ,(selector-matches? sel* elt)
+           (or ,@(map (curry selector-matches? `(desc ,@ansc)) (element-anscestors elt))))]))

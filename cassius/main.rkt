@@ -174,7 +174,8 @@
             (emit `(declare-const ,name Rule))
             (emit `(assert (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)))
 
-            (emit `(assert (= (selector ,name) ,(selector->z3 (selector name rule)))))
+            (define sel (selector->z3 (selector name rule)))
+            (when sel (emit `(assert (= (selector ,name) ,sel))))
 
             (match rule
               ['? (void)]
@@ -308,7 +309,7 @@
               ['? (void)]
               [`((tag ,tag) ,_ ...) (save-tag (sformat "tag/~a" (slower tag)))]
               [`((id ,id) ,_ ...) (save-id (sformat "id/~a" (slower id)))]
-              [`(* ,_ ...) (void)]))))
+              [_ (void)]))))
 
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)

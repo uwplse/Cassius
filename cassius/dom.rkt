@@ -4,7 +4,7 @@
 
 (provide (struct-out dom) (struct-out rendering-context)
          (struct-out element) parse-tree in-tree element-get
-         element-next element-prev element-fchild element-lchild
+         element-next element-prev element-fchild element-lchild element-anscestors
          dom-root elt-from-name)
 
 (struct dom (name context tree))
@@ -44,6 +44,9 @@
 
 (define (element-lchild elt)
   (if (null? (element-children elt)) #f (last (element-children elt))))
+
+(define (element-anscestors elt)
+  (if (element-parent elt) (cons (element-parent elt) (element-anscestors (element-parent elt))) '()))
 
 (define (in-tree elt)
   (apply sequence-append (in-value elt) (map in-tree (element-children elt))))

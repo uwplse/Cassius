@@ -379,7 +379,16 @@ function get_boxes(features) {
 
 function dump_selector(sel) {
     var match;
-    if (match = sel.match(/^[\w-]*#([\w-]+)$/)) {
+    sel = sel.trim();
+    if (sel.indexOf(",") !== -1) {
+        var sub = sel.split(",").map(dump_selector);
+        if (sub.indexOf(false) !== -1) return false;
+        return "(or " + sub.join(" ") + ")";
+    } else if (sel.indexOf(" ") !== -1) {
+        var sub = sel.split(/\s+/).map(dump_selector);
+        if (sub.indexOf(false) !== -1) return false;
+        return "(desc " + sub.join(" ") + ")";
+    } else if (match = sel.match(/^[\w-]*#([\w-]+)$/)) {
         return "(id " + match[1] + ")";
     } else if (match = sel.match(/^([\w-]+)$/)) {
         return "(tag " + match[1] + ")";
