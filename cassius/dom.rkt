@@ -3,25 +3,52 @@
 (require "common.rkt")
 
 (provide (struct-out dom) (struct-out rendering-context)
-         in-tree-subtrees in-tree-values
-         dom-get dom-type dom-root elt-name elt-from-name)
+         (struct-out element) parse-tree in-tree element-get
+         element-next element-prev element-fchild element-lchild
+         dom-root elt-from-name)
 
-(struct dom (name stylesheet context tree))
+(struct dom (name context tree))
 (struct rendering-context (width browser))
+(struct element (type name attrs parent children)
+        #:mutable
+        #:methods gen:custom-write
+        [(define (write-proc elt port mode)
+           (fprintf port "[~a ~a]"
+                    (element-type elt)
+                    (string-join (map ~a (element-attrs elt)) " ")))])
 
-(define (in-tree-subtrees tree)
-  (apply sequence-append
-         (in-parallel (in-value (car tree)) (in-value (cdr tree)))
-         (map in-tree-subtrees (cdr tree))))
+(define (parse-tree tree)
+  (let loop ([tree tree] [parent #f])
+    (match-define `([,type ,attrs ...] ,children ...) tree)
+    (define elt (element type (void) attrs parent (void)))
+    (set-element-name! elt (elt-name elt))
+    (define chld (map (curryr loop elt) children))
+    (set-element-children! elt chld)
+    elt))
 
-(define (in-tree-values tree)
-  (apply sequence-append
-         (in-value (car tree))
-         (map in-tree-values (cdr tree))))
+(define (element-get elt name #:default [default #f])
+  (for/first ([(k v) (in-groups 2 (element-attrs elt))] #:when (equal? k name)) v))
 
-(define (dom-type dom) (dom-name dom))
+(define (element-prev elt)
+  (define sibs (if (element-parent elt) (element-children (element-parent elt)) '()))
+  (for/first ([prev (sequence-cons #f sibs)] [elt* sibs] #:when (equal? elt elt*)) prev))
+
+(define (element-next elt)
+  (define sibs (if (element-parent elt) (element-children (element-parent elt)) '()))
+  (for/first ([next (sequence-tail (sequence-append sibs (in-value #f)) 1)]
+              [elt* sibs] #:when (equal? elt elt*))
+    next))
+
+(define (element-fchild elt)
+  (if (null? (element-children elt)) #f (first (element-children elt))))
+
+(define (element-lchild elt)
+  (if (null? (element-children elt)) #f (last (element-children elt))))
+
+(define (in-tree elt)
+  (apply sequence-append (in-value elt) (map in-tree (element-children elt))))
+
 (define (dom-root dom) (sformat "~a-root" (dom-name dom)))
-(define (dom-get dom elt) `(get/elt ,(elt-name elt)))
 
 (define elt-names (make-hasheq))
 (define (elt-name def)

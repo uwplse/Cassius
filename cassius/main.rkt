@@ -14,14 +14,6 @@
 
 (define (in-empty) (in-list empty))
 
-(define (in-groups n s)
-  (if (null? s)
-      (in-empty)
-      (let-values ([(hd tail) (split-at s n)])
-        (in-sequences
-         (apply in-parallel (map in-value hd))
-         (in-groups n tail)))))
-
 (define (r2 x) (~r x #:precision 2))
 
 (define boxes-to-print (make-hash))
@@ -91,32 +83,29 @@
            (printf "  ~a: ~a;\n" prop (apply print-type value)))
          (printf "}"))))])
 
-(define (tree-constraints dom emit elt children)
-  (define elt-get (curry dom-get dom))
+(define (tree-constraints dom emit elt)
   (define root (dom-root dom))
 
-  (define (get-child children accessor)
-    (if (null? children) 'nil-elt (elt-name (car (accessor children)))))
+  (define fields
+    `((previous-name . ,element-prev)
+      (next-name . ,element-next)
+      (first-child-name . ,element-fchild)
+      (last-child-name . ,element-lchild)))
 
-  ; Parent element
-  (for ([child (sequence-map car children)])
-    (emit `(assert (= (parent-name ,(elt-get child)) ,(elt-name elt)))))
-  ; Previous element
-  (for ([child (sequence-map car children)]
-        [prev (sequence-append (in-value 'nil-elt) (sequence-map (compose elt-name car) children))]
-        [next (sequence-tail (sequence-append (sequence-map (compose elt-name car) children) (in-value 'nil-elt)) 1)])
-    (emit `(assert (= (previous-name ,(elt-get child)) ,prev)))
-    (emit `(assert (= (next-name ,(elt-get child)) ,next))))
+  ;; TODO: This is a hack--the root element isn't actually part of the tree.
+  ;; We should eliminate the root element, and things will be better.
+  (when (element-parent elt)
+    (set! fields (cons `(parent-name . ,element-parent) fields)))
 
-  ; First/last child
-  (emit `(assert (= (first-child-name ,(elt-get elt)) ,(get-child children first))))
-  (emit `(assert (= (last-child-name ,(elt-get elt)) ,(get-child children last)))))
+  (for ([(field fn) (in-pairs fields)])
+    (emit `(assert (= (,field (get/elt ,(element-name elt)))
+                      ,(let ([elt* (fn elt)]) (if elt* (element-name elt*) 'nil-elt)))))))
 
-(define ((style-constraints rules) dom emit elt children)
-  (define e (dom-get dom elt))
+(define ((style-constraints rules) dom emit elt)
+  (define e `(get/elt ,(element-name elt)))
   (define re `(rules ,e))
 
-  (when (member (car elt) '(INLINE BLOCK))
+  (when (member (element-type elt) '(INLINE BLOCK))
     ; Score of computed rule is >= any applicable stylesheet rule
     (for* ([type css-properties] [property (cdr type)]
            [rule (rules)])
@@ -142,7 +131,7 @@
 (define (dom-define-get/elt doms emit)
   (define dom-names
     (for/list ([dom doms])
-      (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt)))))
+      (cons (dom-root dom) (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt)))))
 
   ; The type of element names
   (for ([dom doms] [names dom-names] #:when #t [name names])
@@ -162,7 +151,7 @@
 (define (dom-define-get/box doms emit)
   (define dom-names
     (for/list ([dom doms])
-      (cons (dom-root dom) (for/list ([elt (in-tree-values (dom-tree dom))]) (elt-name elt)))))
+      (cons (dom-root dom) (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt)))))
 
   (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-flow-box" name) Box))
@@ -190,10 +179,10 @@
   (emit `(assert (= (float ,elt) float/none)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
-  (emit `(assert (= (parent-name (get/elt ,(elt-name (car (dom-tree dom))))) ,(dom-root dom))))
-  (emit `(assert (= (previous-name (get/elt ,(elt-name (car (dom-tree dom))))) nil-elt)))
-  (emit `(assert (= (next-name (get/elt ,(elt-name (car (dom-tree dom))))) nil-elt)))
-  (emit `(assert (= (first-child-name ,elt) ,(elt-name (car (dom-tree dom))))))
+  (emit `(assert (= (parent-name (get/elt ,(element-name (dom-tree dom)))) ,(dom-root dom))))
+  (emit `(assert (= (previous-name (get/elt ,(element-name (dom-tree dom)))) nil-elt)))
+  (emit `(assert (= (next-name (get/elt ,(element-name (dom-tree dom)))) nil-elt)))
+  (emit `(assert (= (first-child-name ,elt) ,(element-name (dom-tree dom)))))
   (emit `(assert (= (parent-name ,elt) nil-elt)))
   (emit `(assert (= (previous-name ,elt) nil-elt)))
   (emit `(assert (= (next-name ,elt) nil-elt)))
@@ -252,67 +241,60 @@
                                  (list (sformat "rule.~a?" subprop) name)))
                         :weight 3))))))
 
-(define (user-constraints dom emit elt children)
-  (define name (elt-name elt))
-  (define cmds (cdr elt))
-
-  (let interpret ([cmds cmds])
-    (match cmds
-      [(list ':print rest ...)
-       (hash-set! boxes-to-print (sformat "~a-flow-box" name) 'Box)
-       (interpret rest)]
-      [(list ':style rest ...)
+(define (user-constraints dom emit elt)
+  (define name (element-name elt))
+  (for ([(cmd arg) (in-groups 2 (element-attrs elt))])
+    (match cmd
+      [':print
+       (hash-set! boxes-to-print (sformat "~a-flow-box" name) 'Box)]
+      [':style
        (hash-set! boxes-to-print (sformat "~a.style" name) 'Style)
        (emit `(declare-const ,(sformat "~a.style" name) Style))
-       (emit `(assert (= ,(sformat "~a.style" name) (rules ,(dom-get dom elt)))))
-       (interpret rest)]
-      [(list (and (or ':x ':y ':w ':h ':ml ':mr ':mt ':mb) field) value rest ...)
+       (emit `(assert (= ,(sformat "~a.style" name) (rules (get/elt ,(element-name elt))))))]
+      [(or ':x ':y ':w ':h ':ml ':mr ':mt ':mb)
        (define mapping
          '((:x x) (:y y) (:h box-height) (:w box-width)
            (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
-       (define fun (cadr (assoc field mapping)))
-       (when (and (or true (memq (car elt) '(TEXT MAGIC)))
-                  ;; HTML elements have weird heights
-                  (not (and (eq? field ':h) (member ':tag elt) (eq? (cadr (member ':tag elt)) 'html))))
-         (emit `(assert (! (= (,fun (get/box (flow-box ,(dom-get dom elt)))) ,value) :named ,(sformat "~a-~a" name fun)))))
-       (interpret rest)]
-      [(list ':id id rest ...) (interpret rest)]
-      [(list ':tag tag rest ...) (interpret rest)]
-      [(list ':text txt rest ...) (interpret rest)]
-      [(list) (void)])))
+       (define fun (cadr (assoc cmd mapping)))
+       (when ;; HTML elements have weird heights
+           (not (and (equal? cmd ':h) (equal? (element-get elt ':tag) 'html)))
+         (emit `(assert (! (= (,fun (get/box (flow-box (get/elt ,name)))) ,arg) :named ,(sformat "~a-~a" name fun)))))]
+      [':id (void)]
+      [':tag (void)]
+      [':text (void)])))
 
-(define (element-constraints dom emit elt children)
-  (emit `(assert (an-element ,(dom-get dom elt)))))
+(define (element-constraints dom emit elt)
+  (emit `(assert (an-element (get/elt ,(element-name elt))))))
 
-(define (box-link-constraints dom emit elt children)
+(define (box-link-constraints dom emit elt)
   (define cns
-    (match (car elt)
+    (match (element-type elt)
       ['BLOCK 'link-block-box]
       ['ANON 'link-block-box]
       ['MAGIC 'link-block-box]
       ['LINE 'link-line-box]
       ['INLINE 'link-inline-box]
       ['TEXT 'link-text-box]))
-  (emit `(assert (,cns (get/box (flow-box ,(dom-get dom elt)))))))
+  (emit `(assert (,cns (get/box (flow-box (get/elt ,(element-name elt))))))))
 
-(define (box-constraints dom emit elt children)
+(define (box-constraints dom emit elt)
   (define cns
-    (match (car elt)
+    (match (element-type elt)
       ['BLOCK 'a-block-box]
       ['ANON 'a-block-box]
       ['MAGIC 'a-block-box]
       ['LINE 'a-line-box]
       ['INLINE 'an-inline-box]
       ['TEXT 'a-text-box]))
-  (emit `(assert (,cns ,(sformat "~a-flow-box" (elt-name elt))))))
+  (emit `(assert (,cns ,(sformat "~a-flow-box" (element-name elt))))))
 
-(define (info-constraints dom emit elt children)
+(define (info-constraints dom emit elt)
   (define tagname
-    (if (memq ':tag elt) (sformat "tag/~a" (slower (cadr (memq ':tag elt)))) 'no-tag))
+    (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag))
   (define idname
-    (if (memq ':id elt) (sformat "id/~a" (slower (cadr (memq ':id elt)))) 'no-id))
+    (if (element-get elt ':id) (sformat "id/~a" (slower (element-get elt ':id))) 'no-id))
   (define display
-    (match (car elt)
+    (match (element-type elt)
       ['BLOCK 'display/block]
       ['ANON 'display/block]
       ['MAGIC 'display/block]
@@ -320,9 +302,9 @@
       ['TEXT 'display/inline]
       ['LINE 'display/block]))
 
-  (emit `(assert (= (tagname ,(dom-get dom elt)) ,tagname)))
-  (emit `(assert (= (id ,(dom-get dom elt)) ,idname)))
-  (emit `(assert (= (display ,(dom-get dom elt)) ,display))))
+  (emit `(assert (= (tagname (get/elt ,(element-name elt))) ,tagname)))
+  (emit `(assert (= (id (get/elt ,(element-name elt))) ,idname)))
+  (emit `(assert (= (display (get/elt ,(element-name elt))) ,display))))
 
 (define (getter-definitions doms)
   (reap [sow]
@@ -334,15 +316,15 @@
         (for ([dom doms]) (dom-root-constraints dom sow))
         (for ([cns constraints])
           (sow `(echo ,(format "Generating ~a" (object-name cns))))
-          (for* ([dom doms] [(elt children) (in-tree-subtrees (dom-tree dom))])
-            (cns dom sow elt children)))))
+          (for* ([dom doms] [elt (in-tree (dom-tree dom))])
+            (cns dom sow elt)))))
 
 (define (all-constraints sheet doms)
   (define-values (tags ids)
     (reap [save-tag save-id]
-          (for* ([dom doms] [elt (in-tree-values (dom-tree dom))])
-            (when (memq ':id elt) (save-id (sformat "id/~a" (slower (cadr (memq ':id elt))))))
-            (when (memq ':tag elt) (save-tag (sformat "tag/~a" (slower (cadr (memq ':tag elt)))))))
+          (for* ([dom doms] [elt (in-tree (dom-tree dom))])
+            (when (element-get elt ':id) (save-id (sformat "id/~a" (slower (element-get elt ':id)))))
+            (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag))))))
           (for ([rule sheet])
             (match rule
               ['? (void)]
@@ -360,10 +342,11 @@
                 [`(sel/tag ,tag)
                  (when (memq (slower tag) tags) (save (cons sel props)))])))
 
-  (define elt-names
+  (define element-names
     (append
-     (for*/list ([dom doms] [elt (in-tree-values (dom-tree dom))]) (elt-name elt))
+     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (element-name elt))
      (for/list ([dom doms]) (dom-root dom))))
+  (define box-names (map (curry sformat "~a-flow") element-names))
 
   (define rules '())
   (define (save-rule x) (set! rules (cons x rules)))
@@ -380,10 +363,8 @@
      ((Id no-id ,@(remove-duplicates ids))
       (TagNames no-tag ,@(remove-duplicates tags))
       (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
-      (ElementName ,@elt-names nil-elt)
-      (BoxName
-       ,@(map (curry sformat "~a-flow") elt-names)
-       nil-box)))
+      (ElementName ,@element-names nil-elt)
+      (BoxName ,@box-names nil-box)))
     ,@css-declarations
     ,@tree-types
     ,@(getter-definitions doms)

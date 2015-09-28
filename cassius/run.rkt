@@ -29,9 +29,9 @@
       [`(define-stylesheet ,name ,rules ...)
        (hash-set! sheets name rules)]
       [`(define-document (,name #:width ,width #:browser ,browser) ,tree)
-       (hash-set! docs name (dom name #f (rendering-context width browser) tree))]
+       (hash-set! docs name (dom name (rendering-context width browser) (parse-tree tree)))]
       [`(define-document (,name #:width ,width) ,tree)
-       (hash-set! docs name (dom name #f (rendering-context width #f) tree))]
+       (hash-set! docs name (dom name (rendering-context width #f) (parse-tree tree)))]
       [`(define-header ,name ,header)
        (hash-set! headers name header)]
       [`(define-problem ,name #:header ,header #:sheet ,sheet #:documents ,documents ...)

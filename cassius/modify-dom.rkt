@@ -4,15 +4,14 @@
 
 (provide dom-strip-positions dom-print-all)
 
-(define ((dom-transform l) d)
-  (match-define (dom name stylesheet ctx tree) d)
-  (define (strip tree)
-    (cons (cons (caar tree) (l (caar tree) (cdar tree))) (map strip (cdr tree))))
-  (dom name stylesheet ctx (strip tree)))
+(define ((dom-transform! l) d)
+  (match-define (dom name ctx tree) d)
+  (for ([elt (in-tree tree)])
+    (set-element-attrs! elt (l (element-type elt) (element-attrs elt)))))
 
 (define-syntax-rule (define-dom-transformer (name head cmds) [(pat1 pat2) body ...] ...)
   (define name
-    (dom-transform (λ (head cmds) (match* (head cmds) [(pat1 pat2) body ...] ...)))))
+    (dom-transform! (λ (head cmds) (match* (head cmds) [(pat1 pat2) body ...] ...)))))
 
 (define-syntax-rule (for/cmds cmds [(pat ...) body ...] ...)
   (reap [sow]

@@ -3,11 +3,13 @@
 (provide
  reap for/reap for*/reap
  sformat slower
- flags all-flags
- tree-size sdiff)
+ flags all-flags supported-features
+ tree-size sdiff in-groups sequence-cons)
 
 (define flags (make-parameter '(z3o)))
 (define all-flags '(opt float z3o details))
+
+(define supported-features '(float))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
@@ -45,3 +47,14 @@
         (map (curryr sdiff sow) a b))]
    [else
     (sow a b)]))
+
+(define (in-groups n s)
+  (if (null? s)
+      (in-list empty)
+      (let-values ([(hd tail) (split-at s n)])
+        (in-sequences
+         (apply in-parallel (map in-value hd))
+         (in-groups n tail)))))
+
+(define (sequence-cons v s)
+  (sequence-append (in-value v) s))
