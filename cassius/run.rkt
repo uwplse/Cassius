@@ -10,7 +10,7 @@
 
 (provide parse-file run-file (struct-out problem))
 
-(struct problem (desc url header sheet documents))
+(struct problem (desc url header sheet documents features))
 
 (define (parse-file port)
   (define problems (make-hash))
@@ -37,15 +37,15 @@
       [`(define-problem ,name #:header ,header #:sheet ,sheet #:documents ,documents ...)
        (hash-set! problems name
                   (problem #f #f (hash-ref headers header) (hash-ref sheets sheet)
-                           (map parse-document documents)))]
-      [`(define-problem ,name ,desc #:url ,url #:header ,header #:sheet ,sheet #:documents ,documents ...)
+                           (map parse-document documents) '()))]
+      [`(define-problem ,name ,desc #:url ,url #:header ,header #:sheet ,sheet #:documents ,documents ... #:features ,feats)
        (hash-set! problems name
                   (problem desc url (hash-ref headers header) (hash-ref sheets sheet)
-                           (map parse-document documents)))]))
+                           (map parse-document documents) feats))]))
   problems)
 
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
-  (match-define (problem desc url header sheet documents)
+  (match-define (problem desc url header sheet documents features)
     (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
   (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
