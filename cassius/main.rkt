@@ -88,15 +88,15 @@
   (define root (dom-root dom))
 
   (define fields
-    `((previous-name . ,element-prev)
+    `((parent-name . ,element-parent)
+      (previous-name . ,element-prev)
       (next-name . ,element-next)
       (first-child-name . ,element-fchild)
       (last-child-name . ,element-lchild)))
 
   ;; TODO: This is a hack--the root element isn't actually part of the tree.
   ;; We should eliminate the root element, and things will be better.
-  (when (element-parent elt)
-    (set! fields (cons `(parent-name . ,element-parent) fields)))
+  (when (not (element-parent elt)) (set! fields (cdr fields)))
 
   (for ([(field fn) (in-pairs fields)])
     (emit `(assert (= (,field (get/elt ,(element-name elt)))
