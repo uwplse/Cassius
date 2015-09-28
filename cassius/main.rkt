@@ -1,12 +1,13 @@
 #lang racket
+(require "common.rkt")
 (require "dom.rkt")
 (require "smt.rkt")
 (require "css-rules.rkt")
-(require "spec/tree.rkt")
-(require "spec/layout.rkt")
-(require "common.rkt")
 (require "css-properties.rkt")
 (require "browser-style.rkt")
+(require "spec/tree.rkt")
+(require "spec/layout.rkt")
+(require "spec/cascade.rkt")
 (require unstable/sequence)
 (require srfi/1)
 
@@ -102,31 +103,8 @@
                       ,(let ([elt* (fn elt)]) (if elt* (element-name elt*) 'nil-elt)))))))
 
 (define ((style-constraints rules) dom emit elt)
-  (define e `(get/elt ,(element-name elt)))
-  (define re `(rules ,e))
-
   (when (member (element-type elt) '(INLINE BLOCK))
-    ; Score of computed rule is >= any applicable stylesheet rule
-    (for* ([type css-properties] [property (cdr type)]
-           [rule (rules)])
-      (emit
-       `(assert
-         (or (not (,(sformat "rule.~a?" property) ,rule))
-             (=> (selector-applies? (selector ,rule) ,e)
-                 (score-ge (,(sformat "style.~a$" property) ,re) (score ,rule)))))))
-
-    ; Score&value of computed rule is = some applicable stylesheet rule
-    (for* ([type css-properties] [property (cdr type)])
-      (emit `(assert (or
-                      (and (is-useDefault (,(sformat "style.~a$" property) ,re))
-                           (= (,(sformat "style.~a" property) ,re) ,(hash-ref css-defaults property)))
-                      ,@(for/list ([rule (rules)])
-                          `(and
-                            (,(sformat "rule.~a?" property) ,rule)
-                            (selector-applies? (selector ,rule) ,e)
-                            (= (,(sformat "style.~a$" property) ,re) (score ,rule))
-                            (= (,(sformat "style.~a" property) ,re)
-                               (,(sformat "rule.~a" property) ,rule))))))))))
+    (for-each emit (cascade-rules (rules) elt))))
 
 (define (dom-define-get/elt doms emit)
   (define dom-names
@@ -191,15 +169,16 @@
 (define (stylesheet-constraints sname sheet save-rule #:browser [browser? #f])
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
             (define name (sformat "rule-~a-~a" sname i))
-            (save-rule name)
+            (save-rule name rule)
 
             (emit `(declare-const ,name Rule))
             (emit `(assert (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)))
 
+            (emit `(assert (= (selector ,name) ,(selector->z3 (selector name rule)))))
+
             (match rule
               ['? (void)]
-              [(list sel pairs ... '?)
-               (emit `(assert (= (selector ,name) ,sel)))
+              [(list _ pairs ... '?)
                (for ([(a-prop type default) (in-css-properties)])
                  (match (assoc a-prop pairs)
                    [(list _ '?)
@@ -211,8 +190,7 @@
                     (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
                                       :named ,(sformat "rule-~a-~a-~a-val" name i a-prop))))]
                    [#f (void)]))]
-              [(list sel pairs ...)
-               (emit `(assert (= (selector ,name) ,sel)))
+              [(list _ pairs ...)
                (for ([(a-prop type default) (in-css-properties)])
                  (match (assoc a-prop pairs)
                    [(list _ '?)
@@ -328,8 +306,9 @@
           (for ([rule sheet])
             (match rule
               ['? (void)]
-              [`((sel/tag ,tag) ,_ ...) (save-tag (slower tag))]
-              [`((sel/id ,id) ,_ ...) (save-id (slower id))]))))
+              [`((tag ,tag) ,_ ...) (save-tag (sformat "tag/~a" (slower tag)))]
+              [`((id ,id) ,_ ...) (save-id (sformat "id/~a" (slower id)))]
+              [`(* ,_ ...) (void)]))))
 
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)
@@ -338,9 +317,9 @@
   (define browser-style
     (for/reap [save] ([(sel props) (in-pairs (get-sheet (car browsers)))])
               (match sel
-                ['sel/any (save (cons sel props))]
-                [`(sel/tag ,tag)
-                 (when (memq (slower tag) tags) (save (cons sel props)))])))
+                ['any (save (cons sel props))]
+                [`(tag ,tag)
+                 (when (memq (sformat "tag/~a" (slower tag)) tags) (save (cons sel props)))])))
 
   (define element-names
     (append
@@ -349,7 +328,7 @@
   (define box-names (map (curry sformat "~a-flow") element-names))
 
   (define rules '())
-  (define (save-rule x) (set! rules (cons x rules)))
+  (define (save-rule x rule) (set! rules (cons (cons x rule) rules)))
 
   (define constraints
     (list tree-constraints info-constraints user-constraints element-constraints

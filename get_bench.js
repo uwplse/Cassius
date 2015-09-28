@@ -380,11 +380,11 @@ function get_boxes(features) {
 function dump_selector(sel) {
     var match;
     if (match = sel.match(/^[\w-]*#([\w-]+)$/)) {
-        return "(sel/id id/" + match[1] + ")";
+        return "(id " + match[1] + ")";
     } else if (match = sel.match(/^([\w-]+)$/)) {
-        return "(sel/tag tag/" + match[1] + ")";
+        return "(tag " + match[1] + ")";
     } else if (match = sel.match(/^\*$/)) {
-        return "sel/any";
+        return "*";
     } else {
         console.warn("Invalid selector `" + sel + "`");
         return false;
