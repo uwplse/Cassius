@@ -60,6 +60,7 @@ function f2r(x) {
 }
 
 function val2px(val, features) {
+    var match;
     if (val == "0") {
         return 0;
     } else if (val.match(/^0[^0-9]/)) {
@@ -76,8 +77,8 @@ function val2px(val, features) {
         return +val.substr(0, val.length - 2)*96/2.54;
     } else if (val.endsWith("in")) {
         return +val.substr(0, val.length - 2)*96;
-    } else if (match = val.endsWith(/^(\d+)(\D+)$/)) {
-        features[match[1]] = true;
+    } else if (match = val.match(/^(\d+)(\D+)$/)) {
+        features[match[2]] = true;
         throw "Error, " + val + " is not a known unit";
     } else {
         throw "Error, " + val + " is not a pixel quantity."
@@ -454,6 +455,7 @@ function page2cassius(name) {
     for (var sid in document.styleSheets) {
         var ss = document.styleSheets[sid];
         for (var rid in ss.cssRules) {
+            if (!ss.cssRules.hasOwnProperty(rid)) continue;
             var r = ss.cssRules[rid];
             if (r.type !== CSSRule.STYLE_RULE) {
                 console.warn("Skipping non-style rule", r);
