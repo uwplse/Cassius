@@ -11,13 +11,17 @@
 (require unstable/sequence)
 (require srfi/1)
 
-(provide all-constraints unsat-constraint-info print-rules)
+(provide all-constraints unsat-constraint-info print-rules reset!)
 
 (define (in-empty) (in-list empty))
 
 (define (r2 x) (~r x #:precision 2))
 
 (define boxes-to-print (make-hash))
+
+(define (reset!)
+  (set! boxes-to-print (make-hash))
+  (reset-elt-names!))
 
 (define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
   (for ([(name type) (in-pairs (sort (hash->list boxes-to-print) symbol<? #:key car))])

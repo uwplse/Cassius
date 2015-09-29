@@ -5,7 +5,7 @@
 (provide (struct-out dom) (struct-out rendering-context)
          (struct-out element) parse-tree in-tree element-get
          element-next element-prev element-fchild element-lchild element-anscestors
-         dom-root elt-from-name)
+         dom-root elt-from-name reset-elt-names!)
 
 (struct dom (name context tree))
 (struct rendering-context (width browser))
@@ -54,6 +54,7 @@
 (define (dom-root dom) (sformat "~a-root" (dom-name dom)))
 
 (define elt-names (make-hasheq))
+(define (reset-elt-names!) (set! elt-names (make-hasheq)))
 (define (elt-name def)
   (hash-ref! elt-names def (lambda () (sformat "elt$~a" (hash-count elt-names)))))
 
