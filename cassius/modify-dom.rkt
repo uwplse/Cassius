@@ -7,7 +7,8 @@
 (define ((dom-transform! l) d)
   (match-define (dom name ctx tree) d)
   (for ([elt (in-tree tree)])
-    (set-element-attrs! elt (l (element-type elt) (element-attrs elt)))))
+    (set-element-attrs! elt (l (element-type elt) (element-attrs elt))))
+  d)
 
 (define-syntax-rule (define-dom-transformer (name head cmds) [(pat1 pat2) body ...] ...)
   (define name
@@ -32,5 +33,5 @@
    cmds])
 
 (define-dom-transformer (dom-print-all head cmds)
-  [(_ (? list?)) (append cmds '(:print))])
+  [(_ (? list?)) (append cmds '(:print #t))])
 
