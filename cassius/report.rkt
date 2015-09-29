@@ -8,7 +8,7 @@
 (require "common.rkt")
 (require "run.rkt")
 
-(define (run-files files #:debug [debug '()] #:output [outname #f])
+(define (run-files files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f])
   (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
   (parameterize ([current-output-port out])
     (printf "<!doctype html>\n<html lang='en_US'>\n<meta charset='utf8' />\n")
@@ -20,7 +20,8 @@
         (printf "<h2>~a</h2>\n" fname)
         (printf "<table>\n")
         (define probs (call-with-input-file fname parse-file))
-        (for ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))])
+        (for ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))]
+              #:when (or (not fast?) (subset? (problem-features prob) supported-features)))
           (eprintf "~a\t~a\t" fname pname)
           (define-values (ubase uname udir?) (split-path (problem-url prob)))
           (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='out'><pre>" pname uname (problem-desc prob))
@@ -63,6 +64,7 @@
 (module+ main
   (define debug '())
   (define out-file #f)
+  (define fast #f)
 
   (command-line
    #:program "cassius"
@@ -79,5 +81,7 @@
    #:once-each
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
+   [("--fast") "Skip tests with unsupported features"
+    (set! fast #t)]
    #:args fnames
-   (run-files fnames #:debug debug #:output out-file)))
+   (run-files fnames #:debug debug #:output out-file #:fast fast)))
