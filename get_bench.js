@@ -414,7 +414,7 @@ function dump_rule(sel, style, features) {
             var tname = tname.split("-", 2)[0];
         }
         try {
-            val = "(" + tname + "/px " + val2px(val, features) + ")";
+            val = "(" + tname + "/px " + f2r(val2px(val, features)) + ")";
         } catch (e) {
             val = tname + "/" + val;
         }
