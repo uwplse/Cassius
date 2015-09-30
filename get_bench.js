@@ -236,7 +236,7 @@ function infer_lines(box, parent) {
             }
             for (var i = 0; i < stack.length; i++) {
                 if (!sstack[i]) {
-                    var sselt = new Box(stack[i].type, stack[i].props);
+                    var sselt = new Box(stack[i].type, stack[i].node, stack[i].props);
                     (i == 0 ? l : sstack[i - 1]).children.push(sselt);
                     sstack.push(sselt);
                 }
