@@ -68,9 +68,9 @@ function val2px(val, features) {
     } else if (val.endsWith("px")) {
         return +val.substr(0, val.length - 2);
     } else if (val.endsWith("pt")) {
-        return +val.substr(0, val.length - 2)*72/96;
+        return +val.substr(0, val.length - 2)*96/72;
     } else if (val.endsWith("pc")) {
-        return +val.substr(0, val.length - 2)*72/96/12;
+        return +val.substr(0, val.length - 2)*12*96/72;
     } else if (val.endsWith("mm")) {
         return +val.substr(0, val.length - 2)*96/25.4;
     } else if (val.endsWith("cm")) {
