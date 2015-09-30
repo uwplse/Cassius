@@ -376,11 +376,40 @@
            (not (horizontally-adjacent flt b)))))
 
   (define-fun an-inline-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)])
+    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
+               [r (rules (get/elt (element b)))])
        (= (type b) box/inline)
 
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-           `(= (,field b) 0.0))
+       ;; The ‘width’ and ‘height’ properties do not apply. For each
+       ;; of ‘left’, ‘right’, ‘top’, ‘bottom’, ‘margin-left’,
+       ;; ‘margin-right’, ‘margin-top’ and ‘margin-bottom’, the used
+       ;; value is equal to the computed value, except that a computed
+       ;; value of ‘auto’ becomes a used value of ‘0’.
+       ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
+                            (padding-top padding pt) (padding-bottom padding pb)
+                            (border-top-width border bt) (border-right-width border br)
+                            (border-bottom-width border bb) (border-left-width border bl)
+                            (margin-top margin mt) (margin-bottom margin mb)
+                            (margin-right margin mr) (margin-left margin ml))])
+           (match-define (list prop type field) item)
+           `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+                (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
+       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+           `(and
+             (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) 0))
+             (=> (is-margin/50% (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) (/ (w p) 2)))
+             (=> (is-padding/1% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 100)))
+             (=> (is-padding/2% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 50)))
+             (=> (is-padding/50% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (/ (w p) 2)))))
+       (= (mtp b) (max (mt b) 0.0))
+       (= (mtn b) (min (mt b) 0.0))
+       (= (mbp b) (max (mb b) 0.0))
+       (= (mbn b) (min (mb b) 0.0))
 
        (let ([l* (real-lbox b)] [v* (real-vbox b)])
          (= (stfwidth b)
