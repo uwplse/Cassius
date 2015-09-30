@@ -3,7 +3,7 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; docum
 */
 
 Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align".split(" ");
-BadProps = "position clear float".split(" ");
+BadProps = "position clear float direction".split(" ");
 
 Box = function(type, node, props) {
     this.children = [];
