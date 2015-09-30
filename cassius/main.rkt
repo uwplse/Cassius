@@ -47,6 +47,7 @@
   [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "2%"))) "2%"]
   [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "50%"))) "50%"]
   [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "100%"))) "100%"]
+  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "inherit"))) "inherit"]
   [('Float _) (last (string-split (~a value) "/"))]
   [('TextAlign _) (last (string-split (~a value) "/"))]
   [('Selector 'sel/all) "*"]

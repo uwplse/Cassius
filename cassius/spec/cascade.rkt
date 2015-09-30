@@ -6,6 +6,9 @@
 
 (provide cascade-rules selector->z3 selector)
 
+(define (type->prefix type)
+  (if (eq? (slower type) 'textalign) 'text-align (slower type)))
+
 (define (cascade-rules rules elt)
   (define re `(rules (get/elt ,(element-name elt))))
 
@@ -28,7 +31,11 @@
                      ,(selector-matches? (selector name rule) elt)
                      (= (,(sformat "style.~a$" property) ,re) (score ,name))
                      (= (,(sformat "style.~a" property) ,re)
-                        (,(sformat "rule.~a" property) ,name)))))))))
+                        (ite (,(sformat "is-~a/inherit" (type->prefix type))
+                              (,(sformat "rule.~a" property) ,name))
+                             (,(sformat "style.~a" property)
+                              (rules (parent (get/elt ,(element-name elt)))))
+                             (,(sformat "rule.~a" property) ,name))))))))))
 
 (define (selector name rule)
   (match rule
