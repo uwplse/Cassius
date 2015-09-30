@@ -63,7 +63,7 @@ function val2px(val, features) {
     var match;
     if (val == "0") {
         return 0;
-    } else if (val.match(/^0[^0-9]/)) {
+    } else if (val.match(/^0[^0-9.]/)) {
         return 0;
     } else if (val.endsWith("px")) {
         return +val.substr(0, val.length - 2);
