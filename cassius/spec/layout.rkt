@@ -143,7 +143,10 @@
            (=> (is-margin/px (style.margin-left r)) (= (ml b) (margin.px (style.margin-left r))))
            (=> (and (is-margin/px (style.margin-right r)) (is-margin/auto (style.margin-left r)))
                (= (mr b) (margin.px (style.margin-right r)))))])
-       (= (stfwidth b) (max (min (w lb) (stfwidth lb)) (stfwidth vb)))
+       (let ([l (real-lbox b)] [v (real-vbox b)])
+         (= (stfwidth b)
+            (max (ite (is-box l) (+ (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l)) 0)
+                 (ite (is-box v) (stfwidth v) 0.0))))
 
        ;; Width and horizontal margins out of the way, let's do height and vertical margins
        ;; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
@@ -237,8 +240,13 @@
             
 
        ;; TODO : We don't allow auto widths (CSS § 10.3.5) on floats, it's too hard to compute
-       (=> (is-width/auto (style.width r)) (= (w b) (stfwidth lb)))
-       (= (stfwidth b) (max (min (w lb) (stfwidth lb)) (stfwidth vb)))
+       ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
+         (=> (is-width/auto (style.width r))
+             (= (w b) (ite (is-box l) (+ (bl l) (pl l) (stfwidth l) (pr l) (br l)) 0.0)))
+         (= (stfwidth b)
+            (max
+             (ite (is-box l) (+ (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l)) 0.0)
+             (ite (is-box v) (stfwidth v) 0.0))))
 
        ;; CSS 2.1 § 10.6.7 : In certain cases, the height of an
        ;; element that establishes a block formatting context is computed as follows:
@@ -373,7 +381,11 @@
 
        ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
            `(= (,field b) 0.0))
-       (= (stfwidth b) (max (stfwidth l) (stfwidth v)))
+
+       (let ([l* (real-lbox b)] [v* (real-vbox b)])
+         (= (stfwidth b)
+            (max (ite (is-box l*) (+ (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*)) 0.0)
+                 (ite (is-box v*) (stfwidth v*) 0.0))))
 
        (= (left-outer (fbox b)) (left-content b))
        (= (right-outer (lbox b)) (right-content b))
@@ -389,7 +401,7 @@
        (is-float/none (float e))
 
        ;; Only true if there are no wrapping opportunities in the box
-       (= (stfwidth b) (max (w b) (stfwidth v)))
+       (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
 
        ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
            `(= (,field b) 0.0))
@@ -428,7 +440,12 @@
             (= (y b) (ite (is-no-box v) (top-content p) (bottom-border v))))
 
        (not (is-no-box f))
-       (= (stfwidth b) (min (w b) (max (stfwidth l) (stfwidth v))))
+       (let ([l* (real-lbox b)] [v* (real-vbox b)])
+         (= (stfwidth b)
+            (min (w b)
+                 (max
+                  (ite (is-box l*) (+ (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*)) 0.0)
+                  (ite (is-box v*) (stfwidth v*) 0.0)))))
 
        ,(smt-cond
          [(is-text-align/left (textalign e)) (= (left-border f) (left-content b))]

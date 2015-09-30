@@ -55,12 +55,13 @@
   [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,stfw ,pbname ,n ,v ,flt ,flt-up ,e))
    (with-output-to-string
      (lambda ()
-       (printf "~a ~a×~a at x ~a / y ~a\n" type (r2 (+ pl pr w)) (r2 (+ pt pb h)) (r2 x) (r2 y))
+       (printf "~a ~a×~a at x ~a / y ~a\n" type (r2 (+ bl br pl pr w)) (r2 (+ bt bb pt pb h)) (r2 x) (r2 y))
        (printf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
                 (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
                 (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
        (printf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-       (printf "padding: ~a ~a ~a ~a\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))))]
+       (printf "padding: ~a ~a ~a ~a\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))
+       (printf "stw ~a\n" stfw)))]
   [('Style (list 'style rest ...))
    (with-output-to-string
      (lambda ()
