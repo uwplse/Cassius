@@ -274,7 +274,7 @@ function make_boxes(elt, inflow, styles, features) {
             if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
             r = r[0];
             // Whitespace only line
-            if (r.width == 0 && r.height == 0) continue;
+            if (r.width == 0 || r.height == 0) continue;
             var box = Text(elt, {
                 x: r.x, y: r.y, w: r.width, h: r.height,
                 //text: '"' + ranges[i].toString().replace(/\s+/g, " ") + '"'
