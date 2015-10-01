@@ -145,8 +145,10 @@
                (= (mr b) (margin.px (style.margin-right r)))))])
        (let ([l (real-lbox b)] [v (real-vbox b)])
          (= (stfwidth b)
-            (max (ite (is-box l) (+ (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l)) 0)
-                 (ite (is-box v) (stfwidth v) 0.0))))
+            (ite (is-width/auto (style.width r))
+                 (max (ite (is-box l) (+ (ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (mr l)) 0)
+                      (ite (is-box v) (stfwidth v) 0.0))
+                 (w b))))
 
        ;; Width and horizontal margins out of the way, let's do height and vertical margins
        ;; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
@@ -239,14 +241,15 @@
        (=> (is-width/100% (style.width r)) (= (w b) (w p)))
             
 
-       ;; TODO : We don't allow auto widths (CSS § 10.3.5) on floats, it's too hard to compute
        ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
          (=> (is-width/auto (style.width r))
-             (= (w b) (ite (is-box l) (+ (bl l) (pl l) (stfwidth l) (pr l) (br l)) 0.0)))
+             (= (w b) (ite (is-box l) (+ (ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (mr l)) 0.0)))
          (= (stfwidth b)
-            (max
-             (ite (is-box l) (+ (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l)) 0.0)
-             (ite (is-box v) (stfwidth v) 0.0))))
+            (ite (is-width/auto (style.width r))
+                 (max
+                  (ite (is-box l) (+ (ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (mr l)) 0.0)
+                  (ite (is-box v) (stfwidth v) 0.0))
+                 (w b))))
 
        ;; CSS 2.1 § 10.6.7 : In certain cases, the height of an
        ;; element that establishes a block formatting context is computed as follows:
@@ -413,7 +416,7 @@
 
        (let ([l* (real-lbox b)] [v* (real-vbox b)])
          (= (stfwidth b)
-            (max (ite (is-box l*) (+ (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*)) 0.0)
+            (max (ite (is-box l*) (+ (ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (mr l*)) 0.0)
                  (ite (is-box v*) (stfwidth v*) 0.0))))
 
        (= (left-outer (fbox b)) (left-content b))
@@ -473,7 +476,7 @@
          (= (stfwidth b)
             (min (w b)
                  (max
-                  (ite (is-box l*) (+ (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*)) 0.0)
+                  (ite (is-box l*) (+ (ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (mr l*)) 0.0)
                   (ite (is-box v*) (stfwidth v*) 0.0)))))
 
        ,(smt-cond
