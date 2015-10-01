@@ -77,7 +77,7 @@ function val2px(val, features) {
         return +val.substr(0, val.length - 2)*96/2.54;
     } else if (val.endsWith("in")) {
         return +val.substr(0, val.length - 2)*96;
-    } else if (match = val.match(/^(\d+)(\D+)$/)) {
+    } else if (match = val.match(/^([\d.]+)([^\d.]+)$/)) {
         features[match[2]] = true;
         throw "Error, " + val + " is not a known unit";
     } else {
