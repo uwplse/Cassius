@@ -3,27 +3,26 @@
 
 (provide tree-types link-definitions)
 
-(define tree-types
-  `((declare-datatypes ()
-       ((Box no-box
-             (box (type BoxType)
-                  (x Real) (y Real) (w Real) (h Real)
-                  (mt Real) (mr Real) (mb Real) (ml Real)
-                  (mtp Real) (mtn Real) (mbp Real) (mbn Real)
-                  (pt Real) (pr Real) (pb Real) (pl Real)
-                  (bt Real) (br Real) (bb Real) (bl Real)
-                  (stfwidth Real)
-                  (pb-name BoxName)
-                  (n-name BoxName) (v-name BoxName) (flt-name BoxName) (flt-up-name BoxName)
-                  (element ElementName)))
-        (BoxType box/root box/text box/inline box/block box/line)
-        (Element no-elt
-             (elt (document Document) (tagname TagNames) (id Id) (rules Style)
-                  (display Display) (float Float) (textalign TextAlign)
-                  (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
-                  (first-child-name ElementName) (last-child-name ElementName)
-                  (flow-box BoxName)))))))
-
+(define-constraints tree-types
+  (declare-datatypes ()
+     ((Box no-box
+           (box (type BoxType)
+                (x Real) (y Real) (w Real) (h Real)
+                (mt Real) (mr Real) (mb Real) (ml Real)
+                (mtp Real) (mtn Real) (mbp Real) (mbn Real)
+                (pt Real) (pr Real) (pb Real) (pl Real)
+                (bt Real) (br Real) (bb Real) (bl Real)
+                (stfwidth Real)
+                (pb-name BoxName)
+                (n-name BoxName) (v-name BoxName) (flt-name BoxName) (flt-up-name BoxName)
+                (element ElementName)))
+      (BoxType box/root box/text box/inline box/block box/line)
+      (Element no-elt
+           (elt (document Document) (tagname TagNames) (id Id) (rules Style)
+                (display Display) (float Float) (textalign TextAlign)
+                (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
+                (first-child-name ElementName) (last-child-name ElementName)
+                (flow-box BoxName))))))
 
 (define-constraints link-definitions
   (define-fun previous ((elt Element)) Element (get/elt (previous-name elt)))
