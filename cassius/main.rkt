@@ -127,10 +127,7 @@
       `(ite (,(sformat "is-~a" name) x) ,(sformat "~a-elt" name) ,body)))
   (emit `(define-fun get/elt ((x ElementName)) Element ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (= (get/elt ,name) ,(sformat "~a-elt" name))))
-    (emit `(assert (is-elt (get/elt ,name)))))
-  ; Pointed map: nil goes to nil
-  (emit `(assert (= (get/elt nil-elt) no-elt))))
+    (emit `(assert (is-elt (get/elt ,name))))))
 
 (define (dom-define-get/box doms emit)
   (define dom-names
@@ -148,9 +145,7 @@
       `(ite (,(sformat "is-~a-flow" name) x) ,(sformat "~a-flow-box" name) ,body)))
   (emit `(define-fun get/box ((x BoxName)) Box ,body))
   (for* ([names dom-names] [name names])
-    (emit `(assert (= (get/box ,(sformat "~a-flow" name)) ,(sformat "~a-flow-box" name))))
     (emit `(assert (is-box ,(sformat "~a-flow-box" name)))))
-  (emit `(assert (= (get/box nil-box) no-box)))
   (emit `(assert (= (flow-box no-elt) nil-box))))
 
 (define (dom-root-constraints dom emit)
