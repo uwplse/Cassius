@@ -91,22 +91,18 @@
          (printf "}"))))])
 
 (define (tree-constraints dom emit elt)
-  (define root (dom-root dom))
-
-  (define fields
-    `((parent-name . ,element-parent)
-      (previous-name . ,element-prev)
-      (next-name . ,element-next)
-      (first-child-name . ,element-fchild)
-      (last-child-name . ,element-lchild)))
-
-  ;; TODO: This is a hack--the root element isn't actually part of the tree.
-  ;; We should eliminate the root element, and things will be better.
-  (when (not (element-parent elt)) (set! fields (cdr fields)))
-
-  (for ([(field fn) (in-pairs fields)])
-    (emit `(assert (= (,field (get/elt ,(element-name elt)))
-                      ,(let ([elt* (fn elt)]) (if elt* (element-name elt*) 'nil-elt)))))))
+  (define (either field default)
+    (let ([e (field elt)])
+      (if e (element-name e) default)))
+  (emit
+   `(assert
+     (link-element (get/elt ,(element-name elt))
+                   ,(dom-name dom)
+                   ,(either element-parent (dom-root dom)) ; TODO: Kill the root element
+                   ,(either element-prev 'nil-elt)
+                   ,(either element-next 'nil-elt)
+                   ,(either element-fchild 'nil-elt)
+                   ,(either element-lchild 'nil-elt)))))
 
 (define ((style-constraints rules) dom emit elt)
   (when (member (element-type elt) '(INLINE BLOCK))
@@ -119,15 +115,12 @@
 
   ; The type of element names
   (for ([dom doms] [names dom-names] #:when #t [name names])
-    (emit `(declare-const ,(sformat "~a-elt" name) Element))
-    (emit `(assert (= (document ,(sformat "~a-elt" name)) ,(sformat "~a-doc" (dom-name dom))))))
+    (emit `(declare-const ,(sformat "~a-elt" name) Element)))
   ; The element info for a name
   (define body
     (for*/fold ([body 'no-elt]) ([names dom-names] [name names])
       `(ite (,(sformat "is-~a" name) x) ,(sformat "~a-elt" name) ,body)))
-  (emit `(define-fun get/elt ((x ElementName)) Element ,body))
-  (for* ([names dom-names] [name names])
-    (emit `(assert (is-elt (get/elt ,name))))))
+  (emit `(define-fun get/elt ((x ElementName)) Element ,body)))
 
 (define (dom-define-get/box doms emit)
   (define dom-names
@@ -158,9 +151,6 @@
   (emit `(assert (= (float ,elt) float/none)))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "~a-context-width" (dom-name dom)))))
-  (emit `(assert (= (parent-name (get/elt ,(element-name (dom-tree dom)))) ,(dom-root dom))))
-  (emit `(assert (= (previous-name (get/elt ,(element-name (dom-tree dom)))) nil-elt)))
-  (emit `(assert (= (next-name (get/elt ,(element-name (dom-tree dom)))) nil-elt)))
   (emit `(assert (= (first-child-name ,elt) ,(element-name (dom-tree dom)))))
   (emit `(assert (= (parent-name ,elt) nil-elt)))
   (emit `(assert (= (previous-name ,elt) nil-elt)))
@@ -281,10 +271,8 @@
       ['INLINE 'display/inline]
       ['TEXT 'display/inline]
       ['LINE 'display/block]))
-
-  (emit `(assert (= (tagname (get/elt ,(element-name elt))) ,tagname)))
-  (emit `(assert (= (id (get/elt ,(element-name elt))) ,idname)))
-  (emit `(assert (= (display (get/elt ,(element-name elt))) ,display))))
+  
+  (emit `(assert (element-info (get/elt ,(element-name elt)) ,tagname ,idname ,display))))
 
 (define (getter-definitions doms)
   (reap [sow]

@@ -43,6 +43,20 @@
     (if (is-no-elt (next (get/elt (element box))))
         no-box
         (get/box (flow-box (next (get/elt (element box)))))))
+  
+  (define-fun link-element ((elt Element) (doc Document) (p ElementName)
+                            (v ElementName) (n ElementName) (f ElementName)
+                            (l ElementName)) Bool
+    (and (is-elt elt)
+         (= (document elt) doc)
+         (= (parent-name elt) p)
+         (= (previous-name elt) v)
+         (= (next-name elt) n)
+         (= (first-child-name elt) f)
+         (= (last-child-name elt) l)))
+  
+  (define-fun element-info ((elt Element) (tagname TagNames) (idname Id) (displayname Display)) Bool
+    (and (= (tag elt) tagname) (= (id elt) id) (= (display elt) displayname)))
 
   (define-fun pbox ((box Box)) Box (real-pbox box))
   (define-fun nbox ((box Box)) Box (get/box (n-name box)))

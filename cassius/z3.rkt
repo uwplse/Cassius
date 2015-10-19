@@ -163,8 +163,8 @@
 
 (define to-expand
   (append
-   '(link-block-box link-inline-box link-text-box link-line-box)
-   '(an-element a-root-element)
+   '(link-element link-block-box link-inline-box link-text-box link-line-box)
+   '(an-element a-root-element element-info)
    '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box)
    '(previous next parent fchild lchild)
    '(real-pbox real-fbox real-lbox real-vbox real-nbox)
