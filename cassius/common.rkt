@@ -4,7 +4,7 @@
  reap for/reap for*/reap
  sformat slower
  flags all-flags supported-features
- tree-size sdiff in-groups sequence-cons)
+ tree-size sdiff in-groups sequence-cons cartesian-product)
 
 (define flags (make-parameter '(z3o)))
 (define all-flags '(opt float z3o details))
@@ -58,3 +58,9 @@
 
 (define (sequence-cons v s)
   (sequence-append (in-value v) s))
+
+(define (cartesian-product ls)
+  (if (null? ls)
+      (list (list))
+      (for*/list ([head (car ls)] [tail (cartesian-product (cdr ls))])
+        (cons head tail))))

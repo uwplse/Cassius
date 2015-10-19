@@ -6,7 +6,7 @@
 (require "../coq/z3o.rkt")
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
-         z3-check-let z3-check-fields z3-print-all)
+         z3-check-let z3-check-fields z3-print-all z3-ground-quantifiers)
 
 (define (z3-dco cmds)
   (let ([store (make-hash)])
@@ -506,3 +506,26 @@
       [`(assert ,expr)
        `(assert ,(if-and expr))]
       [_ cmd])))
+
+(define (z3-ground-quantifiers cmds)
+  (define finite-types (make-hash))
+  
+  (define finite-type? (curry hash-has-key? finite-types))
+  (define ((constructor-tester? type) tester)
+    (let ([name (constructor-tester-name tester)])
+      (and name (member name (hash-ref finite-types type)))))
+
+  (for/reap [sow] ([cmd cmds] [i (in-naturals)])
+    (match cmd
+      [`(declare-datatypes () (,decls ...))
+       (for ([decl decls])
+         (match decl
+           [`(,name ,(? symbol? constructors) ...)
+            (hash-set! finite-types name constructors)]
+           [_ (void)]))
+       (sow cmd)]
+      [`(assert (forall ((,vars ,(? finite-type? types)) ...) ,body))
+       (for ([vals (cartesian-product (map (curry hash-ref finite-types) types))])
+         (sow (capture-avoiding-substitute body (map cons vars vals))))]
+      [_
+       (sow cmd)])))

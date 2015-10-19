@@ -321,7 +321,7 @@
   (define (save-rule x rule) (set! rules (cons (cons x rule) rules)))
 
   (define constraints
-    (list tree-constraints info-constraints user-constraints element-constraints
+    (list tree-constraints info-constraints user-constraints #;element-constraints
           box-link-constraints box-constraints
           (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)))
 
@@ -347,6 +347,8 @@
     (echo "Defining the stylesheet")
     ,@(stylesheet-constraints 'user sheet save-rule)
     ; DOMs
+    (echo "Elements must be initialized")
+    (assert (forall ((e ElementName)) (an-element (get/elt e))))
     ,@(apply dfs-constraints doms constraints)
 
     (check-sat)))

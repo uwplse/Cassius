@@ -173,6 +173,7 @@
 
 (define *emitter-passes*
   (list
+   z3-ground-quantifiers
    z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
    (apply z3-expand to-expand)
    z3-dco
