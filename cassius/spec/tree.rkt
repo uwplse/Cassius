@@ -19,7 +19,7 @@
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (document Document) (tagname TagNames) (id Id) (rules Style)
-                (display Display) (float Float) (textalign TextAlign)
+                (display Display)
                 (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
                 (first-child-name ElementName) (last-child-name ElementName)
                 (flow-box BoxName))))))

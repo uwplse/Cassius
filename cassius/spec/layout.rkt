@@ -43,16 +43,15 @@
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
     (or (> (bottom-outer box1) (top-outer box2) (top-outer box1))
         (> (bottom-outer box2) (top-outer box1) (top-outer box2))))
+  
+  (define-fun textalign ((e Element)) TextAlign
+    (style.text-align (rules e)))
+
+  (define-fun float ((e Element)) Float
+    (style.float (rules e)))
 
   (define-fun an-element ((e Element)) Bool
-    ,(smt-let ([r (rules e)] [b (get/box (flow-box e))])
-       (= (textalign e)
-          (ite (is-text-align/inherit (style.text-align r))
-               (textalign (parent e))
-               (style.text-align r)))
-       (=> (is-display/inline (display e)) (is-float/none (float e)))
-       (= (float e)
-          (ite (is-float/inherit (style.float r)) (float (parent e)) (style.float r)))))
+    (=> (is-display/inline (display e)) (is-float/none (float e))))
 
   (define-fun a-root-element ((e Element)) Bool
     ,(smt-let ([b (get/box (flow-box e))])
