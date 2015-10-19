@@ -49,6 +49,12 @@
 
 (define ((z3-resolve-fns . fns) cmds)
   (define resolutions (make-hash))
+  (define finite-types (make-hash))
+  
+  (define finite-type? (curry hash-has-key? finite-types))
+  (define ((constructor-tester? type) tester)
+    (let ([name (constructor-tester-name tester)])
+      (and name (member name (hash-ref finite-types type)))))
 
   (define (save input output)
     (when (and (hash-has-key? resolutions input) (not (equal? output (hash-ref resolutions input))))
@@ -68,6 +74,25 @@
 
   (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
+      [`(declare-datatypes () (,decls ...))
+       (for ([decl decls])
+         (match decl
+           [`(,name ,(? symbol? constructors) ...)
+            (hash-set! finite-types name constructors)]
+           [_ (void)]))
+       cmd]
+      [`(define-fun ,name ((,var ,(? finite-type? type))) ,rtype ,body)
+       (let loop ([body body] [values-set '()])
+         (match body
+           [`(ite (,(? (constructor-tester? type) tester) ,(== var)) ,value ,body*)
+            (hash-set! resolutions `(,name ,(constructor-tester-name tester)) value)
+            (loop body* (cons (constructor-tester-name tester) values-set))]
+           [_
+            (match (set-subtract (hash-ref finite-types type) values-set)
+              [(list default-name)
+               (hash-set! resolutions `(,name ,default-name) body)]
+              [_ (void)])]))
+       cmd]
       [`(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
        (define input (cons fn (map resolve args)))
        (define output (resolve value))
@@ -385,6 +410,11 @@
   (eprintf "~a: ~a\n" text (list-ref cmds n))
   cmds)
 
+(define (constructor-tester-name name)
+  (define parts (string-split (~a name) "-"))
+  (and (string=? (first parts) "is")
+       (string->symbol (string-join (rest parts) "-"))))
+
 (define (z3-simplif cmds)
   (define constructors (make-hash))
   (define types (make-hash))
@@ -392,11 +422,10 @@
 
   (define (constructor? name)
     (hash-has-key? types name))
-
+  
   (define (constructor-tester? name)
-    (define parts (string-split (~a name) "-"))
-    (and (string=? (first parts) "is")
-         (constructor? (string->symbol (string-join (rest parts) "-")))))
+    (let ([constructor (constructor-tester-name name)])
+      (and constructor (constructor? constructor))))
 
   (define (simpl expr)
     (match expr
