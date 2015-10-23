@@ -38,4 +38,8 @@ It works best on Linux.
 Running Tests
 -------------
 
-Run `make test` to run tests.
+Run `make reports/margin-padding-clear.html` to run tests,
+  generating a report into `reports/margin-padding-clear.html`.
+These tests are extracted from the
+  [official W3C conformance tests for CSS](http://www.w3.org/Style/CSS/Test/Overview.en.html);
+  use `make bench/css/margin-padding-clear.rkt` to re-extract the tests.
