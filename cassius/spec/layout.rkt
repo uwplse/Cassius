@@ -56,8 +56,6 @@
   (define-fun a-root-element ((e Element)) Bool
     ,(smt-let ([b (get/box (flow-box e))])
        (= (tagname e) no-tag)
-       (= (float e) float/none)
-       (= (textalign e) text-align/left)
        ,@(for/list ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
            `(= (,field b) 0.0))
        (= (type b) box/root)
@@ -370,8 +368,8 @@
        ;; R3: If a float wraps to the next line, the previous line must be full
        (=> (and (is-box flt) (= (top-outer b) (bottom-outer flt)))
            (ite (is-float/left (float e))
-                (= (right-outer flt) (right-content p))
-                (= (left-outer flt) (left-content p))))
+                (>= (right-outer flt) (right-content p))
+                (<= (left-outer flt) (left-content p))))
        ;; R4: If this and the previous float float to different sides,
        ;; they are not horizontally adjacent
        (=> (and (is-box flt) (not (= (float flte) (float e))))

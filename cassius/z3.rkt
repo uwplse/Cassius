@@ -163,7 +163,7 @@
 
 (define to-expand
   (append
-   '(link-element link-block-box link-inline-box link-text-box link-line-box)
+   '(link-element link-block-box link-inline-box link-text-box link-line-box link-element-box link-root-element)
    '(an-element a-root-element element-info)
    '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box)
    '(previous next parent fchild lchild)
@@ -204,5 +204,5 @@
 (define (z3-prepare exprs)
   (define start (current-inexact-milliseconds))
   (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
-    #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
+    (eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
     (action exprs)))

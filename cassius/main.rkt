@@ -96,27 +96,35 @@
       (if e (element-name e) default)))
   (emit
    `(assert
-     (link-element (get/elt ,(element-name elt))
-                   ,(dom-name dom)
-                   ,(either element-parent (dom-root dom)) ; TODO: Kill the root element
-                   ,(either element-prev 'nil-elt)
-                   ,(either element-next 'nil-elt)
-                   ,(either element-fchild 'nil-elt)
-                   ,(either element-lchild 'nil-elt)))))
+     (!
+      (link-element (get/elt ,(element-name elt))
+                    ,(dom-name dom)
+                    ,(either element-parent (dom-root dom)) ; TODO: Kill the root element
+                    ,(either element-prev 'nil-elt)
+                    ,(either element-next 'nil-elt)
+                    ,(either element-fchild 'nil-elt)
+                    ,(either element-lchild 'nil-elt))
+      :named ,(sformat "tree-~a" (element-name elt))))))
 
 (define ((style-constraints rules) dom emit elt)
   (when (member (element-type elt) '(INLINE BLOCK))
     (for-each emit (cascade-rules (rules) elt))))
+
+(define (box-element-constraints dom emit elt)
+  (define ename (element-name elt))
+  (emit `(assert (! (link-element-box ,ename ,(sformat "~a-flow" ename))
+                    :named ,(sformat "box-element-~a" ename)))))
 
 (define (dom-define-get/elt doms emit)
   (define dom-names
     (for/list ([dom doms])
       (cons (dom-root dom) (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt)))))
 
-  ; The type of element names
+  ; Instantiate each element
   (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-elt" name) Element)))
-  ; The element info for a name
+
+  ; Define the mapping
   (define body
     (for*/fold ([body 'no-elt]) ([names dom-names] [name names])
       `(ite (,(sformat "is-~a" name) x) ,(sformat "~a-elt" name) ,body)))
@@ -127,35 +135,30 @@
     (for/list ([dom doms])
       (cons (dom-root dom) (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt)))))
 
+  ; Instantiate each box
   (for ([dom doms] [names dom-names] #:when #t [name names])
-    (emit `(declare-const ,(sformat "~a-flow-box" name) Box))
-    (emit `(assert (= (element ,(sformat "~a-flow-box" name)) ,name)))
-    (emit `(assert (= (flow-box  ,(sformat "~a-elt" name)) ,(sformat "~a-flow" name)))))
-  (emit `(assert (= (element no-box) nil-elt)))
+    (emit `(declare-const ,(sformat "~a-flow-box" name) Box)))
 
+  ; Define the mapping
   (define body
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       `(ite (,(sformat "is-~a-flow" name) x) ,(sformat "~a-flow-box" name) ,body)))
-  (emit `(define-fun get/box ((x BoxName)) Box ,body))
-  (for* ([names dom-names] [name names])
-    (emit `(assert (is-box ,(sformat "~a-flow-box" name)))))
-  (emit `(assert (= (flow-box no-elt) nil-box))))
+  (emit `(define-fun get/box ((x BoxName)) Box ,body)))
 
 (define (dom-root-constraints dom emit)
   (define elt `(get/elt ,(dom-root dom)))
   (define b `(get/box (flow-box ,elt)))
 
   (emit `(echo ,(format "Defining the ~a root element" (dom-name dom))))
-  (emit `(assert (= ,elt ,(sformat "~a-elt" (dom-root dom)))))
-  (emit `(assert (= (flow-box ,(sformat "~a-elt" (dom-root dom))) ,(sformat "~a-flow" (dom-root dom)))))
-  (emit `(assert (= (float ,elt) float/none)))
+  (emit `(assert (! (link-element-box ,(dom-root dom) ,(sformat "~a-flow" (dom-root dom)))
+                    :named ,(sformat "link-~a" (dom-root dom)))))
+  (for ([(prop type default) (in-css-properties)])
+    (emit `(assert (! (= (,(sformat "style.~a" prop) (rules ,elt)) ,default)
+                      :named ,(sformat "default-~a-~a" prop (dom-root dom))))))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
-                    :named ,(sformat "~a-context-width" (dom-name dom)))))
-  (emit `(assert (= (first-child-name ,elt) ,(element-name (dom-tree dom)))))
-  (emit `(assert (= (parent-name ,elt) nil-elt)))
-  (emit `(assert (= (previous-name ,elt) nil-elt)))
-  (emit `(assert (= (next-name ,elt) nil-elt)))
-  (emit `(assert (a-root-element ,elt))))
+                    :named ,(sformat "width-~a" (dom-name dom)))))
+  (emit `(assert (! (link-root-element ,elt) :named ,(sformat "element-~a" (dom-root dom)))))
+  (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box-~a" (dom-root dom))))))
 
 (define (stylesheet-constraints sname sheet save-rule #:browser [browser? #f])
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
@@ -163,10 +166,12 @@
             (save-rule name rule)
 
             (emit `(declare-const ,name Rule))
-            (emit `(assert (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)))
+            (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
+                              :named ,(sformat "rule-~a" name))))
 
             (define sel (selector->z3 (selector name rule)))
-            (when sel (emit `(assert (= (selector ,name) ,sel))))
+            (when sel (emit `(assert (! (= (selector ,name) ,sel)
+                                        :named ,(sformat "rule-~a-selector" name)))))
 
             (match rule
               ['? (void)]
@@ -186,12 +191,16 @@
                (for ([(a-prop type default) (in-css-properties)])
                  (match (assoc a-prop pairs)
                    [(list _ '?)
-                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))]
+                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))]
                    [(list _ val)
-                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) true)))
-                    (emit `(assert (= (,(sformat "rule.~a" a-prop) ,name) ,val)))]
+                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))
+                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
+                                      :named ,(sformat "rule-~a-~a-~a-val" name i a-prop))))]
                    [#f
-                    (emit `(assert (= (,(sformat "rule.~a?" a-prop) ,name) false)))]))])
+                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
+                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))]))])
 
               ; Optimize for short CSS
             (when (memq 'opt (flags))
@@ -210,6 +219,9 @@
                         (and ,@(for/list ([subprop subproperties])
                                  (list (sformat "rule.~a?" subprop) name)))
                         :weight 3))))))
+
+(define (element-constraints dom emit elt)
+  (emit `(assert (! (an-element (get/elt ,(element-name elt))) :named ,(sformat "element-~a" (element-name elt))))))
 
 (define (user-constraints dom emit elt)
   (define name (element-name elt))
@@ -233,9 +245,6 @@
       [':tag (void)]
       [':text (void)])))
 
-(define (element-constraints dom emit elt)
-  (emit `(assert (an-element (get/elt ,(element-name elt))))))
-
 (define (box-link-constraints dom emit elt)
   (define cns
     (match (element-type elt)
@@ -245,7 +254,8 @@
       ['LINE 'link-line-box]
       ['INLINE 'link-inline-box]
       ['TEXT 'link-text-box]))
-  (emit `(assert (,cns (get/box (flow-box (get/elt ,(element-name elt))))))))
+  (emit `(assert (! (,cns (get/box (flow-box (get/elt ,(element-name elt)))))
+                    :named ,(sformat "link-box-~a" (element-name elt))))))
 
 (define (box-constraints dom emit elt)
   (define cns
@@ -256,7 +266,8 @@
       ['LINE 'a-line-box]
       ['INLINE 'an-inline-box]
       ['TEXT 'a-text-box]))
-  (emit `(assert (,cns ,(sformat "~a-flow-box" (element-name elt))))))
+  (emit `(assert (! (,cns ,(sformat "~a-flow-box" (element-name elt)))
+                    :named ,(sformat "box-~a" (element-name elt))))))
 
 (define (info-constraints dom emit elt)
   (define tagname
@@ -272,7 +283,8 @@
       ['TEXT 'display/inline]
       ['LINE 'display/block]))
   
-  (emit `(assert (element-info (get/elt ,(element-name elt)) ,tagname ,idname ,display))))
+  (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname ,display)
+                    :named ,(sformat "info-~a" (element-name elt))))))
 
 (define (getter-definitions doms)
   (reap [sow]
@@ -322,7 +334,7 @@
 
   (define constraints
     (list tree-constraints info-constraints user-constraints #;element-constraints
-          box-link-constraints box-constraints
+          box-element-constraints box-link-constraints box-constraints
           (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)))
 
   `((set-option :produce-unsat-cores true)
@@ -340,6 +352,7 @@
     ,@css-functions
     ,@link-definitions
     ,@layout-definitions
+    (assert (link-element-box nil-elt nil-box) :named no-element-no-box)
 
     ; Stylesheet
     (echo "Browser stylesheet")
@@ -348,7 +361,8 @@
     ,@(stylesheet-constraints 'user sheet save-rule)
     ; DOMs
     (echo "Elements must be initialized")
-    (assert (forall ((e ElementName)) (an-element (get/elt e))))
+    (assert (! (forall ((e ElementName)) (an-element (get/elt e)))
+               :named element))
     ,@(apply dfs-constraints doms constraints)
 
     (check-sat)))
