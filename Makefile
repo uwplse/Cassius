@@ -2,7 +2,7 @@ TEST_FILES=$(wildcard bench/*.rkt)
 TESTS=$(TEST_FILES:bench/%.rkt=%:verify)
 SRC=$(wildcard cassius/*)
 TIME=$(shell date +%s)
-FLAGS=--fast
+FLAGS=
 
 .PHONY: download deploy
 
@@ -24,7 +24,7 @@ download:
 bench/css/%.rkt: get_bench.py get_bench.js
 	@ python get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard /home/pavpan/src/csswg-test/css21/$*/*.xht))
 
-reports/%.html: bench/css/%.rkt $(SRC)
+reports/%.html: bench/%.rkt $(SRC)
 	racket cassius/report.rkt $(FLAGS) -o $@ $<
 
 get-csswg: bench/css/floats.rkt bench/css/margin-padding-clear.rkt

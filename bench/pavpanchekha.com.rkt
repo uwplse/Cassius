@@ -17,15 +17,15 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
   ? ? ? ?)
 
 (define-stylesheet partial-good-sheet
-  ((sel/tag tag/html) ?)
-  ((sel/tag tag/body) ?)
-  ((sel/tag tag/pre) ?)
-  ((sel/tag tag/h1) ?)
-  ((sel/tag tag/p) ?)
-  ((sel/id id/postamble) ?))
+  ((tag html) ?)
+  ((tag body) ?)
+  ((tag pre) ?)
+  ((tag h1) ?)
+  ((tag p) ?)
+  ((id postamble) ?))
 
 (define-stylesheet good-sheet
-  ((sel/tag tag/html)
+  ((tag html)
    [margin-top (margin/px 0)]
    [margin-right (margin/px 0)]
    [margin-bottom (margin/px 0)]
@@ -34,7 +34,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-right (padding/px 0)]
    [padding-bottom (padding/px 0)]
    [padding-left (padding/px 0)])
-  ((sel/tag tag/body)
+  ((tag body)
    [margin-top (margin/px 0)]
    [margin-right margin/auto]
    [margin-bottom (margin/px 0)]
@@ -44,7 +44,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-bottom (padding/px 90)]
    [padding-left (padding/px 10)]
    [width (width/px 630)])
-  ((sel/tag tag/pre)
+  ((tag pre)
    [margin-top (margin/px 21.6)]
    [margin-right (margin/px 0)]
    [margin-bottom (margin/px 30.6)]
@@ -53,16 +53,16 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [padding-right (padding/px 9)]
    [padding-bottom (padding/px 9)]
    [padding-left (padding/px 9)])
-  ((sel/tag tag/h1)
+  ((tag h1)
    [margin-top (margin/px 36)]
    [margin-bottom (margin/px 0)])
-  ((sel/tag tag/p)
+  ((tag p)
    [text-align text-align/inherit]
    [margin-top (margin/px 18)]
    [margin-right (margin/px 0)]
    [margin-bottom (margin/px 18)]
    [margin-left (margin/px 0)])
-  ((sel/id id/postamble)
+  ((id postamble)
    [text-align text-align/center]
    [margin-top (margin/px 18)]))
 

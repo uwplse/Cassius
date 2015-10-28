@@ -28,7 +28,7 @@
           (define status
             (parameterize ([current-error-port (current-output-port)])
               (define eng (engine (λ (_) (run-file fname (~a pname) #:debug debug))))
-              (define timeout? (not (engine-run 10000 eng))) ; Run for 10s max
+              (define timeout? (not (engine-run 120000 eng))) ; Run for 2m max
               (engine-kill eng)
               (cond
                [timeout?

@@ -218,11 +218,24 @@ function infer_lines(box, parent) {
         while (prev.children.length) {
             prev = prev.children[prev.children.length - 1];
         }
+
+        if (prev.type == "INLINE") return true; // HACK for the case of an empty INLINE element
+        
         var horiz_adj = (
             txt.props.y + txt.props.h > prev.props.y && prev.props.y >= txt.props.y
             || prev.props.y + prev.props.h > txt.props.y && txt.props.y >= prev.props.y)
 
         return horiz_adj && txt.props.x >= prev.props.x + prev.props.w;
+    }
+
+    function stackup(l, stack, sstack) {
+        for (var i = 0; i < stack.length; i++) {
+            if (!sstack[i]) {
+                var sselt = new Box(stack[i].type, stack[i].node, stack[i].props);
+                (i == 0 ? l : sstack[i - 1]).children.push(sselt);
+                sstack.push(sselt);
+            }
+        }
     }
 
     var stack = [];
@@ -234,13 +247,7 @@ function infer_lines(box, parent) {
                 l = new_line();
                 sstack = [];
             }
-            for (var i = 0; i < stack.length; i++) {
-                if (!sstack[i]) {
-                    var sselt = new Box(stack[i].type, stack[i].node, stack[i].props);
-                    (i == 0 ? l : sstack[i - 1]).children.push(sselt);
-                    sstack.push(sselt);
-                }
-            }
+            stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
         } else if (b.type == "BLOCK") {
             parent.children.push(b);
@@ -250,6 +257,7 @@ function infer_lines(box, parent) {
                 var child = b.children[i];
                 go(child);
             }
+            stackup(last_line() || new_line(), stack, sstack);
             stack.pop(b);
             sstack = sstack.slice(0, stack.length);
         } else {
@@ -272,6 +280,7 @@ function make_boxes(elt, inflow, styles, features) {
         for (var i = 0; i < ranges.length; i++) {
             var r = ranges[i].getClientRects();
             if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
+            if (r.length < 1) continue;
             r = r[0];
             // Whitespace only line
             if (r.width == 0 || r.height == 0) continue;
@@ -372,7 +381,8 @@ function make_boxes(elt, inflow, styles, features) {
 }
 
 function get_boxes(features) {
-    var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
+    var has_scrollbar = window.scrollMaxY !== 0;
+    var view = Page(document, {w: window.innerWidth - (has_scrollbar ? 13 : 0), h: window.innerHeight});
     var style = {};
     make_boxes(document.querySelector("html"), view, style, features);
     return {view: view, style: style};
