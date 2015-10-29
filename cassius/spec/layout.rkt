@@ -485,6 +485,6 @@
 
   (define-fun a-block-box ((b Box)) Bool
     (let ((e (get/elt (element b))))
-      (ite (is-float/none (float e))
+      (ite (! (is-float/none (float e)) :named float)
            (a-block-flow-box b)
            (a-block-float-box b)))))

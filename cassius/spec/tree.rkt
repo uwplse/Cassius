@@ -18,7 +18,7 @@
                 (element ElementName)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
-           (elt (document Document) (tagname TagNames) (id Id) (rules Style)
+           (elt (document Document) (tagname TagNames) (idname Id) (rules Style)
                 (display Display)
                 (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
                 (first-child-name ElementName) (last-child-name ElementName)
@@ -55,16 +55,16 @@
          (= (first-child-name elt) f)
          (= (last-child-name elt) l)))
   
-  (define-run link-root-element ((elt Element) (&f ElementName)) Bool
+  (define-fun link-root-element ((elt Element) (&f ElementName)) Bool
     (and (is-elt elt)
          (= (first-child-name elt) &f)
          (= (last-child-name elt) &f)
          (= (parent-name elt) nil-elt)
          (= (previous-name elt) nil-elt)
-         (= (next-name elt nil-elt))))
+         (= (next-name elt) nil-elt)))
   
-  (define-fun element-info ((elt Element) (tagname TagNames) (idname Id) (displayname Display)) Bool
-    (and (= (tag elt) tagname) (= (id elt) id) (= (display elt) displayname)))
+  (define-fun element-info ((elt Element) (tag TagNames) (&idname Id) (displayname Display)) Bool
+    (and (= (tagname elt) tag) (= (idname elt) &idname) (= (display elt) displayname)))
   
   (define-fun link-element-box ((&e ElementName) (&b BoxName)) Bool
     (and (is-box (get/box &b)) (= (element (get/box &b)) &e) (= (flow-box (get/elt &e)) &b)))

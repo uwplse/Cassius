@@ -39,7 +39,7 @@
       ,(smt-cond
         [(is-sel/all sel) true]
         [(is-sel/tag sel) (= (sel.tag sel) (tagname elt))]
-        [(is-sel/id sel) (= (sel.id sel) (id elt))]
+        [(is-sel/id sel) (= (sel.id sel) (idname elt))]
         [else false]))
 
     (define-fun score ((rule Rule)) CascadeScore

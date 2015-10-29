@@ -165,18 +165,27 @@
   (append
    '(link-element link-block-box link-inline-box link-text-box link-line-box link-element-box link-root-element)
    '(an-element a-root-element element-info)
-   '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box)
    '(previous next parent fchild lchild)
    '(real-pbox real-fbox real-lbox real-vbox real-nbox)
    '(pbox pbbox vbox fbox lbox nbox vbox fltbox)
    ))
 
+(define to-expand-2
+  '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box))
+
 (define *emitter-passes*
   (list
    z3-ground-quantifiers
    z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
-   (apply z3-expand to-expand)
+   (z3-resolve-fns)
    z3-dco
+   (apply z3-expand to-expand)
+   z3-simplif
+   z3-assert-and
+   (apply z3-resolve-fns to-resolve)
+   (z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
+   (apply z3-resolve-fns to-resolve)
+   (apply z3-expand to-expand-2)
    z3-simplif
    z3-assert-and
    (apply z3-lift-arguments to-resolve)
@@ -204,5 +213,5 @@
 (define (z3-prepare exprs)
   (define start (current-inexact-milliseconds))
   (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
-    (eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
+    #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
     (action exprs)))

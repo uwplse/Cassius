@@ -93,7 +93,9 @@
                (hash-set! resolutions `(,name ,default-name) body)]
               [_ (void)])]))
        cmd]
-      [`(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
+      [(or 
+        `(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
+        `(assert (! (= (,(? (curryr member fns) fn) ,args ...) ,value) :named ,_)))
        (define input (cons fn (map resolve args)))
        (define output (resolve value))
        (save input output)
@@ -238,6 +240,12 @@
 (define (capture-avoiding-substitute body bindings)
   (match body
     [(? symbol?) (cdr (or (assoc body bindings) (cons body body)))]
+    [`(! ,expr :named ,name)
+     (define (rename head)
+       (match bindings
+         [`((,names . ,(? symbol? vals)) ...) (sformat "~a<~a>" head (string-join (map ~a vals) ","))]
+         [_ head]))
+     `(! ,(capture-avoiding-substitute expr bindings) :named ,(rename name))]
     [`(let ((,names ,vals) ...) ,body)
      (define body*
        (capture-avoiding-substitute body (filter (lambda (v) (not (member (car v) names))) bindings)))
@@ -301,18 +309,37 @@
   cmds)
 
 (define (z3-assert-and cmds)
+  (define (sow-rename sow head)
+    (define ctr 0)
+    (λ (expr)
+      (set! ctr (+ ctr 1))
+      (match expr
+        [`(! ,expr :named ,name)
+         (sow `(assert (! ,expr :named ,(sformat "~a/~a" head name))))]
+        [_
+         (sow `(assert (! ,expr :named ,(sformat "~a/~a" head ctr))))])))
+
   (for/reap (sow) ([cmd cmds] [i (in-naturals)])
     (match cmd
+      [`(assert (! (and ,exprs ...) :named ,name))
+       (for-each (sow-rename sow name) exprs)]
+      [`(assert (and ,exprs ...))
+       (for ([expr exprs])
+         (sow `(assert ,expr)))]
+      [`(assert (! (ite (! ,c :named ,testname) (and ,exprs1 ...) (and ,exprs2 ...)) :named ,name))
+       (define both (set-intersect exprs1 exprs2))
+       (define left (set-subtract exprs1 both))
+       (define right (set-subtract exprs2 both))
+       (for-each (sow-rename sow name) both)
+       (for-each (sow-rename sow (sformat "~a-~a" name testname)) (map (λ (x) `(=> ,c ,x)) left))
+       (for-each (sow-rename sow (sformat "~a-!~a" name testname)) (map (λ (x) `(=> (not ,c) ,x)) right))]
       [`(assert (ite ,c (and ,exprs1 ...) (and ,exprs2 ...)))
        (define both (set-intersect exprs1 exprs2))
        (define left (set-subtract exprs1 both))
        (define right (set-subtract exprs2 both))
-       (for ([expr both]) (sow `(assert ,expr)))
-       (for ([expr left]) (sow `(assert (=> ,c ,expr))))
-       (for ([expr right]) (sow `(assert (=> (not ,c) ,expr))))]
-      [`(assert (and ,exprs ...))
-       (for ([expr exprs])
-         (sow `(assert ,expr)))]
+       (for ([expr both]) (sow expr))
+       (for ([expr left]) (sow `(=> ,c ,expr)))
+       (for ([expr right]) (sow `(=> (not ,c) ,expr)))]
       [_ (sow cmd)])))
 
 (define ((z3-lift-arguments . fn-names) cmds)
@@ -416,8 +443,8 @@
        (string->symbol (string-join (rest parts) "-"))))
 
 (define (z3-simplif cmds)
-  (define constructors (make-hash))
-  (define types (make-hash))
+  (define constructors (make-hash '((Bool true false))))
+  (define types (make-hash '((true . Bool) (false . Bool))))
   (define known-constructors (make-hash))
 
   (define (constructor? name)
@@ -442,6 +469,11 @@
        (if (equal? test-variant constructor) 'true 'false)]
       [`(,(? constructor-tester? tester) ,(? (curry hash-has-key? known-constructors) var))
        (if (equal? tester (hash-ref known-constructors var)) 'true 'false)]
+      [(? (curry hash-has-key? known-constructors) var)
+       (match (hash-ref known-constructors var)
+         ['is-true 'true]
+         ['is-false 'false]
+         [_ var])]
       [`(ite false ,a ,b) b]
       [`(ite true ,a ,b) a]
       [`(ite ,c ,a ,a) a]
@@ -449,18 +481,23 @@
       [`(ite ,c true false) c]
       [`(=> false ,a) 'true]
       [`(=> true ,a) a]
+      [`(=> ,a true) 'true]
+      [`(=> (not ,a) false) a]
+      [`(=> ,a false) `(not ,a)]
       [`(not (not ,a)) a]
+      [`(not false) 'true]
+      [`(not true) 'false]
       [`(and) `true]
       [(list 'and rest ... )
        (if (member 'false rest)
            'false
            (let ([rest* (filter (lambda (x) (not (equal? x 'true))) rest)])
-             (if (null? rest*) 'true (cons 'and rest*))))]
+             (match rest* [`() 'true] [`(,x) x] [`(,x ...) `(and ,@x)])))]
       [(list 'or rest ... )
        (if (member 'true rest)
            'true
            (let ([rest* (filter (lambda (x) (not (equal? x 'false))) rest)])
-             (if (null? rest*) 'false (cons 'or rest*))))]
+             (match rest* [`() 'false] [`(,x) x] [`(,x ...) `(or ,@x)])))]
       [`(or) `false]
       [(list '= a a) 'true]
       [_ expr]))
@@ -477,18 +514,22 @@
        (sow cmd)]
       [`(define-fun ,names ((,args ,atypes)) ,rtype ,body)
        (sow `(define-fun ,names ((,args ,atypes)) ,rtype ,(simpl body)))]
-      [`(assert (,(? constructor-tester? tester) ,tested))
+      [(or
+        `(assert (! (,(? constructor-tester? tester) ,tested) :named ,_))
+        `(assert (,(? constructor-tester? tester) ,tested)))
        (define s (simpl tested))
        (hash-set! known-constructors (simpl tested) tester)
        (sow cmd)]
       [(or
+        `(assert (= ,(or (? constructor? name) (list (? constructor? name) _ ...)) ,tested))
+        `(assert (! (= ,(or (? constructor? name) (list (? constructor? name) _ ...)) ,tested) :named ,_))
         `(assert (= ,tested ,(or (? constructor? name) (list (? constructor? name) _ ...))))
-        `(assert (= ,(or (? constructor? name) (list (? constructor? name) _ ...)) ,tested)))
+        `(assert (! (= ,tested ,(or (? constructor? name) (list (? constructor? name) _ ...))) :named ,_)))
        (hash-set! known-constructors (simpl tested) (sformat "is-~a" name))
        (sow cmd)]
       [`(assert ,expr)
        (define s (simpl expr))
-       (unless (equal? s 'true)
+       (unless (or (equal? s 'true) (and (list? s) (equal? (car s) '!) (equal? (cadr s) 'true)))
          (sow `(assert ,s)))]
       [_ (sow cmd)])))
 
@@ -526,6 +567,6 @@
        (sow cmd)]
       [`(assert (forall ((,vars ,(? finite-type? types)) ...) ,body))
        (for ([vals (cartesian-product (map (curry hash-ref finite-types) types))])
-         (sow (capture-avoiding-substitute body (map cons vars vals))))]
+         (sow `(assert ,(capture-avoiding-substitute body (map cons vars vals)))))]
       [_
        (sow cmd)])))

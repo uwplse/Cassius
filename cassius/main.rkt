@@ -98,7 +98,7 @@
    `(assert
      (!
       (link-element (get/elt ,(element-name elt))
-                    ,(dom-name dom)
+                    ,(sformat "~a-doc" (dom-name dom))
                     ,(either element-parent (dom-root dom)) ; TODO: Kill the root element
                     ,(either element-prev 'nil-elt)
                     ,(either element-next 'nil-elt)
@@ -157,7 +157,8 @@
                       :named ,(sformat "default-~a-~a" prop (dom-root dom))))))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
                     :named ,(sformat "width-~a" (dom-name dom)))))
-  (emit `(assert (! (link-root-element ,elt) :named ,(sformat "element-~a" (dom-root dom)))))
+  (emit `(assert (! (link-root-element ,elt ,(element-name (dom-tree dom)))
+                    :named ,(sformat "element-~a" (dom-root dom)))))
   (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box-~a" (dom-root dom))))))
 
 (define (stylesheet-constraints sname sheet save-rule #:browser [browser? #f])
@@ -333,8 +334,9 @@
   (define (save-rule x rule) (set! rules (cons (cons x rule) rules)))
 
   (define constraints
-    (list tree-constraints info-constraints user-constraints #;element-constraints
-          box-element-constraints box-link-constraints box-constraints
+    (list tree-constraints box-element-constraints
+          info-constraints user-constraints #;element-constraints
+          box-link-constraints box-constraints
           (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)))
 
   `((set-option :produce-unsat-cores true)
@@ -352,7 +354,8 @@
     ,@css-functions
     ,@link-definitions
     ,@layout-definitions
-    (assert (link-element-box nil-elt nil-box) :named no-element-no-box)
+    (assert (! (and (= (element no-box) nil-elt) (= (flow-box no-elt) nil-box))
+               :named no-element-no-box))
 
     ; Stylesheet
     (echo "Browser stylesheet")
@@ -361,8 +364,7 @@
     ,@(stylesheet-constraints 'user sheet save-rule)
     ; DOMs
     (echo "Elements must be initialized")
-    (assert (! (forall ((e ElementName)) (an-element (get/elt e)))
-               :named element))
+    (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
     ,@(apply dfs-constraints doms constraints)
 
     (check-sat)))
