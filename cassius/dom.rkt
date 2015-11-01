@@ -54,7 +54,7 @@
 (define (dom-root dom) (sformat "~a-root" (dom-name dom)))
 
 (define elt-names (make-hasheq))
-(define (reset-elt-names!) (set! elt-names (make-hasheq)))
+(define (reset-elt-names!) (void) #;(set! elt-names (make-hasheq)))
 (define (elt-name def)
   (hash-ref! elt-names def (lambda () (sformat "elt$~a" (hash-count elt-names)))))
 

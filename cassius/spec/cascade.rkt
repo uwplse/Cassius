@@ -19,7 +19,7 @@
        (! (or (not (,(sformat "rule.~a?" property) ,name))
               (=> ,(selector-matches? (selector name rule) elt)
                   (score-ge (,(sformat "style.~a$" property) ,re) (score ,name))))
-          :named ,(sformat "cascade-ge-~a-~a-~a" (element-name elt) name property))))
+          :named ,(sformat "cascade/ge/~a/~a/~a" (element-name elt) name property))))
    
    ;; Score&value of computed rule is = some applicable stylesheet rule
    (for/list ([(property type default) (in-css-properties)])
@@ -38,7 +38,7 @@
                          (,(sformat "style.~a" property)
                           (rules (parent (get/elt ,(element-name elt)))))
                          (,(sformat "rule.~a" property) ,name))))))
-          :named ,(sformat "cascade-~a-~a" (element-name elt) property))))))
+          :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property))))))
 
 (define (selector name rule)
   (match rule

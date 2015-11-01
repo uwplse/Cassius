@@ -7,7 +7,7 @@
 
 (provide css-declarations css-functions
          css-properties css-property-pairs css-defaults
-         css-shorthand-properties)
+         css-shorthand-properties css-type)
 
 (define css-declarations
   `((declare-datatypes () (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))))
@@ -87,6 +87,13 @@
     (cons type
           (for/list ([(prop ptype default) (in-css-properties)] #:when (eq? type ptype))
             prop))))
+
+(define css-types
+  (for/hash ([(prop type default) (in-css-properties)])
+    (values prop type)))
+
+(define (css-type prop)
+  (hash-ref css-types prop))
 
 (define css-defaults
   (for/hash ([(prop name default) (in-css-properties)])

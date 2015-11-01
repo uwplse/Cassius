@@ -51,7 +51,8 @@
     (style.float (rules e)))
 
   (define-fun an-element ((e Element)) Bool
-    (=> (is-display/inline (display e)) (is-float/none (float e))))
+    (! (=> (is-display/inline (display e)) (is-float/none (float e)))
+       :named inline-elements-dont-float))
 
   (define-fun a-root-element ((e Element)) Bool
     ,(smt-let ([b (get/box (flow-box e))])
@@ -116,6 +117,7 @@
        ;; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
        (= (w p) (+ (ml b) (box-width b) (mr b)))
 
+       (!
        ,(smt-cond
          ;; See CSS § 10.3.3
          [(> (+ (ite (is-width/auto (style.width r)) 0.0 (width.px (style.width r)))
@@ -140,6 +142,8 @@
            (=> (is-margin/px (style.margin-left r)) (= (ml b) (margin.px (style.margin-left r))))
            (=> (and (is-margin/px (style.margin-right r)) (is-margin/auto (style.margin-left r)))
                (= (mr b) (margin.px (style.margin-right r)))))])
+       :named flow-width)
+
        (let ([l (real-lbox b)] [v (real-vbox b)])
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
@@ -178,7 +182,7 @@
              [else (= (h b) 0.0)]))
 
        ;; Computing X and Y position
-       (= (x b) (+ (left-content p) (ml b)))
+       (! (= (x b) (+ (left-content p) (ml b))) :named flow-x)
        (= (y b)
           (ite (is-no-box vb)
            (ite (and
@@ -442,7 +446,7 @@
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [flt (fltbox b)]
                [f (fbox b)] [l (lbox b)] [flte (get/elt (element (fltbox b)))])
        (is-box/line (type b))
-       (is-float/none (float e)) ; Where else would we set this?
+       (! (is-float/none (float e)) :named lines-dont-float) ; Where else would we set this?
 
        ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
            `(= (,field b) 0.0))
@@ -485,6 +489,6 @@
 
   (define-fun a-block-box ((b Box)) Bool
     (let ((e (get/elt (element b))))
-      (ite (! (is-float/none (float e)) :named float)
+      (ite (! (is-float/none (float e)) :named flow)
            (a-block-flow-box b)
            (a-block-float-box b)))))

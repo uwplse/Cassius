@@ -10,8 +10,9 @@
 (require "spec/cascade.rkt")
 (require unstable/sequence)
 (require srfi/1)
+(require srfi/13)
 
-(provide all-constraints unsat-constraint-info print-rules reset!)
+(provide all-constraints print-rules print-unsat-core reset!)
 
 (define (in-empty) (in-list empty))
 
@@ -90,6 +91,63 @@
            (printf "  ~a: ~a;\n" prop (apply print-type value)))
          (printf "}"))))])
 
+(define (print-unsat-core query vars)
+  (define (parse-var var)
+    (for/list ([part (string-split (~a var) "^")])
+      (match (string-split part "/")
+        [(list _) part]
+        [(list parts ...) (map string->symbol parts)])))
+
+  (define (parsed->elt parsed)
+    (for/first ([part parsed] #:when (list? part) [symbol part]
+                #:when (string-prefix? "elt$" (~a symbol)))
+      (elt-from-name (string->symbol (car (string-split (~a symbol) "-"))))))
+
+  (define asserts (make-hash))
+  (for ([cmd query])
+    (match cmd
+      [`(assert (! ,expr :named ,name)) (hash-set! asserts name expr)]
+      [_ (void)]))
+
+  (define elts (make-hash))
+
+  (for ([var vars])
+    (define parsed (parse-var var))
+    (define elt (parsed->elt parsed))
+    (hash-set! elts elt (cons (cons var parsed) (hash-ref elts elt '()))))
+
+  (define (describe-line var line elt)
+    (match line
+      [`((,(and (or 'x 'y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,_))
+       (define field-name
+         (match field ['x ':x] ['y ':y] ['box-width ':w] ['box-height ':h]
+           ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
+       (format "You gave ~a ~a" field-name (element-get elt field-name))]
+      [`((y ,_)) (format "You gave :y ~a" (element-get elt ':y))]
+      [`((box-width ,_)) (format "You gave :w ~a" (element-get elt ':w))]
+      [`((box-height ,_)) (format "You gave :h ~a" (element-get elt ':h))]
+      [`((box ,_) (flow ,_) (flow-width ,_ ,_))
+       (format "Compute the width as per CSS §10.3.3")]
+      [`((box ,_) (flow ,_) (flow-x ,_ ,_))
+       (format "The X-position is the parent's left content edge plus the left margin")]
+      [`((box ,_) (lines-dont-float ,_))
+       (format "Line boxes do not float")]
+      [`((cascade eq ,_ ,prop) ,num)
+       (match (hash-ref asserts var)
+         [`(= (,_ (rules ,_)) ,val)
+          (format "Computed style of { ~a: ~a; }" prop (print-type (css-type prop) val))]
+         [line (format "Computed style with, ~a" line)])]
+      [`((root ,prop ,_))
+       (for/first ([(prop* type default) (in-css-properties)] #:when (eq? prop prop*))
+         (format "The root element has { ~a: ~a; }" prop (print-type type default)))]
+      [_ (format "~a: ~a" line (hash-ref asserts var))]))
+
+  (for ([(elt parseds) (in-hash elts)])
+    (printf "~a:\n" (or elt "[VIEW]"))
+    (for ([(var parsed) (in-pairs parseds)])
+      (printf "  ~a\n" (describe-line var parsed elt)))
+    (printf "\n")))
+
 (define (tree-constraints dom emit elt)
   (define (either field default)
     (let ([e (field elt)])
@@ -104,7 +162,7 @@
                     ,(either element-next 'nil-elt)
                     ,(either element-fchild 'nil-elt)
                     ,(either element-lchild 'nil-elt))
-      :named ,(sformat "tree-~a" (element-name elt))))))
+      :named ,(sformat "tree/~a" (element-name elt))))))
 
 (define ((style-constraints rules) dom emit elt)
   (when (member (element-type elt) '(INLINE BLOCK))
@@ -113,7 +171,7 @@
 (define (box-element-constraints dom emit elt)
   (define ename (element-name elt))
   (emit `(assert (! (link-element-box ,ename ,(sformat "~a-flow" ename))
-                    :named ,(sformat "box-element-~a" ename)))))
+                    :named ,(sformat "box-element/~a" ename)))))
 
 (define (dom-define-get/elt doms emit)
   (define dom-names
@@ -151,15 +209,15 @@
 
   (emit `(echo ,(format "Defining the ~a root element" (dom-name dom))))
   (emit `(assert (! (link-element-box ,(dom-root dom) ,(sformat "~a-flow" (dom-root dom)))
-                    :named ,(sformat "link-~a" (dom-root dom)))))
+                    :named ,(sformat "link/~a" (dom-root dom)))))
   (for ([(prop type default) (in-css-properties)])
     (emit `(assert (! (= (,(sformat "style.~a" prop) (rules ,elt)) ,default)
-                      :named ,(sformat "default-~a-~a" prop (dom-root dom))))))
+                      :named ,(sformat "root/~a/~a" prop (dom-root dom))))))
   (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
-                    :named ,(sformat "width-~a" (dom-name dom)))))
+                    :named ,(sformat "width/~a" (dom-name dom)))))
   (emit `(assert (! (link-root-element ,elt ,(element-name (dom-tree dom)))
-                    :named ,(sformat "element-~a" (dom-root dom)))))
-  (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box-~a" (dom-root dom))))))
+                    :named ,(sformat "element/~a" (dom-root dom)))))
+  (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box/~a" (dom-root dom))))))
 
 (define (stylesheet-constraints sname sheet save-rule #:browser [browser? #f])
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
@@ -168,11 +226,11 @@
 
             (emit `(declare-const ,name Rule))
             (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
-                              :named ,(sformat "rule-~a" name))))
+                              :named ,(sformat "rule/~a" name))))
 
             (define sel (selector->z3 (selector name rule)))
             (when sel (emit `(assert (! (= (selector ,name) ,sel)
-                                        :named ,(sformat "rule-~a-selector" name)))))
+                                        :named ,(sformat "rule/~a-selector" name)))))
 
             (match rule
               ['? (void)]
@@ -181,27 +239,27 @@
                  (match (assoc a-prop pairs)
                    [(list _ '?)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))]
+                                      :named ,(sformat "rule/~a-~a?" name a-prop))))]
                    [(list _ val)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))
+                                      :named ,(sformat "rule/~a-~a?" name a-prop))))
                     (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
-                                      :named ,(sformat "rule-~a-~a-~a-val" name i a-prop))))]
+                                      :named ,(sformat "rule/~a-~a" name a-prop))))]
                    [#f (void)]))]
               [(list _ pairs ...)
                (for ([(a-prop type default) (in-css-properties)])
                  (match (assoc a-prop pairs)
                    [(list _ '?)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))]
+                                      :named ,(sformat "rule/~a-~a?" name a-prop))))]
                    [(list _ val)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))
+                                      :named ,(sformat "rule/~a-~a?" name a-prop))))
                     (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
-                                      :named ,(sformat "rule-~a-~a-~a-val" name i a-prop))))]
+                                      :named ,(sformat "rule/~a-~a" name a-prop))))]
                    [#f
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
-                                      :named ,(sformat "rule-~a-~a-~a-?" name i a-prop))))]))])
+                                      :named ,(sformat "rule/~a-~a?" name a-prop))))]))])
 
               ; Optimize for short CSS
             (when (memq 'opt (flags))
@@ -222,7 +280,7 @@
                         :weight 3))))))
 
 (define (element-constraints dom emit elt)
-  (emit `(assert (! (an-element (get/elt ,(element-name elt))) :named ,(sformat "element-~a" (element-name elt))))))
+  (emit `(assert (! (an-element (get/elt ,(element-name elt))) :named ,(sformat "element/~a" (element-name elt))))))
 
 (define (user-constraints dom emit elt)
   (define name (element-name elt))
@@ -241,7 +299,7 @@
        (define fun (cadr (assoc cmd mapping)))
        (when ;; HTML elements have weird heights
            (not (and (equal? cmd ':h) (equal? (element-get elt ':tag) 'html)))
-         (emit `(assert (! (= (,fun (get/box (flow-box (get/elt ,name)))) ,arg) :named ,(sformat "~a-~a" name fun)))))]
+         (emit `(assert (! (= (,fun (get/box (flow-box (get/elt ,name)))) ,arg) :named ,(sformat "~a/~a" fun name)))))]
       [':id (void)]
       [':tag (void)]
       [':text (void)])))
@@ -256,7 +314,7 @@
       ['INLINE 'link-inline-box]
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns (get/box (flow-box (get/elt ,(element-name elt)))))
-                    :named ,(sformat "link-box-~a" (element-name elt))))))
+                    :named ,(sformat "link-box/~a" (element-name elt))))))
 
 (define (box-constraints dom emit elt)
   (define cns
@@ -268,7 +326,7 @@
       ['INLINE 'an-inline-box]
       ['TEXT 'a-text-box]))
   (emit `(assert (! (,cns ,(sformat "~a-flow-box" (element-name elt)))
-                    :named ,(sformat "box-~a" (element-name elt))))))
+                    :named ,(sformat "box/~a" (element-name elt))))))
 
 (define (info-constraints dom emit elt)
   (define tagname
@@ -283,9 +341,9 @@
       ['INLINE 'display/inline]
       ['TEXT 'display/inline]
       ['LINE 'display/block]))
-  
+
   (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname ,display)
-                    :named ,(sformat "info-~a" (element-name elt))))))
+                    :named ,(sformat "info/~a" (element-name elt))))))
 
 (define (getter-definitions doms)
   (reap [sow]
@@ -368,6 +426,3 @@
     ,@(apply dfs-constraints doms constraints)
 
     (check-sat)))
-
-(define (unsat-constraint-info constraint)
-  (elt-from-name (string->symbol (first (string-split (~a constraint) "-")))))

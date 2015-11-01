@@ -4,14 +4,17 @@
 (require "common.rkt")
 (require "z3o.rkt")
 
-(provide z3-solve z3-prepare z3-namelines)
+(provide z3-solve z3-prepare z3-namelines (struct-out model) (struct-out unsat-core))
+
+(struct model (bindings))
+(struct unsat-core (bad-lines))
 
 (define-runtime-path bin "..")
 (define z3 (make-parameter (build-path bin "z3.sh")))
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
-(define (z3-solve encoding #:debug [debug? #f] #:get-unsat [get-unsat identity])
+(define (z3-solve encoding #:debug [debug? #f])
   (define-values (process out in err)
     (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
 
@@ -61,10 +64,7 @@
                    (write "(get-unsat-core)")
                    (let ([msg2 (read out)])
                      (debug #:tag 'output "<- ~a\n" msg2)
-                     (error (format "Z3 unsatisfiable (core is ~a constraints)\n~a" (length msg2)
-                                    (string-join
-                                     (for/list ([var msg2])
-                                       (format "  ~a: ~a" var (or (get-unsat var) (hash-ref asserts var)))) "\n"))))]
+                     (unsat-core msg2))]
                   ['sat
                    (if (null? rest)
                        (begin
@@ -73,7 +73,7 @@
                          (loop rest (current-inexact-milliseconds)))
                        (loop rest #f))]
                   [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
-                   (begin0 (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))
+                   (begin0 (model (for/hash ([c consts] [v vals]) (values c (de-z3ify v))))
                      (for ([cmd rest])
                        (write (~a cmd))
                        (debug #:tag 'eval ">>> ~a → ~a\n" cmd (read out)))

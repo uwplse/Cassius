@@ -93,12 +93,15 @@
                (hash-set! resolutions `(,name ,default-name) body)]
               [_ (void)])]))
        cmd]
-      [(or 
-        `(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
-        `(assert (! (= (,(? (curryr member fns) fn) ,args ...) ,value) :named ,_)))
+      [`(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
        (define input (cons fn (map resolve args)))
        (define output (resolve value))
        (save input output)
+       `(assert (= ,input ,output))]
+      [`(assert (! (= (,(? (curryr member fns) fn) ,args ...) ,value) :named ,name))
+       (define input (cons fn (map resolve args)))
+       (define output (resolve value))
+       (save input output #:because name)
        `(assert (= ,input ,output))]
       [`(assert ,expr)
        `(assert ,(resolve expr))]
@@ -243,7 +246,7 @@
     [`(! ,expr :named ,name)
      (define (rename head)
        (match bindings
-         [`((,names . ,(? symbol? vals)) ...) (sformat "~a<~a>" head (string-join (map ~a vals) ","))]
+         [`((,names . ,(? symbol? vals)) ...) (sformat "~a/~a" head (string-join (map ~a vals) "/"))]
          [_ head]))
      `(! ,(capture-avoiding-substitute expr bindings) :named ,(rename name))]
     [`(let ((,names ,vals) ...) ,body)
@@ -315,9 +318,11 @@
       (set! ctr (+ ctr 1))
       (match expr
         [`(! ,expr :named ,name)
-         (sow `(assert (! ,expr :named ,(sformat "~a/~a" head name))))]
+         (sow `(assert (! ,expr :named ,(sformat "~a^~a" head name))))]
+        [`(=> ,c (! ,expr :named ,name))
+         (sow `(assert (! (=> ,c ,expr) :named ,(sformat "~a^~a" head name))))]
         [_
-         (sow `(assert (! ,expr :named ,(sformat "~a/~a" head ctr))))])))
+         (sow `(assert (! ,expr :named ,(sformat "~a^~a" head ctr))))])))
 
   (for/reap (sow) ([cmd cmds] [i (in-naturals)])
     (match cmd
@@ -331,8 +336,8 @@
        (define left (set-subtract exprs1 both))
        (define right (set-subtract exprs2 both))
        (for-each (sow-rename sow name) both)
-       (for-each (sow-rename sow (sformat "~a-~a" name testname)) (map (λ (x) `(=> ,c ,x)) left))
-       (for-each (sow-rename sow (sformat "~a-!~a" name testname)) (map (λ (x) `(=> (not ,c) ,x)) right))]
+       (for-each (sow-rename sow (sformat "~a^~a" name testname)) (map (λ (x) `(=> ,c ,x)) left))
+       (for-each (sow-rename sow (sformat "~a^!~a" name testname)) (map (λ (x) `(=> (not ,c) ,x)) right))]
       [`(assert (ite ,c (and ,exprs1 ...) (and ,exprs2 ...)))
        (define both (set-intersect exprs1 exprs2))
        (define left (set-subtract exprs1 both))

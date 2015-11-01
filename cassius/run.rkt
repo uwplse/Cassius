@@ -80,17 +80,22 @@
        [#t
         (define z3-result
           (with-handlers ([exn:break? (lambda (e) 'break)] [exn:fail? (λ (e) (list 'error e))])
-            (list 'solved
-                  (z3-solve query #:debug debug #:get-unsat unsat-constraint-info))))
+            (z3-solve query #:debug debug)))
         (define time-solve (current-inexact-milliseconds))
            
         (match z3-result
-          [(list 'solved model)
+          [(model model)
            (print-rules #:stylesheet sheet #:header header model)
            (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
                     (hash-count model))
            #t]
+          [(unsat-core core)
+           (print-unsat-core query core)
+           (eprintf "[~as] Unsatisfiable, core of ~a constraints\nFailure.\n"
+                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
+                    (length core))
+           #f]
           [(list 'error e)
            (eprintf "[~as] ~a\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
