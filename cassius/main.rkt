@@ -178,7 +178,7 @@
       (for ([(rule-id props) (in-hash rules)])
         (define rule* (list-ref sheet* rule-id))
         (printf "  ~a {" (print-type 'Selector (selector->z3 (car rule*))))
-        (for ([prop props] #:when (not (equal? prop 'selector)))
+        (for ([prop props] #:when (not (member prop '(selector a-rule))))
           (define val (cadr (assoc prop (cdr rule*))))
           (printf " ~a: ~a;" prop (print-type (css-type prop) val)))
         (printf " }\n"))
@@ -287,7 +287,7 @@
 
             (emit `(declare-const ,name Rule))
             (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
-                              :named ,(sformat "rule/~a" name))))
+                              :named ,(sformat "rule/~a/a-rule" name))))
 
             (define sel (selector->z3 (selector name rule)))
             (when sel (emit `(assert (! (= (selector ,name) ,sel)

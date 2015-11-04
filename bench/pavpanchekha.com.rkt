@@ -224,7 +224,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 (define-problem verify
   #:header header
   #:sheet good-sheet
-  #:documents doma #;domb)
+  #:documents doma domb)
 
 (define-problem sketch
   #:header header

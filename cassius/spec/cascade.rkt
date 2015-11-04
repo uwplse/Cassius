@@ -58,7 +58,7 @@
   (match sel
     [`(selector ,name) `(selector-applies? ,sel (get/elt ,(element-name elt)))]
     [`(id ,id) (if (equal? id (element-get elt ':id)) 'true 'false)]
-    [`(tag ,tag) (if (equal? tag (element-get elt ':tag)) 'true 'false)]
+    [`(tag ,tag) (if (equal? (slower tag) (slower (element-get elt ':tag))) 'true 'false)]
     [`* 'true]
     [`(or ,sels ...) `(or ,@(map (curryr selector-matches? elt) sels))]
     [`(desc ,sel*) (selector-matches? sel* elt)]
