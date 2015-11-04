@@ -7,10 +7,11 @@
 (require "z3.rkt")
 (require "main.rkt")
 (require "modify-dom.rkt")
+(require "model-check.rkt")
 
 (provide parse-file run-file (struct-out problem))
 
-(struct problem (desc url header sheet documents features))
+(struct problem (desc url header sheet documents features test))
 
 (define (parse-file port)
   (define problems (make-hash))
@@ -29,29 +30,48 @@
       [`(define-stylesheet ,name ,rules ...)
        (hash-set! sheets name rules)]
       [`(define-document (,name #:width ,width #:browser ,browser) ,tree)
-       (hash-set! docs name (dom name (rendering-context width browser) (parse-tree tree)))]
+       (hash-set! docs name (dom name (rendering-context width browser) tree))]
       [`(define-document (,name #:width ,width) ,tree)
-       (hash-set! docs name (dom name (rendering-context width #f) (parse-tree tree)))]
+       (hash-set! docs name (dom name (rendering-context width #f) tree))]
       [`(define-header ,name ,header)
        (hash-set! headers name header)]
+      [`(define-problem ,name #:test ,test #:sheet ,sheet #:documents ,documents ...)
+       (hash-set! problems name
+                  (problem #f #f #f (hash-ref sheets sheet)
+                           (map parse-document documents) '() test))]
       [`(define-problem ,name #:header ,header #:sheet ,sheet #:documents ,documents ...)
        (hash-set! problems name
                   (problem #f #f (hash-ref headers header) (hash-ref sheets sheet)
-                           (map parse-document documents) '()))]
+                           (map parse-document documents) '() #f))]
       [`(define-problem ,name ,desc #:url ,url #:header ,header #:sheet ,sheet #:documents ,documents ... #:features ,feats)
        (hash-set! problems name
                   (problem desc url (hash-ref headers header) (hash-ref sheets sheet)
-                           (map parse-document documents) feats))]))
+                           (map parse-document documents) feats #f))]))
   problems)
 
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
-  (match-define (problem desc url header sheet documents features)
-    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
-
-  (reset!)
   (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
+  (define res
+  (match (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))
+   [(problem desc url header sheet documents features #f)
+    (solve-problem header sheet documents out solve debug)]
+   [(problem desc url header sheet (list document) features test)
+    (match-define (dom name ctx tree) document)
+    (for* ([i (in-naturals)] [concrete (generate-from-template tree i)])
+      (pretty-print concrete)
+      (with-output-to-string
+        (λ () (solve-problem header sheet (list (dom name ctx concrete)) out solve debug))))]))
+  (when outname (close-output-port out))
+  res)
+
+(define (solve-problem header sheet documents out solve debug)
+  (define documents*
+    (for/list ([d documents])
+      (match-define (dom name ctx tree) d)
+      (dom name ctx (parse-tree tree))))
+  (reset!)
   (define time-start (current-inexact-milliseconds))
-  (define query (all-constraints sheet documents))
+  (define query (all-constraints sheet documents*))
   (define time-constraints (current-inexact-milliseconds))
   (eprintf "[~as] Produced ~a constraints of ~a terms\n"
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
@@ -70,14 +90,14 @@
   
   (define res
    (parameterize ([current-output-port out])
-     (match solve
-       [#f
+     (cond
+       [(not solve)
         (for ([cmd query])
           (match cmd
             [(list 'echo comment) (printf "; ~a\n" comment)]
             [_ (printf "~a\n" cmd)]))
         #t]
-       [#t
+       [else
         (define z3-result
           (with-handlers ([exn:break? (lambda (e) 'break)] [exn:fail? (λ (e) (list 'error e))])
             (z3-solve query #:debug debug)))
@@ -91,7 +111,7 @@
                     (hash-count model))
            #t]
           [(unsat-core core)
-           (print-unsat-core query core)
+           (print-unsat-core query core documents* sheet)
            (eprintf "[~as] Unsatisfiable, core of ~a constraints\nFailure.\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
                     (length core))
@@ -106,7 +126,6 @@
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
            #f])])))
 
-  (when outname (close-output-port out))
   res)
 
 (module+ main
