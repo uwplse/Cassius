@@ -241,7 +241,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 (define-document (template #:width 958)
   ([BLOCK :tag HTML :x 0 :y 0 :w 958]
    ([BLOCK :tag BODY :x 154 :y 36 :w 650]
-    ([BLOCK :tag DIV :id content :x 164 :y 36 :w 630 :h 582]
+    ([BLOCK :tag DIV :id content :x 164 :y 36 :w 630]
      ([BLOCK :tag H1 :x 164 :y 36 :w 630 :h 24]
       ([LINE  :x 164 :y 36 :w 630 :h 24]
        ([TEXT :x 164 :y 31.5 :h 33])))

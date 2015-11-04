@@ -32,16 +32,16 @@
     (if (null? parts)
         empty
         (match (car parts)
-          [`(* . ,x) (cons (car split) (loop (cdr split) (cdr parts)))]
-          [`(,n . ,x) (cons n (loop split (cdr parts)))]))))
+          [`(* . ,x) (cons (partition-list (car split)) (loop (cdr split) (cdr parts)))]
+          [`(,n . ,x) (cons (list (list (car split))) (loop (cdr split) (cdr parts)))]))))
 
 (define (generate-from-template dom i)
   (if (list? dom)
       (let ([parts (split-body (cdr dom))])
         (remove-duplicates
-         (for/reap [sow] ([split (split-into i (count (λ (x) (equal? (car x) '*)) parts))])
+         (for/reap [sow] ([split (split-into i (length parts))])
                    (define split* (assign-split split parts))
-                   (define splitschemes (cartesian-product (map partition-list split*)))
+                   (define splitschemes (cartesian-product split*))
                    
                    (for ([splitscheme splitschemes])
                      (for-each sow

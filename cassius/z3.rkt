@@ -211,6 +211,8 @@
 
 (define (z3-prepare exprs)
   (define start (current-inexact-milliseconds))
-  (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
-    #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
-    (action exprs)))
+  (append
+   (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
+     #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
+     (action exprs))
+   '((check-sat))))

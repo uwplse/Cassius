@@ -52,19 +52,28 @@
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
   (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
   (define res
-  (match (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))
-   [(problem desc url header sheet documents features #f)
-    (solve-problem header sheet documents out solve debug)]
-   [(problem desc url header sheet (list document) features test)
-    (match-define (dom name ctx tree) document)
-    (for* ([i (in-naturals)] [concrete (generate-from-template tree i)])
-      (pretty-print concrete)
-      (with-output-to-string
-        (λ () (solve-problem header sheet (list (dom name ctx concrete)) out solve debug))))]))
+    (match (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))
+      [(problem desc url header sheet documents features #f)
+       (solve-problem header sheet documents out solve debug #f)]
+      [(problem desc url header sheet (list document) features test)
+       (match-define (dom name ctx tree) document)
+       (let/ec stop
+         (for* ([i (in-naturals)] [concrete (generate-from-template tree i)])
+           (eprintf ". ")
+           (define port (if (member 'solver debug) out (open-output-string)))
+           (parameterize ([current-output-port port] [current-error-port port])
+             (match (solve-problem "" sheet (list (dom name ctx concrete)) port solve debug test)
+               [#t (void)]
+               [#f
+                (newline)
+                (when (not (member 'solver debug))
+                  (write (get-output-string port)))
+                (pretty-print concrete)]))
+           (when (not solve) (stop #t))))]))
   (when outname (close-output-port out))
   res)
 
-(define (solve-problem header sheet documents out solve debug)
+(define (solve-problem header sheet documents out solve debug test)
   (define documents*
     (for/list ([d documents])
       (match-define (dom name ctx tree) d)
@@ -76,6 +85,9 @@
   (eprintf "[~as] Produced ~a constraints of ~a terms\n"
            (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
            (length query) (tree-size query))
+  
+  (when test
+    (set! query (add-test query test)))
 
   (when (memq 'z3o (flags))
     (set! query (z3-prepare query)))
@@ -103,29 +115,37 @@
             (z3-solve query #:debug debug)))
         (define time-solve (current-inexact-milliseconds))
            
-        (match z3-result
-          [(model model)
+        (match* (test z3-result)
+          [(#f (model model))
            (print-rules #:stylesheet sheet #:header header model)
            (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
                     (hash-count model))
            #t]
-          [(unsat-core core)
+          [(#f (unsat-core core))
            (print-unsat-core query core documents* sheet)
            (eprintf "[~as] Unsatisfiable, core of ~a constraints\nFailure.\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
                     (length core))
            #f]
-          [(list 'error e)
+          [(#t (model model))
+           #;(print-counterexample model documents* sheet)
+           (eprintf "[~as] Counterexample found!\nFailure.\n"
+                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
+           #f]
+          [(#t (unsat-core core))
+           (eprintf "[~as] No counterexamples found\nSuccess!\n"
+                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
+           #t]
+          [(_ (list 'error e))
            (eprintf "[~as] ~a\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
                     (exn-message e))
            #f]
-          ['break
+          [(_ 'break)
            (eprintf "[~as] Query terminated\nFailure.\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
            #f])])))
-
   res)
 
 (module+ main

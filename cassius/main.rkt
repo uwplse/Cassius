@@ -12,7 +12,7 @@
 (require srfi/1)
 (require srfi/13)
 
-(provide all-constraints print-rules print-unsat-core reset!)
+(provide all-constraints add-test print-rules print-unsat-core reset!)
 
 (define (in-empty) (in-list empty))
 
@@ -491,6 +491,12 @@
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
-    ,@(apply dfs-constraints doms constraints)
+    ,@(apply dfs-constraints doms constraints)))
 
-    (check-sat)))
+(define (add-test constraints test)
+  (match-define `(forall (,vars ...) ,body) test)
+  (define &vars (map (curry sformat "counterexample/~a") vars))
+  `(,@constraints
+    ,@(for/list ([&var &vars])
+        `(declare-const ,&var BoxName))
+    (assert (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body)))))
