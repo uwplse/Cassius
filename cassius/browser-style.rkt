@@ -16,9 +16,9 @@
      [margin-bottom (margin/px 8)]
      [margin-left (margin/px 8)])
     ((tag caption)
-     [text-align text/center])
+     [text-align text-align/center])
     ((tag center)
-     [text-align text/center])
+     [text-align text-align/center])
     ((tag dd)
      [margin-left (margin/px 40)])
     ; DIR
@@ -68,4 +68,5 @@
 (define (get-sheet browser)
   (match browser
     ['firefox firefox-sheet]
-    [#f '()]))
+    [#f '()]
+    ['user #f]))

@@ -26,7 +26,7 @@
 (define-dom-transformer (dom-strip-positions head cmds)
   [((or 'BLOCK 'INLINE) cmds)
    (for/cmds cmds
-     [((and (or ':x ':y ':w ':h) cmd) val)
+     [((and (or ':x ':y ':w ':h) cmd) (? number? val))
       '()]
      [(x) (list x)])]
   [(_ _)

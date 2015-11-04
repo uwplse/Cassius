@@ -196,8 +196,6 @@
    z3-if-and
    z3-simplif
    (z3-check-trivial-calls 'get/box 'get/elt)
-   #;(z3-expand 'get/box 'get/elt)
-   #;z3-simplif
    z3-dco
    z3-check-datatypes z3-check-functions z3-check-let z3-check-fields))
 
