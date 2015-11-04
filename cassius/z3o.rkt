@@ -102,7 +102,7 @@
       [`(assert (! (= (,(? (curryr member fns) fn) ,args ...) ,value) :named ,name))
        (define input (cons fn (map resolve args)))
        (define output (resolve value))
-       (save input output #:because name)
+       (save input output)
        `(assert (= ,input ,output))]
       [`(assert ,expr)
        `(assert ,(resolve expr))]
