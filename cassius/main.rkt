@@ -32,7 +32,7 @@
     (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header))
 
   (for ([rule-value (map (curry hash-ref smt-out)
-                         (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "rule-user-~a" i)))])
+                         (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "user/~a" i)))])
     (printf "\n~a\n" (print-type 'Rule rule-value))))
 
 (define (css-type-ending? v)
@@ -91,12 +91,12 @@
            (printf "  ~a: ~a;\n" prop (apply print-type value)))
          (printf "}"))))])
 
-(define (print-unsat-core query vars)
+(define (print-unsat-core query vars doms stylesheet)
   (define (parse-var var)
     (for/list ([part (string-split (~a var) "^")])
       (match (string-split part "/")
         [(list _) part]
-        [(list parts ...) (map string->symbol parts)])))
+        [(list parts ...) (map (curryr with-input-from-string read) parts)])))
 
   (define (parsed->elt parsed)
     (for/first ([part parsed] #:when (list? part) [symbol part]
@@ -106,7 +106,7 @@
   (define asserts (make-hash))
   (for ([cmd query])
     (match cmd
-      [`(assert (! ,expr :named ,name)) (hash-set! asserts name expr)]
+      [`(assert (! ,expr ,_ ... :named ,name ,_ ...)) (hash-set! asserts name expr)]
       [_ (void)]))
 
   (define elts (make-hash))
@@ -126,27 +126,88 @@
       [`((y ,_)) (format "You gave :y ~a" (element-get elt ':y))]
       [`((box-width ,_)) (format "You gave :w ~a" (element-get elt ':w))]
       [`((box-height ,_)) (format "You gave :h ~a" (element-get elt ':h))]
-      [`((box ,_) (flow ,_) (flow-width ,_ ,_))
-       (format "Compute the width as per CSS §10.3.3")]
-      [`((box ,_) (flow ,_) (flow-x ,_ ,_))
+      [`((box root ,_) (zero-xybpm ,_)) (void)]
+      [`((box block ,_) (positive-bpwh ,_ ,_))
+       "Borders, paddings, width, and height must all be non-negative"]
+      [`((box block ,_) (flow ,_) (flow-width-overflow ,_ ,_))
+       (format "If the given L/R margins and width overflow, ignore the right margin")]
+      [`((box block ,_) (flow ,_) (flow-width-wauto ,_ ,_))
+       (format "If { width: auto } and the margins don't overflow, expand the element to fill the available width")]
+      [`((box block ,_) (flow ,_) (flow-width-center ,_ ,_))
+       (format "If { margin-left: auto; margin-right: auto } and the width doesn't overflow, center the element")]
+      [`((box block ,_) (flow ,_) (flow-width-ordinary ,_ ,_))
+       (format "If the width is given, ignore auto margins and the right margin if necessary")]
+      [`((box block ,_) (flow ,_) (flow-x ,_ ,_))
        (format "The X-position is the parent's left content edge plus the left margin")]
-      [`((box ,_) (lines-dont-float ,_))
+      [`((box block ,_) (flow ,_) (flow-fill-width ,_ ,_))
+       (format "In-flow block boxes fill the horizontal width")]
+      [`((box block ,_) (flow ,_) (flow-mt-auto ,_ ,_))
+       (format "{ margin-top: auto } means no top margin")]
+      [`((box block ,_) (flow ,_) (flow-mb-auto ,_ ,_))
+       (format "{ margin-bottom: auto } means no top margin")]
+      [`((box block ,_) (flow ,_) (from-style ,prop ,_ ,_))
+       (format "~a is used straight from the computed style" prop)]
+      [`((box block ,_) (flow ,_) (auto-height ,prop ,_ ,_))
+       (format "Since height is auto, height is computed based on the children" prop)]
+      [`((box block ,_) (!flow ,_) (no-collapse ,_ ,_))
+       (format "Margins of floating boxes don't collapse")]
+      [`((box line ,_) (line-no-mbp ,_))
+       (format "Line boxes do not have margins, padding, or borders")]
+      [`((box line ,_) (lines-dont-float ,_))
        (format "Line boxes do not float")]
+      [`((box line ,_) (skip-float ,_))
+       (format "Y position after preceding floats")]
+      [`((box line ,_) (top-of-parent ,_))
+       (format "Y position at the top of the parent block")]
+      [`((box line ,_) (follow-previous-line ,_))
+       (format "Y position after previous line")]
       [`((cascade eq ,_ ,prop) ,num)
        (match (hash-ref asserts var)
          [`(= (,_ (rules ,_)) ,val)
-          (format "Computed style of { ~a: ~a; }" prop (print-type (css-type prop) val))]
+          (format "Default style is { ~a: ~a; }" prop (print-type (css-type prop) val))]
          [line (format "Computed style with, ~a" line)])]
       [`((root ,prop ,_))
        (for/first ([(prop* type default) (in-css-properties)] #:when (eq? prop prop*))
-         (format "The root element has { ~a: ~a; }" prop (print-type type default)))]
+         (format "The root box has { ~a: ~a; }" prop (print-type type default)))]
       [_ (format "~a: ~a" line (hash-ref asserts var))]))
 
-  (for ([(elt parseds) (in-hash elts)])
-    (printf "~a:\n" (or elt "[VIEW]"))
-    (for ([(var parsed) (in-pairs parseds)])
-      (printf "  ~a\n" (describe-line var parsed elt)))
-    (printf "\n")))
+  (define (print-rule-core rules)
+    (for ([(sheet-name rules) (in-hash (trieify (map cdadr rules)))])
+      (printf "~a.css:\n" sheet-name)
+      (define sheet* (or (get-sheet sheet-name) stylesheet))
+      (for ([(rule-id props) (in-hash rules)])
+        (define rule* (list-ref sheet* rule-id))
+        (printf "  ~a {" (print-type 'Selector (selector->z3 (car rule*))))
+        (for ([prop props] #:when (not (equal? prop 'selector)))
+          (define val (cadr (assoc prop (cdr rule*))))
+          (printf " ~a: ~a;" prop (print-type (css-type prop) val)))
+        (printf " }\n"))
+      (printf "\n")))
+
+  (define keys (hash-keys elts))
+  (define (key<? x y)
+    (cond [(not x) #t]
+          [(not y) #f]
+          [else (symbol<? (element-name x) (element-name y))]))
+  (printf "\n")
+  (for ([elt (sort keys key<?)])
+    (cond
+     [elt
+      (printf "~a:\n" elt)
+      (for ([(var parsed) (in-pairs (hash-ref elts elt))])
+        (printf "  ~a\n" (describe-line var parsed elt)))
+      (printf "\n")]
+     [(not elt)
+      (define-values (rules root)
+        (for/reap [rule root] ([(var parsed) (in-pairs (hash-ref elts elt))])
+          (match parsed
+            [`((rule ,_ ...)) (rule (cons var parsed))]
+            [_ (root (cons var parsed))])))
+      (print-rule-core rules)
+      (printf "[VIEW]:\n")
+      (for ([(var parsed) (in-pairs root)])
+        (printf "  ~a\n" (describe-line var parsed elt)))
+      (printf "\n")])))
 
 (define (tree-constraints dom emit elt)
   (define (either field default)
@@ -217,11 +278,11 @@
                     :named ,(sformat "width/~a" (dom-name dom)))))
   (emit `(assert (! (link-root-element ,elt ,(element-name (dom-tree dom)))
                     :named ,(sformat "element/~a" (dom-root dom)))))
-  (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box/~a" (dom-root dom))))))
+  (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box/root/~a" (dom-root dom))))))
 
 (define (stylesheet-constraints sname sheet save-rule #:browser [browser? #f])
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
-            (define name (sformat "rule-~a-~a" sname i))
+            (define name (sformat "~a/~a" sname i))
             (save-rule name rule)
 
             (emit `(declare-const ,name Rule))
@@ -230,7 +291,7 @@
 
             (define sel (selector->z3 (selector name rule)))
             (when sel (emit `(assert (! (= (selector ,name) ,sel)
-                                        :named ,(sformat "rule/~a-selector" name)))))
+                                        :named ,(sformat "rule/~a/selector" name)))))
 
             (match rule
               ['? (void)]
@@ -239,27 +300,27 @@
                  (match (assoc a-prop pairs)
                    [(list _ '?)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule/~a-~a?" name a-prop))))]
+                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))]
                    [(list _ val)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule/~a-~a?" name a-prop))))
+                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))
                     (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
-                                      :named ,(sformat "rule/~a-~a" name a-prop))))]
+                                      :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
                    [#f (void)]))]
               [(list _ pairs ...)
                (for ([(a-prop type default) (in-css-properties)])
                  (match (assoc a-prop pairs)
                    [(list _ '?)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule/~a-~a?" name a-prop))))]
+                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))]
                    [(list _ val)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule/~a-~a?" name a-prop))))
+                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))
                     (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
-                                      :named ,(sformat "rule/~a-~a" name a-prop))))]
+                                      :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
                    [#f
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
-                                      :named ,(sformat "rule/~a-~a?" name a-prop))))]))])
+                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))]))])
 
               ; Optimize for short CSS
             (when (memq 'opt (flags))
@@ -282,6 +343,12 @@
 (define (element-constraints dom emit elt)
   (emit `(assert (! (an-element (get/elt ,(element-name elt))) :named ,(sformat "element/~a" (element-name elt))))))
 
+(define (number*? x)
+  (match x
+    [(? number?) #t]
+    [`(/ ,(? number*?) ,(? number*?)) #t]
+    [_ #f]))
+
 (define (user-constraints dom emit elt)
   (define name (element-name elt))
   (for ([(cmd arg) (in-groups 2 (element-attrs elt))])
@@ -297,9 +364,15 @@
          '((:x x) (:y y) (:h box-height) (:w box-width)
            (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
        (define fun (cadr (assoc cmd mapping)))
-       (when ;; HTML elements have weird heights
-           (not (and (equal? cmd ':h) (equal? (element-get elt ':tag) 'html)))
-         (emit `(assert (! (= (,fun (get/box (flow-box (get/elt ,name)))) ,arg) :named ,(sformat "~a/~a" fun name)))))]
+       (match arg
+         [(? number*?)
+          (when ;; HTML elements have weird heights
+              (not (and (equal? cmd ':h) (equal? (element-get elt ':tag) 'html)))
+            (emit `(assert (! (= (,fun (get/box (flow-box (get/elt ,name)))) ,arg) :named ,(sformat "~a/~a" fun name)))))]
+         [`(explain ,(? number*? value))
+          (emit `(assert (! (not (= (,fun (get/box (flow-box (get/elt ,name)))) ,value)) :named ,(sformat "~a/~a" fun name))))]
+         [`(between ,(? number*? min) ,(? number*? max))
+          (emit `(assert (! (<= ,min (,fun (get/box (flow-box (get/elt ,name)))) ,max) :named ,(sformat "~a/~a" fun name))))])]
       [':id (void)]
       [':tag (void)]
       [':text (void)])))
@@ -326,7 +399,7 @@
       ['INLINE 'an-inline-box]
       ['TEXT 'a-text-box]))
   (emit `(assert (! (,cns ,(sformat "~a-flow-box" (element-name elt)))
-                    :named ,(sformat "box/~a" (element-name elt))))))
+                    :named ,(sformat "box/~a/~a" (slower (element-type elt)) (element-name elt))))))
 
 (define (info-constraints dom emit elt)
   (define tagname
@@ -359,28 +432,23 @@
             (cns dom sow elt)))))
 
 (define (all-constraints sheet doms)
+
+  (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
+  (unless (= (length browsers) 1)
+    (error "Different browsers on different documents not yet supported"))
+  (define browser-style (get-sheet (car browsers)))
+
   (define-values (tags ids)
     (reap [save-tag save-id]
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
             (when (element-get elt ':id) (save-id (sformat "id/~a" (slower (element-get elt ':id)))))
             (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag))))))
-          (for ([rule sheet])
+          (for* ([sheet* (list browser-style sheet)] [rule sheet*])
             (match rule
               ['? (void)]
               [`((tag ,tag) ,_ ...) (save-tag (sformat "tag/~a" (slower tag)))]
               [`((id ,id) ,_ ...) (save-id (sformat "id/~a" (slower id)))]
               [_ (void)]))))
-
-  (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
-  (unless (= (length browsers) 1)
-    (error "Different browsers on different documents not yet supported"))
-
-  (define browser-style
-    (for/reap [save] ([(sel props) (in-pairs (get-sheet (car browsers)))])
-              (match sel
-                ['any (save (cons sel props))]
-                [`(tag ,tag)
-                 (when (memq (sformat "tag/~a" (slower tag)) tags) (save (cons sel props)))])))
 
   (define element-names
     (append

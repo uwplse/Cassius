@@ -197,7 +197,8 @@
    z3-simplif
    (z3-check-trivial-calls 'get/box 'get/elt)
    z3-dco
-   z3-check-datatypes z3-check-functions z3-check-let z3-check-fields))
+   z3-check-datatypes z3-check-functions z3-check-let z3-check-fields
+   z3-clean-no-opt))
 
 (define (z3-namelines cmds)
   (for/list ([cmd cmds] [i (in-naturals)])

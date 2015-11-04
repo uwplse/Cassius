@@ -6,7 +6,8 @@
 (require "../coq/z3o.rkt")
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
-         z3-check-let z3-check-fields z3-print-all z3-ground-quantifiers)
+         z3-check-let z3-check-fields z3-print-all z3-ground-quantifiers
+         z3-clean-no-opt)
 
 (define (z3-dco cmds)
   (let ([store (make-hash)])
@@ -68,8 +69,8 @@
        (define args* (map resolve args))
        (define expr* (cons f args*))
        (if (hash-has-key? resolutions expr*)
-           (resolve (hash-ref resolutions expr*))
-           expr*)]
+         (resolve (hash-ref resolutions expr*))
+         expr*)]
       [_ expr]))
 
   (for/list ([cmd cmds] [i (in-naturals)])
@@ -323,15 +324,23 @@
          (sow `(assert (! (=> ,c ,expr) :named ,(sformat "~a^~a" head name))))]
         [_
          (sow `(assert (! ,expr :named ,(sformat "~a^~a" head ctr))))])))
+  
+  (define (gather-ands expr)
+    (match expr
+      [`(and ,exprs ...)
+       (append-map gather-ands exprs)]
+      [_ (list expr)]))
 
   (for/reap (sow) ([cmd cmds] [i (in-naturals)])
     (match cmd
       [`(assert (! (and ,exprs ...) :named ,name))
-       (for-each (sow-rename sow name) exprs)]
+       (for-each (sow-rename sow name) (gather-ands `(and ,@exprs)))]
       [`(assert (and ,exprs ...))
-       (for ([expr exprs])
+       (for ([expr (gather-ands `(and ,@exprs))])
          (sow `(assert ,expr)))]
-      [`(assert (! (ite (! ,c :named ,testname) (and ,exprs1 ...) (and ,exprs2 ...)) :named ,name))
+      [`(assert (! (ite (! ,c :named ,testname) ,expr1 ,expr2) :named ,name))
+       (define exprs1 (gather-ands expr1))
+       (define exprs2 (gather-ands expr2))
        (define both (set-intersect exprs1 exprs2))
        (define left (set-subtract exprs1 both))
        (define right (set-subtract exprs2 both))
@@ -561,7 +570,17 @@
     (let ([name (constructor-tester-name tester)])
       (and name (member name (hash-ref finite-types type)))))
 
-  (for/reap [sow] ([cmd cmds] [i (in-naturals)])
+  (define (ground expr)
+    (match expr
+      [`(forall ((,vars ,(? finite-type? types)) ...) ,body)
+       (cons 'and
+             (for/list ([vals (cartesian-product (map (curry hash-ref finite-types) types))])
+               (capture-avoiding-substitute body (map cons vars vals))))]
+      [(? list?)
+       (map ground expr)]
+      [_ expr]))
+
+  (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
       [`(declare-datatypes () (,decls ...))
        (for ([decl decls])
@@ -569,9 +588,14 @@
            [`(,name ,(? symbol? constructors) ...)
             (hash-set! finite-types name constructors)]
            [_ (void)]))
-       (sow cmd)]
-      [`(assert (forall ((,vars ,(? finite-type? types)) ...) ,body))
-       (for ([vals (cartesian-product (map (curry hash-ref finite-types) types))])
-         (sow `(assert ,(capture-avoiding-substitute body (map cons vars vals)))))]
+       cmd]
+      [`(assert ,expr)
+       `(assert ,(ground expr))]
       [_
-       (sow cmd)])))
+       cmd])))
+
+(define (z3-clean-no-opt cmds)
+  (for/list ([cmd cmds])
+    (match cmd
+      [`(assert (! ,terms ... :no-opt)) `(assert (! ,@terms))]
+      [_ cmd])))

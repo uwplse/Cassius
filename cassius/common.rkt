@@ -1,10 +1,12 @@
 #lang racket
 
+(require unstable/sequence)
+
 (provide
  reap for/reap for*/reap
  sformat slower
  flags all-flags supported-features
- tree-size sdiff in-groups sequence-cons cartesian-product)
+ tree-size sdiff in-groups sequence-cons cartesian-product trieify)
 
 (define flags (make-parameter '(z3o)))
 (define all-flags '(opt float z3o details))
@@ -64,3 +66,22 @@
       (list (list))
       (for*/list ([head (car ls)] [tail (cartesian-product (cdr ls))])
         (cons head tail))))
+
+(define (trieify ls)
+  (define/match (single-symbol-list? l)
+    [((list (? symbol?))) #t]
+    [(_) #f])
+  (cond
+   [(null? ls)
+    (hash)]
+   [(andmap single-symbol-list? ls)
+    (map car ls)]
+   [else
+    (for/hash
+        ([(key ls*)
+          (in-hash
+           (let ([h (make-hash)])
+             (for ([(head tail) (in-pairs ls)])
+               (hash-set! h head (cons tail (hash-ref h head '()))))
+             h))])
+      (values key (trieify ls*)))]))
