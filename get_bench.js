@@ -375,6 +375,7 @@ function make_boxes(elt, inflow, styles, features) {
         });
 
         if (elt.id) box.props.id = elt.id;
+        if (elt.classList.length) box.props["class"] = "(" + elt.classList + ")";
 
         inflow.children.push(box);
     }

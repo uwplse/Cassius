@@ -375,6 +375,7 @@
           (emit `(assert (! (<= ,min (,fun (get/box (flow-box (get/elt ,name)))) ,max) :named ,(sformat "~a/~a" fun name))))])]
       [':id (void)]
       [':tag (void)]
+      [':class (void)]
       [':text (void)])))
 
 (define (box-link-constraints dom emit elt)
