@@ -597,5 +597,5 @@
 (define (z3-clean-no-opt cmds)
   (for/list ([cmd cmds])
     (match cmd
-      [`(assert (! ,terms ... :no-opt)) `(assert (! ,@terms))]
+      [`(assert (! ,terms ... :opt _)) `(assert (! ,@terms))]
       [_ cmd])))

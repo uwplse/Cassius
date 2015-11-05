@@ -60,6 +60,7 @@
     [`(id ,id) (if (equal? id (element-get elt ':id)) 'true 'false)]
     [`(tag ,tag) (if (equal? (slower tag) (slower (element-get elt ':tag))) 'true 'false)]
     [`* 'true]
+    [(? string?) 'false]
     [`(or ,sels ...) `(or ,@(map (curryr selector-matches? elt) sels))]
     [`(desc ,sel*) (selector-matches? sel* elt)]
     [`(desc ,ansc ... ,sel*)

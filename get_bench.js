@@ -442,6 +442,7 @@ function dump_rule(sel, style, features) {
     if (!sel_text) {
         if (has_good_prop) features["unknown-selector"] = true;
         return "";
+        return "\n  (\"" + sel.replace("\\", "\\\\").replace("\"", "\\\"") + "\""+ text + ")";
     } else {
         return "\n  (" + sel_text + text + ")";
     }

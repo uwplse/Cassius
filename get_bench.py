@@ -100,12 +100,12 @@ def main(urls, name=None):
                 letter = str(i+1).rjust(len(str(len(urls))), "0")
                 get_bench_output(browser, letter, url, fi)
                 scheme, _, _, _, _, _ = urlparse.urlparse(url)
-                if scheme == "http":
-                    src = urllib.urlopen(url)
-                    fname2 = "bench/{}-{}.html".format(netloc, letter)
-                    print "Saving source to {}".format(fname2)
-                    with open(fname2, "wb") as f2:
-                        shutil.copyfileobj(src, f2)
+                #if scheme == "http":
+                #    src = urllib.urlopen(url)
+                #    fname2 = "bench/{}-{}.html".format(netloc, letter)
+                #    print "Saving source to {}".format(fname2)
+                #    with open(fname2, "wb") as f2:
+                #        shutil.copyfileobj(src, f2)
             fi.close()
 
     browser.quit()

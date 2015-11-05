@@ -177,7 +177,13 @@
       (define sheet* (or (get-sheet sheet-name) stylesheet))
       (for ([(rule-id props) (in-hash rules)])
         (define rule* (list-ref sheet* rule-id))
-        (printf "  ~a {" (print-type 'Selector (selector->z3 (car rule*))))
+        (cond
+         [(eq? rule* '?)
+          (printf "? {")]
+         [(selector->z3 (car rule*))
+          (printf "  ~a {" (print-type 'Selector (selector->z3 (car rule*))))]
+         [else
+          (printf "  ~a {" (car rule*))])
         (for ([prop props] #:when (not (member prop '(selector a-rule))))
           (define val (cadr (assoc prop (cdr rule*))))
           (printf " ~a: ~a;" prop (print-type (css-type prop) val)))
