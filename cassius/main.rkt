@@ -467,10 +467,11 @@
   (define (save-rule x rule) (set! rules (cons (cons x rule) rules)))
 
   (define constraints
-    (list tree-constraints box-element-constraints
-          info-constraints user-constraints #;element-constraints
-          box-link-constraints box-constraints
-          (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)))
+    (list
+     tree-constraints box-element-constraints
+     (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)
+     info-constraints user-constraints #;element-constraints
+     box-link-constraints box-constraints))
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")

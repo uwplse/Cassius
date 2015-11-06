@@ -13,32 +13,36 @@
   (define re `(rules (get/elt ,(element-name elt))))
 
   ;; Score of computed rule is >= any applicable stylesheet rule
-  (append
+  (reap [sow]
    (for*/list ([(property type default) (in-css-properties)] [(name rule) (in-pairs rules)])
-     `(assert
-       (! (or (not (,(sformat "rule.~a?" property) ,name))
-              (=> ,(selector-matches? (selector name rule) elt)
-                  (score-ge (,(sformat "style.~a$" property) ,re) (score ,name))))
-          :named ,(sformat "cascade/ge/~a/~a/~a" (element-name elt) name property))))
+     (when (not (equal? (selector-matches? (selector name rule) elt) 'false))
+       (sow
+        `(assert
+          (! (or (not (,(sformat "rule.~a?" property) ,name))
+                 (=> ,(selector-matches? (selector name rule) elt)
+                     (score-ge (,(sformat "style.~a$" property) ,re) (score ,name))))
+             :named ,(sformat "cascade/ge/~a/~a/~a" (element-name elt) name property))))))
    
    ;; Score&value of computed rule is = some applicable stylesheet rule
    (for/list ([(property type default) (in-css-properties)])
-     `(assert
-       (! (or
-           (and (is-useDefault (,(sformat "style.~a$" property) ,re))
-                (= (,(sformat "style.~a" property) ,re) ,default))
-           ,@(for/list ([(name rule) (in-pairs rules)])
-               `(and
-                 (,(sformat "rule.~a?" property) ,name)
-                 ,(selector-matches? (selector name rule) elt)
-                 (= (,(sformat "style.~a$" property) ,re) (score ,name))
-                 (= (,(sformat "style.~a" property) ,re)
-                    (ite (,(sformat "is-~a/inherit" (type->prefix type))
-                          (,(sformat "rule.~a" property) ,name))
-                         (,(sformat "style.~a" property)
-                          (rules (parent (get/elt ,(element-name elt)))))
-                         (,(sformat "rule.~a" property) ,name))))))
-          :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property))))))
+     (sow
+      `(assert
+        (! (or
+            (and (is-useDefault (,(sformat "style.~a$" property) ,re))
+                 (= (,(sformat "style.~a" property) ,re) ,default))
+            ,@(for/list ([(name rule) (in-pairs rules)]
+                         #:when (not (equal? (selector-matches? (selector name rule) elt) 'false)))
+                `(and
+                  (,(sformat "rule.~a?" property) ,name)
+                  ,(selector-matches? (selector name rule) elt)
+                  (= (,(sformat "style.~a$" property) ,re) (score ,name))
+                  (= (,(sformat "style.~a" property) ,re)
+                     (ite (,(sformat "is-~a/inherit" (type->prefix type))
+                           (,(sformat "rule.~a" property) ,name))
+                          (,(sformat "style.~a" property)
+                           (rules (parent (get/elt ,(element-name elt)))))
+                          (,(sformat "rule.~a" property) ,name))))))
+           :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property)))))))
 
 (define (selector name rule)
   (match rule
@@ -58,7 +62,7 @@
   (match sel
     [`(selector ,name) `(selector-applies? ,sel (get/elt ,(element-name elt)))]
     [`(id ,id) (if (equal? id (element-get elt ':id)) 'true 'false)]
-    [`(tag ,tag) (if (equal? (slower tag) (slower (element-get elt ':tag))) 'true 'false)]
+    [`(tag ,tag) (if (and (element-get elt ':tag) (equal? (slower tag) (slower (element-get elt ':tag)))) 'true 'false)]
     [`* 'true]
     [(? string?) 'false]
     [`(or ,sels ...) `(or ,@(map (curryr selector-matches? elt) sels))]

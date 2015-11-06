@@ -165,6 +165,7 @@
   (append
    '(link-element link-block-box link-inline-box link-text-box link-line-box link-element-box link-root-element)
    '(an-element a-root-element element-info)
+   '(float textalign)
    '(previous next parent fchild lchild)
    '(real-pbox real-fbox real-lbox real-vbox real-nbox)
    '(pbox pbbox vbox fbox lbox nbox vbox fltbox)
