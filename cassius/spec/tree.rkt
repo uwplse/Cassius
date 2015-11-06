@@ -94,11 +94,14 @@
             [(is-no-elt (next e)) nil-box]
             [(is-float/none (float (next e))) (flow-box (next e))]
             [else (n-name (get/box (flow-box (next e))))]))
+       ;; Uncomment the next two commented lines to not inline flow chains
+       ;(!
        (= (flt-name b)
           ,(smt-cond
             [(and (is-no-elt (previous e)) (not (is-float/none (float (parent e))))) nil-box]
             [(is-no-elt (previous e)) (flt-name (get/box (flow-box (parent e))))]
             [else (flt-up-name (get/box (flow-box (previous e))))]))
+       ;:opt false)
        (= (flt-up-name b)
           ,(smt-cond
             [(not (is-float/none (float e))) (flow-box e)]
