@@ -309,6 +309,7 @@ function make_boxes(elt, inflow, styles, features) {
         });
 
         if (elt.id) box.props.id = elt.id;
+        if (elt.classList.length) box.props["class"] = "(" + elt.classList + ")";
         if (elt.style.length) {
             var eid = gensym();
             if (!elt.id) box.props.id = eid;
@@ -344,6 +345,8 @@ function make_boxes(elt, inflow, styles, features) {
     } else if (is_inline (elt)) {
         var r = elt.getBoundingClientRect();
         var box = Inline(elt, {tag: elt.tagName/*, x: r.x, y: r.y, w: r.width, h: r.height*/});
+        if (elt.id) box.props["id"] = elt.id;
+        if (elt.classList.length) box.props["class"] = "(" + elt.classList + ")";
         if (elt.style.length) {
             var eid = gensym();
             if (!elt.id) box.props.id = eid;
@@ -400,10 +403,12 @@ function dump_selector(sel) {
         var sub = sel.split(/\s+/).map(dump_selector);
         if (sub.indexOf(false) !== -1) return false;
         return "(desc " + sub.join(" ") + ")";
-    } else if (match = sel.match(/^[\w-]*#([\w-]+)$/)) {
-        return "(id " + match[1] + ")";
+    } else if (match = sel.match(/^\.([\w-]+)$/)) {
+        return "(class " + match[1] + ")";
+    } else if (match = sel.match(/^[\w-]*#([\w-]+)(.[\w-]*)?$/)) {
+        return "(id " + match[1].toLowerCase() + ")";
     } else if (match = sel.match(/^([\w-]+)$/)) {
-        return "(tag " + match[1] + ")";
+        return "(tag " + match[1].toLowerCase() + ")";
     } else if (match = sel.match(/^\*$/)) {
         return "*";
     } else {
@@ -413,6 +418,8 @@ function dump_selector(sel) {
 }
 
 function dump_rule(sel, style, features) {
+    if (!document.querySelectorAll(sel).length) return "";
+
     var text = "";
     var has_good_prop = false;
     for (var i = 0; i < style.length; i++) {
@@ -430,18 +437,23 @@ function dump_rule(sel, style, features) {
             val = tname + "/" + val;
         }
         if (Props.indexOf(sname) === -1) {
-            if (BadProps.indexOf(sname) !== -1) features[sname] = true;
-            text += "\n   #;[" + sname + " " + val + "]";
+            if (BadProps.indexOf(sname) !== -1) {
+                text += "\n   #;[" + sname + " " + val + "]";
+                features[sname] = true;
+            } else {
+                //text += "\n   #;[" + sname + " " + val + "]";
+            }
         } else {
             has_good_prop = true;
             text += "\n   [" + sname + " " + val + "]";
         }
     }
 
+    if (!has_good_prop) return "";
+
     var sel_text = dump_selector(sel);
     if (!sel_text) {
         if (has_good_prop) features["unknown-selector"] = true;
-        return "";
         return "\n  (\"" + sel.replace("\\", "\\\\").replace("\"", "\\\"") + "\""+ text + ")";
     } else {
         return "\n  (" + sel_text + text + ")";

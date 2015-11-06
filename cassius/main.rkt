@@ -286,9 +286,10 @@
                     :named ,(sformat "element/~a" (dom-root dom)))))
   (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box/root/~a" (dom-root dom))))))
 
-(define (stylesheet-constraints sname sheet save-rule #:browser [browser? #f])
+(define (stylesheet-constraints sname sheet save-rule ids tags classes #:browser [browser? #f])
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
             (define name (sformat "~a/~a" sname i))
+            (when (can-match? (selector name rule) ids tags classes)
             (save-rule name rule)
 
             (emit `(declare-const ,name Rule))
@@ -344,7 +345,7 @@
                 (emit `(assert-soft
                         (and ,@(for/list ([subprop subproperties])
                                  (list (sformat "rule.~a?" subprop) name)))
-                        :weight 3))))))
+                        :weight 3)))))))
 
 (define (element-constraints dom emit elt)
   (emit `(assert (! (an-element (get/elt ,(element-name elt))) :named ,(sformat "element/~a" (element-name elt))))))
@@ -445,12 +446,15 @@
     (error "Different browsers on different documents not yet supported"))
   (define browser-style (get-sheet (car browsers)))
 
-  (define-values (tags ids)
-    (reap [save-tag save-id]
+  (define-values (tags ids classes)
+    (reap [save-tag save-id save-class]
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
             (when (element-get elt ':id) (save-id (sformat "id/~a" (slower (element-get elt ':id)))))
-            (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag))))))
-          (for* ([sheet* (list browser-style sheet)] [rule sheet*])
+            (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag)))))
+            (when (element-get elt ':class)
+              (for ([c (element-get elt ':class)])
+               (save-class (sformat "class/~a" (slower c))))))
+          #;(for* ([sheet* (list browser-style sheet)] [rule sheet*])
             (match rule
               ['? (void)]
               [`((tag ,tag) ,_ ...) (save-tag (sformat "tag/~a" (slower tag)))]
@@ -493,9 +497,9 @@
 
     ; Stylesheet
     (echo "Browser stylesheet")
-    ,@(stylesheet-constraints (car browsers) browser-style save-rule #:browser #t)
+    ,@(stylesheet-constraints (car browsers) browser-style save-rule ids tags classes #:browser #t)
     (echo "Defining the stylesheet")
-    ,@(stylesheet-constraints 'user sheet save-rule)
+    ,@(stylesheet-constraints 'user sheet save-rule ids tags classes)
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
