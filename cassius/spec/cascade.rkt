@@ -12,26 +12,29 @@
 (define (cascade-rules rules elt)
   (define re `(rules (get/elt ,(element-name elt))))
 
-  ;; Score of computed rule is >= any applicable stylesheet rule
+  (define matching-rules
+    (filter (λ (x) (not (equal? (selector-matches? (selector (car x) (cdr x)) elt) 'false))) rules))
+
   (reap [sow]
-   (for*/list ([(property type default) (in-css-properties)] [(name rule) (in-pairs rules)])
-     (when (not (equal? (selector-matches? (selector name rule) elt) 'false))
+   (for ([(property type default) (in-css-properties)])
+     (define applicable-rules (filter (curryr has-property? property) matching-rules))
+
+     ;; Score of computed rule is >= any applicable stylesheet rule
+     (for ([(name rule) (in-pairs applicable-rules)])
        (sow
         `(assert
           (! (or (not (,(sformat "rule.~a?" property) ,name))
                  (=> ,(selector-matches? (selector name rule) elt)
                      (score-ge (,(sformat "style.~a$" property) ,re) (score ,name))))
-             :named ,(sformat "cascade/ge/~a/~a/~a" (element-name elt) name property))))))
-   
-   ;; Score&value of computed rule is = some applicable stylesheet rule
-   (for/list ([(property type default) (in-css-properties)])
+             :named ,(sformat "cascade/ge/~a/~a/~a" (element-name elt) name property)))))
+
+     ;; Score&value of computed rule is = some applicable stylesheet rule
      (sow
       `(assert
         (! (or
             (and (is-useDefault (,(sformat "style.~a$" property) ,re))
                  (= (,(sformat "style.~a" property) ,re) ,default))
-            ,@(for/list ([(name rule) (in-pairs rules)]
-                         #:when (not (equal? (selector-matches? (selector name rule) elt) 'false)))
+            ,@(for/list ([(name rule) (in-pairs applicable-rules)])
                 `(and
                   (,(sformat "rule.~a?" property) ,name)
                   ,(selector-matches? (selector name rule) elt)
@@ -62,8 +65,12 @@
     [`(desc ,sub ...) (andmap (curryr can-match? ids tags classes) sub)]
     [`(or ,sub ...) (ormap (curryr can-match? ids tags classes) sub)]
     [`(selector ,name) #t]
+    [(? string?) #f]
     [`* #t]
     [_ #t]))
+
+(define (has-property? rule prop)
+  (or (member '? (cdr rule)) (assoc prop (cdr rule))))
 
 (define (selector->z3 sel [ids #f] [tags #f])
   (match sel
