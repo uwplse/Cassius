@@ -126,6 +126,9 @@
              (=> (is-padding/50% (,(sformat "style.padding-~a" dir) r))
                  (= (,(sformat "p~a" letter) b) (/ (w p) 2)))))
        (=> (is-width/100% (style.width r)) (= (w b) (w p)))
+       (=> (is-width/30% (style.width r)) (= (w b) (* .3 (w p))))
+       (=> (is-width/5% (style.width r)) (= (w b) (* .05 (w p))))
+       (=> (is-height/100% (style.height r)) (= (h b) (w p)))
        
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
@@ -269,7 +272,9 @@
              (=> (is-padding/50% (,(sformat "style.padding-~a" dir) r))
                  (= (,(sformat "p~a" letter) b) (/ (w p) 2)))))
        (=> (is-width/100% (style.width r)) (= (w b) (w p)))
-            
+       (=> (is-width/30% (style.width r)) (= (w b) (* .3 (w p))))
+       (=> (is-width/5% (style.width r)) (= (w b) (* .05 (w p))))
+       (=> (is-height/100% (style.height r)) (= (h b) (w p)))
 
        ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
          (=> (is-width/auto (style.width r))

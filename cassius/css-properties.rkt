@@ -19,10 +19,10 @@
 (define (in-css-types)
   (in-hash css-types-hash))
 
-(define-css-type (Width width/auto (width/px (width.px Real)) width/100% width/inherit)
+(define-css-type (Width width/auto (width/px (width.px Real)) width/5% width/30% width/100% width/inherit)
   [width width/auto])
 
-(define-css-type (Height height/auto (height/px (height.px Real)) height/inherit)
+(define-css-type (Height height/auto (height/px (height.px Real)) height/100% height/inherit)
   [height height/auto])
 
 (define-css-type (Margin margin/auto (margin/px (margin.px Real)) margin/50% margin/inherit)

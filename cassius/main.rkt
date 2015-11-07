@@ -31,23 +31,23 @@
   (when (> (string-length header) 0)
     (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header))
 
-  (for ([rule-value (map (curry hash-ref smt-out)
-                         (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "user/~a" i)))])
+  (define rule-names (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "user/~a" i)))
+
+  (for ([rule-value (map (curry hash-ref smt-out) (filter (curry hash-has-key? smt-out ) rule-names))])
     (printf "\n~a\n" (print-type 'Rule rule-value))))
 
 (define (css-type-ending? v)
   (lambda (x) (string=? (last (string-split (~a x) "/")) v)))
+
+(define (css-%? x)
+  (string-suffix? "%" (last (string-split (~a x) "/"))))
 
 (define/match (print-type type value)
   [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "auto"))) "auto"]
   [((or 'Width 'Height 'Margin 'Padding 'Border) (list _ 0.0)) "0"]
   [((or 'Width 'Height 'Margin 'Padding 'Border) (list (? (css-type-ending? "px")) x)) (format "~apx" x)]
   [((or 'Width 'Height 'Margin 'Padding 'Border) (list (? (css-type-ending? "pct")) x)) (format "~a%" x)]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "0%"))) "0%"]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "1%"))) "1%"]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "2%"))) "2%"]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "50%"))) "50%"]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "100%"))) "100%"]
+  [((or 'Width 'Height 'Margin 'Padding 'Border) (? css-%?)) (last (string-split (~a value) "/"))]
   [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "inherit"))) "inherit"]
   [('Float _) (last (string-split (~a value) "/"))]
   [('TextAlign _) (last (string-split (~a value) "/"))]
@@ -151,6 +151,14 @@
        (format "Since height is auto, height is computed based on the children" prop)]
       [`((box block ,_) (!flow ,_) (no-collapse ,_ ,_))
        (format "Margins of floating boxes don't collapse")]
+      [`((box block ,_) (!flow ,_) (restriction-1 ,_ ,_))
+       (format "Cassius doesn't allow floats to have negative margins")]
+      [`((box block ,_) (!flow ,_) (restriction-2 ,_ ,_))
+       (format "Cassius requires the bottom of a float box to be below the bottom of the preivous float")]
+      [`((box block ,_) (!flow ,_) (restriction-3 ,_ ,_))
+       (format "Cassius requires a row of floats to fill the parent before wrapping to the next row")]
+      [`((box block ,_) (!flow ,_) (restriction-4 ,_ ,_))
+       (format "Cassius doesn't allow horizontally-adjacent left and right floats")]
       [`((box line ,_) (line-no-mbp ,_))
        (format "Line boxes do not have margins, padding, or borders")]
       [`((box line ,_) (lines-dont-float ,_))

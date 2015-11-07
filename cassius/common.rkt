@@ -32,7 +32,7 @@
   (string->symbol (apply format templ args)))
 
 (define (slower sym)
-  (string->symbol (string-foldcase (symbol->string sym))))
+  (string->symbol (string-foldcase (~a sym))))
 
 (define (tree-size l)
   (if (list? l)
