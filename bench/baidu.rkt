@@ -797,7 +797,8 @@
        ([BLOCK :tag DIV :x 810 :y 138 :w 402 :h 791.3 :id content_right :class (cr-offset)]
         ([MAGIC :tag TABLE :x 828 :y 138 #|:w 351|# :h 791.3 :mt 0 :mr 0 :mb 0 :ml 0]))
        ([MAGIC :tag DIV :x 0 :y 93 :w 810 :h 40 :class (head_nums_cont_outer OP_LOG)])
-       ([BLOCK :tag DIV :x 0 :y 133 :w 661 :h (/ 50371 30) :id content_left]
+       ([MAGIC :tag DIV :x 0 :y 133 :w 661 :h (/ 50371 30) :id content_left])
+       #;([BLOCK :tag DIV :x 0 :y 133 :w 661 :h (/ 50371 30) :id content_left]
         ([BLOCK :tag DIV :x 121 :y 138 :w 540 :h 25 :class (leftBlock)]
          ([BLOCK :tag DIV :x 121 :y 138 :w 537 :h 19 :class (hint_toprq_tips f13 se_common_hint) :id e10010]
           ([ANON]
@@ -866,7 +867,7 @@
            ([MAGIC :tag SPAN :x 605 :y (/ 16738 15) :w 54 :h 20 :id e10022])
            ([MAGIC]))
           ([MAGIC :h (/ 1 60)])))
-        ([BLOCK :tag DIV :x 121 :y 1149.9 :w 538 #|:h 85.7|# :id 5 :class (result c-container )]
+        ([BLOCK :tag DIV :x 121 :y 1149.9 :w 538 :h 85.7 :id 5 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y 1149.9 :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -876,7 +877,7 @@
             ([TEXT :x 252 :y 1152.7 :w 216 :h 20]))))
          ([MAGIC :tag DIV :x 121 :y (/ 35265 30) :w 538 :h (/ 1201 30) :class (c-abstract)])
          ([MAGIC :tag DIV :x 121 :y 1215.55 :w 538 :h 20 :class (f13)]))
-        ([BLOCK :tag DIV :x 121 :y (/ 37487 30) :w 538 #|:h 117.875|# :id 6 :class (result c-container )]
+        ([BLOCK :tag DIV :x 121 :y (/ 37487 30) :w 538 :h 117.875 :id 6 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y (/ 37487 30) :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -887,7 +888,7 @@
          ([MAGIC :tag P :x 121 :y 1275.2 :w 538 :h 20 :class (f13 m)])
          ([MAGIC :tag DIV :x 121 :y (/ 38857 30) :w 538 :h 60.05 :class (c-abstract)])
          ([MAGIC :tag DIV :x 121 :y (/ 20329 15) :w 538 :h 20 :class (f13)]))
-        ([BLOCK :tag DIV :x 121 :y 1302.5 :w 538 #|:h 109.7|# :id 7 :class (result c-container )]
+        ([BLOCK :tag DIV :x 121 :y 1302.5 :w 538 :h 109.7 :id 7 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y 1302.5 :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -896,7 +897,7 @@
              ([TEXT :x 178 :y 1393.1 :w 35 :h 17]))
             ([TEXT :x 213 :y 1392.1 :w 397 :h 20]))))
          ([MAGIC :tag DIV :x 121 :y (/ 17027 12) :w 538 :h (/ 1201 15) :class (c-row c-gap-top-small)]))
-        ([BLOCK :tag DIV :x 121 :y 1539 :w 538 #|:h 85.7|# :id 8 :class (result c-container )]
+        ([BLOCK :tag DIV :x 121 :y 1539 :w 538 :h 85.7 :id 8 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y 1539 :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -906,7 +907,7 @@
             ([TEXT :x 343 :y 1515.8 :w 264 :h 20]))))
          ([MAGIC :tag DIV :x 121 :y (/ 23079 15) :w 538 :h (/ 1201 30) :class (c-abstract)])
          ([MAGIC :tag DIV :x 121 :y 1578.65 :w 538 :h 20 :class (f13)]))
-        ([BLOCK :tag DIV :x 121 :y (/ 4838 3) :w 538 #|:h 85.7|# :id 9 :class (result c-container )]
+        ([BLOCK :tag DIV :x 121 :y (/ 4838 3) :w 538 :h 85.7 :id 9 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y (/ 4838 3) :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -915,7 +916,7 @@
             ([TEXT :x 156 :y (/ 48465 30) :w 266 :h 20]))))
          ([MAGIC :tag DIV :x 121 :y 1638.3 :w 538 :h (/ 1201 30) :class (c-abstract)])
          ([MAGIC :tag DIV :x 121 :y (/ 5035 3) :w 538 :h 20 :class (f13)]))
-        ([BLOCK :tag DIV :x 121 :y 1712.35 :w 538 #|:h 85.7|# :id 10 :class (result-op c-container)]
+        ([BLOCK :tag DIV :x 121 :y 1712.35 :w 538 :h 85.7 :id 10 :class (result-op c-container)]
          ([BLOCK :tag H3 :x 121 :y 1712.35 :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -936,19 +937,18 @@
        ([MAGIC :tag P :x 121 :y (/ 54661 30) :w 1091 :h 24 :class (to_tieba)])
        ([MAGIC :tag DIV :x 121 :y (/ 55561 30) :w 600 :h 104 :id rs])
        ([MAGIC :tag DIV :x 0 :y (/ 59581 30) :w 1212 :h 66 :id page]))
-      ([BLOCK :tag DIV :x 0 :y (/ 62761 30) :w 1907 :h 43 :id foot :print #t]
+      ([BLOCK :tag DIV :x 0 :y (/ 62761 30) :w 1907 :h 43 :id foot]
        ;; Why is :w 331 bad? Everything adds up. This is so weird.
        ([BLOCK :tag SPAN :x 0 :y (/ 62791 30) #|:w 331|# :h 42 :id help]
         ([LINE]
-         ([INLINE :print #t :tag A]
+         ([INLINE :tag A]
           ([TEXT :x 136 :y (/ 63181 30) :w 24 :h 16]))
-         ([INLINE :print #t :tag A]
+         ([INLINE :tag A]
           ([TEXT :x 190 :y (/ 63181 30) :w 24 :h 16]))
-         ([INLINE :print #t :tag A :class (feedback)]
+         ([INLINE :tag A :class (feedback)]
           ([TEXT :x 244 :y (/ 63181 30) :w 72 :h 16]))))))))))
 
 (define-problem verify
   #:header header
   #:sheet doc-1
   #:documents doc-1)
-
