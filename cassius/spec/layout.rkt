@@ -129,6 +129,7 @@
        (=> (is-width/30% (style.width r)) (= (w b) (* .3 (w p))))
        (=> (is-width/5% (style.width r)) (= (w b) (* .05 (w p))))
        (=> (is-height/100% (style.height r)) (= (h b) (w p)))
+       (=> (is-height/50% (style.height r)) (= (h b) (* .5 (w p))))
        
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
@@ -275,6 +276,7 @@
        (=> (is-width/30% (style.width r)) (= (w b) (* .3 (w p))))
        (=> (is-width/5% (style.width r)) (= (w b) (* .05 (w p))))
        (=> (is-height/100% (style.height r)) (= (h b) (w p)))
+       (=> (is-height/50% (style.height r)) (= (h b) (* .5 (w p))))
 
        ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
          (=> (is-width/auto (style.width r))
@@ -477,7 +479,7 @@
        (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
        ;; This is maybe too tight
        ;;(= (- (top-outer b) (top-content p)) (- (bottom-content p) (bottom-outer b)))
-       (=> (is-box v) (= (x b) (right-border v)))))
+       (=> (is-box v) (= (left-outer b) (right-outer v)))))
 
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pbox b)] [v (vbox b)] [e (get/elt (element b))])

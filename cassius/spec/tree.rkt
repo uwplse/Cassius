@@ -36,14 +36,14 @@
   (define-fun real-fbox ((box Box)) Box (get/box (flow-box (fchild (get/elt (element box))))))
   (define-fun real-lbox ((box Box)) Box (get/box (flow-box (lchild (get/elt (element box))))))
   (define-fun real-vbox ((box Box)) Box
-    (if (is-no-elt (previous (get/elt (element box))))
-        no-box
-        (get/box (flow-box (previous (get/elt (element box)))))))
+    (ite (is-no-elt (previous (get/elt (element box))))
+         no-box
+         (get/box (flow-box (previous (get/elt (element box)))))))
   (define-fun real-nbox ((box Box)) Box
-    (if (is-no-elt (next (get/elt (element box))))
-        no-box
-        (get/box (flow-box (next (get/elt (element box)))))))
-  
+    (ite (is-no-elt (next (get/elt (element box))))
+         no-box
+         (get/box (flow-box (next (get/elt (element box)))))))
+
   (define-fun link-element ((elt Element) (doc Document) (p ElementName)
                             (v ElementName) (n ElementName) (f ElementName)
                             (l ElementName)) Bool
@@ -95,13 +95,13 @@
             [(is-float/none (float (next e))) (flow-box (next e))]
             [else (n-name (get/box (flow-box (next e))))]))
        ;; Uncomment the next two commented lines to not inline flow chains
-       (!
+       ;(!
        (= (get/box (flt-name b))
           ,(smt-cond
             [(and (is-no-elt (previous e)) (not (is-float/none (float (parent e))))) no-box]
             [(is-no-elt (previous e)) (get/box (flt-name (get/box (flow-box (parent e)))))]
             [else (get/box (flt-up-name (get/box (flow-box (previous e)))))]))
-       :opt false)
+       ;:opt false)
        (= (flt-up-name b)
           ,(smt-cond
             [(not (is-float/none (float e))) (flow-box e)]

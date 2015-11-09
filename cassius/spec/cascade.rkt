@@ -15,6 +15,9 @@
   (define matching-rules
     (filter (λ (x) (not (equal? (selector-matches? (selector (car x) (cdr x)) elt) 'false))) rules))
 
+  (define definite-rules
+    (filter (λ (x) (equal? (selector-matches? (selector (car x) (cdr x)) elt) 'true)) rules))
+
   (reap [sow]
    (for ([(property type default) (in-css-properties)])
      (define applicable-rules (filter (curryr has-property? property) matching-rules))
@@ -59,9 +62,9 @@
 
 (define (can-match? sel ids tags classes)
   (match sel
-    [`(id ,id) (member (sformat "id/~a" id) ids)]
-    [`(tag ,tag) (member (sformat "tag/~a" tag) tags)]
-    [`(class ,class) (member (sformat "class/~a" class) classes)]
+    [`(id ,id) (member (slower (sformat "id/~a" id)) ids)]
+    [`(tag ,tag) (member (slower (sformat "tag/~a" tag)) tags)]
+    [`(class ,class) (member (slower (sformat "class/~a" class)) classes)]
     [`(desc ,sub ...) (andmap (curryr can-match? ids tags classes) sub)]
     [`(or ,sub ...) (ormap (curryr can-match? ids tags classes) sub)]
     [`(selector ,name) #t]
@@ -83,7 +86,7 @@
 (define (selector-matches? sel elt)
   (match sel
     [`(selector ,name) `(selector-applies? ,sel (get/elt ,(element-name elt)))]
-    [`(id ,id) (if (equal? id (element-get elt ':id)) 'true 'false)]
+    [`(id ,id) (if (and (element-get elt ':id) (equal? (slower id) (slower (element-get elt ':id)))) 'true 'false)]
     [`(tag ,tag) (if (and (element-get elt ':tag) (equal? (slower tag) (slower (element-get elt ':tag)))) 'true 'false)]
     [`(class ,cls) (if (and (element-get elt ':class) (member (slower cls) (map slower (element-get elt ':class)))) 'true 'false)]
     [`* 'true]

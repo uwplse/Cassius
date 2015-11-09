@@ -144,7 +144,7 @@
       [`((box block ,_) (flow ,_) (flow-mt-auto ,_ ,_))
        (format "{ margin-top: auto } means no top margin")]
       [`((box block ,_) (flow ,_) (flow-mb-auto ,_ ,_))
-       (format "{ margin-bottom: auto } means no top margin")]
+       (format "{ margin-bottom: auto } means no bottom margin")]
       [`((box block ,_) (flow ,_) (from-style ,prop ,_ ,_))
        (format "~a is used straight from the computed style" prop)]
       [`((box block ,_) (flow ,_) (auto-height ,prop ,_ ,_))
@@ -154,7 +154,7 @@
       [`((box block ,_) (!flow ,_) (restriction-1 ,_ ,_))
        (format "Cassius doesn't allow floats to have negative margins")]
       [`((box block ,_) (!flow ,_) (restriction-2 ,_ ,_))
-       (format "Cassius requires the bottom of a float box to be below the bottom of the preivous float")]
+       (format "Cassius requires the bottom of a float box to be below the bottom of the previous float")]
       [`((box block ,_) (!flow ,_) (restriction-3 ,_ ,_))
        (format "Cassius requires a row of floats to fill the parent before wrapping to the next row")]
       [`((box block ,_) (!flow ,_) (restriction-4 ,_ ,_))
