@@ -410,12 +410,13 @@
     (match (element-type elt)
       ['BLOCK 'a-block-box]
       ['ANON 'a-block-box]
-      ['MAGIC 'a-block-box]
+      ['MAGIC #f]
       ['LINE 'a-line-box]
       ['INLINE 'an-inline-box]
       ['TEXT 'a-text-box]))
-  (emit `(assert (! (,cns ,(sformat "~a-flow-box" (element-name elt)))
-                    :named ,(sformat "box/~a/~a" (slower (element-type elt)) (element-name elt))))))
+  (when cns
+    (emit `(assert (! (,cns ,(sformat "~a-flow-box" (element-name elt)))
+                      :named ,(sformat "box/~a/~a" (slower (element-type elt)) (element-name elt)))))))
 
 (define (info-constraints dom emit elt)
   (define tagname
@@ -426,13 +427,14 @@
     (match (element-type elt)
       ['BLOCK 'display/block]
       ['ANON 'display/block]
-      ['MAGIC 'display/block]
+      ['MAGIC #f]
       ['INLINE 'display/inline]
       ['TEXT 'display/inline]
       ['LINE 'display/block]))
 
-  (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname ,display)
-                    :named ,(sformat "info/~a" (element-name elt))))))
+  (when (and tagname idname display)
+    (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname ,display)
+                      :named ,(sformat "info/~a" (element-name elt)))))))
 
 (define (getter-definitions doms)
   (reap [sow]

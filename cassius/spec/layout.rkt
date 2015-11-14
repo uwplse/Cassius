@@ -62,6 +62,11 @@
 
   (define-fun float ((e Element)) Float
     (style.float (rules e)))
+  
+  (define-fun is-flow-root ((b Box)) Bool
+    (or (is-box/root (type b))
+        (is-tag/html (tagname (get/elt (element b))))
+        (not (is-float/none (float (get/elt (element b)))))))
 
   (define-fun an-element ((e Element)) Bool
     (! (=> (is-display/inline (display e)) (is-float/none (float e)))
@@ -87,19 +92,19 @@
        ;; Computing maximum collapsed positive and negative margin
        (= (mtp b)
           (max (ite (> (mt b) 0.0) (mt b) 0.0)
-               (ite (and (not (= (tagname e) tag/html)) (is-box fb)
+               (ite (and (not (is-tag/html (tagname e))) (is-box fb)
                          (= (pt b) 0.0) (= (bt b) 0.0)) (mtp fb) 0.0)))
        (= (mtn b)
           (min (ite (< (mt b) 0.0) (mt b) 0.0)
-               (ite (and (not (= (tagname e) tag/html)) (is-box fb)
+               (ite (and (not (is-tag/html (tagname e))) (is-box fb)
                          (= (pt b) 0.0) (= (bt b) 0.0)) (mtn fb) 0.0)))
        (= (mbp b)
           (max (ite (> (mb b) 0.0) (mb b) 0.0)
-               (ite (and (not (= (tagname e) tag/html)) (is-box lb)
+               (ite (and (not (is-tag/html (tagname e))) (is-box lb)
                          (= (pb b) 0.0) (= (bb b) 0.0)) (mbp lb) 0.0)))
        (= (mbn b)
           (min (ite (< (mb b) 0.0) (mb b) 0)
-               (ite (and (not (= (tagname e) tag/html)) (is-box lb)
+               (ite (and (not (is-tag/html (tagname e))) (is-box lb)
                          (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)))
 
        ,@(for/list ([item '((width width w) (height height h)
@@ -292,7 +297,7 @@
        ;; element that establishes a block formatting context is computed as follows:
        (! (=> (is-height/auto (style.height r))
               (= (h b)
-                 (ite (is-box fb)
+                 (ite (is-box (real-fbox b))
                       (ite (is-box/line (type lb))
                            ;; If it only has inline-level children, the height is the distance between
                            ;; the top of the topmost line box and the bottom of the bottommost line box.
@@ -300,7 +305,8 @@
                            ;; If it has block-level children, the height is the distance between the
                            ;; top margin-edge of the topmost block-level child box and the
                            ;; bottom margin-edge of the bottommost block-level child box.
-                           (- (bottom-outer lb) (top-outer fb)))
+                           (- (max (bottom-outer lb) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
+                              (top-content b)))
                       0.0)))
           :named auto-height)
 
