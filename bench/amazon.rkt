@@ -1469,6 +1469,94 @@
    [height height/100%]
    [margin-left (margin/px 10)]))
 
+(define-stylesheet doc-1-sketch
+  ((tag body)
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 8)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 8)])
+  ((id navbar)
+   #;[position position/relative]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px -8)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px -8)]
+   [display display/block])
+  ((desc (class a-js) (id navbar))
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)])
+  ((or (id nav-belt) (desc (id navbar) (class nav-belt)))
+   #;[position position/relative]
+   [width width/100%])
+  ((or (id nav-main) (desc (id navbar) (class nav-main)))
+   [width width/100%]
+   [height (height/px 60)]
+   [padding-top (padding/px 5)]
+   #;[position position/relative])
+  ((id navfooter)
+   [margin-top (margin/px 30)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 8)]
+   [margin-left (margin/px 0)]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 7)]
+   [padding-left (padding/px 0)])
+  ((desc (id navfooter) (tag table))
+   [width width/100%])
+  ((class navFooterLinkLine)
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 8)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 8)])
+  ((or (desc (class navFooterLinkLine) (tag span)) (desc (class navFooterLinkLine) (tag ul)))
+   [display display/inline-block]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)])
+  ((class navFooterDescLine)
+   [margin-top (margin/px 20)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 14)]
+   [margin-left (margin/px 0)])
+  ((desc (id navfooter) (class navFooterBackToTop))
+   [margin-bottom (margin/px 25)])
+  ((tag body)
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)])
+  ((tag table)
+   [margin-bottom (margin/px 18)]
+   [width width/100%])
+  ((tag ul)
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 18)]
+   [margin-left (margin/px 18)])
+  ((or (tag ol) (tag ul))
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)])
+  ((id pagecontent)
+   [width (width/px 1500)]
+   [margin-top margin/auto]
+   [margin-right margin/auto]
+   [margin-bottom margin/auto]
+   [margin-left margin/auto]))
+
 (define-document (doc-1 #:width 1907 #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 1907 :h 4808.3 :class (a-transition a-transform a-opacity a-border-image a-border-radius a-box-shadow a-text-shadow a-touch-scrolling a-local-storage a-textarea-placeholder a-input-placeholder a-autofocus a-webworker a-history a-geolocation a-drag-drop a-svg a-canvas a-video a-audio a-js a-ws a-audio a-video a-canvas a-svg a-drag-drop a-geolocation a-history a-webworker a-autofocus a-input-placeholder a-textarea-placeholder a-local-storage a-touch-scrolling a-text-shadow a-box-shadow a-border-radius a-border-image a-opacity a-transform a-transition)]
    ([BLOCK :tag BODY :x 0 :y 0 :w 1907 :h 4808.3 :class (a-auix_ux_57388-c a-aui_49697-c a-aui_51744-c a-aui_55624-t1 a-aui_57326-c a-aui_58736-c a-aui_accessibility_49860-c a-aui_attr_validations_1_51371-c a-aui_bolt_54706-c a-aui_bolt_56525-t1 a-aui_ux_47524-t1 a-aui_ux_49594-c a-aui_ux_52290-c a-aui_ux_56217-c a-aui_ux_59374-c a-aui_ux_59797-c a-aui_ux_60000-c a-meter-animate)]
@@ -2099,5 +2187,10 @@
 (define-problem verify
   #:header header
   #:sheet doc-1
+  #:documents doc-1)
+
+(define-problem sketch
+  #:header header
+  #:sheet doc-1-sketch
   #:documents doc-1)
 

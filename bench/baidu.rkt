@@ -779,6 +779,207 @@
    [float float/left]
    [padding-left (padding/px 121)]))
 
+(define-stylesheet doc-1-sketch
+  ((tag body)
+   [padding-top (padding/px 6)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)]
+   #;[position position/relative])
+  ((or (tag p) (tag form) (tag ol) (tag ul) (tag li) (tag dl) (tag dt) (tag dd) (tag h3))
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)])
+  ((or (tag table) (tag img))
+   [border-top-width (border/px 0)]
+   [border-right-width (border/px 0)]
+   [border-bottom-width (border/px 0)]
+   [border-left-width (border/px 0)])
+  ((class container_l)
+   [width (width/px 1222)])
+  ((id content_left)
+   [width (width/px 636)]
+   [float float/left]
+   [padding-left (padding/px 35)])
+  ((id content_right)
+   [border-left-width (border/px 1)]
+   [float float/right])
+  ((desc (class container_l) (id content_right))
+   [width (width/px 434)])
+  ((desc (id u) (tag a))
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 5)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 5)])
+  ((id head)
+   [padding-left (padding/px 35)]
+   [margin-bottom (margin/px 20)]
+   [width (width/px 900)])
+  ((class s_tab)
+   [padding-top (padding/px 20)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)]
+   [float float/left])
+  ((id page)
+   [padding-left (padding/px 35)])
+  ((or (desc (id page) (tag a)) (desc (id page) (tag strong)))
+   [display display/inline-block]
+   [height (height/px 66)]
+   [text-align text-align/center]
+   [margin-right (margin/px 9)])
+  ((id rs)
+   [width (width/px 900)]
+   [padding-top (padding/px 8)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 8)]
+   [padding-left (padding/px 0)]
+   [margin-top (margin/px 20)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 15)])
+  ((id foot)
+   [height (height/px 20)]
+   [text-align text-align/center])
+  ((or (class to_zhidao) (class to_tieba) (class to_zhidao_bottom))
+   [margin-top (margin/px 20)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 35)])
+  ((tag body)
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)])
+  ((class s_form)
+   [height (height/px 55)]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 10)])
+  ((id result_logo)
+   [float float/left]
+   [margin-top (margin/px 7)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)])
+  ((id head)
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)]
+   [width width/100%]
+   [border-bottom-width (border/px 1)]
+   #;[position position/fixed])
+  ((class fm)
+   #;[clear clear/none]
+   [float float/left]
+   [margin-top (margin/px 11)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 10)])
+  ((id s_tab)
+   [height (height/px 38)]
+   [padding-top (padding/px 55)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 121)]
+   [float float/none])
+  ((or (desc (id s_tab) (tag a)) (desc (id s_tab) (tag b)))
+   [width (width/px 54)]
+   [display display/inline-block]
+   [text-align text-align/center])
+  ((id content_left)
+   [width (width/px 540)]
+   [padding-left (padding/px 121)]
+   [padding-top (padding/px 5)])
+  ((id content_right)
+   ?)
+  ((id page)
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 121)]
+   [margin-top (margin/px 30)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 40)]
+   [margin-left (margin/px 0)])
+  ((or (class to_tieba) (class to_zhidao_bottom))
+   [margin-top (margin/px 10)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 121)])
+  ((id rs)
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)]
+   [margin-top (margin/px 6)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 121)]
+   [width (width/px 600)])
+  ((desc (id rs) (tag table))
+   [width (width/px 540)])
+  ((id help)
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 50)]
+   [float float/right])
+  ((desc (id help) (tag a))
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 15)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 15)])
+  ((id foot)
+   [border-top-width (border/px 1)]
+   [text-align text-align/left]
+   [height (height/px 42)]
+   [margin-top (margin/px 40)])
+  ((desc (class container_l) (id content_right))
+   [width (width/px 384)])
+  ((class container_l)
+   [width (width/px 1212)])
+  ((class head_nums_cont_outer)
+   [height (height/px 40)]
+   #;[position position/relative])
+  ((class cr-offset)
+   [padding-left (padding/px 17)])
+  ((id u)
+   #;[position position/absolute]
+   [margin-top (margin/px 21)]
+   [margin-right (margin/px 9)]
+   [margin-bottom (margin/px 5)]
+   [margin-left (margin/px 0)]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)])
+  ((desc (id u) (tag a))
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 7)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 7)])
+  ((class head_nums_cont_outer)
+   [width (width/px 810)])
+  ((id help)
+   [float float/left]
+   [padding-left (padding/px 121)]))
+
 (define-document (doc-1 #:width 1907 #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 1907 :h (/ 64051 30)]
    ([BLOCK :tag BODY :x 0 :y 0 :w 1907 :h (/ 64051 30)]
@@ -951,4 +1152,9 @@
 (define-problem verify
   #:header header
   #:sheet doc-1
+  #:documents doc-1)
+
+(define-problem sketch
+  #:header header
+  #:sheet doc-1-sketch
   #:documents doc-1)

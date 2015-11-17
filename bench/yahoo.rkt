@@ -1649,6 +1649,113 @@
   ((class main-row-wrapper)
    [width (width/px 1130)]))
 
+(define-stylesheet doc-1-sketch
+  ((tag body)
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)])
+  ((or (tag h1) (tag h2) (tag h3) (tag h4) (tag h5) (tag h6) (tag p) (tag dl) (tag ol) (tag ul) (tag dd) (tag blockquote))
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)])
+  ((or (tag ol) (tag ul))
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)])
+  ((class ml-xs)
+   [margin-left (margin/px 5)])
+  ((or (class guest-module) (class main-row-wrapper) (class main-col-wrapper))
+   [width (width/px 1200)]
+   [margin-top margin/auto]
+   [margin-right margin/auto]
+   [margin-bottom margin/auto]
+   [margin-left margin/auto])
+  ((class rail)
+   [width (width/px 153)]
+   [display display/inline])
+  ((desc (class type_masthead_default) (class logo-container))
+   [width (width/px 153)])
+  ((class main-col)
+   #;[width width/66.3%]
+   [float float/left])
+  ((desc (class main-col) (class type_masthead_default) (class logo-container))
+   [width (width/px 149)]
+   [padding-right (padding/px 0)]
+   [margin-left (margin/px -5)])
+  ((tag body)
+   [padding-top (padding/px 86)])
+  ((desc (class type_universalheader) (class uni-wrapper))
+   [width width/100%]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)])
+  ((desc (class type_universalheader) (tag a))
+   [padding-top (padding/px 1)])
+  ((desc (class type_universalheader) (class uni-wrapper) (tag ul))
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 10)])
+  ((class type_intlselectorfull)
+   [float float/right]
+   [margin-top (margin/px 2)]
+   [margin-right (margin/px 20)]
+   #;[position position/relative]
+   #;[direction direction/ltr])
+  ((desc (class type_intlselectorfull) (class intl-selectorfull))
+   [border-top-width (border/px 0)]
+   [border-right-width (border/px 0)]
+   [border-bottom-width (border/px 0)]
+   [border-left-width (border/px 0)]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)]
+   #;[position position/relative])
+  ((class type_tabbar)
+   #;[position position/absolute]
+   [width width/30%])
+  ((id masthead)
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)]
+   [width width/100%]
+   #;[position position/absolute])
+  ((desc (id masthead) (class main-row-wrapper))
+   [padding-top (padding/px 25)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 24)]
+   [padding-left (padding/px 0)]
+   #;[position position/relative]
+   [height (height/px 37)])
+  ((tag body)
+   [padding-top (padding/px 60)])
+  ((desc (class type_masthead_default) (class mh-wrap))
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)])
+  ((desc (class type_masthead_default) (class logo-container))
+   [float float/left])
+  ((desc (class main-col) (class type_masthead_default) (class logo-container))
+   [width width/auto])
+  ((class y-logo-new)
+   [width (width/px 142)]
+   [height (height/px 37)]
+   [display display/block])
+  ; !important
+  ((id yui_3_8_1_1_1446778050697_132)
+   [padding-top (padding/px 86)])
+  ((class guest-module)
+   [width (width/px 1200)])
+  ((class main-row-wrapper)
+   [width (width/px 1130)]))
+
 (define-document (doc-1 #:width 1907 #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 1907 #|:h 985|# :id yui_3_8_1_1_1446778050697_541 :class (dev-desktop uni-purple-border ua-ff ua-unknown ua-ff41  bkt321 https mast-enabled  uni-dark-purple sasb-trendingnow jsenabled no-touch flash-0 yui3-js-enabled jsenabled no-touch flash-0)]
    ([BLOCK :tag BODY :x 0 :y 0 :w 1907 #|:h 1071|# :id yui_3_8_1_1_1446778050697_132 :class (yui3-skin-sam ua-ff ua-unknown ua-ff41  bkt321 https mast-enabled  uni-dark-purple sasb-trendingnow ltr fixed-enabled)]
@@ -2183,3 +2290,7 @@
   #:sheet doc-1
   #:documents doc-1)
 
+(define-problem sketch
+  #:header header
+  #:sheet doc-1-sketch
+  #:documents doc-1)

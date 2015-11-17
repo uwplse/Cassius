@@ -5,20 +5,6 @@
 
 ;; From file:///tmp/Cassius%20Marcellus%20Clay%20(politician)%20-%20Wikipedia,%20the%20free%20encyclopedia.html
 
-(define-stylesheet doc-1-skel ? ? ?)
-
-(define-stylesheet doc-1-sketch
-  ((or (tag html) (tag body))
-   ?)
-  ((id mw-head-base)
-   ?)
-  ((id mw-page-base)
-   ?)
-  ((id content)
-   ?)
-  ((tag h1)
-   ?))
-
 (define-stylesheet doc-1
   ((or (tag html) (tag body))
    #;[height height/100%]
@@ -85,6 +71,74 @@
    [margin-top (margin/px 16.8)])
   ((id contentsub)
    [margin-left (margin/px (/ 706 60))]))
+
+(define-stylesheet doc-1-sketch
+  ((or (tag html) (tag body))
+   #;[height height/100%]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)])
+  ((id mw-page-base)
+   [height (height/px 80)])
+  ((id mw-head-base)
+   [height (height/px 80)]
+   [margin-top (margin/px -80)]
+   [margin-left (margin/px 176)])
+  ((id content)
+   [margin-top (margin/px -1)]
+   [margin-left (margin/px 176)]
+   [padding-top (padding/px 20)]
+   [padding-right (padding/px 24)]
+   [padding-bottom (padding/px 20)]
+   [padding-left (padding/px 24)]
+   [border-top-width (border/px 1)]
+   [border-right-width (border/px 0)]
+   [border-bottom-width (border/px 1)]
+   [border-left-width (border/px 1)])
+  ((id footer)
+   [margin-left (margin/px 176)]
+   [padding-top (padding/px 20)]
+   [padding-right (padding/px 20)]
+   [padding-bottom (padding/px 20)]
+   [padding-left (padding/px 20)])
+  ((tag h1)
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 7.2)]
+   [margin-left (margin/px 0)]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)]
+   [border-bottom-width (border/px 1)])
+  ((id interwiki-completelist)
+   #;[font-weight font-weight/bold])
+  ((id toolbar)
+   [height (height/px 22)]
+   [margin-bottom (margin/px 6)])
+  #;((id simpleSearch)
+   [width (width/px 381.4)]
+   [min-width min-width/5em]
+   [max-width max-width/20em])
+  ((id e10008)
+   #;[clear clear/both])
+  ((id e1)
+   [padding-top (padding/px 5.6)]
+   [float float/right])
+  ((id catlinks)
+   [border-top-width (border/px 1)]
+   [border-right-width (border/px 1)]
+   [border-bottom-width (border/px 1)]
+   [border-left-width (border/px 1)]
+   [padding-top (padding/px 5)]
+   [padding-right (padding/px 5)]
+   [padding-bottom (padding/px 5)]
+   [padding-left (padding/px 5)]
+   [margin-top (margin/px 16.8)])
+  ((id contentsub)
+   [margin-left (margin/px (/ 706 60))]))
+
 
 (define-document (doc-1 #:width 1907 #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 1907 #|:h 985|#]
@@ -891,11 +945,6 @@
   #:sheet doc-1
   #:documents doc-1
   #:features (tables inline-block unknown-display position unknown-selector s em clear % px auto vw % auto))
-
-(define-problem synthesize
-  #:header header
-  #:sheet doc-1-skel
-  #:documents doc-1)
 
 (define-problem sketch
   #:header header

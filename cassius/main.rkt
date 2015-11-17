@@ -288,8 +288,11 @@
   (for ([(prop type default) (in-css-properties)])
     (emit `(assert (! (= (,(sformat "style.~a" prop) (rules ,elt)) ,default)
                       :named ,(sformat "root/~a/~a" prop (dom-root dom))))))
-  (emit `(assert (! (= (w ,b) ,(rendering-context-width (dom-context dom)))
-                    :named ,(sformat "width/~a" (dom-name dom)))))
+  (match (rendering-context-width (dom-context dom))
+    [(? number? w)
+     (emit `(assert (! (= (w ,b) ,w) :named ,(sformat "width/~a" (dom-name dom)))))]
+    [`(between ,l ,r)
+     (emit `(assert (! (<= ,l (w ,b) ,r) :named ,(sformat "width/~a" (dom-name dom)))))])
   (emit `(assert (! (link-root-element ,elt ,(element-name (dom-tree dom)))
                     :named ,(sformat "element/~a" (dom-root dom)))))
   (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box/root/~a" (dom-root dom))))))

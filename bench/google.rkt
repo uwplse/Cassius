@@ -544,26 +544,79 @@
    [margin-left (margin/px -27)]))
 
 (define-stylesheet doc-1-sketch
+  ((id searchform)
+   [width width/100%])
   ((id cnt)
-   ?)
+   [padding-top (padding/px 15)])
   ((tag body)
-   ?)
+   #;[color color/rgb(0, 0, 0)]
+   [margin-top (margin/px 0)]
+   [margin-right (margin/px 0)]
+   [margin-bottom (margin/px 0)]
+   [margin-left (margin/px 0)]
+   #;[overflow-y overflow-y/scroll])
   ((id appbar)
-   ?)
-  ((id fbar)
-   ?)
+   #;[background-color background-color/white]
+   #;[background-image background-image/none]
+   #;[background-repeat background-repeat/repeat]
+   #;[background-attachment background-attachment/scroll]
+   #;[background-position (background-position/px 0)]
+   #;[background-clip background-clip/border-box]
+   #;[background-origin background-origin/padding-box]
+   #;[background-size background-size/auto auto]
+   [width width/100%])
   ((id main)
-   ?)
+   [width width/100%])
   ((id hdtbsum)
-   ?)
+   #;[background-color background-color/rgb(255, 255, 255)]
+   #;[background-image background-image/none]
+   #;[background-repeat background-repeat/repeat]
+   #;[background-attachment background-attachment/scroll]
+   #;[background-position (background-position/px 0)]
+   #;[background-clip background-clip/border-box]
+   #;[background-origin background-origin/padding-box]
+   #;[background-size background-size/auto auto]
+   [border-bottom-width (border/px 1)]
+   #;[border-bottom-style border/solid]
+   #;[border-bottom-color border/rgb(235, 235, 235)]
+   [height (height/px 40)]
+   #;[line-height (line-height/px 35)]
+   [padding-top (padding/px 0)]
+   [padding-right (padding/px 0)]
+   [padding-bottom (padding/px 0)]
+   [padding-left (padding/px 0)]
+   #;[position position/relative]
+   #;[z-index z-index/102])
+  ((id hdtbsum)
+   [height (height/px 59)])
   ((id viewport)
-   ?)
+   #;[position position/absolute]
+   #;[top (top/px 0)]
+   [width width/100%])
+  ((id fbar)
+   #;[background-color background-color/rgb(242, 242, 242)]
+   #;[background-image background-image/none]
+   #;[background-repeat background-repeat/repeat]
+   #;[background-attachment background-attachment/scroll]
+   #;[background-position (background-position/px 0)]
+   #;[background-clip background-clip/border-box]
+   #;[background-origin background-origin/padding-box]
+   #;[background-size background-size/auto auto]
+   [border-top-width (border/px 1)]
+   #;[border-top-style border/solid]
+   #;[border-top-color border/rgb(228, 228, 228)]
+   #;[line-height (line-height/px 40)]
+   #;[min-width (min-width/px 980)])
   ((id slim_appbar)
-   ?)
+   [margin-left (margin/px 120)])
+  ((id e101)
+   [width (width/px 1250)])
   ((desc (id fbar) (tag a))
-   ?)
+   [padding-left (padding/px 27)])
+  ((id swml)
+   [margin-left (margin/px 135)])
   ((id e102)
-   ?))
+   [margin-left (margin/px -27)]))
 
 (define-document (doc-1 #:width 1907 #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 1907 #|:h 0|#]
