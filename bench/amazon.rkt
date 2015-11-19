@@ -2185,12 +2185,19 @@
       ([BLOCK :tag DIV :x 203.5 :y 4808.3 :w 1500 :h 0 :id SponsoredLinksGateway]))))))
 
 (define-problem verify
+  ;#:test (forall (a b) (=> (is-no-box (real-fbox a)) (is-no-box (real-fbox b)) (not (overlap a b))))
   #:header header
   #:sheet doc-1
   #:documents doc-1)
 
-(define-problem sketch
-  #:header header
+(define-problem check
+  #:test (forall (a b)
+                 (=> (and (is-box/text (type a)) (is-tag/table (tagname (get/elt (element b)))))
+                     (or (not (overlaps a b)) (= (pbox a) b))))
   #:sheet doc-1-sketch
-  #:documents doc-1)
+  #:documents (strip-positions doc-1))
 
+(define-problem debug
+  #:header header
+  #:sheet doc-1
+  #:documents doc-1)

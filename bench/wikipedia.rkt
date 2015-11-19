@@ -950,3 +950,8 @@
   #:header header
   #:sheet doc-1-sketch
   #:documents doc-1)
+
+(define-problem check
+  #:header header
+  #:sheet doc-1-sketch
+  #:documents doc-1)

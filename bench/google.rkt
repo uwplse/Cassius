@@ -618,7 +618,7 @@
   ((id e102)
    [margin-left (margin/px -27)]))
 
-(define-document (doc-1 #:width 1907 #:browser firefox)
+(define-document (doc-1 #:width (between 800 1907) #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 1907 #|:h 0|#]
    ([BLOCK :tag BODY :x 0 :y 0 :w 1907 #|:h 0|# :id gsr]
     ([BLOCK :tag DIV :x 0 :y 0 :w 1907 :h 1882 :id viewport]
@@ -826,3 +826,15 @@
   #:header header
   #:sheet doc-1-sketch
   #:documents doc-1)
+
+(define-problem check
+  #:test (forall (a b)
+                 (=> (and (is-box/text (type a)) (is-tag/a (tagname (get/elt (element b)))))
+                     (or (not (overlaps a b)) (= (pbox a) b))))
+  #:sheet doc-1-sketch
+  #:documents (strip-positions doc-1))
+
+(define-problem debug
+  #:header header
+  #:sheet doc-1
+  #:documents (strip-positions doc-1))

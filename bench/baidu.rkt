@@ -978,7 +978,11 @@
    [width (width/px 810)])
   ((id help)
    [float float/left]
-   [padding-left (padding/px 121)]))
+   [padding-left (padding/px 121)])
+  ((class OP_LOG)
+   [float float/left]
+   [width (width/px 810)]
+   [height (height/px 40)]))
 
 (define-document (doc-1 #:width 1907 #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 1907 :h (/ 64051 30)]
@@ -997,25 +1001,27 @@
       ([MAGIC :tag DIV :x 0 :y 93 :w 1212 :h (/ 58771 30) :id container :class (container_l)]
        ([BLOCK :tag DIV :x 810 :y 138 :w 402 :h 791.3 :id content_right :class (cr-offset)]
         ([MAGIC :tag TABLE :x 828 :y 138 #|:w 351|# :h 791.3 :mt 0 :mr 0 :mb 0 :ml 0]))
-       ([MAGIC :tag DIV :x 0 :y 93 :w 810 :h 40 :class (head_nums_cont_outer OP_LOG)])
-       ([MAGIC :tag DIV :x 0 :y 133 :w 661 :h (/ 50371 30) :id content_left])
-       #;([BLOCK :tag DIV :x 0 :y 133 :w 661 :h (/ 50371 30) :id content_left]
+       ([BLOCK :tag DIV :x 0 :y 93 :w 810 :h 40 :class (head_nums_cont_outer OP_LOG)])
+       ([MAGIC :tag DIV :x 0 :y 133 :w 661 :h (/ 50371 30) :id content_left]
         ([BLOCK :tag DIV :x 121 :y 138 :w 540 :h 25 :class (leftBlock)]
          ([BLOCK :tag DIV :x 121 :y 138 :w 537 :h 19 :class (hint_toprq_tips f13 se_common_hint) :id e10010]
-          ([ANON]
+          ([MAGIC])
+          #;([ANON]
            ([LINE]
             ([INLINE :tag SPAN :class (hint_toprq_icon)]
              ([TEXT :x 145 :y 140 :w 56 :h 17]))))
           ([MAGIC :tag SPAN :x 216 :y 139 :w 444 :h 19 :class (hint_toprq_tips_items)])))
         ([BLOCK :tag DIV :x 121 :y 177 :w 538 #|:h 169.75|# :id 1 :class (result-op c-container xpath-log)]
          ([BLOCK :tag H3 :x 121 :y 177 :w 538 :h (/ 739 30) :class (t c-gap-bottom-small)]
-          ([LINE]
+          ([MAGIC])
+          #;([LINE]
            ([INLINE :tag A]
             ([INLINE :tag EM]
              ([TEXT :x 121 :y (/ 2170 12) :w 32 :h 17]))
             ([TEXT :x 153 :y (/ 2158 12) :w 73 :h 20]))))
          ([MAGIC :tag DIV :x 121 :y (/ 6199 30) :w 538 :h 140.1 :class (c-row)]))
-        ([BLOCK :tag DIV :x 121 :y 360.75 :w 538 #|:h (/ 4406 15)|# :id 2 :class (result-op c-container xpath-log)]
+        ([MAGIC :tag DIV :x 121 :y 360.75 :w 538 :h (/ 4406 15) :id 2 :class (result-op c-container xpath-log)])
+        #;([BLOCK :tag DIV :x 121 :y 360.75 :w 538 #|:h (/ 4406 15)|# :id 2 :class (result-op c-container xpath-log)]
          ([BLOCK :tag H3 :x 121 :y 360.75 :w 538 :h (/ 739 30) :class (t c-gap-bottom-small)]
           ([LINE]
            ([INLINE :tag A]
@@ -1028,7 +1034,8 @@
          ([MAGIC :tag DIV :x 121 :y (/ 9517 15) :w 538 :h 20 :class (c-gap-top-small)]))
         ([BLOCK :tag DIV :x 121 :y (/ 20055 30) :w 538 #|:h 236.7|# :id 3 :class (result-op c-container)]
          ([BLOCK :tag H3 :x 121 :y (/ 20055 30) :w 538 :h (/ 739 30) :class (t c-gap-bottom-small)]
-          ([LINE]
+          ([MAGIC])
+          #;([LINE]
            ([INLINE :tag A]
             ([INLINE :tag EM]
              ([TEXT :x 121 :y 672.3 :w 32 :h 17]))
@@ -1039,12 +1046,14 @@
          ([MAGIC :tag DIV :x 121 :y 885.15 :w 538 :h 20]))
         ([BLOCK :tag DIV :x 121 :y (/ 5515 6) :w 538 #|:h 203.125|# :id 4 :class (result-op c-container xpath-log)]
          ([BLOCK :tag H3 :x 121 :y (/ 5515 6) :w 538 :h (/ 739 30) :class (t)]
-          ([LINE]
+          ([MAGIC])
+          #;([LINE]
            ([INLINE :tag A]
             ([INLINE :tag EM]
              ([TEXT :x 121 :y 939 :w 32 :h 17]))
             ([TEXT :x 153 :y 938 :w 112 :h 20]))))
-         ([BLOCK :tag DIV :x 121 :y 944.8 :w 538 #|:h (/ 2293 12)|# :class (c-offset)]
+         ([MAGIC :tag DIV :x 121 :y 944.8 :w 538 #|:h (/ 2293 12)|# :class (c-offset)])
+         #;([BLOCK :tag DIV :x 121 :y 944.8 :w 538 #|:h (/ 2293 12)|# :class (c-offset)]
           ([BLOCK :tag DIV :x 131 :y 944.8 :w 528 :h 20 :class (c-gap-bottom-small)]
            ([LINE]
             ([INLINE :tag A]
@@ -1070,15 +1079,18 @@
           ([MAGIC :h (/ 1 60)])))
         ([BLOCK :tag DIV :x 121 :y 1149.9 :w 538 :h 85.7 :id 5 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y 1149.9 :w 538 :h (/ 739 30) :class (t)]
-          ([LINE]
+          ([MAGIC])
+          #;([LINE]
            ([INLINE :tag A]
             ([TEXT :x 121 :y 1152.7 :w 96 :h 20])
             ([INLINE :tag EM]
              ([TEXT :x 217 :y 1153.7 :w 35 :h 17]))
             ([TEXT :x 252 :y 1152.7 :w 216 :h 20]))))
+         ([MAGIC])
          ([MAGIC :tag DIV :x 121 :y (/ 35265 30) :w 538 :h (/ 1201 30) :class (c-abstract)])
          ([MAGIC :tag DIV :x 121 :y 1215.55 :w 538 :h 20 :class (f13)]))
-        ([BLOCK :tag DIV :x 121 :y (/ 37487 30) :w 538 :h 117.875 :id 6 :class (result c-container )]
+        ([MAGIC :tag DIV :x 121 :y (/ 37487 30) :w 538 :h 117.875 :id 6 :class (result c-container )])
+        #;([BLOCK :tag DIV :x 121 :y (/ 37487 30) :w 538 :h 117.875 :id 6 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y (/ 37487 30) :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -1089,7 +1101,8 @@
          ([MAGIC :tag P :x 121 :y 1275.2 :w 538 :h 20 :class (f13 m)])
          ([MAGIC :tag DIV :x 121 :y (/ 38857 30) :w 538 :h 60.05 :class (c-abstract)])
          ([MAGIC :tag DIV :x 121 :y (/ 20329 15) :w 538 :h 20 :class (f13)]))
-        ([BLOCK :tag DIV :x 121 :y 1302.5 :w 538 :h 109.7 :id 7 :class (result c-container )]
+        ([MAGIC :tag DIV :x 121 :y 1302.5 :w 538 :h 109.7 :id 7 :class (result c-container )])
+        #;([BLOCK :tag DIV :x 121 :y 1302.5 :w 538 :h 109.7 :id 7 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y 1302.5 :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -1098,7 +1111,8 @@
              ([TEXT :x 178 :y 1393.1 :w 35 :h 17]))
             ([TEXT :x 213 :y 1392.1 :w 397 :h 20]))))
          ([MAGIC :tag DIV :x 121 :y (/ 17027 12) :w 538 :h (/ 1201 15) :class (c-row c-gap-top-small)]))
-        ([BLOCK :tag DIV :x 121 :y 1539 :w 538 :h 85.7 :id 8 :class (result c-container )]
+        ([MAGIC :tag DIV :x 121 :y 1539 :w 538 :h 85.7 :id 8 :class (result c-container )])
+        #;([BLOCK :tag DIV :x 121 :y 1539 :w 538 :h 85.7 :id 8 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y 1539 :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -1108,7 +1122,8 @@
             ([TEXT :x 343 :y 1515.8 :w 264 :h 20]))))
          ([MAGIC :tag DIV :x 121 :y (/ 23079 15) :w 538 :h (/ 1201 30) :class (c-abstract)])
          ([MAGIC :tag DIV :x 121 :y 1578.65 :w 538 :h 20 :class (f13)]))
-        ([BLOCK :tag DIV :x 121 :y (/ 4838 3) :w 538 :h 85.7 :id 9 :class (result c-container )]
+        ([MAGIC :tag DIV :x 121 :y (/ 4838 3) :w 538 :h 85.7 :id 9 :class (result c-container )])
+        #;([BLOCK :tag DIV :x 121 :y (/ 4838 3) :w 538 :h 85.7 :id 9 :class (result c-container )]
          ([BLOCK :tag H3 :x 121 :y (/ 4838 3) :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -1117,7 +1132,8 @@
             ([TEXT :x 156 :y (/ 48465 30) :w 266 :h 20]))))
          ([MAGIC :tag DIV :x 121 :y 1638.3 :w 538 :h (/ 1201 30) :class (c-abstract)])
          ([MAGIC :tag DIV :x 121 :y (/ 5035 3) :w 538 :h 20 :class (f13)]))
-        ([BLOCK :tag DIV :x 121 :y 1712.35 :w 538 :h 85.7 :id 10 :class (result-op c-container)]
+        ([MAGIC :tag DIV :x 121 :y 1712.35 :w 538 :h 85.7 :id 10 :class (result-op c-container)])
+        #;([BLOCK :tag DIV :x 121 :y 1712.35 :w 538 :h 85.7 :id 10 :class (result-op c-container)]
          ([BLOCK :tag H3 :x 121 :y 1712.35 :w 538 :h (/ 739 30) :class (t)]
           ([LINE]
            ([INLINE :tag A]
@@ -1140,7 +1156,7 @@
        ([MAGIC :tag DIV :x 0 :y (/ 59581 30) :w 1212 :h 66 :id page]))
       ([BLOCK :tag DIV :x 0 :y (/ 62761 30) :w 1907 :h 43 :id foot]
        ;; Why is :w 331 bad? Everything adds up. This is so weird.
-       ([BLOCK :tag SPAN :x 0 :y (/ 62791 30) #|:w 331|# :h 42 :id help]
+       ([BLOCK :tag SPAN :x 0 :y (/ 62791 30) :w (/ 439 3) :h 42 :id help]
         ([LINE]
          ([INLINE :tag A]
           ([TEXT :x 136 :y (/ 63181 30) :w 24 :h 16]))
@@ -1157,4 +1173,16 @@
 (define-problem sketch
   #:header header
   #:sheet doc-1-sketch
+  #:documents doc-1)
+
+(define-problem check
+  #:test (forall (a b)
+                 (=> (and (is-box/text (type a)) (is-tag/a (tagname (get/elt (element b)))))
+                     (or (not (overlaps a b)) (= (pbox a) b))))
+  #:sheet doc-1-sketch
+  #:documents (strip-positions doc-1))
+
+(define-problem debug
+  #:header header
+  #:sheet doc-1
   #:documents doc-1)

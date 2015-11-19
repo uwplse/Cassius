@@ -12,7 +12,7 @@
 (require srfi/1)
 (require srfi/13)
 
-(provide all-constraints add-test print-rules print-unsat-core reset!)
+(provide all-constraints add-test print-rules print-unsat-core reset! print-type)
 
 (define (in-empty) (in-list empty))
 
@@ -413,7 +413,7 @@
     (match (element-type elt)
       ['BLOCK 'a-block-box]
       ['ANON 'a-block-box]
-      ['MAGIC #f]
+      ['MAGIC 'a-magic-box]
       ['LINE 'a-line-box]
       ['INLINE 'an-inline-box]
       ['TEXT 'a-text-box]))
@@ -453,7 +453,6 @@
             (cns dom sow elt)))))
 
 (define (all-constraints sheet doms)
-
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)
     (error "Different browsers on different documents not yet supported"))
@@ -479,6 +478,8 @@
      (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (element-name elt))
      (for/list ([dom doms]) (dom-root dom))))
   (define box-names (map (curry sformat "~a-flow") element-names))
+  
+  (eprintf "~a boxes\n" (length (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) #t)))
 
   (define rules '())
   (define (save-rule x rule) (set! rules (cons (cons x rule) rules)))
@@ -486,7 +487,7 @@
   (define constraints
     (list
      tree-constraints box-element-constraints
-     (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)
+     (procedure-rename (style-constraints (lambda () (eprintf "~a rules\n" (length rules)) rules)) 'cascade-constraints)
      info-constraints user-constraints #;element-constraints
      box-link-constraints box-constraints))
 
@@ -524,4 +525,6 @@
   `(,@constraints
     ,@(for/list ([&var &vars])
         `(declare-const ,&var BoxName))
-    (assert (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body)))))
+    (assert (! (and ,@(for/list ([&var &vars]) `(is-box (get/box ,&var)))
+                    (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body)))
+               :named test))))

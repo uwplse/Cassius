@@ -8,6 +8,8 @@
 (require "main.rkt")
 (require "modify-dom.rkt")
 (require "model-check.rkt")
+(require math/base)
+(require (only-in unstable/list list-update))
 
 (provide parse-file run-file (struct-out problem))
 
@@ -49,27 +51,43 @@
                            (map parse-document documents) feats #f))]))
   problems)
 
+(define num-holes 5)
+
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
   (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
   (define res
     (match (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))
       [(problem desc url header sheet documents features #f)
-       (solve-problem header sheet documents out solve debug #f)]
+       (solve-problem header sheet documents out solve debug #f)
+       #;(for ([i (in-range 10)])
+         (define sheet*
+           (for/fold ([sheet sheet]) ([j (in-range num-holes)])
+             (let ([k (random-integer 0 (length sheet))])
+               (list-update sheet k (λ (r) (cons (car r) '(?)))))))
+         (solve-problem header sheet* documents out solve debug #f))]
       [(problem desc url header sheet (list document) features test)
        (match-define (dom name ctx tree) document)
        (let/ec stop
-         (for* ([i (in-naturals)] [concrete (generate-from-template tree i)])
-           (eprintf ". ")
+         (define port (if (member 'solver debug) out (open-output-string)))
+         (match (parameterize ([current-output-port port] [current-error-port port])
+                  (solve-problem "" sheet (list (dom name ctx tree)) port solve debug test))
+           [#t (printf ". ")]
+           [#f
+            (when (not (member 'solver debug))
+              (printf "~a\n" (get-output-string port)))
+            (pretty-print tree)])
+         (when (not solve) (stop #t)))
+         #;(for* ([i (in-naturals)] [concrete (generate-from-template tree i)])
            (define port (if (member 'solver debug) out (open-output-string)))
            (parameterize ([current-output-port port] [current-error-port port])
              (match (solve-problem "" sheet (list (dom name ctx concrete)) port solve debug test)
-               [#t (void)]
+               [#t (printf ". ")]
                [#f
                 (newline)
                 (when (not (member 'solver debug))
                   (write (get-output-string port)))
                 (pretty-print concrete)]))
-           (when (not solve) (stop #t))))]))
+           (when (not solve) (stop #t)))]))
   (when outname (close-output-port out))
   res)
 
@@ -77,7 +95,9 @@
   (define documents*
     (for/list ([d documents])
       (match-define (dom name ctx tree) d)
-      (dom name ctx (parse-tree tree))))
+      (if (element? tree)
+          d
+          (dom name ctx (parse-tree tree)))))
   (reset!)
   (define time-start (current-inexact-milliseconds))
   (define query (all-constraints sheet documents*))
@@ -128,12 +148,15 @@
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
                     (length core))
            #f]
-          [(#t (model model))
+          [(`(forall (,vars ...) ,query) (model model))
            #;(print-counterexample model documents* sheet)
+           (for ([var vars])
+             (define boxname (hash-ref model (sformat "counterexample/~a" var)))
+             (printf "~a ~a\n" var (print-type 'Box (hash-ref model (sformat "~a-box" boxname)))))
            (eprintf "[~as] Counterexample found!\nFailure.\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
            #f]
-          [(#t (unsat-core core))
+          [(`(forall (,vars ...) ,query) (unsat-core core))
            (eprintf "[~as] No counterexamples found\nSuccess!\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
            #t]

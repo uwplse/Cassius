@@ -556,4 +556,7 @@
     (let ((e (get/elt (element b))))
       (ite (! (is-float/none (float e)) :named flow)
            (a-block-flow-box b)
-           (a-block-float-box b)))))
+           (a-block-float-box b))))
+
+  (define-fun a-magic-box ((b Box)) Bool
+    (or (is-box/block (type b)) (is-box/inline (type b)))))

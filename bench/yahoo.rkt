@@ -1769,7 +1769,7 @@
           ([MAGIC :tag BUTTON :x 1832 :y 2 :w 55 :h 19 :mt 0 :mr 0 :mb 0 :ml 0 :class (intl-selectorfull)])))
         ([BLOCK :tag DIV :x 0 :y 0 :w 1200 :h 22 :class (uni-wrapper guest-module cf)]
          ([MAGIC :tag UL :x 10 :y 0 :w 1190 :h 22 :class (fz-xs)])))))
-     ([BLOCK :tag DIV :x 388.5 :y 22 :w 1130 :h 86 :class (main-row-wrapper)]
+     ([BLOCK :tag DIV :x 388.5 :y 22 :w (explain 1130) :h 86 :class (main-row-wrapper)]
       ([BLOCK :tag DIV :x 388.5 :y 47 :w 1130 :h 0 :id default-p_13838465 :class (mod view_default)]
        ([BLOCK :tag DIV :x 388.5 :y 47 :w 1130 :h 0 :id default-p_13838465-bd :class (bd type_masthead type_masthead_default loaded)]
         ([MAGIC :tag DIV :x 388.5 :y 47 :w 1130 :h 0 :class (mh-wrap us clearfix y-fp-pg-grad   lightbg )]
@@ -2291,6 +2291,18 @@
   #:documents doc-1)
 
 (define-problem sketch
+  #:header header
+  #:sheet doc-1-sketch
+  #:documents doc-1)
+
+(define-problem check
+  #:test (forall (a b)
+                 (=> (and (is-box/text (type a)) (is-tag/a (tagname (get/elt (element b)))))
+                     (or (not (overlaps a b)) (= (pbox a) b))))
+  #:sheet doc-1-sketch
+  #:documents (strip-positions doc-1))
+
+(define-problem debug
   #:header header
   #:sheet doc-1-sketch
   #:documents doc-1)
