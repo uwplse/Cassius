@@ -74,10 +74,10 @@
   (define-fun vbox ((box Box)) Box (get/box (v-name box)))
   (define-fun fltbox ((box Box)) Box (get/box (flt-name box)))
   (define-fun fbox ((b Box)) Box
-    (ite (=> (is-box (real-fbox b)) (is-float/none (float (get/elt (element (real-fbox b))))))
+    (ite (=> (is-box (real-fbox b)) (is-float/none (float (real-fbox b))))
          (real-fbox b) (nbox (real-fbox b))))
   (define-fun lbox ((b Box)) Box
-    (ite (=> (is-box (real-lbox b)) (is-float/none (float (get/elt (element (real-lbox b))))))
+    (ite (=> (is-box (real-lbox b)) (is-float/none (float (real-lbox b))))
          (real-lbox b) (vbox (real-lbox b))))
   (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
 
@@ -87,24 +87,24 @@
        (= (v-name b)
           ,(smt-cond
             [(is-no-elt (previous e)) nil-box]
-            [(is-float/none (float (previous e))) (flow-box (previous e))]
+            [(is-float/none (float (get/box (flow-box (previous e))))) (flow-box (previous e))]
             [else (v-name (get/box (flow-box (previous e))))]))
        (= (n-name b)
           ,(smt-cond
             [(is-no-elt (next e)) nil-box]
-            [(is-float/none (float (next e))) (flow-box (next e))]
+            [(is-float/none (float (get/box (flow-box (next e))))) (flow-box (next e))]
             [else (n-name (get/box (flow-box (next e))))]))
        ;; Uncomment the next two commented lines to not inline flow chains
        (!
        (= (get/box (flt-name b))
           ,(smt-cond
-            [(and (is-no-elt (previous e)) (not (is-float/none (float (parent e))))) no-box]
+            [(and (is-no-elt (previous e)) (not (is-float/none (float (get/box (flow-box (parent e))))))) no-box]
             [(is-no-elt (previous e)) (get/box (flt-name (get/box (flow-box (parent e)))))]
             [else (get/box (flt-up-name (get/box (flow-box (previous e)))))]))
        :opt false)
        (= (flt-up-name b)
           ,(smt-cond
-            [(not (is-float/none (float e))) (flow-box e)]
+            [(not (is-float/none (float b))) (flow-box e)]
             [(is-no-elt (lchild e)) (flt-name b)]
             [else (flt-up-name (get/box (flow-box (lchild e))))]))))
 

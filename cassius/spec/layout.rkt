@@ -57,20 +57,21 @@
   (define-fun overlaps ((b1 Box) (b2 Box)) Bool
     (and (horizontally-adjacent b1 b2) (vertically-adjacent b1 b2)))
 
-  (define-fun textalign ((e Element)) TextAlign
-    (style.text-align (rules e)))
+  (define-fun textalign ((b Box)) TextAlign
+    (style.text-align (rules (get/elt (element b)))))
 
-  (define-fun float ((e Element)) Float
-    (style.float (rules e)))
+  (define-fun float ((b Box)) Float
+    (if (is-box/block (type b))
+        (style.float (rules (get/elt (element b))))
+        float/none))
   
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
         (is-tag/html (tagname (get/elt (element b))))
-        (not (is-float/none (float (get/elt (element b)))))))
+        (not (is-float/none (float b)))))
 
   (define-fun an-element ((e Element)) Bool
-    (! (=> (is-display/inline (display e)) (is-float/none (float e)))
-       :named inline-elements-dont-float))
+    true)
 
   (define-fun a-root-element ((e Element)) Bool
     ,(smt-let ([b (get/box (flow-box e))])
@@ -224,7 +225,7 @@
                  (not (is-box/root (type (pbox p))))
                  ;; Margins between a floated box and any other box do not collapse
                  ;; (not even between a float and its in-flow children). 
-                 (is-float/none (float (get/elt (element p))))
+                 (is-float/none (float p))
                  ;; The top margin of an in-flow block element collapses with
                  ;; its first in-flow block-level child's top margin if the element
                  ;; has no top border, no top padding, and the child has no clearance. 
@@ -240,8 +241,7 @@
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
-               [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [flt (fltbox b)]
-               [flte (get/elt (element (fltbox b)))])
+               [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [flt (fltbox b)])
 
        (= (type b) box/block)
        (! (and
@@ -330,8 +330,8 @@
        ;; may not be to the left of the left edge of its containing block.
        ;; TODO: An analogous rule holds for right-floating elements.
        (! (and
-           (=> (is-float/left (float e)) (>= (left-outer b) (left-content p)))
-           (=> (is-float/right (float e)) (>= (right-content p) (right-outer b))))
+           (=> (is-float/left (float b)) (>= (left-outer b) (left-content p)))
+           (=> (is-float/right (float b)) (>= (right-content p) (right-outer b))))
           :named item-1)
 
        ;; CSS 2.1, § 9.5.1, item 2: If the current box is left-floating,
@@ -345,7 +345,7 @@
        ;; TODO: This doesn't take into account that it's just interactions of
        ;; left floats with left floats, right floats with right floats
        (! (or (is-no-box flt)
-              (ite (is-float/left (float e))
+              (ite (is-float/left (float b))
                    (or (= (left-outer b) (right-outer flt)) (>= (top-border b) (bottom-outer flt)))
                    (or (= (right-outer b) (left-outer flt)) (>= (top-border b) (bottom-outer flt)))))
           :named item-2)
@@ -387,10 +387,10 @@
        ;; left floats with left floats, right floats with right floats
        (! (and
            (=> (and (is-box flt) (< (x flt) (x b)) (horizontally-adjacent b flt)
-                    (is-float/left (float e)))
+                    (is-float/left (float b)))
                (<= (right-outer b) (right-content p)))
            (=> (and (is-box flt) (> (x flt) (x b)) (horizontally-adjacent b flt)
-                    (is-float/right (float e)))
+                    (is-float/right (float b)))
                (>= (left-outer b) (left-content p))))
           :named item-7)
 
@@ -409,10 +409,10 @@
        ;; TODO: This doesn't take into account that it's just interactions of
        ;; left floats with left floats, right floats with right floats
        (! (and
-           (=> (is-float/left (float e))
+           (=> (is-float/left (float b))
                (or (= (left-outer b) (left-content p))
                    (and (is-box flt) (= (left-outer b) (right-outer flt)))))
-           (=> (is-float/right (float e))
+           (=> (is-float/right (float b))
                (or (= (right-outer b) (right-content p))
                    (and (is-box flt) (= (right-outer b) (left-outer flt))))))
           :named item-9)
@@ -428,13 +428,13 @@
           :named restriction-2)
        ;; R3: If a float wraps to the next line, the previous line must be full
        (! (=> (and (is-box flt) (= (top-outer b) (bottom-outer flt)))
-              (ite (is-float/left (float e))
+              (ite (is-float/left (float b))
                    (>= (right-outer flt) (right-content p))
                    (<= (left-outer flt) (left-content p))))
           :named restriction-3)
        ;; R4: If this and the previous float float to different sides,
        ;; they are not horizontally adjacent
-       (! (=> (and (is-box flt) (not (= (float flte) (float e))))
+       (! (=> (and (is-box flt) (not (= (float flt) (float b))))
               (not (horizontally-adjacent flt b)))
           :named restriction-4)))
 
@@ -490,7 +490,6 @@
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pbox b)] [v (vbox b)] [e (get/elt (element b))])
        (is-box/inline (type b))
-       (is-float/none (float e))
 
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
@@ -504,9 +503,8 @@
 
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [flt (fltbox b)]
-               [f (fbox b)] [l (lbox b)] [flte (get/elt (element (fltbox b)))])
+               [f (fbox b)] [l (lbox b)])
        (is-box/line (type b))
-       (! (is-float/none (float e)) :named lines-dont-float) ; Where else would we set this?
 
        (! (and
            ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
@@ -514,17 +512,17 @@
           :named line-no-mbp)
 
        (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
-                 (is-float/left (float flte)))
+                 (is-float/left (float flt)))
             (= (left-outer b) (right-outer flt))
             (= (left-outer b) (left-content p)))
        (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
-                 (is-float/right (float flte)))
+                 (is-float/right (float flt)))
             (= (right-outer b) (left-outer flt))
             (= (right-outer b) (right-content p)))
 
        (let ([c (and ;; Space left for the line of text
                  (> (- (right-outer l) (left-outer f))
-                    (ite (is-float/left (float flte))
+                    (ite (is-float/left (float flt))
                          (- (right-content p) (right-outer flt))
                          (- (left-outer flt) (left-content p))))
                  ;; Previous element is a float; see restrictions on floats
@@ -545,16 +543,14 @@
                   (ite (is-box l*) (+ (ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (mr l*)) 0.0)
                   (ite (is-box v*) (stfwidth v*) 0.0)))))
 
-       ,(smt-cond
-         [(is-text-align/left (textalign e)) (= (left-border f) (left-content b))]
-         [(is-text-align/right (textalign e)) (= (right-border l) (right-content b))]
-         [(is-text-align/center (textalign e))
-          (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b)))]
-         [else true])))
+       (=> (is-text-align/left (textalign b)) (= (left-border f) (left-content b)))
+       (=> (is-text-align/right (textalign b)) (= (right-border l) (right-content b)))
+       (=> (is-text-align/center (textalign b))
+           (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))))
 
   (define-fun a-block-box ((b Box)) Bool
     (let ((e (get/elt (element b))))
-      (ite (! (is-float/none (float e)) :named flow)
+      (ite (! (is-float/none (float b)) :named flow)
            (a-block-flow-box b)
            (a-block-float-box b))))
 
