@@ -159,7 +159,8 @@
 (define to-resolve
   (append
    '(get/elt flow-box first-child-name last-child-name parent-name previous-name next-name)
-   '(get/box element pb-name v-name flt-name flt-up-name n-name)))
+   '(get/box element pb-name v-name flt-name flt-up-name n-name)
+   '(real-p-name real-v-name real-n-name real-f-name real-l-name)))
 
 (define to-expand
   (append
@@ -181,6 +182,7 @@
    (z3-resolve-fns)
    z3-dco
    (apply z3-expand to-expand)
+   z3-unlet
    z3-simplif
    z3-assert-and
    (apply z3-resolve-fns to-resolve)

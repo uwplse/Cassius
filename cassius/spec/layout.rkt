@@ -61,9 +61,10 @@
     (style.text-align (rules (get/elt (element b)))))
 
   (define-fun float ((b Box)) Float
-    (if (is-box/block (type b))
+    ;(if (is-box/block (type b))
         (style.float (rules (get/elt (element b))))
-        float/none))
+        ;float/none))
+        )
   
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
@@ -73,16 +74,15 @@
   (define-fun an-element ((e Element)) Bool
     true)
 
-  (define-fun a-root-element ((e Element)) Bool
-    ,(smt-let ([b (get/box (flow-box e))])
-       (= (tagname e) no-tag)
-       (! (and ,@(for/list ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
-                   `(= (,field b) 0.0)))
+  (define-fun a-root-box ((b Box)) Bool
+    (and
+     (! (and ,@(for/list ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
+                 `(= (,field b) 0.0)))
           :named zero-xypbm)
-       (= (type b) box/root)
-       (= (n-name b) nil-box)
-       (= (flt-name b) nil-box)
-       (= (v-name b) nil-box)))
+     (= (type b) box/root)
+     (= (n-name b) nil-box)
+     (= (flt-name b) nil-box)
+     (= (v-name b) nil-box)))
 
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
@@ -488,8 +488,7 @@
        (=> (is-box v) (= (left-outer b) (right-outer v)))))
 
   (define-fun a-text-box ((b Box)) Bool
-    ,(smt-let ([p (pbox b)] [v (vbox b)] [e (get/elt (element b))])
-       (is-box/inline (type b))
+    ,(smt-let ([p (pbox b)] [v (vbox b)])
 
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
@@ -502,9 +501,8 @@
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-line-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [flt (fltbox b)]
+    ,(smt-let ([p (pbox b)] [v (vbox b)] [flt (fltbox b)]
                [f (fbox b)] [l (lbox b)])
-       (is-box/line (type b))
 
        (! (and
            ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
@@ -549,10 +547,9 @@
            (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))))
 
   (define-fun a-block-box ((b Box)) Bool
-    (let ((e (get/elt (element b))))
-      (ite (! (is-float/none (float b)) :named flow)
-           (a-block-flow-box b)
-           (a-block-float-box b))))
+    (ite (! (is-float/none (float b)) :named flow)
+         (a-block-flow-box b)
+         (a-block-float-box b)))
 
   (define-fun a-magic-box ((b Box)) Bool
     (or (is-box/block (type b)) (is-box/inline (type b)))))

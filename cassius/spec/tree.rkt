@@ -13,6 +13,9 @@
                 (pt Real) (pr Real) (pb Real) (pl Real)
                 (bt Real) (br Real) (bb Real) (bl Real)
                 (stfwidth Real)
+                (real-p-name BoxName)
+                (real-n-name BoxName) (real-v-name BoxName)
+                (real-f-name BoxName) (real-l-name BoxName)
                 (pb-name BoxName)
                 (n-name BoxName) (v-name BoxName) (flt-name BoxName) (flt-up-name BoxName)
                 (element ElementName)))
@@ -32,17 +35,11 @@
   (define-fun lchild   ((elt Element)) Element (get/elt (last-child-name elt)))
 
   ;; The "real" boxes in each direction
-  (define-fun real-pbox ((box Box)) Box (get/box (flow-box (parent (get/elt (element box))))))
-  (define-fun real-fbox ((box Box)) Box (get/box (flow-box (fchild (get/elt (element box))))))
-  (define-fun real-lbox ((box Box)) Box (get/box (flow-box (lchild (get/elt (element box))))))
-  (define-fun real-vbox ((box Box)) Box
-    (ite (is-no-elt (previous (get/elt (element box))))
-         no-box
-         (get/box (flow-box (previous (get/elt (element box)))))))
-  (define-fun real-nbox ((box Box)) Box
-    (ite (is-no-elt (next (get/elt (element box))))
-         no-box
-         (get/box (flow-box (next (get/elt (element box)))))))
+  (define-fun real-pbox ((box Box)) Box (get/box (real-p-name box)))
+  (define-fun real-fbox ((box Box)) Box (get/box (real-f-name box)))
+  (define-fun real-lbox ((box Box)) Box (get/box (real-l-name box)))
+  (define-fun real-vbox ((box Box)) Box (get/box (real-v-name box)))
+  (define-fun real-nbox ((box Box)) Box (get/box (real-n-name box)))
 
   (define-fun link-element ((elt Element) (doc Document) (p ElementName)
                             (v ElementName) (n ElementName) (f ElementName)
@@ -55,19 +52,14 @@
          (= (first-child-name elt) f)
          (= (last-child-name elt) l)))
   
-  (define-fun link-root-element ((elt Element) (&f ElementName)) Bool
-    (and (is-elt elt)
-         (= (first-child-name elt) &f)
-         (= (last-child-name elt) &f)
-         (= (parent-name elt) nil-elt)
-         (= (previous-name elt) nil-elt)
-         (= (next-name elt) nil-elt)))
-  
   (define-fun element-info ((elt Element) (tag TagNames) (&idname Id) (displayname Display)) Bool
     (and (= (tagname elt) tag) (= (idname elt) &idname) (= (display elt) displayname)))
   
   (define-fun link-element-box ((&e ElementName) (&b BoxName)) Bool
     (and (is-box (get/box &b)) (= (element (get/box &b)) &e) (= (flow-box (get/elt &e)) &b)))
+
+  (define-fun link-anon-box ((&b BoxName)) Bool
+    (and (is-box (get/box &b)) (= (element (get/box &b)) nil-elt)))
 
   (define-fun pbox ((box Box)) Box (real-pbox box))
   (define-fun nbox ((box Box)) Box (get/box (n-name box)))
@@ -81,8 +73,14 @@
          (real-lbox b) (vbox (real-lbox b))))
   (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
 
-  (define-fun link-block-box ((b Box)) Bool
+  (define-fun link-block-box ((b Box) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
+       (is-box/block (type b))
+       (= (real-p-name b) &p)
+       (= (real-v-name b) &v)
+       (= (real-n-name b) &n)
+       (= (real-f-name b) &f)
+       (= (real-l-name b) &l)
        (= (pb-name b) (flow-box e))
        (= (v-name b)
           ,(smt-cond
@@ -108,24 +106,42 @@
             [(is-no-elt (lchild e)) (flt-name b)]
             [else (flt-up-name (get/box (flow-box (lchild e))))]))))
 
-  (define-fun link-inline-box ((b Box)) Bool
+  (define-fun link-inline-box ((b Box) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
+       (is-box/inline (type b))
+       (= (real-p-name b) &p)
+       (= (real-v-name b) &v)
+       (= (real-n-name b) &n)
+       (= (real-f-name b) &f)
+       (= (real-l-name b) &l)
        (= (pb-name b) (pb-name (pbox b)))
        (= (v-name b) (ite (is-no-elt (previous e)) nil-box (flow-box (previous e))))
        (= (n-name b) (ite (is-no-elt (next e)) nil-box (flow-box (next e))))
        (= (flt-name b) (flt-name (pbbox b)))
        (= (flt-up-name b) (flt-name b))))
 
-  (define-fun link-line-box ((b Box)) Bool
+  (define-fun link-line-box ((b Box) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
+       (is-box/line (type b))
+       (= (real-p-name b) &p)
+       (= (real-v-name b) &v)
+       (= (real-n-name b) &n)
+       (= (real-f-name b) &f)
+       (= (real-l-name b) &l)
        (= (pb-name b) (pb-name (pbox b)))
        (= (v-name b) (ite (is-no-elt (previous e)) nil-box (flow-box (previous e))))
        (= (n-name b) (ite (is-no-elt (next e)) nil-box (flow-box (next e))))
        (= (flt-name b) (flt-name (pbbox b)))
        (= (flt-up-name b) (flt-name b))))
 
-  (define-fun link-text-box ((b Box)) Bool
+  (define-fun link-text-box ((b Box) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
+       (is-box/text (type b))
+       (= (real-p-name b) &p)
+       (= (real-v-name b) &v)
+       (= (real-n-name b) &n)
+       (= (real-f-name b) &f)
+       (= (real-l-name b) &l)
        (= (pb-name b) (pb-name (pbox b)))
        (= (v-name b) (ite (is-no-elt (previous e)) nil-box (flow-box (previous e))))
        (= (n-name b) (ite (is-no-elt (next e)) nil-box (flow-box (next e))))
