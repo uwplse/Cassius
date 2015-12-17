@@ -49,12 +49,14 @@
   [((or 'Width 'Height 'Margin 'Padding 'Border) (list (? (css-type-ending? "pct")) x)) (format "~a%" x)]
   [((or 'Width 'Height 'Margin 'Padding 'Border) (? css-%?)) (last (string-split (~a value) "/"))]
   [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "inherit"))) "inherit"]
+  [('Border (or 'border/medium 'border/thin 'border/thick))
+   (last (string-split (~a value) "/"))]
   [('Float _) (last (string-split (~a value) "/"))]
   [('TextAlign _) (last (string-split (~a value) "/"))]
   [('Selector 'sel/all) "*"]
   [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
   [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
-  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,stfw ,pbname ,n ,v ,flt ,flt-up ,e))
+  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,_ ,_ ,_ ,_ ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,stfw ,pbname ,n ,v ,flt ,flt-up ,e))
    (with-output-to-string
      (lambda ()
        (printf "~a ~a×~a at x ~a / y ~a\n" type (r2 (+ bl br pl pr w)) (r2 (+ bt bb pt pb h)) (r2 x) (r2 y))

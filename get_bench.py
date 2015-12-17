@@ -98,7 +98,10 @@ def main(urls, name=None):
             fi = CassiusInput(f, urls, netloc)
             for i, url in enumerate(urls):
                 letter = str(i+1).rjust(len(str(len(urls))), "0")
-                get_bench_output(browser, letter, url, fi)
+                try:
+                    get_bench_output(browser, letter, url, fi)
+                except:
+                    continue
                 scheme, _, _, _, _, _ = urlparse.urlparse(url)
                 #if scheme == "http":
                 #    src = urllib.urlopen(url)

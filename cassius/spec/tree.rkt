@@ -9,6 +9,7 @@
            (box (type BoxType)
                 (x Real) (y Real) (w Real) (h Real)
                 (mt Real) (mr Real) (mb Real) (ml Real)
+                (mtp2 Real) (mtn2 Real) (mbp2 Real) (mbn2 Real)
                 (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                 (pt Real) (pr Real) (pb Real) (pl Real)
                 (bt Real) (br Real) (bb Real) (bl Real)

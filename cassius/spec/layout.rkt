@@ -62,7 +62,19 @@
 
   (define-fun float ((e Element)) Float
     (style.float (rules e)))
-  
+
+  (define-fun top-margins-collapse-parent ((b Box)) Bool
+    (and
+     ;; Margins of the root element's box do not collapse. 
+     (not (is-box/root (type (pbox (pbox b)))))
+     ;; Margins between a floated box and any other box do not collapse
+     ;; (not even between a float and its in-flow children). 
+     (is-float/none (float p))
+     ;; The top margin of an in-flow block element collapses with
+     ;; its first in-flow block-level child's top margin if the element
+     ;; has no top border, no top padding, and the child has no clearance. 
+     (= (pt p) 0.0) (= (bt p) 0.0)))
+
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
         (is-tag/html (tagname (get/elt (element b))))
@@ -90,22 +102,28 @@
        (= (type b) box/block)
 
        ;; Computing maximum collapsed positive and negative margin
-       (= (mtp b)
+       (= (mtp2 b)
           (max (ite (> (mt b) 0.0) (mt b) 0.0)
                (ite (and (not (is-tag/html (tagname e))) (is-box fb)
-                         (= (pt b) 0.0) (= (bt b) 0.0)) (mtp fb) 0.0)))
-       (= (mtn b)
+                         (= (pt b) 0.0) (= (bt b) 0.0))
+                    (mtp fb) 0.0)))
+       (= (mtn2 b)
           (min (ite (< (mt b) 0.0) (mt b) 0.0)
                (ite (and (not (is-tag/html (tagname e))) (is-box fb)
                          (= (pt b) 0.0) (= (bt b) 0.0)) (mtn fb) 0.0)))
-       (= (mbp b)
+       (= (mbp2 b)
           (max (ite (> (mb b) 0.0) (mb b) 0.0)
                (ite (and (not (is-tag/html (tagname e))) (is-box lb)
                          (= (pb b) 0.0) (= (bb b) 0.0)) (mbp lb) 0.0)))
-       (= (mbn b)
-          (min (ite (< (mb b) 0.0) (mb b) 0)
+       (= (mbn2 b)
+          (min (ite (< (mb b) 0.0) (mb b) 0.0)
                (ite (and (not (is-tag/html (tagname e))) (is-box lb)
                          (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)))
+       
+       (= (mtp b) (ite (= (box-height b) 0.0) (max (mtp2 b) (mbp2 b)) (mtp2 b)))
+       (= (mtn b) (ite (= (box-height b) 0.0) (max (mtn2 b) (mbn2 b)) (mtn2 b)))
+       (= (mbp b) (ite (= (box-height b) 0.0) (max (mtp2 b) (mbp2 b)) (mbp2 b)))
+       (= (mbn b) (ite (= (box-height b) 0.0) (max (mtn2 b) (mbn2 b)) (mbn2 b)))
 
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
@@ -218,20 +236,24 @@
        ;; Computing X and Y position
        (! (= (x b) (+ (left-content p) (ml b))) :named flow-x)
        (= (y b)
-          (ite (is-no-box vb)
-           (ite (and
-                 ;; Margins of the root element's box do not collapse. 
-                 (not (is-box/root (type (pbox p))))
-                 ;; Margins between a floated box and any other box do not collapse
-                 ;; (not even between a float and its in-flow children). 
-                 (is-float/none (float (get/elt (element p))))
-                 ;; The top margin of an in-flow block element collapses with
-                 ;; its first in-flow block-level child's top margin if the element
-                 ;; has no top border, no top padding, and the child has no clearance. 
-                 (= (pt p) 0.0) (= (bt p) 0.0))
-                (top-content p)
-                (+ (top-content p) (+ (mtp b) (mtn b))))
-           (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b)))))
+          ,(smt-cond
+            [(= (box-height b) 0.0)
+             (ite (is-box vb) (bottom-border vb) (top-content p))]
+            [(is-box vb)
+             (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b)))]
+            [(and
+              ;; Margins of the root element's box do not collapse. 
+              (not (is-box/root (type (pbox p))))
+              ;; Margins between a floated box and any other box do not collapse
+              ;; (not even between a float and its in-flow children). 
+              (is-float/none (float (get/elt (element p))))
+              ;; The top margin of an in-flow block element collapses with
+              ;; its first in-flow block-level child's top margin if the element
+              ;; has no top border, no top padding, and the child has no clearance. 
+              (= (pt p) 0.0) (= (bt p) 0.0))
+             (top-content p)]
+            [else
+             (+ (top-content p) (+ (mtp b) (mtn b)))]))
 
        (! (and
            ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
