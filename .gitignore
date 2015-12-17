@@ -12,3 +12,5 @@ coq/CoqMakefile
 *~
 cassius/compiled
 reports/*.html
+reports/*.json
+bench/css/*.rkt

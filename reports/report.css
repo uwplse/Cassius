@@ -10,3 +10,4 @@ tr:hover .out pre { display: block; }
 .success {background-color: #0bd318;}
 .timeout {background-color: #ff9500;}
 .unsupported {background-color: #8e8e93;}
+th { text-align: left; }

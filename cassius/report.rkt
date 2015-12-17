@@ -20,74 +20,129 @@
       (string-join (drop-right (string-split base "-") 1) "-")
       base))
 
-(define (run-files files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f])
-  (define out (if outname (open-output-file (format "~a.html" outname) #:exists 'replace) (current-output-port)))
+(define (section->tuple s)
+  (if (string=? (substring s 0 1) "s")
+      (cons "s" (map (λ (c) (or (string->number c) c)) (string-split (substring s 1) ".")))
+      '("u")))
+
+(define (number-string<? c1 c2)
+  (cond
+   [(and (number? c1) (number? c2)) (< c1 c2)]
+   [(and (string? c1) (string? c2)) (string<? c1 c2)]
+   [(number? c1) #t]
+   [(number? c2) #f]))
+
+(define (section<? s1 s2)
+  (cond
+   [(and (null? s1) (null? s2)) #f]
+   [(null? s1) #t]
+   [(null? s2) #f]
+   [(number-string<? s1 s2) #t]
+   [(number-string<? s2 s1) #f]
+   [else (section<? (cdr s1) (cdr s2))]))
+
+(struct result (file problem test section status description features output time))
+
+(define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)])
+  (define probs (call-with-input-file file parse-file))
+
+  (for/list ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))]
+        #:when (or (not fast?) (subset? (problem-features prob) supported-features)))
+    (eprintf "~a\t~a\t" file pname)
+    (define-values (ubase uname udir?) (split-path (problem-url prob)))
+
+    (define out (open-output-string))
+    (define-values
+      (runtime status)
+      (parameterize ([current-error-port out] [current-output-port out])
+        (define eng (engine (λ (_) (run-file file (~a pname) #:debug debug))))
+        (define t (current-inexact-milliseconds))
+        (define res
+          (with-handlers ([exn:fail? (λ (e) 'error)])
+            (if (not (engine-run 60000 eng)) 'timeout 'ok))) ; 1m max
+        (define runtime (- (current-inexact-milliseconds) t))
+        (engine-kill eng)
+        (define status
+          (match res
+            ['timeout 'timeout]
+            ['error 'error]
+            ['ok
+             (cond
+              [(engine-result eng) 'success]
+              [(> (length (set-subtract (problem-features prob) supported-features)) 0) 'unsupported]
+              [else 'fail])]))
+        (values runtime status)))
+
+    (eprintf "~a\n" status)
+    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+            status (problem-desc prob) (problem-features prob) (get-output-string out) runtime)))
+
+(define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f])
   (define index
     (if classify
         (for*/hash ([sec (call-with-input-file classify read-json)] [(k v) (in-hash sec)])
           (values (normalize-index k v) v))
         (hash)))
-  (define results
+
+  (define resultss
+    (for/list ([file files])
+      (run-file-tests file #:debug debug #:fast fast? #:index index)))
+  (define results (apply append resultss))
+
+  (define out (if outname (open-output-file (format "~a.html" outname) #:exists 'replace) (current-output-port)))
+  
   (parameterize ([current-output-port out])
     (printf "<!doctype html>\n<html lang='en_US'>\n<meta charset='utf8' />\n")
     (printf "<link rel='stylesheet' href='report.css' />\n")
     (printf "<title>Cassius results for ~a</title>\n" (string-join files ", "))
     (printf "<body>\n")
-    (define results
-      (for/reap [sow] ([fname files])
-        (printf "<h2>~a</h2>\n" fname)
-        (printf "<table>\n")
-        (define probs (call-with-input-file fname parse-file))
-        (for ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))]
-              #:when (or (not fast?) (subset? (problem-features prob) supported-features)))
-          (eprintf "~a\t~a\t" fname pname)
-          (define-values (ubase uname udir?) (split-path (problem-url prob)))
-          (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='out'><pre>" pname uname (problem-desc prob))
-          (define status
-            (parameterize ([current-error-port (current-output-port)])
-              
-              (define eng (engine (λ (_) (run-file fname (~a pname) #:debug debug))))
-              (define timeout? (not (engine-run 120000 eng))) ; Run for 2m max
-              (engine-kill eng)
-              (cond
-               [timeout?
-                (printf "[10.00s] Timed out\n")
-                'timeout]
-               [(engine-result eng) 'success]
-               [(> (length (set-subtract (problem-features prob) supported-features)) 0) 'unsupported]
-               [else 'fail])))
 
-          (sow (list fname uname (hash-ref index (normalize-uname uname) "unknown") status (set-subtract (problem-features prob) supported-features)))
-          (eprintf "~a\n" status)
+    (printf "<table>\n")
+    (printf "<tr><th>Section</th><th>Passing</th><th>Failing</th><th>Unsupported</th></tr>\n")
+    (for ([section (sort (remove-duplicates (map result-section results)) section<?)])
+      (define sresults (filter (λ (x) (equal? (result-section x) section)) results))
+      (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td>~a</td></tr>\n"
+              section
+              (count (λ (x) (equal? (result-status x) 'success)) sresults)
+              (count (λ (x) (member (result-status x) '(error timeout fail))) sresults)
+              (count (λ (x) (equal? (result-status x) 'unsupported)) sresults)))
+    (printf "</table>\n")
 
-          (printf "</pre></td><td class='~a'>~a</td></tr>\n" status
-                  (match status ['success "✔"] ['fail "✘"] ['timeout "🕡"]
-                    ['unsupported
-                     (define probfeats (set-subtract (problem-features prob) supported-features))
-                     (format "<span title='~a'>☹</span>" (string-join (map ~a probfeats) ", "))])))
-        (printf "</table>\n")))
+    (for ([fname files] [results resultss])
+      (printf "<h2>~a</h2>\n" fname)
+      (printf "<table>\n")
+
+      (for ([res results])
+        (match-define (result file problem test section status description features output time) res)
+        (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='out'><pre>~a</pre></td><td class='~a'>~a</td></tr>\n"
+                problem test description output status
+                (match status ['success "✔"] ['fail "✘"] ['timeout "🕡"]
+                  ['unsupported
+                   (define probfeats (set-subtract features supported-features))
+                   (format "<span title='~a'>☹</span>" (string-join (map ~a probfeats) ", "))])))
+      (printf "</table>\n"))
+
     (printf "<h2>Status totals</h2>\n")
     (printf "<dl>\n")
-    (for ([status '(success fail timeout unsupported)])
-      (printf "<dt>~a</dt><dd>~a</dd>\n" status (count (λ (x) (equal? (fourth x) status)) results)))
+    (for ([status '(success fail timeout unsupported error)])
+      (printf "<dt>~a</dt><dd>~a</dd>\n" status (count (λ (x) (equal? (result-status x) status)) results)))
     (printf "</dl>\n")
     (printf "<h2>Feature totals</h2>\n")
     (printf "<dl>\n")
-    (for ([feature (remove-duplicates (append-map fifth results))])
-      (printf "<dt>~a</dt><dd>~a</dd>\n" feature (count (λ (x) (member feature (fifth x))) results)))
+    (for ([feature (remove-duplicates (append-map result-features results))])
+      (printf "<dt>~a</dt><dd>~a</dd>\n" feature (count (λ (x) (member feature (result-features x))) results)))
     (printf "</dl>\n")
     (printf "</body>\n")
-    (printf "</html>\n")
-    results))
+    (printf "</html>\n"))
   (when outname (close-output-port out))
 
+
   ;; This can also be done after-the-fact with
-  ;; a = $$("tr"); k = []; for (var i = 0; i < a.length; i++) { r = a[i].children[4]; k.push({ file: $$("h2").textContent, test: a[i].children[1].textContent, status: r.className, features: (r.children[0] ? r.children[0].title.split() : [])}) }; p = document.createElement("pre"); document.body.appendChild(p); p.textContent = JSON.stringify(k)
   (set! out (if outname (open-output-file (format "~a.json" outname) #:exists 'replace) (current-output-port)))
   (write-json
-   (for/list ([row results])
-     (match-define (list fname pname section status features) row)
-     (make-hash `((file . ,(~a fname)) (test . ,(~a pname)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)))))
+   (for/list ([res results])
+     (match-define (result file problem test section status description features output time) res)
+     (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)))))
    out)
   (when outname (close-output-port out)))
 
@@ -117,4 +172,4 @@
    [("--index") sname "File name with section information for tests"
     (set! classify sname)]
    #:args fnames
-   (run-files fnames #:debug debug #:output out-file #:fast fast #:classify classify)))
+   (run-report fnames #:debug debug #:output out-file #:fast fast #:classify classify)))
