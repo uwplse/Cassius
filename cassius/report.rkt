@@ -28,18 +28,21 @@
 (define (number-string<? c1 c2)
   (cond
    [(and (number? c1) (number? c2)) (< c1 c2)]
-   [(and (string? c1) (string? c2)) (string<? c1 c2)]
    [(number? c1) #t]
-   [(number? c2) #f]))
+   [(number? c2) #f]
+   [else (string<? c1 c2)]))
 
-(define (section<? s1 s2)
+(define (section-tuple<? s1 s2)
   (cond
    [(and (null? s1) (null? s2)) #f]
    [(null? s1) #t]
    [(null? s2) #f]
-   [(number-string<? s1 s2) #t]
-   [(number-string<? s2 s1) #f]
-   [else (section<? (cdr s1) (cdr s2))]))
+   [(number-string<? (car s1) (car s2)) #t]
+   [(number-string<? (car s2) (car s1)) #f]
+   [else (section-tuple<? (cdr s1) (cdr s2))]))
+
+(define (section<? s1 s2)
+  (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
 (struct result (file problem test section status description features output time))
 
