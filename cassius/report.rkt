@@ -80,6 +80,9 @@
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
             status (problem-desc prob) (problem-features prob) (get-output-string out) runtime)))
 
+(define (number-or-empty? x)
+  (if (zero? x) "" x))
+
 (define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f])
   (define index
     (if classify
@@ -100,21 +103,20 @@
     (printf "<title>Cassius results for ~a</title>\n" (string-join files ", "))
     (printf "<body>\n")
 
-    (printf "<table>\n")
+    (printf "<table id='sections'>\n")
     (printf "<tr><th>Section</th><th>Passing</th><th>Failing</th><th>Unsupported</th></tr>\n")
     (for ([section (sort (remove-duplicates (map result-section results)) section<?)])
       (define sresults (filter (λ (x) (equal? (result-section x) section)) results))
       (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td>~a</td></tr>\n"
               section
-              (count (λ (x) (equal? (result-status x) 'success)) sresults)
-              (count (λ (x) (member (result-status x) '(error timeout fail))) sresults)
-              (count (λ (x) (equal? (result-status x) 'unsupported)) sresults)))
+              (number-or-empty? (count (λ (x) (equal? (result-status x) 'success)) sresults))
+              (number-or-empty? (count (λ (x) (member (result-status x) '(error timeout fail))) sresults))
+              (number-or-empty? (count (λ (x) (equal? (result-status x) 'unsupported)) sresults))))
     (printf "</table>\n")
 
     (for ([fname files] [results resultss])
       (printf "<h2>~a</h2>\n" fname)
-      (printf "<table>\n")
-
+      (printf "<table class='results'>\n")
       (for ([res results])
         (match-define (result file problem test section status description features output time) res)
         (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='out'><pre>~a</pre></td><td class='~a'>~a</td></tr>\n"
