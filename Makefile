@@ -24,7 +24,7 @@ download:
 bench/css/%.rkt: get_bench.py get_bench.js
 	@ python get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard /home/pavpan/src/csswg-test/css21/$*/*.xht))
 
-reports/csswg-%.html: bench/css/%.rkt $(SRC)
-	racket cassius/report.rkt $(FLAGS) --index tests.json -o reports/csswg-$* $<
+reports/csswg.html: $(wildcard bench/css/*.rkt)
+	racket cassius/report.rkt $(FLAGS) --index tests.json -o reports/csswg $^
 
 get-csswg: bench/css/floats.rkt bench/css/margin-padding-clear.rkt
