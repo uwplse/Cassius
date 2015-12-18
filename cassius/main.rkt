@@ -467,21 +467,13 @@
             (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag)))))
             (when (element-get elt ':class)
               (for ([c (element-get elt ':class)])
-               (save-class (sformat "class/~a" (slower c))))))
-          #;(for* ([sheet* (list browser-style sheet)] [rule sheet*])
-            (match rule
-              ['? (void)]
-              [`((tag ,tag) ,_ ...) (save-tag (sformat "tag/~a" (slower tag)))]
-              [`((id ,id) ,_ ...) (save-id (sformat "id/~a" (slower id)))]
-              [_ (void)]))))
+               (save-class (sformat "class/~a" (slower c))))))))
 
   (define element-names
     (append
      (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (element-name elt))
      (for/list ([dom doms]) (dom-root dom))))
   (define box-names (map (curry sformat "~a-flow") element-names))
-  
-  (eprintf "~a boxes\n" (length (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) #t)))
 
   (define rules '())
   (define (save-rule x rule) (set! rules (cons (cons x rule) rules)))
@@ -489,7 +481,7 @@
   (define constraints
     (list
      tree-constraints box-element-constraints
-     (procedure-rename (style-constraints (lambda () (eprintf "~a rules\n" (length rules)) rules)) 'cascade-constraints)
+     (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)
      info-constraints user-constraints #;element-constraints
      box-link-constraints box-constraints))
 
