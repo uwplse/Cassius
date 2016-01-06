@@ -8,90 +8,84 @@
 (require "spec/tree.rkt")
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
+(require "print/css.rkt")
 (require unstable/sequence)
 (require srfi/1)
 (require srfi/13)
 
-(provide all-constraints add-test print-rules print-unsat-core reset! print-type)
-
-(define (in-empty) (in-list empty))
+(provide all-constraints add-test print-rules print-unsat-core)
 
 (define (r2 x) (~r x #:precision 2))
 
 (define boxes-to-print (make-hash))
 
-(define (reset!)
-  (set! boxes-to-print (make-hash))
-  (reset-elt-names!))
+(define (extract-stylesheet stylesheet smt-out)
+  (for/list ([rule stylesheet] [i (in-naturals)])
+    (define rule-name (sformat "user/~a" i))
+    (if (not (hash-has-key? smt-out rule-name))
+        rule
+        (match (hash-ref smt-out rule-name)
+          [(list 'rule sel idx origin rest ...)
+           (cons (extract-selector sel)
+                 (for/list ([(value enabled?) (in-groups 2 rest)]
+                            [(prop type default) (in-css-properties)]
+                            #:when enabled?)
+                   (list prop (extract-value value))))]))))
 
-(define (print-rules #:stylesheet [stylesheet #f] #:header [header ""] smt-out)
-  (for ([(name type) (in-pairs (sort (hash->list boxes-to-print) symbol<? #:key car))])
-    (eprintf "~a ~a" name (print-type type (hash-ref smt-out name))))
+(define (split-symbol s)
+  (for/list ([part (string-split (~a s) "/")])
+    (or (string->number part) (string->symbol part))))
 
-  (when (> (string-length header) 0)
-    (printf "/* Pre-generated header */\n\n~a\n\n/* Generated code below */\n" header))
-
-  (define rule-names (for/list ([i (in-naturals)] [rule stylesheet]) (sformat "user/~a" i)))
-
-  (for ([rule-value (map (curry hash-ref smt-out) (filter (curry hash-has-key? smt-out ) rule-names))])
-    (printf "\n~a\n" (print-type 'Rule rule-value))))
-
-(define (css-type-ending? v)
-  (lambda (x) (string=? (last (string-split (~a x) "/")) v)))
+(define ((css-type-ending? v) x)
+  (match (split-symbol x)
+    [(list _ ... (== v)) #t]
+    [_ #f]))
 
 (define (css-%? x)
-  (string-suffix? "%" (last (string-split (~a x) "/"))))
+  (string-suffix? "%" (~a (last (split-symbol x)))))
 
-(define/match (print-type type value)
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "auto"))) "auto"]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (list _ 0.0)) "0"]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (list (? (css-type-ending? "px")) x)) (format "~apx" x)]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (list (? (css-type-ending? "pct")) x)) (format "~a%" x)]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (? css-%?)) (last (string-split (~a value) "/"))]
-  [((or 'Width 'Height 'Margin 'Padding 'Border) (? (css-type-ending? "inherit"))) "inherit"]
-  [('Border (or 'border/medium 'border/thin 'border/thick))
-   (last (string-split (~a value) "/"))]
-  [('Float _) (last (string-split (~a value) "/"))]
-  [('TextAlign _) (last (string-split (~a value) "/"))]
-  [('Selector 'sel/all) "*"]
-  [('Selector `(sel/id ,id)) (format "#~a" (substring (~a id) 3))]
-  [('Selector `(sel/tag ,tag)) (substring (~a tag) 4)]
-  [('Box `(box ,type ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,mtp ,mtn ,mbp ,mbn ,_ ,_ ,_ ,_ ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl ,stfw ,pbname ,n ,v ,flt ,flt-up ,e))
-   (with-output-to-string
-     (lambda ()
-       (printf "~a ~a×~a at x ~a / y ~a\n" type (r2 (+ bl br pl pr w)) (r2 (+ bt bb pt pb h)) (r2 x) (r2 y))
-       (printf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
-                (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
-                (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
-       (printf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-       (printf "padding: ~a ~a ~a ~a\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))
-       (printf "stw ~a\n" stfw)))]
-  [('Style (list 'style rest ...))
-   (with-output-to-string
-     (lambda ()
-       (printf " {\n")
-       (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
-         (printf "  ~a: ~a; /* ~a */ \n" prop (print-type type value) score))
-       (printf "}\n")))]
-  [('Rule (list 'rule sel idx origin rest ...))
-   (define props
-     (for/hash ([(value enabled?) (in-groups 2 rest)] [(prop type default) (in-css-properties)]
-                #:when enabled?)
-       (values prop (list type value))))
-   (with-output-to-string
-     (lambda ()
-       (unless (hash-empty? props)
-         (printf "~a {\n" (print-type 'Selector sel))
-         (define short-printed
-           (apply append
-                  (for/list ([(short parts) (in-pairs css-shorthand-properties)]
-                             #:when (andmap (curry hash-has-key? props) parts))
-                    (define values (map (curry hash-ref props) parts))
-                    (printf "  ~a: ~a;\n" short (string-join (map (curry apply print-type) values) " "))
-                    parts)))
-         (for ([(prop value) (in-hash props)] #:when (not (member prop short-printed)))
-           (printf "  ~a: ~a;\n" prop (apply print-type value)))
-         (printf "}"))))])
+(define (extract-selector sel)
+  (match sel
+    ['sel/all '*]
+    [`(sel/id ,id) (list 'id (string->symbol (substring (~a id) 3)))]
+    [`(sel/tag ,tag) (list 'tag (string->symbol (substring (~a tag) 4)))]))
+
+(define (extract-value value)
+  (match value
+    [(list (? (css-type-ending? 'px)) x) (list 'px x)]
+    [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) "%")))]
+    [(? symbol?) (last (split-symbol value))]))
+
+(define (print-rules #:stylesheet [stylesheet #f] #:header [header #f] smt-out)
+  (for ([(name type) (in-pairs (sort (hash->list boxes-to-print) symbol<? #:key car))])
+    (match type
+      ['Box (debug-box name (hash-ref smt-out name))]
+      ['Style (debug-style name (hash-ref smt-out name))]))
+  
+  (printf "~a~a" (header->string header) (stylesheet->string (extract-stylesheet stylesheet smt-out))))
+
+(define (debug-box name thing)
+  (match-define
+   `(box ,type
+         ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl
+         ,stfw ,pbname ,n ,v ,mtp ,mtn ,mbp ,mbn ,_ ,_ ,_ ,_ ,flt ,flt-up ,e)
+   thing)
+
+  (eprintf "~a ~a ~a×~a at x ~a / y ~a\n"
+           name type (r2 (+ bl br pl pr w)) (r2 (+ bt bb pt pb h)) (r2 x) (r2 y))
+  (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
+          (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
+          (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
+  (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
+  (eprintf "padding: ~a ~a ~a ~a\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))
+  (eprintf "stw ~a\n" stfw))
+
+(define (debug-style name thing)
+  (match-define (list 'style rest ...) thing)
+  (eprintf "~a {\n" name)
+  (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
+    (eprintf "  ~a: ~a; /* ~a */ \n" prop (value->string (extract-value value)) score))
+  (eprintf "}\n"))
 
 (define (print-unsat-core query vars doms stylesheet)
   (define (parse-var var)
@@ -174,11 +168,11 @@
       [`((cascade eq ,_ ,prop) ,num)
        (match (hash-ref asserts var)
          [`(= (,_ (rules ,_)) ,val)
-          (format "Default style is { ~a: ~a; }" prop (print-type (css-type prop) val))]
+          (format "Default style is { ~a: ~a; }" prop (value->string (extract-value val)))]
          [line (format "Computed style with, ~a" line)])]
       [`((root ,prop ,_))
        (for/first ([(prop* type default) (in-css-properties)] #:when (eq? prop prop*))
-         (format "The root box has { ~a: ~a; }" prop (print-type type default)))]
+         (format "The root box has { ~a: ~a; }" prop (value->string (extract-value default))))]
       [_ (format "~a: ~a" line (hash-ref asserts var))]))
 
   (define (print-rule-core rules)
@@ -191,12 +185,12 @@
          [(eq? rule* '?)
           (printf "? {")]
          [(selector->z3 (car rule*))
-          (printf "  ~a {" (print-type 'Selector (selector->z3 (car rule*))))]
+          (printf "  ~a {" (selector->string (extract-selector (car rule*))))]
          [else
           (printf "  ~a {" (car rule*))])
         (for ([prop props] #:when (not (member prop '(selector a-rule))))
           (define val (cadr (assoc prop (cdr rule*))))
-          (printf " ~a: ~a;" prop (print-type (css-type prop) val)))
+          (printf " ~a: ~a;" prop (value->string (extract-value val))))
         (printf " }\n"))
       (printf "\n")))
 

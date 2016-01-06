@@ -98,7 +98,6 @@
       (if (element? tree)
           d
           (dom name ctx (parse-tree tree)))))
-  (reset!)
   (define time-start (current-inexact-milliseconds))
   (define query (all-constraints sheet documents*))
   (define time-constraints (current-inexact-milliseconds))
@@ -150,7 +149,7 @@
            #f]
           [(`(forall (,vars ...) ,query) (model model))
            #;(print-counterexample model documents* sheet)
-           (for ([var vars])
+           #;(for ([var vars])
              (define boxname (hash-ref model (sformat "counterexample/~a" var)))
              (printf "~a ~a\n" var (print-type 'Box (hash-ref model (sformat "~a-box" boxname)))))
            (eprintf "[~as] Counterexample found!\nFailure.\n"
