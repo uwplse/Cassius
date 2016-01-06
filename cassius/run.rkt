@@ -142,7 +142,7 @@
                     (hash-count model))
            #t]
           [(#f (unsat-core core))
-           (print-unsat-core query core documents* sheet)
+           (print-unsat-core query (extract-core core) sheet)
            (eprintf "[~as] Unsatisfiable, core of ~a constraints\nFailure.\n"
                     (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
                     (length core))
