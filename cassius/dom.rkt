@@ -4,12 +4,14 @@
 
 (provide (struct-out dom) (struct-out rendering-context)
          (struct-out element) parse-tree in-tree element-get
-         element-next element-prev element-fchild element-lchild element-anscestors
-         dom-root elt-from-name reset-elt-names!)
+         element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
+         box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
+         dom-root elt-from-name reset-elt-names! is-element?
+         )
 
 (struct dom (name context tree))
 (struct rendering-context (width browser))
-(struct element (type name attrs parent children)
+(struct element (type name* attrs parent* children)
         #:mutable
         #:methods gen:custom-write
         [(define (write-proc elt port mode)
@@ -21,32 +23,88 @@
   (let loop ([tree tree] [parent #f])
     (match-define `([,type ,attrs ...] ,children ...) tree)
     (define elt (element type (void) attrs parent (void)))
-    (set-element-name! elt (elt-name elt))
+    (set-element-name*! elt (elt-name elt))
     (define chld (map (curryr loop elt) children))
     (set-element-children! elt chld)
     elt))
 
+(define (box-name elt)
+  (if elt
+      (sformat "~a-flow" (element-name* elt))
+      'nil-box))
+
+(define (element-name elt)
+  (if elt
+      (element-name* elt)
+      'nil-elt))
+
 (define (element-get elt name #:default [default #f])
   (for/first ([(k v) (in-groups 2 (element-attrs elt))] #:when (equal? k name)) v))
 
+(define (is-element? elt)
+  (element-get elt ':tag))
+
+(define (box-parent elt)
+  (element-parent* elt)) 
+
+(define (element-parent elt)
+  (define e (box-parent elt))
+  (cond
+   [(not e) #f]
+   [(is-element? e) e]
+   [else (element-parent e)]))
+
 (define (element-prev elt)
+  (define e (box-prev elt))
+  (cond
+   [(not e) #f]
+   [(is-element? e) e]
+   [(is-element? (box-lchild e)) (box-lchild e)]
+   [else (or (element-prev (box-lchild e)) (element-prev e))]))
+
+(define (box-prev elt)
   (define sibs (if (element-parent elt) (element-children (element-parent elt)) '()))
   (for/first ([prev (sequence-cons #f sibs)] [elt* sibs] #:when (equal? elt elt*)) prev))
 
 (define (element-next elt)
+  (define e (box-next elt))
+  (cond
+   [(not e) #f]
+   [(is-element? e) e]
+   [(is-element? (box-fchild e)) (box-fchild e)]
+   [else (or (element-next (box-fchild e)) (element-next e))]))
+
+(define (box-next elt)
   (define sibs (if (element-parent elt) (element-children (element-parent elt)) '()))
   (for/first ([next (sequence-tail (sequence-append sibs (in-value #f)) 1)]
               [elt* sibs] #:when (equal? elt elt*))
     next))
 
 (define (element-fchild elt)
+  (define e (box-fchild elt))
+  (cond
+   [(not e) #f]
+   [(is-element? e) e]
+   [else (element-next e)]))
+
+(define (box-fchild elt)
   (if (null? (element-children elt)) #f (first (element-children elt))))
 
 (define (element-lchild elt)
+  (define e (box-lchild elt))
+  (cond
+   [(not e) #f]
+   [(is-element? e) e]
+   [else (element-prev e)]))
+
+(define (box-lchild elt)
   (if (null? (element-children elt)) #f (last (element-children elt))))
 
 (define (element-anscestors elt)
   (if (element-parent elt) (cons (element-parent elt) (element-anscestors (element-parent elt))) '()))
+
+(define (box-anscestors elt)
+  (if (box-parent elt) (cons (box-parent elt) (box-anscestors (box-parent elt))) '()))
 
 (define (in-tree elt)
   (apply sequence-append (in-value elt) (map in-tree (element-children elt))))

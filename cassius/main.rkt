@@ -98,34 +98,37 @@
   (map split-line-name core))
 
 (define (tree-constraints dom emit elt)
-  (define (either field default)
-    (let ([e (field elt)])
-      (if e (element-name e) default)))
-  (emit
-   `(assert
-     (!
-      (link-element (get/elt ,(element-name elt))
-                    ,(sformat "~a-doc" (dom-name dom))
-                    ,(either element-parent (dom-root dom)) ; TODO: Kill the root element
-                    ,(either element-prev 'nil-elt)
-                    ,(either element-next 'nil-elt)
-                    ,(either element-fchild 'nil-elt)
-                    ,(either element-lchild 'nil-elt))
-      :named ,(sformat "tree/~a" (element-name elt))))))
+  (when (is-element? elt)
+    (define (either field default)
+      (let ([e (field elt)])
+        (if e (element-name e) default)))
+    (emit
+     `(assert
+       (!
+        (link-element (get/elt ,(element-name elt))
+                      ,(sformat "~a-doc" (dom-name dom))
+                      ,(either element-parent 'nil-elt)
+                      ,(either element-prev 'nil-elt)
+                      ,(either element-next 'nil-elt)
+                      ,(either element-fchild 'nil-elt)
+                      ,(either element-lchild 'nil-elt))
+        :named ,(sformat "tree/~a" (element-name elt)))))))
 
 (define ((style-constraints rules) dom emit elt)
-  (when (member (element-type elt) '(INLINE BLOCK))
+  (when (is-element? elt)
     (for-each emit (cascade-rules (rules) elt))))
 
 (define (box-element-constraints dom emit elt)
+  (define bname (box-name elt))
   (define ename (element-name elt))
-  (emit `(assert (! (link-element-box ,ename ,(sformat "~a-flow" ename))
-                    :named ,(sformat "box-element/~a" ename)))))
+  (if (is-element? elt)
+      (emit `(assert (! (link-element-box ,ename ,bname) :named ,(sformat "box-element/~a" ename))))
+      (emit `(assert (! (link-anon-box ,bname) :named ,(sformat "box-element/~a" ename))))))
 
 (define (dom-define-get/elt doms emit)
   (define dom-names
     (for/list ([dom doms])
-      (cons (dom-root dom) (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt)))))
+      (for/list ([elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt))))
 
   ; Instantiate each element
   (for ([dom doms] [names dom-names] #:when #t [name names])
@@ -153,23 +156,17 @@
   (emit `(define-fun get/box ((x BoxName)) Box ,body)))
 
 (define (dom-root-constraints dom emit)
-  (define elt `(get/elt ,(dom-root dom)))
-  (define b `(get/box (flow-box ,elt)))
+  (define b `(get/box ,(sformat "~a-flow" (dom-root dom))))
 
-  (emit `(echo ,(format "Defining the ~a root element" (dom-name dom))))
-  (emit `(assert (! (link-element-box ,(dom-root dom) ,(sformat "~a-flow" (dom-root dom)))
+  (emit `(echo ,(format "Defining the ~a root box" (dom-name dom))))
+  (emit `(assert (! (link-anon-box ,(sformat "~a-flow" (dom-root dom)))
                     :named ,(sformat "link/~a" (dom-root dom)))))
-  (for ([(prop type default) (in-css-properties)])
-    (emit `(assert (! (= (,(sformat "style.~a" prop) (rules ,elt)) ,default)
-                      :named ,(sformat "root/~a/~a" prop (dom-root dom))))))
   (match (rendering-context-width (dom-context dom))
     [(? number? w)
      (emit `(assert (! (= (w ,b) ,w) :named ,(sformat "width/~a" (dom-name dom)))))]
     [`(between ,l ,r)
      (emit `(assert (! (<= ,l (w ,b) ,r) :named ,(sformat "width/~a" (dom-name dom)))))])
-  (emit `(assert (! (link-root-element ,elt ,(element-name (dom-tree dom)))
-                    :named ,(sformat "element/~a" (dom-root dom)))))
-  (emit `(assert (! (a-root-element ,elt) :named ,(sformat "box/root/~a" (dom-root dom))))))
+  #;(emit `(assert (! (a-root-element ,b) :named ,(sformat "box/root/~a" (dom-root dom))))))
 
 (define (stylesheet-constraints sname sheet save-rule ids tags classes #:browser [browser? #f])
   (for/reap [emit] ([i (in-naturals)] [rule sheet])
@@ -233,7 +230,8 @@
                         :weight 3)))))))
 
 (define (element-constraints dom emit elt)
-  (emit `(assert (! (an-element (get/elt ,(element-name elt))) :named ,(sformat "element/~a" (element-name elt))))))
+  (when (is-element? elt)
+    (emit `(assert (! (an-element (get/elt ,(element-name elt))) :named ,(sformat "element/~a" (element-name elt)))))))
 
 (define (number*? x)
   (match x
@@ -279,7 +277,12 @@
       ['LINE 'link-line-box]
       ['INLINE 'link-inline-box]
       ['TEXT 'link-text-box]))
-  (emit `(assert (! (,cns (get/box (flow-box (get/elt ,(element-name elt)))))
+  (emit `(assert (! (,cns (get/box ,(box-name elt))
+                          ,(box-name (box-parent elt))
+                          ,(box-name (box-next elt))
+                          ,(box-name (box-prev elt))
+                          ,(box-name (box-fchild elt))
+                          ,(box-name (box-lchild elt)))
                     :named ,(sformat "link-box/~a" (element-name elt))))))
 
 (define (box-constraints dom emit elt)
@@ -309,7 +312,7 @@
       ['TEXT 'display/inline]
       ['LINE 'display/block]))
 
-  (when (and tagname idname display)
+  (when (and (is-element? elt) tagname idname display)
     (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname ,display)
                       :named ,(sformat "info/~a" (element-name elt)))))))
 
@@ -342,10 +345,11 @@
                (save-class (sformat "class/~a" (slower c))))))))
 
   (define element-names
+    (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt)))
+  (define box-names
     (append
-     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (element-name elt))
-     (for/list ([dom doms]) (dom-root dom))))
-  (define box-names (map (curry sformat "~a-flow") element-names))
+     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (box-name elt))
+     (for/list ([dom doms]) (sformat "~a-flow" (dom-root dom)))))
 
   (define rules '())
   (define (save-rule x rule) (set! rules (cons (cons x rule) rules)))

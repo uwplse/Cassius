@@ -78,8 +78,10 @@
                   (= (,(sformat "style.~a" property) ,re)
                      (ite (,(sformat "is-~a/inherit" (type->prefix type))
                            (,(sformat "rule.~a" property) ,name))
-                          (,(sformat "style.~a" property)
-                           (rules (parent (get/elt ,(element-name elt)))))
+                          (ite (is-elt (parent (get/elt ,(element-name elt))))
+                               (,(sformat "style.~a" property)
+                                (rules (parent (get/elt ,(element-name elt)))))
+                               ,default)
                           (,(sformat "rule.~a" property) ,name))))))
            :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property)))))))
 
