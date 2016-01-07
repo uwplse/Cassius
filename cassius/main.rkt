@@ -24,7 +24,7 @@
   (for/list ([rule stylesheet] [i (in-naturals)])
     (define rule-name (sformat "user/~a" i))
     (if (not (hash-has-key? smt-out rule-name))
-        rule
+        (cons (car rule) (for/list ([x (cdr rule)]) (list (car x) (extract-value (cadr x))))) ; HAX
         (match (hash-ref smt-out rule-name)
           [(list 'rule sel idx origin rest ...)
            (cons (extract-selector sel)
