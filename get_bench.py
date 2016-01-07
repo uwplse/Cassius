@@ -1,3 +1,5 @@
+#!/bin/python2.7
+
 """
 Benchmark creator, for Cassius.
 
@@ -15,7 +17,7 @@ import collections
 import argparse
 
 PORT=8000
-PATH="/home/pavpan/cassius"
+PATH="."
 
 class ScriptServer(threading.Thread):
     def __init__(self):

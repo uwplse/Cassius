@@ -1,3 +1,4 @@
+CSSWG_PATH=/home/pavpan/src/csswg-test
 TEST_FILES=$(wildcard bench/*.rkt)
 TESTS=$(TEST_FILES:bench/%.rkt=%:verify)
 SRC=$(wildcard cassius/*)
@@ -22,7 +23,7 @@ download:
 	grep ';; python get_bench.py' -R bench/ | cut '-d:' -f2- | cut -c4- | xargs -n1 bash -c
 
 bench/css/%.rkt: get_bench.py get_bench.js
-	@ python get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard /home/pavpan/src/csswg-test/css21/$*/*.xht))
+	@ python2 get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/css21/$*/*.xht))
 
 reports/csswg.html: $(wildcard bench/css/*.rkt)
 	racket cassius/report.rkt $(FLAGS) --index tests.json -o reports/csswg $^
