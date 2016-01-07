@@ -95,8 +95,15 @@
       (run-file-tests file #:debug debug #:fast fast? #:index index)))
   (define results (apply append resultss))
 
-  (define out (if outname (open-output-file (format "~a.html" outname) #:exists 'replace) (current-output-port)))
+  (define out (if outname (open-output-file (format "~a.json" outname) #:exists 'replace) (current-output-port)))
+  (write-json
+   (for/list ([res results])
+     (match-define (result file problem test section status description features output time) res)
+     (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time))))
+   out)
+  (when outname (close-output-port out))
   
+  (set! out (if outname (open-output-file (format "~a.html" outname) #:exists 'replace) (current-output-port)))
   (parameterize ([current-output-port out])
     (printf "<!doctype html>\n<html lang='en_US'>\n<meta charset='utf8' />\n")
     (printf "<link rel='stylesheet' href='report.css' />\n")
@@ -124,7 +131,8 @@
                 (match status ['success "✔"] ['fail "✘"] ['timeout "🕡"]
                   ['unsupported
                    (define probfeats (set-subtract features supported-features))
-                   (format "<span title='~a'>☹</span>" (string-join (map ~a probfeats) ", "))])))
+                   (format "<span title='~a'>☹</span>" (string-join (map ~a probfeats) ", "))]
+                  ['error "!"])))
       (printf "</table>\n"))
 
     (printf "<h2>Status totals</h2>\n")
@@ -139,16 +147,6 @@
     (printf "</dl>\n")
     (printf "</body>\n")
     (printf "</html>\n"))
-  (when outname (close-output-port out))
-
-
-  ;; This can also be done after-the-fact with
-  (set! out (if outname (open-output-file (format "~a.json" outname) #:exists 'replace) (current-output-port)))
-  (write-json
-   (for/list ([res results])
-     (match-define (result file problem test section status description features output time) res)
-     (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)))))
-   out)
   (when outname (close-output-port out)))
 
 (module+ main
