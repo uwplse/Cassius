@@ -48,5 +48,5 @@
 
 (define-css-type (Display display/block display/inline display/inherit))
 
-(define-css-type (TextAlign text-align/left text-align/right text-align/center text-align/inherit)
+(define-css-type (Text-Align text-align/left text-align/right text-align/center text-align/inherit)
  [text-align text-align/inherit])

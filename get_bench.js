@@ -432,10 +432,9 @@ function dump_rule(sel, style, features) {
             var tname = tname.split("-", 2)[0];
         }
         try {
-            val = "(" + tname + "/px " + f2r(val2px(val, features)) + ")";
-        } catch (e) {
-            val = tname + "/" + val;
-        }
+            val = "(px " + f2r(val2px(val, features)) + ")";
+        } catch (e) {}
+
         if (Props.indexOf(sname) === -1) {
             if (BadProps.indexOf(sname) !== -1) {
                 text += "\n   #;[" + sname + " " + val + "]";

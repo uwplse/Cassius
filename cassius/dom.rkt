@@ -42,7 +42,7 @@
   (for/first ([(k v) (in-groups 2 (element-attrs elt))] #:when (equal? k name)) v))
 
 (define (is-element? elt)
-  (element-get elt ':tag))
+  (or (not elt) (element-get elt ':tag)))
 
 (define (box-parent elt)
   (element-parent* elt)) 

@@ -57,6 +57,23 @@
     [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) "%")))]
     [(? symbol?) (last (split-symbol value))]))
 
+(define (prop->prefix prop)
+  (slower (css-type prop)))
+
+(define (dump-value prop value)
+  (define prefix (prop->prefix prop))
+  (match value
+    [(? symbol?) (sformat "~a/~a" prefix value)]
+    [(list 'px n) (list (sformat "~a/px" prefix) n)]
+    [(list '% n) (sformat "~a/~a%" prefix n)]))
+
+(define (dump-selector selector)
+  (match selector
+    [`(id ,id) `(sel/id ,(sformat "id/~a" id))]
+    [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
+    [`* `sel/any]
+    [_ #f]))
+
 (define (print-rules #:stylesheet [stylesheet #f] #:header [header #f] smt-out)
   (for ([(name type) (in-pairs (sort (hash->list boxes-to-print) symbol<? #:key car))])
     (match type
@@ -193,7 +210,7 @@
                    [(list _ val)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
                                       :named ,(sformat "rule/~a/~a/?" name a-prop))))
-                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
+                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
                                       :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
                    [#f (void)]))]
               [(list _ pairs ...)
@@ -205,7 +222,7 @@
                    [(list _ val)
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
                                       :named ,(sformat "rule/~a/~a/?" name a-prop))))
-                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,val)
+                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
                                       :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
                    [#f
                     (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
