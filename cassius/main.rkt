@@ -318,9 +318,7 @@
   (define doms
     (for/list ([d documents])
       (match-define (dom name ctx tree) d)
-      (if (element? tree)
-          d
-          (dom name ctx (parse-tree tree)))))
+      (dom name ctx (parse-tree tree))))
 
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)

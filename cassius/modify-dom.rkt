@@ -6,10 +6,10 @@
 
 (define ((dom-transform! l) d)
   (match-define (dom name ctx tree) d)
-  (define t (parse-tree tree))
-  (for ([elt (in-tree t)])
-    (set-element-attrs! elt (l (element-type elt) (element-attrs elt))))
-  (dom name ctx t))
+  (dom name ctx
+       (let loop ([tree tree])
+         (cons (cons (caar tree) (l (caar tree) (cdar tree)))
+               (map loop (cdr tree))))))
 
 (define-syntax-rule (define-dom-transformer (name head cmds) [(pat1 pat2) body ...] ...)
   (define name
