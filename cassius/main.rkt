@@ -111,8 +111,14 @@
       [(list _) part]
       [(list parts ...) (map (curryr with-input-from-string read) parts)])))
 
-(define (extract-core core)
-  (map split-line-name core))
+(define (extract-core query vars)
+  (define asserts
+    (for/hash ([cmd query] #:when (equal? (car cmd) 'assert))
+      (match-define `(assert (! ,expr ,_ ... :named ,name ,_ ...)) cmd)
+      (values name expr)))
+
+  (for/list ([var vars])
+    (cons (split-line-name var) (hash-ref asserts var))))
 
 (define (tree-constraints dom emit elt)
   (when (is-element? elt)

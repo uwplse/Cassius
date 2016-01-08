@@ -1,4 +1,5 @@
 #lang racket
+(require unstable/sequence)
 (require srfi/13)
 (require "../common.rkt")
 (require "../browser-style.rkt")
@@ -44,8 +45,8 @@
               #:when (string-prefix? "elt$" (~a symbol)))
     (elt-from-name (string->symbol (car (string-split (~a symbol) "-"))))))
 
-(define (describe-line line elt asserts)
-  (match line
+(define (describe-line name line elt)
+  (match name
     [`((,(and (or 'x 'y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,_))
      (define field-name
        (match field ['x ':x] ['y ':y] ['box-width ':w] ['box-height ':h]
@@ -98,26 +99,20 @@
     [`((box line ,_) (follow-previous-line ,_))
      (format "Y position after previous line")]
     [`((cascade eq ,_ ,prop) ,num)
-     (match (hash-ref asserts line)
+     (match line
        [`(= (,_ (rules ,_)) ,val)
         (format "Default style is { ~a: ~a; }" prop (value->string (extract-value val)))]
-       [line (format "Computed style with, ~a" line)])]
+       [_ (format "Computed style with, ~a" line)])]
     [`((root ,prop ,_))
      (for/first ([(prop* type default) (in-css-properties)] #:when (eq? prop prop*))
        (format "The root box has { ~a: ~a; }" prop (value->string (extract-value default))))]
-    [_ (format "~a: ~a" line (hash-ref asserts line))]))
+    [_ (format "~a: ~a" name line)]))
 
-(define (print-unsat-core query core stylesheet)
-  (define asserts (make-hash))
-  (for ([cmd query])
-    (match cmd
-      [`(assert (! ,expr ,_ ... :named ,name ,_ ...)) (hash-set! asserts (split-line-name name) expr)]
-      [_ (void)]))
-
+(define (print-unsat-core core stylesheet)
   (define elts (make-hash))
-  (for ([line core])
+  (for ([(name line) core])
     (define elt (parsed->elt line))
-    (hash-set! elts elt (cons line (hash-ref elts elt '()))))
+    (hash-set! elts elt (cons (cons name line) (hash-ref elts elt '()))))
 
   (define (print-rule-core rules)
     (for ([(sheet-name rules) (in-hash (trieify (map cdadr rules)))])
@@ -148,17 +143,17 @@
     (cond
      [elt
       (printf "~a:\n" elt)
-      (for ([parsed (hash-ref elts elt)])
-        (printf "  ~a\n" (describe-line parsed elt asserts)))
+      (for ([(name line) (in-pairs (hash-ref elts elt))])
+        (printf "  ~a\n" (describe-line name line elt)))
       (printf "\n")]
      [(not elt)
       (define-values (rules root)
-        (for/reap [rule root] ([parsed (hash-ref elts elt)])
-          (match parsed
-            [`((rule ,_ ...)) (rule (cons parsed parsed))]
-            [_ (root (cons parsed parsed))])))
+        (for/reap [rule root] ([(name line) (in-pairs (hash-ref elts elt))])
+          (match name
+            [`((rule ,_ ...)) (rule (cons name line))]
+            [_ (root (cons name line))])))
       (print-rule-core rules)
       (printf "[VIEW]:\n")
-      (for ([parsed root])
-        (printf "  ~a\n" (describe-line parsed elt asserts)))
+      (for ([(name line) (in-pairs root)])
+        (printf "  ~a\n" (describe-line name line elt)))
       (printf "\n")])))
