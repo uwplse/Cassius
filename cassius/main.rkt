@@ -314,7 +314,14 @@
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
             (cns dom sow elt)))))
 
-(define (all-constraints sheet doms)
+(define (all-constraints sheet documents)
+  (define doms
+    (for/list ([d documents])
+      (match-define (dom name ctx tree) d)
+      (if (element? tree)
+          d
+          (dom name ctx (parse-tree tree)))))
+
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)
     (error "Different browsers on different documents not yet supported"))

@@ -6,7 +6,8 @@
  reap for/reap for*/reap
  sformat slower
  flags all-flags supported-features
- tree-size sdiff in-groups sequence-cons cartesian-product trieify)
+ tree-size sdiff in-groups sequence-cons cartesian-product trieify
+ xor)
 
 (define flags (make-parameter '(z3o)))
 (define all-flags '(opt float z3o details))
@@ -85,3 +86,5 @@
                (hash-set! h head (cons tail (hash-ref h head '()))))
              h))])
       (values key (trieify ls*)))]))
+
+  (define (xor a b) (not (equal? (not a) (not b))))
