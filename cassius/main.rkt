@@ -9,7 +9,6 @@
 (require "spec/tree.rkt")
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
-(require "print/css.rkt")
 (require unstable/sequence)
 (require srfi/1)
 (require srfi/13)
@@ -94,7 +93,7 @@
   (match-define (list 'style rest ...) thing)
   (eprintf "~a {\n" name)
   (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
-    (eprintf "  ~a: ~a; /* ~a */ \n" prop (value->string (extract-value value)) score))
+    (eprintf "  ~a: ~a; /* ~a */ \n" prop value score))
   (eprintf "}\n"))
 
 (define (split-line-name var)
