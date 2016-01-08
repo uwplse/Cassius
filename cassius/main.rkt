@@ -15,10 +15,6 @@
 
 (provide all-constraints add-test solve-constraints)
 
-(define (r2 x) (~r x #:precision 2))
-
-(define boxes-to-print (make-hash))
-
 (define (extract-stylesheet stylesheet smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
     (define rule-name (sformat "user/~a" i))
@@ -72,29 +68,6 @@
     [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
     [`* `sel/any]
     [_ #f]))
-
-(define (debug-box name thing)
-  (match-define
-   `(box ,type
-         ,x ,y ,w ,h ,mt ,mr ,mb ,ml ,pt ,pr ,pb ,pl ,bt ,br ,bb ,bl
-         ,stfw ,pbname ,n ,v ,mtp ,mtn ,mbp ,mbn ,_ ,_ ,_ ,_ ,flt ,flt-up ,e)
-   thing)
-
-  (eprintf "~a ~a ~a×~a at x ~a / y ~a\n"
-           name type (r2 (+ bl br pl pr w)) (r2 (+ bt bb pt pb h)) (r2 x) (r2 y))
-  (eprintf "margin:  ~a (+~a-~a) ~a ~a (+~a-~a) ~a\n"
-          (r2 mt) (r2 mtp) (r2 (abs mtn)) (r2 mr)
-          (r2 mb) (r2 mbp) (r2 (abs mbn)) (r2 ml))
-  (eprintf "border:  ~a ~a ~a ~a\n" (r2 bt) (r2 br) (r2 bb) (r2 bl))
-  (eprintf "padding: ~a ~a ~a ~a\n" (r2 pt) (r2 pr) (r2 pb) (r2 pl))
-  (eprintf "stw ~a\n" stfw))
-
-(define (debug-style name thing)
-  (match-define (list 'style rest ...) thing)
-  (eprintf "~a {\n" name)
-  (for ([(value score) (in-groups 2 rest)] [(prop type default) (in-css-properties)])
-    (eprintf "  ~a: ~a; /* ~a */ \n" prop value score))
-  (eprintf "}\n"))
 
 (define (split-line-name var)
   (for/list ([part (string-split (~a var) "^")])
@@ -257,10 +230,8 @@
   (define name (element-name elt))
   (for ([(cmd arg) (in-groups 2 (element-attrs elt))])
     (match cmd
-      [':print
-       (hash-set! boxes-to-print (sformat "~a-flow-box" name) 'Box)]
+      [':print (void)]
       [':style
-       (hash-set! boxes-to-print (sformat "~a.style" name) 'Style)
        (emit `(declare-const ,(sformat "~a.style" name) Style))
        (emit `(assert (= ,(sformat "~a.style" name) (rules (get/elt ,(element-name elt))))))]
       [(or ':x ':y ':w ':h ':ml ':mr ':mt ':mb)
@@ -416,12 +387,6 @@
 (define (solve-constraints stylesheet constraints #:debug [debug? #f])
   (match (z3-solve constraints #:debug debug?)
     [(model m)
-
-     (for ([(name type) (in-pairs (sort (hash->list boxes-to-print) symbol<? #:key car))])
-       (match type
-         ['Box (debug-box name (hash-ref m name))]
-         ['Style (debug-style name (hash-ref m name))]))
-
      (model (extract-stylesheet stylesheet m))]
     [(unsat-core c)
      (unsat-core (extract-core constraints c))]))
