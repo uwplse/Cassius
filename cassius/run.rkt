@@ -5,7 +5,7 @@
 (require "common.rkt")
 (require "dom.rkt")
 (require "z3.rkt")
-(require "main.rkt")
+(require "frontend.rkt")
 (require "modify-dom.rkt")
 (require "model-check.rkt")
 (require "print/core.rkt")
