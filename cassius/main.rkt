@@ -2,6 +2,7 @@
 (require "common.rkt")
 (require "dom.rkt")
 (require "smt.rkt")
+(require "z3.rkt")
 (require "css-rules.rkt")
 (require "css-properties.rkt")
 (require "browser-style.rkt")
@@ -9,12 +10,11 @@
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
 (require "print/css.rkt")
-(require "print/core.rkt")
 (require unstable/sequence)
 (require srfi/1)
 (require srfi/13)
 
-(provide all-constraints add-test print-rules print-unsat-core extract-core)
+(provide solve constraints)
 
 (define (r2 x) (~r x #:precision 2))
 
@@ -73,14 +73,6 @@
     [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
     [`* `sel/any]
     [_ #f]))
-
-(define (print-rules #:stylesheet [stylesheet #f] #:header [header #f] smt-out)
-  (for ([(name type) (in-pairs (sort (hash->list boxes-to-print) symbol<? #:key car))])
-    (match type
-      ['Box (debug-box name (hash-ref smt-out name))]
-      ['Style (debug-style name (hash-ref smt-out name))]))
-  
-  (printf "~a~a" (header->string header) (stylesheet->string (extract-stylesheet stylesheet smt-out))))
 
 (define (debug-box name thing)
   (match-define
@@ -421,3 +413,68 @@
     (assert (! (and ,@(for/list ([&var &vars]) `(is-box (get/box ,&var)))
                     (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body)))
                :named test))))
+
+(define (solve-constraints stylesheet constraints #:debug [debug? #f])
+  (match (z3-solve constraints #:debug debug?)
+    [(model m)
+
+     (for ([(name type) (in-pairs (sort (hash->list boxes-to-print) symbol<? #:key car))])
+       (match type
+         ['Box (debug-box name (hash-ref m name))]
+         ['Style (debug-style name (hash-ref m name))]))
+
+     (model (extract-stylesheet stylesheet m))]
+    [(unsat-core c)
+     (unsat-core (extract-core constraints c))]))
+
+(define (constraints sheets docs boxes [test #f] #:debug [debug? #f])
+  (define time-start (current-inexact-milliseconds))
+  (define (log-phase fmt . args)
+    (let* ([now (current-inexact-milliseconds)]
+           [delta (- now time-start)])
+      (set! time-start now)
+      (apply eprintf (string-append "[~as] " fmt "\n")
+             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
+             args)))
+
+  (define query (all-constraints (car sheets) docs))
+
+  (log-phase "Produced ~a constraints of ~a terms"
+             (length query) (tree-size query))
+
+  (when test (set! query (add-test query test)))
+  (when (memq 'z3o (flags)) (set! query (z3-prepare query)))
+  (when (memq 'debug (flags)) (set! query (z3-namelines query)))
+
+  (log-phase "Prepared ~a constraints of ~a terms"
+           (length query) (tree-size query))
+
+  query)
+
+(define (solve sheets docs boxes [test #f] #:debug [debug? #f])
+  (define time-start (current-inexact-milliseconds))
+  (define (log-phase fmt . args)
+    (let* ([now (current-inexact-milliseconds)]
+           [delta (- now time-start)])
+      (set! time-start now)
+      (apply eprintf (string-append "[~as] " fmt "\n")
+             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
+             args)))
+
+  (define query (all-constraints (car sheets) docs))
+
+  (log-phase "Produced ~a constraints of ~a terms"
+             (length query) (tree-size query))
+
+  (when test (set! query (add-test query test)))
+  (when (memq 'z3o (flags)) (set! query (z3-prepare query)))
+  (when (memq 'debug (flags)) (set! query (z3-namelines query)))
+
+  (log-phase "Prepared ~a constraints of ~a terms"
+           (length query) (tree-size query))
+
+  (define res (solve-constraints (car sheets) query))
+
+  (log-phase "Solved constraints")
+
+  res)

@@ -8,6 +8,9 @@
 (require "main.rkt")
 (require "modify-dom.rkt")
 (require "model-check.rkt")
+(require "print/core.rkt")
+(require "print/css.rkt")
+(require "print/smt.rkt")
 (require math/base)
 (require (only-in unstable/list list-update))
 
@@ -53,12 +56,12 @@
 
 (define num-holes 5)
 
-(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve #t])
+(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve? #t])
   (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
   (define res
     (match (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))
       [(problem desc url header sheet documents features #f)
-       (solve-problem header sheet documents out solve debug #f)
+       (solve-problem header sheet documents out solve? debug #f)
        #;(for ([i (in-range 10)])
          (define sheet*
            (for/fold ([sheet sheet]) ([j (in-range num-holes)])
@@ -70,13 +73,13 @@
        (let/ec stop
          (define port (if (member 'solver debug) out (open-output-string)))
          (match (parameterize ([current-output-port port] [current-error-port port])
-                  (solve-problem "" sheet (list (dom name ctx tree)) port solve debug test))
+                  (solve-problem "" sheet (list (dom name ctx tree)) port solve? debug test))
            [#t (printf ". ")]
            [#f
             (when (not (member 'solver debug))
               (printf "~a\n" (get-output-string port)))
             (pretty-print tree)])
-         (when (not solve) (stop #t)))
+         (when (not solve?) (stop #t)))
          #;(for* ([i (in-naturals)] [concrete (generate-from-template tree i)])
            (define port (if (member 'solver debug) out (open-output-string)))
            (parameterize ([current-output-port port] [current-error-port port])
@@ -91,82 +94,51 @@
   (when outname (close-output-port out))
   res)
 
-(define (solve-problem header sheet documents out solve debug test)
+(define (solve-problem header sheet documents out solve? debug test)
   (define documents*
     (for/list ([d documents])
       (match-define (dom name ctx tree) d)
       (if (element? tree)
           d
           (dom name ctx (parse-tree tree)))))
-  (define time-start (current-inexact-milliseconds))
-  (define query (all-constraints sheet documents*))
-  (define time-constraints (current-inexact-milliseconds))
-  (eprintf "[~as] Produced ~a constraints of ~a terms\n"
-           (~r #:precision '(= 3) #:min-width 8 (/ (- time-constraints time-start) 1000))
-           (length query) (tree-size query))
-  
-  (when test
-    (set! query (add-test query test)))
 
-  (when (memq 'z3o (flags))
-    (set! query (z3-prepare query)))
-
-  (when (memq 'debug (flags))
-    (set! query (z3-namelines query)))
-
-  (define time-prepare (current-inexact-milliseconds))
-  (eprintf "[~as] Prepared ~a constraints of ~a terms\n"
-           (~r #:precision '(= 3) #:min-width 8 (/ (- time-prepare time-constraints) 1000))
-           (length query) (tree-size query))
-  
   (define res
    (parameterize ([current-output-port out])
      (cond
-       [(not solve)
-        (for ([cmd query])
-          (match cmd
-            [(list 'echo comment) (printf "; ~a\n" comment)]
-            [_ (printf "~a\n" cmd)]))
+       [(not solve?)
+        (display (smt->string (constraints (list sheet) documents* documents* test)))
         #t]
        [else
         (define z3-result
-          (with-handlers ([exn:break? (lambda (e) 'break)] [exn:fail? (λ (e) (list 'error e))])
-            (z3-solve query #:debug debug)))
-        (define time-solve (current-inexact-milliseconds))
-           
+          (with-handlers
+              ([exn:break? (λ (e) 'break)]
+               [exn:fail? (λ (e) (list 'error e))])
+            (solve (list sheet) documents* documents* test #:debug debug)))
+
         (match* (test z3-result)
           [(#f (model model))
-           (print-rules #:stylesheet sheet #:header header model)
-           (eprintf "[~as] Solved for ~a variables\nSuccess!\n"
-                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
-                    (hash-count model))
+           (printf "~a~a" (header->string header) (stylesheet->string model))
+           (eprintf "Synthesized a stylesheet. Success!\n")
            #t]
           [(#f (unsat-core core))
-           (print-unsat-core query (extract-core core) sheet)
-           (eprintf "[~as] Unsatisfiable, core of ~a constraints\nFailure.\n"
-                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
-                    (length core))
+           (print-unsat-core core sheet)
+           (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))
            #f]
           [(`(forall (,vars ...) ,query) (model model))
            #;(print-counterexample model documents* sheet)
            #;(for ([var vars])
              (define boxname (hash-ref model (sformat "counterexample/~a" var)))
              (printf "~a ~a\n" var (print-type 'Box (hash-ref model (sformat "~a-box" boxname)))))
-           (eprintf "[~as] Counterexample found!\nFailure.\n"
-                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
+           (eprintf "Counterexample found! Failure.\n")
            #f]
           [(`(forall (,vars ...) ,query) (unsat-core core))
-           (eprintf "[~as] No counterexamples found\nSuccess!\n"
-                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
+           (eprintf "No counterexamples found. Success!\n")
            #t]
           [(_ (list 'error e))
-           (eprintf "[~as] ~a\n"
-                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000))
-                    (exn-message e))
+           (eprintf "Error: ~a\n" (exn-message e))
            #f]
           [(_ 'break)
-           (eprintf "[~as] Query terminated\nFailure.\n"
-                    (~r #:precision '(= 3) #:min-width 8 (/ (- time-solve time-prepare) 1000)))
+           (eprintf "Query terminated. Failure.\n")
            #f])])))
   res)
 
