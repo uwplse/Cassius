@@ -26,45 +26,45 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 
 (define-stylesheet good-sheet
   ((tag html)
-   [margin-top (margin/px 0)]
-   [margin-right (margin/px 0)]
-   [margin-bottom (margin/px 0)]
-   [margin-left (margin/px 0)]
-   [padding-top (padding/px 0)]
-   [padding-right (padding/px 0)]
-   [padding-bottom (padding/px 0)]
-   [padding-left (padding/px 0)])
+   [margin-top (px 0)]
+   [margin-right (px 0)]
+   [margin-bottom (px 0)]
+   [margin-left (px 0)]
+   [padding-top (px 0)]
+   [padding-right (px 0)]
+   [padding-bottom (px 0)]
+   [padding-left (px 0)])
   ((tag body)
-   [margin-top (margin/px 0)]
-   [margin-right margin/auto]
-   [margin-bottom (margin/px 0)]
-   [margin-left margin/auto]
-   [padding-top (padding/px 0)]
-   [padding-right (padding/px 10)]
-   [padding-bottom (padding/px 90)]
-   [padding-left (padding/px 10)]
-   [width (width/px 630)])
+   [margin-top (px 0)]
+   [margin-right auto]
+   [margin-bottom (px 0)]
+   [margin-left auto]
+   [padding-top (px 0)]
+   [padding-right (px 10)]
+   [padding-bottom (px 90)]
+   [padding-left (px 10)]
+   [width (px 630)])
   ((tag pre)
-   [margin-top (margin/px 21.6)]
-   [margin-right (margin/px 0)]
-   [margin-bottom (margin/px 30.6)]
-   [margin-left (margin/px 0)]
-   [padding-top (padding/px 9)]
-   [padding-right (padding/px 9)]
-   [padding-bottom (padding/px 9)]
-   [padding-left (padding/px 9)])
+   [margin-top (px 21.6)]
+   [margin-right (px 0)]
+   [margin-bottom (px 30.6)]
+   [margin-left (px 0)]
+   [padding-top (px 9)]
+   [padding-right (px 9)]
+   [padding-bottom (px 9)]
+   [padding-left (px 9)])
   ((tag h1)
-   [margin-top (margin/px 36)]
-   [margin-bottom (margin/px 0)])
+   [margin-top (px 36)]
+   [margin-bottom (px 0)])
   ((tag p)
-   [text-align text-align/inherit]
-   [margin-top (margin/px 18)]
-   [margin-right (margin/px 0)]
-   [margin-bottom (margin/px 18)]
-   [margin-left (margin/px 0)])
+   [text-align inherit]
+   [margin-top (px 18)]
+   [margin-right (px 0)]
+   [margin-bottom (px 18)]
+   [margin-left (px 0)])
   ((id postamble)
-   [text-align text-align/center]
-   [margin-top (margin/px 18)]))
+   [text-align center]
+   [margin-top (px 18)]))
 
 ;; From http://pavpanchekha.com/blog/ubuntu-on-lvm.html
 
