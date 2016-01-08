@@ -61,7 +61,9 @@
   (define res
     (match (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))
       [(problem desc url header sheet documents features #f)
-       (solve-problem header sheet documents out solve? debug #f)
+       (if solve?
+           (solve-problem header sheet documents out debug #f)
+           (print-problem sheet documents out debug #f))
        #;(for ([i (in-range 10)])
          (define sheet*
            (for/fold ([sheet sheet]) ([j (in-range num-holes)])
@@ -94,7 +96,7 @@
   (when outname (close-output-port out))
   res)
 
-(define (solve-problem header sheet documents out solve? debug test)
+(define (print-problem sheet documents out debug test)
   (define documents*
     (for/list ([d documents])
       (match-define (dom name ctx tree) d)
@@ -102,44 +104,50 @@
           d
           (dom name ctx (parse-tree tree)))))
 
+  (parameterize ([current-output-port out])
+    (display (smt->string (constraints (list sheet) documents* documents* test)))))
+
+(define (solve-problem header sheet documents out debug test)
+  (define documents*
+    (for/list ([d documents])
+      (match-define (dom name ctx tree) d)
+      (if (element? tree)
+          d
+          (dom name ctx (parse-tree tree)))))
+
+  (define z3-result
+    (with-handlers
+        ([exn:break? (λ (e) 'break)]
+         [exn:fail? (λ (e) (list 'error e))])
+      (solve (list sheet) documents* documents* test #:debug debug)))
+
   (define res
    (parameterize ([current-output-port out])
-     (cond
-       [(not solve?)
-        (display (smt->string (constraints (list sheet) documents* documents* test)))
+     (match* (test z3-result)
+       [(#f (model model))
+        (printf "~a~a" (header->string header) (stylesheet->string model))
+        (eprintf "Synthesized a stylesheet. Success!\n")
         #t]
-       [else
-        (define z3-result
-          (with-handlers
-              ([exn:break? (λ (e) 'break)]
-               [exn:fail? (λ (e) (list 'error e))])
-            (solve (list sheet) documents* documents* test #:debug debug)))
-
-        (match* (test z3-result)
-          [(#f (model model))
-           (printf "~a~a" (header->string header) (stylesheet->string model))
-           (eprintf "Synthesized a stylesheet. Success!\n")
-           #t]
-          [(#f (unsat-core core))
-           (print-unsat-core core sheet)
-           (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))
-           #f]
-          [(`(forall (,vars ...) ,query) (model model))
-           #;(print-counterexample model documents* sheet)
-           #;(for ([var vars])
-             (define boxname (hash-ref model (sformat "counterexample/~a" var)))
-             (printf "~a ~a\n" var (print-type 'Box (hash-ref model (sformat "~a-box" boxname)))))
-           (eprintf "Counterexample found! Failure.\n")
-           #f]
-          [(`(forall (,vars ...) ,query) (unsat-core core))
-           (eprintf "No counterexamples found. Success!\n")
-           #t]
-          [(_ (list 'error e))
-           (eprintf "Error: ~a\n" (exn-message e))
-           #f]
-          [(_ 'break)
-           (eprintf "Query terminated. Failure.\n")
-           #f])])))
+       [(#f (unsat-core core))
+        (print-unsat-core core sheet)
+        (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))
+        #f]
+       [(`(forall (,vars ...) ,query) (model model))
+        #;(print-counterexample model documents* sheet)
+        #;(for ([var vars])
+        (define boxname (hash-ref model (sformat "counterexample/~a" var)))
+        (printf "~a ~a\n" var (print-type 'Box (hash-ref model (sformat "~a-box" boxname)))))
+        (eprintf "Counterexample found! Failure.\n")
+        #f]
+       [(`(forall (,vars ...) ,query) (unsat-core core))
+        (eprintf "No counterexamples found. Success!\n")
+        #t]
+       [(_ (list 'error e))
+        (eprintf "Error: ~a\n" (exn-message e))
+        #f]
+       [(_ 'break)
+        (eprintf "Query terminated. Failure.\n")
+        #f])))
   res)
 
 (module+ main
