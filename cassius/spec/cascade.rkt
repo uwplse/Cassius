@@ -18,7 +18,7 @@
          'true
          'false)]
     [`* 'true]
-    [(? string?) 'false]
+    [(list (? string?) sub) (selector-matches? sub elt)]
     [`(or ,sels ...) `(or ,@(map (curryr selector-matches? elt) sels))]
     [`(desc ,sel*) (selector-matches? sel* elt)]
     [`(desc ,ansc ... ,sel*)
@@ -31,6 +31,7 @@
   (match (selector-matches? sel elt)
     ['true #t]
     [`(or ,selzs) (member 'true selzs)]
+    [(list (? string?) sub) (selector-definitely-matches? sub elt)]
     [_ #f]))
 
 (define (selector-possibly-matches? sel elt)
@@ -38,6 +39,7 @@
   (match (selector-matches? sel elt)
     ['false #f]
     [`(and ,selzs) (not (member 'false selzs))]
+    [(list (? string?) sub) (selector-possibly-matches? sub elt)]
     [_ #t]))
 
 (define (type->prefix type)
@@ -87,7 +89,6 @@
 
 (define (selector name rule)
   (match rule
-    [`? `(selector ,name)]
     [`(? ,props ...) `(selector ,name)]
     [`(,sel ,props ...) sel]))
 
@@ -99,7 +100,7 @@
     [`(desc ,sub ...) (andmap (curryr can-match? ids tags classes) sub)]
     [`(or ,sub ...) (ormap (curryr can-match? ids tags classes) sub)]
     [`(selector ,name) #t]
-    [(? string?) #f]
+    [(list (? string?) sub) (can-match? sub ids tags classes)]
     [`* #t]
     [_ #t]))
 

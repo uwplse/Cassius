@@ -273,6 +273,12 @@ function infer_lines(box, parent) {
 }
 
 function make_boxes(elt, inflow, styles, features) {
+    if (elt.style && elt.style.length) {
+        var eid = elt.id || gensym();
+        if (!elt.id) elt.id = eid;
+        styles[eid] = elt.style;
+    }
+
     if (is_comment(elt)) {
         return;
     } else if (is_text(elt)) {
@@ -310,11 +316,6 @@ function make_boxes(elt, inflow, styles, features) {
 
         if (elt.id) box.props.id = elt.id;
         if (elt.classList.length) box.props["class"] = "(" + elt.classList + ")";
-        if (elt.style.length) {
-            var eid = gensym();
-            if (!elt.id) box.props.id = eid;
-            styles[eid] = elt.style;
-        }
 
         inflow.children.push(box);
 
@@ -412,12 +413,29 @@ function dump_selector(sel) {
     } else if (match = sel.match(/^\*$/)) {
         return "*";
     } else {
-        console.warn("Invalid selector `" + sel + "`");
         return false;
     }
 }
 
+function rescue_selector(sel) {
+    console.log(sel)
+    var matched = document.querySelectorAll(sel);
+    var ids = [];
+    for (var i = 0; i < matched.length; i++) {
+        if (matched[i].id) {
+            ids.push(matched[i].id);
+        } else {
+            var id = gensym();
+            ids.push(id);
+            matched[i].id = id;
+        }
+    }
+    var sel_ = sel.replace("\\", "\\\\").replace("\"", "\\\"");
+    return "(\"" + sel_ + "\" (id " + ids.join(") (id ") + "))";
+}
+
 function dump_rule(sel, style, features) {
+    // Ignore rules that don't match any elements
     if (!document.querySelectorAll(sel).length) return "";
 
     var text = "";
@@ -452,11 +470,10 @@ function dump_rule(sel, style, features) {
 
     var sel_text = dump_selector(sel);
     if (!sel_text) {
-        if (has_good_prop) features["unknown-selector"] = true;
-        return "\n  (\"" + sel.replace("\\", "\\\\").replace("\"", "\\\"") + "\""+ text + ")";
-    } else {
-        return "\n  (" + sel_text + text + ")";
+        features["unknown-selector"] = true;
+        sel_text = rescue_selector(sel);
     }
+    return "\n  (" + sel_text + text + ")";
 }
 
 function dump_features(features) {
@@ -470,9 +487,7 @@ function dump_features(features) {
 
 function page2cassius(name) {
     var features = {};
-    var out = get_boxes(features);
-    var page = out.view;
-    var style = out.style;
+
     var text = "";
     text += "(define-stylesheet " + name;
     for (var sid in document.styleSheets) {
@@ -487,6 +502,10 @@ function page2cassius(name) {
             text += dump_rule(r.selectorText, r.style, features);
         }
     }
+
+    var out = get_boxes(features);
+    var page = out.view;
+    var style = out.style;
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
         text += dump_rule("#" + eid, style[eid], features);

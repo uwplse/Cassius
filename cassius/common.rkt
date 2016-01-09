@@ -12,7 +12,7 @@
 (define flags (make-parameter '(z3o)))
 (define all-flags '(opt float z3o details))
 
-(define supported-features '(float %))
+(define supported-features '(float % unknown-selector))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
