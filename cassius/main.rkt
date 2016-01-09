@@ -77,7 +77,7 @@
 
 (define (extract-core query vars)
   (define asserts
-    (for/hash ([cmd query] #:when (equal? (car cmd) 'assert))
+    (for/hash ([cmd query] #:when (and (equal? (car cmd) 'assert) (member ':named (cadr cmd))))
       (match-define `(assert (! ,expr ,_ ... :named ,name ,_ ...)) cmd)
       (values name expr)))
 
