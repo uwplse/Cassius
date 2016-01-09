@@ -229,9 +229,7 @@
        (define fun (cadr (assoc cmd mapping)))
        (match arg
          [(? number*?)
-          (when ;; HTML elements have weird heights
-              (not (and (equal? cmd ':h) (equal? (element-get elt ':tag) 'html)))
-            (emit `(assert (! (= (,fun (get/box ,(sformat "~a-flow" name))) ,arg) :named ,(sformat "~a/~a" fun name)))))]
+          (emit `(assert (! (= (,fun (get/box ,(sformat "~a-flow" name))) ,arg) :named ,(sformat "~a/~a" fun name))))]
          [`(explain ,(? number*? value))
           (emit `(assert (! (not (= (,fun (get/box ,(sformat "~a-flow" name))) ,value)) :named ,(sformat "~a/~a" fun name))))]
          [`(between ,(? number*? min) ,(? number*? max))
