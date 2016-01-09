@@ -167,35 +167,24 @@
             (define sel (selector->z3 (selector name rule)))
             (when sel (emit `(assert (! (= (selector ,name) ,sel)
                                         :named ,(sformat "rule/~a/selector" name)))))
+            
+            (define allow-new-properties? (member '? rule))
+            (define pairs (filter list? (cdr rule)))
 
-            (match rule
-              ['? (void)]
-              [(list _ pairs ... '?)
-               (for ([(a-prop type default) (in-css-properties)])
-                 (match (assoc a-prop pairs)
-                   [(list _ '?)
-                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))]
-                   [(list _ val)
-                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))
-                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
-                                      :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
-                   [#f (void)]))]
-              [(list _ pairs ...)
-               (for ([(a-prop type default) (in-css-properties)])
-                 (match (assoc a-prop pairs)
-                   [(list _ '?)
-                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))]
-                   [(list _ val)
-                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))
-                    (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
-                                      :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
-                   [#f
-                    (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
-                                      :named ,(sformat "rule/~a/~a/?" name a-prop))))]))])
+            (for ([(a-prop type default) (in-css-properties)])
+              (match (assoc a-prop pairs)
+                [(list _ '?)
+                 (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                   :named ,(sformat "rule/~a/~a/?" name a-prop))))]
+                [(list _ val)
+                 (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                   :named ,(sformat "rule/~a/~a/?" name a-prop))))
+                 (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
+                                   :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
+                [#f
+                 (when (not allow-new-properties?)
+                   (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
+                                     :named ,(sformat "rule/~a/~a/?" name a-prop)))))]))
 
               ; Optimize for short CSS
             (when (memq 'opt (flags))
