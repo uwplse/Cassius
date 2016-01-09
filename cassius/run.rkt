@@ -33,7 +33,10 @@
   (for ([expr (in-port read port)])
     (match expr
       [`(define-stylesheet ,name ,rules ...)
-       (hash-set! sheets name rules)]
+       (define rules*
+         (for/list ([rule rules])
+           (if (equal? rule '?) '(? ?) rule)))
+       (hash-set! sheets name rules*)]
       [`(define-document (,name #:width ,width #:browser ,browser) ,tree)
        (hash-set! docs name (dom name (rendering-context width browser) tree))]
       [`(define-document (,name #:width ,width) ,tree)
