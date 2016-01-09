@@ -2,6 +2,7 @@
 (require "common.rkt")
 (require "z3.rkt")
 (require "main.rkt")
+(require "dom.rkt")
 (provide constraints solve)
 
 (define (constraints sheets docs boxes [test #f] #:debug [debug? #f])
@@ -25,6 +26,8 @@
 
   (log-phase "Prepared ~a constraints of ~a terms"
            (length query) (tree-size query))
+  
+  (reset-elt-names!)
 
   query)
 
@@ -53,5 +56,7 @@
   (define res (solve-constraints (car sheets) query))
 
   (log-phase "Solved constraints")
+
+  (reset-elt-names!)
 
   res)
