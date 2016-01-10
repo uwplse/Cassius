@@ -110,7 +110,7 @@
 
 (define (print-unsat-core core stylesheet)
   (define elts (make-hash))
-  (for ([(name line) core])
+  (for ([(name line) (in-pairs core)])
     (define elt (parsed->elt line))
     (hash-set! elts elt (cons (cons name line) (hash-ref elts elt '()))))
 

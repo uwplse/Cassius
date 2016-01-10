@@ -85,20 +85,21 @@
     (cons (split-line-name var) (hash-ref asserts var))))
 
 (define (tree-constraints dom emit elt)
-  (define (either field default)
-    (let ([e (field elt)])
-      (if e (element-name e) default)))
-  (emit
-   `(assert
-     (!
-      (link-element (get/elt ,(element-name elt))
-                    ,(sformat "~a-doc" (dom-name dom))
-                    ,(either element-parent 'nil-elt)
-                    ,(either element-prev 'nil-elt)
-                    ,(either element-next 'nil-elt)
-                    ,(either element-fchild 'nil-elt)
-                    ,(either element-lchild 'nil-elt))
-      :named ,(sformat "tree/~a" (element-name elt))))))
+  (when (is-element? elt)
+    (define (either field default)
+      (let ([e (field elt)])
+        (if e (element-name e) default)))
+    (emit
+     `(assert
+       (!
+        (link-element (get/elt ,(element-name elt))
+                      ,(sformat "~a-doc" (dom-name dom))
+                      ,(either element-parent 'nil-elt)
+                      ,(either element-prev 'nil-elt)
+                      ,(either element-next 'nil-elt)
+                      ,(either element-fchild 'nil-elt)
+                      ,(either element-lchild 'nil-elt))
+        :named ,(sformat "tree/~a" (element-name elt)))))))
 
 (define ((style-constraints rules) dom emit elt)
   (when (is-element? elt)
