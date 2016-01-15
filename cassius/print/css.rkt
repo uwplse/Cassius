@@ -31,6 +31,6 @@
     [`(class ,cls) (format ".~a" cls)]
     [`(tag ,tag) (~a (slower tag))]
     ['* "*"]
-    [(? string?) selector]
+    [(list (? string? sel) sel*) sel]
     [`(or ,sels ...) (string-join (map selector->string sels) ", ")]
     [`(desc ,sels ...) (string-join (map selector->string sels) " ")]))

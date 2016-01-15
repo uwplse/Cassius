@@ -5,7 +5,7 @@
 (require "../css-properties.rkt")
 (require unstable/sequence)
 
-(provide cascade-rules selector->z3 selector can-match? name-rules)
+(provide selector-constraints cascade-rules name-rules)
 
 (define (selector-matches? sel elt)
   "Given an element and a selector, returns a Z3 expression for when that element matches"
@@ -56,6 +56,15 @@
 (define (type->prefix type)
   (if (eq? (slower type) 'textalign) 'text-align (slower type)))
 
+(define (selector-constraints emit name rule i #:browser [browser? #f])
+  (emit `(declare-const ,name Rule))
+  (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
+                    :named ,(sformat "rule/~a/a-rule" name))))
+
+  (define sel (selector->z3 (selector name rule)))
+  (when sel
+    (emit `(assert (! (= (selector ,name) ,sel) :named ,(sformat "rule/~a/selector" name))))))
+
 (define (cascade-rules names rules elt)
   (define re `(rules (get/elt ,(element-name elt))))
 
@@ -102,18 +111,6 @@
     [`(? ,props ...) `(selector ,name)]
     [`(,sel ,props ...) sel]))
 
-(define (can-match? sel ids tags classes)
-  (match sel
-    [`(id ,id) (member (slower (sformat "id/~a" id)) ids)]
-    [`(tag ,tag) (member (slower (sformat "tag/~a" tag)) tags)]
-    [`(class ,class) (member (slower (sformat "class/~a" class)) classes)]
-    [`(desc ,sub ...) (andmap (curryr can-match? ids tags classes) sub)]
-    [`(or ,sub ...) (ormap (curryr can-match? ids tags classes) sub)]
-    [`(selector ,name) #t]
-    [(list (? string?) sub) (can-match? sub ids tags classes)]
-    [`* #t]
-    [_ #t]))
-
 (define (has-property? rule prop)
   (or (equal? '? rule) (member '? (cdr rule)) (assoc prop (cdr rule))))
 
@@ -124,56 +121,6 @@
     [`(selector ,name) sel]
     [`* `sel/any]
     [_ #f]))
-
-(define (stylesheet-constraints sname sheet save-rule ids tags classes #:browser [browser? #f])
-  (for/reap [emit] ([i (in-naturals)] [rule sheet])
-            (define name (sformat "~a/~a" sname i))
-            (when (can-match? (selector name rule) ids tags classes)
-            (save-rule name rule)
-
-            (emit `(declare-const ,name Rule))
-            (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
-                              :named ,(sformat "rule/~a/a-rule" name))))
-
-            (define sel (selector->z3 (selector name rule)))
-            (when sel (emit `(assert (! (= (selector ,name) ,sel)
-                                        :named ,(sformat "rule/~a/selector" name)))))
-            
-            (define allow-new-properties? (member '? rule))
-            (define pairs (filter list? (cdr rule)))
-
-            (for ([(a-prop type default) (in-css-properties)])
-              (match (assoc a-prop pairs)
-                [(list _ '?)
-                 (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                   :named ,(sformat "rule/~a/~a/?" name a-prop))))]
-                [(list _ val)
-                 (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                   :named ,(sformat "rule/~a/~a/?" name a-prop))))
-                 (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
-                                   :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
-                [#f
-                 (when (not allow-new-properties?)
-                   (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
-                                     :named ,(sformat "rule/~a/~a/?" name a-prop)))))]))
-
-              ; Optimize for short CSS
-            (when (memq 'opt (flags))
-              ; Each enabled property costs one line
-              (for* ([type css-properties] [property (cdr type)])
-                (emit `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1)))
-              ; Each block with an enabled property costs two line (open/selector and close brace)
-              (emit
-               `(assert-soft
-                 (and ,@(for*/list ([type css-properties] [property (cdr type)])
-                          `(not (,(sformat "rule.~a?" property) ,name))))
-                 :weight 2))
-              ; Each shorthand rule can save space if all its properties exist
-              (for ([(short-name subproperties) (in-pairs css-shorthand-properties)])
-                (emit `(assert-soft
-                        (and ,@(for/list ([subprop subproperties])
-                                 (list (sformat "rule.~a?" subprop) name)))
-                        :weight 3)))))))
 
 (define (name-rules name sheet eltss)
   (for/list ([rule sheet] [i (in-naturals)])

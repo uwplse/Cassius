@@ -105,51 +105,45 @@
   (when (is-element? elt)
     (for-each emit (cascade-rules names rules elt))))
 
-(define (stylesheet-constraints names sheet #:browser [browser? #f])
-  (for/reap [emit] ([name names] [rule sheet] [i (in-naturals)] #:when name)
-            (emit `(declare-const ,name Rule))
-            (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
-                              :named ,(sformat "rule/~a/a-rule" name))))
+(define (stylesheet-constraints emit names sheet #:browser [browser? #f])
+  (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
+    (selector-constraints emit name rule i #:browser browser?)
 
-            (define sel (selector->z3 (selector name rule)))
-            (when sel (emit `(assert (! (= (selector ,name) ,sel)
-                                        :named ,(sformat "rule/~a/selector" name)))))
-            
-            (define allow-new-properties? (member '? rule))
-            (define pairs (filter list? (cdr rule)))
+    (define allow-new-properties? (member '? rule))
+    (define pairs (filter list? (cdr rule)))
 
-            (for ([(a-prop type default) (in-css-properties)])
-              (match (assoc a-prop pairs)
-                [(list _ '?)
-                 (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                   :named ,(sformat "rule/~a/~a/?" name a-prop))))]
-                [(list _ val)
-                 (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                                   :named ,(sformat "rule/~a/~a/?" name a-prop))))
-                 (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
-                                   :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
-                [#f
-                 (when (not allow-new-properties?)
-                   (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
-                                     :named ,(sformat "rule/~a/~a/?" name a-prop)))))]))
+    (for ([(a-prop type default) (in-css-properties)])
+      (match (assoc a-prop pairs)
+        [(list _ '?)
+         (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                           :named ,(sformat "rule/~a/~a/?" name a-prop))))]
+        [(list _ val)
+         (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                           :named ,(sformat "rule/~a/~a/?" name a-prop))))
+         (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
+                           :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
+        [#f
+         (when (not allow-new-properties?)
+           (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
+                             :named ,(sformat "rule/~a/~a/?" name a-prop)))))]))
 
-              ; Optimize for short CSS
-            (when (memq 'opt (flags))
-              ; Each enabled property costs one line
-              (for* ([type css-properties] [property (cdr type)])
-                (emit `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1)))
-              ; Each block with an enabled property costs two line (open/selector and close brace)
-              (emit
-               `(assert-soft
-                 (and ,@(for*/list ([type css-properties] [property (cdr type)])
-                          `(not (,(sformat "rule.~a?" property) ,name))))
-                 :weight 2))
-              ; Each shorthand rule can save space if all its properties exist
-              (for ([(short-name subproperties) (in-pairs css-shorthand-properties)])
-                (emit `(assert-soft
-                        (and ,@(for/list ([subprop subproperties])
-                                 (list (sformat "rule.~a?" subprop) name)))
-                        :weight 3))))))
+    ;; Optimize for short CSS
+    (when (memq 'opt (flags))
+      ;; Each enabled property costs one line
+      (for* ([type css-properties] [property (cdr type)])
+        (emit `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1)))
+      ;; Each block with an enabled property costs two line (open/selector and close brace)
+      (emit
+       `(assert-soft
+         (and ,@(for*/list ([type css-properties] [property (cdr type)])
+                  `(not (,(sformat "rule.~a?" property) ,name))))
+         :weight 2))
+      ;; Each shorthand rule can save space if all its properties exist
+      (for ([(short-name subproperties) (in-pairs css-shorthand-properties)])
+        (emit `(assert-soft
+                (and ,@(for/list ([subprop subproperties])
+                         (list (sformat "rule.~a?" subprop) name)))
+                :weight 3))))))
 
 (define (box-element-constraints dom emit elt)
   (define bname (box-name elt))
@@ -359,9 +353,9 @@
 
     ; Stylesheet
     (echo "Browser stylesheet")
-    ,@(stylesheet-constraints browser-style-names browser-style #:browser #t)
+    ,@(reap [emit] (stylesheet-constraints emit browser-style-names browser-style #:browser #t))
     (echo "Defining the stylesheet")
-    ,@(stylesheet-constraints user-style-names sheet)
+    ,@(reap [emit] (stylesheet-constraints emit user-style-names sheet))
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))

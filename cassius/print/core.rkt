@@ -123,10 +123,8 @@
         (cond
          [(eq? rule* '?)
           (printf "? {")]
-         [(selector->z3 (car rule*))
-          (printf "  ~a {" (selector->string (car rule*)))]
          [else
-          (printf "  ~a {" (car rule*))])
+          (printf "  ~a {" (selector->string (car rule*)))])
         (for ([prop props] #:when (not (member prop '(selector a-rule))))
           (define val (cadr (assoc prop (cdr rule*))))
           (printf " ~a: ~a;" prop (value->string (extract-value val))))
