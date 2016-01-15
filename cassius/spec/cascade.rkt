@@ -10,7 +10,7 @@
 (define (selector-matches? sel elt)
   "Given an element and a selector, returns a Z3 expression for when that element matches"
   (match sel
-    [`(selector ,name) `(selector-applies? ,sel (get/elt ,(element-name elt)))]
+    [`? #f]
     [`(id ,id) (if (equal? id (element-get elt ':id)) 'true 'false)]
     [`(class ,cls)
      (if (and (element-get elt ':class) (member cls (element-get elt ':class))) 'true 'false)]
@@ -26,16 +26,6 @@
      (define tail-sel `(desc ,@ansc))
      `(and ,(selector-matches? sel* elt)
            (or ,@(map (curry selector-matches? tail-sel) (element-anscestors elt))))]))
-
-(define (prop->prefix prop)
-  (slower (css-type prop)))
-
-(define (dump-value prop value)
-  (define prefix (prop->prefix prop))
-  (match value
-    [(? symbol?) (sformat "~a/~a" prefix value)]
-    [(list 'px n) (list (sformat "~a/px" prefix) n)]
-    [(list '% n) (sformat "~a/~a%" prefix n)]))
 
 (define (selector-definitely-matches? sel elt)
   "Can the selector can be statically determined to match the element"
@@ -61,7 +51,7 @@
   (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
                     :named ,(sformat "rule/~a/a-rule" name))))
 
-  (define sel (selector->z3 (selector name rule)))
+  (define sel (selector->z3 (car rule)))
   (when sel
     (emit `(assert (! (= (selector ,name) ,sel) :named ,(sformat "rule/~a/selector" name))))))
 
@@ -108,7 +98,7 @@
 
 (define (selector name rule)
   (match rule
-    [`(? ,props ...) `(selector ,name)]
+    [`(? ,props ...) #f]
     [`(,sel ,props ...) sel]))
 
 (define (has-property? rule prop)
@@ -118,7 +108,6 @@
   (match sel
     [`(id ,id) `(sel/id ,(sformat "id/~a" id))]
     [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
-    [`(selector ,name) sel]
     [`* `sel/any]
     [_ #f]))
 
