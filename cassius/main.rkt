@@ -101,9 +101,55 @@
                       ,(either element-lchild 'nil-elt))
         :named ,(sformat "tree/~a" (element-name elt)))))))
 
-(define ((style-constraints rules) dom emit elt)
+(define ((style-constraints names rules) dom emit elt)
   (when (is-element? elt)
-    (for-each emit (cascade-rules (rules) elt))))
+    (for-each emit (cascade-rules names rules elt))))
+
+(define (stylesheet-constraints names sheet #:browser [browser? #f])
+  (for/reap [emit] ([name names] [rule sheet] [i (in-naturals)] #:when name)
+            (emit `(declare-const ,name Rule))
+            (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
+                              :named ,(sformat "rule/~a/a-rule" name))))
+
+            (define sel (selector->z3 (selector name rule)))
+            (when sel (emit `(assert (! (= (selector ,name) ,sel)
+                                        :named ,(sformat "rule/~a/selector" name)))))
+            
+            (define allow-new-properties? (member '? rule))
+            (define pairs (filter list? (cdr rule)))
+
+            (for ([(a-prop type default) (in-css-properties)])
+              (match (assoc a-prop pairs)
+                [(list _ '?)
+                 (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                   :named ,(sformat "rule/~a/~a/?" name a-prop))))]
+                [(list _ val)
+                 (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
+                                   :named ,(sformat "rule/~a/~a/?" name a-prop))))
+                 (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
+                                   :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
+                [#f
+                 (when (not allow-new-properties?)
+                   (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
+                                     :named ,(sformat "rule/~a/~a/?" name a-prop)))))]))
+
+              ; Optimize for short CSS
+            (when (memq 'opt (flags))
+              ; Each enabled property costs one line
+              (for* ([type css-properties] [property (cdr type)])
+                (emit `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1)))
+              ; Each block with an enabled property costs two line (open/selector and close brace)
+              (emit
+               `(assert-soft
+                 (and ,@(for*/list ([type css-properties] [property (cdr type)])
+                          `(not (,(sformat "rule.~a?" property) ,name))))
+                 :weight 2))
+              ; Each shorthand rule can save space if all its properties exist
+              (for ([(short-name subproperties) (in-pairs css-shorthand-properties)])
+                (emit `(assert-soft
+                        (and ,@(for/list ([subprop subproperties])
+                                 (list (sformat "rule.~a?" subprop) name)))
+                        :weight 3))))))
 
 (define (box-element-constraints dom emit elt)
   (define bname (box-name elt))
@@ -261,6 +307,9 @@
   (unless (= (length browsers) 1)
     (error "Different browsers on different documents not yet supported"))
   (define browser-style (get-sheet (car browsers)))
+  
+  (define browser-style-names (name-rules (car browsers) browser-style (map dom-tree doms)))
+  (define user-style-names (name-rules 'user sheet (map dom-tree doms)))
 
   (define-values (tags ids classes)
     (reap [save-tag save-id save-class]
@@ -278,13 +327,15 @@
      (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (box-name elt))
      (for/list ([dom doms]) (sformat "~a-flow" (dom-root dom)))))
 
-  (define rules '())
-  (define (save-rule x rule) (set! rules (cons (cons x rule) rules)))
+  (define rule-names (filter identity (append browser-style-names user-style-names)))
 
   (define constraints
     (list
      tree-constraints box-element-constraints
-     (procedure-rename (style-constraints (lambda () rules)) 'cascade-constraints)
+     (procedure-rename
+      (style-constraints (append browser-style-names user-style-names)
+                         (append browser-style sheet))
+      'cascade-constraints)
      info-constraints user-constraints #;element-constraints
      box-link-constraints box-constraints))
 
@@ -308,9 +359,9 @@
 
     ; Stylesheet
     (echo "Browser stylesheet")
-    ,@(stylesheet-constraints (car browsers) browser-style save-rule ids tags classes #:browser #t)
+    ,@(stylesheet-constraints browser-style-names browser-style #:browser #t)
     (echo "Defining the stylesheet")
-    ,@(stylesheet-constraints 'user sheet save-rule ids tags classes)
+    ,@(stylesheet-constraints user-style-names sheet)
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))

@@ -5,17 +5,7 @@
 (require "../css-properties.rkt")
 (require unstable/sequence)
 
-(provide cascade-rules selector->z3 selector can-match? stylesheet-constraints)
-
-(define (prop->prefix prop)
-  (slower (css-type prop)))
-
-(define (dump-value prop value)
-  (define prefix (prop->prefix prop))
-  (match value
-    [(? symbol?) (sformat "~a/~a" prefix value)]
-    [(list 'px n) (list (sformat "~a/px" prefix) n)]
-    [(list '% n) (sformat "~a/~a%" prefix n)]))
+(provide cascade-rules selector->z3 selector can-match? name-rules)
 
 (define (selector-matches? sel elt)
   "Given an element and a selector, returns a Z3 expression for when that element matches"
@@ -37,6 +27,16 @@
      `(and ,(selector-matches? sel* elt)
            (or ,@(map (curry selector-matches? tail-sel) (element-anscestors elt))))]))
 
+(define (prop->prefix prop)
+  (slower (css-type prop)))
+
+(define (dump-value prop value)
+  (define prefix (prop->prefix prop))
+  (match value
+    [(? symbol?) (sformat "~a/~a" prefix value)]
+    [(list 'px n) (list (sformat "~a/px" prefix) n)]
+    [(list '% n) (sformat "~a/~a%" prefix n)]))
+
 (define (selector-definitely-matches? sel elt)
   "Can the selector can be statically determined to match the element"
   (match (selector-matches? sel elt)
@@ -56,17 +56,16 @@
 (define (type->prefix type)
   (if (eq? (slower type) 'textalign) 'text-align (slower type)))
 
-(define (cascade-rules rules elt)
+(define (cascade-rules names rules elt)
   (define re `(rules (get/elt ,(element-name elt))))
-  (define (name&rule->selector name&rule)
-    (selector (car name&rule) (cdr name&rule)))
 
   (define matching-rules
-    (filter (compose (curryr selector-possibly-matches? elt) name&rule->selector) rules))
+    (for/list ([name names] [rule rules] #:when (selector-possibly-matches? (selector name rule) elt))
+      (cons name rule)))
 
   (reap [sow]
    (for ([(property type default) (in-css-properties)])
-     (define applicable-rules (filter (curryr has-property? property) matching-rules))
+     (define applicable-rules (filter (compose (curryr has-property? property) cdr) matching-rules))
 
      ;; Score of computed rule is >= any applicable stylesheet rule
      (for ([(name rule) (in-pairs applicable-rules)])
@@ -175,3 +174,11 @@
                         (and ,@(for/list ([subprop subproperties])
                                  (list (sformat "rule.~a?" subprop) name)))
                         :weight 3)))))))
+
+(define (name-rules name sheet eltss)
+  (for/list ([rule sheet] [i (in-naturals)])
+    (define rname (sformat "~a/~a" name i))
+    (and
+     (for*/or ([elts eltss] [elt (in-tree elts)])
+       (selector-possibly-matches? (selector rname rule) elt))
+     rname)))
