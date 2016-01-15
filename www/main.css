@@ -13,6 +13,11 @@ p, li, dd, blockquote, figcaption {
   margin: .5em;
 }
 
+pre {padding-left: 2.5em; font-size: 16px; font-family: monospace; background-color: #f1f1f1;}
+ul {padding-left: 1em;}
+a {color: #2A6496; text-decoration: none}
+a:hover {text-decoration: underline; color: #295785}
+
 figcaption {font-size: 14px; line-height: 1.1;}
 
 header {margin: 2em 0 2em 0; height: 60px;}
