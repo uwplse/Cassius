@@ -126,8 +126,8 @@
       (printf "<table class='results'>\n")
       (for ([res results])
         (match-define (result file problem test section status description features output time) res)
-        (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='out'><pre>~a</pre></td><td class='~a'>~a</td></tr>\n"
-                problem test description output status
+        (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='~a'>~a</td></tr>\n"
+                problem test description status
                 (match status ['success "✔"] ['fail "✘"] ['timeout "🕡"]
                   ['unsupported
                    (define probfeats (set-subtract features supported-features))
