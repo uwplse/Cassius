@@ -21,7 +21,7 @@
     (if (not (hash-has-key? smt-out rule-name))
         (cons (car rule) (for/list ([x (cdr rule)]) (list (car x) (extract-value (cadr x))))) ; HAX
         (match (hash-ref smt-out rule-name)
-          [(list 'rule sel idx origin rest ...)
+          [(list 'rule sel idx origin is-from-style score rest ...)
            (cons (extract-selector sel)
                  (for/list ([(value enabled?) (in-groups 2 rest)]
                             [(prop type default) (in-css-properties)]

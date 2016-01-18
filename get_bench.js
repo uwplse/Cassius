@@ -434,7 +434,7 @@ function rescue_selector(sel) {
     return "(\"" + sel_ + "\" (id " + ids.join(") (id ") + "))";
 }
 
-function dump_rule(sel, style, features) {
+function dump_rule(sel, style, features, is_from_style) {
     // Ignore rules that don't match any elements
     if (!document.querySelectorAll(sel).length) return "";
 
@@ -473,7 +473,7 @@ function dump_rule(sel, style, features) {
         features["unknown-selector"] = true;
         sel_text = rescue_selector(sel);
     }
-    return "\n  (" + sel_text + text + ")";
+    return "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
 }
 
 function dump_features(features) {
@@ -508,7 +508,7 @@ function page2cassius(name) {
     var style = out.style;
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
-        text += dump_rule("#" + eid, style[eid], features);
+        text += dump_rule("#" + eid, style[eid], features, true);
     }
     text += ")\n\n";
     text += "(define-document (" + name + " #:width " + page.props.w +  " #:browser firefox)";

@@ -43,17 +43,36 @@
     [(list (? string?) sub) (selector-possibly-matches? sub elt)]
     [_ #t]))
 
+(define (compute-score rule)
+  "Given a selector, return a list of counts (ids classes elts)"
+  (match rule
+    [`? #f]
+    [`(id ,id) `(1 0 0)]
+    [`(class ,cls) `(0 1 0)]
+    [`(tag ,tag) `(0 0 1)]
+    [`* '(0 0 0)]
+    [(list (? string?) sub) (compute-score sub)]
+    [`(or ,sels ...) (map (curry apply +) (apply (curry map list) (map compute-score sels)))]
+    [`(desc ,sels ...) (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
+
 (define (type->prefix type)
   (if (eq? (slower type) 'textalign) 'text-align (slower type)))
 
 (define (selector-constraints emit name rule i #:browser [browser? #f])
+  (define is-from-style? (member ':style (cdr rule)))
+
   (emit `(declare-const ,name Rule))
-  (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal) ,i)
+  (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal)
+                               ,i ,(if is-from-style? 'true 'false))
                     :named ,(sformat "rule/~a/a-rule" name))))
 
-  (define sel (selector->z3 (car rule)))
-  (when sel
-    (emit `(assert (! (= (selector ,name) ,sel) :named ,(sformat "rule/~a/selector" name))))))
+  (match (selector->z3 (car rule))
+    [#f
+     (match-define (list ids classes tags) (compute-score (car rule)))
+     (emit `(assert (= (score ,name) (cascadeScore (origin ,name) (isFromStyle ,name) ,ids ,classes ,tags (index ,name)))))]
+    [sel
+     (emit `(assert (= (score ,name) (compute-score ,name))))
+     (emit `(assert (! (= (selector ,name) ,sel) :named ,(sformat "rule/~a/selector" name))))]))
 
 (define (cascade-rules names rules elt)
   (define re `(rules (get/elt ,(element-name elt))))
@@ -102,7 +121,8 @@
     [`(,sel ,props ...) sel]))
 
 (define (has-property? rule prop)
-  (or (equal? '? rule) (member '? (cdr rule)) (assoc prop (cdr rule))))
+  (or (equal? '? rule)
+      (member '? (cdr rule)) (assoc prop (filter list? (cdr rule)))))
 
 (define (selector->z3 sel [ids #f] [tags #f])
   (match sel
