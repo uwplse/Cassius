@@ -1,13 +1,28 @@
 #lang racket
 
-(provide in-css-properties in-css-types)
+(require "common.rkt")
+(provide in-css-properties in-css-types %ages)
 
 (define css-types-hash (make-hash))
 (define css-property-hash (make-hash))
 
+(define %ages-data
+  '((Width 1 15 18 20 50 80 100 125 200)
+    (Height 1 20 25 50 100 200)
+    (Margin 15 50)
+    (Padding 1 2 20 50)))
+
+(define (%ages type)
+  (match (assoc type %ages-data)
+    [#f '()]
+    [(list _ %s ...) %s]))
+
+(define (%age-constructor type)
+  (map (curry sformat "~a/~a%" (slower type)) (%ages type)))
+
 (define-syntax-rule (define-css-type (name decl ...) [prop default] ...)
   (begin
-    (hash-set! css-types-hash 'name '(decl ...))
+    (hash-set! css-types-hash 'name (append '(decl ...) (%age-constructor 'name)))
     (hash-set! css-property-hash 'prop (cons 'name 'default)) ...))
 
 (define (in-css-properties)
@@ -19,19 +34,19 @@
 (define (in-css-types)
   (in-hash css-types-hash))
 
-(define-css-type (Width width/auto (width/px (width.px Real)) width/5% width/30% width/100% width/inherit)
+(define-css-type (Width width/auto (width/px (width.px Real)) width/inherit)
   [width width/auto])
 
-(define-css-type (Height height/auto (height/px (height.px Real)) height/50% height/100% height/inherit)
+(define-css-type (Height height/auto (height/px (height.px Real)) height/inherit)
   [height height/auto])
 
-(define-css-type (Margin margin/auto (margin/px (margin.px Real)) margin/50% margin/inherit)
+(define-css-type (Margin margin/auto (margin/px (margin.px Real)) margin/inherit)
   [margin-top margin/auto]
   [margin-right (margin/px 0)]
   [margin-bottom margin/auto]
   [margin-left (margin/px 0)])
 
-(define-css-type (Padding (padding/px (padding.px Real)) padding/1% padding/2% padding/50% padding/inherit)
+(define-css-type (Padding (padding/px (padding.px Real)) padding/inherit)
   [padding-top (padding/px 0)]
   [padding-right (padding/px 0)]
   [padding-bottom (padding/px 0)]
