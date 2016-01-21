@@ -113,7 +113,7 @@
 
   (match* (test res)
     [(#f (model model))
-     (printf "~a~a" (header->string header) (stylesheet->string model))
+     #;(printf "~a~a" (header->string header) (stylesheet->string model))
      (eprintf "Synthesized a stylesheet. Success!\n")]
     [(#f (unsat-core core))
      (print-unsat-core core sheet)

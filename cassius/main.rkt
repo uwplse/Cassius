@@ -125,8 +125,10 @@
         [#f
          (when (not allow-new-properties?)
            (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
-                             :named ,(sformat "rule/~a/~a/?" name a-prop)))))]))
+                             :named ,(sformat "rule/~a/~a/?" name a-prop)))))]))))
 
+(define (minimizality-constraints emit names sheet)
+  (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
     ;; Optimize for short CSS
     (when (memq 'opt (flags))
       ;; Each enabled property costs one line

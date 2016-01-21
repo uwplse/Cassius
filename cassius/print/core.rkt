@@ -115,7 +115,7 @@
     (hash-set! elts elt (cons (cons name line) (hash-ref elts elt '()))))
 
   (define (print-rule-core rules)
-    (for ([(sheet-name rules) (in-hash (trieify (map cdadr rules)))])
+    (for ([(sheet-name rules) (in-hash (trieify (map cdaar rules)))])
       (printf "~a.css:\n" sheet-name)
       (define sheet* (or (get-sheet sheet-name) stylesheet))
       (for ([(rule-id props) (in-hash rules)])
@@ -126,7 +126,7 @@
          [else
           (printf "  ~a {" (selector->string (car rule*)))])
         (for ([prop props] #:when (not (member prop '(selector a-rule))))
-          (define val (cadr (assoc prop (cdr rule*))))
+          (define val (cadr (assoc prop (filter list? (cdr rule*)))))
           (printf " ~a: ~a;" prop (value->string (extract-value val))))
         (printf " }\n"))
       (printf "\n")))
