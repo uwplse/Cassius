@@ -89,7 +89,7 @@
 
   (define-fun a-root-box ((b Box)) Bool
     (and
-     (! (and ,@(for/list ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
+     (! (and ,@(for/list ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn mtp2 mtb2 mtn2 mbn2)])
                  `(= (,field b) 0.0)))
           :named zero-xypbm)
      (= (type b) box/root)
@@ -116,16 +116,26 @@
        (= (mbp2 b)
           (max (ite (> (mb b) 0.0) (mb b) 0.0)
                (ite (and (not (is-tag/html (tagname e))) (is-box lb)
-                         (= (pb b) 0.0) (= (bb b) 0.0)) (mbp lb) 0.0)))
+                         (= (pb b) 0.0) (= (bb b) 0.0))
+                    (ite (= (box-height lb) 0.0) (mtp lb) (mbp lb)) 0.0)))
        (= (mbn2 b)
           (min (ite (< (mb b) 0.0) (mb b) 0.0)
                (ite (and (not (is-tag/html (tagname e))) (is-box lb)
-                         (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)))
-       
-       (= (mtp b) (ite (= (box-height b) 0.0) (max (mtp2 b) (mbp2 b)) (mtp2 b)))
-       (= (mtn b) (ite (= (box-height b) 0.0) (max (mtn2 b) (mbn2 b)) (mtn2 b)))
-       (= (mbp b) (ite (= (box-height b) 0.0) (max (mtp2 b) (mbp2 b)) (mbp2 b)))
-       (= (mbn b) (ite (= (box-height b) 0.0) (max (mtn2 b) (mbn2 b)) (mbn2 b)))
+                         (= (pb b) 0.0) (= (bb b) 0.0))
+                    (ite (= (box-height lb) 0.0) (mtn lb) (mbn lb)) 0.0)))
+
+       (= (mtp b) (ite (= (box-height b) 0.0)
+                       (if (= (box-height p) 0.0)
+                           (max (mtp2 b) (mtp p))
+                           (max (mtp2 b) (mtp2 p)))
+                       (mtp2 b)))
+       (= (mtn b) (ite (= (box-height b) 0.0)
+                       (if (= (box-height p) 0.0)
+                           (max (mtn2 b) (mbn p))
+                           (max (mtn2 b) (mbn2 p)))
+                       (mtn2 b)))
+       (= (mbp b) (ite (= (box-height b) 0.0) 0.0 (mbp2 b)))
+       (= (mbn b) (ite (= (box-height b) 0.0) 0.0 (mbn2 b)))
 
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
@@ -228,7 +238,9 @@
                  ;; if the child's bottom margin does not collapse with the
                  ;; element's bottom margin
                  (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (= (tagname e) tag/html)))
-                      (bottom-border lb) ; Collapsed bottom margin
+                      (if (= (box-height lb) 0.0)
+                          (- (bottom-border lb) (mtp lb) (mtn lb))
+                          (bottom-border lb)) ; Collapsed bottom margin
                       (bottom-outer lb)))] ; No collapsed bottom margin
              ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
              ;; whose top margin doesn't collapse with the element's bottom margin
@@ -240,25 +252,24 @@
 
        ;; Computing X and Y position
        (! (= (x b) (+ (left-content p) (ml b))) :named flow-x)
-       (= (y b)
-          ,(smt-cond
-            [(= (box-height b) 0.0)
-             (ite (is-box vb) (bottom-border vb) (top-content p))]
-            [(is-box vb)
-             (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b)))]
-            [(and
-              ;; Margins of the root element's box do not collapse. 
-              (not (is-box/root (type (pbox p))))
-              ;; Margins between a floated box and any other box do not collapse
-              ;; (not even between a float and its in-flow children). 
-              (is-float/none (float p))
-              ;; The top margin of an in-flow block element collapses with
-              ;; its first in-flow block-level child's top margin if the element
-              ;; has no top border, no top padding, and the child has no clearance. 
-              (= (pt p) 0.0) (= (bt p) 0.0))
-             (top-content p)]
-            [else
-             (+ (top-content p) (+ (mtp b) (mtn b)))]))
+       ,(smt-cond
+         [(= (box-height b) 0.0)
+          (= (y b) (ite (is-box vb) (+ (bottom-border vb) (mtp b) (mtn b)) (top-content p)))]
+         [(is-box vb)
+          (= (y b) (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))]
+         [(and
+           ;; Margins of the root element's box do not collapse. 
+           (not (is-box/root (type (pbox p))))
+           ;; Margins between a floated box and any other box do not collapse
+           ;; (not even between a float and its in-flow children). 
+           (is-float/none (float p))
+           ;; The top margin of an in-flow block element collapses with
+           ;; its first in-flow block-level child's top margin if the element
+           ;; has no top border, no top padding, and the child has no clearance. 
+           (= (pt p) 0.0) (= (bt p) 0.0))
+          (= (y b) (top-content p))]
+         [else
+          (= (y b) (+ (top-content p) (+ (mtp b) (mtn b))))])
 
        (! (and
            ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
@@ -271,10 +282,10 @@
 
        (= (type b) box/block)
        (! (and
-           (= (mtp b) (max (mt b) 0.0))
-           (= (mtn b) (min (mt b) 0.0))
-           (= (mbp b) (max (mb b) 0.0))
-           (= (mbn b) (min (mb b) 0.0)))
+           (= (mtp2 b) (mtp b) (max (mt b) 0.0))
+           (= (mtn2 b) (mtn b) (min (mt b) 0.0))
+           (= (mbp2 b) (mbp b) (max (mb b) 0.0))
+           (= (mbn2 b) (mbn b) (min (mb b) 0.0)))
           :named no-collapse)
 
        ;; Floating block element layout
@@ -523,7 +534,7 @@
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
 
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+       ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl)])
            `(= (,field b) 0.0))
 
        ;; This is super-weak, but for now it really is our formalization of line layout
@@ -535,7 +546,7 @@
                [f (fbox b)] [l (lbox b)])
 
        (! (and
-           ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
+           ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl)])
                `(= (,field b) 0.0)))
           :named line-no-mbp)
 
