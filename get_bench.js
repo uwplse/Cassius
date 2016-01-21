@@ -63,19 +63,19 @@ function val2px(val, features) {
     var match;
     if (val == "0") {
         return 0;
-    } else if (val.match(/^0[^0-9.]/)) {
+    } else if (val.match(/^-?0[^0-9.]+/)) {
         return 0;
-    } else if (val.endsWith("px")) {
+    } else if (val.match(/^-?[0-9.]+px$/)) {
         return +val.substr(0, val.length - 2);
-    } else if (val.endsWith("pt")) {
+    } else if (val.match(/^-?[0-9.]+pt$/)) {
         return +val.substr(0, val.length - 2)*96/72;
-    } else if (val.endsWith("pc")) {
+    } else if (val.match(/^-?[0-9.]+pc$/)) {
         return +val.substr(0, val.length - 2)*12*96/72;
-    } else if (val.endsWith("mm")) {
+    } else if (val.match(/^-?[0-9.]+mm$/)) {
         return +val.substr(0, val.length - 2)*96/25.4;
-    } else if (val.endsWith("cm")) {
+    } else if (val.match(/^-?[0-9.]+cm$/)) {
         return +val.substr(0, val.length - 2)*96/2.54;
-    } else if (val.endsWith("in")) {
+    } else if (val.match(/^-?[0-9.]+in$/)) {
         return +val.substr(0, val.length - 2)*96;
     } else if (match = val.match(/^([\d.]+)([^\d.]+)$/)) {
         features[match[2]] = true;
@@ -418,7 +418,6 @@ function dump_selector(sel) {
 }
 
 function rescue_selector(sel) {
-    console.log(sel)
     var matched = document.querySelectorAll(sel);
     var ids = [];
     for (var i = 0; i < matched.length; i++) {
@@ -431,7 +430,7 @@ function rescue_selector(sel) {
         }
     }
     var sel_ = sel.replace("\\", "\\\\").replace("\"", "\\\"");
-    return "(\"" + sel_ + "\" (id " + ids.join(") (id ") + "))";
+    return "(\"" + sel_ + "\" (or (id " + ids.join(") (id ") + ")))";
 }
 
 function dump_rule(sel, style, features, is_from_style) {
