@@ -140,14 +140,21 @@
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
-                            (border-top-width border bt) (border-right-width border br)
-                            (border-bottom-width border bb) (border-left-width border bl)
                             (margin-top margin mt) (margin-bottom margin mb))])
            ;; Set properties that are settable with lengths
            (match-define (list prop type field) item)
            `(! (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                    (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
                :named ,(sformat "from-style/~a" prop)))
+
+       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+           `(! (= (,(sformat "b~a" letter) b)
+                  (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
+                            (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
+                            (not (is-border-style/hidden (,(sformat "style.border-~a-style" dir) r))))
+                       (border.px (,(sformat "style.border-~a-width" dir) r))
+                       0.0))
+               :named ,(sformat "from-style/border-~a-width" dir)))
 
        ;; %ages
        ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
@@ -168,13 +175,13 @@
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
                 (= (h b) (* (w p) (/ ,% 100)))))
-       
+
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
        ;; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
        (! (= (w p) (+ (ml b) (box-width b) (mr b)))
           :named flow-fill-width)
-       
+
        (let ([w* (ite (is-width/auto (style.width r)) 0.0 (width.px (style.width r)))]
              [ml* (ite (is-margin/auto (style.margin-left r)) 0.0 (margin.px (style.margin-left r)))]
              [mr* (ite (is-margin/auto (style.margin-right r)) 0.0 (margin.px (style.margin-right r)))])
@@ -292,13 +299,20 @@
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
-                            (border-top-width border bt) (border-right-width border br)
-                            (border-bottom-width border bb) (border-left-width border bl)
                             (margin-top margin mt) (margin-bottom margin mb)
                             (margin-right margin mr) (margin-left margin ml))])
            (match-define (list prop type field) item)
            `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
+
+       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+           `(! (= (,(sformat "b~a" letter) b)
+                  (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
+                            (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
+                            (not (is-border-style/hidden (,(sformat "style.border-~a-style" dir) r))))
+                       (border.px (,(sformat "style.border-~a-width" dir) r))
+                       0.0))
+               :named ,(sformat "from-style/border-~a-width" dir)))
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
        ;; %ages
@@ -490,13 +504,21 @@
        ;; value of ‘auto’ becomes a used value of ‘0’.
        ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
-                            (border-top-width border bt) (border-right-width border br)
-                            (border-bottom-width border bb) (border-left-width border bl)
                             (margin-top margin mt) (margin-bottom margin mb)
                             (margin-right margin mr) (margin-left margin ml))])
            (match-define (list prop type field) item)
            `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
+
+       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+           `(! (= (,(sformat "b~a" letter) b)
+                  (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
+                            (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
+                            (not (is-border-style/hidden (,(sformat "style.border-~a-style" dir) r))))
+                       (border.px (,(sformat "style.border-~a-width" dir) r))
+                       0.0))
+               :named ,(sformat "from-style/border-~a-width" dir)))
+
        ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
              (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))

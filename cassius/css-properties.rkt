@@ -53,10 +53,19 @@
   [padding-left (padding/px 0)])
 
 (define-css-type (Border (border/px (border.px Real)) border/inherit)
-  [border-top-width (border/px 0)]
-  [border-right-width (border/px 0)]
-  [border-bottom-width (border/px 0)]
-  [border-left-width (border/px 0)])
+  [border-top-width border/medium]
+  [border-right-width border/medium]
+  [border-bottom-width border/medium]
+  [border-left-width border/medium])
+
+(define-css-type (Border-Style border-style/none border-style/hidden border-style/dotted
+                              border-style/dashed border-style/solid border-style/double
+                              border-style/groove border-style/ridge border-style/inset
+                              border-style/outset border-style/inherit)
+  [border-top-style border-style/none]
+  [border-right-style border-style/none]
+  [border-bottom-style border-style/none]
+  [border-left-style border-style/none])
 
 (define-css-type (Float float/none float/left float/right float/inherit)
  [float float/none])
