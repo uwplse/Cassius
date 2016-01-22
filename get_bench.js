@@ -4,6 +4,7 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; docum
 
 Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style".split(" ");
 BadProps = "position clear float direction min-height max-height min-width max-width".split(" ");
+BadTags = "img input".split(" ");
 
 Box = function(type, node, props) {
     this.children = [];
@@ -273,6 +274,8 @@ function infer_lines(box, parent) {
 }
 
 function make_boxes(elt, inflow, styles, features) {
+    if (BadTags.indexOf(elt.tagName) !== -1) features[elt.tagName] = true;
+
     if (elt.style && elt.style.length) {
         var eid = elt.id || gensym();
         if (!elt.id) elt.id = eid;
@@ -344,8 +347,13 @@ function make_boxes(elt, inflow, styles, features) {
             }
         }
     } else if (is_inline (elt)) {
-        var r = elt.getBoundingClientRect();
-        var box = Inline(elt, {tag: elt.tagName/*, x: r.x, y: r.y, w: r.width, h: r.height*/});
+        var r = elt.getClientRects();
+        var box;
+        if (r.length == 1 && false) {
+            box = Inline(elt, {tag: elt.tagName, x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
+        } else {
+            box = Inline(elt, {tag: elt.tagName});
+        }
         if (elt.id) box.props["id"] = elt.id;
         if (elt.classList.length) box.props["class"] = "(" + elt.classList + ")";
         if (elt.style.length) {
