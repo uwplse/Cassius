@@ -81,7 +81,7 @@
   
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
-        (is-tag/html (tagname (get/elt (element b))))
+        (is-nil-elt (parent-name (get/elt (element b))))
         (not (is-float/none (float b)))))
 
   (define-fun an-element ((e Element)) Bool
@@ -238,6 +238,10 @@
              ;; if the box establishes a inline formatting context with one or more lines
              [(and (is-box lb) (is-box/line (type lb)))
               (= (bottom-content b) (bottom-border lb))]
+             [(is-flow-root b)
+              (= (bottom-content b)
+                 (max (bottom-outer lb)
+                      (bottom-outer (get/box (flt-up-name lb)))))]
              [(and (is-box lb) (is-box/block (type lb)))
               (= (bottom-content b)
                  ;; CSS § 10.6.3, item 2: the bottom edge of the bottom
@@ -246,13 +250,11 @@
                  ;; element's bottom margin
                  (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (= (tagname e) tag/html)))
                       (if (= (box-height lb) 0.0)
+                          ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
+                          ;; whose top margin doesn't collapse with the element's bottom margin
                           (- (bottom-border lb) (mtp lb) (mtn lb))
                           (bottom-border lb)) ; Collapsed bottom margin
                       (bottom-outer lb)))] ; No collapsed bottom margin
-             ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
-             ;; whose top margin doesn't collapse with the element's bottom margin
-             ;; NOTE: This can happen if the box height is 0.
-             ;; We don't support that, so it's not an issue.
 
              ;; CSS § 10.6.3, item 4: zero, otherwise
              [else (= (h b) 0.0)]))
