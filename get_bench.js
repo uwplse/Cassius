@@ -86,6 +86,15 @@ function val2px(val, features) {
     }
 }
 
+function val2pct(val, features) {
+    var match;
+    if (val.match(/^-?[0-9.]+%$/)) {
+        return +val.substr(0, val.length - 1);
+    } else {
+        throw "Error, " + val + " is not a percentage quantity."
+    }
+}
+
 function cs(elt) {
     if (!elt || elt.nodeType !== document.ELEMENT_NODE) console.trace();
     return window.getComputedStyle(elt);
@@ -458,6 +467,9 @@ function dump_rule(sel, style, features, is_from_style) {
         }
         try {
             val = "(px " + f2r(val2px(val, features)) + ")";
+        } catch (e) {}
+        try {
+            val = "(% " + f2r(val2pct(val, features)) + ")";
         } catch (e) {}
 
         if (Props.indexOf(sname) === -1) {

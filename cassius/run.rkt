@@ -127,7 +127,7 @@
     [(`(forall (,vars ...) ,query) (unsat-core core))
      (eprintf "No counterexamples found. Success!\n")]
     [(_ (list 'error e))
-     (eprintf "Error: ~a\n" (exn-message e))]
+     ((error-display-handler) (exn-message e) e)]
     [(_ 'break)
      (eprintf "Query terminated. Failure.\n")])
 

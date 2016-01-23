@@ -23,7 +23,7 @@
 (define (extract-value value)
   (match value
     [(list (? (css-type-ending? 'px)) x) (list 'px x)]
-    [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) "%")))]
+    [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) #\%)))]
     [(? symbol?) (last (split-symbol value))]))
 
 (define (split-line-name var)
