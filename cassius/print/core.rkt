@@ -127,7 +127,7 @@
           (printf "  ~a {" (selector->string (car rule*)))])
         (for ([prop props] #:when (not (member prop '(selector a-rule))))
           (define val (cadr (assoc prop (filter list? (cdr rule*)))))
-          (printf " ~a: ~a;" prop (value->string (extract-value val))))
+          (printf " ~a: ~a;" prop (value->string val)))
         (printf " }\n"))
       (printf "\n")))
 

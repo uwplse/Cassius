@@ -124,7 +124,7 @@
     (for ([fname files] [results resultss])
       (printf "<h2>~a</h2>\n" fname)
       (printf "<table class='results'>\n")
-      (for ([res results])
+      (for ([res results] #:when (not (member (result-status res) '(success unsupported))))
         (match-define (result file problem test section status description features output time) res)
         (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='~a'>~a</td></tr>\n"
                 problem test description status
