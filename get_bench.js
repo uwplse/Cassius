@@ -181,29 +181,30 @@ function contains_text(elt) {
 function infer_anons(box, parent) {
     function save_anon_box() {
         if (!anon_box) return;
-        var real_anon = Anon(box.node, {});
-        infer_lines(anon_box, real_anon);
-        parent.children.push(real_anon);
+        parent.children.push(anon_box);
     }
     var anon_box = false;
     for (var i = 0; i < box.children.length; i++) {
         var child = box.children[i];
-        if (child.type == "BLOCK" || child.type == "MAGIC") {
-            save_anon_box();
-            parent.children.push(child);
-            anon_box = false;
-        } else if (child.type == "ANON") {
+        if (child.type == "BLOCK" || child.type == "MAGIC" || child.type == "ANON") {
             save_anon_box();
             parent.children.push(child);
             anon_box = false;
         } else {
             if (!anon_box) {
-                anon_box = new Box("Fake", box.node, {});
+                anon_box = new Anon(box.node, {});
             }
             anon_box.children.push(child);
         }
     }
     save_anon_box();
+
+    if (parent.children.length == 1 && parent.children[0].type == "ANON") {
+        var anon = parent.children.pop();
+        for (var i = 0; i < anon.children.length; i++) {
+            parent.children.push(anon.children[i]);
+        }
+    }
 }
 
 function infer_lines(box, parent) {
@@ -280,6 +281,13 @@ function infer_lines(box, parent) {
         var child = box.children[i];
         go(child);
     }
+    
+    for (var i = 0; i < parent.children.length; i++) {
+        if (parent.children[i].type == "LINE" && parent.children[i].children.length == 0) {
+            parent.children.splice(i, 1);
+            i--;
+        }
+    }
 }
 
 function make_boxes(elt, inflow, styles, features) {
@@ -304,7 +312,8 @@ function make_boxes(elt, inflow, styles, features) {
             if (r.width == 0 || r.height == 0) continue;
             var box = Text(elt, {
                 x: r.x, y: r.y, w: r.width, h: r.height,
-                //text: '"' + ranges[i].toString().replace(/\s+/g, " ") + '"'
+                // TODO: Escape correctly
+                //text: '"' + ranges[i].toString().replace(/\s+/g, " ").replace("\\", "\\\\").replace("\"", "\\\\") + '"'
             });
             inflow.children.push(box);
         }
@@ -331,30 +340,17 @@ function make_boxes(elt, inflow, styles, features) {
 
         inflow.children.push(box);
 
-        if (is_text_container(elt)) {
-            // Make a subtree under a fake box
-            var fake_parent = new Box("Fake", elt, {});
-            for (var i = 0; i < elt.childNodes.length; i++) {
-                var child = elt.childNodes[i];
-                make_boxes(child, fake_parent, styles, features);
-            }
-            // Then break it into lines
-            infer_lines(fake_parent, box);
-        }  else if (contains_text(elt)) {
-            // Make a subtree under a fake box
-            var fake_parent = new Box("Fake", elt, {});
-            for (var i = 0; i < elt.childNodes.length; i++) {
-                var child = elt.childNodes[i];
-                make_boxes(child, fake_parent, styles, features);
-            }
-            // Then add anonymous boxes
-            infer_anons(fake_parent, box);
-        }  else {
-            for (var i = 0; i < elt.childNodes.length; i++) {
-                var child = elt.childNodes[i];
-                make_boxes(child, box, styles, features);
-            }
+        var fake_lines = new Box("Fake", elt, {});
+        var fake_anons = new Box("Fake", elt, {});
+        for (var i = 0; i < elt.childNodes.length; i++) {
+            var child = elt.childNodes[i];
+            make_boxes(child, fake_lines, styles, features);
         }
+
+        // Then break it into lines
+        infer_lines(fake_lines, fake_anons);
+        // Then add anonymous boxes
+        infer_anons(fake_anons, box);
     } else if (is_inline (elt)) {
         var r = elt.getClientRects();
         var box;
@@ -460,7 +456,6 @@ function dump_rule(sel, style, features, is_from_style) {
         var sname = style[i];
         if (sname.startsWith("-")) continue; // Skip browser-specific styles for now.
         var val = style[sname];
-        if (!val) { console.log(style, i, sname)}
         var tname = sname;
         if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
             var tname = tname.split("-", 2)[0];
@@ -504,6 +499,23 @@ function dump_features(features) {
     return "(" + text.trim() + ")";
 }
 
+function dump_tree(page) {
+    var text = "";
+    var indent = "  ";
+
+    function recurse(box) {
+        text += "\n" + indent + "(" + box.toString();
+        var idt = indent;
+        indent += " ";
+        for (var i = 0; i < box.children.length; i++) recurse(box.children[i]);
+        indent = idt;
+        text += ")";
+    }
+
+    for (var i = 0; i < page.children.length; i++) recurse(page.children[i]);
+    return text;
+}
+
 function page2cassius(name) {
     var features = {};
 
@@ -531,18 +543,7 @@ function page2cassius(name) {
     }
     text += ")\n\n";
     text += "(define-document (" + name + " #:width " + page.props.w +  " #:browser firefox)";
-    var indent = "  ";
-
-    function recurse(box) {
-        text += "\n" + indent + "(" + box.toString();
-        var idt = indent;
-        indent += " ";
-        for (var i = 0; i < box.children.length; i++) recurse(box.children[i]);
-        indent = idt;
-        text += ")";
-    }
-
-    for (var i = 0; i < page.children.length; i++) recurse(page.children[i]);
+    text += dump_tree(page);
     text += ")\n\n";
 
     var title = document.title.replace("\\", "\\\\").replace("\"", "\\\"");
