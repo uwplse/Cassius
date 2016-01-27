@@ -243,8 +243,8 @@
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns (get/box ,(box-name elt))
                           ,(box-name (box-parent elt))
-                          ,(box-name (box-next elt))
                           ,(box-name (box-prev elt))
+                          ,(box-name (box-next elt))
                           ,(box-name (box-fchild elt))
                           ,(box-name (box-lchild elt)))
                     :named ,(sformat "link-box/~a" (element-name elt))))))
@@ -253,7 +253,7 @@
   (define cns
     (match (element-type elt)
       ['BLOCK 'a-block-box]
-      ['ANON 'a-block-box]
+      ['ANON 'a-block-flow-box]
       ['MAGIC 'a-magic-box]
       ['LINE 'a-line-box]
       ['INLINE 'an-inline-box]

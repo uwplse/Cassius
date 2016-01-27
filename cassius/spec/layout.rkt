@@ -97,11 +97,16 @@
      (= (flt-name b) nil-box)
      (= (v-name b) nil-box)))
 
+  (define-fun box-collapsed-through ((b Box) (f Box)) Bool
+    (and (= (box-height b) 0.0)
+         (or (is-no-box f) (not (is-box/line (type f))))))
+
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
 
        (= (type b) box/block)
+       (= (float b) float/none)
 
        ;; Computing maximum collapsed positive and negative margin
        (= (mtp2 b)
@@ -117,25 +122,25 @@
           (max (ite (> (mb b) 0.0) (mb b) 0.0)
                (ite (and (not (is-tag/html (tagname e))) (is-box lb)
                          (= (pb b) 0.0) (= (bb b) 0.0))
-                    (ite (= (box-height lb) 0.0) (mtp lb) (mbp lb)) 0.0)))
+                    (ite (box-collapsed-through lb (fbox lb)) (mtp lb) (mbp lb)) 0.0)))
        (= (mbn2 b)
           (min (ite (< (mb b) 0.0) (mb b) 0.0)
                (ite (and (not (is-tag/html (tagname e))) (is-box lb)
                          (= (pb b) 0.0) (= (bb b) 0.0))
-                    (ite (= (box-height lb) 0.0) (mtn lb) (mbn lb)) 0.0)))
+                    (ite (box-collapsed-through lb (fbox lb)) (mtn lb) (mbn lb)) 0.0)))
 
-       (= (mtp b) (ite (= (box-height b) 0.0)
-                       (if (= (box-height p) 0.0)
+       (= (mtp b) (ite (box-collapsed-through b fb)
+                       (if (box-collapsed-through p b)
                            (max (mtp2 b) (mtp p))
                            (max (mtp2 b) (mtp2 p)))
                        (mtp2 b)))
-       (= (mtn b) (ite (= (box-height b) 0.0)
-                       (if (= (box-height p) 0.0)
+       (= (mtn b) (ite (box-collapsed-through b fb)
+                       (if (box-collapsed-through p b)
                            (max (mtn2 b) (mbn p))
                            (max (mtn2 b) (mbn2 p)))
                        (mtn2 b)))
-       (= (mbp b) (ite (= (box-height b) 0.0) 0.0 (mbp2 b)))
-       (= (mbn b) (ite (= (box-height b) 0.0) 0.0 (mbn2 b)))
+       (= (mbp b) (ite (box-collapsed-through b fb) 0.0 (mbp2 b)))
+       (= (mbn b) (ite (box-collapsed-through b fb) 0.0 (mbn2 b)))
 
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
@@ -249,7 +254,7 @@
                  ;; if the child's bottom margin does not collapse with the
                  ;; element's bottom margin
                  (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (= (tagname e) tag/html)))
-                      (if (= (box-height lb) 0.0)
+                      (if (box-collapsed-through lb (fbox lb))
                           ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
                           ;; whose top margin doesn't collapse with the element's bottom margin
                           (- (bottom-border lb) (mtp lb) (mtn lb))
@@ -262,7 +267,7 @@
        ;; Computing X and Y position
        (! (= (x b) (+ (left-content p) (ml b))) :named flow-x)
        ,(smt-cond
-         [(= (box-height b) 0.0)
+         [(box-collapsed-through b fb)
           (= (y b) (ite (is-box vb) (+ (bottom-border vb) (mtp b) (mtn b)) (top-content p)))]
          [(is-box vb)
           (= (y b) (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))]
@@ -617,4 +622,10 @@
          (a-block-float-box b)))
 
   (define-fun a-magic-box ((b Box)) Bool
-    (or (is-box/block (type b)) (is-box/inline (type b)))))
+    (or (is-box/block (type b)) (is-box/inline (type b))))
+
+  (define-fun an-anon-block-box ((b Box)) Bool
+    (and (a-block-flow-box b)
+         (= (mt b) (mr b) (mb b) (ml b))
+         (= (bt b) (br b) (bb b) (bl b))
+         (= (pt b) (pr b) (pb b) (pl b)))))
