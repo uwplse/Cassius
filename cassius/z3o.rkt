@@ -453,7 +453,8 @@
 
 (define (constructor-tester-name name)
   (define parts (string-split (~a name) "-"))
-  (and (string=? (first parts) "is")
+  (and (not (null? parts))
+       (string=? (first parts) "is")
        (string->symbol (string-join (rest parts) "-"))))
 
 (define (z3-simplif cmds)
@@ -502,12 +503,12 @@
       [`(not false) 'true]
       [`(not true) 'false]
       [`(and) `true]
-      [(list 'and rest ... )
+      [(list 'and rest ...)
        (if (member 'false rest)
            'false
            (let ([rest* (filter (lambda (x) (not (equal? x 'true))) rest)])
              (match rest* [`() 'true] [`(,x) x] [`(,x ...) `(and ,@x)])))]
-      [(list 'or rest ... )
+      [(list 'or rest ...)
        (if (member 'true rest)
            'true
            (let ([rest* (filter (lambda (x) (not (equal? x 'false))) rest)])
