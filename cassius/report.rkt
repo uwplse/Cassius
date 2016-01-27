@@ -44,7 +44,7 @@
 (define (section<? s1 s2)
   (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
-(struct result (file problem test section status description features output time))
+(struct result (file problem test section status description features output time url))
 
 (define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)])
   (define probs (call-with-input-file file parse-file))
@@ -78,7 +78,8 @@
 
     (eprintf "~a\n" status)
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (problem-desc prob) (problem-features prob) (get-output-string out) runtime)))
+            status (problem-desc prob) (problem-features prob) (get-output-string out) runtime
+            (problem-url prob))))
 
 (define (number-or-empty? x)
   (if (zero? x) "" x))
@@ -98,7 +99,7 @@
   (define out (if outname (open-output-file (format "~a.json" outname) #:exists 'replace) (current-output-port)))
   (write-json
    (for/list ([res results])
-     (match-define (result file problem test section status description features output time) res)
+     (match-define (result file problem test section status description features output time url) res)
      (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time))))
    out)
   (when outname (close-output-port out))
@@ -125,9 +126,9 @@
       (printf "<h2>~a</h2>\n" fname)
       (printf "<table class='results'>\n")
       (for ([res results] #:when (not (member (result-status res) '(success unsupported))))
-        (match-define (result file problem test section status description features output time) res)
-        (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td class='~a'>~a</td></tr>\n"
-                problem test description status
+        (match-define (result file problem test section status description features output time url) res)
+        (printf "<tr><td>~a</td><td><a href='~a'>~a</a></td><td>~a</td><td class='~a'>~a</td></tr>\n"
+                problem url test description status
                 (match status ['success "✔"] ['fail "✘"] ['timeout "🕡"]
                   ['unsupported
                    (define probfeats (set-subtract features supported-features))
