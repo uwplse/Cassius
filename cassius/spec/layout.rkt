@@ -70,15 +70,6 @@
      ;; has no top border, no top padding, and the child has no clearance. 
      (= (pt p) 0.0) (= (bt p) 0.0)))
 
-  (define-fun textalign ((b Box)) TextAlign
-    (style.text-align (rules (get/elt (element b)))))
-
-  (define-fun float ((b Box)) Float
-    ;(if (is-box/block (type b))
-        (style.float (rules (get/elt (element b))))
-        ;float/none))
-        )
-  
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
         (is-nil-elt (parent-name (get/elt (element b))))

@@ -164,7 +164,7 @@
 
 (define to-expand
   (append
-   '(link-element link-block-box link-inline-box link-text-box link-line-box link-element-box link-root-element)
+   '(link-element link-block-box link-inline-box link-text-box link-line-box link-element-box link-root-element link-anon-box)
    '(an-element a-root-element element-info)
    '(float textalign)
    '(previous next parent fchild lchild)
@@ -201,7 +201,8 @@
    z3-dco
    #;(z3-check-trivial-calls 'get/box 'get/elt)
    z3-check-datatypes z3-check-functions z3-check-let #;z3-check-fields
-   z3-clean-no-opt))
+   z3-clean-no-opt
+   ))
 
 (define (z3-namelines cmds)
   (for/list ([cmd cmds] [i (in-naturals)])

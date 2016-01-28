@@ -242,6 +242,7 @@
       ['INLINE 'link-inline-box]
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns (get/box ,(box-name elt))
+                          ,(box-name elt)
                           ,(box-name (box-parent elt))
                           ,(box-name (box-prev elt))
                           ,(box-name (box-next elt))
