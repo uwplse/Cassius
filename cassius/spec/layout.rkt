@@ -594,7 +594,6 @@
           (! (=> (and (not c) (is-box v)) (= (y b) (bottom-border v)))
              :named follow-previous-line)))
 
-       (not (is-no-box f))
        (let ([l* (real-lbox b)] [v* (real-vbox b)])
          (= (stfwidth b)
             (min (w b)

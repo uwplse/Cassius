@@ -144,7 +144,7 @@
     (printf "<h2>Feature totals</h2>\n")
     (printf "<dl>\n")
     (for ([feature (remove-duplicates (append-map result-features results))])
-      (printf "<dt>~a</dt><dd>~a</dd>\n" feature (count (λ (x) (member feature (result-features x))) results)))
+      (printf "<dt>~a</dt><dd>~a only, ~a has </dd>\n" feature (count (λ (x) (equal? (result-features x) (list feature))) results) (count (λ (x) (member feature (result-features x))) results)))
     (printf "</dl>\n")
     (printf "</body>\n")
     (printf "</html>\n"))

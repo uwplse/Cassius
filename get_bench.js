@@ -281,13 +281,6 @@ function infer_lines(box, parent) {
         var child = box.children[i];
         go(child);
     }
-    
-    for (var i = 0; i < parent.children.length; i++) {
-        if (parent.children[i].type == "LINE" && parent.children[i].children.length == 0) {
-            parent.children.splice(i, 1);
-            i--;
-        }
-    }
 }
 
 function make_boxes(elt, inflow, styles, features) {
