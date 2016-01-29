@@ -19,6 +19,7 @@
                 (real-f-name BoxName) (real-l-name BoxName)
                 (pb-name BoxName)
                 (n-name BoxName) (v-name BoxName) (flt-name BoxName) (flt-up-name BoxName)
+                (float Float) (textalign Text-Align)
                 (element ElementName)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
@@ -57,19 +58,19 @@
     (and (= (tagname elt) tag) (= (idname elt) &idname) (= (display elt) displayname)))
   
   (define-fun link-element-box ((&e ElementName) (&b BoxName)) Bool
-    (and (is-box (get/box &b)) (= (element (get/box &b)) &e) (= (flow-box (get/elt &e)) &b)))
+    (and
+     (is-box (get/box &b)) 
+     (= (float (get/box &b)) (style.float (rules (get/elt &e))))
+     (= (textalign (get/box &b)) (style.text-align (rules (get/elt &e))))
+     (= (element (get/box &b)) &e)
+     (= (flow-box (get/elt &e)) &b)))
 
   (define-fun link-anon-box ((&b BoxName)) Bool
-    (and (is-box (get/box &b)) (= (element (get/box &b)) nil-elt)))
-
-  (define-fun textalign ((b Box)) Text-Align
-    (style.text-align (rules (get/elt (element b)))))
-
-  (define-fun float ((b Box)) Float
-    ;(if (is-box/block (type b))
-        (style.float (rules (get/elt (element b))))
-        ;float/none))
-        )
+    (and
+     (is-box (get/box &b))
+     (= (float (get/box &b)) float/none)
+     (= (textalign (get/box &b)) (textalign (pbox (get/box &b))))
+     (= (element (get/box &b)) nil-elt)))
 
   (define-fun pbox ((box Box)) Box (real-pbox box))
   (define-fun nbox ((box Box)) Box (get/box (n-name box)))
