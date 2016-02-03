@@ -84,6 +84,9 @@
 (define (number-or-empty? x)
   (if (zero? x) "" x))
 
+(define (file-name-stem fn)
+  (first (string-split (last (string-split fn "/")) ".")))
+
 (define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f])
   (define index
     (if classify
@@ -115,11 +118,15 @@
     (printf "<tr><th>Section</th><th>Passing</th><th>Failing</th><th>Unsupported</th></tr>\n")
     (for ([section (sort (remove-duplicates (map result-section results)) section<?)])
       (define sresults (filter (λ (x) (equal? (result-section x) section)) results))
-      (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td>~a</td></tr>\n"
+      (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td>~a</td><td>~a</td></tr>\n"
               section
               (number-or-empty? (count (λ (x) (equal? (result-status x) 'success)) sresults))
-              (number-or-empty? (count (λ (x) (member (result-status x) '(error timeout fail))) sresults))
-              (number-or-empty? (count (λ (x) (equal? (result-status x) 'unsupported)) sresults))))
+              (number-or-empty? (count (λ (x) (member (result-status x) '(error fail))) sresults))
+              (number-or-empty? (count (λ (x) (member (result-status x) '(unsupported timeout))) sresults))
+              (string-join
+               (for/list ([r sresults] #:when (member (result-status r) '(error fail)))
+                 (format "<a href='~a'>~a:~a</a>" (result-url r) (file-name-stem (result-file r)) (result-problem r))) ",")
+              ))
     (printf "</table>\n")
 
     (for ([fname files] [results resultss])
