@@ -73,7 +73,9 @@
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
         (is-nil-elt (parent-name (get/elt (element b))))
-        (not (is-float/none (float b)))))
+        (not (is-float/none (float b)))
+        (not (is-overflow/visible (overflow-x b)))
+        (not (is-overflow/visible (overflow-y b)))))
 
   (define-fun an-element ((e Element)) Bool
     true)

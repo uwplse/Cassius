@@ -74,3 +74,7 @@
 
 (define-css-type (Text-Align text-align/left text-align/right text-align/center text-align/inherit)
  [text-align text-align/inherit])
+
+(define-css-type (Overflow overflow/visible overflow/hidden overflow/overflow/auto overflow/scroll overflow/inherit)
+ [overflow-x overflow/visible]
+ [overflow-y overflow/visible])
