@@ -1,4 +1,5 @@
 #lang racket
+(require "../common.rkt")
 (require "../smt.rkt")
 
 (provide tree-types link-definitions)
@@ -23,7 +24,8 @@
                 (element ElementName)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
-           (elt (document Document) (tagname TagNames) (idname Id) (rules Style)
+           (elt (document Document) (tagname TagNames) (idname Id)
+                (specified-style Style) (computed-style Style)
                 (display Display)
                 (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
                 (first-child-name ElementName) (last-child-name ElementName)
@@ -55,13 +57,37 @@
          (= (last-child-name elt) l)))
   
   (define-fun element-info ((elt Element) (tag TagNames) (&idname Id) (displayname Display)) Bool
-    (and (= (tagname elt) tag) (= (idname elt) &idname) (= (display elt) displayname)))
+    (and (= (tagname elt) tag) (= (idname elt) &idname) (= (display elt) displayname)
+         ,@(for/list ([prop '(width
+                              margin-top margin-right margin-bottom margin-left
+                              padding-top padding-right padding-bottom padding-left
+                              border-top-style border-right-style border-bottom-style border-left-style
+                              float text-align overflow-x overflow-y)])
+             `(= (,(sformat "style.~a" prop) (computed-style elt))
+                 (,(sformat "style.~a" prop) (specified-style elt))))
+         ;; If the height of the containing block is not specified
+         ;; explicitly (i.e., it depends on content height), and this
+         ;; element is not absolutely positioned, the value computes
+         ;; to 'auto'
+         (= (style.height (computed-style elt))
+            (let ([h (style.height (specified-style elt))]
+                  [h* (style.height (specified-style (parent elt)))])
+              (if (and (not (or (is-height/px h) (is-height/auto h))) (is-height/auto h*))
+                  height/auto
+                  (style.height (specified-style elt)))))
+         ;; border-*-width
+         ,@(for/list ([dir '(top right bottom left)])
+             `(= (,(sformat "style.border-~a-width" dir) (computed-style elt))
+                 (if (or (is-border-style/none (,(sformat "style.border-~a-style" dir) (specified-style elt)))
+                         (is-border-style/hidden (,(sformat "style.border-~a-style" dir) (specified-style elt))))
+                     (border/px 0.0)
+                     (,(sformat "style.border-~a-width" dir) (specified-style elt)))))))
   
   (define-fun link-element-box ((&e ElementName) (&b BoxName)) Bool
     (and
      (is-box (get/box &b)) 
-     (= (float (get/box &b)) (style.float (rules (get/elt &e))))
-     (= (textalign (get/box &b)) (style.text-align (rules (get/elt &e))))
+     (= (float (get/box &b)) (style.float (computed-style (get/elt &e))))
+     (= (textalign (get/box &b)) (style.text-align (computed-style (get/elt &e))))
      (= (element (get/box &b)) &e)
      (= (flow-box (get/elt &e)) &b)))
 

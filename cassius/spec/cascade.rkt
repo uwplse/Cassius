@@ -75,7 +75,7 @@
      (emit `(assert (! (= (selector ,name) ,sel) :named ,(sformat "rule/~a/selector" name))))]))
 
 (define (cascade-rules names rules elt)
-  (define re `(rules (get/elt ,(element-name elt))))
+  (define re `(specified-style (get/elt ,(element-name elt))))
 
   (define matching-rules
     (for/list ([name names] [rule rules] #:when (selector-possibly-matches? (selector name rule) elt))
@@ -110,7 +110,7 @@
                            (,(sformat "rule.~a" property) ,name))
                           (ite (is-elt (parent (get/elt ,(element-name elt))))
                                (,(sformat "style.~a" property)
-                                (rules (parent (get/elt ,(element-name elt)))))
+                                (computed-style (parent (get/elt ,(element-name elt)))))
                                ,default)
                           (,(sformat "rule.~a" property) ,name))))))
            :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property)))))))

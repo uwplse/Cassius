@@ -95,7 +95,7 @@
          (or (is-no-box l) (= (box-height l) 0.0))))
 
   (define-fun a-block-flow-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
+    ,(smt-let ([e (get/elt (element b))] [r (specified-style (get/elt (element b)))]
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
 
        (= (type b) box/block)
@@ -172,7 +172,7 @@
                 (= (w b) (* (w p) (/ ,% 100)))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
-                (= (h b) (* (w p) (/ ,% 100)))))
+                (= (h b) (* (h p) (/ ,% 100)))))
 
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
@@ -284,7 +284,7 @@
           :named positive-bpwh)))
 
   (define-fun a-block-float-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [r (rules (get/elt (element b)))]
+    ,(smt-let ([e (get/elt (element b))] [r (specified-style (get/elt (element b)))]
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [flt (fltbox b)])
 
        (= (type b) box/block)
@@ -335,7 +335,7 @@
                 (= (w b) (* (w p) (/ ,% 100)))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
-                (= (h b) (* (w p) (/ ,% 100)))))
+                (= (h b) (* (h p) (/ ,% 100)))))
 
        ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
          (=> (is-width/auto (style.width r))
@@ -494,7 +494,7 @@
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
-               [r (rules (get/elt (element b)))])
+               [r (specified-style (get/elt (element b)))])
        (= (type b) box/inline)
 
        ;; The ‘width’ and ‘height’ properties do not apply. For each
