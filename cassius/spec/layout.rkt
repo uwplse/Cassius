@@ -74,8 +74,8 @@
     (or (is-box/root (type b))
         (is-nil-elt (parent-name (get/elt (element b))))
         (not (is-float/none (float b)))
-        (not (is-overflow/visible (overflow-x b)))
-        (not (is-overflow/visible (overflow-y b)))))
+        (not (is-overflow/visible (style.overflow-x (computed-style (get/elt (element b))))))
+        (not (is-overflow/visible (style.overflow-y (computed-style (get/elt (element b))))))))
 
   (define-fun an-element ((e Element)) Bool
     true)
@@ -95,7 +95,7 @@
          (or (is-no-box l) (= (box-height l) 0.0))))
 
   (define-fun a-block-flow-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [r (specified-style (get/elt (element b)))]
+    ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
 
        (= (type b) box/block)
@@ -123,14 +123,14 @@
                     (ite (box-collapsed-through lb (lbox lb)) (mtn lb) (mbn lb)) 0.0)))
 
        (= (mtp b) (ite (box-collapsed-through b lb)
-                       (if (box-collapsed-through p b)
-                           (max (mtp2 b) (mtp p))
-                           (max (mtp2 b) (mtp2 p)))
+                       (ite (box-collapsed-through p b)
+                            (max (mtp2 b) (mtp p))
+                            (max (mtp2 b) (mtp2 p)))
                        (mtp2 b)))
        (= (mtn b) (ite (box-collapsed-through b lb)
-                       (if (box-collapsed-through p b)
-                           (max (mtn2 b) (mbn p))
-                           (max (mtn2 b) (mbn2 p)))
+                       (ite (box-collapsed-through p b)
+                            (max (mtn2 b) (mbn p))
+                            (max (mtn2 b) (mbn2 p)))
                        (mtn2 b)))
        (= (mbp b) (ite (box-collapsed-through b lb) 0.0 (mbp2 b)))
        (= (mbn b) (ite (box-collapsed-through b lb) 0.0 (mbn2 b)))
@@ -138,21 +138,14 @@
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
-                            (margin-top margin mt) (margin-bottom margin mb))])
+                            (margin-top margin mt) (margin-bottom margin mb)
+                            (border-top-width border bt) (border-right-width border br)
+                            (border-bottom-width border bb) (border-left-width border bl))])
            ;; Set properties that are settable with lengths
            (match-define (list prop type field) item)
            `(! (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                    (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
                :named ,(sformat "from-style/~a" prop)))
-
-       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
-           `(! (= (,(sformat "b~a" letter) b)
-                  (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
-                            (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
-                            (not (is-border-style/hidden (,(sformat "style.border-~a-style" dir) r))))
-                       (border.px (,(sformat "style.border-~a-width" dir) r))
-                       0.0))
-               :named ,(sformat "from-style/border-~a-width" dir)))
 
        ;; %ages
        ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
@@ -247,11 +240,11 @@
                  ;; if the child's bottom margin does not collapse with the
                  ;; element's bottom margin
                  (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (= (tagname e) tag/html)))
-                      (if (box-collapsed-through lb (lbox lb))
-                          ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
-                          ;; whose top margin doesn't collapse with the element's bottom margin
-                          (- (bottom-border lb) (mtp lb) (mtn lb))
-                          (bottom-border lb)) ; Collapsed bottom margin
+                      (ite (box-collapsed-through lb (lbox lb))
+                           ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
+                           ;; whose top margin doesn't collapse with the element's bottom margin
+                           (- (bottom-border lb) (mtp lb) (mtn lb))
+                           (bottom-border lb)) ; Collapsed bottom margin
                       (bottom-outer lb)))] ; No collapsed bottom margin
 
              ;; CSS § 10.6.3, item 4: zero, otherwise
@@ -284,7 +277,7 @@
           :named positive-bpwh)))
 
   (define-fun a-block-float-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [r (specified-style (get/elt (element b)))]
+    ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [flt (fltbox b)])
 
        (= (type b) box/block)
@@ -299,20 +292,13 @@
        ,@(for/list ([item '((width width w) (height height h)
                             (padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
+                            (border-top-width border bt) (border-right-width border br)
+                            (border-bottom-width border bb) (border-left-width border bl)
                             (margin-top margin mt) (margin-bottom margin mb)
                             (margin-right margin mr) (margin-left margin ml))])
            (match-define (list prop type field) item)
            `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
-
-       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
-           `(! (= (,(sformat "b~a" letter) b)
-                  (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
-                            (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
-                            (not (is-border-style/hidden (,(sformat "style.border-~a-style" dir) r))))
-                       (border.px (,(sformat "style.border-~a-width" dir) r))
-                       0.0))
-               :named ,(sformat "from-style/border-~a-width" dir)))
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
        ;; %ages
@@ -494,7 +480,7 @@
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
-               [r (specified-style (get/elt (element b)))])
+               [r (computed-style (get/elt (element b)))])
        (= (type b) box/inline)
 
        ;; The ‘width’ and ‘height’ properties do not apply. For each
