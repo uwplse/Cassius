@@ -197,10 +197,6 @@
      (emit `(assert (! (<= ,l (w ,b) ,r) :named ,(sformat "width/~a" (dom-name dom)))))])
   #;(emit `(assert (! (a-root-element ,b) :named ,(sformat "box/root/~a" (dom-root dom))))))
 
-(define (element-constraints dom emit elt)
-  (when (is-element? elt)
-    (emit `(assert (! (an-element (get/elt ,(element-name elt))) :named ,(sformat "element/~a" (element-name elt)))))))
-
 (define (number*? x)
   (match x
     [(? number?) #t]
@@ -329,7 +325,7 @@
       (style-constraints (append browser-style-names user-style-names)
                          (append browser-style sheet))
       'cascade-constraints)
-     info-constraints user-constraints #;element-constraints
+     info-constraints user-constraints
      box-link-constraints box-constraints))
 
   `((set-option :produce-unsat-cores true)

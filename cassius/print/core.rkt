@@ -100,9 +100,9 @@
      (format "Y position after previous line")]
     [`((cascade eq ,_ ,prop) ,num)
      (match line
-       [`(= (,_ (rules ,_)) ,val)
-        (format "Default style is { ~a: ~a; }" prop (value->string (extract-value val)))]
-       [_ (format "Computed style with, ~a" line)])]
+       [`(= (,_ (specified-style ,_)) ,val)
+        (format "Specified: { ~a: ~a; }" prop (value->string (extract-value val)))]
+       [_ (format "Specified: ~a" line)])]
     [`((root ,prop ,_))
      (for/first ([(prop* type default) (in-css-properties)] #:when (eq? prop prop*))
        (format "The root box has { ~a: ~a; }" prop (value->string (extract-value default))))]
