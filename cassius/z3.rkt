@@ -6,8 +6,8 @@
 
 (provide z3-solve z3-prepare z3-namelines (struct-out model) (struct-out unsat-core))
 
-(struct model (bindings))
-(struct unsat-core (bad-lines))
+(struct model (bindings) #:prefab)
+(struct unsat-core (bad-lines) #:prefab)
 
 (define-runtime-path bin "..")
 (define z3 (make-parameter (build-path bin "z3.sh")))
