@@ -211,10 +211,6 @@
   (define name (element-name elt))
   (for ([(cmd arg) (in-groups 2 (element-attrs elt))])
     (match cmd
-      [':print (void)]
-      [':style
-       (emit `(declare-const ,(sformat "~a.style" name) Style))
-       (emit `(assert (= ,(sformat "~a.style" name) (rules (get/elt ,(element-name elt))))))]
       [(or ':x ':y ':w ':h ':ml ':mr ':mt ':mb)
        (define mapping
          '((:x x) (:y y) (:h box-height) (:w box-width)

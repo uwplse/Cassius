@@ -22,7 +22,8 @@
 
 (define-syntax-rule (define-css-type (name decl ...) [prop default] ...)
   (begin
-    (hash-set! css-types-hash 'name (append '(decl ...) (%age-constructor 'name)))
+    (hash-set! css-types-hash 'name
+               `(decl ... ,@(%age-constructor 'name)))
     (hash-set! css-property-hash 'prop (cons 'name 'default)) ...))
 
 (define (in-css-properties)

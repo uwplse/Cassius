@@ -2,9 +2,9 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style".split(" ");
-BadProps = "position clear float direction min-height max-height min-width max-width".split(" ");
-BadTags = "img input".split(" ");
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y".split(" ");
+BadProps = "position clear float direction min-height max-height min-width max-width overflow-x overflow-y".split(" ");
+BadTags = "img input svg:svg".split(" ");
 
 Box = function(type, node, props) {
     this.children = [];
@@ -230,8 +230,9 @@ function infer_lines(box, parent) {
             prev = prev.children[prev.children.length - 1];
         }
 
-        if (prev.type == "INLINE") return true; // HACK for the case of an empty INLINE element
-        
+        // HACK for the case of an empty INLINE or LINE element
+        if (prev.type == "LINE" || prev.type == "INLINE") return true;
+
         var horiz_adj = (
             txt.props.y + txt.props.h > prev.props.y && prev.props.y >= txt.props.y
             || prev.props.y + prev.props.h > txt.props.y && txt.props.y >= prev.props.y)
@@ -262,6 +263,8 @@ function infer_lines(box, parent) {
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
         } else if (b.type == "BLOCK") {
             parent.children.push(b);
+        } else if (b.type == "INLINE" && b.props.tag && b.props.tag.toLowerCase() == "br") {
+            new_line();
         } else if (b.type == "INLINE") {
             stack.push(b);
             for (var i = 0; i < b.children.length; i++) {
@@ -460,16 +463,16 @@ function dump_rule(sel, style, features, is_from_style) {
             val = "(% " + f2r(val2pct(val, features)) + ")";
         } catch (e) {}
 
-        if (Props.indexOf(sname) === -1) {
-            if (BadProps.indexOf(sname) !== -1) {
-                text += "\n   #;[" + sname + " " + val + "]";
-                features[sname] = true;
-            } else {
-                //text += "\n   #;[" + sname + " " + val + "]";
-            }
-        } else {
+
+        if (BadProps.indexOf(sname) !== -1) {
+            features[sname] = true;
+        }
+
+        if (Props.indexOf(sname) !== -1) {
             has_good_prop = true;
             text += "\n   [" + sname + " " + val + "]";
+        } else {
+            text += "\n   #;[" + sname + " " + val + "]";
         }
     }
 
