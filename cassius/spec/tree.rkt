@@ -26,7 +26,6 @@
       (Element no-elt
            (elt (document Document) (tagname TagNames) (idname Id)
                 (specified-style Style) (computed-style Style)
-                (display Display)
                 (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
                 (first-child-name ElementName) (last-child-name ElementName)
                 (flow-box BoxName))))))
@@ -56,8 +55,8 @@
          (= (first-child-name elt) f)
          (= (last-child-name elt) l)))
   
-  (define-fun element-info ((elt Element) (tag TagNames) (&idname Id) (displayname Display)) Bool
-    (and (= (tagname elt) tag) (= (idname elt) &idname) (= (display elt) displayname)
+  (define-fun element-info ((elt Element) (tag TagNames) (&idname Id)) Bool
+    (and (= (tagname elt) tag) (= (idname elt) &idname)
          ,@(for/list ([prop '(width
                               margin-top margin-right margin-bottom margin-left
                               padding-top padding-right padding-bottom padding-left

@@ -256,21 +256,13 @@
                       :named ,(sformat "box/~a/~a" (slower (element-type elt)) (element-name elt)))))))
 
 (define (info-constraints dom emit elt)
-  (define tagname
-    (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag))
-  (define idname
-    (if (element-get elt ':id) (sformat "id/~a" (slower (element-get elt ':id))) 'no-id))
-  (define display
-    (match (element-type elt)
-      ['BLOCK 'display/block]
-      ['ANON 'display/block]
-      ['MAGIC #f]
-      ['INLINE 'display/inline]
-      ['TEXT 'display/inline]
-      ['LINE 'display/block]))
+  (when (is-element? elt)
+    (define tagname
+      (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag))
+    (define idname
+      (if (element-get elt ':id) (sformat "id/~a" (slower (element-get elt ':id))) 'no-id))
 
-  (when (and (is-element? elt) tagname idname display)
-    (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname ,display)
+    (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname)
                       :named ,(sformat "info/~a" (element-name elt)))))))
 
 (define (getter-definitions doms)
