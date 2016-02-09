@@ -95,6 +95,10 @@ function val2pct(val, features) {
     }
 }
 
+function dump_string(s) {
+    return '"' + s.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + '"';
+}
+
 function cs(elt) {
     if (!elt || elt.nodeType !== document.ELEMENT_NODE) console.trace();
     return window.getComputedStyle(elt);
@@ -261,7 +265,7 @@ function infer_lines(box, parent) {
             }
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
-        } else if (b.type == "BLOCK") {
+        } else if (b.type == "BLOCK" || b.type == "MAGIC") {
             parent.children.push(b);
         } else if (b.type == "INLINE" && b.props.tag && b.props.tag.toLowerCase() == "br") {
             new_line();
@@ -309,7 +313,7 @@ function make_boxes(elt, inflow, styles, features) {
             var box = Text(elt, {
                 x: r.x, y: r.y, w: r.width, h: r.height,
                 // TODO: Escape correctly
-                //text: '"' + ranges[i].toString().replace(/\s+/g, " ").replace("\\", "\\\\").replace("\"", "\\\\") + '"'
+                //text: dump_string(ranges[i].toString().replace(/\s+/g, " "))
             });
             inflow.children.push(box);
         }
@@ -368,13 +372,14 @@ function make_boxes(elt, inflow, styles, features) {
             make_boxes(child, box, styles, features);
         }
     } else {
-        console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
-
         if (cs(elt).display.startsWith("table")) {
             features["tables"] = true;
         } else if (cs(elt).display == "inline-block") {
             features["inline-block"] = true;
+        } else if (cs(elt).display == "list-item") {
+            features["list-item"] = true;
         } else {
+            console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
             features["unknown-display"] = true;
         }
 
@@ -438,8 +443,7 @@ function rescue_selector(sel) {
             matched[i].id = id;
         }
     }
-    var sel_ = sel.replace("\\", "\\\\").replace("\"", "\\\"");
-    return "(\"" + sel_ + "\" (or (id " + ids.join(") (id ") + ")))";
+    return "(" + dump_string(sel) + " (or (id " + ids.join(") (id ") + ")))";
 }
 
 function dump_rule(sel, style, features, is_from_style) {
@@ -522,7 +526,7 @@ function page2cassius(name) {
         for (var rid in ss.cssRules) {
             if (!ss.cssRules.hasOwnProperty(rid)) continue;
             var r = ss.cssRules[rid];
-            if (r.type !== CSSRule.STYLE_RULE) {
+            if (r.type === CSSRule.IMPORT_RULE || r.type === CSSRule.MEDIA_RULE) {
                 console.warn("Skipping non-style rule", r);
                 continue;
             }
@@ -542,8 +546,8 @@ function page2cassius(name) {
     text += dump_tree(page);
     text += ")\n\n";
 
-    var title = document.title.replace("\\", "\\\\").replace("\"", "\\\"");
-    text += "(define-problem " + name + "\n  \"" + title + "\"\n  #:url \"" + location + "\"\n  #:header header\n  #:sheet " + name  + "\n  #:documents " + name + "\n  #:features " + dump_features(features) + ")";
+    var title = dump_string(document.title);
+    text += "(define-problem " + name + "\n  " + title + "\n  #:url \"" + location + "\"\n  #:header header\n  #:sheet " + name  + "\n  #:documents " + name + "\n  #:features " + dump_features(features) + ")";
     return text;
 }
 
