@@ -2,7 +2,7 @@
 (require "common.rkt")
 (require "dom.rkt")
 
-(provide dom-strip-positions dom-print-all)
+(provide dom-strip-positions dom-print-all dom-limit-depth)
 
 (define ((dom-transform! l) d)
   (match-define (dom name ctx tree) d)
@@ -41,3 +41,12 @@
 (define-dom-transformer (dom-print-all head cmds)
   [(_ (? list?)) (append cmds '(:print #t))])
 
+
+(define (dom-limit-depth n d)
+  (match-define (dom name ctx tree) d)
+
+  (dom name ctx
+       (let loop ([n n] [tree tree])
+         (if (= n 0)
+             `([MAGIC ,@ (cdar tree)])
+             (cons (car tree) (map (curry loop (- n 1)) (cdr tree)))))))

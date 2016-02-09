@@ -26,6 +26,7 @@
 
   (define (parse-document name)
     (match name
+      [`(limit-depth ,n ,x) (dom-limit-depth n (parse-document x))]
       [`(strip-positions ,x) (dom-strip-positions (parse-document x))]
       [`(print-all ,x) (dom-print-all (parse-document x))]
       [(? symbol?) (hash-ref docs name)]))
