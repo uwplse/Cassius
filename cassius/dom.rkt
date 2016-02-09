@@ -7,6 +7,7 @@
          element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
          box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
          dom-root elt-from-name reset-elt-names! is-element?
+         tree->string
          )
 
 (struct dom (name context tree))
@@ -27,6 +28,14 @@
     (define chld (map (curryr loop elt) children))
     (set-element-children! elt chld)
     elt))
+
+(define (tree->string tree #:indent [indent 0] #:newline [newline? #f])
+  (when newline? (newline))
+  (eprintf "~a([~a ~a]" (build-string indent (const #\space)) (caar tree)
+           (string-join (map ~a (cdar tree)) " "))
+  (for-each (λ (t) (tree->string t #:indent (+ 1 indent) #:newline #t)) (cdr tree))
+  (eprintf ")")
+  (when (not newline?) (newline)))
 
 (define (box-name elt)
   (if elt
