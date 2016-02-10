@@ -421,7 +421,7 @@ function dump_selector(sel) {
     } else if (match = sel.match(/^\.([\w-]+)$/)) {
         return "(class " + match[1] + ")";
     } else if (match = sel.match(/^[\w-]*#([\w-]+)(.[\w-]*)?$/)) {
-        return "(id " + match[1].toLowerCase() + ")";
+        return "(id " + match[1] + ")";
     } else if (match = sel.match(/^([\w-]+)$/)) {
         return "(tag " + match[1].toLowerCase() + ")";
     } else if (match = sel.match(/^\*$/)) {

@@ -260,7 +260,7 @@
     (define tagname
       (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag))
     (define idname
-      (if (element-get elt ':id) (sformat "id/~a" (slower (element-get elt ':id))) 'no-id))
+      (if (element-get elt ':id) (sformat "id/~a" (element-get elt ':id)) 'no-id))
 
     (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname)
                       :named ,(sformat "info/~a" (element-name elt)))))))
@@ -295,11 +295,11 @@
   (define-values (tags ids classes)
     (reap [save-tag save-id save-class]
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
-            (when (element-get elt ':id) (save-id (sformat "id/~a" (slower (element-get elt ':id)))))
+            (when (element-get elt ':id) (save-id (sformat "id/~a" (element-get elt ':id))))
             (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag)))))
             (when (element-get elt ':class)
               (for ([c (element-get elt ':class)])
-               (save-class (sformat "class/~a" (slower c))))))))
+               (save-class (sformat "class/~a" c)))))))
 
   (define element-names
     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt)))
