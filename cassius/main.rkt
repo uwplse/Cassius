@@ -314,6 +314,8 @@
      (for/list ([dom doms]) (sformat "~a-flow" (dom-root dom)))))
 
   (define rule-names (filter identity (append browser-style-names user-style-names)))
+  
+  (eprintf ";; ~a rules, ~a elements, ~a boxes\n" (length rule-names) (length element-names) (length box-names))
 
   (define constraints
     (list

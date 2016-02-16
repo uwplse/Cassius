@@ -60,15 +60,19 @@
 
 (define num-holes 5)
 
-(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve? #t])
+(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve? #t] #:truncate truncate)
   (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
   (define res
     (match (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))
       [(problem desc url header sheet documents features #f)
+       (define documents*
+         (if truncate
+             (map (curry dom-limit-depth truncate) documents)
+             documents))
        (parameterize ([current-output-port out])
          (if solve?
-             (solve-problem header sheet documents out debug #f)
-             (print-problem sheet documents out debug #f)))
+             (solve-problem header sheet documents* out debug #f)
+             (print-problem sheet documents* out debug #f)))
        #;(for ([i (in-range 10)])
          (define sheet*
            (for/fold ([sheet sheet]) ([j (in-range num-holes)])
@@ -106,6 +110,7 @@
   #t)
 
 (define (solve-problem header sheet documents out debug test)
+  (tree->string (dom-tree (car documents)))
   (define res
     (with-handlers
         ([exn:break? (λ (e) 'break)]
@@ -138,10 +143,13 @@
   (define solve? #t)
   (define debug '())
   (define out-file #f)
+  (define truncate #f)
 
   (command-line
    #:program "cassius"
    #:multi
+   [("--truncate") level "Truncate the tree to this level"
+    (set! truncate (string->number level))]
    [("-d" "--debug") type "Turn on debug information"
     (set! debug (cons (string->symbol type) debug))]
    [("-c" "--constraints") "Don't solve the constraints, just output them"
@@ -157,4 +165,4 @@
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
    #:args (fname problem)
-   (exit (if (run-file fname problem #:output out-file #:debug debug #:solve solve?) 0 1))))
+   (exit (if (run-file fname problem #:output out-file #:debug debug #:solve solve? #:truncate truncate) 0 1))))
