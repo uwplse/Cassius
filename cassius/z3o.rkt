@@ -319,41 +319,47 @@
       (set! ctr (+ ctr 1))
       (match expr
         [`(! ,expr :named ,name)
-         (sow `(assert (! ,expr :named ,(sformat "~a^~a" head name))))]
+         (sow `(! ,expr :named ,(sformat "~a^~a" head name)))]
         [`(=> ,c (! ,expr :named ,name))
-         (sow `(assert (! (=> ,c ,expr) :named ,(sformat "~a^~a" head name))))]
+         (sow `(! (=> ,c ,expr) :named ,(sformat "~a^~a" head name)))]
         [_
-         (sow `(assert (! ,expr :named ,(sformat "~a^~a" head ctr))))])))
+         (sow `(! ,expr :named ,(sformat "~a^~a" head ctr)))])))
   
   (define (gather-ands expr)
     (match expr
+      [`(! ,expr :named ,name)
+       (reap [sow] (for-each (sow-rename sow name) (gather-ands expr)))]
       [`(and ,exprs ...)
        (append-map gather-ands exprs)]
+      [`(ite (! ,c :named ,testname) ,ift ,iff)
+       (define exprs1 (gather-ands ift))
+       (define exprs2 (gather-ands iff))
+       (define both (set-intersect exprs1 exprs2))
+       (define left (set-subtract exprs1 both))
+       (define right (set-subtract exprs2 both))
+       (reap [sow]
+             (for-each sow both)
+             (for-each (sow-rename sow (sformat "because/~a" testname))
+                       (map (λ (x) `(=> ,c ,x)) left))
+             (for-each (sow-rename sow (sformat "because/!~a" testname))
+                       (map (λ (x) `(=> (not ,c) ,x)) right)))]
+      [`(ite ,c ,ift ,iff)
+       (define exprs1 (gather-ands ift))
+       (define exprs2 (gather-ands iff))
+       (define both (set-intersect exprs1 exprs2))
+       (define left (set-subtract exprs1 both))
+       (define right (set-subtract exprs2 both))
+       (reap [sow]
+             (for ([expr both]) (sow expr))
+             (for ([expr left]) (sow `(=> ,c ,expr)))
+             (for ([expr right]) (sow `(=> (not ,c) ,expr))))]
       [_ (list expr)]))
 
   (for/reap (sow) ([cmd cmds] [i (in-naturals)])
     (match cmd
-      [`(assert (! (and ,exprs ...) :named ,name))
-       (for-each (sow-rename sow name) (gather-ands `(and ,@exprs)))]
-      [`(assert (and ,exprs ...))
-       (for ([expr (gather-ands `(and ,@exprs))])
-         (sow `(assert ,expr)))]
-      [`(assert (! (ite (! ,c :named ,testname) ,expr1 ,expr2) :named ,name))
-       (define exprs1 (gather-ands expr1))
-       (define exprs2 (gather-ands expr2))
-       (define both (set-intersect exprs1 exprs2))
-       (define left (set-subtract exprs1 both))
-       (define right (set-subtract exprs2 both))
-       (for-each (sow-rename sow name) both)
-       (for-each (sow-rename sow (sformat "~a^~a" name testname)) (map (λ (x) `(=> ,c ,x)) left))
-       (for-each (sow-rename sow (sformat "~a^!~a" name testname)) (map (λ (x) `(=> (not ,c) ,x)) right))]
-      [`(assert (ite ,c (and ,exprs1 ...) (and ,exprs2 ...)))
-       (define both (set-intersect exprs1 exprs2))
-       (define left (set-subtract exprs1 both))
-       (define right (set-subtract exprs2 both))
-       (for ([expr both]) (sow expr))
-       (for ([expr left]) (sow `(=> ,c ,expr)))
-       (for ([expr right]) (sow `(=> (not ,c) ,expr)))]
+      [`(assert ,expr)
+       (for ([expr* (gather-ands expr)])
+         (sow `(assert ,expr*)))]
       [_ (sow cmd)])))
 
 (define ((z3-lift-arguments . fn-names) cmds)
