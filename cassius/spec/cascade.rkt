@@ -31,7 +31,8 @@
   "Can the selector can be statically determined to match the element"
   (match (selector-matches? sel elt)
     ['true #t]
-    [`(or ,selzs) (member 'true selzs)]
+    [`(and ,selzs ...) (andmap (λ (x) (equal? x 'true)) selzs)]
+    [`(or ,selzs ...) (member 'true selzs)]
     [(list (? string?) sub) (selector-definitely-matches? sub elt)]
     [_ #f]))
 
@@ -39,7 +40,8 @@
   "Can the selector can be statically determined to not match the element"
   (match (selector-matches? sel elt)
     ['false #f]
-    [`(and ,selzs) (not (member 'false selzs))]
+    [`(or ,selzs ...) (ormap (λ (x) (not (equal? x 'false))) selzs)]
+    [`(and ,selzs ...) (not (member 'false selzs))]
     [(list (? string?) sub) (selector-possibly-matches? sub elt)]
     [_ #t]))
 
@@ -66,7 +68,7 @@
                                ,i ,(if is-from-style? 'true 'false))
                     :named ,(sformat "rule/~a/a-rule" name))))
 
-  (match (selector->z3 (car rule))
+  (match (and (not is-from-style?) (selector->z3 (car rule)))
     [#f
      (match-define (list ids classes tags) (compute-score (car rule)))
      (emit `(assert (= (score ,name) (cascadeScore (origin ,name) (isFromStyle ,name) ,ids ,classes ,tags (index ,name)))))]
@@ -136,5 +138,6 @@
     (define rname (sformat "~a/~a" name i))
     (and
      (for*/or ([elts eltss] [elt (in-tree elts)])
-       (selector-possibly-matches? (selector rname rule) elt))
+       (and (is-element? elt) (not (equal? (element-type elt) 'MAGIC))
+            (selector-possibly-matches? (selector rname rule) elt)))
      rname)))
