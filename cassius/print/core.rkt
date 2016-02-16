@@ -47,46 +47,45 @@
 
 (define (describe-line name line elt)
   (match name
-    [`((,(and (or 'x 'y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,_))
+    [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,_) ,_ ...)
      (define field-name
-       (match field ['x ':x] ['y ':y] ['box-width ':w] ['box-height ':h]
+       (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
          ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
-     (format "You gave ~a ~a" field-name (element-get elt field-name))]
-    [`((y ,_)) (format "You gave :y ~a" (element-get elt ':y))]
+     (format "~a ~a" field-name (element-get elt field-name))]
     [`((box-width ,_)) (format "You gave :w ~a" (element-get elt ':w))]
     [`((box-height ,_)) (format "You gave :h ~a" (element-get elt ':h))]
     [`((box root ,_) (zero-xybpm ,_)) (void)]
     [`((box block ,_) (positive-bpwh ,_ ,_))
      "Borders, paddings, width, and height must all be non-negative"]
-    [`((box block ,_) (flow ,_) (flow-width-overflow ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (flow-width-overflow ,_ ,_))
      (format "If the given L/R margins and width overflow, ignore the right margin")]
-    [`((box block ,_) (flow ,_) (flow-width-wauto ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (flow-width-wauto ,_ ,_))
      (format "If { width: auto } and the margins don't overflow, expand the element to fill the available width")]
-    [`((box block ,_) (flow ,_) (flow-width-center ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (flow-width-center ,_ ,_))
      (format "If { margin-left: auto; margin-right: auto } and the width doesn't overflow, center the element")]
-    [`((box block ,_) (flow ,_) (flow-width-ordinary ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (flow-width-ordinary ,_ ,_))
      (format "If the width is given, ignore auto margins and the right margin if necessary")]
-    [`((box block ,_) (flow ,_) (flow-x ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (flow-x ,_ ,_))
      (format "The X-position is the parent's left content edge plus the left margin")]
-    [`((box block ,_) (flow ,_) (flow-fill-width ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (flow-fill-width ,_ ,_))
      (format "In-flow block boxes fill the horizontal width")]
-    [`((box block ,_) (flow ,_) (flow-mt-auto ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (flow-mt-auto ,_ ,_))
      (format "{ margin-top: auto } means no top margin")]
-    [`((box block ,_) (flow ,_) (flow-mb-auto ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (flow-mb-auto ,_ ,_))
      (format "{ margin-bottom: auto } means no bottom margin")]
-    [`((box block ,_) (flow ,_) (from-style ,prop ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (from-style ,prop ,_ ,_))
      (format "~a is used straight from the computed style" prop)]
-    [`((box block ,_) (flow ,_) (auto-height ,prop ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because flow ,_) (auto-height ,prop ,_ ,_))
      (format "Since height is auto, height is computed based on the children" prop)]
-    [`((box block ,_) (!flow ,_) (no-collapse ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because !flow ,_) (no-collapse ,_ ,_))
      (format "Margins of floating boxes don't collapse")]
-    [`((box block ,_) (!flow ,_) (restriction-1 ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because !flow ,_) (restriction-1 ,_ ,_))
      (format "Cassius doesn't allow floats to have negative margins")]
-    [`((box block ,_) (!flow ,_) (restriction-2 ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because !flow ,_) (restriction-2 ,_ ,_))
      (format "Cassius requires the bottom of a float box to be below the bottom of the previous float")]
-    [`((box block ,_) (!flow ,_) (restriction-3 ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because !flow ,_) (restriction-3 ,_ ,_))
      (format "Cassius requires a row of floats to fill the parent before wrapping to the next row")]
-    [`((box block ,_) (!flow ,_) (restriction-4 ,_ ,_))
+    [`((box block ,_) _ (because !positioned _) (because !flow ,_) (restriction-4 ,_ ,_))
      (format "Cassius doesn't allow horizontally-adjacent left and right floats")]
     [`((box line ,_) (line-no-mbp ,_))
      (format "Line boxes do not have margins, padding, or borders")]
@@ -106,7 +105,7 @@
     [`((root ,prop ,_))
      (for/first ([(prop* type default) (in-css-properties)] #:when (eq? prop prop*))
        (format "The root box has { ~a: ~a; }" prop (value->string (extract-value default))))]
-    [_ (format "~a: ~a" name line)]))
+    [_ (format "~a: ~a" name line) #;#f]))
 
 (define (print-unsat-core core stylesheet)
   (define elts (make-hash))
@@ -142,7 +141,9 @@
      [elt
       (printf "~a:\n" elt)
       (for ([(name line) (in-pairs (hash-ref elts elt))])
-        (printf "  ~a\n" (describe-line name line elt)))
+        (let ([desc (describe-line name line elt)])
+          (when desc
+            (printf "  ~a\n" (describe-line name line elt)))))
       (printf "\n")]
      [(not elt)
       (define-values (rules root)
@@ -153,5 +154,7 @@
       (print-rule-core rules)
       (printf "[VIEW]:\n")
       (for ([(name line) (in-pairs root)])
-        (printf "  ~a\n" (describe-line name line elt)))
+        (let ([desc (describe-line name line elt)])
+          (when desc
+            (printf "  ~a\n" (describe-line name line elt)))))
       (printf "\n")])))
