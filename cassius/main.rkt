@@ -209,7 +209,7 @@
     (match cmd
       [(or ':x ':y ':w ':h ':ml ':mr ':mt ':mb)
        (define mapping
-         '((:x x) (:y y) (:h box-height) (:w box-width)
+         '((:x box-x) (:y box-y) (:h box-height) (:w box-width)
            (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
        (define fun (cadr (assoc cmd mapping)))
        (match arg

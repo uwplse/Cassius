@@ -33,6 +33,8 @@
   (define-fun bottom-border ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box)))
   (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
 
+  (define-fun box-x ((box Box)) Real (+ (x box) (xo box)))
+  (define-fun box-y ((box Box)) Real (+ (x box) (yo box)))
   (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
 
@@ -60,20 +62,20 @@
 
   (define-fun top-margins-collapse-parent ((b Box)) Bool
     (and
-     ;; Margins of the root element's box do not collapse. 
+     ;; Margins of the root element's box do not collapse.
      (not (is-box/root (type (pbox (pbox b)))))
      ;; Margins between a floated box and any other box do not collapse
-     ;; (not even between a float and its in-flow children). 
+     ;; (not even between a float and its in-flow children).
      (is-float/none (float p))
      ;; The top margin of an in-flow block element collapses with
      ;; its first in-flow block-level child's top margin if the element
-     ;; has no top border, no top padding, and the child has no clearance. 
+     ;; has no top border, no top padding, and the child has no clearance.
      (= (pt p) 0.0) (= (bt p) 0.0)))
 
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
         (is-nil-elt (parent-name (get/elt (element b))))
-        (not (is-float/none (float b)))
+        (not (box-in-flow b))
         (not (is-overflow/visible (style.overflow-x (computed-style (get/elt (element b))))))
         (not (is-overflow/visible (style.overflow-y (computed-style (get/elt (element b))))))))
 
@@ -160,6 +162,24 @@
                  `(=> (,(sformat "is-padding/~a%" %) (,(sformat "style.padding-~a" dir) r))
                       (= (,(sformat "p~a" letter) b) (* (w p) (/ ,% 100)))))))
 
+       (ite (is-position/relative (style.position r))
+            (and
+             (=> (is-offset/px (style.left r))
+                 (= (xo b) (offset.px (style.left r))))
+             (=> (is-offset/px (style.top r))
+                 (= (yo b) (offset.px (style.top r))))
+             (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
+                 (= (xo b) (- (offset.px (style.right r)))))
+             (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
+                 (= (yo b) (- (offset.px (style.bottom r)))))
+             (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
+                 (= (xo b) 0.0))
+             (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
+                 (= (yo b) 0.0)))
+            (and
+             (= (xo b) 0.0)
+             (= (yo b) 0.0)))
+
        ,@(for/list ([% (%ages 'Width)])
            `(=> (,(sformat "is-width/~a%" %) (style.width r))
                 (= (w b) (* (w p) (/ ,% 100)))))
@@ -181,12 +201,12 @@
             ;; It overflows. So what do we do? Ignore margin-right
             (! (=> overflow? (and (= (w b) w*) (= (ml b) ml*)))
                :named flow-width-overflow)
-         
+
             ;; No overflow, but width: auto, so width dominates
             (! (=> (and (not overflow?)) (is-width/auto (style.width r))
                    (and (= (ml b) ml*) (= (mr b) mr*)))
                :named flow-width-wauto)
-            
+
             ;; No overflow, width given, ignore auto margin
             (! (=> (and (not overflow?)
                         (not (is-width/auto (style.width r))))
@@ -198,7 +218,7 @@
                              (not (is-margin/auto (style.margin-right r))))
                             (= (mr b) mr*))))
                :named flow-width-ordinary)
-         
+
             ;; No overflow, margin: ? auto, so centered
             (! (=> (and (not overflow?)
                         (not (is-width/auto (style.width r)))
@@ -258,14 +278,14 @@
          [(is-box vb)
           (= (y b) (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))]
          [(and
-           ;; Margins of the root element's box do not collapse. 
+           ;; Margins of the root element's box do not collapse.
            (not (is-box/root (type (pbox p))))
            ;; Margins between a floated box and any other box do not collapse
-           ;; (not even between a float and its in-flow children). 
+           ;; (not even between a float and its in-flow children).
            (is-float/none (float p))
            ;; The top margin of an in-flow block element collapses with
            ;; its first in-flow block-level child's top margin if the element
-           ;; has no top border, no top padding, and the child has no clearance. 
+           ;; has no top border, no top padding, and the child has no clearance.
            (= (pt p) 0.0) (= (bt p) 0.0))
           (= (y b) (top-content p))]
          [else
@@ -478,6 +498,9 @@
               (not (horizontally-adjacent flt b)))
           :named restriction-4)))
 
+  (define-fun a-block-positioned-box ((b Box)) Bool
+    true)
+
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
                [r (computed-style (get/elt (element b)))])
@@ -595,9 +618,11 @@
            (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))))
 
   (define-fun a-block-box ((b Box)) Bool
-    (ite (! (is-float/none (float b)) :named flow)
-         (a-block-flow-box b)
-         (a-block-float-box b)))
+    (ite (! (or (is-position/fixed (position b)) (is-position/absolute (position b))) :named positioned)
+         (a-block-positioned-box b)
+         (ite (!  (is-float/none (float b)) :named flow)
+              (a-block-flow-box b)
+              (a-block-float-box b))))
 
   (define-fun a-magic-box ((b Box)) Bool
     (or (is-box/block (type b)) (is-box/inline (type b))))

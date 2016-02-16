@@ -10,7 +10,8 @@
   '((Width 1 15 18 20 50 80 100 125 200)
     (Height 1 20 25 50 100 200)
     (Margin 15 50)
-    (Padding 1 2 20 50)))
+    (Padding 1 2 20 50)
+    (Offset 1.5)))
 
 (define (%ages type)
   (match (assoc type %ages-data)
@@ -79,3 +80,12 @@
 (define-css-type (Overflow overflow/visible overflow/hidden overflow/overflow/auto overflow/scroll overflow/inherit overflow/auto)
  [overflow-x overflow/visible]
  [overflow-y overflow/visible])
+
+(define-css-type (Position position/static position/relative position/absolute position/fixed position/inherit)
+  [position position/static])
+
+(define-css-type (Offset (offset/px (offset.px Real)) offset/auto offset/inherit)
+  [top offset/auto]
+  [right offset/auto]
+  [bottom offset/auto]
+  [left offset/auto])
