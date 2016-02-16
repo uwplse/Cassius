@@ -2,8 +2,8 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y".split(" ");
-BadProps = "position clear float direction min-height max-height min-width max-width overflow-x overflow-y".split(" ");
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right".split(" ");
+BadProps = "clear float direction min-height max-height min-width max-width overflow-x overflow-y position".split(" ");
 BadTags = "img input svg:svg".split(" ");
 
 Box = function(type, node, props) {
@@ -336,7 +336,7 @@ function make_boxes(elt, inflow, styles, features) {
         });
 
         if (elt.id) box.props.id = elt.id;
-        if (elt.classList.length) box.props["class"] = "(" + elt.classList + ")";
+        if (elt.classList.length) box.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
         inflow.children.push(box);
 
@@ -360,7 +360,7 @@ function make_boxes(elt, inflow, styles, features) {
             box = Inline(elt, {tag: elt.tagName});
         }
         if (elt.id) box.props["id"] = elt.id;
-        if (elt.classList.length) box.props["class"] = "(" + elt.classList + ")";
+        if (elt.classList.length) box.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
         if (elt.style.length) {
             var eid = gensym();
             if (!elt.id) box.props.id = eid;
@@ -393,7 +393,12 @@ function make_boxes(elt, inflow, styles, features) {
         });
 
         if (elt.id) box.props.id = elt.id;
-        if (elt.classList.length) box.props["class"] = "(" + elt.classList + ")";
+        if (elt.classList.length) box.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
+
+        for (var i = 0; i < elt.childNodes.length; i++) {
+            var child = elt.childNodes[i];
+            make_boxes(child, box, styles, features);
+        }
 
         inflow.children.push(box);
     }
@@ -447,8 +452,13 @@ function rescue_selector(sel) {
 }
 
 function dump_rule(sel, style, features, is_from_style) {
-    // Ignore rules that don't match any elements
-    if (!document.querySelectorAll(sel).length) return "";
+    try {
+        // Ignore rules that don't match any elements
+        if (!document.querySelectorAll(sel).length) return "";
+    } catch(e) {
+        console.warn("Invalid selector syntax, this shouldn't happen.");
+        return "";
+    }
 
     var text = "";
     var has_good_prop = false;
