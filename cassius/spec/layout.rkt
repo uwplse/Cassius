@@ -34,7 +34,7 @@
   (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
 
   (define-fun box-x ((box Box)) Real (+ (x box) (xo box)))
-  (define-fun box-y ((box Box)) Real (+ (x box) (yo box)))
+  (define-fun box-y ((box Box)) Real (+ (y box) (yo box)))
   (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
 
