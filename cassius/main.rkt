@@ -40,6 +40,9 @@
 (define (css-%? x)
   (string-suffix? "%" (~a (last (split-symbol x)))))
 
+(define (css-em? x)
+  (string-suffix? "em" (~a (last (split-symbol x)))))
+
 (define (extract-selector sel)
   (match sel
     ['sel/all '*]
@@ -110,7 +113,9 @@
     (selector-constraints emit name rule i #:browser browser?)
 
     (define allow-new-properties? (member '? rule))
-    (define pairs (filter list? (cdr rule)))
+    (define pairs
+      (filter (λ (x) (or (not (symbol? (cadr x))) (not (css-em? (cadr x)))))
+              (filter list? (cdr rule))))
 
     (for ([(a-prop type default) (in-css-properties)])
       (match (assoc a-prop pairs)
