@@ -105,7 +105,7 @@
         :named ,(sformat "tree/~a" (element-name elt)))))))
 
 (define ((style-constraints names rules) dom emit elt)
-  (when (is-element? elt)
+  (when (and (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
     (for-each emit (cascade-rules names rules elt))))
 
 (define (stylesheet-constraints emit names sheet #:browser [browser? #f])
@@ -126,7 +126,7 @@
          (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
                            :named ,(sformat "rule/~a/~a/?" name a-prop))))
          (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
-                           :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
+                           :named ,(sformat "rule/~a/~a" name a-prop) #|:opt false|#)))]
         [#f
          (when (not allow-new-properties?)
            (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
@@ -195,6 +195,12 @@
   (emit `(echo ,(format "Defining the ~a root box" (dom-name dom))))
   (emit `(assert (! (link-anon-box ,(sformat "~a-flow" (dom-root dom)))
                     :named ,(sformat "link/~a" (dom-root dom)))))
+  (emit `(assert (! (link-block-box ,(sformat "~a-flow-box" (dom-root dom))
+                                    ,(sformat "~a-flow" (dom-root dom))
+                                    nil-box nil-box nil-box
+                                    ,(sformat "~a-flow" (element-name (dom-tree dom)))
+                                    ,(sformat "~a-flow" (element-name (dom-tree dom))))
+                    :named ,(sformat "box/block/~a" (dom-root dom)))))
   (match (rendering-context-width (dom-context dom))
     [(? number? w)
      (emit `(assert (! (= (w ,b) ,w) :named ,(sformat "width/~a" (dom-name dom)))))]
