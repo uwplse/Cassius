@@ -107,8 +107,11 @@
     (and
      (is-box (get/box &b))
      (= (float (get/box &b)) float/none)
-     (= (textalign (get/box &b)) (textalign (pbox (get/box &b))))
      (= (position (get/box &b)) position/static)
+     (= (textalign (get/box &b))
+        (ite (is-box (pbox (get/box &b)))
+             (textalign (pbox (get/box &b)))
+             text-align/left))
      (= (element (get/box &b)) nil-elt)))
 
   (define-fun pbox ((box Box)) Box (real-pbox box))
