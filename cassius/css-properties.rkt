@@ -7,9 +7,9 @@
 (define css-property-hash (make-hash))
 
 (define %ages-data
-  '((Width 1 15 18 20 50 80 100 125 200)
+  '((Width 1 15 18 20 50 80 100 125 200 62 66 25 29 101 5)
     (Height 1 20 25 50 100 200)
-    (Margin 15 50)
+    (Margin 15 50 29 2)
     (Padding 1 2 20 50)
     (Offset 1.5)))
 
