@@ -279,7 +279,6 @@ function infer_lines(box, parent) {
             stack.pop(b);
             sstack = sstack.slice(0, stack.length);
         } else {
-            console.trace();
             console.warn("Unknown box type", b);
         }
     }
@@ -448,20 +447,26 @@ function rescue_selector(sel) {
             matched[i].id = id;
         }
     }
-    return "(" + dump_string(sel) + " (or (id " + ids.join(") (id ") + ")))";
+    if (ids.length) {
+        return "(" + dump_string(sel) + " (or (id " + ids.join(") (id ") + ")))";
+    } else {
+        return "(" + dump_string(sel) + " (or))";
+    }
 }
 
 function dump_rule(sel, style, features, is_from_style) {
+    var nodes;
     try {
-        // Ignore rules that don't match any elements
-        if (!document.querySelectorAll(sel).length) return "";
-    } catch(e) {
+        nodes = document.querySelectorAll(sel);
+    } catch (e) {
         console.warn("Invalid selector syntax, this shouldn't happen.");
         return "";
     }
-
     var text = "";
     var has_good_prop = false;
+
+    var em2px = null;
+
     for (var i = 0; i < style.length; i++) {
         var sname = style[i];
         if (sname.startsWith("-")) continue; // Skip browser-specific styles for now.
@@ -476,7 +481,27 @@ function dump_rule(sel, style, features, is_from_style) {
         try {
             val = "(% " + f2r(val2pct(val, features)) + ")";
         } catch (e) {}
-
+        
+        try {
+            if (val.match(/^(-?[0-9.]+)em$/) && nodes.length > 0) {
+                var em = val.substr(0, val.length - 2);
+                if (em2px !== null) {
+                } else if (style.hasOwnProperty("font-size")) {
+                    em2px = val2px(style["font-size"], features);
+                } else {
+                    // HAXX: See if we can convert the EMs to PXs
+                    for (var i = 0; i < nodes.length; i++) {
+                        var ifs = val2px(cs(nodes[i])["font-size"], features);
+                        if (em2px === null) em2px = ifs
+                        if (em2px === ifs) continue;
+                        throw "Different font sizes for em value `" + sel + "`";
+                    }
+                }
+                val = "(px " + f2r(em2px * em) + ")";
+            }
+        } catch (e) {
+            console.warn(e);
+        }
 
         if (BadProps.indexOf(sname) !== -1) {
             features[sname] = true;
@@ -526,22 +551,38 @@ function dump_tree(page) {
     return text;
 }
 
+function dump_stylesheet(ss, features) {
+    var text = "";
+    for (var rid in ss.cssRules) {
+        if (!ss.cssRules.hasOwnProperty(rid)) continue;
+        var r = ss.cssRules[rid];
+        try {
+            if (r.type === CSSRule.IMPORT_RULE) {
+                console.warn("Skipping non-style rule", r);
+                continue;
+            } else if (r.type === CSSRule.MEDIA_RULE) {
+                if (window.matchMedia(r.media).matches) {
+                    text += dump_stylesheet(r, features);
+                }
+            } else if (r.type === CSSRule.STYLE_RULE) {
+                text += dump_rule(r.selectorText, r.style, features);
+            } else {
+                console.warn("Unknown rule type", r);
+            }
+        } catch (e) {
+            console.warn(r, e);
+        }
+    }
+    return text;
+}
+
 function page2cassius(name) {
     var features = {};
 
     var text = "";
     text += "(define-stylesheet " + name;
     for (var sid in document.styleSheets) {
-        var ss = document.styleSheets[sid];
-        for (var rid in ss.cssRules) {
-            if (!ss.cssRules.hasOwnProperty(rid)) continue;
-            var r = ss.cssRules[rid];
-            if (r.type === CSSRule.IMPORT_RULE || r.type === CSSRule.MEDIA_RULE) {
-                console.warn("Skipping non-style rule", r);
-                continue;
-            }
-            text += dump_rule(r.selectorText, r.style, features);
-        }
+        text += dump_stylesheet(document.styleSheets[sid], features);
     }
 
     var out = get_boxes(features);
