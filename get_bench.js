@@ -318,7 +318,7 @@ function make_boxes(elt, inflow, styles, features) {
         }
     } else if (!is_visible(elt)) {
         return;
-    } else if (is_block(elt)) {
+    } else if (is_block(elt) && cs(elt)["box-sizing"] === "content-box" && cs(elt)["clear"] === "none") {
         var r = elt.getBoundingClientRect();
         var s = cs(elt);
         var box = Block(elt, {
@@ -466,6 +466,9 @@ function dump_rule(sel, style, features, is_from_style) {
     var has_good_prop = false;
 
     var em2px = null;
+    if (style["max-width"]) {
+        style["width"] = style["max-width"];
+    }
 
     for (var i = 0; i < style.length; i++) {
         var sname = style[i];
@@ -506,7 +509,7 @@ function dump_rule(sel, style, features, is_from_style) {
         if (BadProps.indexOf(sname) !== -1) {
             features[sname] = true;
         }
-
+        
         if (Props.indexOf(sname) !== -1) {
             has_good_prop = true;
             text += "\n   [" + sname + " " + val + "]";

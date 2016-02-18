@@ -126,7 +126,7 @@
          (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
                            :named ,(sformat "rule/~a/~a/?" name a-prop))))
          (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
-                           :named ,(sformat "rule/~a/~a" name a-prop) #|:opt false|#)))]
+                           :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
         [#f
          (when (not allow-new-properties?)
            (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)

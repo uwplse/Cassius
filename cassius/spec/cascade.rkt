@@ -27,23 +27,33 @@
      `(and ,(selector-matches? sel* elt)
            (or ,@(map (curry selector-matches? tail-sel) (element-anscestors elt))))]))
 
+(define (reduce-bool bool)
+  (match bool
+    ['true #t]
+    ['false #f]
+    [`(or ,sels ...)
+     (define-values (ok weird) (partition boolean? (map reduce-bool sels)))
+     (cond
+      [(ormap identity ok) #t]
+      [(null? weird) #f]
+      [(= (length weird) 1) (car weird)]
+      [else (cons 'or weird)])]
+    [`(and ,sels ...)
+     (define-values (ok weird) (partition boolean? (map reduce-bool sels)))
+     (cond
+      [(andmap identity ok) #t]
+      [(null? weird) #f]
+      [(= (length weird) 1) (car weird)]
+      [else (cons 'and weird)])]
+    [_ bool]))
+
 (define (selector-definitely-matches? sel elt)
   "Can the selector can be statically determined to match the element"
-  (match (selector-matches? sel elt)
-    ['true #t]
-    [`(and ,selzs ...) (andmap (λ (x) (equal? x 'true)) selzs)]
-    [`(or ,selzs ...) (member 'true selzs)]
-    [(list (? string?) sub) (selector-definitely-matches? sub elt)]
-    [_ #f]))
+  (eq? (reduce-bool (selector-matches? sel elt)) #t))
 
 (define (selector-possibly-matches? sel elt)
   "Can the selector can be statically determined to not match the element"
-  (match (selector-matches? sel elt)
-    ['false #f]
-    [`(or ,selzs ...) (ormap (λ (x) (not (equal? x 'false))) selzs)]
-    [`(and ,selzs ...) (not (member 'false selzs))]
-    [(list (? string?) sub) (selector-possibly-matches? sub elt)]
-    [_ #t]))
+  (reduce-bool (selector-matches? sel elt)))
 
 (define (compute-score rule)
   "Given a selector, return a list of counts (ids classes elts)"

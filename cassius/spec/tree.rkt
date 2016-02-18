@@ -146,14 +146,14 @@
             [(box-in-flow (get/box &n)) &n]
             [else (n-name (get/box &n))]))
        ;; Uncomment the next two commented lines to not inline flow chains
-       ;(!
+       (!
        (= (flt-name b)
           (ite (is-nil-box &v)
                (ite (not (box-in-flow (get/box &p)))
                     nil-box
                     (flt-name (get/box &p)))
                (flt-up-name (get/box &v))))
-       ;:opt false)
+       :opt false)
        (= (flt-up-name b)
           ,(smt-cond
             [(or (is-position/fixed (position b)) (is-position/absolute (position b)))
