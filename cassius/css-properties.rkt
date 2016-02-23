@@ -89,3 +89,6 @@
   [right offset/auto]
   [bottom offset/auto]
   [left offset/auto])
+
+(define-css-type (Box-Sizing box-sizing/border-box box-sizing/content-box box-sizing/inherit)
+  [box-sizing box-sizing/content-box])

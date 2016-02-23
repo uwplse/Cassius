@@ -137,8 +137,7 @@
        (= (mbp b) (ite (box-collapsed-through b lb) 0.0 (mbp2 b)))
        (= (mbn b) (ite (box-collapsed-through b lb) 0.0 (mbn2 b)))
 
-       ,@(for/list ([item '((width width w) (height height h)
-                            (padding-left padding pl) (padding-right padding pr)
+       ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
                             (margin-top margin mt) (margin-bottom margin mb)
                             (border-top-width border bt) (border-right-width border br)
@@ -148,6 +147,15 @@
            `(! (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                    (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
                :named ,(sformat "from-style/~a" prop)))
+       
+       (! (=> (is-width/px (style.width r))
+              (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                 (width.px (style.width r))))
+          :named ,(sformat "from-style/width"))
+       (! (=> (is-height/px (style.height r))
+              (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+                 (height.px (style.height r))))
+          :named ,(sformat "from-style/height"))
 
        ;; %ages
        ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
