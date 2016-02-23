@@ -459,7 +459,7 @@ function dump_rule(sel, style, features, is_from_style) {
     try {
         nodes = document.querySelectorAll(sel);
     } catch (e) {
-        console.warn("Invalid selector syntax, this shouldn't happen.");
+        console.warn("Invalid selector syntax, this shouldn't happen:", sel);
         return "";
     }
     var text = "";
@@ -493,8 +493,8 @@ function dump_rule(sel, style, features, is_from_style) {
                     em2px = val2px(style["font-size"], features);
                 } else {
                     // HAXX: See if we can convert the EMs to PXs
-                    for (var i = 0; i < nodes.length; i++) {
-                        var ifs = val2px(cs(nodes[i])["font-size"], features);
+                    for (var j = 0; j < nodes.length; j++) {
+                        var ifs = val2px(cs(nodes[j])["font-size"], features);
                         if (em2px === null) em2px = ifs
                         if (em2px === ifs) continue;
                         throw "Different font sizes for em value `" + sel + "`";
@@ -569,6 +569,10 @@ function dump_stylesheet(ss, features) {
                 }
             } else if (r.type === CSSRule.STYLE_RULE) {
                 text += dump_rule(r.selectorText, r.style, features);
+            } else if (  r.type === CSSRule.MOZ_KEYFRAMES_RULE
+                     || r.type === CSSRule.MOZ_KEYFRAME_RULE
+                     || r.type === CSSRule.FONT_FACE_RULE) {
+                // Don't need these...
             } else {
                 console.warn("Unknown rule type", r);
             }

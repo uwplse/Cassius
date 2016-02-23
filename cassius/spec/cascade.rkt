@@ -20,12 +20,18 @@
          'false)]
     [`* 'true]
     [(list (? string?) sub) (selector-matches? sub elt)]
+    [`(and ,sels ...) `(and ,@(map (curryr selector-matches? elt) sels))]
     [`(or ,sels ...) `(or ,@(map (curryr selector-matches? elt) sels))]
     [`(desc ,sel*) (selector-matches? sel* elt)]
     [`(desc ,ansc ... ,sel*)
      (define tail-sel `(desc ,@ansc))
      `(and ,(selector-matches? sel* elt)
-           (or ,@(map (curry selector-matches? tail-sel) (element-anscestors elt))))]))
+           (or ,@(map (curry selector-matches? tail-sel) (element-anscestors elt))))]
+    [`(child ,sel*)
+     (selector-matches? sel* elt)]
+    [`(child ,ancestors ... ,sel*)
+     `(and ,(selector-matches? `(child ,@ancestors) (element-parent elt))
+           ,(selector-matches? sel* elt))]))
 
 (define (reduce-bool bool)
   (match bool
@@ -64,8 +70,8 @@
     [`(tag ,tag) `(0 0 1)]
     [`* '(0 0 0)]
     [(list (? string?) sub) (compute-score sub)]
-    [`(or ,sels ...) (map (curry apply +) (apply (curry map list) (map compute-score sels)))]
-    [`(desc ,sels ...) (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
+    [(list (or 'or 'and 'desc 'child) sels ...)
+     (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
 
 (define (type->prefix type)
   (if (eq? (slower type) 'textalign) 'text-align (slower type)))
@@ -140,7 +146,7 @@
   (match sel
     [`(id ,id) `(sel/id ,(sformat "id/~a" id))]
     [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
-    [`* `sel/any]
+    [`* `sel/all]
     [_ #f]))
 
 (define (name-rules name sheet eltss)

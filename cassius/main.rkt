@@ -69,7 +69,7 @@
   (match selector
     [`(id ,id) `(sel/id ,(sformat "id/~a" id))]
     [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
-    [`* `sel/any]
+    [`* `sel/all]
     [_ #f]))
 
 (define (split-line-name var)
@@ -193,14 +193,14 @@
   (define b `(get/box ,(sformat "~a-flow" (dom-root dom))))
 
   (emit `(echo ,(format "Defining the ~a root box" (dom-name dom))))
-  (emit `(assert (! (link-anon-box ,(sformat "~a-flow" (dom-root dom)))
-                    :named ,(sformat "link/~a" (dom-root dom)))))
   (emit `(assert (! (link-block-box ,(sformat "~a-flow-box" (dom-root dom))
                                     ,(sformat "~a-flow" (dom-root dom))
                                     nil-box nil-box nil-box
                                     ,(sformat "~a-flow" (element-name (dom-tree dom)))
                                     ,(sformat "~a-flow" (element-name (dom-tree dom))))
                     :named ,(sformat "box/block/~a" (dom-root dom)))))
+  (emit `(assert (! (link-anon-box ,(sformat "~a-flow" (dom-root dom)))
+                    :named ,(sformat "link/~a" (dom-root dom)))))
   (match (rendering-context-width (dom-context dom))
     [(? number? w)
      (emit `(assert (! (= (w ,b) ,w) :named ,(sformat "width/~a" (dom-name dom)))))]
@@ -325,13 +325,14 @@
 
   (define constraints
     (list
-     tree-constraints box-element-constraints
+     tree-constraints 
      (procedure-rename
       (style-constraints (append browser-style-names user-style-names)
                          (append browser-style sheet))
       'cascade-constraints)
-     info-constraints user-constraints
-     box-link-constraints box-constraints))
+     user-constraints box-link-constraints
+     info-constraints box-element-constraints
+     box-constraints))
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")

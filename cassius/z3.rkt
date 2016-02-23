@@ -173,7 +173,7 @@
    ))
 
 (define to-expand-2
-  '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box an-anon-block-box))
+  '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box))
 
 (define *emitter-passes*
   (list
@@ -219,4 +219,13 @@
    (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
      #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
      (action exprs))
-   '((check-sat))))
+   '((check-sat-using
+      (then
+       (! propagate-values
+          :push_ite_arith true
+          :algebraic_number_evaluator false
+          :bit2bool false
+          :local_ctx true
+          :hoist_mul true
+          :flat false)
+       nnf occf smt)))))
