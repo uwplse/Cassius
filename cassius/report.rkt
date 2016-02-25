@@ -7,6 +7,7 @@
 (require racket/cmdline)
 (require json)
 (require "common.rkt")
+(require "input.rkt")
 (require "run.rkt")
 
 (define (normalize-index name section)
