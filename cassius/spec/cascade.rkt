@@ -30,7 +30,8 @@
     [`(child ,sel*)
      (selector-matches? sel* elt)]
     [`(child ,ancestors ... ,sel*)
-     `(and ,(selector-matches? `(child ,@ancestors) (element-parent elt))
+
+     `(and ,(if (element-parent elt) (selector-matches? `(child ,@ancestors) (element-parent elt)) 'false)
            ,(selector-matches? sel* elt))]))
 
 (define (reduce-bool bool)
@@ -70,7 +71,9 @@
     [`(tag ,tag) `(0 0 1)]
     [`* '(0 0 0)]
     [(list (? string?) sub) (compute-score sub)]
-    [(list (or 'or 'and 'desc 'child) sels ...)
+    [(list 'or sels ...)
+     (map (curry apply max) (apply (curry map list) (map compute-score sels)))]
+    [(list (or 'and 'desc 'child) sels ...)
      (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
 
 (define (type->prefix type)

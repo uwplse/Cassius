@@ -418,11 +418,27 @@ function dump_selector(sel) {
         var sub = sel.split(",").map(dump_selector);
         if (sub.indexOf(false) !== -1) return false;
         return "(or " + sub.join(" ") + ")";
+    } else if (sel.indexOf(">") !== -1) {
+        var sub = sel.split(">").map(dump_selector);
+        if (sub.indexOf(false) !== -1) return false;
+        return "(child " + sub.join(" ") + ")";
     } else if (sel.indexOf(" ") !== -1) {
         var sub = sel.split(/\s+/).map(dump_selector);
         if (sub.indexOf(false) !== -1) return false;
         return "(desc " + sub.join(" ") + ")";
-    } else if (match = sel.match(/^\.([\w-]+)$/)) {
+    } else if (match = sel.match(/^([\w-]+|\*)?((\.|\#)[\w-]+)*$/)) {
+        var sub = sel.replace(/\.|\#/g, "\0$&").split("\0");
+        if (sub[0] === "") sub.shift();
+        sub = sub.map(dump_primitive_selector);
+        if (sub.indexOf(false) !== -1) return false;
+        return "(and " + sub.join(" ") + ")"
+    } else {
+        return false;
+    }
+}
+
+function dump_primitive_selector(sel) {
+    if (match = sel.match(/^\.([\w-]+)$/)) {
         return "(class " + match[1] + ")";
     } else if (match = sel.match(/^[\w-]*#([\w-]+)(.[\w-]*)?$/)) {
         return "(id " + match[1] + ")";

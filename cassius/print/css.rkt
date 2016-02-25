@@ -33,4 +33,6 @@
     ['* "*"]
     [(list (? string? sel) sel*) sel]
     [`(or ,sels ...) (string-join (map selector->string sels) ", ")]
-    [`(desc ,sels ...) (string-join (map selector->string sels) " ")]))
+    [`(desc ,sels ...) (string-join (map selector->string sels) " ")]
+    [`(child ,sels ...) (string-join (map selector->string sels) " > ")]
+    [`(and ,sels ...) (string-join (map selector->string sels) "")]))

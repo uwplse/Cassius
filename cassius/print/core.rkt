@@ -118,6 +118,7 @@
       (printf "~a.css:\n" sheet-name)
       (define sheet* (or (get-sheet sheet-name) stylesheet))
       (for ([(rule-id props) (in-hash rules)])
+        (printf "(~a) " rule-id)
         (define rule* (list-ref sheet* rule-id))
         (cond
          [(eq? rule* '?)
