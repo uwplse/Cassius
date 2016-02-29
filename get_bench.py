@@ -18,6 +18,7 @@ import argparse
 
 PORT=8000
 PATH="."
+SCREENSHOT=False
 
 class ScriptServer(threading.Thread):
     def __init__(self):
@@ -70,7 +71,6 @@ class CassiusInput():
 def get_bench_output(browser, letter, url, file):
     js = """window.LETTER = arguments[0]; (function(x){x.src = "http://localhost:""" + str(PORT) + """/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script"));"""
 
-    browser.get(url)
     browser.execute_script(js, letter)
     elt = browser.find_element_by_id("-x-cassius-output-block");
     text = elt.text.encode("utf8")
@@ -95,12 +95,16 @@ def main(urls, name=None):
 
     for (netloc, urls) in sorted(site_to_pages.items()):
         fname = "bench/{}.rkt".format(netloc)
-        print "Saving layout to {}".format(fname)
         with open(fname, "wb") as f:
             fi = CassiusInput(f, urls, netloc)
             for i, url in enumerate(urls):
                 letter = str(i+1).rjust(len(str(len(urls))), "0")
+                iname = "bench/{}-{}.png".format(netloc, letter)
                 try:
+                    browser.get(url)
+                    print "Saving screenshot to", iname
+                    browser.save_screenshot(iname)
+                    print "Saving layout to {}".format(fname)
                     get_bench_output(browser, letter, url, fi)
                 except:
                     continue
@@ -120,6 +124,9 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
     p.add_argument("--name", dest="name", default=None, type=str, help="File name under bench/.")
+    p.add_argument("--screenshot", dest="screenshot", default=False, action="store_true", help="File name under bench/.")
     args = p.parse_args()
+    
+    SCREENSHOT = args.screenshot
 
     main(args.urls, name=args.name)
