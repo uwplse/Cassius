@@ -2,7 +2,7 @@
 
 (provide get-sheet)
 
-; Significantly via http://css-class.UA-style-sheet-defaults.htm
+; Significantly via http://css-class.com/test/css/defaults/UA-style-sheet-defaults.htm
 
 (define firefox-sheet
   '(((tag blockquote)
@@ -21,17 +21,24 @@
      [text-align center])
     ((tag dd)
      [margin-left (px 40)])
-    ; DIR
     ((tag dl)
      [margin-top (px 16)]
      [margin-bottom (px 16)])
-    ; Fieldset
+    ((tag fieldset)
+     [margin-top (px 2)]
+     [margin-right (px 0)]
+     [margin-bottom (px 2)]
+     [margin-left (px 0)])
     ((tag figure)
      [margin-top (px 16)]
      [margin-right (px 40)]
      [margin-bottom (px 16)]
      [margin-left (px 40)])
-    ; Form
+    ((tag form)
+     [margin-top (px 0)]
+     [margin-right (px 0)]
+     [margin-bottom (px 0)]
+     [margin-left (px 0)])
     ((tag h1)
      [margin-top (px (/ 643 30))]
      [margin-bottom (px (/ 643 30))])
@@ -57,13 +64,35 @@
      [border-right (px 1)]
      [border-bottom (px 1)]
      [border-left (px 1)])
-    ; Menu
-    ; OL
-    ; TH
-    ; UL
-    ((tag p)
+    ((tag menu)
+     [margin-left (px 0)]
+     [margin-right (px 0)]
      [margin-top (px 16)]
-     [margin-bottom (px 16)])))
+     [margin-bottom (px 16)])
+    ((tag ol)
+     [margin-left (px 0)]
+     [margin-right (px 0)]
+     [margin-top (px 16)]
+     [margin-bottom (px 16)])
+    ((tag p)
+     [margin-left (px 0)]
+     [margin-right (px 0)]
+     [margin-top (px 16)]
+     [margin-bottom (px 16)])
+    ((tag pre)
+     [white-space pre]
+     [margin-top (px 16)]
+     [margin-bottom (px 16)]
+     [margin-left (px 0)]
+     [margin-right (px 0)])
+    ((tag th)
+     [text-align center])
+    ((tag ul)
+     [margin-left (px 0)]
+     [margin-right (px 0)]
+     [margin-top (px 16)]
+     [margin-bottom (px 16)])
+    ))
 
 (define (get-sheet browser)
   (match browser

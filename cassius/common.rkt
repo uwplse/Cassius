@@ -7,7 +7,7 @@
  sformat slower
  flags all-flags supported-features
  tree-size sdiff in-groups sequence-cons cartesian-product trieify
- xor)
+ xor ->number)
 
 (define flags (make-parameter '(z3o)))
 (define all-flags '(opt float z3o details))
@@ -88,3 +88,8 @@
       (values key (trieify ls*)))]))
 
   (define (xor a b) (not (equal? (not a) (not b))))
+
+(define (->number n)
+  (match n
+    [(? number?) n]
+    [`(/ ,a ,b) (/ a b)]))

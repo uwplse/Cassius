@@ -92,3 +92,6 @@
 
 (define-css-type (Box-Sizing box-sizing/border-box box-sizing/content-box box-sizing/inherit)
   [box-sizing box-sizing/content-box])
+
+(define-css-type (White-Space white-space/normal white-space/pre white-space/nowrap white-space/pre-wrap white-space/pre-word white-space/inherit)
+  [white-space white-space/normal])
