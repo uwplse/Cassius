@@ -13,7 +13,7 @@
 (require srfi/1)
 (require srfi/13)
 
-(provide all-constraints add-test solve-constraints)
+(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure))
 
 (define (extract-stylesheet stylesheet smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
@@ -86,6 +86,35 @@
 
   (for/list ([var vars])
     (cons (split-line-name var) (hash-ref asserts var))))
+
+(define (plist-add plist key value)
+  (if (member key plist)
+      plist
+      (list* key value plist)))
+
+(define (plist-merge plist1 plist2)
+  (for/fold ([plist plist1]) ([(k v) (in-groups 2 plist2)])
+    (plist-add plist k v)))
+
+(define (extract-box! box elt)
+  (match box
+    [(list 'box type x y w h xo yo mt mr mb ml mtp2 mtn2 mbp2 mbn2 mtp mtn mbp mbn
+           pt pr pb pl bt br bb bl stfwidth real-p-name real-n-name real-v-name real-f-name
+           real-l-name width-set pb-name n-name v-name flt-name flt-up-name float
+           textalign position element)
+     (define box-width (+ bl pl w pr br))
+     (define box-height (+ bt pt w pb bb))
+     (define box-x (+ x xo))
+     (define box-y (+ y yo))
+     (define props
+       `(:w ,box-width :h ,box-height :x ,box-x :y ,box-y :bl ,bl :bb ,bb :br ,br :bt ,bt))
+
+     (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))
+
+(define (extract-tree! tree smt-out)
+  (for ([elt (in-tree tree)])
+    (define box-name (sformat "~a-flow-box" (element-name elt)))
+    (extract-box! (hash-ref smt-out box-name) elt)))
 
 (define (tree-constraints dom emit elt)
   (when (is-element? elt)
@@ -289,11 +318,7 @@
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
             (cns dom sow elt)))))
 
-(define (all-constraints sheet documents)
-  (define doms
-    (for/list ([d documents])
-      (match-define (dom name ctx tree) d)
-      (dom name ctx (parse-tree tree))))
+(define (all-constraints sheet doms)
 
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)
@@ -372,9 +397,13 @@
                     (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body)))
                :named test))))
 
-(define (solve-constraints stylesheet constraints #:debug [debug? #f])
+(struct success (stylesheet elements))
+(struct failure (core))
+
+(define (solve-constraints stylesheet trees constraints #:debug [debug? #f])
   (match (z3-solve constraints #:debug debug?)
     [(model m)
-     (model (extract-stylesheet stylesheet m))]
+     (for-each (curryr extract-tree! m) trees)
+     (success (extract-stylesheet stylesheet m) (map unparse-tree trees))]
     [(unsat-core c)
-     (unsat-core (extract-core constraints c))]))
+     (failure (extract-core constraints c))]))

@@ -3,7 +3,7 @@
 (require "common.rkt")
 
 (provide (struct-out dom) (struct-out rendering-context)
-         (struct-out element) parse-tree in-tree element-get
+         (struct-out element) parse-tree unparse-tree in-tree element-get
          element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
          box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
          dom-root elt-from-name reset-elt-names! is-element?
@@ -36,6 +36,11 @@
   (for-each (λ (t) (tree->string t #:indent (+ 1 indent) #:newline #t)) (cdr tree))
   (eprintf ")")
   (when (not newline?) (newline)))
+
+(define (unparse-tree tree)
+  (cons
+   (list* (element-type tree) (element-attrs tree))
+   (map unparse-tree (element-children tree))))
 
 (define (box-name elt)
   (if elt

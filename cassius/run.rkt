@@ -4,7 +4,7 @@
 (require racket/cmdline)
 (require "common.rkt")
 (require "dom.rkt")
-(require "z3.rkt")
+(require "main.rkt")
 (require "frontend.rkt")
 (require "input.rkt")
 (require "modify-dom.rkt")
@@ -65,38 +65,37 @@
   res)
 
 (define (print-problem sheet documents out debug test)
-  (display (smt->string (constraints (list sheet) documents documents test)))
+  (display (smt->string (constraints (list sheet) documents test)))
   #t)
 
 (define (solve-problem header sheet documents out debug test)
-  (tree->string (dom-tree (car documents)))
   (define res
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents documents test #:debug debug)))
+      (solve (list sheet) documents test #:debug debug)))
 
   (match* (test res)
-    [(#f (model model))
+    [(#f (success stylesheet tree))
      #;(printf "~a~a" (header->string header) (stylesheet->string model))
      (eprintf "Synthesized a stylesheet. Success!\n")]
-    [(#f (unsat-core core))
+    [(#f (failure core))
      (print-unsat-core core sheet)
      (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))]
-    [(`(forall (,vars ...) ,query) (model model))
+    [(`(forall (,vars ...) ,query) (success stylesheet tree))
      #;(print-counterexample model documents sheet)
      #;(for ([var vars])
      (define boxname (hash-ref model (sformat "counterexample/~a" var)))
      (printf "~a ~a\n" var (print-type 'Box (hash-ref model (sformat "~a-box" boxname)))))
      (eprintf "Counterexample found! Failure.\n")]
-    [(`(forall (,vars ...) ,query) (unsat-core core))
+    [(`(forall (,vars ...) ,query) (failure core))
      (eprintf "No counterexamples found. Success!\n")]
     [(_ (list 'error e))
      ((error-display-handler) (exn-message e) e)]
     [(_ 'break)
      (eprintf "Query terminated. Failure.\n")])
 
-  (and (or (model? res) (unsat-core? res)) (xor test (model? res))))
+  (and (or (success? res) (failure? res)) (xor test (success? res))))
 
 (module+ main
   (define solve? #t)
