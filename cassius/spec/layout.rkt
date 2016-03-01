@@ -149,8 +149,10 @@
                :named ,(sformat "from-style/~a" prop)))
        
        (! (=> (is-width/px (style.width r))
-              (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                 (width.px (style.width r))))
+              (and
+               (width-set b)
+               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                  (width.px (style.width r)))))
           :named ,(sformat "from-style/width"))
        (! (=> (is-height/px (style.height r))
               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
@@ -190,7 +192,7 @@
 
        ,@(for/list ([% (%ages 'Width)])
            `(=> (,(sformat "is-width/~a%" %) (style.width r))
-                (= (w b) (* (w p) (/ ,% 100)))))
+                (and (width-set b) (= (w b) (* (w p) (/ ,% 100))))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
                 (= (h b) (* (h p) (/ ,% 100)))))
@@ -206,19 +208,21 @@
              [mr* (ite (is-margin/auto (style.margin-right r)) 0.0 (margin.px (style.margin-right r)))])
          (let ([overflow? (> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))])
            (and
+
             ;; It overflows. So what do we do? Ignore margin-right
-            (! (=> overflow? (and (= (w b) w*) (= (ml b) ml*)))
+            (! (=> overflow? (and (= (w b) w*) (= (ml b) ml*) (width-set b)))
                :named flow-width-overflow)
 
             ;; No overflow, but width: auto, so width dominates
             (! (=> (and (not overflow?)) (is-width/auto (style.width r))
-                   (and (= (ml b) ml*) (= (mr b) mr*)))
+                   (and (= (ml b) ml*) (= (mr b) mr*) (width-set b)))
                :named flow-width-wauto)
 
             ;; No overflow, width given, ignore auto margin
             (! (=> (and (not overflow?)
                         (not (is-width/auto (style.width r))))
                    (and (= (w b) w*)
+                        (width-set b)
                         (=> (not (is-margin/auto (style.margin-left r)))
                             (= (ml b) ml*))
                         (=> (and
@@ -232,7 +236,7 @@
                         (not (is-width/auto (style.width r)))
                         (is-margin/auto (style.margin-left r))
                         (is-margin/auto (style.margin-right r)))
-                   (and (= (w b) w*) (= (ml b) (mr b))))
+                   (and (= (w b) w*) (= (ml b) (mr b)) (width-set b)))
                :named flow-width-center))))
 
        (let ([l (real-lbox b)] [v (real-vbox b)])
@@ -251,7 +255,7 @@
 
        ;; If 'height' is 'auto', the height depends on whether the element has
        ;; any block-level children and whether it has padding or borders:
-       (=> (is-height/auto (style.height r))
+       (=> (and (width-set b) (is-height/auto (style.height r)))
            ,(smt-cond
              ;; CSS § 10.6.3, item 1: the bottom edge of the last line box,
              ;; if the box establishes a inline formatting context with one or more lines
@@ -317,8 +321,7 @@
           :named no-collapse)
 
        ;; Floating block element layout
-       ,@(for/list ([item '((width width w) (height height h)
-                            (padding-left padding pl) (padding-right padding pr)
+       ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
                             (border-top-width border bt) (border-right-width border br)
                             (border-bottom-width border bb) (border-left-width border bl)
@@ -327,6 +330,18 @@
            (match-define (list prop type field) item)
            `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
+
+       (! (=> (is-width/px (style.width r))
+              (and
+               (width-set b)
+               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                  (width.px (style.width r)))))
+          :named ,(sformat "from-style/width"))
+       (! (=> (is-height/px (style.height r))
+              (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+                 (height.px (style.height r))))
+          :named ,(sformat "from-style/height"))
+
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
        ;; %ages
@@ -346,14 +361,16 @@
 
        ,@(for/list ([% (%ages 'Width)])
            `(=> (,(sformat "is-width/~a%" %) (style.width r))
-                (= (w b) (* (w p) (/ ,% 100)))))
+                (and (width-set b) (= (w b) (* (w p) (/ ,% 100))))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
                 (= (h b) (* (h p) (/ ,% 100)))))
 
        ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
          (=> (is-width/auto (style.width r))
-             (= (w b) (ite (is-box l) (+ (ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (mr l)) 0.0)))
+             (and
+              (width-set b)
+              (= (w b) (ite (is-box l) (+ (ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (mr l)) 0.0))))
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
                  (max
@@ -363,7 +380,7 @@
 
        ;; CSS 2.1 § 10.6.7 : In certain cases, the height of an
        ;; element that establishes a block formatting context is computed as follows:
-       (! (=> (is-height/auto (style.height r))
+       (! (=> (and (width-set b) (is-height/auto (style.height r)))
               (= (h b)
                  (ite (is-box (real-fbox b))
                       (ite (is-box/line (type lb))

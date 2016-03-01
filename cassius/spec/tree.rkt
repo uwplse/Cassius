@@ -19,6 +19,7 @@
                 (real-p-name BoxName)
                 (real-n-name BoxName) (real-v-name BoxName)
                 (real-f-name BoxName) (real-l-name BoxName)
+                (width-set Bool)
                 (pb-name BoxName)
                 (n-name BoxName) (v-name BoxName) (flt-name BoxName) (flt-up-name BoxName)
                 (float Float) (textalign Text-Align) (position Position)
