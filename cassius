@@ -1,0 +1,10 @@
+#!/bin/sh
+
+TOOL=$1
+shift
+
+if [ "x$TOOL" == "x--help" ]; then
+    echo "USAGE: cassius ($(ls src/tools | cut -d. -f1 | paste -s -d\|)) [args ...]"
+else
+    racket src/tools/"$TOOL".rkt "$@"
+fi
