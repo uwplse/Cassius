@@ -24,7 +24,10 @@
    (problem desc url header sheet documents features #f)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
-  (define documents* (if truncate (map (curry dom-limit-depth truncate) documents) documents))
+  (define documents*
+    (map (compose dom-strip-positions
+                  (if truncate (curry dom-limit-depth truncate) identity))
+         documents))
   (if outname
       (print-problem sheet documents* outname debug #f)
       (solve-problem header sheet documents* debug #f)))
@@ -43,14 +46,14 @@
 
   (match res
     [(success stylesheet trees)
-     (eprintf "Accepted!\n")]
+     (for-each tree->string trees)]
     [(failure core)
      (print-unsat-core core sheet)
-     (eprintf "Rejected.\n" (length core))]
+     (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
-     (eprintf "Terminated.\n")])
+     (eprintf "Query terminated. Failure.\n")])
 
   (and (or (success? res) (failure? res)) (xor test (success? res))))
 
@@ -60,7 +63,7 @@
   (define truncate #f)
 
   (command-line
-   #:program "cassius accept"
+   #:program "cassius render"
    #:multi
    [("-d" "--debug") type "Turn on debug information"
     (set! debug (cons (string->symbol type) debug))]
