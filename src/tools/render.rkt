@@ -21,7 +21,7 @@
 
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:truncate truncate)
   (match-define
-   (problem desc url header sheet documents features #f)
+   (problem desc url header sheet documents features test)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
   (define documents*
@@ -29,33 +29,34 @@
                   (if truncate (curry dom-limit-depth truncate) identity))
          documents))
   (if outname
-      (print-problem sheet documents* outname debug #f)
-      (solve-problem header sheet documents* debug #f)))
+      (print-problem sheet documents* outname debug)
+      (solve-problem sheet documents* debug)))
 
-(define (print-problem sheet documents out debug test)
-  (define constraints (smt->string (constraints (list sheet) documents test)))
+(define (print-problem sheet documents out debug)
+  (define constraints (smt->string (constraints (list sheet) documents)))
   (call-with-output-file out (curry display constraints out) #:exists 'replace)
   #t)
 
-(define (solve-problem header sheet documents debug test)
+(define (solve-problem sheet documents debug)
   (define res
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents test #:debug debug)))
+      (solve (list sheet) documents #:debug debug)))
 
   (match res
     [(success stylesheet trees)
+     (eprintf "Rendered the following layout:\n")
      (for-each tree->string trees)]
     [(failure core)
      (print-unsat-core core sheet)
-     (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))]
+     (eprintf "Unable to render, core of ~a constraints:\n" (length core))]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
-     (eprintf "Query terminated. Failure.\n")])
+     (eprintf "Rendering terminated.\n")])
 
-  (and (or (success? res) (failure? res)) (xor test (success? res))))
+  (success? res))
 
 (module+ main
   (define debug '())

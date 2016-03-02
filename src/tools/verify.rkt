@@ -26,33 +26,33 @@
 
   (define documents* (if truncate (map (curry dom-limit-depth truncate) documents) documents))
   (if outname
-      (print-problem sheet documents* outname debug)
-      (solve-problem sheet documents* debug)))
+      (print-problem sheet documents* outname debug test)
+      (solve-problem sheet documents* debug test)))
 
-(define (print-problem sheet documents out debug)
-  (define constraints (smt->string (constraints (list sheet) documents)))
+(define (print-problem sheet documents out debug test)
+  (define constraints (smt->string (constraints (list sheet) documents test)))
   (call-with-output-file out (curry display constraints out) #:exists 'replace)
   #t)
 
-(define (solve-problem sheet documents debug)
+(define (solve-problem sheet documents debug test)
   (define res
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents #:debug debug)))
+      (solve (list sheet) documents test #:debug debug)))
 
   (match res
     [(success stylesheet trees)
-     (eprintf "Accepted!\n")]
+     (eprintf "Counterexample found!\n")
+     (for-each tree->string trees)]
     [(failure core)
-     (print-unsat-core core sheet)
-     (eprintf "Rejected.\n")]
+     (eprintf "Verified.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
      (eprintf "Terminated.\n")])
 
-  (success? res))
+  (failure? res))
 
 (module+ main
   (define debug '())
