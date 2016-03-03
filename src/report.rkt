@@ -8,7 +8,7 @@
 (require json)
 (require "common.rkt")
 (require "input.rkt")
-(require "run.rkt")
+(require "frontend.rkt")
 
 (define (normalize-index name section)
   (if (string=? (last (string-split (~a name) "-")) (substring section 1))
@@ -52,31 +52,35 @@
 
   (for/list ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))]
         #:when (or (not fast?) (subset? (problem-features prob) supported-features)))
+    (match-define (problem desc url header sheet documents features test) prob)
     (eprintf "~a\t~a\t" file pname)
-    (define-values (ubase uname udir?) (split-path (problem-url prob)))
+    (define-values (ubase uname udir?) (split-path url))
 
     (define out (open-output-string))
-    (define-values
-      (runtime status)
-      (parameterize ([current-error-port out] [current-output-port out])
-        (define eng (engine (λ (_) (run-file file (~a pname) #:debug debug))))
-        (define t (current-inexact-milliseconds))
-        (define res
-          (with-handlers ([exn:fail? (λ (e) 'error)])
-            (if (not (engine-run 60000 eng)) 'timeout 'ok))) ; 1m max
-        (define runtime (- (current-inexact-milliseconds) t))
-        (engine-kill eng)
-        (define status
-          (match res
-            ['timeout 'timeout]
-            ['error 'error]
-            ['ok
-             (cond
-              [(engine-result eng) 'success]
-              [(> (length (set-subtract (problem-features prob) supported-features)) 0) 'unsupported]
-              [else 'fail])]))
-        (values runtime status)))
-
+    (define eng
+      (engine (λ (_)
+                (parameterize ([current-error-port out] [current-output-port out])
+                  (with-handlers
+                      ([exn:break? (λ (e) 'break)]
+                       [exn:fail? (λ (e) (list 'error e))])
+                    (solve (list sheet) documents #:debug debug))))))
+    (define t (current-inexact-milliseconds))
+    (define res
+      (with-handlers ([exn:fail? (λ (e) 'error)])
+        (if (engine-run 60000 eng) (engine-result eng) 'timeout))) ; 1m max
+    (define runtime (- (current-inexact-milliseconds) t))
+    (engine-kill eng)
+    (define status
+      (match res
+        ['timeout 'timeout]
+        [(list 'error e)
+         (newline)
+         ((error-display-handler) (exn-message e) e)
+         'error]
+        ['break 'break]
+        [(success stylesheet trees) 'success]
+        [(failure core)
+         (if (null? (set-subtract features supported-features)) 'fail 'unsupported)]))
     (eprintf "~a\n" status)
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
             status (problem-desc prob) (problem-features prob) (get-output-string out) runtime
