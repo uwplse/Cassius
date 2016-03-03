@@ -103,7 +103,7 @@
            real-l-name width-set pb-name n-name v-name flt-name flt-up-name float
            textalign position element)
      (define box-width (+ bl pl w pr br))
-     (define box-height (+ bt pt w pb bb))
+     (define box-height (+ bt pt h pb bb))
      (define box-x (+ x xo))
      (define box-y (+ y yo))
      (define props
