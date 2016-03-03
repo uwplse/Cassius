@@ -1,8 +1,9 @@
 #lang racket
 (require "common.rkt")
 (require "dom.rkt")
+(require math/base)
 
-(provide dom-strip-positions dom-print-all dom-limit-depth)
+(provide dom-strip-positions dom-print-all dom-limit-depth dom-not-something)
 
 (define ((dom-transform! l) d)
   (match-define (dom name ctx tree) d)
@@ -50,3 +51,36 @@
          (if (= n 0)
              `([MAGIC ,@ (cdar tree)])
              (cons (car tree) (map (curry loop (- n 1)) (cdr tree)))))))
+
+(define (dom-not-something d)
+  (match-define (dom name ctx tree) d)
+  
+  (define constraints 0)
+
+  (let loop ([tree tree])
+    (when (member (caar tree) '(LINE BLOCK INLINE))
+      (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree)))))
+    (for-each loop (cdr tree)))
+  
+  (define idx (random-integer 0 constraints))
+  (set! constraints 0)
+
+  ;; Not my fault
+  (dom name ctx
+       (let loop ([tree tree])
+         (cond
+          [(> constraints idx) tree]
+          [(member (caar tree) '(LINE BLOCK INLINE))
+           (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree))))
+           (cons (cons (caar tree)
+                       (let loop2 ([n (- constraints idx)] [props (cdar tree)])
+                         (cond
+                          [(null? props) props]
+                          [(and (= n 0) (member (car props) '(:x :y :w :h)))
+                           (list* (car props) `(not ,(cadr props)) (cddr props))]
+                          [(and (member (car props) '(:x :y :w :h)))
+                           (list* (car props) (cadr props) (loop2 (- n 1) (cddr props)))]
+                          [else
+                           (list* (car props) (cadr props) (loop2 n (cddr props)))])))
+                 (map loop (cdr tree)))]
+          [else (cons (car tree) (map loop (cdr tree)))]))))

@@ -255,7 +255,7 @@
        (match arg
          [(? number*?)
           (emit `(assert (! (= (,fun (get/box ,(sformat "~a-flow" name))) ,arg) :named ,(sformat "~a/~a" fun name))))]
-         [`(explain ,(? number*? value))
+         [`(not ,(? number*? value))
           (emit `(assert (! (not (= (,fun (get/box ,(sformat "~a-flow" name))) ,value)) :named ,(sformat "~a/~a" fun name))))]
          [`(between ,(? number*? min) ,(? number*? max))
           (emit `(assert (! (<= ,min (,fun (get/box ,(sformat "~a-flow" name))) ,max) :named ,(sformat "~a/~a" fun name))))])]
