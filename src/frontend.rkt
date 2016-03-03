@@ -3,7 +3,7 @@
 (require "z3.rkt")
 (require "main.rkt")
 (require "dom.rkt")
-(provide constraints solve)
+(provide constraints solve (struct-out success) (struct-out failure))
 
 (define (constraints sheets docs [test #f] #:debug [debug? #f])
   (define time-start (current-inexact-milliseconds))

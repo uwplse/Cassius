@@ -107,7 +107,7 @@
      (define box-x (+ x xo))
      (define box-y (+ y yo))
      (define props
-       `(:w ,box-width :h ,box-height :x ,box-x :y ,box-y :bl ,bl :bb ,bb :br ,br :bt ,bt))
+       `(:w ,box-width :h ,box-height :x ,box-x :y ,box-y #|:bl ,bl :bb ,bb :br ,br :bt ,bt|#))
 
      (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))
 
