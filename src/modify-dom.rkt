@@ -76,7 +76,7 @@
                        (let loop2 ([n (- constraints idx)] [props (cdar tree)])
                          (cond
                           [(null? props) props]
-                          [(and (= n 0) (member (car props) '(:x :y :w :h)))
+                          [(and (= n 1) (member (car props) '(:x :y :w :h)))
                            (list* (car props) `(not ,(cadr props)) (cddr props))]
                           [(and (member (car props) '(:x :y :w :h)))
                            (list* (car props) (cadr props) (loop2 (- n 1) (cddr props)))]
