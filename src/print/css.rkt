@@ -10,9 +10,11 @@
   (format "/* Hand-written header */\n\n~a\n\n" header))
 
 (define (rule->string rule)
-  (match-define (list selector (list properties values) ...) rule)
+  (define selector (car rule))
+  (match-define (list (list properties values) ...) (filter list? (cdr rule)))
   (with-output-to-string
     (λ ()
+      (when (member ':style rule) (printf "[inline style] "))
       (printf "~a {\n" (selector->string selector))
       (for ([property properties] [value values])
         (printf "  ~a: ~a;\n" property (value->string value)))
