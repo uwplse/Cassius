@@ -255,16 +255,18 @@
 
        ;; If 'height' is 'auto', the height depends on whether the element has
        ;; any block-level children and whether it has padding or borders:
-       (=> (and (width-set b) (is-height/auto (style.height r)))
+       (=> (is-height/auto (style.height r))
            ,(smt-cond
              ;; CSS § 10.6.3, item 1: the bottom edge of the last line box,
              ;; if the box establishes a inline formatting context with one or more lines
              [(and (is-box lb) (is-box/line (type lb)))
-              (= (bottom-content b) (bottom-border lb))]
-             [(is-flow-root b)
-              (= (bottom-content b)
-                 (max (bottom-outer lb)
-                      (bottom-outer (get/box (flt-up-name lb)))))]
+              (=> (width-set b) (= (bottom-content b) (bottom-border lb)))]
+             [(and (is-box lb) (is-flow-root b))
+              (ite (is-box (get/box (flt-up-name lb)))
+                   (= (bottom-content b)
+                      (max (bottom-outer lb)
+                           (bottom-outer (get/box (flt-up-name lb)))))
+                   (= (bottom-content b) (bottom-outer lb)))]
              [(and (is-box lb) (is-box/block (type lb)))
               (= (bottom-content b)
                  ;; CSS § 10.6.3, item 2: the bottom edge of the bottom
@@ -652,11 +654,16 @@
               (a-block-flow-box b)
               (a-block-float-box b))))
 
+  (define-fun a-view-box ((b Box)) Bool
+    (and
+     ,@(for/list ([field '(x y xo yo mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl)])
+         `(= (,field b) 0.0))))
+
   (define-fun a-magic-box ((b Box)) Bool
     (or (is-box/block (type b)) (is-box/inline (type b))))
 
   (define-fun an-anon-block-box ((b Box)) Bool
     (and (a-block-flow-box b)
-         (= (mt b) (mr b) (mb b) (ml b))
-         (= (bt b) (br b) (bb b) (bl b))
-         (= (pt b) (pr b) (pb b) (pl b)))))
+         (= (mt b) (mr b) (mb b) (ml b) 0.0)
+         (= (bt b) (br b) (bb b) (bl b) 0.0)
+         (= (pt b) (pr b) (pb b) (pl b) 0.0))))

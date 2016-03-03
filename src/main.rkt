@@ -88,9 +88,14 @@
     (cons (split-line-name var) (hash-ref asserts var))))
 
 (define (plist-add plist key value)
-  (if (member key plist)
-      plist
-      (list* key value plist)))
+  (let loop ([plist plist])
+    (cond
+     [(null? plist)
+      (list key value)]
+     [(equal? (car plist) key)
+      (list* (car plist) value (cddr plist))]
+     [else
+      (list* (car plist) (cadr plist) (loop (cddr plist)))])))
 
 (define (plist-merge plist1 plist2)
   (for/fold ([plist plist1]) ([(k v) (in-groups 2 plist2)])
@@ -227,9 +232,11 @@
                                     nil-box nil-box nil-box
                                     ,(sformat "~a-flow" (element-name (dom-tree dom)))
                                     ,(sformat "~a-flow" (element-name (dom-tree dom))))
-                    :named ,(sformat "box/block/~a" (dom-root dom)))))
+                    :named ,(sformat "link-box/~a" (dom-root dom)))))
   (emit `(assert (! (link-anon-box ,(sformat "~a-flow" (dom-root dom)))
                     :named ,(sformat "link/~a" (dom-root dom)))))
+  (emit `(assert (! (a-view-box ,(sformat "~a-flow-box" (dom-root dom)))
+                    :named ,(sformat "box/view/~a" (dom-name dom)))))
   (match (rendering-context-width (dom-context dom))
     [(? number? w)
      (emit `(assert (! (= (w ,b) ,w) :named ,(sformat "width/~a" (dom-name dom)))))]

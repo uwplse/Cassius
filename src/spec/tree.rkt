@@ -158,7 +158,7 @@
        (= (flt-up-name b)
           ,(smt-cond
             [(or (is-position/fixed (position b)) (is-position/absolute (position b)))
-             (if (is-nil-box &v) nil-box (flt-up-name (get/box &v)))]
+             (ite (is-nil-box &v) nil-box (flt-up-name (get/box &v)))]
             [(not (is-float/none (float b))) &self]
             [(is-nil-box &l) (flt-name b)]
             [else (flt-up-name (get/box &l))]))))

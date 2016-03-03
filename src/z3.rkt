@@ -173,7 +173,7 @@
    ))
 
 (define to-expand-2
-  '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box))
+  '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box a-view-box))
 
 (define *emitter-passes*
   (list
