@@ -598,7 +598,7 @@
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-line-box ((b Box)) Bool
-    ,(smt-let ([p (pbox b)] [v (vbox b)] [flt (fltbox b)]
+    ,(smt-let ([p (pbox b)] [v (vbox b)] [n (nbox b)] [flt (fltbox b)]
                [f (fbox b)] [l (lbox b)])
 
        (! (and
@@ -638,6 +638,9 @@
                   (ite (is-box v*) (stfwidth v*) 0.0)))))
 
        (=> (is-text-align/left (textalign b)) (= (left-border f) (left-content b)))
+       (=> (is-text-align/justify (textalign b))
+           (and (= (left-border f) (left-content b))
+                (=> (is-no-box n) (= (right-border l) (right-content b)))))
        (=> (is-text-align/right (textalign b)) (= (right-border l) (right-content b)))
        (=> (is-text-align/center (textalign b))
            (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))))
