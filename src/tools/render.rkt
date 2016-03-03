@@ -12,6 +12,7 @@
 (require "../print/core.rkt")
 (require "../print/css.rkt")
 (require "../print/smt.rkt")
+(require "../print/tree.rkt")
 (require math/base)
 (require (only-in unstable/list list-update))
 
@@ -47,7 +48,7 @@
   (match res
     [(success stylesheet trees)
      (eprintf "Rendered the following layout:\n")
-     (for-each tree->string trees)]
+     (for-each (compose display tree->string) trees)]
     [(failure core)
      (print-unsat-core core sheet)
      (eprintf "Unable to render, core of ~a constraints:\n" (length core))]

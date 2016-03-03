@@ -12,6 +12,7 @@
 (require "../print/core.rkt")
 (require "../print/css.rkt")
 (require "../print/smt.rkt")
+(require "../print/tree.rkt")
 (require math/base)
 (require (only-in unstable/list list-update))
 
@@ -44,7 +45,7 @@
   (match res
     [(success stylesheet trees)
      (eprintf "Counterexample found!\n")
-     (for-each tree->string trees)]
+     (for-each (compose display tree->string) trees)]
     [(failure core)
      (eprintf "Verified.\n")]
     [(list 'error e)
