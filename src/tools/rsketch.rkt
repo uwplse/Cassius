@@ -36,7 +36,7 @@
 
 (define (print-problem sheet documents out debug)
   (define constraints (smt->string (constraints (list sheet) documents)))
-  (call-with-output-file out (curry display constraints out) #:exists 'replace)
+  (call-with-output-file out (curry displayln constraints out) #:exists 'replace)
   #t)
 
 (define (solve-problem sheet documents debug)

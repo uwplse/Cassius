@@ -32,7 +32,7 @@
 
 (define (print-problem sheet documents out debug)
   (define constraints (smt->string (constraints (list sheet) documents)))
-  (call-with-output-file out (curry display constraints out) #:exists 'replace)
+  (call-with-output-file out (curry displayln constraints out) #:exists 'replace)
   #t)
 
 (define (solve-problem sheet documents debug)
@@ -46,7 +46,7 @@
 
   (match res
     [(success stylesheet trees)
-     (for-each (compose display tree->string dom-tree) documents)
+     (for-each (compose displayln tree->string dom-tree) documents)
      (newline)]
     [(failure core) (eprintf "Success!\n")]
     [(list 'error e)
