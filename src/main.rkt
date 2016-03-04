@@ -293,7 +293,7 @@
   (define cns
     (match (element-type elt)
       ['BLOCK 'a-block-box]
-      ['ANON 'a-block-flow-box]
+      ['ANON 'an-anon-block-box]
       ['MAGIC 'a-magic-box]
       ['LINE 'a-line-box]
       ['INLINE 'an-inline-box]

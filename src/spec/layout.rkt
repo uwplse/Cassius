@@ -368,6 +368,25 @@
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
                 (= (h b) (* (h p) (/ ,% 100)))))
 
+       (ite (is-position/relative (style.position r))
+            (and
+             (=> (is-offset/px (style.left r))
+                 (= (xo b) (offset.px (style.left r))))
+             (=> (is-offset/px (style.top r))
+                 (= (yo b) (offset.px (style.top r))))
+             (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
+                 (= (xo b) (- (offset.px (style.right r)))))
+             (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
+                 (= (yo b) (- (offset.px (style.bottom r)))))
+             (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
+                 (= (xo b) 0.0))
+             (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
+                 (= (yo b) 0.0)))
+            (and
+             (= (xo b) 0.0)
+             (= (yo b) 0.0)))
+
+
        ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
          (=> (is-width/auto (style.width r))
              (and
@@ -572,6 +591,7 @@
        (= (mtn2 b) (mtn b) (min (mt b) 0.0))
        (= (mbp2 b) (mbp b) (max (mb b) 0.0))
        (= (mbn2 b) (mbn b) (min (mb b) 0.0))
+       (= (xo b) (yo b) 0.0)
 
        (let ([l* (real-lbox b)] [v* (real-vbox b)])
          (= (stfwidth b)
@@ -592,7 +612,7 @@
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
 
-       ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl)])
+       ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
            `(= (,field b) 0.0))
 
        ;; This is super-weak, but for now it really is our formalization of line layout
@@ -604,7 +624,7 @@
                [f (fbox b)] [l (lbox b)])
 
        (! (and
-           ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl)])
+           ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
                `(= (,field b) 0.0)))
           :named line-no-mbp)
 
@@ -663,9 +683,16 @@
     (or (is-box/block (type b)) (is-box/inline (type b))))
 
   (define-fun an-anon-block-box ((b Box)) Bool
-    (and (a-block-flow-box b)
-         (= (mt b) (mr b) (mb b) (ml b) 0.0)
-         (= (mtn b) (mtn2 b) (mtp b) (mtp2 b) 0.0)
-         (= (mbn b) (mbn2 b) (mbp b) (mbp2 b) 0.0)
-         (= (bt b) (br b) (bb b) (bl b) 0.0)
-         (= (pt b) (pr b) (pb b) (pl b) 0.0))))
+    ,(smt-let ([p (pbox b)] [v (vbox b)] [l (lbox b)])
+       (a-block-flow-box b)
+       (= (w b) (w p))
+       (= (bottom-content b) (bottom-border l))
+       (ite (is-box v)
+            (= (y b) (+ (bottom-border v) (mbp v) (mbn v)))
+            (= (y b) (top-content p)))
+       (= (x b) (left-content p))
+       (= (mt b) (mr b) (mb b) (ml b) 0.0)
+       (= (mtn b) (mtn2 b) (mtp b) (mtp2 b) 0.0)
+       (= (mbn b) (mbn2 b) (mbp b) (mbp2 b) 0.0)
+       (= (bt b) (br b) (bb b) (bl b) 0.0)
+       (= (pt b) (pr b) (pb b) (pl b) 0.0))))
