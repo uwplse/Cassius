@@ -262,11 +262,11 @@
              [(and (is-box lb) (is-box/line (type lb)))
               (=> (width-set b) (= (bottom-content b) (bottom-border lb)))]
              [(and (is-box lb) (is-flow-root b))
-              (ite (is-box (get/box (flt-up-name lb)))
+              (ite (is-nil-box (flt-up-name lb))
+                   (= (bottom-content b) (bottom-outer lb))
                    (= (bottom-content b)
                       (max (bottom-outer lb)
-                           (bottom-outer (get/box (flt-up-name lb)))))
-                   (= (bottom-content b) (bottom-outer lb)))]
+                           (bottom-outer (get/box (flt-up-name lb))))))]
              [(and (is-box lb) (is-box/block (type lb)))
               (= (bottom-content b)
                  ;; CSS § 10.6.3, item 2: the bottom edge of the bottom
@@ -665,5 +665,7 @@
   (define-fun an-anon-block-box ((b Box)) Bool
     (and (a-block-flow-box b)
          (= (mt b) (mr b) (mb b) (ml b) 0.0)
+         (= (mtn b) (mtn2 b) (mtp b) (mtp2 b) 0.0)
+         (= (mbn b) (mbn2 b) (mbp b) (mbp2 b) 0.0)
          (= (bt b) (br b) (bb b) (bl b) 0.0)
          (= (pt b) (pr b) (pb b) (pl b) 0.0))))
