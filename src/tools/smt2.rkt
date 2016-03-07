@@ -5,44 +5,25 @@
 (require "../input.rkt")
 (require "../frontend.rkt")
 (require "../modify-dom.rkt")
-(require "../print/core.rkt")
-(require "../print/css.rkt")
+(require "../print/smt.rkt")
 
-(define (run-file fname pname #:debug [debug '()] #:truncate truncate)
+(define (run-file fname pname #:output [outname #f] #:truncate truncate)
   (match-define
    (problem desc url header sheet documents features test)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
-  (define documents* (if truncate (map (curry dom-limit-depth truncate) documents) documents))
+  (define documents*
+    (if truncate (map (curry dom-limit-depth truncate) documents) documents))
 
-  (define res
-    (with-handlers
-        ([exn:break? (λ (e) 'break)]
-         [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents* #:debug debug)))
-
-  (match res
-    [(success stylesheet trees)
-     (displayln (stylesheet->string stylesheet))]
-    [(failure core)
-     (print-unsat-core core sheet)
-     (eprintf "Rejected.\n")]
-    [(list 'error e)
-     ((error-display-handler) (exn-message e) e)]
-    ['break
-     (eprintf "Terminated.\n")])
-
-  (exit (if (success? res) 0 1))
+  (displayln (smt->string (constraints (list sheet) documents*))))
 
 (module+ main
-  (define debug '())
+  (define out-file #f)
   (define truncate #f)
 
   (command-line
-   #:program "cassius sketch"
+   #:program "cassius smt2"
    #:multi
-   [("-d" "--debug") type "Turn on debug information"
-    (set! debug (cons (string->symbol type) debug))]
    [("-f" "--feature") name "Toggle a feature; use -name and +name to unset or set"
     (cond
       [(equal? (substring name 0 1) "+") (flags (cons (string->symbol (substring name 1)) (flags)))]
@@ -54,4 +35,4 @@
    [("--truncate") level "Truncate the tree to this level"
     (set! truncate (string->number level))]
    #:args (fname problem)
-   (run-file fname problem #:debug debug #:truncate truncate)))
+   (run-file fname problem #:output out-file #:truncate truncate)))

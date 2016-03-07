@@ -1,39 +1,20 @@
 #lang racket
 
-(require racket/runtime-path racket/path)
 (require racket/cmdline)
 (require "../common.rkt")
-(require "../main.rkt")
-(require "../dom.rkt")
-(require "../frontend.rkt")
 (require "../input.rkt")
+(require "../frontend.rkt")
 (require "../modify-dom.rkt")
-(require "../print/core.rkt")
-(require "../print/css.rkt")
-(require "../print/smt.rkt")
 (require "../print/tree.rkt")
-(require math/base)
-(require (only-in unstable/list list-update))
 
-(provide run-file)
-
-(define num-holes 5)
-
-(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:repeat [n 1])
+(define (run-file fname pname #:debug [debug '()] #:repeat [n 1])
   (match-define
    (problem desc url header sheet documents features test)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
   (for/and ([i (in-range n)])
     (define documents* (map dom-not-something documents))
-    (if outname
-        (print-problem sheet documents* outname debug)
-        (solve-problem sheet documents* debug))))
-
-(define (print-problem sheet documents out debug)
-  (define constraints (smt->string (constraints (list sheet) documents)))
-  (call-with-output-file out (curry displayln constraints out) #:exists 'replace)
-  #t)
+    (solve-problem sheet documents* debug)))
 
 (define (solve-problem sheet documents debug)
   (define out (open-output-string))
@@ -58,7 +39,6 @@
 
 (module+ main
   (define debug '())
-  (define out-file #f)
   (define repeat 1)
 
   (command-line
@@ -74,9 +54,7 @@
        (define name* (string->symbol name))
        (flags (if (memq name* (flags)) (remove name* (flags)) (cons name* (flags))))])]
    #:once-each
-   [("-c" "--constraints") fname "Don't solve the constraints, just output them"
-    (set! out-file fname)]
    [("-n" "--repeat") times "Don't solve the constraints, just output them"
     (set! repeat (string->number times))]
    #:args (fname problem)
-   (exit (if (run-file fname problem #:output out-file #:debug debug #:repeat repeat) 0 1))))
+   (exit (if (run-file fname problem #:debug debug #:repeat repeat) 0 1))))
