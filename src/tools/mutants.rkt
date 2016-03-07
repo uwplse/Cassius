@@ -5,6 +5,7 @@
 (require "../input.rkt")
 (require "../frontend.rkt")
 (require "../modify-dom.rkt")
+(require "../dom.rkt")
 (require "../print/tree.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:repeat [n 1])
@@ -12,7 +13,7 @@
    (problem desc url header sheet documents features test)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
-  (for/and ([i (in-range n)])
+  (for ([i (in-range n)])
     (define documents* (map dom-not-something documents))
     (solve-problem sheet documents* debug)))
 
@@ -27,8 +28,7 @@
 
   (match res
     [(success stylesheet trees)
-     (for-each (compose displayln tree->string dom-tree) documents)
-     (newline)]
+     (for-each (compose displayln tree->string dom-tree) documents)]
     [(failure core) (eprintf "Success!\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
@@ -57,4 +57,4 @@
    [("-n" "--repeat") times "Don't solve the constraints, just output them"
     (set! repeat (string->number times))]
    #:args (fname problem)
-   (exit (if (run-file fname problem #:debug debug #:repeat repeat) 0 1))))
+   (run-file fname problem #:debug debug #:repeat repeat) ))
