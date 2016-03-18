@@ -29,6 +29,6 @@ bench/alexa/%.rkt: get_bench.py get_bench.js bench/alexa/%.html
 	@ xvfb-run -s '-screen 0 1920x10800x24' python2 get_bench.py --name alexa/$* file://$(PWD)/bench/alexa/$*.html
 
 reports/csswg.html: $(wildcard bench/css/*.rkt)
-	racket cassius/report.rkt $(FLAGS) --index tests.json -o reports/csswg $^
+	racket src/report.rkt $(FLAGS) --index tests.json -o reports/csswg $^
 
 get-csswg: bench/css/floats.rkt bench/css/margin-padding-clear.rkt

@@ -1,21 +1,39 @@
 #lang racket
 
+(require racket/runtime-path racket/path)
 (require racket/cmdline)
 (require "../common.rkt")
-(require "../input.rkt")
-(require "../frontend.rkt")
-(require "../modify-dom.rkt")
+(require "../main.rkt")
 (require "../dom.rkt")
+(require "../frontend.rkt")
+(require "../input.rkt")
+(require "../modify-dom.rkt")
+(require "../print/core.rkt")
+(require "../print/css.rkt")
+(require "../print/smt.rkt")
 (require "../print/tree.rkt")
+(require math/base)
+(require (only-in unstable/list list-update))
 
-(define (run-file fname pname #:debug [debug '()] #:repeat [n 1])
+(provide run-file)
+
+(define num-holes 5)
+
+(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:repeat [n 1])
   (match-define
    (problem desc url header sheet documents features test)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
-  (for ([i (in-range n)])
+  (for/and ([i (in-range n)])
     (define documents* (map dom-not-something documents))
-    (solve-problem sheet documents* debug)))
+    (if outname
+        (print-problem sheet documents* outname debug)
+        (solve-problem sheet documents* debug))))
+
+(define (print-problem sheet documents out debug)
+  (define constraints (smt->string (constraints (list sheet) documents)))
+  (call-with-output-file out (curry displayln constraints out) #:exists 'replace)
+  #t)
 
 (define (solve-problem sheet documents debug)
   (define out (open-output-string))
@@ -28,7 +46,8 @@
 
   (match res
     [(success stylesheet trees)
-     (for-each (compose displayln tree->string dom-tree) documents)]
+     (for-each (compose displayln tree->string dom-tree) documents)
+     (newline)]
     [(failure core) (eprintf "Success!\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
@@ -39,6 +58,7 @@
 
 (module+ main
   (define debug '())
+  (define out-file #f)
   (define repeat 1)
 
   (command-line
@@ -54,7 +74,9 @@
        (define name* (string->symbol name))
        (flags (if (memq name* (flags)) (remove name* (flags)) (cons name* (flags))))])]
    #:once-each
+   [("-c" "--constraints") fname "Don't solve the constraints, just output them"
+    (set! out-file fname)]
    [("-n" "--repeat") times "Don't solve the constraints, just output them"
     (set! repeat (string->number times))]
    #:args (fname problem)
-   (run-file fname problem #:debug debug #:repeat repeat) ))
+   (exit (if (run-file fname problem #:output out-file #:debug debug #:repeat repeat) 0 1))))
