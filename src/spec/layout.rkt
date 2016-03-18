@@ -192,10 +192,13 @@
 
        ,@(for/list ([% (%ages 'Width)])
            `(=> (,(sformat "is-width/~a%" %) (style.width r))
-                (and (width-set b) (= (w b) (* (w p) (/ ,% 100))))))
+                (and (width-set b)
+                     (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                        (* (w p) (/ ,% 100))))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
-                (= (h b) (* (h p) (/ ,% 100)))))
+                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+                   (* (h p) (/ ,% 100)))))
 
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
