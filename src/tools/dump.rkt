@@ -1,10 +1,10 @@
 #lang racket
-(require "common.rkt")
-(require "dom.rkt")
-(require "modify-dom.rkt")
-(require "input.rkt")
+(require "../common.rkt")
+(require "../dom.rkt")
+(require "../modify-dom.rkt")
+(require "../input.rkt")
 
-(define (dump-problem fname pname out #:truncate [truncate #f] #:screenshot [screenshot #f])
+(define (dump-problem fname pname #:truncate [truncate #f] #:screenshot [screenshot #f])
   (define documents
     (problem-documents
      (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))))
@@ -18,6 +18,9 @@
     (define w (rendering-context-width (dom-context (first documents))))
     (printf "<img src='~a' width='~a' style='opacity:.4;position:absolute;top:0;left:0;'/>"
             screenshot w))
+  
+  (define (px->vw x)
+    (* (/ x (rendering-context-width (dom-context (first documents)))) 100))
 
   (let loop ([tree tree])
     (match (car tree)
@@ -26,7 +29,7 @@
        (printf "<div style='display: block; box-sizing: border-box; position: absolute; border: 2px solid black; ")
        (for ([attr '(:w :h :x :y)] #:when (member attr attrs))
          (define property (match attr [':w 'width] [':h 'height] [':x 'left] [':y 'top]))
-         (printf "~a: ~apx; " property (real->double-flonum (->number (cadr (member attr attrs))))))
+         (printf "~a: ~avw; " property (real->double-flonum (px->vw (->number (cadr (member attr attrs)))))))
        (printf "'>")
        (printf "</div>\n")
        (for-each loop (cdr tree))]))
@@ -34,7 +37,6 @@
   (printf "</body></html>"))
 
 (module+ main
-  (define out-file #f)
   (define truncate #f)
   (define screenshot #f)
 
@@ -46,7 +48,5 @@
    [("--screenshot") sname "File with a web page screenshot"
     (set! screenshot sname)]
    #:once-each
-   [("-o" "--output") fname "File name for final CSS file"
-    (set! out-file fname)]
    #:args (fname problem)
-   (dump-problem fname problem out-file #:truncate truncate #:screenshot screenshot)))
+   (dump-problem fname problem #:truncate truncate #:screenshot screenshot)))
