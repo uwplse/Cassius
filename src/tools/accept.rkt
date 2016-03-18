@@ -1,43 +1,25 @@
 #lang racket
 
-(require racket/runtime-path racket/path)
 (require racket/cmdline)
 (require "../common.rkt")
-(require "../main.rkt")
-(require "../frontend.rkt")
 (require "../input.rkt")
+(require "../frontend.rkt")
 (require "../modify-dom.rkt")
 (require "../print/core.rkt")
-(require "../print/css.rkt")
-(require "../print/smt.rkt")
-(require math/base)
-(require (only-in unstable/list list-update))
 
-(provide run-file)
-
-(define num-holes 5)
-
-(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:truncate truncate)
+(define (run-file fname pname #:debug [debug '()] #:truncate truncate)
   (match-define
    (problem desc url header sheet documents features test)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
-  (define documents* (if truncate (map (curry dom-limit-depth truncate) documents) documents))
-  (if outname
-      (print-problem sheet documents* outname debug)
-      (solve-problem sheet documents* debug)))
+  (define documents*
+    (if truncate (map (curry dom-limit-depth truncate) documents) documents))
 
-(define (print-problem sheet documents out debug)
-  (define c (smt->string (constraints (list sheet) documents)))
-  (call-with-output-file out (curry displayln c) #:exists 'replace)
-  #t)
-
-(define (solve-problem sheet documents debug)
   (define res
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents #:debug debug)))
+      (solve (list sheet) documents* #:debug debug)))
 
   (match res
     [(success stylesheet trees)
@@ -50,11 +32,10 @@
     ['break
      (eprintf "Terminated.\n")])
 
-  (success? res))
+  (exit (if (success? res) 0 1)))
 
 (module+ main
   (define debug '())
-  (define out-file #f)
   (define truncate #f)
 
   (command-line
@@ -70,9 +51,7 @@
        (define name* (string->symbol name))
        (flags (if (memq name* (flags)) (remove name* (flags)) (cons name* (flags))))])]
    #:once-each
-   [("-c" "--constraints") fname "Don't solve the constraints, just output them"
-    (set! out-file fname)]
    [("--truncate") level "Truncate the tree to this level"
     (set! truncate (string->number level))]
    #:args (fname problem)
-   (exit (if (run-file fname problem #:output out-file #:debug debug #:truncate truncate) 0 1))))
+   (run-file fname problem #:debug debug #:truncate truncate)))
