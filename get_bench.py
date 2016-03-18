@@ -102,8 +102,9 @@ def main(urls, name=None):
                 iname = "bench/{}-{}.png".format(netloc, letter)
                 try:
                     browser.get(url)
-                    print "Saving screenshot to", iname
-                    browser.save_screenshot(iname)
+                    if SCREENSHOT:
+                        print "Saving screenshot to", iname
+                        browser.save_screenshot(iname)
                     print "Saving layout to {}".format(fname)
                     get_bench_output(browser, letter, url, fi)
                 except:
