@@ -30,9 +30,8 @@
     [(success stylesheet trees)
      (eprintf "Rendered the following layout:\n")
      (for-each (compose displayln tree->string) trees)]
-    [(failure core)
-     (print-unsat-core core sheet)
-     (eprintf "Unable to render, core of ~a constraints:\n" (length core))]
+    [(failure stylesheet trees)
+     (eprintf "Unable to render.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break

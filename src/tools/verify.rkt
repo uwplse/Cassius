@@ -24,7 +24,7 @@
     [(success stylesheet trees)
      (eprintf "Counterexample found!\n")
      (for-each (compose displayln tree->string) trees)]
-    [(failure core)
+    [(failure stylesheet trees)
      (eprintf "Verified.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]

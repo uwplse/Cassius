@@ -31,7 +31,7 @@
   (match res
     [(success stylesheet trees)
      (eprintf "Success.\n")]
-    [(failure core)
+    [(failure stylesheet trees)
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]

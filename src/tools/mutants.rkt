@@ -7,6 +7,7 @@
 (require "../modify-dom.rkt")
 (require "../dom.rkt")
 (require "../print/tree.rkt")
+(require "../print/css.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:repeat [n 1])
   (match-define
@@ -30,14 +31,10 @@
         (solve (list sheet) documents #:debug debug))))
 
   (match res
-    [(success stylesheet trees)
-     documents]
-    [(failure core) #f]
-    [(list 'error e)
-     ((error-display-handler) (exn-message e) e)
-     documents]
-    ['break
-     #f]))
+    [(success stylesheet trees) documents]
+    [(failure stylesheet trees) #f]
+    [(list 'error e) ((error-display-handler) (exn-message e) e) documents]
+    ['break #f]))
 
 (module+ main
   (define debug '())

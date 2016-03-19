@@ -24,8 +24,7 @@
   (match res
     [(success stylesheet trees)
      (displayln (stylesheet->string stylesheet))]
-    [(failure core)
-     (print-unsat-core core sheet)
+    [(failure stylesheet trees)
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]

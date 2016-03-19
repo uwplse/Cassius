@@ -12,6 +12,7 @@
 (require unstable/sequence)
 (require srfi/1)
 (require srfi/13)
+(require (only-in unstable/list list-update))
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure))
 
@@ -78,14 +79,32 @@
       [(list _) part]
       [(list parts ...) (map (curryr with-input-from-string read) parts)])))
 
-(define (extract-core query vars)
-  (define asserts
-    (for/hash ([cmd query] #:when (and (equal? (car cmd) 'assert) (member ':named (cadr cmd))))
-      (match-define `(assert (! ,expr ,_ ... :named ,name ,_ ...)) cmd)
-      (values name expr)))
-
-  (for/list ([var vars])
-    (cons (split-line-name var) (hash-ref asserts var))))
+(define (extract-core query stylesheet trees vars)
+  (for ([cmd query] #:when (and (equal? (car cmd) 'assert) (member ':named (cadr cmd))))
+    (match-define `(assert (! ,expr ,_ ... :named ,name ,_ ...)) cmd)
+    (match (split-line-name name)
+      [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
+       (define field-name
+         (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
+                ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
+       (define elt (elt-from-name elt-name))
+       (set-element-attrs! elt (plist-merge (element-attrs elt) `(,field-name (bad ,(element-get elt field-name)))))]
+      [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
+       (define rule (list-ref stylesheet idx))
+       (set! stylesheet
+             (list-update stylesheet idx
+                          (const
+                           (cons (car rule)
+                                 (for/list ([line (cdr rule)])
+                                   (cond 
+                                    [(not (list? line))
+                                     line]
+                                    [(equal? (car line) prop)
+                                     `(,prop (bad ,(cadr line)))]
+                                    [else
+                                     line]))))))]
+      [_ (void)]))
+  (values stylesheet trees))
 
 (define (plist-add plist key value)
   (let loop ([plist plist])
@@ -405,7 +424,7 @@
                :named test))))
 
 (struct success (stylesheet elements))
-(struct failure (core))
+(struct failure (stylesheet trees))
 
 (define (solve-constraints stylesheet trees constraints #:debug [debug? #f])
   (match (z3-solve constraints #:debug debug?)
@@ -413,4 +432,5 @@
      (for-each (curryr extract-tree! m) trees)
      (success (extract-stylesheet stylesheet m) (map unparse-tree trees))]
     [(unsat-core c)
-     (failure (extract-core constraints c))]))
+     (define-values (stylesheet* trees*) (extract-core constraints stylesheet trees c))
+     (failure stylesheet* (map unparse-tree trees*))]))

@@ -84,7 +84,7 @@
         ['break 'break]
         [(success stylesheet trees)
          (if (null? (set-subtract features supported-features)) 'fail 'unsupported)]
-        [(failure core)
+        [(failure stylesheet trees)
          (if (null? (set-subtract features supported-features)) 'success 'unsupported)]))
     (eprintf "~a\n" status)
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")

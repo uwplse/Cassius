@@ -79,8 +79,7 @@
     [(#f (success stylesheet tree))
      #;(printf "~a~a" (header->string header) (stylesheet->string model))
      (eprintf "Synthesized a stylesheet. Success!\n")]
-    [(#f (failure core))
-     (print-unsat-core core sheet)
+    [(#f (failure stylesheet trees))
      (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))]
     [(`(forall (,vars ...) ,query) (success stylesheet tree))
      #;(print-counterexample model documents sheet)

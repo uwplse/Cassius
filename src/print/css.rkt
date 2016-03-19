@@ -17,7 +17,11 @@
       (when (member ':style rule) (printf "[inline style] "))
       (printf "~a {\n" (selector->string selector))
       (for ([property properties] [value values])
-        (printf "  ~a: ~a;\n" property (value->string value)))
+        (match value
+          [`(bad ,val)
+           (printf "  \33[1;31m~a: ~a\33[0m;\n" property (value->string val))]
+          [_
+           (printf "  ~a: ~a;\n" property (value->string value))]))
       (printf "}"))))
 
 (define/match (value->string value)
