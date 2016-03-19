@@ -4,8 +4,10 @@
 (require "../common.rkt")
 (require "../input.rkt")
 (require "../frontend.rkt")
+(require "../dom.rkt")
 (require "../modify-dom.rkt")
-(require "../print/core.rkt")
+(require "../print/tree.rkt")
+(require "../print/css.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate)
   (match-define
@@ -25,6 +27,8 @@
     [(success stylesheet trees)
      (eprintf "Accepted!\n")]
     [(failure stylesheet trees)
+     (displayln (stylesheet->string stylesheet))
+     (for-each (compose displayln tree->string) trees)
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]

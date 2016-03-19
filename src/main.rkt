@@ -80,8 +80,8 @@
       [(list parts ...) (map (curryr with-input-from-string read) parts)])))
 
 (define (extract-core query stylesheet trees vars)
-  (for ([cmd query] #:when (and (equal? (car cmd) 'assert) (member ':named (cadr cmd))))
-    (match-define `(assert (! ,expr ,_ ... :named ,name ,_ ...)) cmd)
+  (define stylesheet* (make-hash))
+  (for ([name vars])
     (match (split-line-name name)
       [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
        (define field-name
@@ -90,21 +90,20 @@
        (define elt (elt-from-name elt-name))
        (set-element-attrs! elt (plist-merge (element-attrs elt) `(,field-name (bad ,(element-get elt field-name)))))]
       [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
-       (define rule (list-ref stylesheet idx))
-       (set! stylesheet
-             (list-update stylesheet idx
-                          (const
-                           (cons (car rule)
-                                 (for/list ([line (cdr rule)])
-                                   (cond 
-                                    [(not (list? line))
-                                     line]
-                                    [(equal? (car line) prop)
-                                     `(,prop (bad ,(cadr line)))]
-                                    [else
-                                     line]))))))]
+       (define rule (hash-ref! stylesheet* idx (list-ref stylesheet idx)))
+       (define rule*
+         (cons (car rule)
+               (for/list ([line (cdr rule)])
+                 (cond 
+                  [(not (list? line))
+                   line]
+                  [(equal? (car line) prop)
+                   `(,prop (bad ,(cadr line)))]
+                  [else
+                   line]))))
+       (hash-set! stylesheet* idx rule*)]
       [_ (void)]))
-  (values stylesheet trees))
+  (values (hash-values stylesheet*) trees)) ; stylesheet* is the one with just bad rules
 
 (define (plist-add plist key value)
   (let loop ([plist plist])
