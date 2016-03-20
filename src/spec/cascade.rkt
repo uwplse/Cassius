@@ -152,11 +152,31 @@
     [`* `sel/all]
     [_ #f]))
 
+(define (can-match ids tags classes rule)
+  (let loop ([sel (car rule)])
+    (match sel
+      [`? #t]
+      [`(id ,id) (member id ids)]
+      [`(class ,cls) (member cls classes)]
+      [`(tag ,tag) (member (slower tag) (map slower tags))]
+      [`* #t]
+      [(list (? string?) sub) (loop sub)]
+      [`(and ,sels ...) (andmap loop sels)]
+      [`(or ,sels ...) (ormap loop sels)]
+      [`(desc ,sels ...) (andmap loop sels)]
+      [`(child ,sels ...) (andmap loop sels)])))
+
 (define (name-rules name sheet eltss)
+  (define-values (ids tags classes)
+    (for/reap [id tag class] ([elts eltss] #:when #t [elt (in-tree elts)])
+      (when (element-get elt ':id) (id (element-get elt ':id)))
+      (when (element-get elt ':tag) (tag (slower (element-get elt ':tag))))
+      (when (element-get elt ':class) (for-each class (element-get elt ':class)))))
+
   (for/list ([rule sheet] [i (in-naturals)])
-    (define rname (sformat "~a/~a" name i))
     (and
+     (can-match ids tags classes rule)
      (for*/or ([elts eltss] [elt (in-tree elts)])
        (and (is-element? elt) (not (equal? (element-type elt) 'MAGIC))
-            (selector-possibly-matches? (selector rname rule) elt)))
-     rname)))
+            (selector-possibly-matches? (car rule) elt)))
+     (sformat "~a/~a" name i))))
