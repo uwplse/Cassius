@@ -1,8 +1,12 @@
 #lang racket
 
+(require math)
 (require racket/cmdline)
 (require "../common.rkt")
 (require "../input.rkt")
+(require "../dom.rkt")
+(require "../spec/cascade.rkt")
+(require "../print/css.rkt")
 (require "../frontend.rkt")
 (require "../modify-dom.rkt")
 (require (only-in unstable/list list-update))
@@ -14,19 +18,21 @@
 
   (define documents*
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
-  (define sheet*
-    (for/fold ([sheet sheet]) ([j (in-range holes)])
+  
+  (define names (name-rules 'user sheet (map (compose parse-tree dom-tree) documents*)))
+  (reset-elt-names!)
+  (define sheet* (for/list ([rule sheet] [name names] #:when name) rule))
+
+  (define sheet**
+    (for/fold ([sheet sheet*]) ([j (in-range holes)])
       (define rule-id (random-integer 0 (length sheet)))
-      (define rule (list-ref sheet rule-id))
-      (define property-id
-        (random-integer (+ (count (compose not list?) rule) 1) (length (list-ref sheet rule-id))))
-      (list-update sheet rule-id (λ (r) (list-update r property-id (λ (c) (list (first c) '?)))))))
+      (list-update sheet rule-id (λ (r) (list (car r) '?)))))
 
   (define res
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet*) documents* #:debug debug)))
+      (solve (list sheet**) documents* #:debug debug)))
 
   (match res
     [(success stylesheet trees)
@@ -62,7 +68,7 @@
    #:once-each
    [("-n" "--repeat") n "How many times to repeat the experiment"
     (set! times (string->number n))]
-   [("--add-css-holes") n "Add N random holes into the stylesheet"
+   [("--holes") n "Add N random holes into the stylesheet"
     (set! holes (string->number n))]
    [("--truncate") level "Truncate the tree to this level"
     (set! truncate (string->number level))]
