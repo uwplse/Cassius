@@ -303,7 +303,7 @@
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns (get/box ,(box-name elt))
                           ,(box-name elt)
-                          ,(box-name (box-parent elt))
+                          ,(if (box-parent elt) (box-name (box-parent elt)) (sformat "~a-flow" (dom-root dom)))
                           ,(box-name (box-prev elt))
                           ,(box-name (box-next elt))
                           ,(box-name (box-fchild elt))
