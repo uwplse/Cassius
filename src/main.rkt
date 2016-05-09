@@ -11,7 +11,6 @@
 (require "spec/cascade.rkt")
 (require unstable/sequence)
 (require srfi/1)
-(require srfi/13)
 (require (only-in unstable/list list-update))
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure))
@@ -53,7 +52,7 @@
 (define (extract-value value)
   (match value
     [(list (? (css-type-ending? 'px)) x) (list 'px x)]
-    [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) #\%)))]
+    [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) "%" #:left? #f)))]
     [(? symbol?) (last (split-symbol value))]))
 
 (define (prop->prefix prop)
@@ -138,6 +137,12 @@
   (for ([elt (in-tree tree)])
     (define box-name (sformat "~a-flow-box" (element-name elt)))
     (extract-box! (hash-ref smt-out box-name) elt)))
+
+(define (extract-counterexample! smt-out)
+  (for ([(name value) (in-hash smt-out)])
+    (when (equal? (car (split-symbol name)) 'counterexample)
+      (define elt (elt-from-name (string->symbol (car (string-split (~a value) "-")))))
+      (set-element-attrs! elt (list* ':cex `(bad ,(string-join (cdr (string-split (~a name) "/")) "/")) (element-attrs elt))))))
 
 (define (tree-constraints dom emit elt)
   (when (is-element? elt)
@@ -429,6 +434,7 @@
   (match (z3-solve constraints #:debug debug?)
     [(model m)
      (for-each (curryr extract-tree! m) trees)
+     (extract-counterexample! m)
      (success (extract-stylesheet stylesheet m) (map unparse-tree trees))]
     [(unsat-core c)
      (define-values (stylesheet* trees*) (extract-core constraints stylesheet trees c))

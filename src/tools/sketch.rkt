@@ -31,7 +31,7 @@
     ['break
      (eprintf "Terminated.\n")])
 
-  (exit (if (success? res) 0 1))
+  (exit (if (success? res) 0 1)))
 
 (module+ main
   (define debug '())
