@@ -1,5 +1,4 @@
 #lang racket
-(require unstable/sequence)
 (require srfi/13)
 (require "../common.rkt")
 (require "../browser-style.rkt")
@@ -109,7 +108,7 @@
 
 (define (print-unsat-core core stylesheet)
   (define elts (make-hash))
-  (for ([(name line) (in-pairs core)])
+  (for ([(name line) (in-dict core)])
     (define elt (parsed->elt name))
     (hash-set! elts elt (cons (cons name line) (hash-ref elts elt '()))))
 
@@ -141,20 +140,20 @@
     (cond
      [elt
       (printf "~a:\n" elt)
-      (for ([(name line) (in-pairs (hash-ref elts elt))])
+      (for ([(name line) (in-dict (hash-ref elts elt))])
         (let ([desc (describe-line name line elt)])
           (when desc
             (printf "  ~a\n" (describe-line name line elt)))))
       (printf "\n")]
      [(not elt)
       (define-values (rules root)
-        (for/reap [rule root] ([(name line) (in-pairs (hash-ref elts elt))])
+        (for/reap [rule root] ([(name line) (in-dict (hash-ref elts elt))])
           (match name
             [`((rule ,_ ...)) (rule (cons name line))]
             [_ (root (cons name line))])))
       (print-rule-core rules)
       (printf "[VIEW]:\n")
-      (for ([(name line) (in-pairs root)])
+      (for ([(name line) (in-dict root)])
         (let ([desc (describe-line name line elt)])
           (when desc
             (printf "  ~a\n" (describe-line name line elt)))))

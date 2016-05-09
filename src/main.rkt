@@ -9,9 +9,7 @@
 (require "spec/tree.rkt")
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
-(require unstable/sequence)
 (require srfi/1)
-(require (only-in unstable/list list-update))
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure))
 
@@ -203,7 +201,7 @@
                   `(not (,(sformat "rule.~a?" property) ,name))))
          :weight 2))
       ;; Each shorthand rule can save space if all its properties exist
-      (for ([(short-name subproperties) (in-pairs css-shorthand-properties)])
+      (for ([(short-name subproperties) (in-dict css-shorthand-properties)])
         (emit `(assert-soft
                 (and ,@(for/list ([subprop subproperties])
                          (list (sformat "rule.~a?" subprop) name)))

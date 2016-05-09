@@ -3,7 +3,6 @@
 (require racket/path)
 (require racket/set)
 (require racket/engine)
-(require unstable/sequence)
 (require racket/cmdline)
 (require json)
 (require "common.rkt")
@@ -50,7 +49,7 @@
 (define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)])
   (define probs (call-with-input-file file parse-file))
 
-  (for/list ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))]
+  (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))]
         #:when (or (not fast?) (subset? (problem-features prob) supported-features)))
     (match-define (problem desc url header sheet documents features test) prob)
     (eprintf "~a\t~a\t" file pname)

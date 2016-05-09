@@ -1,5 +1,4 @@
 #lang racket
-(require unstable/sequence)
 (require "common.rkt")
 
 (provide generate-from-template)

@@ -3,7 +3,6 @@
 (require racket/path)
 (require racket/set)
 (require racket/engine)
-(require unstable/sequence)
 (require racket/cmdline)
 (require json)
 (require "dom.rkt")
@@ -52,7 +51,7 @@
 (define (run-file-tests file #:debug [debug '()] #:index [index (hash)] #:repeat [repeat 1])
   (define probs (call-with-input-file file parse-file))
 
-  (for/list ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))]
+  (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))]
              #:when (subset? (problem-features prob) supported-features)
              [n (in-range repeat)])
     (match-define (problem desc url header sheet documents features test) prob)
