@@ -75,5 +75,5 @@ project.
 Installing
 ----------
 
-Cassius requires Racket 6.1 or later and Z3 4.3 or later.
+Cassius requires Racket 6.3 or later and Z3 4.3 or later.
 It works best on Linux.
