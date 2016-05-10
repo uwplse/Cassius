@@ -1,0 +1,23 @@
+Other questions for Pavel:
+- ./cassius accept -d (what's going on?)
+
+got some error messages about the correct number of command-line args when I was
+trying to run it -- but
+'./cassius accept -d FooBar bench/test.rkt test'
+ works for whatever reason (??)
+ there's nothing related to FooBar in the file directory
+--- I think it's just acting as a place-holder?
+--The behavior seems to be the same exact as just calling './cassius debug bench/test.rkt test'
+
+
+
+* It looks like render is what we want to adjust (I think)
+
+
+
+
+"accept -d" =? debug
+! =
+sketch =? rsketch =
+! =
+verify

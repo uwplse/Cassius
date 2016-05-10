@@ -10,8 +10,21 @@ still not really sure what's going on in everything after (module+ main)...
 takes document, rendering, style-sheet, and property but I can't tell what
  variables in debug.rkt refer to those command-line arguments.
 
-
+------------------------------------------------------------------------
 frontend.rkt
 
 solve definition: takes in 2-4 arguments
       1. just sets up a way to time how long it takes
+
+------------------------------------------------------------------------------
+dump.rkt
+
+I think isn't a functional part of the code-base -- tested it on a couple of .rkt files
+and keep getting errors like:
+match: no matching clause for '(TEXT :x 183 :y (/ 643 30) :w 250 :h 38 :text "Michael Ernst")
+
+------------------------------------------------------------------------------
+mutants.rkt
+
+Also can't get this to work -- after running './cassius mutants bench/pavpanchekha.com.rkt sketch'
+it hung for a while and then terminated without any other output, but every other problem in pavpanchekha.com.rkt 

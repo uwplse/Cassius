@@ -9,10 +9,7 @@
 (require "spec/tree.rkt")
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
-(require unstable/sequence)
 (require srfi/1)
-(require srfi/13)
-(require (only-in unstable/list list-update))
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure))
 
@@ -53,7 +50,7 @@
 (define (extract-value value)
   (match value
     [(list (? (css-type-ending? 'px)) x) (list 'px x)]
-    [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) #\%)))]
+    [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) "%" #:left? #f)))]
     [(? symbol?) (last (split-symbol value))]))
 
 (define (prop->prefix prop)
@@ -94,7 +91,7 @@
        (define rule*
          (cons (car rule)
                (for/list ([line (cdr rule)])
-                 (cond 
+                 (cond
                   [(not (list? line))
                    line]
                   [(equal? (car line) prop)
@@ -138,6 +135,12 @@
   (for ([elt (in-tree tree)])
     (define box-name (sformat "~a-flow-box" (element-name elt)))
     (extract-box! (hash-ref smt-out box-name) elt)))
+
+(define (extract-counterexample! smt-out)
+  (for ([(name value) (in-hash smt-out)])
+    (when (equal? (car (split-symbol name)) 'counterexample)
+      (define elt (elt-from-name (string->symbol (car (string-split (~a value) "-")))))
+      (set-element-attrs! elt (list* ':cex `(bad ,(string-join (cdr (string-split (~a name) "/")) "/")) (element-attrs elt))))))
 
 (define (tree-constraints dom emit elt)
   (when (is-element? elt)
@@ -198,7 +201,7 @@
                   `(not (,(sformat "rule.~a?" property) ,name))))
          :weight 2))
       ;; Each shorthand rule can save space if all its properties exist
-      (for ([(short-name subproperties) (in-pairs css-shorthand-properties)])
+      (for ([(short-name subproperties) (in-dict css-shorthand-properties)])
         (emit `(assert-soft
                 (and ,@(for/list ([subprop subproperties])
                          (list (sformat "rule.~a?" subprop) name)))
@@ -300,7 +303,7 @@
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns (get/box ,(box-name elt))
                           ,(box-name elt)
-                          ,(box-name (box-parent elt))
+                          ,(if (box-parent elt) (box-name (box-parent elt)) (sformat "~a-flow" (dom-root dom)))
                           ,(box-name (box-prev elt))
                           ,(box-name (box-next elt))
                           ,(box-name (box-fchild elt))
@@ -349,7 +352,7 @@
   (unless (= (length browsers) 1)
     (error "Different browsers on different documents not yet supported"))
   (define browser-style (get-sheet (car browsers)))
-  
+
   (define browser-style-names (name-rules (car browsers) browser-style (map dom-tree doms)))
   (define user-style-names (name-rules 'user sheet (map dom-tree doms)))
 
@@ -370,12 +373,12 @@
      (for/list ([dom doms]) (sformat "~a-flow" (dom-root dom)))))
 
   (define rule-names (filter identity (append browser-style-names user-style-names)))
-  
+
   (eprintf ";; ~a rules, ~a elements, ~a boxes\n" (length rule-names) (length element-names) (length box-names))
 
   (define constraints
     (list
-     tree-constraints 
+     tree-constraints
      (procedure-rename
       (style-constraints (append browser-style-names user-style-names)
                          (append browser-style sheet))
@@ -429,6 +432,7 @@
   (match (z3-solve constraints #:debug debug?)
     [(model m)
      (for-each (curryr extract-tree! m) trees)
+     (extract-counterexample! m)
      (success (extract-stylesheet stylesheet m) (map unparse-tree trees))]
     [(unsat-core c)
      (define-values (stylesheet* trees*) (extract-core constraints stylesheet trees c))

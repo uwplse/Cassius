@@ -1,7 +1,5 @@
 #lang racket
 
-(require unstable/sequence)
-
 (provide
  reap for/reap for*/reap
  sformat slower
@@ -82,7 +80,7 @@
         ([(key ls*)
           (in-hash
            (let ([h (make-hash)])
-             (for ([(head tail) (in-pairs ls)])
+             (for ([(head tail) (in-dict ls)])
                (hash-set! h head (cons tail (hash-ref h head '()))))
              h))])
       (values key (trieify ls*)))]))

@@ -1,5 +1,6 @@
 #lang racket
 
+(require "../common.rkt")
 (require "../input.rkt")
 (require "../frontend.rkt")
 (require "../modify-dom.rkt")
