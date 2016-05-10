@@ -1,5 +1,4 @@
 #lang racket
-(require unstable/sequence)
 (require "common.rkt")
 
 (provide (struct-out dom) (struct-out rendering-context)

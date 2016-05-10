@@ -9,7 +9,6 @@
 (require "../print/css.rkt")
 (require "../frontend.rkt")
 (require "../modify-dom.rkt")
-(require (only-in unstable/list list-update))
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate #:holes holes)
   (match-define

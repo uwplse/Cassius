@@ -4,7 +4,6 @@
 (require "../dom.rkt")
 (require "../css-properties.rkt")
 
-(require unstable/sequence)
 (provide layout-definitions)
 
 (define-constraints layout-definitions
@@ -59,6 +58,12 @@
 
   (define-fun overlaps ((b1 Box) (b2 Box)) Bool
     (and (horizontally-adjacent b1 b2) (vertically-adjacent b1 b2)))
+  
+  (define-fun within ((b1 Box) (b2 Box)) Bool
+    (and (<= (box-left b2) (box-left b1))
+         (<= (box-top b2) (box-top b1))
+         (<= (box-right b1) (box-right b2))
+         (<= (box-bottom b1) (box-bottom b2))))
 
   (define-fun within ((b1 Box) (b2 Box)) Bool
     (and (<= (box-left b2) (box-left b1))
@@ -166,7 +171,7 @@
           :named ,(sformat "from-style/height"))
 
        ;; %ages
-       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+       ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
              ,@(for/list ([% (%ages 'Margin)])
                  `(=> (,(sformat "is-margin/~a%" %) (,(sformat "style.margin-~a" dir) r))
@@ -356,7 +361,7 @@
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
        ;; %ages
-       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+       ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
              (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
                  (= (,(sformat "m~a" letter) b) 0))
@@ -574,7 +579,7 @@
            `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
 
-       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+       ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(! (= (,(sformat "b~a" letter) b)
                   (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
                             (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
@@ -583,7 +588,7 @@
                        0.0))
                :named ,(sformat "from-style/border-~a-width" dir)))
 
-       ,@(for/list ([(dir letter) (in-pairs '((left . l) (right . r) (top . t) (bottom . b)))])
+       ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
              (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
                  (= (,(sformat "m~a" letter) b) 0))

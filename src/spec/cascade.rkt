@@ -3,7 +3,6 @@
 (require "../dom.rkt")
 (require "../css-rules.rkt")
 (require "../css-properties.rkt")
-(require unstable/sequence)
 
 (provide selector-constraints cascade-rules name-rules)
 
@@ -107,7 +106,7 @@
      (define applicable-rules (filter (compose (curryr has-property? property) cdr) matching-rules))
 
      ;; Score of computed rule is >= any applicable stylesheet rule
-     (for ([(name rule) (in-pairs applicable-rules)])
+     (for ([(name rule) (in-dict applicable-rules)])
        (sow
         `(assert
           (! (or (not (,(sformat "rule.~a?" property) ,name))
@@ -121,7 +120,7 @@
         (! (or
             (and (is-useDefault (,(sformat "style.~a$" property) ,re))
                  (= (,(sformat "style.~a" property) ,re) ,default))
-            ,@(for/list ([(name rule) (in-pairs applicable-rules)])
+            ,@(for/list ([(name rule) (in-dict applicable-rules)])
                 `(and
                   (,(sformat "rule.~a?" property) ,name)
                   ,(selector-matches? (selector name rule) elt)

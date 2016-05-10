@@ -13,7 +13,6 @@
 (require "print/css.rkt")
 (require "print/smt.rkt")
 (require math/base)
-(require (only-in unstable/list list-update))
 
 (provide run-file)
 
