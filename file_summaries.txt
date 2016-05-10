@@ -1,0 +1,17 @@
+debug.rkt
+
+Basically looks like it just calls parse on the input file and sets flags based
+on command-line args, then calls (solve ...) (solve is defined in frontend.rkt)
+ and prints the result. No real parsing or code generation in this file.
+
+still not really sure what's going on in everything after (module+ main)...
+-- probably something to ask Pavel about.
+
+takes document, rendering, style-sheet, and property but I can't tell what
+ variables in debug.rkt refer to those command-line arguments.
+
+
+frontend.rkt
+
+solve definition: takes in 2-4 arguments
+      1. just sets up a way to time how long it takes
