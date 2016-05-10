@@ -14,6 +14,53 @@ trying to run it -- but
 * It looks like render is what we want to adjust (I think)
 
 
+* It looks like  rsketch handles holes, sketch doesn't.
+I tested this out by making bench/test_holes.rkt and running rsketch and sketch:
+
+miranda@miranda-rights:~/Documents/507/Project/forked_cassius/Cassius$ ./cassius rsketch bench/test_holes.rkt test
+./cassius: 6: [: xrsketch: unexpected operator
+;; 1 rules, 3 elements, 4 boxes
+[   0.011s] Produced 263 constraints of 10674 terms
+[   0.914s] Prepared 944 constraints of 23670 terms
+[   0.521s] Solved constraints
+Success.
+miranda@miranda-rights:~/Documents/507/Project/forked_cassius/Cassius$ ./cassius sketch bench/test_holes.rkt test
+./cassius: 6: [: xsketch: unexpected operator
+;; 1 rules, 3 elements, 4 boxes
+[   0.012s] Produced 263 constraints of 10674 terms
+[   0.974s] Prepared 944 constraints of 23670 terms
+[   0.351s] Solved constraints
+/* Generated code below */
+
+div {
+  height: 2287.5216px;
+  padding-top: 8.5216px;
+  padding-right: 7.0px;
+  border-bottom-width: 68.0px;
+  border-top-style: none;
+  border-right-style: dotted;
+  float: left;
+}
+
+I then updated the rsketch file so it would print out the stylesheet like sketch does, and got this output:
+
+./cassius sketch bench/test_holes.rkt test
+./cassius: 6: [: xsketch: unexpected operator
+;; 1 rules, 3 elements, 4 boxes
+[   0.014s] Produced 263 constraints of 10674 terms
+[   1.189s] Prepared 944 constraints of 23670 terms
+[   0.398s] Solved constraints
+/* Generated code below */
+
+div {
+  height: 2287.5216px;
+  padding-top: 8.5216px;
+  padding-right: 7.0px;
+  border-bottom-width: 68.0px;
+  border-top-style: none;
+  border-right-style: dotted;
+  float: left;
+}
 
 
 "accept -d" =? debug
