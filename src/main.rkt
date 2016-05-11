@@ -99,6 +99,9 @@
                   [else
                    line]))))
        (hash-set! stylesheet* idx rule*)]
+       ;; Want to create pattern that matches on 
+      ;[`((info ,elt-name) ,_ ...)
+      ; ???]
       [_ (void)]))
   (values (hash-values stylesheet*) trees)) ; stylesheet* is the one with just bad rules
 

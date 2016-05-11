@@ -1,0 +1,53 @@
+
+
+Using Cassius
+
+The ./cassius script runs Cassius. It takes four arguments: the tool to run, the file to run on, and the example in that file. The tools are defined in src/tools; the files to run on can be found anywhere but good examples are in bench/; and the examples in each file are defined by define-problem blocks.
+
+A very useful tool will be the smt2 tool, which just outputs constraints. Run it like this:
+
+./cassius smt2 bench/pavpanchekha.com.rkt sketch > /tmp/out.z3
+
+This puts a file with all the generated constraints into /tmp/out.z3. You can also run it like this:
+
+./cassius smt2 -f z3o bench/pavpanchekha.com.rkt sketch > /tmp/out.z3
+
+That doesn't run the constraint optimizer. You can understand the unoptimized constraints much easier than the optimized ones, but of course they are too slow to solve.
+
+Collecting Examples
+
+You can collect examples to run Cassius on from a web browser. If you have Firefox and the Selenium packages for Python installed, you can run
+
+python2 get_bench.py URL
+
+to run Firefox on the URL in question and dump the resulting layout into a file somewhere in bench/. If you look into the Makefile,
+ you'll see some additional options that you can pass to the get_bench.py script.
+
+The Source Code
+
+The Cassius source code is in src/. The actual CSS spec is mostly described in src/spec/.
+ In that folder, the cascade.rkt file implements selectors and selector logic;
+  the layout.rkt file defines the layout algorithm for boxes; and tree.rkt defines the tree structure used by boxes and trees.
+
+Outside the CSS spec, the most important files are css-properties.rkt and css-rules.rkt,
+ which define the CSS properties and browser-style.rkt, which defines the Firefox stylesheet.
+  There are also are main.rkt, which outputs constraints for a given example;
+   input.rkt, which reads in examples; frontend.rkt, which coordinates running Z3 on the generated constraints;
+    z3o.rkt, which optimizes constraints; and a few other files which define utility functions and macros.
+
+
+Getting Started with IDs
+
+    Take a look at the debug tool, found in tools/debug.rkt.
+        This takes a document, rendering, stylesheet, and a property, and tries to find a rendering of the document that violates the property.
+        For example, you might want to see if a certain box doesn't overlap some other box, no matter the size of the browser window.
+    Use the smt2 tool to look at the constraints generated.
+        Try to find the ones that set identifiers on elements.
+    Thread back from debug.rkt to frontend.rkt, then to main.rkt, and then to tree.rkt.
+        This shows you where the constraints come from.
+    If you look at the extract-core function in main.rkt,
+     you'll see the guts of the code that uses Z3's unsat cores to figure out what annotations in the document might be problematic.
+---------------------------------------------------------------------------
+z3 -smt2 /tmp/asdf2.z3 | tr ' ' '\n'
+
+Look for info/elt in z3 output constraints

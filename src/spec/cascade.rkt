@@ -14,9 +14,13 @@
     [`(class ,cls)
      (if (and (element-get elt ':class) (member cls (element-get elt ':class))) 'true 'false)]
     [`(tag ,tag)
-     (if (and (element-get elt ':tag) (equal? (slower tag) (slower (element-get elt ':tag))))
-         'true
-         'false)]
+     (cond
+        [(and (element-get elt ':tag) (equal? (slower tag) (slower (element-get elt ':tag))))
+         'true]
+        [(and (element-get elt ':tag) (equal? '? (slower (element-get elt ':tag))))
+         `(,(sformat "is-tag/~a" tag) (tagname (get/elt ,(element-name elt))))]
+        [else
+         'false])]
     [`* 'true]
     [(list (? string?) sub) (selector-matches? sub elt)]
     [`(and ,sels ...) `(and ,@(map (curryr selector-matches? elt) sels))]
@@ -105,6 +109,10 @@
    (for ([(property type default) (in-css-properties)])
      (define applicable-rules (filter (compose (curryr has-property? property) cdr) matching-rules))
 
+     (define could-be-different?
+       (for/or ([name names] [rule rules])
+         (has-property? rule property)))
+
      ;; Score of computed rule is >= any applicable stylesheet rule
      (for ([(name rule) (in-dict applicable-rules)])
        (sow
@@ -117,7 +125,11 @@
      ;; Score&value of computed rule is = some applicable stylesheet rule
      (sow
       `(assert
-        (! (or
+        (! (=>
+          ,(if could-be-different?
+              `(,(sformat "is-tag/~a" (element-get elt ':tag)) (tagname (get/elt ,(element-name elt))))
+              'true)
+          (or
             (and (is-useDefault (,(sformat "style.~a$" property) ,re))
                  (= (,(sformat "style.~a" property) ,re) ,default))
             ,@(for/list ([(name rule) (in-dict applicable-rules)])
@@ -132,7 +144,7 @@
                                (,(sformat "style.~a" property)
                                 (computed-style (parent (get/elt ,(element-name elt)))))
                                ,default)
-                          (,(sformat "rule.~a" property) ,name))))))
+                          (,(sformat "rule.~a" property) ,name)))))))
            :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property)))))))
 
 (define (selector name rule)
