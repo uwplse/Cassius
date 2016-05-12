@@ -75,7 +75,7 @@
     (match (string-split part "/")
       [(list _) part]
       [(list parts ...) (map (curryr with-input-from-string read) parts)])))
-
+;; Does tagging of bad
 (define (extract-core query stylesheet trees vars)
   (define stylesheet* (make-hash))
   (for ([name vars])
@@ -99,7 +99,7 @@
                   [else
                    line]))))
        (hash-set! stylesheet* idx rule*)]
-       ;; Want to create pattern that matches on 
+       ;; Want to create pattern that matches on
       ;[`((info ,elt-name) ,_ ...)
       ; ???]
       [_ (void)]))

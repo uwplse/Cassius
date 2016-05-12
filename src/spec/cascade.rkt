@@ -17,7 +17,7 @@
      (cond
         [(and (element-get elt ':tag) (equal? (slower tag) (slower (element-get elt ':tag))))
          'true]
-        [(and (element-get elt ':tag) (equal? '? (slower (element-get elt ':tag))))
+        [(and (element-get elt ':tag) (equal? '? (slower (element-get elt ':tag)))) ;; new?
          `(,(sformat "is-tag/~a" tag) (tagname (get/elt ,(element-name elt))))]
         [else
          'false])]
