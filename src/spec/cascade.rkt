@@ -18,7 +18,7 @@
         [(and (element-get elt ':tag) (equal? (slower tag) (slower (element-get elt ':tag))))
          'true]
         [(and (element-get elt ':tag) (equal? '? (slower (element-get elt ':tag)))) ;; new?
-         `(,(sformat "is-tag/~a" tag) (tagname (get/elt ,(element-name elt))))]
+         `(,(sformat "is-tag/~a" (slower tag)) (tagname (get/elt ,(element-name elt))))]
         [else
          'false])]
     [`* 'true]
@@ -127,7 +127,7 @@
       `(assert
         (! (=>
           ,(if could-be-different?
-              `(,(sformat "is-tag/~a" (element-get elt ':tag)) (tagname (get/elt ,(element-name elt))))
+              `(,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))
               'true)
           (or
             (and (is-useDefault (,(sformat "style.~a$" property) ,re))
