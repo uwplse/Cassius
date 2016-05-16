@@ -75,11 +75,20 @@
     (match (string-split part "/")
       [(list _) part]
       [(list parts ...) (map (curryr with-input-from-string read) parts)])))
+
+(define (extract-tag-name constraint)
+  (define cstyle (first constraint))
+  (match cstyle
+    [`(compute-style ,property ,elt-name tag ,tagname ,id)
+      tagname]
+    [_ (void)]))
+  
 ;; Does tagging of bad
 (define (extract-core query stylesheet trees vars)
   (define stylesheet* (make-hash))
   (for ([name vars])
-    (match (split-line-name name)
+    (define split-name (split-line-name name))
+    (match split-name
       [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
        (define field-name
          (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
@@ -99,11 +108,20 @@
                   [else
                    line]))))
        (hash-set! stylesheet* idx rule*)]
-       ;; Want to create pattern that matches on
-      ;[`((info ,elt-name) ,_ ...)
-      ; ???]
+      [`((info ,elt-name) ,compute-style ...)
+        (define tag-name (extract-tag-name compute-style))
+        (define elt (elt-from-name elt-name))
+        (define field-name ':tag)
+        (define attributes (element-attrs elt))
+        (define fname (element-get elt field-name))
+        (define (no-bad field)
+          (match field
+            [`(bad ,tag) #f]
+            [_ #t]))
+        (when (no-bad fname)(set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname)))))]
       [_ (void)]))
-  (values (hash-values stylesheet*) trees)) ; stylesheet* is the one with just bad rules
+  (define ss (hash-values stylesheet*))
+  (values ss trees)) ; stylesheet* is the one with just bad rules
 
 (define (plist-add plist key value)
   (let loop ([plist plist])
