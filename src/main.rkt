@@ -82,7 +82,7 @@
     [`(compute-style ,property ,elt-name tag ,tagname ,id)
       tagname]
     [_ (void)]))
-  
+
 ;; Does tagging of bad
 (define (extract-core query stylesheet trees vars)
   (define stylesheet* (make-hash))
@@ -347,6 +347,7 @@
 (define (info-constraints dom emit elt)
   (when (is-element? elt)
     (define tagname
+      ; `(tagname (get/elt ,(element-name elt)))
       (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag))
     (define idname
       (if (element-get elt ':id) (sformat "id/~a" (element-get elt ':id)) 'no-id))
