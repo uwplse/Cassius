@@ -101,6 +101,12 @@
     (and (= (box-height b) 0.0)
          (or (is-no-box l) (= (box-height l) 0.0))))
 
+  (define-fun min-width-limit ((val Real) (e Element)) Real
+    (if (is-width/px (style.min-width (computed-style e)))
+        (max val (width.px (style.min-width (computed-style e))))
+        ;; Leaving here for future percentage support
+        val))
+
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
@@ -157,7 +163,7 @@
               (and
                (width-set b)
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                  (width.px (style.width r)))))
+                  (min-width-limit (width.px (style.width r)) e))))
           :named ,(sformat "from-style/width"))
        (! (=> (is-height/px (style.height r))
               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
@@ -199,7 +205,7 @@
            `(=> (,(sformat "is-width/~a%" %) (style.width r))
                 (and (width-set b)
                      (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                        (* (w p) (/ ,% 100))))))
+                        (min-width-limit (* (w p) (/ ,% 100)) e)))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
                 (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
@@ -211,7 +217,7 @@
        (! (= (w p) (+ (ml b) (box-width b) (mr b)))
           :named flow-fill-width)
 
-       (let ([w* (ite (is-width/auto (style.width r)) 0.0 (width.px (style.width r)))]
+       (let ([w* (min-width-limit (ite (is-width/auto (style.width r)) 0.0 (width.px (style.width r))) e)]
              [ml* (ite (is-margin/auto (style.margin-left r)) 0.0 (margin.px (style.margin-left r)))]
              [mr* (ite (is-margin/auto (style.margin-right r)) 0.0 (margin.px (style.margin-right r)))])
          (let ([overflow? (> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))])
@@ -345,7 +351,7 @@
               (and
                (width-set b)
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                  (width.px (style.width r)))))
+                  (min-width-limit (width.px (style.width r)) e))))
           :named ,(sformat "from-style/width"))
        (! (=> (is-height/px (style.height r))
               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
@@ -371,7 +377,7 @@
 
        ,@(for/list ([% (%ages 'Width)])
            `(=> (,(sformat "is-width/~a%" %) (style.width r))
-                (and (width-set b) (= (w b) (* (w p) (/ ,% 100))))))
+                (and (width-set b) (= (w b) (min-width-limit (* (w p) (/ ,% 100)) e)))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
                 (= (h b) (* (h p) (/ ,% 100)))))
@@ -399,7 +405,7 @@
          (=> (is-width/auto (style.width r))
              (and
               (width-set b)
-              (= (w b) (ite (is-box l) (+ (ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (mr l)) 0.0))))
+              (= (w b) (min-width-limit (ite (is-box l) (+ (ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (mr l)) 0.0) e))))
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
                  (max

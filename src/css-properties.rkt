@@ -37,7 +37,8 @@
   (in-hash css-types-hash))
 
 (define-css-type (Width width/auto (width/px (width.px Real)) width/inherit)
-  [width width/auto])
+  [width width/auto]
+  [min-width (width/px 0)])
 
 (define-css-type (Height height/auto (height/px (height.px Real)) height/inherit)
   [height height/auto])
