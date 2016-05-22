@@ -11,7 +11,7 @@
 (require "spec/cascade.rkt")
 (require srfi/1)
 
-(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure))
+(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes)
 
 (define (extract-stylesheet stylesheet smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
@@ -80,7 +80,7 @@
   (define cstyle (first constraint))
   (match cstyle
     [`(compute-style ,property ,elt-name tag ,tagname ,id)
-      tagname]
+     tagname]
     [_ (void)]))
 
 ;; Does tagging of bad
@@ -92,7 +92,7 @@
       [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
        (define field-name
          (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
-                ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
+           ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
        (define elt (elt-from-name elt-name))
        (set-element-attrs! elt (plist-merge (element-attrs elt) `(,field-name (bad ,(element-get elt field-name)))))]
       [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
@@ -101,37 +101,61 @@
          (cons (car rule)
                (for/list ([line (cdr rule)])
                  (cond
-                  [(not (list? line))
-                   line]
-                  [(equal? (car line) prop)
-                   `(,prop (bad ,(cadr line)))]
-                  [else
-                   line]))))
+                   [(not (list? line))
+                    line]
+                   [(equal? (car line) prop)
+                    `(,prop (bad ,(cadr line)))]
+                   [else
+                    line]))))
        (hash-set! stylesheet* idx rule*)]
       [`((info ,elt-name) ,compute-style ...)
-        (define tag-name (extract-tag-name compute-style))
-        (define elt (elt-from-name elt-name))
-        (define field-name ':tag)
-        (define attributes (element-attrs elt))
-        (define fname (element-get elt field-name))
-        (define (no-bad field)
-          (match field
-            [`(bad ,tag) #f]
-            [_ #t]))
-        (when (no-bad fname)(set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname)))))]
+       (define tag-name (extract-tag-name compute-style))
+       (define elt (elt-from-name elt-name))
+       (define field-name ':tag)
+       (define attributes (element-attrs elt))
+       (define fname (element-get elt field-name))
+       (define (no-bad field)
+         (match field
+           [`(bad ,tag) #f]
+           [_ #t]))
+       (when (no-bad fname)(set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname)))))]
       [_ (void)]))
   (define ss (hash-values stylesheet*))
   (values ss trees)) ; stylesheet* is the one with just bad rules
 
+; Replace the bad tags with holes
+(define (replace-ids-with-holes tree)
+  (define (match-attr attr)
+    (match attr
+      [`(bad ,val) val]
+      [_ attr]))
+  (for/list ([t tree])
+    (match t
+      [`(,block :tag (bad ,val) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret (list block ':tag '?))
+       (set! ret (append ret vals))
+       ret]
+      [`(,block ,attr (bad ,val) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret (list block attr val))
+       (set! ret (append ret vals))
+       ret]
+      [`(,block ,attr ,val ,rest ...)
+       (define ret (list block attr val))
+       (set! ret (append ret rest))
+       ret]
+      [_ (replace-ids-with-holes t)])))
+
 (define (plist-add plist key value)
   (let loop ([plist plist])
     (cond
-     [(null? plist)
-      (list key value)]
-     [(equal? (car plist) key)
-      (list* (car plist) value (cddr plist))]
-     [else
-      (list* (car plist) (cadr plist) (loop (cddr plist)))])))
+      [(null? plist)
+       (list key value)]
+      [(equal? (car plist) key)
+       (list* (car plist) value (cddr plist))]
+      [else
+       (list* (car plist) (cadr plist) (loop (cddr plist)))])))
 
 (define (plist-merge plist1 plist2)
   (for/fold ([plist plist1]) ([(k v) (in-groups 2 plist2)])
@@ -149,7 +173,7 @@
      (define box-y (+ y yo))
      (define props
        `(:w ,box-width :h ,box-height :x ,box-x :y ,box-y #|:bl ,bl :bb ,bb :br ,br :bt ,bt|#))
-
+     
      (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))
 
 (define (extract-tree! tree smt-out)
@@ -187,12 +211,12 @@
 (define (stylesheet-constraints emit names sheet #:browser [browser? #f])
   (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
     (selector-constraints emit name rule i #:browser browser?)
-
+    
     (define allow-new-properties? (member '? rule))
     (define pairs
       (filter (λ (x) (or (not (symbol? (cadr x))) (not (css-em? (cadr x)))))
               (filter list? (cdr rule))))
-
+    
     (for ([(a-prop type default) (in-css-properties)])
       (match (assoc a-prop pairs)
         [(list _ '?)
@@ -239,11 +263,11 @@
   (define dom-names
     (for/list ([dom doms])
       (for/list ([elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt))))
-
+  
   ; Instantiate each element
   (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-elt" name) Element)))
-
+  
   ; Define the mapping
   (define body
     (for*/fold ([body 'no-elt]) ([names dom-names] [name names])
@@ -254,11 +278,11 @@
   (define dom-names
     (for/list ([dom doms])
       (cons (dom-root dom) (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt)))))
-
+  
   ; Instantiate each box
   (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-flow-box" name) Box)))
-
+  
   ; Define the mapping
   (define body
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
@@ -267,7 +291,7 @@
 
 (define (dom-root-constraints dom emit)
   (define b `(get/box ,(sformat "~a-flow" (dom-root dom))))
-
+  
   (emit `(echo ,(format "Defining the ~a root box" (dom-name dom))))
   (emit `(assert (! (link-block-box ,(sformat "~a-flow-box" (dom-root dom))
                                     ,(sformat "~a-flow" (dom-root dom))
@@ -299,7 +323,7 @@
       [(or ':x ':y ':w ':h ':ml ':mr ':mt ':mb)
        (define mapping
          '((:x box-x) (:y box-y) (:h box-height) (:w box-width)
-           (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
+                      (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
        (define fun (cadr (assoc cmd mapping)))
        (match arg
          [(? number*?)
@@ -351,7 +375,7 @@
       (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag))
     (define idname
       (if (element-get elt ':id) (sformat "id/~a" (element-get elt ':id)) 'no-id))
-
+    
     (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname)
                       :named ,(sformat "info/~a" (element-name elt)))))))
 
@@ -368,16 +392,15 @@
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
             (cns dom sow elt)))))
 
-(define (all-constraints sheet doms)
-
+(define (all-constraints sheet doms) 
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)
     (error "Different browsers on different documents not yet supported"))
   (define browser-style (get-sheet (car browsers)))
-
+  
   (define browser-style-names (name-rules (car browsers) browser-style (map dom-tree doms)))
   (define user-style-names (name-rules 'user sheet (map dom-tree doms)))
-
+  
   (define-values (tags ids classes)
     (reap [save-tag save-id save-class]
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
@@ -385,19 +408,19 @@
             (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag)))))
             (when (element-get elt ':class)
               (for ([c (element-get elt ':class)])
-               (save-class (sformat "class/~a" c)))))))
-
+                (save-class (sformat "class/~a" c)))))))
+  
   (define element-names
     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt)))
   (define box-names
     (append
      (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (box-name elt))
      (for/list ([dom doms]) (sformat "~a-flow" (dom-root dom)))))
-
+  
   (define rule-names (filter identity (append browser-style-names user-style-names)))
-
+  
   (eprintf ";; ~a rules, ~a elements, ~a boxes\n" (length rule-names) (length element-names) (length box-names))
-
+  
   (define constraints
     (list
      tree-constraints
@@ -408,7 +431,7 @@
      user-constraints box-link-constraints
      info-constraints box-element-constraints
      box-constraints))
-
+  
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")
     (declare-datatypes
@@ -426,7 +449,7 @@
     ,@layout-definitions
     (assert (! (and (= (element no-box) nil-elt) (= (flow-box no-elt) nil-box))
                :named no-element-no-box))
-
+    
     ; Stylesheet
     (echo "Browser stylesheet")
     ,@(reap [emit] (stylesheet-constraints emit browser-style-names browser-style #:browser #t))
