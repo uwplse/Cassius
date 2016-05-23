@@ -79,7 +79,7 @@
 
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
-        (is-nil-elt (parent-name (get/elt (element b))))
+        (is-box/root (type (pbox b)))
         (not (box-in-flow b))
         (not (is-overflow/visible (style.overflow-x (computed-style (get/elt (element b))))))
         (not (is-overflow/visible (style.overflow-y (computed-style (get/elt (element b))))))))
@@ -87,9 +87,9 @@
   (define-fun an-element ((e Element)) Bool
     true)
 
-  (define-fun a-root-box ((b Box)) Bool
+  (define-fun a-view-box ((b Box)) Bool
     (and
-     (! (and ,@(for/list ([field '(x y pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn mtp2 mtb2 mtn2 mbn2)])
+     (! (and ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn mtp2 mbp2 mtn2 mbn2)])
                  `(= (,field b) 0.0)))
           :named zero-xypbm)
      (= (type b) box/root)
@@ -301,10 +301,7 @@
           (= (y b) (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))]
          [(and
            ;; Margins of the root element's box do not collapse.
-           (not (is-box/root (type (pbox p))))
-           ;; Margins between a floated box and any other box do not collapse
-           ;; (not even between a float and its in-flow children).
-           (is-float/none (float p))
+           (not (is-flow-root p))
            ;; The top margin of an in-flow block element collapses with
            ;; its first in-flow block-level child's top margin if the element
            ;; has no top border, no top padding, and the child has no clearance.
@@ -553,7 +550,7 @@
           :named restriction-4)))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
-    true)
+    (is-box/block (type b)))
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
@@ -616,6 +613,7 @@
 
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pbox b)] [v (vbox b)])
+       (= (type b) box/text)
 
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
@@ -630,6 +628,7 @@
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pbox b)] [v (vbox b)] [n (nbox b)] [flt (fltbox b)]
                [f (fbox b)] [l (lbox b)])
+       (= (type b) box/line)
 
        (! (and
            ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
@@ -681,11 +680,6 @@
          (ite (!  (is-float/none (float b)) :named flow)
               (a-block-flow-box b)
               (a-block-float-box b))))
-
-  (define-fun a-view-box ((b Box)) Bool
-    (and
-     ,@(for/list ([field '(x y xo yo mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl)])
-         `(= (,field b) 0.0))))
 
   (define-fun a-magic-box ((b Box)) Bool
     (or (is-box/block (type b)) (is-box/inline (type b))))

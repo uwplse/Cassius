@@ -129,7 +129,6 @@
 
   (define-fun link-block-box ((b Box) (&self BoxName) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
-       (is-box/block (type b))
        (= (real-p-name b) &p)
        (= (real-v-name b) &v)
        (= (real-n-name b) &n)
@@ -165,7 +164,6 @@
 
   (define-fun link-inline-box ((b Box) (&self BoxName) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
-       (is-box/inline (type b))
        (= (real-p-name b) &p)
        (= (real-v-name b) &v)
        (= (real-n-name b) &n)
@@ -179,7 +177,6 @@
 
   (define-fun link-line-box ((b Box) (&self BoxName) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
-       (is-box/line (type b))
        (= (real-p-name b) &p)
        (= (real-v-name b) &v)
        (= (real-n-name b) &n)
@@ -193,7 +190,6 @@
 
   (define-fun link-text-box ((b Box) (&self BoxName) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
-       (is-box/text (type b))
        (= (real-p-name b) &p)
        (= (real-v-name b) &v)
        (= (real-n-name b) &n)
