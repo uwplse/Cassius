@@ -24,10 +24,12 @@ This should churn for a few seconds and say, "Accepted".
 Using Cassius
 ----------------
 
+Run Cassius with
+
+    ./cassius [tool] [file] [instance]
+
 The `./cassius` script runs Cassius. It takes four arguments: the tool
-to run, the file to run on, and the example in that file. The tools
-are defined in `src/tools`; good example files are in `bench/`; and
-the examples in each file are defined by `define-problem` blocks.
+to run, the file to run on, and the example in that file. 
 
 The currently-supported tools are:
 
