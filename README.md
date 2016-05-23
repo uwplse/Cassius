@@ -10,10 +10,10 @@ Unlike WYSIWYG tools like Dreamweaver or Photoshop,
 Installing
 ------------
 
-You'll need to install Racket <http://racket-lang.org> and Z3
-<https://github.com/Z3Prover/z3>. Once Racket and Z3 are set up, edit
-the `z3.sh` script, to call your installation of Z3. (Make sure to
-pass through all arguments.)
+You'll need to install Racket (6.3 or later) <http://racket-lang.org>
+and Z3 <https://github.com/Z3Prover/z3> (4.3 or later). Once Racket
+and Z3 are set up, edit the `z3.sh` script, to call your installation
+of Z3. (Make sure to pass through all arguments.)
 
 Test out your Cassius installation by running, from the top-level directory,
 
@@ -71,9 +71,3 @@ Cassius development is tracked
 [on Trello](https://trello.com/b/ylAVgJh3/cassius). Email
 [Pavel Panchekha](mailto:me@pavpanchekha.com) to be added to the
 project.
-
-Installing
-----------
-
-Cassius requires Racket 6.3 or later and Z3 4.3 or later.
-It works best on Linux.
