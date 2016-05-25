@@ -6,6 +6,16 @@
 
 (provide selector-constraints cascade-rules name-rules)
 
+(define (dump-tag tag)
+  (if tag
+      (string->symbol (string-replace (format "tag/~a" (slower tag)) ":" ".."))
+      'no-tag))
+
+(define (dump-id id)
+  (if id
+      (sformat "id/~a" id)
+      'no-id))
+
 (define (selector-matches? sel elt)
   "Given an element and a selector, returns a Z3 expression for when that element matches"
   (match sel
@@ -144,10 +154,10 @@
   (or (equal? '? rule)
       (member '? (cdr rule)) (assoc prop (filter list? (cdr rule)))))
 
-(define (selector->z3 sel [ids #f] [tags #f])
+(define (selector->z3 sel)
   (match sel
-    [`(id ,id) `(sel/id ,(sformat "id/~a" id))]
-    [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
+    [`(id ,id) `(sel/id ,(dump-id id))]
+    [`(tag ,tag) `(sel/tag ,(dump-tag tag))]
     [`* `sel/all]
     [_ #f]))
 

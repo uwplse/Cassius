@@ -13,6 +13,16 @@
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure))
 
+(define (dump-tag tag)
+  (if tag
+      (string->symbol (string-replace (format "tag/~a" (slower tag)) ":" ".."))
+      'no-tag))
+
+(define (dump-id id)
+  (if id
+      (sformat "id/~a" id)
+      'no-id))
+
 (define (extract-stylesheet stylesheet smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
     (define rule-name (sformat "user/~a" i))
@@ -65,8 +75,8 @@
 
 (define (dump-selector selector)
   (match selector
-    [`(id ,id) `(sel/id ,(sformat "id/~a" id))]
-    [`(tag ,tag) `(sel/tag ,(sformat "tag/~a" tag))]
+    [`(id ,id) `(sel/id ,(dump-id id))]
+    [`(tag ,tag) `(sel/tag ,(dump-tag tag))]
     [`* `sel/all]
     [_ #f]))
 
@@ -324,10 +334,8 @@
 
 (define (info-constraints dom emit elt)
   (when (is-element? elt)
-    (define tagname
-      (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag))
-    (define idname
-      (if (element-get elt ':id) (sformat "id/~a" (element-get elt ':id)) 'no-id))
+    (define tagname (dump-tag (element-get elt ':tag)))
+    (define idname (dump-id (element-get elt ':id)))
 
     (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname)
                       :named ,(sformat "info/~a" (element-name elt)))))))
@@ -358,8 +366,8 @@
   (define-values (tags ids classes)
     (reap [save-tag save-id save-class]
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
-            (when (element-get elt ':id) (save-id (sformat "id/~a" (element-get elt ':id))))
-            (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag)))))
+            (when (element-get elt ':id) (save-id (dump-id (element-get elt ':id))))
+            (when (element-get elt ':tag) (save-tag (dump-tag (element-get elt ':tag))))
             (when (element-get elt ':class)
               (for ([c (element-get elt ':class)])
                (save-class (sformat "class/~a" c)))))))
