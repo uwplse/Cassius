@@ -134,17 +134,14 @@
       [`(,block :tag (bad ,val) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
        (define ret (list block ':tag '?))
-       (set! ret (append ret vals))
-       ret]
+       (append ret vals)]
       [`(,block ,attr (bad ,val) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
        (define ret (list block attr val))
-       (set! ret (append ret vals))
-       ret]
+       (append ret vals)]
       [`(,block ,attr ,val ,rest ...)
        (define ret (list block attr val))
-       (set! ret (append ret rest))
-       ret]
+       (append ret rest)]
       [_ (replace-ids-with-holes t)])))
 
 (define (plist-add plist key value)
@@ -180,6 +177,11 @@
   (for ([elt (in-tree tree)])
     (define box-name (sformat "~a-flow-box" (element-name elt)))
     (extract-box! (hash-ref smt-out box-name) elt)))
+    ;(match (hash-ref smt-out (sformat "~a-elt" (element-name elt)))
+      ;[(list 'elt _ ...)
+       ; extract tagname and idname
+       ; set the elt's :tag and elt's :id to those
+       ;]
 
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)])
@@ -372,10 +374,13 @@
   (when (is-element? elt)
     (define tagname
       ; `(tagname (get/elt ,(element-name elt)))
-      (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag))
+      (if (equal? (element-get elt ':tag) '?) `(tagname (get/elt ,(element-name elt)))
+          (if (element-get elt ':tag) (sformat "tag/~a" (slower (element-get elt ':tag))) 'no-tag)))
+
     (define idname
-      (if (element-get elt ':id) (sformat "id/~a" (element-get elt ':id)) 'no-id))
-    
+      (if (equal? (element-get elt ':id) '?) `(idname (get/elt ,(element-name elt)))
+          (if (element-get elt ':id) (sformat "id/~a" (element-get elt ':id)) 'no-id)))
+
     (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname)
                       :named ,(sformat "info/~a" (element-name elt)))))))
 
@@ -397,18 +402,29 @@
   (unless (= (length browsers) 1)
     (error "Different browsers on different documents not yet supported"))
   (define browser-style (get-sheet (car browsers)))
-  
+
   (define browser-style-names (name-rules (car browsers) browser-style (map dom-tree doms)))
   (define user-style-names (name-rules 'user sheet (map dom-tree doms)))
   
   (define-values (tags ids classes)
     (reap [save-tag save-id save-class]
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
-            (when (element-get elt ':id) (save-id (sformat "id/~a" (element-get elt ':id))))
+            (when (element-get elt ':id)(save-id (sformat "id/~a" (element-get elt ':id))))
             (when (element-get elt ':tag) (save-tag (sformat "tag/~a" (slower (element-get elt ':tag)))))
             (when (element-get elt ':class)
               (for ([c (element-get elt ':class)])
-                (save-class (sformat "class/~a" c)))))))
+                (save-class (sformat "class/~a" c)))))
+          (for ([name (append browser-style-names user-style-names)] [rule (append (or (car browsers) '()) sheet)])
+            (when name
+              ; add tags and ids into the list
+              (match (car rule)
+                [`(tag ,tagname)
+                  (save-tag (sformat "tag/~a" (slower tagname)))]
+                [`(id ,idname)
+                  (save-id (sformat "id/~a" idname))]
+                [`(class ,classname)
+                  (save-class (sformat "class/~a" classname))]
+                [_ (void)])))))
   
   (define element-names
     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt)))

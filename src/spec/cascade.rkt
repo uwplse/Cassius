@@ -167,9 +167,9 @@
   (let loop ([sel (car rule)])
     (match sel
       [`? #t]
-      [`(id ,id) (member id ids)]
+      [`(id ,id) (or (member '? ids) (member id ids))]
       [`(class ,cls) (member cls classes)]
-      [`(tag ,tag) (member (slower tag) (map slower tags))]
+      [`(tag ,tag) (or (member '? tags) (member (slower tag) (map slower tags)))]
       [`* #t]
       [(list (? string?) sub) (loop sub)]
       [`(and ,sels ...) (andmap loop sels)]
