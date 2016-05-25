@@ -102,8 +102,8 @@
          (or (is-no-box l) (= (box-height l) 0.0))))
 
   (define-fun min-width-limit ((val Real) (e Element)) Real
-    (if (is-width/px (style.min-width (computed-style e)))
-        (max val (width.px (style.min-width (computed-style e))))
+    (if (is-min-width/px (style.min-width (computed-style e))) ;; changed is-width/px to is-min-width/px
+        (max val (min-width.px (style.min-width (computed-style e)))) ;; changed width.px to min-width.px
         ;; Leaving here for future percentage support
         val))
 
