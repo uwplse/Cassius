@@ -262,8 +262,7 @@
     [(? number? w)
      (emit `(assert (! (= (w ,b) ,w) :named ,(sformat "width/~a" (dom-name dom)))))]
     [`(between ,l ,r)
-     (emit `(assert (! (<= ,l (w ,b) ,r) :named ,(sformat "width/~a" (dom-name dom)))))])
-  #;(emit `(assert (! (a-root-element ,b) :named ,(sformat "box/root/~a" (dom-root dom))))))
+     (emit `(assert (! (<= ,l (w ,b) ,r) :named ,(sformat "width/~a" (dom-name dom)))))]))
 
 (define (number*? x)
   (match x
