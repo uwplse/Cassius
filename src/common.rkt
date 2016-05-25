@@ -10,7 +10,7 @@
 (define flags (make-parameter '(z3o)))
 (define all-flags '(opt float z3o details))
 
-(define supported-features '(float % unknown-selector box-sizing))
+(define supported-features '(float % unknown-selector box-sizing min-width))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
