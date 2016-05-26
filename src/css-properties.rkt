@@ -21,11 +21,26 @@
 (define (%age-constructor type)
   (map (curry sformat "~a/~a%" (slower type)) (%ages type)))
 
+(define (css-constructor name items)
+  (append (%age-constructor name)
+          (for/list ([variant (list* 'inherit items)])
+            (match variant
+              [(? symbol?) (sformat "~a/~a" (slower name) variant)]
+              [(list (? symbol? constructor) (? symbol? type))
+               (list (sformat "~a/~a" (slower name) constructor)
+                     (list (sformat "~a.~a" (slower name) constructor)
+                           type))]))))
+
+(define (css-expand name value)
+  (match value
+    [(? symbol?) (sformat "~a/~a" (slower name) value)]
+    [(list (? symbol? constructor) value)
+     (list (sformat "~a/~a" (slower name) constructor) value)]))
+
 (define-syntax-rule (define-css-type (name decl ...) [prop default] ...)
   (begin
-    (hash-set! css-types-hash 'name
-               `(decl ... ,@(%age-constructor 'name)))
-    (hash-set! css-property-hash 'prop (cons 'name 'default)) ...))
+    (hash-set! css-types-hash 'name (css-constructor 'name '(decl ...)))
+    (hash-set! css-property-hash 'prop (cons 'name (css-expand 'name 'default))) ...))
 
 (define (in-css-properties)
   (in-parallel
@@ -36,66 +51,63 @@
 (define (in-css-types)
   (in-hash css-types-hash))
 
-(define-css-type (Width width/auto (width/px (width.px Real)) width/inherit)
-  [width width/auto])
+(define-css-type (Width auto (px Real))
+  [width auto])
 
 ;; define Min-Width, not sure if it works
-(define-css-type (Min-Width (min-width/px (min-width.px Real)) min-width/inherit)
-  [min-width (min-width/px 0)])
+(define-css-type (Min-Width (px Real))
+  [min-width (px 0)])
 
-(define-css-type (Height height/auto (height/px (height.px Real)) height/inherit)
-  [height height/auto])
+(define-css-type (Height auto (px Real))
+  [height auto])
 
-(define-css-type (Margin margin/auto (margin/px (margin.px Real)) margin/inherit)
-  [margin-top margin/auto]
-  [margin-right (margin/px 0)]
-  [margin-bottom margin/auto]
-  [margin-left (margin/px 0)])
+(define-css-type (Margin auto (px Real))
+  [margin-top auto]
+  [margin-right (px 0)]
+  [margin-bottom auto]
+  [margin-left (px 0)])
 
-(define-css-type (Padding (padding/px (padding.px Real)) padding/inherit)
-  [padding-top (padding/px 0)]
-  [padding-right (padding/px 0)]
-  [padding-bottom (padding/px 0)]
-  [padding-left (padding/px 0)])
+(define-css-type (Padding (px Real))
+  [padding-top (px 0)]
+  [padding-right (px 0)]
+  [padding-bottom (px 0)]
+  [padding-left (px 0)])
 
-(define-css-type (Border (border/px (border.px Real)) border/inherit)
-  [border-top-width border/medium]
-  [border-right-width border/medium]
-  [border-bottom-width border/medium]
-  [border-left-width border/medium])
+(define-css-type (Border (px Real))
+  [border-top-width medium]
+  [border-right-width medium]
+  [border-bottom-width medium]
+  [border-left-width medium])
 
-(define-css-type (Border-Style border-style/none border-style/hidden border-style/dotted
-                              border-style/dashed border-style/solid border-style/double
-                              border-style/groove border-style/ridge border-style/inset
-                              border-style/outset border-style/inherit)
-  [border-top-style border-style/none]
-  [border-right-style border-style/none]
-  [border-bottom-style border-style/none]
-  [border-left-style border-style/none])
+(define-css-type (Border-Style none hidden dotted dashed solid double groove ridge inset outset)
+  [border-top-style none]
+  [border-right-style none]
+  [border-bottom-style none]
+  [border-left-style none])
 
-(define-css-type (Float float/none float/left float/right float/inherit)
- [float float/none])
+(define-css-type (Float none left right)
+ [float none])
 
-(define-css-type (Display display/block display/inline display/inherit))
+(define-css-type (Display block inline))
 
-(define-css-type (Text-Align text-align/left text-align/right text-align/center text-align/justify text-align/inherit)
- [text-align text-align/inherit])
+(define-css-type (Text-Align left right center justify)
+ [text-align inherit])
 
-(define-css-type (Overflow overflow/visible overflow/hidden overflow/overflow/auto overflow/scroll overflow/inherit overflow/auto)
- [overflow-x overflow/visible]
- [overflow-y overflow/visible])
+(define-css-type (Overflow visible hidden auto scroll)
+ [overflow-x visible]
+ [overflow-y visible])
 
-(define-css-type (Position position/static position/relative position/absolute position/fixed position/inherit)
-  [position position/static])
+(define-css-type (Position static relative absolute fixed)
+  [position static])
 
-(define-css-type (Offset (offset/px (offset.px Real)) offset/auto offset/inherit)
-  [top offset/auto]
-  [right offset/auto]
-  [bottom offset/auto]
-  [left offset/auto])
+(define-css-type (Offset (px Real) auto)
+  [top auto]
+  [right auto]
+  [bottom auto]
+  [left auto])
 
-(define-css-type (Box-Sizing box-sizing/border-box box-sizing/content-box box-sizing/inherit)
-  [box-sizing box-sizing/content-box])
+(define-css-type (Box-Sizing border-box content-box)
+  [box-sizing content-box])
 
-(define-css-type (White-Space white-space/normal white-space/pre white-space/nowrap white-space/pre-wrap white-space/pre-word white-space/inherit)
-  [white-space white-space/normal])
+(define-css-type (White-Space normal pre nowrap pre-wrap pre-word)
+  [white-space normal])
