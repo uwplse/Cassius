@@ -63,7 +63,7 @@
   
   (define-fun element-info ((elt Element) (tag TagNames) (&idname Id)) Bool
     (and (= (tagname elt) tag) (= (idname elt) &idname)
-         ,@(for/list ([prop '(width min-width
+         ,@(for/list ([prop '(width min-width max-width min-height max-height
                               margin-top margin-right margin-bottom margin-left
                               padding-top padding-right padding-bottom padding-left
                               border-top-style border-right-style border-bottom-style border-left-style

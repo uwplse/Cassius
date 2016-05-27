@@ -54,12 +54,20 @@
 (define-css-type (Width auto (px Real))
   [width auto])
 
-;; define Min-Width, not sure if it works
 (define-css-type (Min-Width (px Real))
   [min-width (px 0)])
 
+(define-css-type (Max-Width none (px Real))
+  [max-width none])
+
 (define-css-type (Height auto (px Real))
   [height auto])
+
+(define-css-type (Min-Height (px Real))
+  [min-height (px 0)])
+
+(define-css-type (Max-Height none (px Real))
+  [max-height none])
 
 (define-css-type (Margin auto (px Real))
   [margin-top auto]

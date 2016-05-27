@@ -102,10 +102,28 @@
          (or (is-no-box l) (= (box-height l) 0.0))))
 
   (define-fun min-width-limit ((val Real) (e Element)) Real
-    (if (is-min-width/px (style.min-width (computed-style e))) ;; changed is-width/px to is-min-width/px
-        (max val (min-width.px (style.min-width (computed-style e)))) ;; changed width.px to min-width.px
+    (ite (is-min-width/px (style.min-width (computed-style e)))
+        (max val (min-width.px (style.min-width (computed-style e)))) 
         ;; Leaving here for future percentage support
         val))
+
+  (define-fun max-width-limit ((val Real) (e Element)) Real
+    (ite (is-max-width/px (style.max-width (computed-style e)))
+         (min val (max-width.px (style.max-width (computed-style e))))
+         ;; Leaving here for future percentage support
+         val))
+  
+  (define-fun min-height-limit ((val Real) (e Element)) Real
+    (ite (is-min-height/px (style.min-height (computed-style e)))
+        (max val (min-height.px (style.min-height (computed-style e)))) 
+        ;; Leaving here for future percentage support
+        val))
+  
+  (define-fun max-height-limit ((val Real) (e Element)) Real
+    (ite (is-max-height/px (style.max-height (computed-style e)))
+         (min val (max-height.px (style.max-height (computed-style e))))
+         ;; Leaving here for future percentage support
+         val))
 
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
@@ -163,11 +181,11 @@
               (and
                (width-set b)
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                  (min-width-limit (width.px (style.width r)) e))))
+                  (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
           :named ,(sformat "from-style/width"))
        (! (=> (is-height/px (style.height r))
               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-                 (height.px (style.height r))))
+                 (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
           :named ,(sformat "from-style/height"))
 
        ;; %ages
@@ -205,11 +223,11 @@
            `(=> (,(sformat "is-width/~a%" %) (style.width r))
                 (and (width-set b)
                      (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                        (min-width-limit (* (w p) (/ ,% 100)) e)))))
+                        (min-width-limit (max-width-limit (* (w p) (/ ,% 100)) e) e)))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
                 (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-                   (* (h p) (/ ,% 100)))))
+                   (min-height-limit (max-height-limit (* (h p) (/ ,% 100)) e) e))))
 
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
@@ -217,7 +235,7 @@
        (! (= (w p) (+ (ml b) (box-width b) (mr b)))
           :named flow-fill-width)
 
-       (let ([w* (min-width-limit (ite (is-width/auto (style.width r)) 0.0 (width.px (style.width r))) e)]
+       (let ([w* (min-width-limit (max-width-limit (ite (is-width/auto (style.width r)) 0.0 (width.px (style.width r))) e) e)]
              [ml* (ite (is-margin/auto (style.margin-left r)) 0.0 (margin.px (style.margin-left r)))]
              [mr* (ite (is-margin/auto (style.margin-right r)) 0.0 (margin.px (style.margin-right r)))])
          (let ([overflow? (> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))])
@@ -348,11 +366,11 @@
               (and
                (width-set b)
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                  (min-width-limit (width.px (style.width r)) e))))
+                  (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
           :named ,(sformat "from-style/width"))
        (! (=> (is-height/px (style.height r))
               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-                 (height.px (style.height r))))
+                 (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
           :named ,(sformat "from-style/height"))
 
 
@@ -374,10 +392,10 @@
 
        ,@(for/list ([% (%ages 'Width)])
            `(=> (,(sformat "is-width/~a%" %) (style.width r))
-                (and (width-set b) (= (w b) (min-width-limit (* (w p) (/ ,% 100)) e)))))
+                (and (width-set b) (= (w b) (min-width-limit (max-width-limit (* (w p) (/ ,% 100)) e) e)))))
        ,@(for/list ([% (%ages 'Height)])
            `(=> (,(sformat "is-height/~a%" %) (style.height r))
-                (= (h b) (* (h p) (/ ,% 100)))))
+                (= (h b) (min-height-limit (max-height-limit (* (h p) (/ ,% 100)) e) e))))
 
        (ite (is-position/relative (style.position r))
             (and
@@ -402,7 +420,7 @@
          (=> (is-width/auto (style.width r))
              (and
               (width-set b)
-              (= (w b) (min-width-limit (ite (is-box l) (+ (ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (mr l)) 0.0) e))))
+              (= (w b) (min-width-limit (max-width-limit (ite (is-box l) (+ (ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (mr l)) 0.0) e) e))))
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
                  (max
