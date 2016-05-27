@@ -14,3 +14,5 @@ cassius/compiled
 reports/*.html
 reports/*.json
 bench/css/*.rkt
+.DS_Store
+src/compiled/
