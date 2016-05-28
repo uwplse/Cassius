@@ -100,7 +100,6 @@
 
 (define (cascade-rules names rules elt)
   (define re `(specified-style (get/elt ,(element-name elt))))
-
   (define matching-rules
     (for/list ([name names] [rule rules] #:when (selector-possibly-matches? (selector name rule) elt))
       (cons name rule)))
@@ -113,6 +112,15 @@
        (for/or ([name names] [rule rules])
          (has-property? rule property)))
 
+     ; Make sure the tag name is one of the applicable rules or the tag name that is already specified
+     (when (and (not (dict-empty? applicable-rules)) (equal? (element-get elt ':tag) '?)) 
+       (sow
+        `(assert
+          (! (or
+              (,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))
+              ,@(for/list ([(name rule) (in-dict applicable-rules)])
+                (selector-matches? (selector name rule) elt)))))))
+     
      ;; Score of computed rule is >= any applicable stylesheet rule
      (for ([(name rule) (in-dict applicable-rules)])
        (sow

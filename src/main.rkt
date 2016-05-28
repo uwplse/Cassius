@@ -131,6 +131,16 @@
       [_ attr]))
   (for/list ([t tree])
     (match t
+      [`((,block ...) ,rest ...)
+       (replace-ids-with-holes t)]
+      [`(,block :tag (bad body) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret (list block ':tag 'body))
+       (append ret vals)] ; Make sure we don't replace body with ? 
+      [`(,block :tag (bad html) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret (list block ':tag 'html))
+       (append ret vals)] ; Make sure we don't replace html with ?
       [`(,block :tag (bad ,val) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
        (define ret (list block ':tag '?))
@@ -176,12 +186,14 @@
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
     (define box-name (sformat "~a-flow-box" (element-name elt)))
-    (extract-box! (hash-ref smt-out box-name) elt)))
-    ;(match (hash-ref smt-out (sformat "~a-elt" (element-name elt)))
-      ;[(list 'elt _ ...)
-       ; extract tagname and idname
-       ; set the elt's :tag and elt's :id to those
-       ;]
+    (extract-box! (hash-ref smt-out box-name) elt)
+    (define output (hash-ref smt-out (sformat "~a-elt" (element-name elt))))
+    (when (equal?  (element-get elt ':tag) '?)
+      (match output
+        [(list 'elt doc tag _ ...)
+         (define props
+           `(:tag (fixed,(second (string-split (symbol->string tag) "/")))))
+         (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))))
 
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)])

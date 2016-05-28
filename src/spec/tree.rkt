@@ -63,6 +63,7 @@
 
   (define-fun element-info ((elt Element) (tag TagNames) (&idname Id)) Bool
     (and (! (= (tagname elt) tag) :named tag)
+         (! (not (is-no-tag (tagname elt))))
          (! (= (idname elt) &idname) :named id)
          ,@(for/list ([prop '(width
                               margin-top margin-right margin-bottom margin-left
