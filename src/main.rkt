@@ -83,45 +83,57 @@
      tagname]
     [_ (void)]))
 
-;; Does tagging of bad
-(define (extract-core query stylesheet trees vars)
-  (define stylesheet* (make-hash))
-  (for ([name vars])
-    (define split-name (split-line-name name))
-    (match split-name
-      [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
-       (define field-name
-         (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
-           ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
-       (define elt (elt-from-name elt-name))
-       (set-element-attrs! elt (plist-merge (element-attrs elt) `(,field-name (bad ,(element-get elt field-name)))))]
-      [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
-       (define rule (hash-ref! stylesheet* idx (list-ref stylesheet idx)))
-       (define rule*
-         (cons (car rule)
-               (for/list ([line (cdr rule)])
-                 (cond
-                   [(not (list? line))
-                    line]
-                   [(equal? (car line) prop)
-                    `(,prop (bad ,(cadr line)))]
-                   [else
-                    line]))))
-       (hash-set! stylesheet* idx rule*)]
-      [`((info ,elt-name) ,compute-style ...)
-       (define tag-name (extract-tag-name compute-style))
-       (define elt (elt-from-name elt-name))
-       (define field-name ':tag)
-       (define attributes (element-attrs elt))
-       (define fname (element-get elt field-name))
-       (define (no-bad field)
-         (match field
-           [`(bad ,tag) #f]
-           [_ #t]))
-       (when (no-bad fname)(set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname)))))]
+    (define (extract-id-name constraint)
+      (define cstyle (first constraint))
+      (match cstyle
+      [`(compute-style ,property ,elt-name tag ,tagname ,id)
+       id]
       [_ (void)]))
-  (define ss (hash-values stylesheet*))
-  (values ss trees)) ; stylesheet* is the one with just bad rules
+
+  ;; Does tagging of bad
+  (define (extract-core query stylesheet trees vars)
+    (define stylesheet* (make-hash))
+    (for ([name vars])
+      (define split-name (split-line-name name))
+      ;(printf "SPLIT-NAME: ~a\n" split-name)
+      (match split-name
+        [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
+         (define field-name
+           (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
+             ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
+         (define elt (elt-from-name elt-name))
+         (set-element-attrs! elt (plist-merge (element-attrs elt) `(,field-name (bad ,(element-get elt field-name)))))]
+        [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
+         (define rule (hash-ref! stylesheet* idx (list-ref stylesheet idx)))
+         (define rule*
+           (cons (car rule)
+                 (for/list ([line (cdr rule)])
+                   (cond
+                     [(not (list? line))
+                      line]
+                     [(equal? (car line) prop)
+                      `(,prop (bad ,(cadr line)))]
+                     [else
+                      line]))))
+         (hash-set! stylesheet* idx rule*)]
+        [`((info ,elt-name) ,compute-style ...) ;;? Pattern matching for ids?
+         (define tag-name (extract-tag-name compute-style))
+         (define id-name (extract-id-name compute-style))
+         (define elt (elt-from-name elt-name))
+         (define field-name ':tag)
+         (define id-field-name ':id)
+         (define attributes (element-attrs elt))
+         (define fname (element-get elt field-name))
+         (define iname (element-get elt id-field-name))
+         (define (no-bad field)
+           (match field
+             [`(bad ,tag) #f]
+             [_ #t]))
+         (when (no-bad fname)(set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname))))  )
+         (when (and (no-bad iname) iname) (set-element-attrs! elt (plist-merge attributes `(,id-field-name (bad ,iname)))))]
+        [_ (void)]))
+    (define ss (hash-values stylesheet*))
+    (values ss trees)) ; stylesheet* is the one with just bad rules
 
 ; Replace the bad tags with holes
 (define (replace-ids-with-holes tree)
@@ -136,7 +148,7 @@
       [`(,block :tag (bad body) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
        (define ret (list block ':tag 'body))
-       (append ret vals)] ; Make sure we don't replace body with ? 
+       (append ret vals)] ; Make sure we don't replace body with ?
       [`(,block :tag (bad html) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
        (define ret (list block ':tag 'html))
@@ -180,7 +192,7 @@
      (define box-y (+ y yo))
      (define props
        `(:w ,box-width :h ,box-height :x ,box-x :y ,box-y #|:bl ,bl :bb ,bb :br ,br :bt ,bt|#))
-     
+
      (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))
 
 (define (extract-tree! tree smt-out)
@@ -225,12 +237,12 @@
 (define (stylesheet-constraints emit names sheet #:browser [browser? #f])
   (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
     (selector-constraints emit name rule i #:browser browser?)
-    
+
     (define allow-new-properties? (member '? rule))
     (define pairs
       (filter (λ (x) (or (not (symbol? (cadr x))) (not (css-em? (cadr x)))))
               (filter list? (cdr rule))))
-    
+
     (for ([(a-prop type default) (in-css-properties)])
       (match (assoc a-prop pairs)
         [(list _ '?)
@@ -277,11 +289,11 @@
   (define dom-names
     (for/list ([dom doms])
       (for/list ([elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt))))
-  
+
   ; Instantiate each element
   (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-elt" name) Element)))
-  
+
   ; Define the mapping
   (define body
     (for*/fold ([body 'no-elt]) ([names dom-names] [name names])
@@ -292,11 +304,11 @@
   (define dom-names
     (for/list ([dom doms])
       (cons (dom-root dom) (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt)))))
-  
+
   ; Instantiate each box
   (for ([dom doms] [names dom-names] #:when #t [name names])
     (emit `(declare-const ,(sformat "~a-flow-box" name) Box)))
-  
+
   ; Define the mapping
   (define body
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
@@ -305,7 +317,7 @@
 
 (define (dom-root-constraints dom emit)
   (define b `(get/box ,(sformat "~a-flow" (dom-root dom))))
-  
+
   (emit `(echo ,(format "Defining the ~a root box" (dom-name dom))))
   (emit `(assert (! (link-block-box ,(sformat "~a-flow-box" (dom-root dom))
                                     ,(sformat "~a-flow" (dom-root dom))
@@ -409,7 +421,7 @@
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
             (cns dom sow elt)))))
 
-(define (all-constraints sheet doms) 
+(define (all-constraints sheet doms)
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)
     (error "Different browsers on different documents not yet supported"))
@@ -417,7 +429,7 @@
 
   (define browser-style-names (name-rules (car browsers) browser-style (map dom-tree doms)))
   (define user-style-names (name-rules 'user sheet (map dom-tree doms)))
-  
+
   (define-values (tags ids classes)
     (reap [save-tag save-id save-class]
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
@@ -437,18 +449,18 @@
                 [`(class ,classname)
                   (save-class (sformat "class/~a" classname))]
                 [_ (void)])))))
-  
+
   (define element-names
     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt)))
   (define box-names
     (append
      (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (box-name elt))
      (for/list ([dom doms]) (sformat "~a-flow" (dom-root dom)))))
-  
+
   (define rule-names (filter identity (append browser-style-names user-style-names)))
-  
+
   (eprintf ";; ~a rules, ~a elements, ~a boxes\n" (length rule-names) (length element-names) (length box-names))
-  
+
   (define constraints
     (list
      tree-constraints
@@ -459,7 +471,7 @@
      user-constraints box-link-constraints
      info-constraints box-element-constraints
      box-constraints))
-  
+
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")
     (declare-datatypes
@@ -477,7 +489,7 @@
     ,@layout-definitions
     (assert (! (and (= (element no-box) nil-elt) (= (flow-box no-elt) nil-box))
                :named no-element-no-box))
-    
+
     ; Stylesheet
     (echo "Browser stylesheet")
     ,@(reap [emit] (stylesheet-constraints emit browser-style-names browser-style #:browser #t))
