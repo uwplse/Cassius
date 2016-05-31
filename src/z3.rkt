@@ -10,13 +10,12 @@
 (struct unsat-core (bad-lines) #:prefab)
 
 (define-runtime-path bin "..")
-(define z3 (make-parameter (build-path bin "z3.sh")))
 
 ; Invokes Z3 and returns #f if unsatisfiable
 ; or a map from constant names to values if satisfiable.
 (define (z3-solve encoding #:debug [debug? #f])
   (define-values (process out in err)
-    (subprocess #f #f #f (z3) "-st" "-smt2" "-in"))
+    (subprocess #f #f #f z3-path "-st" "-smt2" "-in"))
 
   (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
   (define asserts (make-hash))

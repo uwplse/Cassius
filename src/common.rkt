@@ -5,12 +5,17 @@
  sformat slower
  flags all-flags supported-features
  tree-size sdiff in-groups sequence-cons cartesian-product trieify
- xor ->number)
+ xor ->number z3-path)
 
 (define flags (make-parameter '(z3o)))
 (define all-flags '(opt float z3o details))
 
-(define supported-features '(float % unknown-selector box-sizing min-width))
+(define supported-features '(float % unknown-selector box-sizing min-width max-width min-height max-height))
+
+(define z3-path (find-executable-path "z3"))
+
+(unless z3-path
+  (error "Cannot find `z3` binary; please put a `z3` binary into your PATH."))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
@@ -85,7 +90,7 @@
              h))])
       (values key (trieify ls*)))]))
 
-  (define (xor a b) (not (equal? (not a) (not b))))
+(define (xor a b) (not (equal? (not a) (not b))))
 
 (define (->number n)
   (match n
