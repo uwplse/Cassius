@@ -10,73 +10,125 @@
 (require "../print/css.rkt")
 (require "../main.rkt")
 
-(define (run-file fname pname #:debug [debug '()] #:truncate truncate #:repair repair)
+(define (run-file fname pname #:debug [debug '()] #:truncate truncate #:repair-all repair-all #:max-repairs max-repairs)
   (match-define
     (problem desc url header sheet documents features test)
     (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
   
   (define documents*
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
-  
-  ; Secondary repair pass to fill in holes in the IDs and tag names
-  (define (repair-pass trees)
-    (printf "\nAttempting to repair the document..\n")
-    (define second-res
-      (with-handlers
-          ([exn:break? (λ (e) 'break)]
-           [exn:fail? (λ (e) (list 'error e))])
-        (solve (list sheet) trees #:debug debug)))
-    (match second-res
-      [(success stylesheet trees)
-       (displayln (stylesheet->string stylesheet))
-       (for-each (compose displayln tree->string) trees)]
-      [(failure stylesheet trees)
-       (displayln (stylesheet->string stylesheet))
-       (for-each (compose displayln tree->string) trees)
-       (eprintf "Rejected.\n")]
-      [(list 'error e)
-       ((error-display-handler) (exn-message e) e)]
-      ['break
-       (eprintf "Terminated.\n")]))
 
+  (define documents-orig documents*)
+  (define repaired-elt-paths '()) ; Keep track of all of the elements we have tried to repair so far
+  
   ; Solve once to get the tree with holes highlighed 
-  (define res
+  (define (solve-problem sheets documents debug)
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents* #:debug debug)))
+      (solve sheets documents #:debug debug)))
+
+  ; Get the failure/succeses results
+  (define fixed #f)
+  (define (match-result res)
+    (match res
+      [(success stylesheet trees)
+       (set! fixed #t)
+       (displayln (stylesheet->string stylesheet))
+       (for-each (compose displayln tree->string) trees)
+       (eprintf "\nAccepted!\n")]
+      [(failure stylesheet trees) #f]
+      [(list 'error e)
+       ((error-display-handler) (exn-message e) e) #t]
+      ['break
+       (eprintf "\nTerminated.\n") #t]))
+
+  ; First, run solve without any repair holes
+  (define result (solve-problem (list sheet) documents* debug))
+  (define last-repaired-tree '())
+
+  ; Keep looping until we reach the maximum number of repair attempts, or the result is accepted
+  (define continue #t)
+  (for ([i max-repairs])
+    #:break (or (not continue) (match-result result))
+    (match result
+      [(failure stylesheet trees)
+       (displayln (stylesheet->string stylesheet))
+       (for-each (compose displayln tree->string) trees)
+       (printf "\nAttempting to repair the document...\n")
+       ; Replace the bad tags with holes and attempt to repair the document
+       (cond
+         [(equal? repair-all #f)
+          (define doms
+            (for/list ([d documents*][t trees]) ;; d = <#dom>
+              ; Replace one id or tag with a ?. If the last tag or id could not be fixed, set it back to what it was previously
+              (set-replaced #f)
+              (define new-tree (replace-one-id-with-hole t))
+              (set! continue (not (equal? last-repaired-tree new-tree))) ; break out if we are trying to repair the exact same tree
+              (set! last-repaired-tree new-tree)
+
+              ; Createe a new instance of the problem again and try to solve
+              (printf "\nRepairing this tree..\n")
+              ((compose displayln tree->string) new-tree)
+              (match-define (dom name ctx tree) d)
+              (dom name ctx new-tree)))
+          (when continue (set! result (solve-problem (list sheet) doms debug)))]
+         [(equal? repair-all 't)
+          (define doms
+            (for/list ([d documents*] [t trees])
+              (define new-tree (replace-ids-with-holes t))
+              (match-define (dom name ctx tree) d)
+              (dom name ctx new-tree)))
+          (set! result (solve-problem (list sheet) doms debug))])]))
   
-  ; If a failure was returned, trigger the repair process if the flag is set
-  (match res
-    [(success stylesheet trees)
-     (eprintf "Accepted!\n")]
-    [(failure stylesheet trees)
-     (cond
-       [(equal? repair #t)
-        (displayln (stylesheet->string stylesheet))
-        (for-each (compose displayln tree->string) trees)
-        
-        ; Replace the bad tags with holes and attempt to repair the document
-        (define doms
-          (for/list ([d documents*] [t trees]) ;; d = <#dom>
-            (define new-tree  (replace-ids-with-holes t))
-            (match-define (dom name ctx tree) d)
-            (dom name ctx new-tree)))
-        
-        (repair-pass doms)]
-       [
-        (displayln (stylesheet->string stylesheet))
-        (for-each (compose displayln tree->string) trees)
-        (eprintf "Rejected 1.\n")])]
-    [(list 'error e)
-     ((error-display-handler) (exn-message e) e)]
-    ['break
-     (eprintf "Terminated.\n")]))
+  ; Fill in all holes at once
+  (for ([i max-repairs])
+    #:break (or fixed (match-result result))
+    (match result
+      [(failure stylesheet trees)
+       (displayln (stylesheet->string stylesheet))
+       (for-each (compose displayln tree->string) trees)
+       (printf "\nUnable to repair the document... Attempting to repair by filling in all holes at once.\n")
+       
+       (define doms
+         (for/list ([d documents*] [t trees])
+           (define new-tree (replace-ids-with-holes t))
+           (match-define (dom name ctx tree) d)
+           (dom name ctx new-tree)))
+       (set! result (solve-problem (list sheet) doms debug))]
+      [(list 'error e)
+       ((error-display-handler) (exn-message e) e) #t]
+      ['break
+       (eprintf "\nTerminated.\n") #t]))
+  
+  ; After looping for the max number, try to synthesize an empty rule that will make it work
+  (for ([i 1])
+    #:break (or fixed (match-result result))
+    (match result
+      [(failure stylesheet trees)
+       (displayln (stylesheet->string stylesheet))
+       (for-each (compose displayln tree->string) trees)
+       (printf "Unable to repair the document after ~a attempts... Attempting to repair by synthesizing a new rule.\n" max-repairs)
+       (printf "Stylesheet ~a\n" sheet)]
+       ;(define doms
+        ; (for/list ([d documents*] [t trees])
+        ;   (define new-tree (replace-ids-with-holes t))
+         ;  (match-define (dom name ctx tree) d)
+          ; (dom name ctx new-tree)))]
+
+       
+       
+      ; (solve-problem (list sheet) doms debug)]
+      [(list 'error e)
+       ((error-display-handler) (exn-message e) e) #t]
+      ['break
+       (eprintf "\nTerminated.\n") #t]))) 
 
 (module+ main
   (define debug '())
   (define truncate #f)
-  (define repair #t)
+  (define repair-all #f)
+  (define max-repairs 10)
   
   (command-line
    #:program "cassius repair"
@@ -93,7 +145,9 @@
    #:once-each
    [("--truncate") level "Truncate the tree to this level"
                    (set! truncate (string->number level))]
-   [("--repair") userepair "Repair the given tree if the first pass is rejected"
-                 (set! repair userepair)] ; TODO: Fix this flag to work. 
+   [("--repair-all") repairall "Repair the document by filling all holes in at once"
+                 (set! repair-all (string->symbol repairall))]
+   [("--max-repairs") maxrepairs "Set the maximum number of repair attempts"
+                 (set! max-repairs (string->number maxrepairs))]
    #:args (fname problem)
-   (run-file fname problem #:debug debug #:truncate truncate #:repair repair)))
+   (run-file fname problem #:debug debug #:truncate truncate #:repair-all repair-all #:max-repairs max-repairs)))

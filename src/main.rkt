@@ -10,8 +10,9 @@
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
 (require srfi/1)
+(require racket/generator)
 
-(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes)
+(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes replace-one-id-with-hole get-first-bad-tag-id set-replaced)
 
 (define (extract-stylesheet stylesheet smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
@@ -118,7 +119,9 @@
          (match field
            [`(bad ,tag) #f]
            [_ #t]))
-       (when (no-bad fname)(set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname)))))]
+       (cond
+         [(no-bad fname)
+          (set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname))))])]
       [_ (void)]))
   (define ss (hash-values stylesheet*))
   (values ss trees)) ; stylesheet* is the one with just bad rules
@@ -133,7 +136,7 @@
     (match t
       [`((,block ...) ,rest ...)
        (replace-ids-with-holes t)]
-      [`(,block :tag (bad body) ,rest ...)
+      [`(,block :tag (bad body) ,rest ...) ; TODO: This does not work for uppercase tag names
        (define vals (map (λ (t) (match-attr t)) rest))
        (define ret (list block ':tag 'body))
        (append ret vals)] ; Make sure we don't replace body with ? 
@@ -153,6 +156,80 @@
        (define ret (list block attr val))
        (append ret rest)]
       [_ (replace-ids-with-holes t)])))
+
+; Replace the bad tags with holes
+; Update to work with IDs, loop through IDs first, then tags
+(define replaced #f)
+(define (set-replaced val)
+  (set! replaced val))
+
+(define (replace-one-id-with-hole tree)
+  (define (match-attr attr)
+    (match attr
+      [`(bad ,val) val]
+      [_ attr]))
+  
+  (define (match-html-body elt)
+    (match elt
+      [`(,block :tag (bad body) ,rest ...) #t]
+      [`(,block :tag (bad html) ,rest ...) #t]
+      [_ #f]))
+  
+  (define (match-tag elt)
+    (match elt
+      [`(,block :tag (bad ,val) ,rest ...) #t]
+      [_ #f]))
+
+  (define (match-hole elt)
+    (match elt
+      [`(,block :tag (bad ?) ,rest ...) #t]
+      [_ #f]))
+  
+  (define (match-id elt)
+    (match elt
+      [`(,block :id (bad ,val) ,rest ...) #t]
+      [_ #f]))
+  
+  (for/list ([t tree])
+      (match t
+        [`((,block ...) ,rest ...)
+         (replace-one-id-with-hole t)]
+        [`(,block ,attr (bad ,val) ,rest ...)
+         (define vals (map (λ (t) (match-attr t)) rest))
+         (define ret
+           (cond
+             [(and (not (match-html-body t)) (match-hole t) (match-tag t))
+              (list block ':tag '?)]
+             [(and (not (match-html-body t)) (match-hole t) (match-id t))
+              (list block ':id '?)] 
+             [(and (not (match-html-body t)) (match-id t) (not replaced)) ; Fix an ID first before fixing a tag
+              (set-replaced #t)
+              (list block ':id '?)]
+             [(and (not (match-html-body t)) (match-tag t) (not replaced))
+              (set-replaced #t) ; how horrible is this?
+              (list block ':tag '?)]         
+             [else (list block attr val)]))
+         (append ret vals)]
+        [`(,block ,attr (fixed ,val) ,rest ...)
+          (define vals (map (λ (t) (match-attr t)) rest))
+          (define ret (list block attr val rest))
+          (append ret vals)]
+        [`(,block ,attr ,val ,rest ...)
+         (define ret (list block attr val))
+         (append ret rest)]
+        [_ (replace-one-id-with-hole t)])))
+
+
+(define (get-first-bad-tag-id tree)
+  (in-generator
+   (for ([t tree])
+      (match t
+        [`((,block ...) ,rest ...) (for ([j (get-first-bad-tag-id t)]) (yield j))]
+        [`(,block :tag (bad body) ,rest ...) (void)]
+        [`(,block :tag (bad html) ,rest ...) (void)]
+        [`(,block :tag (bad ,val) ,rest ...) (yield val)]
+        [`(,block :id (bad ,val) ,rest ...) (yield val)]
+        [_ (void)]))))
 
 (define (plist-add plist key value)
   (let loop ([plist plist])
