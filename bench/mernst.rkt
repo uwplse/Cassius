@@ -4,9 +4,9 @@
 "")
 
 (define-stylesheet good-sheet
-  ((sel/id id/leftsidebar)
-   [width (width/px 175)]
-   [float float/left]))
+  ((id leftsidebar)
+   [width (px 175)]
+   [float left]))
 
 (define-stylesheet unknown-sheet
   ?)

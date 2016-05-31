@@ -226,11 +226,6 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
   #:sheet good-sheet
   #:documents doma domb)
 
-(define-problem render
-  #:header header
-  #:sheet good-sheet
-  #:documents (strip-positions doma))
-
 (define-problem sketch
   #:header header
   #:sheet partial-good-sheet
