@@ -184,41 +184,37 @@
       [`(,block :tag (bad body) ,rest ...) #t]
       [`(,block :tag (bad html) ,rest ...) #t]
       [_ #f]))
-  
-  (define (match-tag elt)
-    (match elt
-      [`(,block :tag (bad ,val) ,rest ...) #t]
-      [_ #f]))
 
   (define (match-hole elt)
     (match elt
       [`(,block :tag (bad ?) ,rest ...) #t]
       [_ #f]))
-  
-  (define (match-id elt)
-    (match elt
-      [`(,block :id (bad ,val) ,rest ...) #t]
-      [_ #f]))
-  
+ 
   (for/list ([t tree])
       (match t
         [`((,block ...) ,rest ...)
          (replace-one-id-with-hole t)]
-        [`(,block ,attr (bad ,val) ,rest ...)
+        [`(,block ,tag (bad ,val) :id (bad ,id) ,rest ...)
          (define vals (map (λ (t) (match-attr t)) rest))
          (define ret
            (cond
-             [(and (not (match-html-body t)) (match-hole t) (match-tag t))
-              (list block ':tag '?)]
-             [(and (not (match-html-body t)) (match-hole t) (match-id t))
-              (list block ':id '?)] 
-             [(and (not (match-html-body t)) (match-id t) (not replaced)) ; Fix an ID first before fixing a tag
+             [(and (not (match-html-body t)) (match-hole t))
+              (list block tag val ':id '?)] 
+             [(and (not (match-html-body t)) (not replaced)) ; Fix an ID first before fixing a tag
               (set-replaced #t)
-              (list block ':id '?)]
-             [(and (not (match-html-body t)) (match-tag t) (not replaced))
+              (list block tag val ':id '?)]      
+             [else (list block tag val)]))
+         (append ret vals)]
+        [`(,block ,tag (bad ,val) ,rest ...)
+         (define vals (map (λ (t) (match-attr t)) rest))
+         (define ret
+           (cond
+             [(and (not (match-html-body t)) (match-hole t))
+              (list block ':tag '?)]
+             [(and (not (match-html-body t)) (not replaced))
               (set-replaced #t) ; how horrible is this?
               (list block ':tag '?)]         
-             [else (list block attr val)]))
+             [else (list block tag val)]))
          (append ret vals)]
         [`(,block ,attr (fixed ,val) ,rest ...)
           (define vals (map (λ (t) (match-attr t)) rest))
@@ -280,6 +276,12 @@
         [(list 'elt doc tag _ ...)
          (define props
            `(:tag (fixed,(second (string-split (symbol->string tag) "/")))))
+         (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))
+    (when (equal?  (element-get elt ':id) '?)
+      (match output
+        [(list 'elt doc tag id _ ...)
+         (define props
+           `(:id (fixed,(second (string-split (symbol->string id) "/")))))
          (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))))
 
 (define (extract-counterexample! smt-out)
@@ -313,7 +315,7 @@
   (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
     (selector-constraints emit name rule i #:browser browser?)
 
-    (define allow-new-properties? (member '? rule))
+    (define allow-new-properties? (member '? (cdr rule)))
     (define pairs
       (filter (λ (x) (or (not (symbol? (cadr x))) (not (css-em? (cadr x)))))
               (filter list? (cdr rule))))

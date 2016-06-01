@@ -55,7 +55,6 @@
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
        (for-each (compose displayln tree->string) trees)
-       (printf "\nAttempting to repair the document...\n")
        ; Replace the bad tags with holes and attempt to repair the document
        (cond
          [(equal? repair-all #f)
@@ -68,11 +67,14 @@
               (set! last-repaired-tree new-tree)
 
               ; Createe a new instance of the problem again and try to solve
-              (printf "\nRepairing this tree..\n")
+              (printf "\nRepairing this tree..\n\n")
               ((compose displayln tree->string) new-tree)
+              (printf "\n")
               (match-define (dom name ctx tree) d)
               (dom name ctx new-tree)))
-          (when continue (set! result (solve-problem (list sheet) doms debug)))]
+          (when continue
+            (printf "\nAttempting to repair the document...\n\n")
+            (set! result (solve-problem (list sheet) doms debug)))]
          [(equal? repair-all 't)
           (define doms
             (for/list ([d documents*] [t trees])
@@ -82,20 +84,23 @@
           (set! result (solve-problem (list sheet) doms debug))])]))
   
   ; Fill in all holes at once
+  (set! continue #t)
   (for ([i max-repairs])
-    #:break (or fixed (match-result result))
+    #:break (or fixed (not continue) (match-result result))
     (match result
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
        (for-each (compose displayln tree->string) trees)
-       (printf "\nUnable to repair the document... Attempting to repair by filling in all holes at once.\n")
+       (printf "\n\nUnable to repair the document... Attempting to repair by filling in all holes at once.\n\n")
        
        (define doms
          (for/list ([d documents*] [t trees])
            (define new-tree (replace-ids-with-holes t))
+           (set! continue (not (equal? last-repaired-tree new-tree))) ; break out if we are trying to repair the exact same tree
+           (set! last-repaired-tree new-tree)
            (match-define (dom name ctx tree) d)
            (dom name ctx new-tree)))
-       (set! result (solve-problem (list sheet) doms debug))]
+        (when continue (set! result (solve-problem (list sheet) doms debug)))]
       [(list 'error e)
        ((error-display-handler) (exn-message e) e) #t]
       ['break
@@ -108,17 +113,16 @@
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
        (for-each (compose displayln tree->string) trees)
-       (printf "Unable to repair the document after ~a attempts... Attempting to repair by synthesizing a new rule.\n" max-repairs)
-       (printf "Stylesheet ~a\n" sheet)]
-       ;(define doms
-        ; (for/list ([d documents*] [t trees])
-        ;   (define new-tree (replace-ids-with-holes t))
-         ;  (match-define (dom name ctx tree) d)
-          ; (dom name ctx new-tree)))]
-
+       (printf "\n\nUnable to repair the document... Attempting to repair by synthesizing a new rule.\n\n")
+       (set! sheet (append (list (list '? '?)) sheet))
        
+       (define doms
+         (for/list ([d documents*] [t trees])
+           (define new-tree (replace-ids-with-holes t))
+           (match-define (dom name ctx tree) d)
+           (dom name ctx new-tree)))
        
-      ; (solve-problem (list sheet) doms debug)]
+       (match-result (solve-problem (list sheet) doms debug))]    
       [(list 'error e)
        ((error-display-handler) (exn-message e) e) #t]
       ['break
@@ -128,7 +132,7 @@
   (define debug '())
   (define truncate #f)
   (define repair-all #f)
-  (define max-repairs 10)
+  (define max-repairs 2)
   
   (command-line
    #:program "cassius repair"
