@@ -10,14 +10,21 @@
   "Given an element and a selector, returns a Z3 expression for when that element matches"
   (match sel
     [`? #f]
-    [`(id ,id) (if (equal? id (element-get elt ':id)) 'true 'false)]
+    [`(id ,id)
+      (cond
+       [(and (element-get elt ':id) (equal? (slower id) (slower (element-get elt ':id))))
+        'true]
+       [(and (element-get elt ':id) (equal? '? (slower (element-get elt ':id))))
+        `(,(sformat "is-id/~a" (slower id)) (idname (get/elt ,(element-name elt))))]
+       [else
+        'false]) ]
     [`(class ,cls)
      (if (and (element-get elt ':class) (member cls (element-get elt ':class))) 'true 'false)]
     [`(tag ,tag)
      (cond
         [(and (element-get elt ':tag) (equal? (slower tag) (slower (element-get elt ':tag))))
          'true]
-        [(and (element-get elt ':tag) (equal? '? (slower (element-get elt ':tag)))) ;; new?
+        [(and (element-get elt ':tag) (equal? '? (slower (element-get elt ':tag))))
          `(,(sformat "is-tag/~a" (slower tag)) (tagname (get/elt ,(element-name elt))))]
         [else
          'false])]
@@ -112,15 +119,32 @@
        (for/or ([name names] [rule rules])
          (has-property? rule property)))
 
+    ;; Redundant -- will change once certain debugged
+    (define could-inherit-different?
+      (for/or ([name names] [rule rules])
+        (and (has-property? rule property) (if (equal? (caar rule) 'child) (selector-matches? (car rule) elt) true)))) ;; need to be able to handle inheriting tags/ids
+
+
+
+
      ; Make sure the tag name is one of the applicable rules or the tag name that is already specified
-     (when (and (not (dict-empty? applicable-rules)) (equal? (element-get elt ':tag) '?)) 
+     (when (and (not (dict-empty? applicable-rules)) (equal? (element-get elt ':tag) '?))
        (sow
         `(assert
           (! (or
               (,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))
               ,@(for/list ([(name rule) (in-dict applicable-rules)])
                 (selector-matches? (selector name rule) elt)))))))
-     
+
+    ; Mirror above
+    (when (and (not (dict-empty? applicable-rules)) (equal? (element-get elt ':id) '?))
+      (sow
+       `(assert
+         (! (or
+             (,(sformat "is-id/~a" (slower (element-get elt ':tag))) (idname (get/elt ,(element-name elt))))
+             ,@(for/list ([(name rule) (in-dict applicable-rules)])
+                (selector-matches? (selector name rule) elt)))))))
+
      ;; Score of computed rule is >= any applicable stylesheet rule
      (for ([(name rule) (in-dict applicable-rules)])
        (sow
@@ -134,8 +158,16 @@
      (sow
       `(assert
         (! (=>
-          ,(if could-be-different?
-              `(,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))
+          ,(if (and could-be-different? could-inherit-different?)
+               (cond
+                   [ (and (not (dict-empty? applicable-rules) ) (equal?  (caadar applicable-rules) 'id))  `(,(sformat "is-id/~a" (slower (element-get elt ':id))) (idname (get/elt ,(element-name elt))))]
+                   [ (or (dict-empty? applicable-rules) (equal?  (caadar applicable-rules) 'tag)) `(,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))];  (printf "APPLICABLERULESTAG: ~a\n" applicable-rules)] ;; Apply to all rules (not just first) & add others
+                   [else 'true]) ;; Is this a good default value?
+
+              ;; TODO: trying to get pattern matching to work instead
+              ;(match applicable-rules
+              ;  [,(list (list _ ('tag ,...) ...) ...) `(,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))]
+              ;  [_ (void)])
               'true)
           (or
             (and (is-useDefault (,(sformat "style.~a$" property) ,re))
@@ -152,8 +184,9 @@
                                (,(sformat "style.~a" property)
                                 (computed-style (parent (get/elt ,(element-name elt)))))
                                ,default)
-                          (,(sformat "rule.~a" property) ,name)))))))
-           :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property)))))))
+                          (,(sformat "rule.~a" property) ,name)))))) )
+           :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property))))
+          )))
 
 (define (selector name rule)
   (match rule
@@ -191,7 +224,6 @@
       (when (element-get elt ':id) (id (element-get elt ':id)))
       (when (element-get elt ':tag) (tag (slower (element-get elt ':tag))))
       (when (element-get elt ':class) (for-each class (element-get elt ':class)))))
-
   (for/list ([rule sheet] [i (in-naturals)])
     (and
      (can-match ids tags classes rule)
