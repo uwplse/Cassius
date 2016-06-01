@@ -19,17 +19,17 @@
    ([BLOCK :tag body :x 0 :y 0 :w 20]
     ([BLOCK :tag div :x 0 :y 0 :w 10]))))
 
-    (define-document (test-wrong-id #:width 20)
+    (define-document (test-wrong-tag #:width 20)
       ([BLOCK :tag html :x 0 :y 0 :w 20]
        ([BLOCK :tag body :x 0 :y 0 :w 20]
-        ([BLOCK :tag djv :x 0 :y 0 :w 10]))))
+        ([BLOCK :tag djv :id bleh :x 0 :y 0 :w 10]))))
 
 (define-problem test
   #:header test
   #:sheet test
   #:documents test)
 
-  (define-problem wrong-id
+  (define-problem wrong-tag ;; <--- Good example to use
     #:header test
     #:sheet test
-    #:documents test-wrong-id)
+    #:documents test-wrong-tag)
