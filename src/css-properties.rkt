@@ -1,35 +1,20 @@
 #lang racket
 
 (require "common.rkt")
-(provide in-css-properties in-css-types %ages)
+(provide in-css-properties in-css-types *%*)
 
 (define css-types-hash (make-hash))
 (define css-property-hash (make-hash))
 
-(define %ages-data
-  '((Width 1 15 18 20 50 80 100 125 200 62 66 25 29 101 5)
-    (Height 1 20 25 50 100 200)
-    (Margin 15 50 29 2)
-    (Padding 1 2 20 50)
-    (Offset 1.5)))
-
-(define (%ages type)
-  (match (assoc type %ages-data)
-    [#f '()]
-    [(list _ %s ...) %s]))
-
-(define (%age-constructor type)
-  (map (curry sformat "~a/~a%" (slower type)) (%ages type)))
+(define *%* (make-parameter '(1 1.5 5 10 15 18 20 25 29 50 62 66 80 100 101 125 200)))
 
 (define (css-constructor name items)
-  (append (%age-constructor name)
-          (for/list ([variant (list* 'inherit items)])
-            (match variant
-              [(? symbol?) (sformat "~a/~a" (slower name) variant)]
-              [(list (? symbol? constructor) (? symbol? type))
-               (list (sformat "~a/~a" (slower name) constructor)
-                     (list (sformat "~a.~a" (slower name) constructor)
-                           type))]))))
+  (for/list ([variant (list* 'inherit items)])
+    (match variant
+      [(? symbol?) (sformat "~a/~a" (slower name) variant)]
+      [(list (? symbol? constructor) (? symbol? type))
+       (list (sformat "~a/~a" (slower name) constructor)
+             (list (sformat "~a.~a" (slower name) constructor) type))])))
 
 (define (css-expand name value)
   (match value
@@ -51,7 +36,7 @@
 (define (in-css-types)
   (in-hash css-types-hash))
 
-(define-css-type (Width auto (px Real))
+(define-css-type (Width auto (px Real) (% Real))
   [width auto])
 
 (define-css-type (Min-Width (px Real))
@@ -60,7 +45,7 @@
 (define-css-type (Max-Width none (px Real))
   [max-width none])
 
-(define-css-type (Height auto (px Real))
+(define-css-type (Height auto (px Real) (% Real))
   [height auto])
 
 (define-css-type (Min-Height (px Real))
@@ -69,19 +54,19 @@
 (define-css-type (Max-Height none (px Real))
   [max-height none])
 
-(define-css-type (Margin auto (px Real))
+(define-css-type (Margin auto (px Real) (% Real))
   [margin-top auto]
   [margin-right (px 0)]
   [margin-bottom auto]
   [margin-left (px 0)])
 
-(define-css-type (Padding (px Real))
+(define-css-type (Padding (px Real) (% Real))
   [padding-top (px 0)]
   [padding-right (px 0)]
   [padding-bottom (px 0)]
   [padding-left (px 0)])
 
-(define-css-type (Border (px Real))
+(define-css-type (Border (px Real) (% Real))
   [border-top-width medium]
   [border-right-width medium]
   [border-bottom-width medium]

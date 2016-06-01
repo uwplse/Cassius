@@ -60,7 +60,7 @@
 (define (extract-value value)
   (match value
     [(list (? (css-type-ending? 'px)) x) (list 'px x)]
-    [(? css-%?) (list '% (string->number (string-trim (~a (last (split-symbol value))) "%" #:left? #f)))]
+    [(list (? (css-type-ending? '%)) x) (list '% x)]
     [(? symbol?) (last (split-symbol value))]))
 
 (define (prop->prefix prop)
@@ -71,7 +71,7 @@
   (match value
     [(? symbol?) (sformat "~a/~a" prefix value)]
     [(list 'px n) (list (sformat "~a/px" prefix) n)]
-    [(list '% n) (sformat "~a/~a%" prefix n)]))
+    [(list '% n) (list (sformat "~a/%" prefix) n)]))
 
 (define (dump-selector selector)
   (match selector

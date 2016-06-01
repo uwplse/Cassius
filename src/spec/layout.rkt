@@ -42,6 +42,14 @@
   (define-fun between ((x Real) (y Real) (z Real)) Bool
     (or (<= x y z) (>= x y z)))
 
+  (define-fun valid% ((% Real)) Bool
+    (or ,(for/list ([% (*%*)]) `(= % ,%))))
+
+  (define-fun %of ((% Real) (base Real)) Real
+    ,(let* ([%s (*%*)])
+       (for/fold ([out `(* ,(/ (car %s) 100.0) base)]) ([% (cdr %s)])
+         `(if (= % ,%) (* ,(/ % 100.0) base) ,out))))
+
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
     (or (> (bottom-outer box1) (top-outer box2) (top-outer box1))
         (> (bottom-outer box2) (top-outer box1) (top-outer box2))
@@ -188,18 +196,14 @@
                  (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
           :named ,(sformat "from-style/height"))
 
-       ;; %ages
        ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
-             ,@(for/list ([% (%ages 'Margin)])
-                 `(=> (,(sformat "is-margin/~a%" %) (,(sformat "style.margin-~a" dir) r))
-                      (= (,(sformat "m~a" letter) b) (* (w p) (/ ,% 100)))))
-             ,@(for/list ([% (%ages 'Border)])
-                 `(=> (,(sformat "is-border/~a%" %) (,(sformat "style.border-~a" dir) r))
-                      (= (,(sformat "b~a" letter) b) (* (w p) (/ ,% 100)))))
-             ,@(for/list ([% (%ages 'Padding)])
-                 `(=> (,(sformat "is-padding/~a%" %) (,(sformat "style.padding-~a" dir) r))
-                      (= (,(sformat "p~a" letter) b) (* (w p) (/ ,% 100)))))))
+             (=> (is-margin/% (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) (%of (margin.% (,(sformat "style.margin-~a" dir) r)) (w p))))
+             (=> (is-border/% (,(sformat "style.border-~a-width" dir) r))
+                 (= (,(sformat "b~a" letter) b) (%of (border.% (,(sformat "style.border-~a-width" dir) r)) (w p))))
+             (=> (is-padding/% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))))
 
        (ite (is-position/relative (style.position r))
             (and
@@ -219,15 +223,13 @@
              (= (xo b) 0.0)
              (= (yo b) 0.0)))
 
-       ,@(for/list ([% (%ages 'Width)])
-           `(=> (,(sformat "is-width/~a%" %) (style.width r))
-                (and (width-set b)
-                     (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                        (min-width-limit (max-width-limit (* (w p) (/ ,% 100)) e) e)))))
-       ,@(for/list ([% (%ages 'Height)])
-           `(=> (,(sformat "is-height/~a%" %) (style.height r))
-                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-                   (min-height-limit (max-height-limit (* (h p) (/ ,% 100)) e) e))))
+       (=> (is-width/% (style.width r))
+           (and (width-set b)
+                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                   (min-width-limit (max-width-limit (%of (width.% (style.width r)) (w p)) e) e))))
+       (=> (is-height/% (style.height r))
+           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+              (min-height-limit (max-height-limit (%of (height.% (style.height r)) (h p)) e) e)))
 
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
@@ -375,27 +377,24 @@
 
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
-       ;; %ages
        ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
+             (=> (is-margin/% (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) (%of (margin.% (,(sformat "style.margin-~a" dir) r)) (w p))))
+             (=> (is-border/% (,(sformat "style.border-~a-width" dir) r))
+                 (= (,(sformat "b~a" letter) b) (%of (border.% (,(sformat "style.border-~a-width" dir) r)) (w p))))
+             (=> (is-padding/% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))
              (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
-                 (= (,(sformat "m~a" letter) b) 0))
-             ,@(for/list ([% (%ages 'Margin)])
-                 `(=> (,(sformat "is-margin/~a%" %) (,(sformat "style.margin-~a" dir) r))
-                      (= (,(sformat "m~a" letter) b) (* (w p) (/ ,% 100)))))
-             ,@(for/list ([% (%ages 'Border)])
-                 `(=> (,(sformat "is-border/~a%" %) (,(sformat "style.border-~a" dir) r))
-                      (= (,(sformat "b~a" letter) b) (* (w p) (/ ,% 100)))))
-             ,@(for/list ([% (%ages 'Padding)])
-                 `(=> (,(sformat "is-padding/~a%" %) (,(sformat "style.padding-~a" dir) r))
-                      (= (,(sformat "p~a" letter) b) (* (w p) (/ ,% 100)))))))
+                 (= (,(sformat "m~a" letter) b) 0))))
 
-       ,@(for/list ([% (%ages 'Width)])
-           `(=> (,(sformat "is-width/~a%" %) (style.width r))
-                (and (width-set b) (= (w b) (min-width-limit (max-width-limit (* (w p) (/ ,% 100)) e) e)))))
-       ,@(for/list ([% (%ages 'Height)])
-           `(=> (,(sformat "is-height/~a%" %) (style.height r))
-                (= (h b) (min-height-limit (max-height-limit (* (h p) (/ ,% 100)) e) e))))
+       (=> (is-width/% (style.width r))
+           (and (width-set b)
+                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                   (min-width-limit (max-width-limit (%of (width.% (style.width r)) (w p)) e) e))))
+       (=> (is-height/% (style.height r))
+           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+              (min-height-limit (max-height-limit (%of (height.% (style.height r)) (h p)) e) e)))
 
        (ite (is-position/relative (style.position r))
             (and
@@ -607,15 +606,12 @@
            `(and
              (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
                  (= (,(sformat "m~a" letter) b) 0))
-             ,@(for/list ([% (%ages 'Margin)])
-                 `(=> (,(sformat "is-margin/~a%" %) (,(sformat "style.margin-~a" dir) r))
-                      (= (,(sformat "m~a" letter) b) (* (w p) (/ ,% 100)))))
-             ,@(for/list ([% (%ages 'Border)])
-                 `(=> (,(sformat "is-border/~a%" %) (,(sformat "style.border-~a" dir) r))
-                      (= (,(sformat "b~a" letter) b) (* (w p) (/ ,% 100)))))
-             ,@(for/list ([% (%ages 'Padding)])
-                 `(=> (,(sformat "is-padding/~a%" %) (,(sformat "style.padding-~a" dir) r))
-                      (= (,(sformat "p~a" letter) b) (* (w p) (/ ,% 100)))))))
+             (=> (is-margin/% (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) (%of (margin.% (,(sformat "style.margin-~a" dir) r)) (w p))))
+             (=> (is-border/% (,(sformat "style.border-~a-width" dir) r))
+                 (= (,(sformat "b~a" letter) b) (%of (border.% (,(sformat "style.border-~a-width" dir) r)) (w p))))
+             (=> (is-padding/% (,(sformat "style.padding-~a" dir) r))
+                 (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))))
        (= (mtp2 b) (mtp b) (max (mt b) 0.0))
        (= (mtn2 b) (mtn b) (min (mt b) 0.0))
        (= (mbp2 b) (mbp b) (max (mb b) 0.0))
