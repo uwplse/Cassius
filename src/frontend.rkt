@@ -26,7 +26,9 @@
              (length query) (tree-size query))
 
   (when test (set! query (add-test query test)))
-  (when (memq 'z3o (flags)) (set! query (z3-prepare query)))
+  (if (memq 'z3o (flags))
+      (set! query (z3-prepare query))
+      (set! query (z3-clean query)))
   (when (memq 'debug (flags)) (set! query (z3-namelines query)))
 
   (log-phase "Prepared ~a constraints of ~a terms"
@@ -57,7 +59,9 @@
              (length query) (tree-size query))
 
   (when test (set! query (add-test query test)))
-  (when (memq 'z3o (flags)) (set! query (z3-prepare query)))
+  (if (memq 'z3o (flags))
+      (set! query (z3-prepare query))
+      (set! query (z3-clean query)))
   (when (memq 'debug (flags)) (set! query (z3-namelines query)))
 
   (log-phase "Prepared ~a constraints of ~a terms"
