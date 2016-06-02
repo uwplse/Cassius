@@ -43,7 +43,7 @@
     (or (<= x y z) (>= x y z)))
 
   (define-fun valid% ((% Real)) Bool
-    (or ,(for/list ([% (*%*)]) `(= % ,%))))
+    (or ,@(for/list ([% (*%*)]) `(= % ,%))))
 
   (define-fun %of ((% Real) (base Real)) Real
     ,(let* ([%s (*%*)])
@@ -79,11 +79,11 @@
      (not (is-box/root (type (pbox (pbox b)))))
      ;; Margins between a floated box and any other box do not collapse
      ;; (not even between a float and its in-flow children).
-     (is-float/none (float p))
+     (is-float/none (float (pbox b)))
      ;; The top margin of an in-flow block element collapses with
      ;; its first in-flow block-level child's top margin if the element
      ;; has no top border, no top padding, and the child has no clearance.
-     (= (pt p) 0.0) (= (bt p) 0.0)))
+     (= (pt (pbox b)) 0.0) (= (bt (pbox b)) 0.0)))
 
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))

@@ -7,7 +7,7 @@
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
          z3-check-let z3-check-fields z3-print-all z3-ground-quantifiers
-         z3-clean-no-opt)
+         z3-clean-no-opt z3-strip-inner-names)
 
 (define (z3-dco cmds)
   (let ([store (make-hash)])
@@ -604,5 +604,27 @@
 (define (z3-clean-no-opt cmds)
   (for/list ([cmd cmds])
     (match cmd
-      [`(assert (! ,terms ... :opt _)) `(assert (! ,@terms))]
+      [`(assert (! ,term :opt ,_))
+       `(assert term)]
+      [`(assert (! ,terms ... :opt ,_))
+       `(assert (! ,@terms))]
       [_ cmd])))
+
+(define (z3-strip-inner-names cmds)
+  (define (strip-names expr)
+    (match expr
+      [`(! ,term :named ,_)
+       (strip-names term)]
+      [(? list?) (map strip-names expr)]
+      [_ expr]))
+  (for/list ([cmd cmds])
+    (match cmd
+      [`(define-fun ,name (,vars ...) ,rtype ,body)
+       `(define-fun ,name (,@vars) ,rtype ,(strip-names body))]
+      [`(assert (forall (,vars ...) ,body))
+       `(assert (forall (,@vars) ,(strip-names body)))]
+      [_ cmd])))
+
+(module+ main
+  (define inl (sequence->list (in-port read (current-input-port))))
+  (z3-print-all ((z3-lift-arguments 'get/box 'get/elt) inl)))

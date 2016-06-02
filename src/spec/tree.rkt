@@ -48,7 +48,20 @@
 
   (define-fun box-in-flow ((box Box)) Bool
     (and (is-box box) (is-float/none (float box))
-         (or (is-position/static (position box)) (is-position/relative (position box)))))
+         (or (is-position/static (position box))
+             (is-position/relative (position box)))))
+
+  (define-fun pbox ((box Box)) Box (real-pbox box))
+  (define-fun nbox ((box Box)) Box (get/box (n-name box)))
+  (define-fun vbox ((box Box)) Box (get/box (v-name box)))
+  (define-fun fltbox ((box Box)) Box (get/box (flt-name box)))
+  (define-fun fbox ((b Box)) Box
+    (ite (=> (is-box (real-fbox b)) (box-in-flow (real-fbox b)))
+         (real-fbox b) (nbox (real-fbox b))))
+  (define-fun lbox ((b Box)) Box
+    (ite (=> (is-box (real-lbox b)) (box-in-flow (real-lbox b)))
+         (real-lbox b) (vbox (real-lbox b))))
+  (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
 
   (define-fun link-element ((elt Element) (doc Document) (p ElementName)
                             (v ElementName) (n ElementName) (f ElementName)
@@ -114,18 +127,6 @@
              (textalign (pbox (get/box &b)))
              text-align/left))
      (= (element (get/box &b)) nil-elt)))
-
-  (define-fun pbox ((box Box)) Box (real-pbox box))
-  (define-fun nbox ((box Box)) Box (get/box (n-name box)))
-  (define-fun vbox ((box Box)) Box (get/box (v-name box)))
-  (define-fun fltbox ((box Box)) Box (get/box (flt-name box)))
-  (define-fun fbox ((b Box)) Box
-    (ite (=> (is-box (real-fbox b)) (box-in-flow (real-fbox b)))
-         (real-fbox b) (nbox (real-fbox b))))
-  (define-fun lbox ((b Box)) Box
-    (ite (=> (is-box (real-lbox b)) (box-in-flow (real-lbox b)))
-         (real-lbox b) (vbox (real-lbox b))))
-  (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
 
   (define-fun link-block-box ((b Box) (&self BoxName) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])

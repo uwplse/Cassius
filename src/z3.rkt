@@ -4,7 +4,7 @@
 (require "common.rkt")
 (require "z3o.rkt")
 
-(provide z3-solve z3-prepare z3-namelines (struct-out model) (struct-out unsat-core))
+(provide z3-solve z3-prepare z3-namelines (struct-out model) (struct-out unsat-core) z3-clean)
 
 (struct model (bindings) #:prefab)
 (struct unsat-core (bad-lines) #:prefab)
@@ -228,3 +228,6 @@
           :hoist_mul true
           :flat false)
        nnf occf smt)))))
+
+(define (z3-clean exprs)
+  (append (z3-clean-no-opt (z3-strip-inner-names exprs)) '((check-sat))))
