@@ -66,7 +66,7 @@
 
   (define-fun overlaps ((b1 Box) (b2 Box)) Bool
     (and (horizontally-adjacent b1 b2) (vertically-adjacent b1 b2)))
-  
+
   (define-fun within ((b1 Box) (b2 Box)) Bool
     (and (<= (box-left b2) (box-left b1))
          (<= (box-top b2) (box-top b1))
@@ -110,7 +110,7 @@
 
   (define-fun min-width-limit ((val Real) (e Element)) Real
     (ite (is-min-width/px (style.min-width (computed-style e)))
-        (max val (min-width.px (style.min-width (computed-style e)))) 
+        (max val (min-width.px (style.min-width (computed-style e))))
         ;; Leaving here for future percentage support
         val))
 
@@ -119,18 +119,37 @@
          (min val (max-width.px (style.max-width (computed-style e))))
          ;; Leaving here for future percentage support
          val))
-  
+
   (define-fun min-height-limit ((val Real) (e Element)) Real
     (ite (is-min-height/px (style.min-height (computed-style e)))
-        (max val (min-height.px (style.min-height (computed-style e)))) 
+        (max val (min-height.px (style.min-height (computed-style e))))
         ;; Leaving here for future percentage support
         val))
-  
+
   (define-fun max-height-limit ((val Real) (e Element)) Real
     (ite (is-max-height/px (style.max-height (computed-style e)))
          (min val (max-height.px (style.max-height (computed-style e))))
          ;; Leaving here for future percentage support
          val))
+
+  (define-fun margin-min-px ((m Margin) (b Box)) Real
+    ,(smt-cond
+      [(is-margin/px m) (margin.px m)]
+      [(is-margin/% m) (%of (margin.% m) (w (pbox b)))]
+      [else 0]))
+
+  (define-fun min-w ((b Box)) Real
+    (let ([width (style.width (computed-style (get/elt (element b))))])
+      ,(smt-cond
+        [(is-width/px width) (width.px width)]
+        [(is-width/% width) (%of (width.% width) (w (pbox b)))]
+        [else 0])))
+
+  (define-fun min-ml ((b Box)) Real
+    (margin-min-px (style.margin-left (computed-style (get/elt (element b)))) b))
+
+  (define-fun min-mr ((b Box)) Real
+    (margin-min-px (style.margin-right (computed-style (get/elt (element b)))) b))
 
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
@@ -230,12 +249,11 @@
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
        ;; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
-       (! (= (w p) (+ (ml b) (box-width b) (mr b)))
-          :named flow-fill-width)
+       (= (w p) (+ (ml b) (box-width b) (mr b)))
 
-       (let ([w* (min-width-limit (max-width-limit (ite (is-width/auto (style.width r)) 0.0 (width.px (style.width r))) e) e)]
-             [ml* (ite (is-margin/auto (style.margin-left r)) 0.0 (margin.px (style.margin-left r)))]
-             [mr* (ite (is-margin/auto (style.margin-right r)) 0.0 (margin.px (style.margin-right r)))])
+       (let ([w* (min-width-limit (max-width-limit (min-w b) e) e)]
+             [ml* (min-ml b)]
+             [mr* (min-mr b)])
          (let ([overflow? (> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))])
            (and
 
@@ -268,7 +286,10 @@
        (let ([l (real-lbox b)] [v (real-vbox b)])
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
-                 (max (ite (is-box l) (+ (ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (mr l)) 0)
+                 (max (ite (is-box l)
+                           (+ (min-ml l) (bl l) (pl l)
+                              (min (w l) (stfwidth l))
+                              (pr l) (br l) (min-mr l)) 0)
                       (ite (is-box v) (stfwidth v) 0.0))
                  (w b))))
 
@@ -408,7 +429,7 @@
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
                  (max
-                  (ite (is-box l) (+ (ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (mr l)) 0.0)
+                  (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)
                   (ite (is-box v) (stfwidth v) 0.0))
                  (w b))))
 
@@ -591,7 +612,7 @@
 
        (let ([l* (real-lbox b)] [v* (real-vbox b)])
          (= (stfwidth b)
-            (max (ite (is-box l*) (+ (ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (mr l*)) 0.0)
+            (max (ite (is-box l*) (+ (min-ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (min-mr l*)) 0.0)
                  (ite (is-box v*) (stfwidth v*) 0.0))))
 
        (= (left-outer (fbox b)) (left-content b))
@@ -650,7 +671,7 @@
          (= (stfwidth b)
             (min (w b)
                  (max
-                  (ite (is-box l*) (+ (ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (mr l*)) 0.0)
+                  (ite (is-box l*) (+ (min-ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (min-mr l*)) 0.0)
                   (ite (is-box v*) (stfwidth v*) 0.0)))))
 
        (=> (is-text-align/left (textalign b)) (= (left-border f) (left-content b)))
