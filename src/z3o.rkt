@@ -391,7 +391,7 @@
   (define (expand-calls expr)
     (match expr
       [`(,(? (curry hash-has-key? lifted) f) ,args ...)
-       `(,f ,@args ,@(apply (hash-ref lifted f) args))]
+       `(,f ,@(map expand-calls args) ,@(apply (hash-ref lifted f) (map expand-calls args)))]
       [(? list?) (map expand-calls expr)]
       [_ expr]))
 
@@ -409,18 +409,20 @@
        (hash-set! fns name rtype)
        cmd]
       [`(define-fun ,name ((,args ,types) ...) ,rtype ,body)
+       (define body* (expand-calls body))
        ; TODO: Doesn't do capture avoidance
-       (define insts (remove-duplicates (reap [sow] (find-funs body sow))))
+       (define insts (remove-duplicates (reap [sow] (find-funs body* sow))))
        (define-values (eargs etypes)
          (for/lists (args types) ([inst insts])
            (define fn (car inst))
            (values (gensym fn) (hash-ref fns fn))))
-       (hash-set! lifted name
-                  (lambda oargs
-                    (for/list ([inst insts])
-                      (replace-terms inst (map cons args oargs)))))
+       (when insts
+         (hash-set! lifted name
+                    (lambda oargs
+                      (for/list ([inst insts])
+                        (replace-terms inst (map cons args oargs))))))
        `(define-fun ,name (,@(map list args types) ,@(map list eargs etypes)) ,rtype
-          ,(replace-terms (expand-calls body) (map cons insts eargs)))]
+          ,(replace-terms body* (map cons insts eargs)))]
       [`(assert ,expr)
        `(assert ,(expand-calls expr))]
       [_ cmd])))
