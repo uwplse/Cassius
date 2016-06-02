@@ -76,14 +76,14 @@
   
   (define-fun element-info ((elt Element) (tag TagNames) (&idname Id)) Bool
     (and (= (tagname elt) tag) (= (idname elt) &idname)
+
          ,@(for/list ([prop '(width min-width max-width min-height max-height
                               margin-top margin-right margin-bottom margin-left
                               padding-top padding-right padding-bottom padding-left
                               border-top-style border-right-style border-bottom-style border-left-style
                               text-align overflow-x overflow-y position top bottom left right)])
-             `(! (= (,(sformat "style.~a" prop) (computed-style elt))
-                    (,(sformat "style.~a" prop) (specified-style elt)))
-                 :named ,(sformat "compute-style/~a" prop)))
+             `(= (,(sformat "style.~a" prop) (computed-style elt))
+                 (,(sformat "style.~a" prop) (specified-style elt))))
          ;; If the height of the containing block is not specified
          ;; explicitly (i.e., it depends on content height), and this
          ;; element is not absolutely positioned, the value computes

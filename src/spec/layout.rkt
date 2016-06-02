@@ -97,9 +97,8 @@
 
   (define-fun a-view-box ((b Box)) Bool
     (and
-     (! (and ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn mtp2 mbp2 mtn2 mbn2)])
-                 `(= (,field b) 0.0)))
-          :named zero-xypbm)
+     ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn mtp2 mbp2 mtn2 mbn2)])
+         `(= (,field b) 0.0))
      (= (type b) box/root)
      (= (n-name b) nil-box)
      (= (flt-name b) nil-box)
@@ -181,20 +180,17 @@
                             (border-bottom-width border bb) (border-left-width border bl))])
            ;; Set properties that are settable with lengths
            (match-define (list prop type field) item)
-           `(! (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-                   (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
-               :named ,(sformat "from-style/~a" prop)))
-       
-       (! (=> (is-width/px (style.width r))
-              (and
-               (width-set b)
-               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                  (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
-          :named ,(sformat "from-style/width"))
-       (! (=> (is-height/px (style.height r))
-              (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-                 (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
-          :named ,(sformat "from-style/height"))
+           `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+                   (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
+
+       (=> (is-width/px (style.width r))
+           (and
+            (width-set b)
+            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+               (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
+       (=> (is-height/px (style.height r))
+           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+              (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
 
        ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
@@ -244,34 +240,30 @@
            (and
 
             ;; It overflows. So what do we do? Ignore margin-right
-            (! (=> overflow? (and (= (w b) w*) (= (ml b) ml*) (width-set b)))
-               :named flow-width-overflow)
+            (=> overflow? (and (= (w b) w*) (= (ml b) ml*) (width-set b)))
 
             ;; No overflow, but width: auto, so width dominates
-            (! (=> (and (not overflow?)) (is-width/auto (style.width r))
-                   (and (= (ml b) ml*) (= (mr b) mr*) (width-set b)))
-               :named flow-width-wauto)
+            (=> (and (not overflow?)) (is-width/auto (style.width r))
+                (and (= (ml b) ml*) (= (mr b) mr*) (width-set b)))
 
             ;; No overflow, width given, ignore auto margin
-            (! (=> (and (not overflow?)
-                        (not (is-width/auto (style.width r))))
-                   (and (= (w b) w*)
-                        (width-set b)
-                        (=> (not (is-margin/auto (style.margin-left r)))
-                            (= (ml b) ml*))
-                        (=> (and
-                             (is-margin/auto (style.margin-left r))
-                             (not (is-margin/auto (style.margin-right r))))
-                            (= (mr b) mr*))))
-               :named flow-width-ordinary)
+            (=> (and (not overflow?)
+                     (not (is-width/auto (style.width r))))
+                (and (= (w b) w*)
+                     (width-set b)
+                     (=> (not (is-margin/auto (style.margin-left r)))
+                         (= (ml b) ml*))
+                     (=> (and
+                          (is-margin/auto (style.margin-left r))
+                          (not (is-margin/auto (style.margin-right r))))
+                         (= (mr b) mr*))))
 
             ;; No overflow, margin: ? auto, so centered
-            (! (=> (and (not overflow?)
-                        (not (is-width/auto (style.width r)))
-                        (is-margin/auto (style.margin-left r))
-                        (is-margin/auto (style.margin-right r)))
-                   (and (= (w b) w*) (= (ml b) (mr b)) (width-set b)))
-               :named flow-width-center))))
+            (=> (and (not overflow?)
+                     (not (is-width/auto (style.width r)))
+                     (is-margin/auto (style.margin-left r))
+                     (is-margin/auto (style.margin-right r)))
+                (and (= (w b) w*) (= (ml b) (mr b)) (width-set b))))))
 
        (let ([l (real-lbox b)] [v (real-vbox b)])
          (= (stfwidth b)
@@ -282,10 +274,8 @@
 
        ;; Width and horizontal margins out of the way, let's do height and vertical margins
        ;; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
-       (! (=> (is-margin/auto (style.margin-top r)) (= (mt b) 0.0))
-          :named flow-mt-auto)
-       (! (=> (is-margin/auto (style.margin-bottom r)) (= (mb b) 0.0))
-          :named flow-mb-auto)
+       (=> (is-margin/auto (style.margin-top r)) (= (mt b) 0.0))
+       (=> (is-margin/auto (style.margin-bottom r)) (= (mb b) 0.0))
 
        ;; If 'height' is 'auto', the height depends on whether the element has
        ;; any block-level children and whether it has padding or borders:
@@ -319,7 +309,8 @@
              [else (= (h b) 0.0)]))
 
        ;; Computing X and Y position
-       (! (= (x b) (+ (left-content p) (ml b))) :named flow-x)
+       (= (x b) (+ (left-content p) (ml b)))
+
        ,(smt-cond
          [(box-collapsed-through b lb)
           (= (y b) (ite (is-box vb) (+ (bottom-border vb) (mtp b) (mtn b)) (top-content p)))]
@@ -336,22 +327,18 @@
          [else
           (= (y b) (+ (top-content p) (+ (mtp b) (mtn b))))])
 
-       (! (and
-           ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
-               `(>= (,field b) 0.0)))
-          :named positive-bpwh)))
+       ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
+           `(>= (,field b) 0.0))))
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [flt (fltbox b)])
 
        (= (type b) box/block)
-       (! (and
-           (= (mtp2 b) (mtp b) (max (mt b) 0.0))
-           (= (mtn2 b) (mtn b) (min (mt b) 0.0))
-           (= (mbp2 b) (mbp b) (max (mb b) 0.0))
-           (= (mbn2 b) (mbn b) (min (mb b) 0.0)))
-          :named no-collapse)
+       (= (mtp2 b) (mtp b) (max (mt b) 0.0))
+       (= (mtn2 b) (mtn b) (min (mt b) 0.0))
+       (= (mbp2 b) (mbp b) (max (mb b) 0.0))
+       (= (mbn2 b) (mbn b) (min (mb b) 0.0))
 
        ;; Floating block element layout
        ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
@@ -364,16 +351,14 @@
            `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
 
-       (! (=> (is-width/px (style.width r))
-              (and
-               (width-set b)
-               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                  (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
-          :named ,(sformat "from-style/width"))
-       (! (=> (is-height/px (style.height r))
-              (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-                 (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
-          :named ,(sformat "from-style/height"))
+       (=> (is-width/px (style.width r))
+           (and
+            (width-set b)
+            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+               (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
+       (=> (is-height/px (style.height r))
+           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+              (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
 
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
@@ -429,20 +414,19 @@
 
        ;; CSS 2.1 § 10.6.7 : In certain cases, the height of an
        ;; element that establishes a block formatting context is computed as follows:
-       (! (=> (and (width-set b) (is-height/auto (style.height r)))
-              (= (h b)
-                 (ite (is-box (real-fbox b))
-                      (ite (is-box/line (type lb))
-                           ;; If it only has inline-level children, the height is the distance between
-                           ;; the top of the topmost line box and the bottom of the bottommost line box.
-                           (- (bottom-border lb) (top-border fb))
-                           ;; If it has block-level children, the height is the distance between the
-                           ;; top margin-edge of the topmost block-level child box and the
-                           ;; bottom margin-edge of the bottommost block-level child box.
-                           (- (max (bottom-outer lb) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
-                              (top-content b)))
-                      0.0)))
-          :named auto-height)
+       (=> (and (width-set b) (is-height/auto (style.height r)))
+           (= (h b)
+              (ite (is-box (real-fbox b))
+                   (ite (is-box/line (type lb))
+                        ;; If it only has inline-level children, the height is the distance between
+                        ;; the top of the topmost line box and the bottom of the bottommost line box.
+                        (- (bottom-border lb) (top-border fb))
+                        ;; If it has block-level children, the height is the distance between the
+                        ;; top margin-edge of the topmost block-level child box and the
+                        ;; bottom margin-edge of the bottommost block-level child box.
+                        (- (max (bottom-outer lb) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
+                           (top-content b)))
+                   0.0)))
 
        ;; TODO : In addition, if the element has any floating descendants whose bottom margin edge
        ;; is below the element's bottom content edge, then the height is increased to include
@@ -455,18 +439,14 @@
        ;; positioned as if it had an otherwise empty anonymous block parent taking part in the flow.
        ;; The position of such a parent is defined by the rules in the section on margin collapsing.
 
-       (! (and
-           ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
-               `(>= (,field b) 0.0)))
-          :named positive-bpwh)
+       ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
+           `(>= (,field b) 0.0))
 
        ;; CSS 2.1, § 9.5.1, item 1: The left outer edge of a left-floating box
        ;; may not be to the left of the left edge of its containing block.
        ;; TODO: An analogous rule holds for right-floating elements.
-       (! (and
-           (=> (is-float/left (float b)) (>= (left-outer b) (left-content p)))
-           (=> (is-float/right (float b)) (>= (right-content p) (right-outer b))))
-          :named item-1)
+       (=> (is-float/left (float b)) (>= (left-outer b) (left-content p)))
+       (=> (is-float/right (float b)) (>= (right-content p) (right-outer b)))
 
        ;; CSS 2.1, § 9.5.1, item 2: If the current box is left-floating,
        ;; and there are any left-floating boxes generated by elements
@@ -478,11 +458,10 @@
 
        ;; TODO: This doesn't take into account that it's just interactions of
        ;; left floats with left floats, right floats with right floats
-       (! (or (is-no-box flt)
-              (ite (is-float/left (float b))
-                   (or (= (left-outer b) (right-outer flt)) (>= (top-border b) (bottom-outer flt)))
-                   (or (= (right-outer b) (left-outer flt)) (>= (top-border b) (bottom-outer flt)))))
-          :named item-2)
+       (or (is-no-box flt)
+           (ite (is-float/left (float b))
+                (or (= (left-outer b) (right-outer flt)) (>= (top-border b) (bottom-outer flt)))
+                (or (= (right-outer b) (left-outer flt)) (>= (top-border b) (bottom-outer flt)))))
 
 
        ;; CSS 2.1, § 9.5.1, item 3: The right outer edge of a left-floating box
@@ -495,7 +474,7 @@
        ;; two collapsing margins, the float is positioned as if it had an otherwise
        ;; empty anonymous block parent taking part in the flow. The position of such
        ;; a parent is defined by the rules in the section on margin collapsing.
-       (! (>= (top-outer b) (top-content p)) :named item-3)
+       (>= (top-outer b) (top-content p))
 
        ;; CSS 2.1, § 9.5.1, item 5: The outer top of a floating box
        ;; may not be higher than the outer top of any block or floated box
@@ -504,12 +483,10 @@
        ;; may not be higher than the top of any line-box containing a box
        ;; generated by an element earlier in the source document.
        ;; SIMPL: May not be higher than the top of the previous float or flow box
-       (! (and
-           (=> (is-box flt) (>= (top-outer b) (top-outer flt)))
-           (=> (is-box vb) (>= (top-outer b) (top-outer vb)))
-           (=> (and (is-box vb) (is-box (lbox vb)))
-               (>= (top-outer b) (top-outer (lbox (ite (is-box vb) vb b))))))
-          :named item-56)
+       (=> (is-box flt) (>= (top-outer b) (top-outer flt)))
+       (=> (is-box vb) (>= (top-outer b) (top-outer vb)))
+       (=> (and (is-box vb) (is-box (lbox vb)))
+           (>= (top-outer b) (top-outer (lbox (ite (is-box vb) vb b)))))
 
        ;; CSS 2.1, § 9.5.1, item 7: A left-floating box that has another
        ;; left-floating box to its left may not have its right outer edge
@@ -519,21 +496,18 @@
 
        ;; TODO: This doesn't take into account that it's just interactions of
        ;; left floats with left floats, right floats with right floats
-       (! (and
-           (=> (and (is-box flt) (< (x flt) (x b)) (horizontally-adjacent b flt)
-                    (is-float/left (float b)))
-               (<= (right-outer b) (right-content p)))
-           (=> (and (is-box flt) (> (x flt) (x b)) (horizontally-adjacent b flt)
-                    (is-float/right (float b)))
-               (>= (left-outer b) (left-content p))))
-          :named item-7)
+       (=> (and (is-box flt) (< (x flt) (x b)) (horizontally-adjacent b flt)
+                (is-float/left (float b)))
+           (<= (right-outer b) (right-content p)))
+       (=> (and (is-box flt) (> (x flt) (x b)) (horizontally-adjacent b flt)
+                (is-float/right (float b)))
+           (>= (left-outer b) (left-content p)))
 
        ;; CSS 2.1, § 9.5.1, item 8: A floating box must be placed as high as possible.
        ;; SIMPL: at its normal position, or the same y-position as previous float
-       (! (or (= (top-outer b) (ite (is-no-box vb) (top-content p) (bottom-outer (vbox b))))
-              (and (is-box flt) (= (top-outer b) (top-outer flt)))
-              (and (is-box flt) (= (top-outer b) (bottom-outer flt))))
-          :named item-8)
+       (or (= (top-outer b) (ite (is-no-box vb) (top-content p) (bottom-outer (vbox b))))
+           (and (is-box flt) (= (top-outer b) (top-outer flt)))
+           (and (is-box flt) (= (top-outer b) (bottom-outer flt))))
 
        ;; CSS 2.1, § 9.5.1, item 9: A left-floating box must be put as far to the left
        ;; as possible, a right-floating box as far to the right as possible. A higher
@@ -542,14 +516,12 @@
 
        ;; TODO: This doesn't take into account that it's just interactions of
        ;; left floats with left floats, right floats with right floats
-       (! (and
-           (=> (is-float/left (float b))
-               (or (= (left-outer b) (left-content p))
-                   (and (is-box flt) (= (left-outer b) (right-outer flt)))))
-           (=> (is-float/right (float b))
-               (or (= (right-outer b) (right-content p))
-                   (and (is-box flt) (= (right-outer b) (left-outer flt))))))
-          :named item-9)
+       (=> (is-float/left (float b))
+           (or (= (left-outer b) (left-content p))
+               (and (is-box flt) (= (left-outer b) (right-outer flt)))))
+       (=> (is-float/right (float b))
+           (or (= (right-outer b) (right-content p))
+               (and (is-box flt) (= (right-outer b) (left-outer flt)))))
 
        ;; Three restrictions on floats to make solving efficient
 
@@ -594,13 +566,12 @@
                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
 
        ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
-           `(! (= (,(sformat "b~a" letter) b)
-                  (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
-                            (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
-                            (not (is-border-style/hidden (,(sformat "style.border-~a-style" dir) r))))
-                       (border.px (,(sformat "style.border-~a-width" dir) r))
-                       0.0))
-               :named ,(sformat "from-style/border-~a-width" dir)))
+           `(= (,(sformat "b~a" letter) b)
+               (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
+                         (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
+                         (not (is-border-style/hidden (,(sformat "style.border-~a-style" dir) r))))
+                    (border.px (,(sformat "style.border-~a-width" dir) r))
+                    0.0)))
 
        ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
@@ -650,10 +621,8 @@
                [f (fbox b)] [l (lbox b)])
        (= (type b) box/line)
 
-       (! (and
-           ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
-               `(= (,field b) 0.0)))
-          :named line-no-mbp)
+       ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
+           `(= (,field b) 0.0))
 
        (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
                  (is-float/left (float flt)))
@@ -673,11 +642,9 @@
                  (is-box flt)
                  (= (v-name b) (v-name flt)))])
          (and
-          (! (=> c (= (top-outer b) (bottom-outer flt))) :named skip-float)
-          (! (=> (and (not c) (is-no-box v)) (= (y b) (top-content p)))
-             :named top-of-parent)
-          (! (=> (and (not c) (is-box v)) (= (y b) (bottom-border v)))
-             :named follow-previous-line)))
+          (=> c (= (top-outer b) (bottom-outer flt)))
+          (=> (and (not c) (is-no-box v)) (= (y b) (top-content p)))
+          (=> (and (not c) (is-box v)) (= (y b) (bottom-border v)))))
 
        (let ([l* (real-lbox b)] [v* (real-vbox b)])
          (= (stfwidth b)
@@ -697,7 +664,7 @@
   (define-fun a-block-box ((b Box)) Bool
     (ite (! (or (is-position/fixed (position b)) (is-position/absolute (position b))) :named positioned)
          (a-block-positioned-box b)
-         (ite (!  (is-float/none (float b)) :named flow)
+         (ite (! (is-float/none (float b)) :named flow)
               (a-block-flow-box b)
               (a-block-float-box b))))
 
