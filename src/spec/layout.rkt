@@ -481,8 +481,8 @@
        ;; left floats with left floats, right floats with right floats
        (or (is-no-box flt)
            (ite (is-float/left (float b))
-                (or (= (left-outer b) (right-outer flt)) (>= (top-border b) (bottom-outer flt)))
-                (or (= (right-outer b) (left-outer flt)) (>= (top-border b) (bottom-outer flt)))))
+                (or (= (left-outer b) (right-outer flt)) (>= (top-outer b) (bottom-outer flt)))
+                (or (= (right-outer b) (left-outer flt)) (>= (top-outer b) (bottom-outer flt)))))
 
 
        ;; CSS 2.1, § 9.5.1, item 3: The right outer edge of a left-floating box
@@ -507,7 +507,7 @@
        (=> (is-box flt) (>= (top-outer b) (top-outer flt)))
        (=> (is-box vb) (>= (top-outer b) (top-outer vb)))
        (=> (and (is-box vb) (is-box (lbox vb)))
-           (>= (top-outer b) (top-outer (lbox (ite (is-box vb) vb b)))))
+           (>= (top-outer b) (top-outer (lbox vb))))
 
        ;; CSS 2.1, § 9.5.1, item 7: A left-floating box that has another
        ;; left-floating box to its left may not have its right outer edge
@@ -526,7 +526,7 @@
 
        ;; CSS 2.1, § 9.5.1, item 8: A floating box must be placed as high as possible.
        ;; SIMPL: at its normal position, or the same y-position as previous float
-       (or (= (top-outer b) (ite (is-no-box vb) (top-content p) (bottom-outer (vbox b))))
+       (or (= (top-outer b) (ite (is-no-box vb) (top-content p) (bottom-outer vb)))
            (and (is-box flt) (= (top-outer b) (top-outer flt)))
            (and (is-box flt) (= (top-outer b) (bottom-outer flt))))
 
@@ -539,10 +539,14 @@
        ;; left floats with left floats, right floats with right floats
        (=> (is-float/left (float b))
            (or (= (left-outer b) (left-content p))
-               (and (is-box flt) (= (left-outer b) (right-outer flt)))))
+               (and (is-box flt) (is-float/left (float flt))
+                    (horizontally-adjacent b flt)
+                    (= (left-outer b) (right-outer flt)))))
        (=> (is-float/right (float b))
            (or (= (right-outer b) (right-content p))
-               (and (is-box flt) (= (right-outer b) (left-outer flt)))))
+               (and (is-box flt) (is-float/left (float flt))
+                    (horizontally-adjacent b flt)
+                    (= (right-outer b) (left-outer flt)))))
 
        ;; Three restrictions on floats to make solving efficient
 
