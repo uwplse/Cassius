@@ -39,19 +39,19 @@
 (define-css-type (Width auto (px Real) (% Real))
   [width auto])
 
-(define-css-type (Min-Width (px Real))
+(define-css-type (Min-Width (px Real) (% Real))
   [min-width (px 0)])
 
-(define-css-type (Max-Width none (px Real))
+(define-css-type (Max-Width none (px Real) (% Real))
   [max-width none])
 
 (define-css-type (Height auto (px Real) (% Real))
   [height auto])
 
-(define-css-type (Min-Height (px Real))
+(define-css-type (Min-Height (px Real) (% Real))
   [min-height (px 0)])
 
-(define-css-type (Max-Height none (px Real))
+(define-css-type (Max-Height none (px Real) (% Real))
   [max-height none])
 
 (define-css-type (Margin auto (px Real) (% Real))
