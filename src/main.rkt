@@ -203,7 +203,7 @@
              [(and (not (match-html-body t)) (not replaced)) ; Fix an ID first before fixing a tag
               (set-replaced #t)
               (list block tag val ':id '?)]      
-             [else (list block tag val)]))
+             [else (list block tag val ':id id)]))
          (append ret vals)]
         [`(,block ,tag (bad ,val) ,rest ...)
          (define vals (map (λ (t) (match-attr t)) rest))
