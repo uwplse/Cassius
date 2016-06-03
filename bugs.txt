@@ -1,0 +1,3 @@
+Bugs
+
+a rule like (child (id bleh) (tag blah)) if bleh doesn't have other rule with same property
