@@ -126,7 +126,7 @@
       ;; Redundant -- will change once certain debugged
     (define could-inherit-different?
       (for/or ([name names] [rule rules])
-        (and (has-property? rule property) (if (equal? (caar rule) 'child) (selector-matches? (car rule) elt) true)))) ;; need to be able to handle inheriting tags/ids
+        (and (has-property? rule property) (if (and (not (equal? rule (list '? '?))) (equal? (caar rule) 'child)) (selector-matches? (car rule) elt) true)))) ;; need to be able to handle inheriting tags/ids
 
      ; Make sure the tag name is one of the applicable rules or the tag name that is already specified
      (when (and (not (dict-empty? applicable-rules)) (equal? (element-get elt ':tag) '?)) 
@@ -162,7 +162,7 @@
      (sow
       `(assert
         (! (=>
-            ,(if (and could-be-different? could-inherit-different?)
+            ,(if (and could-be-different? could-inherit-different? (or (dict-empty? applicable-rules) (not (equal? (cdar applicable-rules) (list '? '?)))))
                  (cond
                    [ (and (not (dict-empty? applicable-rules)) (equal?  (caadar applicable-rules) 'id) (not (equal? (element-get elt ':id) '?)))
                      `(,(sformat "is-id/~a" (slower (element-get elt ':id))) (idname (get/elt ,(element-name elt))))]

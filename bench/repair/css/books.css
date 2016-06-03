@@ -1,0 +1,13 @@
+#bookLabel {
+    width: 50px;
+    background-color: lightblue;
+}
+
+body {
+    width: 100px;
+}
+
+img {
+    width: 30px;
+    height: 30px;
+}
