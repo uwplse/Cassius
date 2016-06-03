@@ -126,14 +126,14 @@
       ;; Redundant -- will change once certain debugged
     (define could-inherit-different?
       (for/or ([name names] [rule rules])
-        (and (not (equal? rule '(? ?))) (has-property? rule property) (if (equal? (caar rule) 'child) (selector-matches? (car rule) elt) true)))) ;; need to be able to handle inheriting tags/ids
+        (and (has-property? rule property) (if (equal? (caar rule) 'child) (selector-matches? (car rule) elt) true)))) ;; need to be able to handle inheriting tags/ids
 
      ; Make sure the tag name is one of the applicable rules or the tag name that is already specified
      (when (and (not (dict-empty? applicable-rules)) (equal? (element-get elt ':tag) '?)) 
        (sow
         `(assert
           (! (or
-             ; (,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))
+              (,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))
               ,@(for/list ([(name rule) (in-dict applicable-rules)])
                   (or (selector-matches? (selector name rule) elt)
                       `(selector-applies? (selector ,name) (get/elt ,(element-name elt))))))))))
@@ -143,7 +143,7 @@
       (sow
        `(assert
          (! (or
-            ; (,(sformat "is-id/~a" (slower (element-get elt ':id))) (idname (get/elt ,(element-name elt))))
+             (,(sformat "is-id/~a" (slower (element-get elt ':id))) (idname (get/elt ,(element-name elt))))
              ,@(for/list ([(name rule) (in-dict applicable-rules)])
                   (or (selector-matches? (selector name rule) elt)
                       `(selector-applies? (selector ,name) (get/elt ,(element-name elt))))))))))
@@ -162,9 +162,9 @@
      (sow
       `(assert
         (! (=>
-            ,(if (and could-be-different? could-inherit-different? (or (dict-empty? applicable-rules)(not (equal? (cdar applicable-rules) (list '? '?)))))
+            ,(if (and could-be-different? could-inherit-different?)
                  (cond
-                   [ (and (not (dict-empty? applicable-rules)) (equal? (caadar applicable-rules) 'id) (not (equal? (element-get elt ':id) '?)))
+                   [ (and (not (dict-empty? applicable-rules)) (equal?  (caadar applicable-rules) 'id) (not (equal? (element-get elt ':id) '?)))
                      `(,(sformat "is-id/~a" (slower (element-get elt ':id))) (idname (get/elt ,(element-name elt))))]
                    [ (and (or (dict-empty? applicable-rules) (equal?  (caadar applicable-rules) 'tag)) (not (equal? (element-get elt ':tag) '?)))
                      `(,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))];  (printf "APPLICABLERULESTAG: ~a\n" applicable-rules)] ;; Apply to all rules (not just first) & add others

@@ -165,7 +165,7 @@
       [`(,block ,attr ,val ,rest ...)
        (define ret (list block attr val))
        (append ret rest)]
-      [_ t])))
+      [_ (replace-ids-with-holes t)])))
 
 ; Replace the bad tags with holes
 ; Update to work with IDs, loop through IDs first, then tags
@@ -223,7 +223,7 @@
         [`(,block ,attr ,val ,rest ...)
          (define ret (list block attr val))
          (append ret rest)]
-        [_ t])))
+        [_ (replace-one-id-with-hole t)])))
 
 
 (define (get-first-bad-tag-id tree)
@@ -270,7 +270,7 @@
   (for ([elt (in-tree tree)])
     (define box-name (sformat "~a-flow-box" (element-name elt)))
     (extract-box! (hash-ref smt-out box-name) elt)
-    (define output (hash-ref smt-out (sformat "~a-elt" (element-name elt)) '()))
+    (define output (hash-ref smt-out (sformat "~a-elt" (element-name elt))))
     (when (equal?  (element-get elt ':tag) '?)
       (match output
         [(list 'elt doc tag _ ...)
@@ -451,7 +451,7 @@
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns (get/box ,(box-name elt))
                           ,(box-name elt)
-                          ,(box-name (box-parent elt))
+                          ,(if (box-parent elt) (box-name (box-parent elt)) (sformat "~a-flow" (dom-root dom)))
                           ,(box-name (box-prev elt))
                           ,(box-name (box-next elt))
                           ,(box-name (box-fchild elt))
@@ -515,8 +515,7 @@
             (when (element-get elt ':class)
               (for ([c (element-get elt ':class)])
                 (save-class (sformat "class/~a" c)))))
-          ; TODO: This isn't quite working right for child selectors
-          (for ([name (append user-style-names)] [rule (append sheet)]) ; TODO: Should be saving browser style names as well
+          (for ([name (append browser-style-names user-style-names)] [rule (append (or (car browsers) '()) sheet)])
             (when name
               ; add tags and ids into the list
               (match (car rule)
@@ -526,9 +525,6 @@
                   (save-id (sformat "id/~a" idname))]
                 [`(class ,classname)
                   (save-class (sformat "class/~a" classname))]
-                [`(child (and (id ,idname)) (and (id ,idname2)))
-                  (save-id (sformat "id/~a" idname))
-                  (save-id (sformat "id/~a" idname2))]
                 [_ (void)])))))
 
   (define element-names

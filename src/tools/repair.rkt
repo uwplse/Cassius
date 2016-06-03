@@ -132,7 +132,7 @@
   (define debug '())
   (define truncate #f)
   (define repair-all #f)
-  (define max-repairs 5)
+  (define max-repairs 2)
   
   (command-line
    #:program "cassius repair"
