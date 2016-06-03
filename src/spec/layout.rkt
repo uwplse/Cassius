@@ -425,7 +425,7 @@
          (=> (is-width/auto (style.width r))
              (and
               (width-set b)
-              (= (w b) (min-width-limit (max-width-limit (ite (is-box l) (+ (ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (mr l)) 0.0) e) e))))
+              (= (w b) (min-width-limit (max-width-limit (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l)) 0.0) e) e))))
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
                  (max
