@@ -66,11 +66,54 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [text-align center]
    [margin-top (px 18)]))
 
+(define-stylesheet bad-sheet
+  ((tag html)
+   [margin-top (px 0)]
+   [margin-right (px 0)]
+   [margin-bottom (px 0)]
+   [margin-left (px 0)]
+   [padding-top (px 0)]
+   [padding-right (px 0)]
+   [padding-bottom (px 0)]
+   [padding-left (px 0)])
+  ((tag body)
+   [margin-top (px 0)]
+   [margin-right auto]
+   [margin-bottom (px 0)]
+   [margin-left auto]
+   [padding-top (px 0)]
+   [padding-right (px 10)]
+   [padding-bottom (px 90)]
+   [padding-left (px 10)]
+   [width (px 630)])
+  ((tag pre)
+   [margin-top (px 21.6)]
+   [margin-right (px 0)]
+   [margin-bottom (px 30.6)]
+   [margin-left (px 0)]
+   [padding-top (px 9)]
+   [padding-right (px 9)]
+   [padding-bottom (px 9)]
+   [padding-left (px 9)])
+  ((tag h1)
+   [margin-top (px 36)]
+   [margin-bottom (px 0)])
+  ((tag p)
+   [text-align inherit]
+   [margin-top (px 18)]
+   [margin-right (px 0)]
+   [margin-bottom (px 18)]
+   [margin-left (px 0)])
+  ((id postamble)
+   [text-align center]
+   [margin-top (px 18)]
+   [height (px 16)]))
+
 ;; From http://pavpanchekha.com/blog/ubuntu-on-lvm.html
 
 (define-document (doma #:width 958)
-  ([BLOCK :tag HTML :x 0 :y 0 :w 958 #|:h (/ 10291 12)|#]
-   ([BLOCK :tag BODY :x 154 :y 36 :w 650 #|:h (/ 8779 12)|#]
+  ([BLOCK :tag html :x 0 :y 0 :w 958 #|:h (/ 10291 12)|#]
+   ([BLOCK :tag body :x 154 :y 36 :w 650 #|:h (/ 8779 12)|#]
     ([BLOCK :tag DIV :id content :x 164 :y 36 :w 630 :h 582]
      ([BLOCK :tag H1 :x 164 :y 36 :w 630 :h 24]
       ([LINE  :x 164 :y 36 :w 630 :h 24]
@@ -126,8 +169,8 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 ;; From http://pavpanchekha.com/blog/organization.html
 
 (define-document (domb #:width 945)
-  ([BLOCK :tag HTML :x 0 :y 0 :w 945]
-   ([BLOCK :tag BODY :x 147.5 :y 36 :w 650 #|:h (/ 33465 30)|#]
+  ([BLOCK :tag html :x 0 :y 0 :w 945]
+   ([BLOCK :tag body :x 147.5 :y 36 :w 650 #|:h (/ 33465 30)|#]
     ([BLOCK :tag DIV :id content :x 157.5 :y 36 :w 630 :h 978.5]
      ([BLOCK :tag H1 :x 157.5 :y 36 :w 630 :h 24]
       ([LINE :x 157.5 :y 36 :w 630 :h 24]
@@ -211,20 +254,17 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
       ([LINE :x 157.5 :y 966.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 968 :w 630 :h 21]))
       ([LINE :x 157.5 :y 990.5 :w 630 :h 24]
-       ([TEXT :x 157.5 :y 992 :w 281 :h 21]))))
-    ([BLOCK :tag DIV :id postamble :x 157.5 :y 1032.5 :w 630 :h 16]
-     ([BLOCK :tag P :x 157.5 :y 1032.5 :w 630 :h 16]
-      ([LINE :x 157.5 :y 1032.5 :w 630 :h 16]
-       ([TEXT :x 299 :y 1033 :w 21 :h 15])
-       ([TEXT :x 320 :y 1033 :w 108 :h 15])
-       ([TEXT :x 428 :y 1033 :w 95 :h 15])
-       ([TEXT :x 523 :y 1033 :w 119 :h 15])
-       ([TEXT :x 642 :y 1033 :w 4 :h 15])))))))
+       ([TEXT :x 157.5 :y 992 :w 281 :h 21])))))))
 
-(define-problem verify
+(define-problem verify-b-bad-id
   #:header header
   #:sheet good-sheet
-  #:documents doma domb)
+  #:documents domb)
+
+(define-problem verify-a-bad-tag
+  #:header header
+  #:sheet bad-sheet
+  #:documents doma)
 
 (define-problem render
   #:header header

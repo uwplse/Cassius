@@ -5,7 +5,15 @@
   ((id booklabel)
    [width (px 50)])
   ((tag body)
-   [width (px 100)]))
+   [width (px 100)])
+
+   ((id urk)
+   [width (px 100)]) ;; <-- don't remove!
+
+   ((child (id urk) (tag img))
+    [width (px 30)])
+
+  )
 
 (define-document (book-simple #:width 100)
   ([BLOCK :tag html :x 0 :y 0 :w 100]

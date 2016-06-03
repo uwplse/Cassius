@@ -41,6 +41,13 @@
   ((id good)
    [width (px 40)]))
 
+(define-stylesheet repair-one
+  ((tag div)
+   [width (px 50)])
+  ((child (and (tag div)) (and (id child)))
+   [width (px 100)]
+   [margin-left (px 10)]))
+
 (define-stylesheet test-empty ? ? ?)
 
 (define-document (test #:width 20)
@@ -102,6 +109,12 @@
     ([BLOCK :tag div :x 0 :y 0 :w 30])
     ([BLOCK :tag div :x 0 :y 0 :w 40]))))
 
+(define-document (repair-one #:width 50)
+  ([BLOCK :tag html :x 0 :y 0 :w 50]
+   ([BLOCK :tag body :x 0 :y 0 :w 50]
+    ([BLOCK :tag djv :x 0 :y 0 :w 50]
+      ([BLOCK :tag div :id child :x 10 :y 0 :w 100])))))
+
 (define-problem test
   #:header test
   #:sheet test
@@ -156,3 +169,8 @@
   #:header test
   #:sheet add-id
   #:documents add-id)
+
+(define-problem repair-one
+  #:header test
+  #:sheet repair-one
+  #:documents repair-one)

@@ -89,7 +89,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 164 :y 221.7 :w 630 :h 21]))
       ([LINE  :x 164 :y 244.2 :w 630 :h 24]
        ([TEXT :x 164 :y 245.7 :w 68 :h 21])))
-     ([BLOCK :tag DJV :x 164 :y 289.8 :w 630 :h 162]
+     ([BLOCK :tag DIV :x 164 :y 289.8 :w 630 :h 162]
       ([BLOCK :tag PRE :x 164 :y 289.8 :w 630 :h 162]
        ([LINE  :x 173 :y 298.8 :w 612 :h 24]
         ([TEXT :x 173 :y 298.8 :w 349 :h 24]))
@@ -126,8 +126,8 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 ;; From http://pavpanchekha.com/blog/organization.html
 
 (define-document (domb #:width 945)
-  ([BLOCK :tag html :x 0 :y 0 :w 945]
-   ([BLOCK :tag body :x 147.5 :y 36 :w 650 #|:h (/ 33465 30)|#]
+  ([BLOCK :tag HTML :x 0 :y 0 :w 945]
+   ([BLOCK :tag BODY :x 147.5 :y 36 :w 650 #|:h (/ 33465 30)|#]
     ([BLOCK :tag DIV :id content :x 157.5 :y 36 :w 630 :h 978.5]
      ([BLOCK :tag H1 :x 157.5 :y 36 :w 630 :h 24]
       ([LINE :x 157.5 :y 36 :w 630 :h 24]
@@ -212,7 +212,7 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 157.5 :y 968 :w 630 :h 21]))
       ([LINE :x 157.5 :y 990.5 :w 630 :h 24]
        ([TEXT :x 157.5 :y 992 :w 281 :h 21]))))
-    ([BLOCK :tag div :id postamble :x 157.5 :y 1032.5 :w 630 :h 16]
+    ([BLOCK :tag DIV :id postamble :x 157.5 :y 1032.5 :w 630 :h 16]
      ([BLOCK :tag P :x 157.5 :y 1032.5 :w 630 :h 16]
       ([LINE :x 157.5 :y 1032.5 :w 630 :h 16]
        ([TEXT :x 299 :y 1033 :w 21 :h 15])
@@ -221,15 +221,10 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 523 :y 1033 :w 119 :h 15])
        ([TEXT :x 642 :y 1033 :w 4 :h 15])))))))
 
-(define-problem verify-b-bad-id
+(define-problem verify
   #:header header
   #:sheet good-sheet
-  #:documents domb)
-
-(define-problem verify-a-bad-tag
-  #:header header
-  #:sheet good-sheet
-  #:documents doma)
+  #:documents doma domb)
 
 (define-problem render
   #:header header
