@@ -10,7 +10,7 @@
    ((id urk)
    [width (px 30)]) ;; <-- don't remove!
 
-   ((child (tag img) (id urk))
+   ((child (tag div) (id urk))
     [width (px 50)])
 
    )
@@ -23,7 +23,7 @@
     ([BLOCK :tag div :id boookLabe :x 0 :y 0 :w 50]
      ([INLINE :tag img :x 0 :y 0 :w 30])))))
 
-(define-problem book-simple
+(define-problem inheritance
   #:header header
   #:sheet book-sheet
   #:documents book-simple)
