@@ -123,13 +123,12 @@
        (for/or ([name names] [rule rules])
          (has-property? rule property)))
 
-      ;; Redundant -- will change once certain debugged
     (define could-inherit-different?
       (for/or ([name names] [rule rules])
-        (and (has-property? rule property) (if (and (not (equal? rule (list '? '?))) (equal? (caar rule) 'child)) (selector-matches? (car rule) elt) true)))) ;; need to be able to handle inheriting tags/ids
+        (and (has-property? rule property) (if (and (not (equal? rule (list '? '?))) (or (equal? (caar rule) 'child)) (equal? (caar rule) 'desc)) (selector-matches? (car rule) elt) true)))) ;; need to be able to handle inheriting tags/ids
 
      ; Make sure the tag name is one of the applicable rules or the tag name that is already specified
-     (when (and (not (dict-empty? applicable-rules)) (equal? (element-get elt ':tag) '?)) 
+     (when (and (not (dict-empty? applicable-rules)) (equal? (element-get elt ':tag) '?))
        (sow
         `(assert
           (! (or
@@ -147,7 +146,7 @@
              ,@(for/list ([(name rule) (in-dict applicable-rules)])
                   (or (selector-matches? (selector name rule) elt)
                       `(selector-applies? (selector ,name) (get/elt ,(element-name elt))))))))))
-     
+
      ;; Score of computed rule is >= any applicable stylesheet rule
      (for ([(name rule) (in-dict applicable-rules)])
        (sow
@@ -169,7 +168,7 @@
                    [ (and (or (dict-empty? applicable-rules) (equal?  (caadar applicable-rules) 'tag)) (not (equal? (element-get elt ':tag) '?)))
                      `(,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))];  (printf "APPLICABLERULESTAG: ~a\n" applicable-rules)] ;; Apply to all rules (not just first) & add others
                    [else 'true]) ;; Is this a good default value?
-                 
+
                  ;; TODO: trying to get pattern matching to work instead
                  ;(match applicable-rules
                  ;  [,(list (list _ ('tag ,...) ...) ...) `(,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))]
