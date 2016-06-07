@@ -17,18 +17,15 @@
   
   (define documents*
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
-
-  (define documents-orig documents*)
-  (define repaired-elt-paths '()) ; Keep track of all of the elements we have tried to repair so far
   
-  ; Solve once to get the tree with holes highlighed 
+  ; Solve once to get the initial tree with bad values highlighted
   (define (solve-problem sheets documents debug)
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
       (solve sheets documents #:debug debug)))
-
-  ; Get the failure/succeses results
+  
+  ; Get the failure/success results of a given pass
   (define fixed #f)
   (define (match-result res)
     (match res
@@ -42,39 +39,46 @@
        ((error-display-handler) (exn-message e) e) #t]
       ['break
        (eprintf "\nTerminated.\n") #t]))
-
+  
   ; First, run solve without any repair holes
   (define result (solve-problem (list sheet) documents* debug))
-  (define last-repaired-tree '())
-
-  ; Keep looping until we reach the maximum number of repair attempts, or the result is accepted
+  (define last-repaired-trees '()) ; Keeps track of the last tree we have tried to repair. If we have already tried this one, go to the last phase.
   (define continue #t)
+  
+  ; Keep looping until we reach the maximum number of repair attempts, or the result is accepted
   (for ([i max-repairs])
-    #:break (or (not continue) (match-result result))
+    #:break (or (equal? continue #f) (match-result result))
     (match result
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
        (for-each (compose displayln tree->string) trees)
+       
        ; Replace the bad tags with holes and attempt to repair the document
        (cond
-         [(equal? repair-all #f)
+         [(equal? repair-all #f)     
+          ; Update trees
+          (reset-replaced)
+          (define new-trees
+            (for/list ([t trees])
+              (replace-ids-with-holes t #t)))
+          
+          ; Create new doms
           (define doms
-            (for/list ([d documents*][t trees]) ;; d = <#dom>
-              ; Replace one id or tag with a ?. If the last tag or id could not be fixed, set it back to what it was previously
-              (set-replaced #f)
-              (define new-tree (replace-one-id-with-hole t))
-              (set! continue (not (equal? last-repaired-tree new-tree))) ; break out if we are trying to repair the exact same tree
-              (set! last-repaired-tree new-tree)
-
-              ; Createe a new instance of the problem again and try to solve
+            (for/list ([d documents*][t new-trees]) ;; d = <#dom>   
+              ; Create a new instance of the problem again and try to solve
               (printf "\nRepairing this tree..\n\n")
-              ((compose displayln tree->string) new-tree)
+              ((compose displayln tree->string) t)
               (printf "\n")
+              
               (match-define (dom name ctx tree) d)
-              (dom name ctx new-tree)))
+              (dom name ctx t)))
+
+          (set! continue (not (equal? last-repaired-trees new-trees)))
           (when continue
-            (printf "\nAttempting to repair the document...\n\n")
-            (set! result (solve-problem (list sheet) doms debug)))]
+            (printf "\nAttempting to repair the document... \n\n")
+            (set! result (solve-problem (list sheet) doms debug)))
+            
+          (set! last-repaired-trees new-trees)]
          [(equal? repair-all 't)
           (define doms
             (for/list ([d documents*] [t trees])
@@ -83,10 +87,9 @@
               (dom name ctx new-tree)))
           (set! result (solve-problem (list sheet) doms debug))])]))
   
-  ; Fill in all holes at once
-  (set! continue #t)
-  (for ([i max-repairs])
-    #:break (or fixed (not continue) (match-result result))
+  ; Attempt to repair all holes at once
+  (for ([i 1])
+    #:break (or fixed (match-result result))
     (match result
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
@@ -95,30 +98,30 @@
        
        (define doms
          (for/list ([d documents*] [t trees])
-           (define new-tree (replace-ids-with-holes t))
-           (set! continue (not (equal? last-repaired-tree new-tree))) ; break out if we are trying to repair the exact same tree
-           (set! last-repaired-tree new-tree)
+           (reset-replaced)
+           (define new-tree (replace-ids-with-holes t #f))
            (match-define (dom name ctx tree) d)
            (dom name ctx new-tree)))
-        (when continue (set! result (solve-problem (list sheet) doms debug)))]
+       
+       (set! result (solve-problem (list sheet) doms debug))]
       [(list 'error e)
        ((error-display-handler) (exn-message e) e) #t]
       ['break
        (eprintf "\nTerminated.\n") #t]))
   
-  ; After looping for the max number, try to synthesize an empty rule that will make it work
+  ; Try to synthesize a new rule that will make the document be accepted
   (for ([i 1])
     #:break (or fixed (match-result result))
     (match result
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
        (for-each (compose displayln tree->string) trees)
-       (printf "\n\nUnable to repair the document... Attempting to repair by synthesizing a new rule.\n\n")
-       (set! sheet (append (list (list '? '?)) sheet))
        
+       (printf "\n\nUnable to repair the document... Attempting to repair by synthesizing a new rule.\n\n")
+       (set! sheet (append (list (list '? '?)) sheet))    
        (define doms
          (for/list ([d documents*] [t trees])
-           (define new-tree (replace-ids-with-holes t))
+           (define new-tree (replace-ids-with-holes t #f))
            (match-define (dom name ctx tree) d)
            (dom name ctx new-tree)))
        
@@ -132,7 +135,7 @@
   (define debug '())
   (define truncate #f)
   (define repair-all #f)
-  (define max-repairs 5)
+  (define max-repairs 10)
   
   (command-line
    #:program "cassius repair"
@@ -150,8 +153,8 @@
    [("--truncate") level "Truncate the tree to this level"
                    (set! truncate (string->number level))]
    [("--repair-all") repairall "Repair the document by filling all holes in at once"
-                 (set! repair-all (string->symbol repairall))]
+                     (set! repair-all (string->symbol repairall))]
    [("--max-repairs") maxrepairs "Set the maximum number of repair attempts"
-                 (set! max-repairs (string->number maxrepairs))]
+                      (set! max-repairs (string->number maxrepairs))]
    #:args (fname problem)
    (run-file fname problem #:debug debug #:truncate truncate #:repair-all repair-all #:max-repairs max-repairs)))

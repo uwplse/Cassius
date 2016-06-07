@@ -12,7 +12,7 @@
 (require srfi/1)
 (require racket/generator)
 
-(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes replace-one-id-with-hole get-first-bad-tag-id set-replaced)
+(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced)
 
 (define (extract-stylesheet stylesheet smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
@@ -117,7 +117,7 @@
                    [else
                     line]))))
        (hash-set! stylesheet* idx rule*)]
-      [`((info ,elt-name) ,compute-style ...) ;;? Pattern matching for ids?
+      [`((info ,elt-name) ,compute-style ...)
        (define tag-name (extract-tag-name compute-style))
        (define id-name (extract-id-name compute-style))
        (define elt (elt-from-name elt-name))
@@ -136,27 +136,54 @@
   (define ss (hash-values stylesheet*))
   (values ss trees)) ; stylesheet* is the one with just bad rules
 
-; Replace the bad tags with holes
-(define (replace-ids-with-holes tree)
+; Replace all bad tags and ids with holes
+; TODO: It is kind of strange & hacky to have this weird global variable thing, but I can't figure out how to avoid it currently.. Maybe Pavel can think of a better way
+; with his wicked racket skills? 
+(define replaced #f)
+(define (reset-replaced)
+  (set! replaced #f))
+
+(define (replace-ids-with-holes tree one)
   (define (match-attr attr)
     (match attr
       [`(bad ,val) val]
       [_ attr]))
+ 
   (for/list ([t tree])
     (match t
       [`((,block ...) ,rest ...)
-       (replace-ids-with-holes t)]
-      [`(,block :tag (bad body) ,rest ...) ; TODO: This does not work for uppercase tag names
+       (replace-ids-with-holes t one)]
+      [`(,block :tag (bad ,val) :id (bad ,idval) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
-       (define ret (list block ':tag 'body))
-       (append ret vals)] ; Make sure we don't replace body with ?
-      [`(,block :tag (bad html) ,rest ...)
-       (define vals (map (λ (t) (match-attr t)) rest))
-       (define ret (list block ':tag 'html))
-       (append ret vals)] ; Make sure we don't replace html with ?
+       (define ret
+         (cond
+           [(and (not (equal? (slower (symbol->string val)) 'html))
+                  (not (equal? (slower (symbol->string val)) 'body))
+                  (not replaced)
+                  (not (equal? idval '?)))
+             (when (and one (not replaced))
+               (set! replaced #t))
+             (cond
+               [(not one)
+                 (list block ':tag '? ':id '?)]
+               [else
+                 (list block ':tag val ':id '?)])]
+           [else 
+             (list block ':tag val ':id idval)]))
+       (append ret vals)] 
       [`(,block :tag (bad ,val) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
-       (define ret (list block ':tag '?))
+       (define ret
+         (cond
+           [(and (not (equal? (slower (symbol->string val)) 'html))
+                  (not (equal? (slower (symbol->string val)) 'body))
+                  (not replaced)
+                  (not (equal? val '?)))
+            (when (and one (not replaced))
+               (set! replaced #t))
+             (list block ':tag '?)]
+           [else
+             (list block ':tag val)]))
        (append ret vals)]
       [`(,block ,attr (bad ,val) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
@@ -165,77 +192,7 @@
       [`(,block ,attr ,val ,rest ...)
        (define ret (list block attr val))
        (append ret rest)]
-      [_ (replace-ids-with-holes t)])))
-
-; Replace the bad tags with holes
-; Update to work with IDs, loop through IDs first, then tags
-(define replaced #f)
-(define (set-replaced val)
-  (set! replaced val))
-
-(define (replace-one-id-with-hole tree)
-  (define (match-attr attr)
-    (match attr
-      [`(bad ,val) val]
-      [_ attr]))
-  
-  (define (match-html-body elt)
-    (match elt
-      [`(,block :tag (bad body) ,rest ...) #t]
-      [`(,block :tag (bad html) ,rest ...) #t]
-      [_ #f]))
-
-  (define (match-hole elt)
-    (match elt
-      [`(,block :tag (bad ?) ,rest ...) #t]
-      [_ #f]))
- 
-  (for/list ([t tree])
-      (match t
-        [`((,block ...) ,rest ...)
-         (replace-one-id-with-hole t)]
-        [`(,block ,tag (bad ,val) :id (bad ,id) ,rest ...)
-         (define vals (map (λ (t) (match-attr t)) rest))
-         (define ret
-           (cond
-             [(and (not (match-html-body t)) (match-hole t))
-              (list block tag val ':id '?)] 
-             [(and (not (match-html-body t)) (not replaced)) ; Fix an ID first before fixing a tag
-              (set-replaced #t)
-              (list block tag val ':id '?)]      
-             [else (list block tag val ':id id)]))
-         (append ret vals)]
-        [`(,block ,tag (bad ,val) ,rest ...)
-         (define vals (map (λ (t) (match-attr t)) rest))
-         (define ret
-           (cond
-             [(and (not (match-html-body t)) (match-hole t))
-              (list block ':tag '?)]
-             [(and (not (match-html-body t)) (not replaced))
-              (set-replaced #t) ; how horrible is this?
-              (list block ':tag '?)]         
-             [else (list block tag val)]))
-         (append ret vals)]
-        [`(,block ,attr (fixed ,val) ,rest ...)
-          (define vals (map (λ (t) (match-attr t)) rest))
-          (define ret (list block attr val rest))
-          (append ret vals)]
-        [`(,block ,attr ,val ,rest ...)
-         (define ret (list block attr val))
-         (append ret rest)]
-        [_ (replace-one-id-with-hole t)])))
-
-
-(define (get-first-bad-tag-id tree)
-  (in-generator
-   (for ([t tree])
-      (match t
-        [`((,block ...) ,rest ...) (for ([j (get-first-bad-tag-id t)]) (yield j))]
-        [`(,block :tag (bad body) ,rest ...) (void)]
-        [`(,block :tag (bad html) ,rest ...) (void)]
-        [`(,block :tag (bad ,val) ,rest ...) (yield val)]
-        [`(,block :id (bad ,val) ,rest ...) (yield val)]
-        [_ (void)]))))
+      [_ (replace-ids-with-holes t one)])))
 
 (define (plist-add plist key value)
   (let loop ([plist plist])
@@ -280,8 +237,12 @@
     (when (equal?  (element-get elt ':id) '?)
       (match output
         [(list 'elt doc tag id _ ...)
+         (define new-id (string-split (symbol->string id) "/"))
+         (define old-id (element-get elt ':id))
          (define props
-           `(:id (fixed,(second (string-split (symbol->string id) "/")))))
+           (if (not (equal? (string->symbol (car new-id)) 'no-id))
+               `(:id (fixed ,(second new-id)))
+               `(:id (fixed ,old-id))))
          (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))))
 
 (define (extract-counterexample! smt-out)
@@ -515,12 +476,14 @@
             (when (element-get elt ':class)
               (for ([c (element-get elt ':class)])
                 (save-class (sformat "class/~a" c)))))
-          (for ([name (append browser-style-names user-style-names)] [rule (append (or (car browsers) '()) sheet)])
+
+          ; TODO: Not dealing with saving browser style names currently because the logic was buggy for appending those to this list
+          (for ([name user-style-names] [rule sheet])
             (when name
               ; add tags and ids into the list
               (match (car rule)
                 [`(tag ,tagname)
-                  (save-tag (sformat "tag/~a" (slower tagname)))]
+                 (save-tag (sformat "tag/~a" (slower tagname)))]
                 [`(id ,idname)
                   (save-id (sformat "id/~a" idname))]
                 [`(class ,classname)
