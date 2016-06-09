@@ -2,8 +2,6 @@
 (require srfi/13)
 (require racket/set)
 (require "common.rkt")
-(require "ffi.rkt")
-(require "../coq/z3o.rkt")
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
          z3-check-let z3-check-fields z3-print-all z3-ground-quantifiers
@@ -557,14 +555,13 @@
       [_ (sow cmd)])))
 
 (define (z3-if-and cmds)
-  (define (if-and-old expr)
+  (define (if-and expr)
     (match expr
       [`(and (ite ,c ,a1 ,b1) (ite ,c ,a2, b2))
        `(ite ,c ,(if-and `(and ,a1 ,a2)) ,(if-and `(and ,b1 ,b2)))]
       [(? list?)
        (map if-and expr)]
       [_ expr]))
-  (define (if-and expr) (coq->sexpr (ifAnd (sexpr->coq expr))))
   (for/list ([i (in-naturals)] [cmd cmds])
     (match cmd
       [`(assert ,expr)
