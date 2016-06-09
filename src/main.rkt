@@ -103,50 +103,46 @@
 (define (extract-core query stylesheet trees vars)
   (define stylesheet* (make-hash))
   (for ([name vars])
-    (define split-name (split-line-name name))
-    ;(printf "SPLIT-NAME: ~a\n" split-name)
-    (match split-name
+    (match (split-line-name name)
       [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
        (define field-name
          (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
            ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
        (define elt (elt-from-name elt-name))
-       (set-element-attrs! elt (plist-merge (element-attrs elt) `(,field-name (bad ,(element-get elt field-name)))))]
+       (element-set! elt field-name `(bad ,(element-get elt field-name)))]
       [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
        (define rule (hash-ref! stylesheet* idx (list-ref stylesheet idx)))
        (define rule*
          (cons (car rule)
                (for/list ([line (cdr rule)])
                  (cond
-                   [(not (list? line))
-                    line]
-                   [(equal? (car line) prop)
-                    `(,prop (bad ,(cadr line)))]
-                   [else
-                    line]))))
+                  [(not (list? line))
+                   line]
+                  [(equal? (car line) prop)
+                   `(,prop (bad ,(cadr line)))]
+                  [else
+                   line]))))
        (hash-set! stylesheet* idx rule*)]
       [`((info ,elt-name) ,compute-style ...)
        (define tag-name (extract-tag-name compute-style))
        (define id-name (extract-id-name compute-style))
        (define elt (elt-from-name elt-name))
-       (define field-name ':tag)
-       (define id-field-name ':id)
-       (define attributes (element-attrs elt))
-       (define fname (element-get elt field-name))
-       (define iname (element-get elt id-field-name))
+       (define fname (element-get elt ':tag))
+       (define iname (element-get elt ':id))
        (define (no-bad field)
          (match field
            [`(bad ,tag) #f]
            [_ #t]))
-       (when (no-bad fname)(set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname))))  )
-       (when (and (no-bad iname) iname) (set-element-attrs! elt (plist-merge attributes `(,id-field-name (bad ,iname)))))]
+       (when (no-bad fname)
+         (element-set! elt ':tag `(bad ,fname)))
+       (when (and (no-bad iname) iname)
+         (element-set! elt ':id `(bad ,iname)))]
       [_ (void)]))
-  (define ss (hash-values stylesheet*))
-  (values ss trees)) ; stylesheet* is the one with just bad rules
+  (values (hash-values stylesheet*) trees))
 
 ; Replace all bad tags and ids with holes
 ; TODO: It is kind of strange & hacky to have this weird global variable thing, but I can't figure out how to avoid it currently.. Maybe Pavel can think of a better way
-; with his wicked racket skills? 
+; with his wicked racket skills?
 (define replaced #f)
 (define (reset-replaced)
   (set! replaced #f))
@@ -156,7 +152,7 @@
     (match attr
       [`(bad ,val) val]
       [_ attr]))
- 
+
   (for/list ([t tree])
     (match t
       [`((,block ...) ,rest ...)
@@ -176,9 +172,9 @@
                  (list block ':tag '? ':id '?)]
                [else
                  (list block ':tag val ':id '?)])]
-           [else 
+           [else
              (list block ':tag val ':id idval)]))
-       (append ret vals)] 
+       (append ret vals)]
       [`(,block :tag (bad ,val) ,rest ...)
        (define vals (map (λ (t) (match-attr t)) rest))
        (define ret
@@ -202,20 +198,6 @@
        (append ret rest)]
       [_ (replace-ids-with-holes t one)])))
 
-(define (plist-add plist key value)
-  (let loop ([plist plist])
-    (cond
-      [(null? plist)
-       (list key value)]
-      [(equal? (car plist) key)
-       (list* (car plist) value (cddr plist))]
-      [else
-       (list* (car plist) (cadr plist) (loop (cddr plist)))])))
-
-(define (plist-merge plist1 plist2)
-  (for/fold ([plist plist1]) ([(k v) (in-groups 2 plist2)])
-    (plist-add plist k v)))
-
 (define (extract-box! box elt)
   (match box
     [(list 'box type x y w h xo yo mt mr mb ml mtp2 mtn2 mbp2 mbn2 mtp mtn mbp mbn
@@ -226,10 +208,10 @@
      (define box-height (+ bt pt h pb bb))
      (define box-x (+ x xo))
      (define box-y (+ y yo))
-     (define props
-       `(:w ,box-width :h ,box-height :x ,box-x :y ,box-y #|:bl ,bl :bb ,bb :br ,br :bt ,bt|#))
-
-     (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))
+     (element-set! elt ':w box-width)
+     (element-set! elt ':h box-height)
+     (element-set! elt ':x box-x)
+     (element-set! elt ':y box-y)]))
 
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
@@ -239,19 +221,17 @@
     (when (equal?  (element-get elt ':tag) '?)
       (match output
         [(list 'elt doc tag _ ...)
-         (define props
-           `(:tag (fixed,(second (string-split (symbol->string tag) "/")))))
-         (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))
+         (element-set! elt ':tag `(fixed ,(second (string-split (symbol->string tag) "/"))))]))
     (when (equal?  (element-get elt ':id) '?)
       (match output
         [(list 'elt doc tag id _ ...)
          (define new-id (string-split (symbol->string id) "/"))
          (define old-id (element-get elt ':id))
-         (define props
+         (define value
            (if (not (equal? (string->symbol (car new-id)) 'no-id))
-               `(:id (fixed ,(second new-id)))
-               `(:id (fixed ,old-id))))
-         (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))))
+               `(fixed ,(second new-id))
+               `(fixed ,old-id)))
+         (element-set! elt ':id value)]))))
 
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)])
