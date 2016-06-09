@@ -9,8 +9,6 @@
 (require "spec/tree.rkt")
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
-(require srfi/1)
-(require racket/generator)
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced)
 
