@@ -10,8 +10,9 @@
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
 (require srfi/1)
+(require racket/generator)
 
-(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure))
+(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced)
 
 (define (dump-tag tag)
   (if tag
@@ -86,14 +87,31 @@
       [(list _) part]
       [(list parts ...) (map (curryr with-input-from-string read) parts)])))
 
+(define (extract-tag-name constraint)
+  (define cstyle (first constraint))
+  (match cstyle
+    [`(compute-style ,property ,elt-name tag ,tagname ,id)
+     tagname]
+    [_ (void)]))
+
+(define (extract-id-name constraint)
+  (define cstyle (first constraint))
+  (match cstyle
+    [`(compute-style ,property ,elt-name tag ,tagname ,id)
+     id]
+    [_ (void)]))
+
+;; Does tagging of bad
 (define (extract-core query stylesheet trees vars)
   (define stylesheet* (make-hash))
   (for ([name vars])
-    (match (split-line-name name)
+    (define split-name (split-line-name name))
+    ;(printf "SPLIT-NAME: ~a\n" split-name)
+    (match split-name
       [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
        (define field-name
          (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
-                ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
+           ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
        (define elt (elt-from-name elt-name))
        (set-element-attrs! elt (plist-merge (element-attrs elt) `(,field-name (bad ,(element-get elt field-name)))))]
       [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
@@ -101,26 +119,100 @@
        (define rule*
          (cons (car rule)
                (for/list ([line (cdr rule)])
-                 (cond 
-                  [(not (list? line))
-                   line]
-                  [(equal? (car line) prop)
-                   `(,prop (bad ,(cadr line)))]
-                  [else
-                   line]))))
+                 (cond
+                   [(not (list? line))
+                    line]
+                   [(equal? (car line) prop)
+                    `(,prop (bad ,(cadr line)))]
+                   [else
+                    line]))))
        (hash-set! stylesheet* idx rule*)]
+      [`((info ,elt-name) ,compute-style ...)
+       (define tag-name (extract-tag-name compute-style))
+       (define id-name (extract-id-name compute-style))
+       (define elt (elt-from-name elt-name))
+       (define field-name ':tag)
+       (define id-field-name ':id)
+       (define attributes (element-attrs elt))
+       (define fname (element-get elt field-name))
+       (define iname (element-get elt id-field-name))
+       (define (no-bad field)
+         (match field
+           [`(bad ,tag) #f]
+           [_ #t]))
+       (when (no-bad fname)(set-element-attrs! elt (plist-merge attributes `(,field-name (bad ,fname))))  )
+       (when (and (no-bad iname) iname) (set-element-attrs! elt (plist-merge attributes `(,id-field-name (bad ,iname)))))]
       [_ (void)]))
-  (values (hash-values stylesheet*) trees)) ; stylesheet* is the one with just bad rules
+  (define ss (hash-values stylesheet*))
+  (values ss trees)) ; stylesheet* is the one with just bad rules
+
+; Replace all bad tags and ids with holes
+; TODO: It is kind of strange & hacky to have this weird global variable thing, but I can't figure out how to avoid it currently.. Maybe Pavel can think of a better way
+; with his wicked racket skills? 
+(define replaced #f)
+(define (reset-replaced)
+  (set! replaced #f))
+
+(define (replace-ids-with-holes tree one)
+  (define (match-attr attr)
+    (match attr
+      [`(bad ,val) val]
+      [_ attr]))
+ 
+  (for/list ([t tree])
+    (match t
+      [`((,block ...) ,rest ...)
+       (replace-ids-with-holes t one)]
+      [`(,block :tag (bad ,val) :id (bad ,idval) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret
+         (cond
+           [(and (not (equal? (slower (symbol->string val)) 'html))
+                  (not (equal? (slower (symbol->string val)) 'body))
+                  (not replaced)
+                  (not (equal? idval '?)))
+             (when (and one (not replaced))
+               (set! replaced #t))
+             (cond
+               [(not one)
+                 (list block ':tag '? ':id '?)]
+               [else
+                 (list block ':tag val ':id '?)])]
+           [else 
+             (list block ':tag val ':id idval)]))
+       (append ret vals)] 
+      [`(,block :tag (bad ,val) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret
+         (cond
+           [(and (not (equal? (slower (symbol->string val)) 'html))
+                  (not (equal? (slower (symbol->string val)) 'body))
+                  (not replaced)
+                  (not (equal? val '?)))
+            (when (and one (not replaced))
+               (set! replaced #t))
+             (list block ':tag '?)]
+           [else
+             (list block ':tag val)]))
+       (append ret vals)]
+      [`(,block ,attr (bad ,val) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret (list block attr val))
+       (append ret vals)]
+      [`(,block ,attr ,val ,rest ...)
+       (define ret (list block attr val))
+       (append ret rest)]
+      [_ (replace-ids-with-holes t one)])))
 
 (define (plist-add plist key value)
   (let loop ([plist plist])
     (cond
-     [(null? plist)
-      (list key value)]
-     [(equal? (car plist) key)
-      (list* (car plist) value (cddr plist))]
-     [else
-      (list* (car plist) (cadr plist) (loop (cddr plist)))])))
+      [(null? plist)
+       (list key value)]
+      [(equal? (car plist) key)
+       (list* (car plist) value (cddr plist))]
+      [else
+       (list* (car plist) (cadr plist) (loop (cddr plist)))])))
 
 (define (plist-merge plist1 plist2)
   (for/fold ([plist plist1]) ([(k v) (in-groups 2 plist2)])
@@ -144,7 +236,24 @@
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
     (define box-name (sformat "~a-flow-box" (element-name elt)))
-    (extract-box! (hash-ref smt-out box-name) elt)))
+    (extract-box! (hash-ref smt-out box-name) elt)
+    (define output (hash-ref smt-out (sformat "~a-elt" (element-name elt))))
+    (when (equal?  (element-get elt ':tag) '?)
+      (match output
+        [(list 'elt doc tag _ ...)
+         (define props
+           `(:tag (fixed,(second (string-split (symbol->string tag) "/")))))
+         (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))
+    (when (equal?  (element-get elt ':id) '?)
+      (match output
+        [(list 'elt doc tag id _ ...)
+         (define new-id (string-split (symbol->string id) "/"))
+         (define old-id (element-get elt ':id))
+         (define props
+           (if (not (equal? (string->symbol (car new-id)) 'no-id))
+               `(:id (fixed ,(second new-id)))
+               `(:id (fixed ,old-id))))
+         (set-element-attrs! elt (plist-merge (element-attrs elt) props))]))))
 
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)])
@@ -177,7 +286,7 @@
   (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
     (selector-constraints emit name rule i #:browser browser?)
 
-    (define allow-new-properties? (member '? rule))
+    (define allow-new-properties? (member '? (cdr rule)))
     (define pairs
       (filter (λ (x) (or (not (symbol? (cadr x))) (not (css-em? (cadr x)))))
               (filter list? (cdr rule))))
@@ -287,7 +396,7 @@
       [(or ':x ':y ':w ':h ':ml ':mr ':mt ':mb)
        (define mapping
          '((:x box-x) (:y box-y) (:h box-height) (:w box-width)
-           (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
+                      (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
        (define fun (cadr (assoc cmd mapping)))
        (match arg
          [(? number*?)
@@ -334,8 +443,16 @@
 
 (define (info-constraints dom emit elt)
   (when (is-element? elt)
-    (define tagname (dump-tag (element-get elt ':tag)))
-    (define idname (dump-id (element-get elt ':id)))
+    (define tagname
+      ; `(tagname (get/elt ,(element-name elt)))
+      (if (equal? (element-get elt ':tag) '?)
+          `(tagname (get/elt ,(element-name elt)))
+          (dump-tag (element-get elt ':tag))))
+
+    (define idname
+      (if (equal? (element-get elt ':id) '?)
+          `(idname (get/elt ,(element-name elt)))
+          (dump-id (element-get elt ':id))))
 
     (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname)
                       :named ,(sformat "info/~a" (element-name elt)))))))
@@ -354,12 +471,11 @@
             (cns dom sow elt)))))
 
 (define (all-constraints sheet doms)
-
   (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
   (unless (= (length browsers) 1)
     (error "Different browsers on different documents not yet supported"))
   (define browser-style (get-sheet (car browsers)))
-  
+
   (define browser-style-names (name-rules (car browsers) browser-style (map dom-tree doms)))
   (define user-style-names (name-rules 'user sheet (map dom-tree doms)))
 
@@ -370,7 +486,20 @@
             (when (element-get elt ':tag) (save-tag (dump-tag (element-get elt ':tag))))
             (when (element-get elt ':class)
               (for ([c (element-get elt ':class)])
-               (save-class (sformat "class/~a" c)))))))
+                (save-class (sformat "class/~a" c)))))
+
+          ; TODO: Not dealing with saving browser style names currently because the logic was buggy for appending those to this list
+          (for ([name user-style-names] [rule sheet])
+            (when name
+              ; add tags and ids into the list
+              (match (car rule)
+                [`(tag ,tagname)
+                 (save-tag (sformat "tag/~a" (slower tagname)))]
+                [`(id ,idname)
+                  (save-id (sformat "id/~a" idname))]
+                [`(class ,classname)
+                  (save-class (sformat "class/~a" classname))]
+                [_ (void)])))))
 
   (define element-names
     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt)))
@@ -380,12 +509,12 @@
      (for/list ([dom doms]) (sformat "~a-flow" (dom-root dom)))))
 
   (define rule-names (filter identity (append browser-style-names user-style-names)))
-  
+
   (eprintf ";; ~a rules, ~a elements, ~a boxes\n" (length rule-names) (length element-names) (length box-names))
 
   (define constraints
     (list
-     tree-constraints 
+     tree-constraints
      (procedure-rename
       (style-constraints (append browser-style-names user-style-names)
                          (append browser-style sheet))

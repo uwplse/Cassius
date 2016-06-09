@@ -11,6 +11,9 @@
              (match props
                [(list attr `(bad ,val) rest ...)
                 (cons (format "\33[1;31m~a ~a\33[0m" attr val) (loop rest))]
+               ; (new - output in green color :)
+               [(list attr `(fixed ,val) rest ...)
+                (cons (format "\33[1;32m~a ~a\33[0m" attr val) (loop rest))]
                [(list attr val rest ...)
                 (cons (format "~a ~a" attr val) (loop rest))]
                [(list) '()]))

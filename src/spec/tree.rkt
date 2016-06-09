@@ -73,10 +73,10 @@
          (= (next-name elt) n)
          (= (first-child-name elt) f)
          (= (last-child-name elt) l)))
-  
+
   (define-fun element-info ((elt Element) (tag TagNames) (&idname Id)) Bool
     (and (= (tagname elt) tag) (= (idname elt) &idname)
-
+         (not (is-no-tag (tagname elt)))
          ,@(for/list ([prop '(width min-width max-width min-height max-height
                               margin-top margin-right margin-bottom margin-left
                               padding-top padding-right padding-bottom padding-left
@@ -107,10 +107,10 @@
                           (is-border-style/hidden (,(sformat "style.border-~a-style" dir) (specified-style elt))))
                       (border/px 0.0)
                       (,(sformat "style.border-~a-width" dir) (specified-style elt)))))))
-  
+
   (define-fun link-element-box ((&e ElementName) (&b BoxName)) Bool
     (and
-     (is-box (get/box &b)) 
+     (is-box (get/box &b))
      (= (float (get/box &b)) (style.float (computed-style (get/elt &e))))
      (= (position (get/box &b)) (style.position (computed-style (get/elt &e))))
      (= (textalign (get/box &b)) (style.text-align (computed-style (get/elt &e))))

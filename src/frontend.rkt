@@ -33,7 +33,7 @@
 
   (log-phase "Prepared ~a constraints of ~a terms"
            (length query) (tree-size query))
-  
+
   (reset-elt-names!)
 
   query)
@@ -49,8 +49,15 @@
              args)))
 
   (define doms
-    (for/list ([d docs])
+    (for/list ([d docs]) ;; d = <#dom>
       (match-define (dom name ctx tree) d)
+      ;; dom = dom procedure
+      ;; name = actual name i.e. domb
+      ; ctx = rendering context
+      ;; tree has the form of syntax:
+      ; ((BLOCK :tag HTML :x 0 :y 0 :w 945)
+      ; ((BLOCK :tag BODY :x 147.5 :y 36 :w 650)
+      ; ((BLOCK :tag DIV :id content :x 157.5 :y 36 :w 630 :h 978.5))))
       (dom name ctx (parse-tree tree))))
 
   (define query (all-constraints (car sheets) doms))
