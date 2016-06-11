@@ -2,7 +2,7 @@
 (require "common.rkt")
 
 (provide (struct-out dom) (struct-out rendering-context)
-         (struct-out element) parse-tree unparse-tree in-tree element-get element-set!
+         (struct-out element) parse-tree unparse-tree in-tree element-get element-set! element-remove!
          element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
          box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
          dom-root elt-from-name reset-elt-names! is-element?)
@@ -52,6 +52,15 @@
         (list name value)]
        [(equal? (car plist) name)
         (list* (car plist) value (cddr plist))]
+       [else
+        (list* (car plist) (cadr plist) (loop (cddr plist)))]))))
+
+(define (element-remove! elt name)
+  (set-element-attrs! elt
+    (let loop ([plist (element-attrs elt)])
+      (cond
+       [(null? plist) plist]
+       [(equal? (car plist) name) (cddr plist)]
        [else
         (list* (car plist) (cadr plist) (loop (cddr plist)))]))))
 

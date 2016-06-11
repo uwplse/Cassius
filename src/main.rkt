@@ -22,6 +22,13 @@
       (sformat "id/~a" id)
       'no-id))
 
+(define (extract-tag tag)
+  (and (not (equal? tag 'no-tag))
+       (string->symbol (string-replace (~a (second (split-symbol tag))) ".." ":"))))
+
+(define (extract-id id)
+  (and (not (equal? id 'no-id)) (second (split-symbol id))))
+
 (define (extract-stylesheet stylesheet smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
     (define rule-name (sformat "user/~a" i))
@@ -43,9 +50,6 @@
   (match (split-symbol x)
     [(list _ ... (== v)) #t]
     [_ #f]))
-
-(define (css-%? x)
-  (string-suffix? "%" (~a (last (split-symbol x)))))
 
 (define (css-em? x)
   (string-suffix? "em" (~a (last (split-symbol x)))))
@@ -199,39 +203,38 @@
       [_ (replace-ids-with-holes t one)])))
 
 (define (extract-box! box elt)
-  (match box
-    [(list 'box type x y w h xo yo mt mr mb ml mtp2 mtn2 mbp2 mbn2 mtp mtn mbp mbn
-           pt pr pb pl bt br bb bl stfwidth real-p-name real-n-name real-v-name real-f-name
-           real-l-name width-set pb-name n-name v-name flt-name flt-up-name float
-           textalign position element)
-     (define box-width (+ bl pl w pr br))
-     (define box-height (+ bt pt h pb bb))
-     (define box-x (+ x xo))
-     (define box-y (+ y yo))
-     (element-set! elt ':w box-width)
-     (element-set! elt ':h box-height)
-     (element-set! elt ':x box-x)
-     (element-set! elt ':y box-y)]))
+  (match-define
+   (list 'box
+         type x y w h xo yo mt mr mb ml mtp2 mtn2 mbp2 mbn2 mtp mtn mbp mbn
+         pt pr pb pl bt br bb bl stfwidth real-p-name real-n-name real-v-name real-f-name
+         real-l-name width-set pb-name n-name v-name flt-name flt-up-name float
+         textalign position element)
+   box)
+  (define box-width (+ bl pl w pr br))
+  (define box-height (+ bt pt h pb bb))
+  (define box-x (+ x xo))
+  (define box-y (+ y yo))
+  (element-set! elt ':w box-width)
+  (element-set! elt ':h box-height)
+  (element-set! elt ':x box-x)
+  (element-set! elt ':y box-y))
+
+(define (extract-elt! result elt)
+  (match-define (list 'elt doc tag id spec-style comp-style &v &p &n &f &l &b) result)
+  (when (equal?  (element-get elt ':tag) '?)
+    (element-set! elt ':tag `(fixed ,(extract-tag tag))))
+  (when (equal?  (element-get elt ':id) '?)
+    (define new-id (extract-id id))
+    (if (equal? new-id 'no-id)
+        (element-remove! elt ':id)
+        (element-set! elt ':id new-id))))
 
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
-    (define box-name (sformat "~a-flow-box" (element-name elt)))
-    (extract-box! (hash-ref smt-out box-name) elt)
-    (define output (hash-ref smt-out (sformat "~a-elt" (element-name elt))))
-    (when (equal?  (element-get elt ':tag) '?)
-      (match output
-        [(list 'elt doc tag _ ...)
-         (element-set! elt ':tag `(fixed ,(second (string-split (symbol->string tag) "/"))))]))
-    (when (equal?  (element-get elt ':id) '?)
-      (match output
-        [(list 'elt doc tag id _ ...)
-         (define new-id (string-split (symbol->string id) "/"))
-         (define old-id (element-get elt ':id))
-         (define value
-           (if (not (equal? (string->symbol (car new-id)) 'no-id))
-               `(fixed ,(second new-id))
-               `(fixed ,old-id)))
-         (element-set! elt ':id value)]))))
+    (define box-model (hash-ref smt-out (sformat "~a-flow-box" (element-name elt))))
+    (when (and box-model (list? box-model)) (extract-box! box-model elt))
+    (define elt-model (hash-ref smt-out (sformat "~a-elt" (element-name elt))))
+    (when (and elt-model (list? elt-model)) (extract-elt! elt-model elt))))
 
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)])
@@ -374,7 +377,7 @@
       [(or ':x ':y ':w ':h ':ml ':mr ':mt ':mb)
        (define mapping
          '((:x box-x) (:y box-y) (:h box-height) (:w box-width)
-                      (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
+           (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
        (define fun (cadr (assoc cmd mapping)))
        (match arg
          [(? number*?)
@@ -422,7 +425,6 @@
 (define (info-constraints dom emit elt)
   (when (is-element? elt)
     (define tagname
-      ; `(tagname (get/elt ,(element-name elt)))
       (if (equal? (element-get elt ':tag) '?)
           `(tagname (get/elt ,(element-name elt)))
           (dump-tag (element-get elt ':tag))))
