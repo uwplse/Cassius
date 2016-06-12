@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TOOL=$1
 shift

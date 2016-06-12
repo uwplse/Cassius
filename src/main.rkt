@@ -231,9 +231,9 @@
 
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
-    (define box-model (hash-ref smt-out (sformat "~a-flow-box" (element-name elt))))
+    (define box-model (hash-ref smt-out (sformat "~a-flow-box" (element-name elt)) #f))
     (when (and box-model (list? box-model)) (extract-box! box-model elt))
-    (define elt-model (hash-ref smt-out (sformat "~a-elt" (element-name elt))))
+    (define elt-model (hash-ref smt-out (sformat "~a-elt" (element-name elt)) #f))
     (when (and elt-model (list? elt-model)) (extract-elt! elt-model elt))))
 
 (define (extract-counterexample! smt-out)
