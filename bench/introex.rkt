@@ -2,10 +2,10 @@
 
 (define-stylesheet main
   ((tag body)
-   [margin-top (margin/px 0)]
-   [margin-right (margin/px 0)]
-   [margin-bottom (margin/px 0)]
-   [margin-left (margin/px 0)])
+   [margin-top (px 0)]
+   [margin-right (px 0)]
+   [margin-bottom (px 0)]
+   [margin-left (px 0)])
   ((tag main)
    #;[background-color background-color/gray]
    #;[background-image background-image/none]
@@ -15,13 +15,13 @@
    #;[background-clip background-clip/border-box]
    #;[background-origin background-origin/padding-box]
    #;[background-size background-size/auto auto]
-   [width width/100%]
-   [float float/left])
+   [width 100%]
+   [float left])
   ((tag div)
-   [float float/left]
+   [float left]
    #;[font-size (font-size/px 192)]
-   [width (width/px 200)]
-   [height (height/px 200)]))
+   [width (px 200)]
+   [height (px 200)]))
 
 (define-document (four #:width 400 #:browser firefox)
   ([BLOCK :tag HTML :x 0 :y 0 :w 400 :h 486]

@@ -42,7 +42,9 @@
   (string-suffix? "%" (~a (last (split-symbol x)))))
 
 (define (css-em? x)
-  (string-suffix? "em" (~a (last (split-symbol x)))))
+  (or
+   (string-suffix? "ex" (~a (last (split-symbol x))))
+   (string-suffix? "em" (~a (last (split-symbol x))))))
 
 (define (extract-selector sel)
   (match sel
