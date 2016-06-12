@@ -79,16 +79,14 @@
   [border-left-style none])
 
 (define-css-type (Float none left right)
- [float none])
-
-(define-css-type (Display block inline))
+  [float none])
 
 (define-css-type (Text-Align left right center justify)
- [text-align inherit])
+  [text-align inherit])
 
 (define-css-type (Overflow visible hidden auto scroll)
- [overflow-x visible]
- [overflow-y visible])
+  [overflow-x visible]
+  [overflow-y visible])
 
 (define-css-type (Position static relative absolute fixed)
   [position static])
@@ -101,6 +99,3 @@
 
 (define-css-type (Box-Sizing border-box content-box)
   [box-sizing content-box])
-
-(define-css-type (White-Space normal pre nowrap pre-wrap pre-word)
-  [white-space normal])
