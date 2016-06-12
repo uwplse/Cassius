@@ -73,12 +73,6 @@
          (<= (box-right b1) (box-right b2))
          (<= (box-bottom b1) (box-bottom b2))))
 
-  (define-fun within ((b1 Box) (b2 Box)) Bool
-    (and (<= (box-left b2) (box-left b1))
-         (<= (box-top b2) (box-top b1))
-         (<= (box-right b1) (box-right b2))
-         (<= (box-bottom b1) (box-bottom b2))))
-
   (define-fun top-margins-collapse-parent ((b Box)) Bool
     (and
      ;; Margins of the root element's box do not collapse.
