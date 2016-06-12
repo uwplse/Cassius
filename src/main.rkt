@@ -66,7 +66,7 @@
   (match value
     [(list (? (css-type-ending? 'px)) x) (list 'px x)]
     [(list (? (css-type-ending? '%)) x)
-     (if (member x *%*) ; Percentages that aren't in the list are its first element
+     (if (member x (*%*)) ; Percentages that aren't in the list are its first element
          (list '% x)
          (list '% (car *%*)))]
     [(? symbol?) (last (split-symbol value))]))
