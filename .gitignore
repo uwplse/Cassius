@@ -1,6 +1,5 @@
 test.css
 test.html
-z3.sh
 papers/
 *.aux
 *.d
@@ -13,4 +12,3 @@ coq/CoqMakefile
 cassius/compiled
 reports/*.html
 reports/*.json
-bench/css/*.rkt
