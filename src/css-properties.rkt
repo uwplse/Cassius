@@ -11,7 +11,7 @@
     (Height 1 20 25 50 100 200)
     (Margin 15 50 29 2)
     (Padding 1 2 20 50)
-    (Offset 1.5)))
+    (Offset 1.5 50 100)))
 
 (define (%ages type)
   (match (assoc type %ages-data)
