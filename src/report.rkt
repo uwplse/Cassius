@@ -47,44 +47,49 @@
 
 (struct result (file problem test section status description features output time url))
 
-(define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)])
+(define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)] #:sections [sections #f])
   (define probs (call-with-input-file file parse-file))
 
-  (for/list ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))]
-        #:when (or (not fast?) (subset? (problem-features prob) supported-features)))
+  (for/reap [save] ([(pname prob) (in-pairs (sort (hash->list probs) symbol<? #:key car))])
     (match-define (problem desc url header sheet documents features test) prob)
-    (eprintf "~a\t~a\t" file pname)
     (define-values (ubase uname udir?) (split-path url))
 
-    (define out (open-output-string))
-    (define eng
-      (engine (λ (_)
-                (parameterize ([current-error-port out] [current-output-port out])
-                  (with-handlers
-                      ([exn:break? (λ (e) 'break)]
-                       [exn:fail? (λ (e) (list 'error e))])
-                    (solve (list sheet) documents #:debug debug))))))
-    (define t (current-inexact-milliseconds))
-    (define res
-      (with-handlers ([exn:fail? (λ (e) 'error)])
-        (if (engine-run 60000 eng) (engine-result eng) 'timeout))) ; 1m max
-    (define runtime (- (current-inexact-milliseconds) t))
-    (engine-kill eng)
-    (define status
-      (match res
-        ['timeout 'timeout]
-        [(list 'error e)
-         (newline)
-         ((error-display-handler) (exn-message e) e)
-         'error]
-        ['break 'break]
-        [(success stylesheet trees) 'success]
-        [(failure stylesheet trees)
-         (if (null? (set-subtract features supported-features)) 'fail 'unsupported)]))
-    (eprintf "~a\n" status)
-    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (problem-desc prob) (problem-features prob) (get-output-string out) runtime
-            (problem-url prob))))
+    (when (and
+           (or (not sections)
+               (member (hash-ref index (normalize-uname uname) "unknown") sections))
+           (or (not fast?) (subset? (problem-features prob) supported-features)))
+      (eprintf "~a\t~a\t" file pname)
+
+      (define out (open-output-string))
+      (define eng
+        (engine (λ (_)
+                  (parameterize ([current-error-port out] [current-output-port out])
+                    (with-handlers
+                        ([exn:break? (λ (e) 'break)]
+                         [exn:fail? (λ (e) (list 'error e))])
+                      (solve (list sheet) documents #:debug debug))))))
+      (define t (current-inexact-milliseconds))
+      (define res
+        (with-handlers ([exn:fail? (λ (e) 'error)])
+          (if (engine-run 60000 eng) (engine-result eng) 'timeout))) ; 1m max
+      (define runtime (- (current-inexact-milliseconds) t))
+      (engine-kill eng)
+      (define status
+        (match res
+          ['timeout 'timeout]
+          [(list 'error e)
+           (newline)
+           ((error-display-handler) (exn-message e) e)
+           'error]
+          ['break 'break]
+          [(success stylesheet trees) 'success]
+          [(failure stylesheet trees)
+           (if (null? (set-subtract features supported-features)) 'fail 'unsupported)]))
+      (eprintf "~a\n" status)
+      (save
+       (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+               status (problem-desc prob) (problem-features prob) (get-output-string out) runtime
+               (problem-url prob))))))
 
 (define (number-or-empty? x)
   (if (zero? x) "" x))
@@ -92,7 +97,7 @@
 (define (file-name-stem fn)
   (first (string-split (last (string-split fn "/")) ".")))
 
-(define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f])
+(define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f] #:sections [sections #f])
   (define index
     (if classify
         (for*/hash ([sec (call-with-input-file classify read-json)] [(k v) (in-hash sec)])
@@ -101,7 +106,7 @@
 
   (define resultss
     (for/list ([file files])
-      (run-file-tests file #:debug debug #:fast fast? #:index index)))
+      (run-file-tests file #:debug debug #:fast fast? #:index index #:sections sections)))
   (define results (apply append resultss))
 
   (define out (if outname (open-output-file (format "~a.json" outname) #:exists 'replace) (current-output-port)))
@@ -165,6 +170,7 @@
 (module+ main
   (define debug '())
   (define out-file #f)
+  (define sections #f)
   (define classify #f)
   (define fast #f)
 
@@ -183,9 +189,11 @@
    #:once-each
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
+   [("--sections") sfile "Read sections to test from a JSON file"
+    (set! sections (call-with-input-file sfile read-json))]
    [("--fast") "Skip tests with unsupported features"
     (set! fast #t)]
    [("--index") sname "File name with section information for tests"
     (set! classify sname)]
    #:args fnames
-   (run-report fnames #:debug debug #:output out-file #:fast fast #:classify classify)))
+   (run-report fnames #:debug debug #:output out-file #:fast fast #:classify classify #:sections sections)))
