@@ -430,6 +430,8 @@
 (define (solve-constraints stylesheet trees constraints #:debug [debug? #f])
   (match (z3-solve constraints #:debug debug?)
     [(model m)
+     (for ([(k v) (in-hash m)] #:when (equal? (car (split-symbol k)) 'counterexample))
+       (eprintf "~a: ~a\n" k (elt-from-name (string->symbol (first (string-split (~a v) "-"))))))
      (for-each (curryr extract-tree! m) trees)
      (success (extract-stylesheet stylesheet m) (map unparse-tree trees))]
     [(unsat-core c)

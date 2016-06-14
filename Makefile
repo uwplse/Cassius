@@ -31,4 +31,4 @@ bench/alexa/%.rkt: get_bench.py get_bench.js bench/alexa/%.html
 reports/csswg.html: $(wildcard bench/css/*.rkt)
 	racket src/report.rkt $(FLAGS) --sections sections.json --index tests.json -o reports/csswg $^
 
-get-csswg: bench/css/floats.rkt bench/css/margin-padding-clear.rkt
+get-csswg: bench/css/margin-padding-clear.rkt bench/css/normal-flow.rkt bench/css/linebox.rkt bench/css/borders.rkt
