@@ -14,7 +14,7 @@ This artifact is thus chiefly concerned with replicating the
 These tests can be examined and automatically rerun.
 
 This artifact also includes the 5 web sites discussed in §5.2, and
-includes scripts to run acceptance, verification, debugging, and
+describes how to run acceptance, verification, debugging, and
 synthesis tasks for each web site.
 
 This artifact does not include a formalization of CSS without the
@@ -161,23 +161,35 @@ generation and grounding time were summed to create the Table 2 results.
 Tool tests for real-world websites
 ----------------------------------
 
+The tool tests for real-world websites are substantially harder to
+reproduce than the previous. The main claim of the tool tests is that
+the tools run fast; inside a virtual machine this claim will be
+near-meaningless. No claims were made that the tools are usable by
+others; in fact, they are prototypes, testing the guts of our CSS
+semantics, and are hard to use even for the authors. Nonetheless,
+basic tests of these tools can be conducted.
+
 You can use the prototype verification, debugging, and synthesis tools
 built atop Cassius on all five of the websites mentioned in the
 previous section. To run the verification tool, run
 
-    ./cassius verify --truncate <level> bench/alexa/<site>.rkt doc-1
+    ./cassius verify --truncate <level> bench/alexa/<site>.rkt verify
 
-The runtimes should approximate those in Table 3.
+The runtimes should approximate those in Table 3, keeping in mind that
+runtimes inside the virtual machine will be substantially longer.
 
 To run the debugger, use
 
-    ./cassius debug --truncate <level> bench/alexa/<site>.rkt doc-1
+    ./cassius rdebug --truncate <level> bench/alexa/<site>.rkt doc-1
 
 Each invocation is randomized, but very roughly similar results to
-those in Table 3 should be seen. Sometimes the debugger negates a
+those in Table 3 should be seen. Rather often the debugger negates a
 constraint and Cassius is able to find another solution, so no debug
-info is produced. This is due to the opaque boxes introduced by
-truncation. Cassius prints "problematic" properties in red, and does
+info is produced (it prints `Different renderings possible`). This is
+due to the opaque boxes introduced by truncation. These cases were
+ignored when formulating Table 3.
+
+Cassius prints "problematic" properties in red, and does
 not print rule bodies without problematic properties, so the last two
 columns in Table 3 are simply the number of rules and highlighted
 properties printed.
