@@ -30,7 +30,7 @@ machine image. Otherwise, Cassius can be installed and run from
 source.
 
 Before installing Cassius, please install Racket (6.3 or higher) and
-Z3 (any recent version).
+Z3 (4.4.2).
 
 Racket can be installed from
 [its website](https://download.racket-lang.org/), while Z3 must be
