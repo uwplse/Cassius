@@ -13,9 +13,7 @@
 <p>Racket can be installed from <a href="https://download.racket-lang.org/">its website</a>, while Z3 must be <a href="https://github.com/Z3Prover/z3">built from source</a>. To extract web pages to Cassius format, you will also need <a href="https://python.org">Python 2.7</a>, <a href="http://www.seleniumhq.org/">Selenium 2.45</a>, Xvfb, and <a href="https://firefox.com">Firefox 38+</a> but none of the artifact evaluation steps require these components.</p>
 <p>Please also install the <code>unstable</code> package for Racket:</p>
 <pre><code>raco pkg install --auto unstable</code></pre>
-<p>The Cassius source can be downloaded from Github:</p>
-<pre><code>git clone https://github.com/uwplse/cassius</code></pre>
-<p>The <code>master</code> branch of Cassius, on the other hand, has had substantial development in pursuit of new projects. Please use the <code>aec</code> branch instead, which should be more comparable to the paper:</p>
+<p>Enter the directory containing the Cassius source.</p>
 <pre><code>git checkout aec</code></pre>
 <p>Cassius must be able to find the Z3 binary; please edit the file <code>z3.sh</code> to give a full absolute path name to the Z3 binary, like so:</p>
 <pre><code>#!/bin/bash

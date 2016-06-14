@@ -45,15 +45,7 @@ Please also install the `unstable` package for Racket:
 
     raco pkg install --auto unstable
 
-The Cassius source can be downloaded from Github:
-
-    git clone https://github.com/uwplse/cassius
-
-The `master` branch of Cassius, on the other hand, has had substantial
-development in pursuit of new projects. Please use the `aec` branch
-instead, which should be more comparable to the paper:
-
-    git checkout aec
+Enter the directory containing the Cassius source.
 
 Cassius must be able to find the Z3 binary; please edit the file
 `z3.sh` to give a full absolute path name to the Z3 binary, like so:
