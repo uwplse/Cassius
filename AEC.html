@@ -1,0 +1,94 @@
+<h1 id="evaluating-the-cassius-oopsla16-artifact">Evaluating the Cassius OOPSLA'16 Artifact</h1>
+<p>Cassius (OOPSLA'16 Paper #69) is a mechanized formalization of a substantial fragment of the semantics of CSS 2.1. As such, the most important aspect of the artifact is its correct and efficient formalization of the CSS 2.1 standard.</p>
+<h2 id="evaluations-included-in-this-artifact">Evaluations included in this artifact</h2>
+<p>This artifact is thus chiefly concerned with replicating the <em>acceptance</em> and <em>rejection</em> tests in §5.1.1 and §5.1.2 of the paper. These tests can be examined and automatically rerun.</p>
+<p>This artifact also includes the 5 web sites discussed in §5.2, and describes how to run acceptance, verification, debugging, and synthesis tasks for each web site.</p>
+<p>This artifact does not include a formalization of CSS without the restrictions to floating boxes that allow a linear number of constraints, so there is no possibility of testing the experiments discussed in §5.3.</p>
+<h2 id="installing-cassius">Installing Cassius</h2>
+<p>This section may be skipped if you are working from the virtual machine image. Otherwise, Cassius can be installed and run from source.</p>
+<p>Before installing Cassius, please install Racket (6.3 or higher) and Z3 (any recent version).</p>
+<p>Racket can be installed from <a href="https://download.racket-lang.org/">its website</a>, while Z3 must be <a href="https://github.com/Z3Prover/z3">built from source</a>. To extract web pages to Cassius format, you will also need <a href="https://python.org">Python 2.7</a>, <a href="http://www.seleniumhq.org/">Selenium 2.45</a>, Xvfb, and <a href="https://firefox.com">Firefox 38+</a> but none of the artifact evaluation steps require these components.</p>
+<p>Please also install the <code>unstable</code> package for Racket:</p>
+<pre><code>raco pkg install --auto unstable</code></pre>
+<p>The Cassius source can be downloaded from Github:</p>
+<pre><code>git clone https://github.com/uwplse/cassius</code></pre>
+<p>The <code>master</code> branch of Cassius, on the other hand, has had substantial development in pursuit of new projects. Please use the <code>aec</code> branch instead, which should be more comparable to the paper:</p>
+<pre><code>git checkout aec</code></pre>
+<p>Cassius must be able to find the Z3 binary; please edit the file <code>z3.sh</code> to give a full absolute path name to the Z3 binary, like so:</p>
+<pre><code>#!/bin/bash
+/usr/local/bin/z3 &quot;$@&quot;</code></pre>
+<p>With all these steps completed, you should be able to use Cassius. Please test that this is so by executing</p>
+<pre><code>./cassius accept bench/css/borders.rkt doc-0002</code></pre>
+<p>You should see results similar to these:</p>
+<pre><code>~/cassius $ ./cassius accept bench/css/borders.rkt doc-0002
+;; 3 rules, 4 elements, 7 boxes
+[   0.050s] Produced 402 constraints of 11285 terms
+[   1.878s] Prepared 1443 constraints of 32935 terms
+[   0.141s] Solved constraints
+Accepted!</code></pre>
+<p>Times in brackets may differ.</p>
+<h2 id="running-acceptance-tests">Running acceptance tests</h2>
+<p>To run acceptance tests, run</p>
+<pre><code>make reports/csswg.html</code></pre>
+<p>or the longer but equivalent command</p>
+<pre><code>racket src/report.rkt  --sections sections.json --index tests.json -o reports/csswg bench/css/*.rkt</code></pre>
+<p>This command asks Cassius to attempt every test in <code>bench/css/</code> which comes from one of the sections of the CSS standard listed in <code>sections.json</code>, as indexed by <code>tests.json</code>.</p>
+<p>This command will take a few hours to run (less on a machine with a fast CPU) and produce the HTML file <code>reports/csswg.html</code> as output.</p>
+<p>The results can be compared to Table 1 of the paper; &quot;unsupported&quot; tests are those which use features not supported by Cassius, most commonly tables (a full list can be found at the bottom of the generated report). This artifact uses a slightly larger collection of tests; there are 2700 or instead of the approximately 2000 in the paper. There should be a comparable number of failures and more successes.</p>
+<p>As described in the paper, a few tests should fail. These can be investigated manually. Each test is identified by a source file (such as <code>bench/css/borders.rkt</code>) and a name (such as <code>doc-0002</code>). Going to that file and searching for that name should take you to the correct part of the file.</p>
+<h2 id="running-rejection-tests">Running rejection tests</h2>
+<p>To run rejection tests, run</p>
+<pre><code>racket src/mutation-test.rkt --repeat 10 --index tests.json -o reports/mut bench/css/*.rkt</code></pre>
+<p>This command asks Cassius to attempt 10 random rejection queries to each test in <code>bench/css</code>.</p>
+<p>This command will take roughly 10 times as long to run as the previous command, so may be best run overnight (or at a smaller <code>--repeat</code> count). It produces output to the file <code>reports/mut.html</code>.</p>
+<p>Since rejection testing is randomized, your number of failures may not match the number of failures reported in the paper, but it ought to be close.</p>
+<h2 id="acceptance-tests-for-real-world-websites">Acceptance tests for real-world websites</h2>
+<p>Each of the real-world websites must be truncated; the following truncation levels were used in the paper:</p>
+<p>Site | Amazon | Baidu | Google | Wikipedia | Yahoo |<br />
+Level | 4 | 5 | 5 | 4 | 6 |</p>
+<p>Cassius can generate wireframes from each truncation, like that in Figure 9, using the command</p>
+<pre><code>./cassius dump --truncate &lt;level&gt; --screenshot bench/alexa/&lt;site&gt;-1.png bench/alexa/&lt;site&gt;.rkt doc-1 &gt; &lt;site&gt;.html</code></pre>
+<p>The generated HTML page can then be viewed in any recent browser. Note that the original HTML page is located in <code>bench/alexa/&lt;site&gt;.html</code>. Your browser's rendering will not look identical to the skeleton, however, because the skeleton was likely rendered using a different screen size, font setting, browser version, and so on.</p>
+<p>For each site, you can test that Cassius accepts Firefox's rendering of that site with</p>
+<pre><code>./cassius accept --truncate &lt;level&gt; bench/alexa/&lt;site&gt;.rkt doc-1</code></pre>
+<p>The results can be compared to those in Table 2. The runtime numbers can be read directly from Cassius's output. The Elts, Boxes, and Rules figures are printed directly by Cassius. The Time figure is split into setup and solve time; Cassius reports the time to generate constraints, ground them, and solve them separately, and the generation and grounding time were summed to create the Table 2 results.</p>
+<h2 id="tool-tests-for-real-world-websites">Tool tests for real-world websites</h2>
+<p>The tool tests for real-world websites are substantially harder to reproduce than the previous. The main claim of the tool tests is that the tools run fast; inside a virtual machine this claim will be near-meaningless. No claims were made that the tools are usable by others; in fact, they are prototypes, testing the guts of our CSS semantics, and are hard to use even for the authors. Nonetheless, basic tests of these tools can be conducted.</p>
+<p>You can use the prototype verification, debugging, and synthesis tools built atop Cassius on all five of the websites mentioned in the previous section. To run the verification tool, run</p>
+<pre><code>./cassius verify --truncate &lt;level&gt; bench/alexa/&lt;site&gt;.rkt verify</code></pre>
+<p>The runtimes should approximate those in Table 3, keeping in mind that runtimes inside the virtual machine will be substantially longer.</p>
+<p>To run the debugger, use</p>
+<pre><code>./cassius rdebug --truncate &lt;level&gt; bench/alexa/&lt;site&gt;.rkt doc-1</code></pre>
+<p>Each invocation is randomized, but very roughly similar results to those in Table 3 should be seen. Rather often the debugger negates a constraint and Cassius is able to find another solution, so no debug info is produced (it prints <code>Different renderings possible</code>). This is due to the opaque boxes introduced by truncation. These cases were ignored when formulating Table 3.</p>
+<p>Cassius prints &quot;problematic&quot; properties in red, and does not print rule bodies without problematic properties, so the last two columns in Table 3 are simply the number of rules and highlighted properties printed.</p>
+<p>To run the sketcher, use</p>
+<pre><code>./cassius rksetch --holes &lt;num&gt; --truncate &lt;level&gt; bench/alexa/&lt;site&gt;.rkt doc-1</code></pre>
+<p>For the sketcher, the <code>--holes</code> parameter accepts the number of rule bodies to replace with holes; each invocation is randomized (randomly chosen rules are replaced with holes), but very broadly similar results to those in Figure 10 should be seen.</p>
+<p><strong>This concludes the part of this document reproducing results from the paper.</strong></p>
+<h2 id="writing-your-own-cassius-files">Writing your own Cassius files</h2>
+<p>To write your own Cassius input files, use <code>bench/test.rkt</code> as an example. It defines a tiny page. This definition has two parts (the stylesheet and the document). The stylesheet is defined by the <code>define-stylesheet</code> line, which uses the format</p>
+<pre><code>(define-stylesheet &lt;name&gt;
+  (&lt;selector&gt;
+   [&lt;property&gt; &lt;value&gt;] ...)
+  ...)</code></pre>
+<p>The selector can be <code>(tag &lt;tagname&gt;)</code>, <code>(id &lt;idname&gt;)</code>, or <code>*</code>, or it can be one of a larger, expanded set that is automatically translated by Cassius into identifier selectors as described in the text. This expanded set includes the descendent <code>(desc &lt;selector&gt; ...)</code>, class <code>(class &lt;classname&gt;)</code>, direct child <code>(child &lt;selector&gt; ...)</code>, and comma <code>(or &lt;selector&gt; ...)</code> selectors.</p>
+<p>The document is defined for Cassius by the <code>define-document</code> line:</p>
+<pre><code>(define-document (&lt;name&gt; #:width &lt;width&gt; #:browser firefox)
+  &lt;elements&gt;)</code></pre>
+<p>The <code>#:browser firefox</code> bit can be omitted to tell Cassius not to load the Firefox browser stylesheet. Elements are written</p>
+<pre><code>([&lt;type&gt; :&lt;property&gt; &lt;value&gt; ...]
+ &lt;elements&gt;)</code></pre>
+<p>The type can be <code>BLOCK</code>, <code>INLINE</code>, <code>TEXT</code>, or <code>LINE</code> (for the different types of boxes), as well as <code>MAGIC</code> for opaque boxes and <code>ANON</code> for anonymous block boxes. The available properties are <code>:w</code>, <code>:h</code>, <code>:x</code>, and <code>:y</code>, to which define those measurements of the <em>box</em> being described, and <code>:tag</code>, <code>:id</code>, and <code>:class</code>, which define those properties of the associated <em>element</em>.</p>
+<p>You must that all <code>BLOCK</code> and <code>INLINE</code> boxes have <code>:tag</code>s, and that no <code>TEXT</code>, <code>LINE</code>, or <code>ANON</code> boxes do.</p>
+<p>After defining the document and the stylesheet, you must have a <code>define-problem</code> and <code>define-header</code> line like those in <code>bench/test.rkt</code>, listing the names of the stylesheet and document.</p>
+<h2 id="extracting-websites-to-cassius-files">Extracting websites to Cassius files</h2>
+<p>The <code>get_bench.py</code> script that comes with Cassius uses Firefox and Selenium to render a page and run the <code>get_bench.js</code> JavaScript snippet, which extracts box positions from a live web page. This process is imperfect, but accurate for most pages. To extract a web page, run</p>
+<pre><code>xvfb-run -a -s &#39;-screen 0 1920x10800x24&#39; python2 get_bench.py --name &lt;file&gt; &lt;url&gt;</code></pre>
+<p>Note that the URL must have either the <code>file://</code> or the <code>http://</code> scheme. In particular, the <code>https://</code> scheme is not supported. Getting Xvfb to work on a given machine is tricky, and not all Firefox versions interact well with a given Selenium version, but if all goes well, a Cassius input file should be generated in the given file name.</p>
+<h2 id="source-code-layout">Source code layout</h2>
+<p>Cassius is a total of approximately 4000 lines of code in <code>src/</code>. This code formalizes CSS, generates constraints for input files, grounds those constraints, interacts with the solver, and implements several prototype tools.</p>
+<p>The formalization lives, by and large, in <code>spec/</code>. <code>spec/tree.rkt</code> defines the element and box types and describes functions that set up both tree structures. <code>spec/layout.rkt</code> formalizes the CSS 2.1 layout algorithm. Both these files contain only function and definitions, which are referred to by the constraint generator. <code>spec/cascade.rkt</code> houses the implementation of CSS selectors and cascading. Additional bits that could arguably be part of the formalization live in <code>css-properties.rkt</code>, <code>css-rules.rkt</code>, and <code>browser-style.rkt</code>.</p>
+<p>The constraint generator lives in <code>main.rkt</code> and <code>frontend.rkt</code>.</p>
+<p>Constraints are partly grounded manually in the formalization files above, and partly by the Z3 optimizer in <code>z3o.rkt</code>.</p>
+<p>Interaction with the solver is in <code>z3.rkt</code>.</p>
+<p>Tools are implemented in <code>src/tools/</code>; in the version submitted to the AEC, not all of them work; embarrassingly, some have syntax errors. The random sketching, debugging, acceptance testing, dumping, and verification tools all work, however.</p>
