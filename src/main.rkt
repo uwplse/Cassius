@@ -369,7 +369,7 @@
 (define (dom-define-get/box doms emit)
   (define dom-names
     (for/list ([dom doms])
-      (cons (dom-root dom) (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt)))))
+      (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt))))
 
   ; Instantiate each box
   (for ([dom doms] [names dom-names] #:when #t [name names])
@@ -380,26 +380,6 @@
     (for*/fold ([body 'no-box]) ([names dom-names] [name names])
       `(ite (,(sformat "is-~a-flow" name) x) ,(sformat "~a-flow-box" name) ,body)))
   (emit `(define-fun get/box ((x BoxName)) Box ,body)))
-
-(define (dom-root-constraints dom emit)
-  (define b `(get/box ,(sformat "~a-flow" (dom-root dom))))
-
-  (emit `(echo ,(format "Defining the ~a root box" (dom-name dom))))
-  (emit `(assert (! (link-block-box ,(sformat "~a-flow-box" (dom-root dom))
-                                    ,(sformat "~a-flow" (dom-root dom))
-                                    nil-box nil-box nil-box
-                                    ,(sformat "~a-flow" (element-name (dom-tree dom)))
-                                    ,(sformat "~a-flow" (element-name (dom-tree dom))))
-                    :named ,(sformat "link-box/~a" (dom-root dom)))))
-  (emit `(assert (! (link-anon-box ,(sformat "~a-flow" (dom-root dom)))
-                    :named ,(sformat "link/~a" (dom-root dom)))))
-  (emit `(assert (! (a-view-box ,(sformat "~a-flow-box" (dom-root dom)))
-                    :named ,(sformat "box/view/~a" (dom-name dom)))))
-  (match (rendering-context-width (dom-context dom))
-    [(? number? w)
-     (emit `(assert (! (= (w ,b) ,w) :named ,(sformat "width/~a" (dom-name dom)))))]
-    [`(between ,l ,r)
-     (emit `(assert (! (<= ,l (w ,b) ,r) :named ,(sformat "width/~a" (dom-name dom)))))]))
 
 (define (number*? x)
   (match x
@@ -432,6 +412,7 @@
   (define cns
     (match (element-type elt)
       ['BLOCK 'link-block-box]
+      ['VIEW  'link-block-box]
       ['ANON 'link-block-box]
       ['MAGIC 'link-block-box]
       ['LINE 'link-line-box]
@@ -439,7 +420,7 @@
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns (get/box ,(box-name elt))
                           ,(box-name elt)
-                          ,(if (box-parent elt) (box-name (box-parent elt)) (sformat "~a-flow" (dom-root dom)))
+                          ,(box-name (box-parent elt))
                           ,(box-name (box-prev elt))
                           ,(box-name (box-next elt))
                           ,(box-name (box-fchild elt))
@@ -450,6 +431,7 @@
   (define cns
     (match (element-type elt)
       ['BLOCK 'a-block-box]
+      ['VIEW 'a-view-box]
       ['ANON 'an-anon-block-box]
       ['MAGIC 'a-magic-box]
       ['LINE 'a-line-box]
@@ -481,7 +463,6 @@
 
 (define (dfs-constraints doms . constraints)
   (reap [sow]
-        (for ([dom doms]) (dom-root-constraints dom sow))
         (for ([cns constraints])
           (sow `(echo ,(format "Generating ~a" (object-name cns))))
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
@@ -521,9 +502,7 @@
   (define element-names
     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt)))
   (define box-names
-    (append
-     (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (box-name elt))
-     (for/list ([dom doms]) (sformat "~a-flow" (dom-root dom)))))
+    (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (box-name elt)))
 
   (define rule-names (filter identity (append browser-style-names user-style-names)))
 

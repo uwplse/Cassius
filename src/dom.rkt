@@ -5,7 +5,7 @@
          (struct-out element) parse-tree unparse-tree in-tree element-get element-set! element-remove!
          element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
          box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
-         dom-root elt-from-name reset-elt-names! is-element?)
+         elt-from-name reset-elt-names! is-element?)
 
 (struct dom (name context tree))
 (struct rendering-context (width browser))
@@ -131,8 +131,6 @@
 
 (define (in-tree elt)
   (apply sequence-append (in-value elt) (map in-tree (element-children elt))))
-
-(define (dom-root dom) (sformat "~a-root" (dom-name dom)))
 
 (define elt-names (make-hasheq))
 (define (reset-elt-names!) (void) #;(set! elt-names (make-hasheq)))
