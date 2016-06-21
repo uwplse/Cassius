@@ -4,7 +4,7 @@
 (require "../css-rules.rkt")
 (require "../css-properties.rkt")
 
-(provide selector-constraints cascade-rules name-rules)
+(provide cascade-rules name-rules)
 
 (define (dump-tag tag)
   (if tag
@@ -85,40 +85,8 @@
   (define expr (and sel (selector-matches? sel elt)))
   (or (not expr) (reduce-bool expr)))
 
-(define (compute-score rule)
-  "Given a selector, return a list of counts (ids classes elts)"
-  (match rule
-    [`? #f]
-    [`(id ,id) `(1 0 0)]
-    [`(class ,cls) `(0 1 0)]
-    [`(tag ,tag) `(0 0 1)]
-    [`* '(0 0 0)]
-    [(list (? string?) sub) (compute-score sub)]
-    [(list 'or sels ...)
-     (map (curry apply max) (apply (curry map list) (map compute-score sels)))]
-    [(list (or 'and 'desc 'child) sels ...)
-     (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
-
 (define (type->prefix type)
   (if (eq? (slower type) 'textalign) 'text-align (slower type)))
-
-(define (selector-constraints emit name rule i #:browser [browser? #f])
-  (define is-from-style? (member ':style (cdr rule)))
-
-  (emit `(declare-const ,name Rule))
-  (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal)
-                               ,i ,(if is-from-style? 'true 'false))
-                    :named ,(sformat "rule/~a/a-rule" name))))
-
-  (cond
-    [(or is-from-style? (and (not (equal? (car rule) '?)) (selector->z3 (car rule))))
-     (match-define (list ids classes tags) (compute-score (car rule)))
-     (emit `(assert (= (score ,name) (cascadeScore (origin ,name) (isFromStyle ,name) ,ids ,classes ,tags (index ,name)))))]
-    [else
-     (define sel (selector->z3 (car rule)))
-     (emit `(assert (= (score ,name) (compute-score ,name))))
-     (when sel
-       (emit `(assert (! (= (selector ,name) ,sel) :named ,(sformat "rule/~a/selector" name)))))]))
 
 (define (cascade-rules names rules elt)
   (define re `(specified-style (get/elt ,(element-name elt))))
@@ -211,13 +179,6 @@
 (define (has-property? rule prop)
   (or (equal? '? rule)
       (member '? (cdr rule)) (assoc prop (filter list? (cdr rule)))))
-
-(define (selector->z3 sel)
-  (match sel
-    [`(id ,id) `(sel/id ,(dump-id id))]
-    [`(tag ,tag) `(sel/tag ,(dump-tag tag))]
-    [`* `sel/all]
-    [_ #f]))
 
 (define (can-match ids tags classes rule)
   (let loop ([sel (car rule)])
