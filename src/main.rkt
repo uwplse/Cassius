@@ -53,8 +53,11 @@
     [(list _ ... (== v)) #t]
     [_ #f]))
 
+(define (css-ex? x)
+  (string-suffix? (~a (last (split-symbol x))) "ex"))
+
 (define (css-em? x)
-  (string-suffix? "em" (~a (last (split-symbol x)))))
+  (string-suffix? (~a (last (split-symbol x))) "em"))
 
 (define (extract-selector sel)
   (match sel
@@ -274,7 +277,7 @@
 
     (define allow-new-properties? (member '? (cdr rule)))
     (define pairs
-      (filter (λ (x) (or (not (symbol? (cadr x))) (not (css-em? (cadr x)))))
+      (filter (λ (x) (or (not (symbol? (cadr x))) (not (or (css-ex? (cadr x)) (css-em? (cadr x))))))
               (filter list? (cdr rule))))
 
     (for ([(a-prop type default) (in-css-properties)])
