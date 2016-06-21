@@ -22,6 +22,22 @@
       (sformat "id/~a" id)
       'no-id))
 
+(define (dump-class class)
+  (sformat "class/~a" class))
+
+(define (dump-elt elt)
+  (if elt
+      (sformat "~a-elt" (element-name elt))
+      'no-elt))
+
+(define (dump-box box)
+  (if box
+      (sformat "~a-box" (box-name box))
+      'no-box))
+
+(define (dump-dom dom)
+  (sformat "~a-doc" (dom-name dom)))
+
 (define (extract-tag tag)
   (and (not (equal? tag 'no-tag))
        (string->symbol (string-replace (~a (second (split-symbol tag))) ".." ":"))))
@@ -239,9 +255,9 @@
 
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
-    (define box-model (hash-ref smt-out (sformat "~a-flow-box" (element-name elt)) #f))
+    (define box-model (dict-ref smt-out (dump-box elt) #f))
     (when (and box-model (list? box-model)) (extract-box! box-model elt))
-    (define elt-model (hash-ref smt-out (sformat "~a-elt" (element-name elt)) #f))
+    (define elt-model (dict-ref smt-out (dump-elt elt) #f))
     (when (and elt-model (list? elt-model)) (extract-elt! elt-model elt))))
 
 (define (extract-counterexample! smt-out)
@@ -259,7 +275,7 @@
      `(assert
        (!
         (link-element (get/elt ,(element-name elt))
-                      ,(sformat "~a-doc" (dom-name dom))
+                      ,(dump-dom dom)
                       ,(either element-parent 'nil-elt)
                       ,(either element-prev 'nil-elt)
                       ,(either element-next 'nil-elt)
@@ -352,34 +368,20 @@
       (emit `(assert (! (link-anon-box ,bname) :named ,(sformat "box-element/~a" ename))))))
 
 (define (dom-define-get/elt doms emit)
-  (define dom-names
-    (for/list ([dom doms])
-      (for/list ([elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt))))
-
-  ; Instantiate each element
-  (for ([dom doms] [names dom-names] #:when #t [name names])
-    (emit `(declare-const ,(sformat "~a-elt" name) Element)))
-
-  ; Define the mapping
+  (for* ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt))
+    (emit `(declare-const ,(dump-elt elt) Element)))
   (define body
-    (for*/fold ([body 'no-elt]) ([names dom-names] [name names])
-      `(ite (,(sformat "is-~a" name) x) ,(sformat "~a-elt" name) ,body)))
-  (emit `(define-fun get/elt ((x ElementName)) Element ,body)))
+    (for*/fold ([body 'no-elt]) ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt))
+      `(ite (,(sformat "is-~a" (element-name elt)) &elt) ,(dump-elt elt) ,body)))
+  (emit `(define-fun get/elt ((&elt ElementName)) Element ,body)))
 
 (define (dom-define-get/box doms emit)
-  (define dom-names
-    (for/list ([dom doms])
-      (for/list ([elt (in-tree (dom-tree dom))]) (element-name elt))))
-
-  ; Instantiate each box
-  (for ([dom doms] [names dom-names] #:when #t [name names])
-    (emit `(declare-const ,(sformat "~a-flow-box" name) Box)))
-
-  ; Define the mapping
+  (for* ([dom doms] [box (in-tree (dom-tree dom))])
+    (emit `(declare-const ,(dump-box box) Box)))
   (define body
-    (for*/fold ([body 'no-box]) ([names dom-names] [name names])
-      `(ite (,(sformat "is-~a-flow" name) x) ,(sformat "~a-flow-box" name) ,body)))
-  (emit `(define-fun get/box ((x BoxName)) Box ,body)))
+    (for*/fold ([body 'no-box]) ([dom doms] [box (in-tree (dom-tree dom))])
+      `(ite (,(sformat "is-~a" (box-name box)) &box) ,(dump-box box) ,body)))
+  (emit `(define-fun get/box ((&box BoxName)) Box ,body)))
 
 (define (number*? x)
   (match x
@@ -388,25 +390,15 @@
     [_ #f]))
 
 (define (user-constraints dom emit elt)
-  (define name (element-name elt))
-  (for ([(cmd arg) (in-groups 2 (element-attrs elt))])
-    (match cmd
-      [(or ':x ':y ':w ':h ':ml ':mr ':mt ':mb)
-       (define mapping
-         '((:x box-x) (:y box-y) (:h box-height) (:w box-width)
-           (:ml ml) (:mr mr) (:mt mt) (:mb mb)))
-       (define fun (cadr (assoc cmd mapping)))
-       (match arg
-         [(? number*?)
-          (emit `(assert (! (= (,fun (get/box ,(sformat "~a-flow" name))) ,arg) :named ,(sformat "~a/~a" fun name))))]
-         [`(not ,(? number*? value))
-          (emit `(assert (! (not (= (,fun (get/box ,(sformat "~a-flow" name))) ,value)) :named ,(sformat "~a/~a" fun name))))]
-         [`(between ,(? number*? min) ,(? number*? max))
-          (emit `(assert (! (<= ,min (,fun (get/box ,(sformat "~a-flow" name))) ,max) :named ,(sformat "~a/~a" fun name))))])]
-      [':id (void)]
-      [':tag (void)]
-      [':class (void)]
-      [':text (void)])))
+  (for ([(cmd arg) (in-groups 2 (element-attrs elt))] #:when (set-member? '(:x :y :w :h) cmd))
+    (define fun
+      (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
+    (define constraint
+      (match arg
+        [(? number*?) `(= (,fun ,(dump-box elt)) ,arg)]
+        [`(not ,(? number*? value)) `(not (= (,fun (dump-box elt)) ,value))]
+        [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min (,fun ,(dump-box elt)) ,max)]))
+    (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (element-name elt)))))))
 
 (define (box-link-constraints dom emit elt)
   (define cns
@@ -418,7 +410,7 @@
       ['LINE 'link-line-box]
       ['INLINE 'link-inline-box]
       ['TEXT 'link-text-box]))
-  (emit `(assert (! (,cns (get/box ,(box-name elt))
+  (emit `(assert (! (,cns ,(dump-box elt)
                           ,(box-name elt)
                           ,(box-name (box-parent elt))
                           ,(box-name (box-prev elt))
@@ -438,7 +430,7 @@
       ['INLINE 'an-inline-box]
       ['TEXT 'a-text-box]))
   (when cns
-    (emit `(assert (! (,cns ,(sformat "~a-flow-box" (element-name elt)))
+    (emit `(assert (! (,cns ,(dump-box elt))
                       :named ,(sformat "box/~a/~a" (slower (element-type elt)) (element-name elt)))))))
 
 (define (info-constraints dom emit elt)
@@ -483,20 +475,16 @@
             (when (element-get elt ':id) (save-id (dump-id (element-get elt ':id))))
             (when (element-get elt ':tag) (save-tag (dump-tag (element-get elt ':tag))))
             (when (element-get elt ':class)
-              (for ([c (element-get elt ':class)])
-                (save-class (sformat "class/~a" c)))))
+              (for-each (compose save-class dump-class) (element-get elt ':class))))
 
           ; TODO: Not dealing with saving browser style names currently because the logic was buggy for appending those to this list
           (for ([name user-style-names] [rule sheet])
             (when name
               ; add tags and ids into the list
               (match (car rule)
-                [`(tag ,tagname)
-                 (save-tag (sformat "tag/~a" (slower tagname)))]
-                [`(id ,idname)
-                  (save-id (sformat "id/~a" idname))]
-                [`(class ,classname)
-                  (save-class (sformat "class/~a" classname))]
+                [`(tag ,tagname) (save-tag (dump-tag tagname))]
+                [`(id ,idname) (save-id (dump-id idname))]
+                [`(class ,classname) (save-class (dump-class classname))]
                 [_ (void)])))))
 
   (define element-names
@@ -525,7 +513,7 @@
      () ; No parameters
      ((Id no-id ,@(remove-duplicates ids))
       (TagNames no-tag ,@(remove-duplicates tags))
-      (Document ,@(for/list ([dom doms]) (sformat "~a-doc" (dom-name dom))))
+      (Document ,@(for/list ([dom doms]) (dump-dom dom)))
       (ElementName ,@element-names nil-elt)
       (BoxName ,@box-names nil-box)))
     ,@css-declarations
@@ -545,7 +533,7 @@
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
-    ,@(apply dfs-constraints doms constraints)))
+   ,@(apply dfs-constraints doms constraints)))
 
 (define (add-test constraints test)
   (match-define `(forall (,vars ...) ,body) test)
