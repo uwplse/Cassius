@@ -139,7 +139,7 @@
     [(? (curry dict-has-key? bindings))
      (dict-ref bindings expr)]
     [`(let ((,vars ,vals) ...) ,body)
-     `(let (,@(map list vars (map (curryr replace-terms bindings) vals)))
+     `(let (,@(map cons vars (map (curryr replace-terms bindings) vals)))
         ,(replace-terms body (dict-remove* bindings vars)))]
     [(? list?) (map (curryr replace-terms bindings) expr)]
     [_ expr]))
