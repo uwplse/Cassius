@@ -130,21 +130,28 @@
     (write "~a\n" expr))
   (flush-output port))
 
-; Reads the SMT solution from the given input port.
-; The solution consist of 'sat or 'unsat, followed by
-; followed by a suitably formatted s-expression.  The
-; output of this procedure is a hashtable from constant
-; identifiers to their values (if the solution is 'sat);
-; a non-empty list of assertion identifiers that form an
-; unsatisfiable core (if the solution is 'unsat and a
-; core was extracted); or #f (if the solution is
-; 'unsat and no core was extracted).
+(define (dict-remove* dict keys)
+  (for/fold ([dict dict]) ([key keys])
+    (dict-remove dict key)))
+
+(define (replace-terms expr bindings)
+  (match expr
+    [(? (curry dict-has-key? bindings))
+     (dict-ref bindings expr)]
+    [`(let ((,vars ,vals) ...) ,body)
+     `(let (,@(map list vars (map (curryr replace-terms bindings) vals)))
+        ,(replace-terms body (dict-remove* bindings vars)))]
+    [(? list?) (map (curryr replace-terms bindings) expr)]
+    [_ expr]))
+
 (define (de-z3ify v)
   (match v
     [(== 'true) #t]
     [(== 'false) #f]
     [`(- ,n) (- (de-z3ify n))]
     [`(/ ,n ,d) (/ (de-z3ify n) (de-z3ify d))]
+    [`(let ((,names ,values) ...) ,body)
+     (de-z3ify (replace-terms body (map list names values)))]
     [(list args ...) (map de-z3ify args)]
     [else v]))
 
