@@ -139,7 +139,7 @@
     [(? (curry dict-has-key? bindings))
      (dict-ref bindings expr)]
     [`(let ((,vars ,vals) ...) ,body)
-     `(let (,@(map cons vars (map (curryr replace-terms bindings) vals)))
+     `(let (,@(map list vars (map (curryr replace-terms bindings) vals)))
         ,(replace-terms body (dict-remove* bindings vars)))]
     [(? list?) (map (curryr replace-terms bindings) expr)]
     [_ expr]))
@@ -151,7 +151,7 @@
     [`(- ,n) (- (de-z3ify n))]
     [`(/ ,n ,d) (/ (de-z3ify n) (de-z3ify d))]
     [`(let ((,names ,values) ...) ,body)
-     (de-z3ify (replace-terms body (map list names values)))]
+     (de-z3ify (replace-terms body (map cons names values)))]
     [(list args ...) (map de-z3ify args)]
     [else v]))
 
