@@ -1,3 +1,4 @@
+![Cassius](logo.png)
 
 Cassius
 =======
