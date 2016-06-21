@@ -27,11 +27,6 @@
                                (field `(,(sformat "rule.~a" prop) ,type))
                                (field `(,(sformat "rule.~a?" prop) Bool)))))))
 
-    (define-const width/0% Width (width/px 0))
-    (define-const height/0% Height (height/px 0))
-    (define-const margin/0% Margin (margin/px 0))
-    (define-const padding/0% Padding (padding/px 0))
-    (define-const border/0% Border (border/px 0))
     ;; Firefox's values
     (define-const border/thin Border (border/px 1))
     (define-const border/medium Border (border/px 3))
