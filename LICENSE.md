@@ -1,5 +1,5 @@
 © 2016 Cassius Project
-© 2016 Adobe
+© 2016 Adobe Systems, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
