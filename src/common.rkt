@@ -7,8 +7,8 @@
  tree-size sdiff in-groups sequence-cons cartesian-product trieify
  xor ->number z3-path)
 
-(define flags (make-parameter '(z3o)))
-(define all-flags '(opt float z3o details))
+(define flags (make-parameter '(z3o rules selectors)))
+(define all-flags '(opt float z3o details rules selectors))
 
 (define supported-features '(float % unknown-selector box-sizing min-width max-width min-height max-height))
 

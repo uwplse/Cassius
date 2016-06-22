@@ -43,6 +43,8 @@
     [(list (? string?) sub) (selector-matches? sub elt)]
     [`(and ,sels ...) `(and ,@(map (curryr selector-matches? elt) sels))]
     [`(or ,sels ...) `(or ,@(map (curryr selector-matches? elt) sels))]
+    [`(match ,elts ...)
+     (if (set-member? elts elt) 'true 'false)]
     [`(desc ,sel*) (selector-matches? sel* elt)]
     [`(desc ,ansc ... ,sel*)
      (define tail-sel `(desc ,@ansc))

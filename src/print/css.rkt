@@ -33,6 +33,7 @@
 (define (selector->string selector)
   (match selector
     [`(selector ,name) "?"]
+    [`(match ,elts ...) (string-join (map ~a elts) ", ")]
     [`(id ,id) (format "#~a" id)]
     [`(class ,cls) (format ".~a" cls)]
     [`(tag ,tag) (~a (slower tag))]

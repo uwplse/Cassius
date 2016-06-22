@@ -45,20 +45,32 @@
 (define (extract-id id)
   (and (not (equal? id 'no-id)) (second (split-symbol id))))
 
-(define (extract-stylesheet stylesheet smt-out)
-  (for/list ([rule stylesheet] [i (in-naturals)])
-    (define rule-name (sformat "user/~a" i))
-    (if (not (hash-has-key? smt-out rule-name))
-        rule
-        (match (hash-ref smt-out rule-name)
-          [(list 'rule sel idx origin is-from-style score rest ...)
-           (cons (if (equal? '? (car rule))
-                     (extract-selector sel)
-                     (car rule))
-                 (for/list ([(value enabled?) (in-groups 2 rest)]
-                            [(prop type default) (in-css-properties)]
-                            #:when enabled?)
-                   (list prop (extract-value value))))]))))
+(define (extract-stylesheet stylesheet trees smt-out)
+  (cond
+   [(set-member? (flags) 'rules)
+    (for/list ([rule stylesheet] [i (in-naturals)])
+      (define rule-name (sformat "user/~a" i))
+      (if (not (hash-has-key? smt-out rule-name))
+          rule
+          (match (hash-ref smt-out rule-name)
+            [(list 'rule sel idx origin is-from-style score rest ...)
+             (cons (if (equal? '? (car rule))
+                       (extract-selector sel)
+                       (car rule))
+                   (for/list ([(value enabled?) (in-groups 2 rest)]
+                              [(prop type default) (in-css-properties)]
+                              #:when enabled?)
+                     (list prop (extract-value value))))])))]
+   [else
+    (for*/list ([tree trees] [elt (in-tree tree)] #:when (is-element? elt))
+      (match-define (list 'elt doc tag id spec-style comp-style &v &p &n &f &l &b)
+                    (dict-ref smt-out (dump-elt elt)))
+      (match-define (list 'style rec ...) spec-style)
+      `((match ,elt)
+         :style
+         ,@(for/list ([(prop type default) (in-css-properties)] [(value score) (in-groups 2 rec)]
+                      #:when (not (equal? (extract-value value) default)))
+             `[,prop ,(extract-value value)])))]))
 
 (define (split-symbol s)
   (for/list ([part (string-split (~a s) "/")])
@@ -274,7 +286,7 @@
     (emit
      `(assert
        (!
-        (link-element (get/elt ,(element-name elt))
+        (link-element ,(dump-elt elt)
                       ,(dump-dom dom)
                       ,(either element-parent 'nil-elt)
                       ,(either element-prev 'nil-elt)
@@ -284,7 +296,7 @@
         :named ,(sformat "tree/~a" (element-name elt)))))))
 
 (define ((style-constraints names rules) dom emit elt)
-  (when (and (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
+  (when (and (set-member? (flags) 'rules) (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
     (for-each emit (cascade-rules names rules elt))))
 
 (define (compute-score rule)
@@ -343,7 +355,7 @@
 (define (minimizality-constraints emit names sheet)
   (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
     ;; Optimize for short CSS
-    (when (memq 'opt (flags))
+    (when (set-member? (flags) 'opt)
       ;; Each enabled property costs one line
       (for* ([type css-properties] [property (cdr type)])
         (emit `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1)))
@@ -437,15 +449,15 @@
   (when (is-element? elt)
     (define tagname
       (if (equal? (element-get elt ':tag) '?)
-          `(tagname (get/elt ,(element-name elt)))
+          `(tagname ,(dump-elt elt))
           (dump-tag (element-get elt ':tag))))
 
     (define idname
       (if (equal? (element-get elt ':id) '?)
-          `(idname (get/elt ,(element-name elt)))
+          `(idname ,(dump-elt elt))
           (dump-id (element-get elt ':id))))
 
-    (emit `(assert (! (element-info (get/elt ,(element-name elt)) ,tagname ,idname)
+    (emit `(assert (! (element-info ,(dump-elt elt) ,tagname ,idname)
                       :named ,(sformat "info/~a" (element-name elt)))))))
 
 (define (getter-definitions doms)
@@ -526,10 +538,13 @@
                :named no-element-no-box))
 
     ; Stylesheet
-    (echo "Browser stylesheet")
-    ,@(reap [emit] (stylesheet-constraints emit browser-style-names browser-style #:browser #t))
-    (echo "Defining the stylesheet")
-    ,@(reap [emit] (stylesheet-constraints emit user-style-names sheet))
+    ,@(cond
+       [(set-member? (flags) 'rules)
+        `((echo "Browser stylesheet")
+          ,@(reap [emit] (stylesheet-constraints emit browser-style-names browser-style #:browser #t))
+          (echo "Defining the stylesheet")
+          ,@(reap [emit] (stylesheet-constraints emit user-style-names sheet)))]
+       [else '()])
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
@@ -553,7 +568,7 @@
     [(model m)
      (for-each (curryr extract-tree! m) trees)
      (extract-counterexample! m)
-     (success (extract-stylesheet stylesheet m) (map unparse-tree trees))]
+     (success (extract-stylesheet stylesheet trees m) (map unparse-tree trees))]
     [(unsat-core c)
      (define-values (stylesheet* trees*) (extract-core constraints stylesheet trees c))
      (failure stylesheet* (map unparse-tree trees*))]))
