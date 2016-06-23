@@ -26,15 +26,16 @@
             [(list) (void)]))))
 
 (define-dom-transformer (dom-strip-positions head cmds)
-  [((or 'LINE 'BLOCK 'INLINE) cmds)
+  [((or 'BLOCK 'INLINE) cmds)
    (for/cmds cmds
-     [((and (or ':x ':y ':w ':h) cmd) (? number? val))
-      '()]
+     [((and (or ':x ':y ':w ':h) cmd) (? number? val)) '()]
      [(x) (list x)])]
   [('TEXT cmds)
    (for/cmds cmds
-     [((and (or ':x ':y) cmd) (? number? val))
-      '()]
+     [((and (or ':x ':y) cmd) (? number? val)) '()]
+     [(x) (list x)])]
+  [('LINE cmds)
+   (for/cmds cmds
      [(x) (list x)])]
   [(_ _)
    cmds])
