@@ -20,6 +20,8 @@
         (match value
           [`(bad ,val)
            (printf "  \33[1;31m~a: ~a\33[0m;\n" property (value->string val))]
+          [`(bad)
+           (printf "  \33[9;31m~a\33[0m;\n" property)]
           [_
            (printf "  ~a: ~a;\n" property (value->string value))]))
       (printf "}"))))

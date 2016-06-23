@@ -174,7 +174,11 @@
          (element-set! elt ':id `(bad ,iname)))]
       [`((style ,elt-name ,prop) ,_ ...)
        (define elt (elt-from-name elt-name))
-       (element-set! elt ':style `(bad ,(element-get elt ':style)))]
+       (define old-style (element-get elt ':style))
+       (element-set! elt ':style
+                     (if (dict-has-key? old-style prop)
+                         (dict-update old-style prop (λ (x) (list `(bad ,(car x)))))
+                         (dict-set old-style prop '((bad)))))]
       [_ (void)]))
   (values (hash-values stylesheet*) trees))
 
@@ -295,16 +299,8 @@
         :named ,(sformat "tree/~a" (element-name elt)))))))
 
 (define ((cascade-constraints names rules) dom emit elt)
-  (emit `(assert (is-position/static (position ,(dump-box elt)))))
-  (when (and (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
-    (if (set-member? (flags) 'rules)
-        (for-each emit (cascade-rules names rules elt))
-        (unless #t #;(equal? 'rect (element-get elt ':tag))
-          (for ([(prop type default) (in-css-properties)])
-            (define value
-              (if (equal? prop 'text-align) 'text-align/left default))
-            (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
-                              :named ,(sformat "cascade/nostyle/~a/~a" (element-name elt) prop)))))))))
+  (when (and (set-member? (flags) 'rules) (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
+    (for-each emit (cascade-rules names rules elt))))
 
 (define (compute-score rule)
   "Given a selector, return a list of counts (ids classes elts)"
