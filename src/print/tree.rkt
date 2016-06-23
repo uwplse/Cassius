@@ -1,5 +1,6 @@
 #lang racket
 
+(require "../common.rkt")
 (provide tree->string)
 
 (define (tree->string tree #:indent [indent 0] #:attrs [attrs '(:tag :id :class)])
@@ -7,18 +8,11 @@
           (build-string indent (const #\space))
           (caar tree)
           (string-join
-           (let loop ([props (cdar tree)])
-             (match props
-               [(list (? (λ (x) (not (set-member? attrs x))) attr) value rest ...)
-                (loop rest)]
-               [(list attr `(bad ,val) rest ...)
-                (cons (format "\33[1;31m~a ~a\33[0m" attr val) (loop rest))]
-               ; (new - output in green color :)
-               [(list attr `(fixed ,val) rest ...)
-                (cons (format "\33[1;32m~a ~a\33[0m" attr val) (loop rest))]
-               [(list attr val rest ...)
-                (cons (format "~a ~a" attr val) (loop rest))]
-               [(list) '()]))
+           (for/list ([(cmd value) (in-groups 2 (cdar tree))] #:when (set-member? attrs cmd))
+             (match value
+               [`(bad ,value) (format "\33[1;31m~a ~a\33[0m" cmd value)]
+               [`(fixed ,value) (format "\33[1;32m~a ~a\33[0m" cmd value)]
+               [value (format "~a ~a" cmd value)]))
            " ")
           (if (null? (cdr tree)) "" "\n")
-          (string-join (map (λ (t) (tree->string t #:indent (+ indent 1))) (cdr tree)) "\n")))
+          (string-join (map (λ (t) (tree->string t #:indent (+ indent 1) #:attrs attrs)) (cdr tree)) "\n")))

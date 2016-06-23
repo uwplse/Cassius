@@ -42,10 +42,10 @@
       'nil-elt))
 
 (define (element-get elt name #:default [default #f])
-  (for/first ([(k v) (in-groups 2 (element-attrs elt))] #:when (equal? k name)) v))
+  (for/first ([(k v) (in-groups 2 (element-attrs elt))] #:when (equal? name k)) v))
 
 (define (element-get* elt names)
-  (for/list ([(k v) (in-groups 2 (element-attrs elt))] #:when (set-member? k names))
+  (for/list ([(k v) (in-groups 2 (element-attrs elt))] #:when (set-member? names k))
     (cons k v)))
 
 (define (element-set! elt name value)

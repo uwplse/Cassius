@@ -60,7 +60,7 @@
                             #:when enabled?)
                    (list prop (extract-value value))))]))))
 
-(define (extract-styles style-expr)
+(define (extract-style style-expr)
   (match-define (list 'style rec ...) style-expr)
   (for/list ([(prop type default) (in-css-properties)]
              [(value score) (in-groups 2 rec)]
@@ -296,7 +296,7 @@
   (when (and (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
     (if (set-member? (flags) 'rules)
         (for-each emit (cascade-rules names rules elt))
-        (unless (equal? 'rect (element-get elt ':tag))
+        (unless #t #;(equal? 'rect (element-get elt ':tag))
           (for ([(prop type default) (in-css-properties)])
             (define value
               (if (equal? prop 'text-align) 'text-align/left default))
@@ -407,10 +407,8 @@
 
 (define (user-constraints dom emit elt)
   (for ([(cmd arg) (in-dict (element-get* elt '(:x :y :w :h)))])
-    (define expr
-      `(,(dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd)
-        ,(dump-box elt)))
-
+    (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
+    (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg
         [(? number*?) `(= ,expr ,arg)]
