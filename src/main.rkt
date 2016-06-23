@@ -172,6 +172,9 @@
          (element-set! elt ':tag `(bad ,fname)))
        (when (and (no-bad iname) iname)
          (element-set! elt ':id `(bad ,iname)))]
+      [`((style ,elt-name ,prop) ,_ ...)
+       (define elt (elt-from-name elt-name))
+       (element-set! elt ':style `(bad ,(element-get elt ':style)))]
       [_ (void)]))
   (values (hash-values stylesheet*) trees))
 
@@ -291,7 +294,7 @@
                       ,(either element-lchild 'nil-elt))
         :named ,(sformat "tree/~a" (element-name elt)))))))
 
-(define ((style-constraints names rules) dom emit elt)
+(define ((cascade-constraints names rules) dom emit elt)
   (emit `(assert (is-position/static (position ,(dump-box elt)))))
   (when (and (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
     (if (set-member? (flags) 'rules)
@@ -317,44 +320,41 @@
     [(list (or 'and 'desc 'child) sels ...)
      (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
 
-(define (stylesheet-constraints emit names sheet #:browser [browser? #f])
-  (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
-    (define is-from-style? (member ':style (cdr rule)))
+(define (rule-constraints emit name rule i #:browser? [browser? #f])
+  (define from-style? (member ':style (cdr rule)))
+  (emit `(declare-const ,name Rule))
+  (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal)
+                               ,i ,(if from-style? 'true 'false))
+                    :named ,(sformat "rule/~a/a-rule" name))))
+  (cond
+    [(or from-style? (and (not (equal? (car rule) '?)) (dump-selector (car rule))))
+     (match-define (list ids classes tags) (compute-score (car rule)))
+     (emit `(assert (= (score ,name) (cascadeScore (origin ,name) (isFromStyle ,name) ,ids ,classes ,tags (index ,name)))))]
+    [else
+     (emit `(assert (= (score ,name) (compute-score ,name))))
+     (when (dump-selector (car rule))
+       (emit `(assert (! (= (selector ,name) ,(dump-selector (car rule)))
+                         :named ,(sformat "rule/~a/selector" name)))))])
 
-    (emit `(declare-const ,name Rule))
-    (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal)
-                                 ,i ,(if is-from-style? 'true 'false))
-                      :named ,(sformat "rule/~a/a-rule" name))))
+  (define allow-new-properties? (member '? (cdr rule)))
+  (define pairs
+    (filter (λ (x) (or (not (symbol? (cadr x))) (not (or (css-ex? (cadr x)) (css-em? (cadr x))))))
+            (filter list? (cdr rule))))
 
-    (cond
-      [(or is-from-style? (and (not (equal? (car rule) '?)) (dump-selector (car rule))))
-       (match-define (list ids classes tags) (compute-score (car rule)))
-       (emit `(assert (= (score ,name) (cascadeScore (origin ,name) (isFromStyle ,name) ,ids ,classes ,tags (index ,name)))))]
-      [else
-       (emit `(assert (= (score ,name) (compute-score ,name))))
-       (when (dump-selector (car rule))
-         (emit `(assert (! (= (selector ,name) ,(dump-selector (car rule)))
-                           :named ,(sformat "rule/~a/selector" name)))))])
-
-    (define allow-new-properties? (member '? (cdr rule)))
-    (define pairs
-      (filter (λ (x) (or (not (symbol? (cadr x))) (not (or (css-ex? (cadr x)) (css-em? (cadr x))))))
-              (filter list? (cdr rule))))
-
-    (for ([(a-prop type default) (in-css-properties)])
-      (match (assoc a-prop pairs)
-        [(list _ '?)
-         (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                           :named ,(sformat "rule/~a/~a/?" name a-prop))))]
-        [(list _ val)
-         (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) true)
-                           :named ,(sformat "rule/~a/~a/?" name a-prop))))
-         (emit `(assert (! (= (,(sformat "rule.~a" a-prop) ,name) ,(dump-value a-prop val))
-                           :named ,(sformat "rule/~a/~a" name a-prop) :opt false)))]
-        [#f
-         (when (not allow-new-properties?)
-           (emit `(assert (! (= (,(sformat "rule.~a?" a-prop) ,name) false)
-                             :named ,(sformat "rule/~a/~a/?" name a-prop)))))]))))
+  (for ([(prop _t _d) (in-css-properties)])
+    (match (assoc prop pairs)
+      [(list _ '?)
+       (emit `(assert (! (= (,(sformat "rule.~a?" prop) ,name) true)
+                         :named ,(sformat "rule/~a/~a/?" name prop))))]
+      [(list _ val)
+       (emit `(assert (! (= (,(sformat "rule.~a?" prop) ,name) true)
+                         :named ,(sformat "rule/~a/~a/?" name prop))))
+       (emit `(assert (! (= (,(sformat "rule.~a" prop) ,name) ,(dump-value prop val))
+                         :named ,(sformat "rule/~a/~a" name prop) :opt false)))]
+      [#f
+       (when (not allow-new-properties?)
+         (emit `(assert (! (= (,(sformat "rule.~a?" prop) ,name) false)
+                           :named ,(sformat "rule/~a/~a/?" name prop)))))])))
 
 (define (minimizality-constraints emit names sheet)
   (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
@@ -405,7 +405,7 @@
     [`(/ ,(? number*?) ,(? number*?)) #t]
     [_ #f]))
 
-(define (user-constraints dom emit elt)
+(define (box-constraints dom emit elt)
   (for ([(cmd arg) (in-dict (element-get* elt '(:x :y :w :h)))])
     (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
     (define expr `(,fun ,(dump-box elt)))
@@ -416,6 +416,21 @@
         [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min ,expr ,max)]))
 
     (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (element-name elt)))))))
+
+(define (style-constraints dom emit elt)
+  (when (element-get elt ':style)
+    (define style (element-get elt ':style))
+    (for ([(prop _t default) (in-css-properties)])
+      (match (dict-ref style prop #f)
+        ['(?) (void)]
+        [(list val)
+         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
+                              ,(dump-value prop val))
+                           :named ,(sformat "style/~a/~a" (element-name elt) prop))))]
+        [#f
+         (define value (if (equal? prop 'text-align) 'text-align/left default))
+         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
+                           :named ,(sformat "style/~a/~a" (element-name elt) prop))))])))) 
 
 (define (box-link-constraints dom emit elt)
   (define cns
@@ -436,7 +451,7 @@
                           ,(box-name (box-lchild elt)))
                     :named ,(sformat "link-box/~a" (element-name elt))))))
 
-(define (box-constraints dom emit elt)
+(define (layout-constraints dom emit elt)
   (define cns
     (match (element-type elt)
       ['BLOCK 'a-block-box]
@@ -516,13 +531,12 @@
   (define constraints
     (list
      tree-constraints
+     box-constraints style-constraints
      (procedure-rename
-      (style-constraints (append browser-style-names user-style-names)
-                         (append browser-style sheet))
+      (cascade-constraints (append browser-style-names user-style-names) (append browser-style sheet))
       'cascade-constraints)
-     user-constraints box-link-constraints
-     info-constraints box-element-constraints
-     box-constraints))
+     box-link-constraints info-constraints box-element-constraints
+     layout-constraints))
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")
@@ -545,10 +559,13 @@
     ; Stylesheet
     ,@(cond
        [(set-member? (flags) 'rules)
-        `((echo "Browser stylesheet")
-          ,@(reap [emit] (stylesheet-constraints emit browser-style-names browser-style #:browser #t))
-          (echo "Defining the stylesheet")
-          ,@(reap [emit] (stylesheet-constraints emit user-style-names sheet)))]
+        (reap [emit]
+          (emit '(echo "Browser stylesheet"))
+          (for ([name browser-style-names] [rule browser-style] [i (in-naturals)] #:when name)
+            (rule-constraints emit name rule i #:browser? #t))
+          (emit '(echo "User stylesheet"))
+          (for ([name user-style-names] [rule sheet] [i (in-naturals)] #:when name)
+            (rule-constraints emit name rule i #:browser? #f)))]
        [else '()])
     ; DOMs
     (echo "Elements must be initialized")

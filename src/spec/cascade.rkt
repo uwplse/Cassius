@@ -156,7 +156,12 @@
                  'true)
           (or
             (and (is-useDefault (,(sformat "style.~a$" property) ,re))
-                 (= (,(sformat "style.~a" property) ,re) ,default))
+                 (= (,(sformat "style.~a" property) ,re)
+                    (ite (,(sformat "is-~a/inherit" (type->prefix type)) ,default)
+                         ;; TODO: Assumes property is not inherited, which is false for text-align
+                         (,(sformat "style.~a" property)
+                          (computed-style (parent (get/elt ,(element-name elt)))))
+                         ,default)))
             ,@(for/list ([(name rule) (in-dict applicable-rules)])
                 `(and
                   (,(sformat "rule.~a?" property) ,name)
