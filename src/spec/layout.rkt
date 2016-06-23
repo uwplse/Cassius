@@ -174,6 +174,9 @@
   (define-fun min-mr ((b Box)) Real
     (margin-min-px (style.margin-right (computed-style (get/elt (element b)))) b))
 
+  (define-fun is-root-elt ((e Element)) Bool
+    (is-nil-elt (parent-name e)))
+
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
@@ -184,21 +187,21 @@
        ;; Computing maximum collapsed positive and negative margin
        (= (mtp2 b)
           (max (ite (> (mt b) 0.0) (mt b) 0.0)
-               (ite (and (is-flow-root b) (is-box fb)
+               (ite (and (not (is-root-elt e)) (is-box fb)
                          (= (pt b) 0.0) (= (bt b) 0.0))
                     (mtp fb) 0.0)))
        (= (mtn2 b)
           (min (ite (< (mt b) 0.0) (mt b) 0.0)
-               (ite (and (is-flow-root b) (is-box fb)
+               (ite (and (not (is-root-elt e)) (is-box fb)
                          (= (pt b) 0.0) (= (bt b) 0.0)) (mtn fb) 0.0)))
        (= (mbp2 b)
           (max (ite (> (mb b) 0.0) (mb b) 0.0)
-               (ite (and (is-flow-root b) (is-box lb)
+               (ite (and (not (is-root-elt e)) (is-box lb)
                          (= (pb b) 0.0) (= (bb b) 0.0))
                     (ite (box-collapsed-through lb (lbox lb)) (mtp lb) (mbp lb)) 0.0)))
        (= (mbn2 b)
           (min (ite (< (mb b) 0.0) (mb b) 0.0)
-               (ite (and (is-flow-root b) (is-box lb)
+               (ite (and (not (is-root-elt e)) (is-box lb)
                          (= (pb b) 0.0) (= (bb b) 0.0))
                     (ite (box-collapsed-through lb (lbox lb)) (mtn lb) (mbn lb)) 0.0)))
 
