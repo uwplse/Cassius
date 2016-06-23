@@ -45,32 +45,27 @@
 (define (extract-id id)
   (and (not (equal? id 'no-id)) (second (split-symbol id))))
 
-(define (extract-stylesheet stylesheet trees smt-out)
-  (cond
-   [(set-member? (flags) 'rules)
-    (for/list ([rule stylesheet] [i (in-naturals)])
-      (define rule-name (sformat "user/~a" i))
-      (if (not (hash-has-key? smt-out rule-name))
-          rule
-          (match (hash-ref smt-out rule-name)
-            [(list 'rule sel idx origin is-from-style score rest ...)
-             (cons (if (equal? '? (car rule))
-                       (extract-selector sel)
-                       (car rule))
-                   (for/list ([(value enabled?) (in-groups 2 rest)]
-                              [(prop type default) (in-css-properties)]
-                              #:when enabled?)
-                     (list prop (extract-value value))))])))]
-   [else
-    (for*/list ([tree trees] [elt (in-tree tree)] #:when (is-element? elt))
-      (match-define (list 'elt doc tag id spec-style comp-style &v &p &n &f &l &b)
-                    (dict-ref smt-out (dump-elt elt)))
-      (match-define (list 'style rec ...) spec-style)
-      `((match ,elt)
-         :style
-         ,@(for/list ([(prop type default) (in-css-properties)] [(value score) (in-groups 2 rec)]
-                      #:when (not (equal? (extract-value value) default)))
-             `[,prop ,(extract-value value)])))]))
+(define (extract-rules stylesheet trees smt-out)
+  (for/list ([rule stylesheet] [i (in-naturals)])
+    (define rule-name (sformat "user/~a" i))
+    (if (not (hash-has-key? smt-out rule-name))
+        rule
+        (match (hash-ref smt-out rule-name)
+          [(list 'rule sel idx origin is-from-style score rest ...)
+           (cons (if (equal? '? (car rule))
+                     (extract-selector sel)
+                     (car rule))
+                 (for/list ([(value enabled?) (in-groups 2 rest)]
+                            [(prop type default) (in-css-properties)]
+                            #:when enabled?)
+                   (list prop (extract-value value))))]))))
+
+(define (extract-styles style-expr)
+  (match-define (list 'style rec ...) style-expr)
+  (for/list ([(prop type default) (in-css-properties)]
+             [(value score) (in-groups 2 rec)]
+             #:when (not (equal? value default)))
+    `[,prop ,(extract-value value)]))
 
 (define (split-symbol s)
   (for/list ([part (string-split (~a s) "/")])
@@ -259,6 +254,7 @@
   (match-define (list 'elt doc tag id spec-style comp-style &v &p &n &f &l &b) result)
   (when (equal?  (element-get elt ':tag) '?)
     (element-set! elt ':tag `(fixed ,(extract-tag tag))))
+  (element-set! elt ':style (extract-style spec-style))
   (when (equal?  (element-get elt ':id) '?)
     (define new-id (extract-id id))
     (if (equal? new-id 'no-id)
@@ -296,8 +292,16 @@
         :named ,(sformat "tree/~a" (element-name elt)))))))
 
 (define ((style-constraints names rules) dom emit elt)
-  (when (and (set-member? (flags) 'rules) (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
-    (for-each emit (cascade-rules names rules elt))))
+  (emit `(assert (is-position/static (position ,(dump-box elt)))))
+  (when (and (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
+    (if (set-member? (flags) 'rules)
+        (for-each emit (cascade-rules names rules elt))
+        (unless (equal? 'rect (element-get elt ':tag))
+          (for ([(prop type default) (in-css-properties)])
+            (define value
+              (if (equal? prop 'text-align) 'text-align/left default))
+            (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
+                              :named ,(sformat "cascade/nostyle/~a/~a" (element-name elt) prop)))))))))
 
 (define (compute-score rule)
   "Given a selector, return a list of counts (ids classes elts)"
@@ -402,14 +406,17 @@
     [_ #f]))
 
 (define (user-constraints dom emit elt)
-  (for ([(cmd arg) (in-groups 2 (element-attrs elt))] #:when (set-member? '(:x :y :w :h) cmd))
-    (define fun
-      (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
+  (for ([(cmd arg) (in-dict (element-get* elt '(:x :y :w :h)))])
+    (define expr
+      `(,(dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd)
+        ,(dump-box elt)))
+
     (define constraint
       (match arg
-        [(? number*?) `(= (,fun ,(dump-box elt)) ,arg)]
-        [`(not ,(? number*? value)) `(not (= (,fun (dump-box elt)) ,value))]
-        [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min (,fun ,(dump-box elt)) ,max)]))
+        [(? number*?) `(= ,expr ,arg)]
+        [`(not ,(? number*? value)) `(not (= ,expr ,value))]
+        [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min ,expr ,max)]))
+
     (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (element-name elt)))))))
 
 (define (box-link-constraints dom emit elt)
@@ -568,7 +575,7 @@
     [(model m)
      (for-each (curryr extract-tree! m) trees)
      (extract-counterexample! m)
-     (success (extract-stylesheet stylesheet trees m) (map unparse-tree trees))]
+     (success (extract-rules stylesheet trees m) (map unparse-tree trees))]
     [(unsat-core c)
      (define-values (stylesheet* trees*) (extract-core constraints stylesheet trees c))
      (failure stylesheet* (map unparse-tree trees*))]))
