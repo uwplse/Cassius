@@ -2,7 +2,7 @@
 (require "common.rkt")
 
 (provide (struct-out dom) (struct-out rendering-context)
-         (struct-out element) parse-tree unparse-tree in-tree element-get element-set! element-remove!
+         (struct-out element) parse-tree unparse-tree in-tree element-get element-get* element-set! element-remove!
          element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
          box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
          elt-from-name reset-elt-names! is-element?)
@@ -43,6 +43,10 @@
 
 (define (element-get elt name #:default [default #f])
   (for/first ([(k v) (in-groups 2 (element-attrs elt))] #:when (equal? k name)) v))
+
+(define (element-get* elt names)
+  (for/list ([(k v) (in-groups 2 (element-attrs elt))] #:when (set-member? k names))
+    (cons k v)))
 
 (define (element-set! elt name value)
   (set-element-attrs! elt
