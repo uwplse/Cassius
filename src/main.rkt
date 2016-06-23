@@ -64,7 +64,7 @@
   (match-define (list 'style rec ...) style-expr)
   (for/list ([(prop type default) (in-css-properties)]
              [(value score) (in-groups 2 rec)]
-             #:when (not (equal? value default)))
+             #:unless (value=? type value default))
     `[,prop ,(extract-value value)]))
 
 (define (split-symbol s)
