@@ -32,7 +32,7 @@
       [(success stylesheet trees)
        (set! fixed #t)
        (displayln (stylesheet->string stylesheet))
-       (for-each (compose displayln tree->string) trees)
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))
        (eprintf "\nAccepted!\n")]
       [(failure stylesheet trees) #f]
       [(list 'error e)
@@ -51,7 +51,7 @@
     (match result
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
-       (for-each (compose displayln tree->string) trees)
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))
        
        ; Replace the bad tags with holes and attempt to repair the document
        (cond
@@ -67,7 +67,7 @@
             (for/list ([d documents*][t new-trees]) ;; d = <#dom>   
               ; Create a new instance of the problem again and try to solve
               (printf "\nRepairing this tree..\n\n")
-              ((compose displayln tree->string) t)
+              (displayln (tree->string t #:attrs '(:x :y :w :h)))
               (printf "\n")
               
               (match-define (dom name ctx tree) d)
@@ -93,7 +93,7 @@
     (match result
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
-       (for-each (compose displayln tree->string) trees)
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))
        (printf "\n\nUnable to repair the document... Attempting to repair by filling in all holes at once.\n\n")
        
        (define doms
@@ -115,7 +115,7 @@
     (match result
       [(failure stylesheet trees)
        (displayln (stylesheet->string stylesheet))
-       (for-each (compose displayln tree->string) trees)
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))
        
        (printf "\n\nUnable to repair the document... Attempting to repair by synthesizing a new rule.\n\n")
        (set! sheet (append (list (list '? '?)) sheet))    

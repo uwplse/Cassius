@@ -23,7 +23,7 @@
   (match res
     [(success stylesheet trees)
      (eprintf "Counterexample found!\n")
-     (for-each (compose displayln tree->string) trees)]
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
     [(failure stylesheet trees)
      (eprintf "Verified.\n")]
     [(list 'error e)

@@ -2,13 +2,15 @@
 
 (provide tree->string)
 
-(define (tree->string tree #:indent [indent 0])
+(define (tree->string tree #:indent [indent 0] #:attrs [attrs '(:tag :id :class)])
   (format "~a([~a ~a]~a~a)"
           (build-string indent (const #\space))
           (caar tree)
           (string-join
            (let loop ([props (cdar tree)])
              (match props
+               [(list (? (λ (x) (not (set-member? attrs x))) attr) value rest ...)
+                (loop rest)]
                [(list attr `(bad ,val) rest ...)
                 (cons (format "\33[1;31m~a ~a\33[0m" attr val) (loop rest))]
                ; (new - output in green color :)

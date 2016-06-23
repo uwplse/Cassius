@@ -42,11 +42,9 @@
   (match res
     [(success stylesheet trees)
      (eprintf "Different renderings possible.\n")
-     (for-each (compose displayln tree->string) trees)]
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
     [(failure stylesheet trees)
-     (displayln (stylesheet->string stylesheet))
-     (for-each (compose displayln tree->string) trees)
-     (eprintf "Rejected.\n")]
+     (displayln (stylesheet->string stylesheet))]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
