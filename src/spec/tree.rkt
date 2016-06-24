@@ -1,8 +1,12 @@
 #lang racket
 (require "../common.rkt")
 (require "../smt.rkt")
+(require "../css-properties.rkt")
 
 (provide tree-types link-definitions)
+
+(define (type->prefix type)
+  (if (eq? (slower type) 'textalign) 'text-align (slower type)))
 
 (define-constraints tree-types
   (declare-datatypes ()
@@ -77,6 +81,9 @@
   (define-fun element-info ((elt Element) (tag TagNames) (&idname Id)) Bool
     (and (= (tagname elt) tag) (= (idname elt) &idname)
          (not (is-no-tag (tagname elt)))
+         ,@(for/list ([(prop type _d) (in-css-properties)])
+             `(not (,(sformat "is-~a/inherit" (type->prefix type))
+                    (,(sformat "style.~a" prop) (specified-style elt)))))
          ,@(for/list ([prop '(width min-width max-width min-height max-height
                               margin-top margin-right margin-bottom margin-left
                               padding-top padding-right padding-bottom padding-left
