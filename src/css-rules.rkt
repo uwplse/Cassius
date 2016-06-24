@@ -119,5 +119,5 @@
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
     (if (dict-has-key? body prop)
         (for/fold ([body (dict-remove body prop)]) ([part parts] [value (dict-ref body prop)])
-           (dict-set body part value))
+           (dict-set body part (list value)))
         body)))
