@@ -15,12 +15,12 @@
   
   (printf "<!doctype html>\n<html><body>\n")
   (when screenshot
-    (define w (rendering-context-width (dom-context (first documents))))
+    (define w (element-get (dom-tree (first documents)) ':w))
     (printf "<img src='~a' width='~a' style='opacity:.4;position:absolute;top:0;left:0;'/>"
             screenshot w))
   
   (define (px->vw x)
-    (* (/ x (rendering-context-width (dom-context (first documents)))) 100))
+    (* (/ x (element-get (dom-tree (first documents)) :w)) 100))
 
   (let loop ([tree tree])
     (match (car tree)

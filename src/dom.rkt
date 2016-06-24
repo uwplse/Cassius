@@ -8,7 +8,7 @@
          elt-from-name reset-elt-names! is-element?)
 
 (struct dom (name context tree))
-(struct rendering-context (width browser))
+(struct rendering-context (browser))
 (struct element (type name* attrs parent* children)
         #:mutable
         #:methods gen:custom-write
