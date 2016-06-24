@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt")
-(provide in-css-properties in-css-types *%*)
+(provide in-css-properties in-css-types *%* css-shorthand-properties)
 
 (define css-types-hash (make-hash))
 (define css-property-hash (make-hash))
@@ -99,3 +99,14 @@
 
 (define-css-type (Box-Sizing border-box content-box)
   [box-sizing content-box])
+
+(define css-shorthand-properties
+  '((margin margin-top margin-right margin-bottom margin-left)
+    (padding padding-top padding-right padding-bottom padding-left)
+    (border-width border-top-width border-right-width border-bottom-width border-left-width)
+    (border-style border-top-style border-right-style border-bottom-style border-left-style)
+    (border-top border-top-width border-top-style)
+    (border-right border-right-width border-right-style)
+    (border-bottom border-bottom-width border-bottom-style)
+    (border-left border-left-width border-left-style)
+    (overflow overflow-x overflow-y)))

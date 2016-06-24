@@ -55,17 +55,19 @@
            (cons (if (equal? '? (car rule))
                      (extract-selector sel)
                      (car rule))
-                 (for/list ([(value enabled?) (in-groups 2 rest)]
-                            [(prop type default) (in-css-properties)]
-                            #:when enabled?)
-                   (list prop (extract-value value))))]))))
+                 (css-normalize-body
+                  (for/list ([(value enabled?) (in-groups 2 rest)]
+                             [(prop type default) (in-css-properties)]
+                             #:when enabled?)
+                    (list prop (extract-value value)))))]))))
 
 (define (extract-style style-expr)
   (match-define (list 'style rec ...) style-expr)
-  (for/list ([(prop type default) (in-css-properties)]
-             [(value score) (in-groups 2 rec)]
-             #:unless (value=? type value default))
-    `[,prop ,(extract-value value)]))
+  (css-normalize-body
+   (for/list ([(prop type default) (in-css-properties)]
+              [(value score) (in-groups 2 rec)]
+              #:unless (value=? type value default))
+     `[,prop ,(extract-value value)])))
 
 (define (split-symbol s)
   (for/list ([part (string-split (~a s) "/")])
@@ -335,7 +337,7 @@
   (define allow-new-properties? (member '? (cdr rule)))
   (define pairs
     (filter (λ (x) (or (not (symbol? (cadr x))) (not (or (css-ex? (cadr x)) (css-em? (cadr x))))))
-            (filter list? (cdr rule))))
+            (filter list? (css-denormalize-body (cdr rule)))))
 
   (for ([(prop _t _d) (in-css-properties)])
     (match (assoc prop pairs)
@@ -415,7 +417,7 @@
 
 (define (style-constraints dom emit elt)
   (when (element-get elt ':style)
-    (define style (element-get elt ':style))
+    (define style (css-denormalize-body (element-get elt ':style)))
     (for ([(prop _t default) (in-css-properties)])
       (match (dict-ref style prop #f)
         ['(?) (void)]

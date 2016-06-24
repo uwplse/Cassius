@@ -7,7 +7,8 @@
 
 (provide css-declarations css-functions
          css-properties css-property-pairs css-defaults
-         css-shorthand-properties css-type)
+         css-shorthand-properties css-type
+         css-normalize-body css-denormalize-body)
 
 (define css-declarations
   `((declare-datatypes () (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))))
@@ -104,7 +105,19 @@
   (for*/list ([type css-properties] [prop (cdr type)])
     (cons prop (car type))))
 
-(define css-shorthand-properties
-  '((margin margin-top margin-right margin-bottom margin-left)
-    (padding padding-top padding-right padding-bottom padding-left)
-    (border-width border-top-width border-right-width border-bottom-width border-left-width)))
+(define (css-normalize-body body)
+  (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
+    (if (andmap (curry dict-has-key? body) parts)
+        (dict-set
+         (for/fold ([body body]) ([part parts])
+           (dict-remove body part))
+         prop
+         (for/list ([part parts]) (car (dict-ref body part))))
+        body)))
+
+(define (css-denormalize-body body)
+  (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
+    (if (dict-has-key? body prop)
+        (for/fold ([body (dict-remove body prop)]) ([part parts] [value (dict-ref body prop)])
+           (dict-set body part value))
+        body)))
