@@ -55,19 +55,17 @@
            (cons (if (equal? '? (car rule))
                      (extract-selector sel)
                      (car rule))
-                 (css-normalize-body
-                  (for/list ([(value enabled?) (in-groups 2 rest)]
-                             [(prop type default) (in-css-properties)]
-                             #:when enabled?)
-                    (list prop (extract-value value)))))]))))
+                 (for/list ([(value enabled?) (in-groups 2 rest)]
+                            [(prop type default) (in-css-properties)]
+                            #:when enabled?)
+                   (list prop (extract-value value))))]))))
 
 (define (extract-style style-expr)
   (match-define (list 'style rec ...) style-expr)
-  (css-normalize-body
-   (for/list ([(prop type default) (in-css-properties)]
-              [(value score) (in-groups 2 rec)]
-              #:unless (value=? type value default))
-     `[,prop ,(extract-value value)])))
+  (for/list ([(prop type default) (in-css-properties)]
+             [(value score) (in-groups 2 rec)]
+             #:unless (value=? type value default))
+    `[,prop ,(extract-value value)]))
 
 (define (split-symbol s)
   (for/list ([part (string-split (~a s) "/")])
