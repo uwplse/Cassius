@@ -344,7 +344,7 @@
                  ;; (possibly collapsed) margin of its last in-flow child,
                  ;; if the child's bottom margin does not collapse with the
                  ;; element's bottom margin
-                 (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (= (tagname e) tag/html)))
+                 (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (is-root-elt e)))
                       (ite (and (not (box-collapsed-through b lb)) (box-collapsed-through lb (lbox lb)))
                            ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
                            ;; whose top margin doesn't collapse with the element's bottom margin
