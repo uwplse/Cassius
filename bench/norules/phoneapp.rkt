@@ -1,0 +1,36 @@
+(define-header header "")
+
+(define-stylesheet main)
+
+(define-document (mockup #:width 750)
+  ((BLOCK :tag html :w 750 :h 1334.0 :x 0 :y 0 :style ())
+   ((BLOCK :tag rect :w 750 :h 1075 :x 0 :y 109.0 :style ([padding-top ?] [margin-top ?]))
+    ((BLOCK :tag g :style ([padding ? ? ? ?]))
+     ((BLOCK :tag rect :w 500 :h 75 :x 125 :y 159.0 :style ([margin ? ? ? ?]))
+      ((BLOCK :tag g :style ([padding ? ? ? ?]))
+       ((BLOCK :tag rect :w 215 :h 55 :x 135 :y 169.0 :style ([height ?] [width ?] [float ?] [margin-right ?])))
+       ((BLOCK :tag rect :w 215 :h 55 :x 400 :y 169.0 :style ([height ?] [width ?] [float ?] [margin-left ?])))))
+     ((BLOCK :tag rect :w 650 :h 75 :x 50 :y 259.0 :style ([height ?] [width ?])))
+     ((BLOCK :tag g :style ([padding-bottom ?] [padding-top ?]))
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 359.0 :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag rect :w 250 :h 150 :x 75 :y 384.0 :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 359.0 :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag rect :w 250 :h 150 :x 425 :y 384.0 :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 609.0 :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag rect :w 250 :h 150 :x 75 :y 634.0 :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 609.0 :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag rect :w 250 :h 150 :x 425 :y 634.0 :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 859.0 :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag rect :w 250 :h 150 :x 75 :y 884.0 :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 859.0 :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag rect :w 250 :h 150 :x 425 :y 884.0 :style ([height ?] [width ?])))))))
+   ((BLOCK :tag g :style ([padding ? ? ? ?]))
+    ((BLOCK :tag rect :w 100 :h 100 :x 100 :y 1209.0 :style ([float ?] [height ?] [width ?] [margin-left ?] [margin-right ?])))
+    ((BLOCK :tag rect :w 100 :h 100 :x 250 :y 1209.0 :style ([float ?] [height ?] [width ?] [margin-left ?] [margin-right ?])))
+    ((BLOCK :tag rect :w 100 :h 100 :x 400 :y 1209.0 :style ([float ?] [height ?] [width ?] [margin-left ?] [margin-right ?])))
+    ((BLOCK :tag rect :w 100 :h 100 :x 550 :y 1209.0 :style ([float ?] [height ?] [width ?] [margin-left ?] [margin-right ?]))))))
+
+(define-problem main
+  #:header header
+  #:sheet main
+  #:documents mockup)
