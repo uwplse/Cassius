@@ -17,7 +17,7 @@
     (cons (list* (caar tree) ':w w (apply append (for/list ([(k v) (in-groups 2 (cdar tree))] #:when (not (equal? k ':w))) (list k v)))) (cdr tree)))
   (dom (dom-name d) (dom-context d) (tree-change-width (dom-tree d))))
 
-(define (run-file fname pname w #:debug [debug '()] #:truncate truncate)
+(define (run-file fname pname #:debug [debug '()] #:truncate truncate)
   (match-define
    (problem desc url header sheet (list document) features test)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
@@ -102,5 +102,5 @@
    #:once-each
    [("--truncate") level "Truncate the tree to this level"
     (set! truncate (string->number level))]
-   #:args (fname problem newwidth)
-   (run-file fname problem (string->number newwidth) #:debug debug #:truncate truncate)))
+   #:args (fname problem)
+   (run-file fname problem #:debug debug #:truncate truncate)))
