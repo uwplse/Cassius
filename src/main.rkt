@@ -64,7 +64,8 @@
   (match-define (list 'style rec ...) style-expr)
   (for/list ([(prop type default) (in-css-properties)]
              [(value score) (in-groups 2 rec)]
-             #:unless (value=? type value default))
+             ;; TODO Hack on text-align
+             #:unless (or (and (equal? prop 'text-align) (equal? value 'text-align/left)) (value=? type value default)))
     `[,prop ,(extract-value value)]))
 
 (define (split-symbol s)
@@ -92,7 +93,7 @@
   (match value
     [(list (? (css-type-ending? 'px)) x) (list 'px x)]
     [(list (? (css-type-ending? '%)) x)
-     (if (member x (*%*)) ; Percentages that aren't in the list are its first element
+     (if (ormap (curry = x) (*%*)) ; Percentages that aren't in the list are its first element
          (list '% x)
          (list '% (car (*%*))))]
     [(? symbol?) (last (split-symbol value))]))
@@ -105,7 +106,8 @@
   (match value
     [(? symbol?) (sformat "~a/~a" prefix value)]
     [(list 'px n) (list (sformat "~a/px" prefix) n)]
-    [(list '% n) (list (sformat "~a/%" prefix) n)]))
+    [(list '% n) (list (sformat "~a/%" prefix) n)]
+    [0 (dump-value prop '(px 0))]))
 
 (define (dump-selector selector)
   (match selector
