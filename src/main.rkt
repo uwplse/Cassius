@@ -338,7 +338,7 @@
   (define allow-new-properties? (member '? (cdr rule)))
   (define pairs
     (filter (λ (x) (or (not (symbol? (cadr x))) (not (or (css-ex? (cadr x)) (css-em? (cadr x))))))
-            (filter list? (css-denormalize-body (cdr rule)))))
+            (css-denormalize-body (filter list? (cdr rule)))))
 
   (for ([(prop _t _d) (in-css-properties)])
     (match (assoc prop pairs)
