@@ -3,7 +3,7 @@
 (require "dom.rkt")
 (require math/base)
 
-(provide dom-strip-positions dom-print-all dom-limit-depth dom-not-something)
+(provide dom-strip-positions dom-print-all dom-limit-depth dom-not-something dom-strip-attrs)
 
 (define ((dom-transform! l) d)
   (match-define (dom name ctx tree) d)
@@ -85,3 +85,11 @@
                            (list* (car props) (cadr props) (loop2 n (cddr props)))])))
                  (map loop (cdr tree)))]
           [else (cons (car tree) (map loop (cdr tree)))]))))
+
+(define (dom-strip-attrs keep)
+  (define-dom-transformer (k head cmds)
+    [(_ cmds)
+     (for/cmds cmds
+       [((? (curry set-member? keep) c) val) (list c val)]
+       [(_) '()])])
+  k)
