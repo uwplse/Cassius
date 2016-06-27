@@ -26,7 +26,7 @@
        [(and (element-get elt ':id) (equal? (slower id) (slower (element-get elt ':id))))
         'true]
        [(and (element-get elt ':id) (equal? '? (slower (element-get elt ':id))))
-        `(,(sformat "is-id/~a" (slower id)) (idname (get/elt ,(element-name elt))))]
+        `(,(sformat "is-~a" (dump-id id)) (idname (get/elt ,(element-name elt))))]
        [else
         'false]) ]
     [`(class ,cls)
@@ -36,7 +36,7 @@
         [(and (element-get elt ':tag) (equal? (slower tag) (slower (element-get elt ':tag))))
          'true]
         [(and (element-get elt ':tag) (equal? '? (slower (element-get elt ':tag))))
-         `(,(sformat "is-tag/~a" (slower tag)) (tagname (get/elt ,(element-name elt))))]
+         `(,(sformat "is-~a" (dump-tag tag)) (tagname (get/elt ,(element-name elt))))]
         [else
          'false])]
     [`* 'true]
@@ -112,7 +112,7 @@
        (sow
         `(assert
           (! (or
-              (,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))
+              (,(sformat "is-~a" (dump-tag (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))
               ,@(for/list ([(name rule) (in-dict applicable-rules)])
                   (or (selector-matches? (selector name rule) elt)
                       `(selector-applies? (selector ,name) (get/elt ,(element-name elt))))))))))
@@ -122,7 +122,7 @@
       (sow
        `(assert
          (! (or
-             (,(sformat "is-id/~a" (slower (element-get elt ':id))) (idname (get/elt ,(element-name elt))))
+             (,(sformat "is-~a" (dump-id (element-get elt ':id))) (idname (get/elt ,(element-name elt))))
              ,@(for/list ([(name rule) (in-dict applicable-rules)])
                   (or (selector-matches? (selector name rule) elt)
                       `(selector-applies? (selector ,name) (get/elt ,(element-name elt))))))))))
@@ -144,9 +144,9 @@
             ,(if (and could-be-different? could-inherit-different? (or (dict-empty? applicable-rules) (not (equal? (cdar applicable-rules) (list '? '?)))))
                  (cond
                    [ (and (not (dict-empty? applicable-rules)) (equal?  (caadar applicable-rules) 'id) (not (equal? (element-get elt ':id) '?)))
-                     `(,(sformat "is-id/~a" (slower (element-get elt ':id))) (idname (get/elt ,(element-name elt))))]
+                     `(,(sformat "is-~a" (dump-id (element-get elt ':id))) (idname (get/elt ,(element-name elt))))]
                    [ (and (or (dict-empty? applicable-rules) (equal?  (caadar applicable-rules) 'tag)) (not (equal? (element-get elt ':tag) '?)))
-                     `(,(sformat "is-tag/~a" (slower (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))];  (printf "APPLICABLERULESTAG: ~a\n" applicable-rules)] ;; Apply to all rules (not just first) & add others
+                     `(,(sformat "is-~a" (dump-tag (element-get elt ':tag))) (tagname (get/elt ,(element-name elt))))];  (printf "APPLICABLERULESTAG: ~a\n" applicable-rules)] ;; Apply to all rules (not just first) & add others
                    [else 'true]) ;; Is this a good default value?
 
                  ;; TODO: trying to get pattern matching to work instead
