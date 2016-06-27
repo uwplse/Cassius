@@ -97,16 +97,16 @@
 
   (define-fun a-view-box ((b Box)) Bool
     (and
-     ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn mtp2 mbp2 mtn2 mbn2)])
+     ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
          `(= (,field b) 0.0))
      (= (type b) box/root)
      (= (n-name b) nil-box)
      (= (flt-name b) nil-box)
      (= (v-name b) nil-box)))
 
-  (define-fun box-collapsed-through ((b Box) (l Box)) Bool
+  (define-fun box-collapsed-through ((b Box)) Bool
     (and (= (box-height b) 0.0)
-         (or (is-no-box l) (= (box-height l) 0.0))))
+         (or (is-no-box (lbox b)) (= (box-height (lbox b)) 0.0))))
 
   (define-fun min-width-limit ((val Real) (e Element)) Real
     ,(smt-cond
@@ -184,39 +184,22 @@
        (= (type b) box/block)
        (= (float b) float/none)
 
-       ;; Computing maximum collapsed positive and negative margin
-       (= (mtp2 b)
-          (max (ite (> (mt b) 0.0) (mt b) 0.0)
-               (ite (and (not (is-root-elt e)) (is-box fb)
-                         (= (pt b) 0.0) (= (bt b) 0.0))
-                    (mtp fb) 0.0)))
-       (= (mtn2 b)
-          (min (ite (< (mt b) 0.0) (mt b) 0.0)
-               (ite (and (not (is-root-elt e)) (is-box fb)
-                         (= (pt b) 0.0) (= (bt b) 0.0)) (mtn fb) 0.0)))
-       (= (mbp2 b)
-          (max (ite (> (mb b) 0.0) (mb b) 0.0)
-               (ite (and (not (is-root-elt e)) (is-box lb)
-                         (= (pb b) 0.0) (= (bb b) 0.0))
-                    (ite (box-collapsed-through lb (lbox lb)) (mtp lb) (mbp lb)) 0.0)))
-       (= (mbn2 b)
-          (min (ite (< (mb b) 0.0) (mb b) 0.0)
-               (ite (and (not (is-root-elt e)) (is-box lb)
-                         (= (pb b) 0.0) (= (bb b) 0.0))
-                    (ite (box-collapsed-through lb (lbox lb)) (mtn lb) (mbn lb)) 0.0)))
-
-       (= (mtp b) (ite (box-collapsed-through b lb)
-                       (ite (box-collapsed-through p b)
-                            (max (mtp2 b) (mtp p))
-                            (max (mtp2 b) (mtp2 p)))
-                       (mtp2 b)))
-       (= (mtn b) (ite (box-collapsed-through b lb)
-                       (ite (box-collapsed-through p b)
-                            (max (mtn2 b) (mbn p))
-                            (max (mtn2 b) (mbn2 p)))
-                       (mtn2 b)))
-       (= (mbp b) (ite (box-collapsed-through b lb) 0.0 (mbp2 b)))
-       (= (mbn b) (ite (box-collapsed-through b lb) 0.0 (mbn2 b)))
+       (= (mtp b)
+          (max (ite (and (not (is-root-elt e)) (is-box fb) (= (pt b) 0.0) (= (bt b) 0.0)) (mtp fb) 0.0)
+               (max (ite (and (is-box vb) (box-collapsed-through vb)) (mtp vb) 0.0)
+                    (max (ite (is-box vb) (mbp vb) 0.0)
+                         (ite (> (mt b) 0.0) (mt b) 0.0)))))
+       (= (mtn b)
+          (max (ite (and (not (is-root-elt e)) (is-box fb) (= (pt b) 0.0) (= (bt b) 0.0)) (mtn fb) 0.0)
+               (max (ite (and (is-box vb) (box-collapsed-through vb)) (mtn vb) 0.0)
+                    (max (ite (is-box vb) (mbn vb) 0.0)
+                         (ite (< (mt b) 0.0) (mt b) 0.0)))))
+       (= (mbp b)
+          (max (ite (and (not (is-root-elt e)) (is-box lb) (= (pb b) 0.0) (= (bb b) 0.0)) (mbp lb) 0.0)
+               (ite (> (mb b) 0.0) (mb b) 0.0)))
+       (= (mbn b)
+          (max (ite (and (not (is-root-elt e)) (is-box lb) (= (pb b) 0.0) (= (bb b) 0.0)) (mbn lb) 0.0)
+               (ite (< (mb b) 0.0) (mb b) 0.0)))
 
        ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
@@ -353,7 +336,7 @@
                  ;; if the child's bottom margin does not collapse with the
                  ;; element's bottom margin
                  (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (is-root-elt e)))
-                      (ite (and (not (box-collapsed-through b lb)) (box-collapsed-through lb (lbox lb)))
+                      (ite (and (not (box-collapsed-through b)) (box-collapsed-through lb))
                            ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
                            ;; whose top margin doesn't collapse with the element's bottom margin
                            (- (bottom-border lb) (mtp lb) (mtn lb))
@@ -367,10 +350,8 @@
        (= (x b) (+ (left-content p) (ml b)))
 
        ,(smt-cond
-         [(box-collapsed-through b lb)
-          (= (y b) (ite (is-box vb) (+ (bottom-border vb) (mtp b) (mtn b)) (top-content p)))]
          [(is-box vb)
-          (= (y b) (+ (bottom-border vb) (max (mbp vb) (mtp b)) (min (mbn vb) (mtn b))))]
+          (= (y b) (+ (bottom-border vb) (mtp b) (mtn b)))]
          [(and
            ;; Margins of the root element's box do not collapse.
            (not (is-flow-root p))
@@ -380,7 +361,7 @@
            (= (pt p) 0.0) (= (bt p) 0.0))
           (= (y b) (top-content p))]
          [else
-          (= (y b) (+ (top-content p) (+ (mtp b) (mtn b))))])
+          (= (y b) (+ (top-content p) (mtp b) (mtn b)))])
 
        ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
            `(>= (,field b) 0.0))))
@@ -390,10 +371,10 @@
                [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [flt (fltbox b)])
 
        (= (type b) box/block)
-       (= (mtp2 b) (mtp b) (max (mt b) 0.0))
-       (= (mtn2 b) (mtn b) (min (mt b) 0.0))
-       (= (mbp2 b) (mbp b) (max (mb b) 0.0))
-       (= (mbn2 b) (mbn b) (min (mb b) 0.0))
+       (= (mtp b) (max (mt b) 0.0))
+       (= (mtn b) (min (mt b) 0.0))
+       (= (mbp b) (max (mb b) 0.0))
+       (= (mbn b) (min (mb b) 0.0))
 
        ;; Floating block element layout
        ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
@@ -478,7 +459,9 @@
                         ;; If it has block-level children, the height is the distance between the
                         ;; top margin-edge of the topmost block-level child box and the
                         ;; bottom margin-edge of the bottommost block-level child box.
-                        (- (max (bottom-outer lb) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
+                        (- (ite (not (is-nil-box (flt-up-name (real-lbox b))))
+                                (max (bottom-outer lb) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
+                                (bottom-outer lb))
                            (top-content b)))
                    0.0)))
 
@@ -641,10 +624,10 @@
                  (= (,(sformat "b~a" letter) b) (%of (border.% (,(sformat "style.border-~a-width" dir) r)) (w p))))
              (=> (is-padding/% (,(sformat "style.padding-~a" dir) r))
                  (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))))
-       (= (mtp2 b) (mtp b) (max (mt b) 0.0))
-       (= (mtn2 b) (mtn b) (min (mt b) 0.0))
-       (= (mbp2 b) (mbp b) (max (mb b) 0.0))
-       (= (mbn2 b) (mbn b) (min (mb b) 0.0))
+       (= (mtp b) (max (mt b) 0.0))
+       (= (mtn b) (min (mt b) 0.0))
+       (= (mbp b) (max (mb b) 0.0))
+       (= (mbn b) (min (mb b) 0.0))
        (= (xo b) (yo b) 0.0)
 
        (let ([l* (real-lbox b)] [v* (real-vbox b)])
@@ -667,7 +650,7 @@
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
 
-       ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
            `(= (,field b) 0.0))
 
        ;; This is super-weak, but for now it really is our formalization of line layout
@@ -679,7 +662,7 @@
                [f (fbox b)] [l (lbox b)])
        (= (type b) box/line)
 
-       ,@(for/list ([field '(mtp mtn mbp mbn mtp2 mtn2 mbp2 mbn2 mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
            `(= (,field b) 0.0))
 
        (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
@@ -740,7 +723,6 @@
             (= (y b) (top-content p)))
        (= (x b) (left-content p))
        (= (mt b) (mr b) (mb b) (ml b) 0.0)
-       (= (mtn b) (mtn2 b) (mtp b) (mtp2 b) 0.0)
-       (= (mbn b) (mbn2 b) (mbp b) (mbp2 b) 0.0)
+       (= (mtn b) (mbn b) (mtp b) (mbp b) 0.0)
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) (pl b) 0.0))))
