@@ -1,4 +1,6 @@
-(define-header header "")
+(define-header header "
+* { padding: 0; margin: 0; }
+div.rect { outline: 1px solid black; }")
 
 (define-stylesheet main)
 
