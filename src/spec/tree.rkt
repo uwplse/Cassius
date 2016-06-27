@@ -19,7 +19,7 @@
                 (mtp Real) (mtn Real) (mbp Real) (mbn Real)
                 (pt Real) (pr Real) (pb Real) (pl Real)
                 (bt Real) (br Real) (bb Real) (bl Real)
-                (stfwidth Real)
+                (stfwidth Real) (w-from-stfwidth Bool)
                 (real-p-name BoxName)
                 (real-n-name BoxName) (real-v-name BoxName)
                 (real-f-name BoxName) (real-l-name BoxName)

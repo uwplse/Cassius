@@ -244,7 +244,8 @@
   (match-define
    (list 'box
          type x y w h xo yo mt mr mb ml mtp2 mtn2 mbp2 mbn2 mtp mtn mbp mbn
-         pt pr pb pl bt br bb bl stfwidth real-p-name real-n-name real-v-name real-f-name
+         pt pr pb pl bt br bb bl stfwidth w-from-stfwidth
+         real-p-name real-n-name real-v-name real-f-name
          real-l-name width-set pb-name n-name v-name flt-name flt-up-name float
          textalign position element)
    box)

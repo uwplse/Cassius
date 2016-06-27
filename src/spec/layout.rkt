@@ -231,6 +231,7 @@
        (=> (is-width/px (style.width r))
            (and
             (width-set b)
+            (not (w-from-stfwidth b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
                (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
        (=> (is-height/px (style.height r))
@@ -265,9 +266,14 @@
              (= (yo b) 0.0)))
 
        (=> (is-width/% (style.width r))
-           (and (width-set b)
-                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                   (min-width-limit (max-width-limit (%of (width.% (style.width r)) (w p)) e) e))))
+           (and
+            (width-set b)
+            (not (w-from-stfwidth b))
+            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+               (min-width-limit (max-width-limit
+                                 (ite (w-from-stfwidth p)
+                                      0.0
+                                      (%of (width.% (style.width r)) (w p))) e) e))))
        (=> (is-height/% (style.height r))
            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
               (min-height-limit (max-height-limit (%of (height.% (style.height r)) (h p)) e) e)))
@@ -282,6 +288,8 @@
              [mr* (min-mr b)])
          (let ([overflow? (> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))])
            (and
+
+            (not (w-from-stfwidth b))
 
             ;; It overflows. So what do we do? Ignore margin-right
             (=> overflow? (and (= (w b) w*) (= (ml b) ml*) (width-set b)))
@@ -395,38 +403,36 @@
                             (margin-top margin mt) (margin-bottom margin mb)
                             (margin-right margin mr) (margin-left margin ml))])
            (match-define (list prop type field) item)
-           `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-                (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
+           `(and
+             (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
+             (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
+                 (= (,field b) (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) r)) (w p))))))
 
        (=> (is-width/px (style.width r))
            (and
             (width-set b)
+            (not (w-from-stfwidth b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
                (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
+       (=> (is-width/% (style.width r))
+           (and (width-set b)
+                (not (w-from-stfwidth b))
+                ;; TODO: what if (w-from-stfwidth p)
+                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                   (min-width-limit (max-width-limit (%of (width.% (style.width r)) (w p)) e) e))))
        (=> (is-height/px (style.height r))
            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
               (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
+       (=> (is-height/% (style.height r))
+           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+              (min-height-limit (max-height-limit (%of (height.% (style.height r)) (h p)) e) e)))
 
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
        ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
-           `(and
-             (=> (is-margin/% (,(sformat "style.margin-~a" dir) r))
-                 (= (,(sformat "m~a" letter) b) (%of (margin.% (,(sformat "style.margin-~a" dir) r)) (w p))))
-             (=> (is-border/% (,(sformat "style.border-~a-width" dir) r))
-                 (= (,(sformat "b~a" letter) b) (%of (border.% (,(sformat "style.border-~a-width" dir) r)) (w p))))
-             (=> (is-padding/% (,(sformat "style.padding-~a" dir) r))
-                 (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))
-             (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
-                 (= (,(sformat "m~a" letter) b) 0))))
-
-       (=> (is-width/% (style.width r))
-           (and (width-set b)
-                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                   (min-width-limit (max-width-limit (%of (width.% (style.width r)) (w p)) e) e))))
-       (=> (is-height/% (style.height r))
-           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-height-limit (max-height-limit (%of (height.% (style.height r)) (h p)) e) e)))
+           `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
+                 (= (,(sformat "m~a" letter) b) 0)))
 
        (ite (is-position/relative (style.position r))
             (and
@@ -451,6 +457,7 @@
          (=> (is-width/auto (style.width r))
              (and
               (width-set b)
+              (w-from-stfwidth b)
               (= (w b) (min-width-limit (max-width-limit (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l)) 0.0) e) e))))
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
@@ -726,6 +733,7 @@
     ,(smt-let ([p (pbox b)] [v (vbox b)] [l (lbox b)])
        (a-block-flow-box b)
        (= (w b) (w p))
+       (not (w-from-stfwidth b))
        (= (bottom-content b) (bottom-border l))
        (ite (is-box v)
             (= (y b) (+ (bottom-border v) (mbp v) (mbn v)))
