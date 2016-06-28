@@ -23,7 +23,7 @@
                 (real-n-name BoxName) (real-v-name BoxName)
                 (real-f-name BoxName) (real-l-name BoxName)
                 (width-set Bool)
-                (pb-name BoxName)
+                (pb-name BoxName) (pp-name BoxName)
                 (n-name BoxName) (v-name BoxName) (flt-name BoxName) (flt-up-name BoxName)
                 (float Float) (textalign Text-Align) (position Position)
                 (element ElementName)))
@@ -49,10 +49,12 @@
   (define-fun real-vbox ((box Box)) Box (get/box (real-v-name box)))
   (define-fun real-nbox ((box Box)) Box (get/box (real-n-name box)))
 
+  (define-fun box-positioned ((box Box)) Bool
+    (or (is-position/absolute (position box))
+        (is-position/fixed (position box))))
+
   (define-fun box-in-flow ((box Box)) Bool
-    (and (is-box box) (is-float/none (float box))
-         (or (is-position/static (position box))
-             (is-position/relative (position box)))))
+    (and (is-box box) (is-float/none (float box)) (not (box-positioned box))))
 
   (define-fun pbox ((box Box)) Box (real-pbox box))
   (define-fun nbox ((box Box)) Box (get/box (n-name box)))
@@ -65,6 +67,7 @@
     (ite (=> (is-box (real-lbox b)) (box-in-flow (real-lbox b)))
          (real-lbox b) (vbox (real-lbox b))))
   (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
+  (define-fun ppbox ((box Box)) Box (get/box (pp-name box)))
 
   (define-fun link-element ((elt Element) (doc Document) (p ElementName)
                             (v ElementName) (n ElementName) (f ElementName)
@@ -142,6 +145,11 @@
        (= (real-f-name b) &f)
        (= (real-l-name b) &l)
        (= (pb-name b) &self)
+       (= (pp-name b)
+          ,(smt-cond
+            [(is-nil-box &p) &self]
+            [(box-positioned (get/box &p)) &p]
+            [else (pp-name (get/box &p))]))
        (= (v-name b)
           ,(smt-cond
             [(is-nil-box &v) nil-box]
@@ -163,8 +171,7 @@
        :opt false)
        (= (flt-up-name b)
           ,(smt-cond
-            [(or (is-position/fixed (position b)) (is-position/absolute (position b)))
-             (ite (is-nil-box &v) nil-box (flt-up-name (get/box &v)))]
+            [(box-positioned b) (ite (is-nil-box &v) nil-box (flt-up-name (get/box &v)))]
             [(not (is-float/none (float b))) &self]
             [(is-nil-box &l) (flt-name b)]
             [else (flt-up-name (get/box &l))]))))
@@ -177,6 +184,7 @@
        (= (real-f-name b) &f)
        (= (real-l-name b) &l)
        (= (pb-name b) (pb-name (pbox b)))
+       (= (pp-name b) (pp-name (pbox b)))
        (= (v-name b) &v)
        (= (n-name b) &n)
        (= (flt-name b) (flt-name (pbbox b)))
@@ -190,6 +198,7 @@
        (= (real-f-name b) &f)
        (= (real-l-name b) &l)
        (= (pb-name b) (pb-name (pbox b)))
+       (= (pp-name b) (pp-name (pbox b)))
        (= (v-name b) &v)
        (= (n-name b) &n)
        (= (flt-name b) (flt-name (pbbox b)))
@@ -203,6 +212,7 @@
        (= (real-f-name b) &f)
        (= (real-l-name b) &l)
        (= (pb-name b) (pb-name (pbox b)))
+       (= (pp-name b) (pp-name (pbox b)))
        (= (v-name b) &v)
        (= (n-name b) &n)
        (= (flt-name b) (flt-name (pbbox b)))

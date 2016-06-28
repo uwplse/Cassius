@@ -248,7 +248,7 @@
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
          pt pr pb pl bt br bb bl stfwidth w-from-stfwidth
          real-p-name real-n-name real-v-name real-f-name
-         real-l-name width-set pb-name n-name v-name flt-name flt-up-name float
+         real-l-name width-set pb-name pp-name n-name v-name flt-name flt-up-name float
          textalign position element)
    box)
   (define box-width (+ bl pl w pr br))
