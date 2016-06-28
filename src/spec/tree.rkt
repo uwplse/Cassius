@@ -51,10 +51,13 @@
 
   (define-fun box-positioned ((box Box)) Bool
     (or (is-position/absolute (position box))
-        (is-position/fixed (position box))))
+        (is-position/fixed (position box))
+        (is-position/relative (position box))))
 
   (define-fun box-in-flow ((box Box)) Bool
-    (and (is-box box) (is-float/none (float box)) (not (box-positioned box))))
+    (and (is-box box) (is-float/none (float box))
+         (or (is-position/relative (position box))
+             (is-position/static (position box)))))
 
   (define-fun pbox ((box Box)) Box (real-pbox box))
   (define-fun nbox ((box Box)) Box (get/box (n-name box)))
@@ -171,7 +174,8 @@
        :opt false)
        (= (flt-up-name b)
           ,(smt-cond
-            [(box-positioned b) (ite (is-nil-box &v) nil-box (flt-up-name (get/box &v)))]
+            [(or (is-position/absolute (position b)) (is-position/fixed (position b)))
+             (ite (is-nil-box &v) nil-box (flt-up-name (get/box &v)))]
             [(not (is-float/none (float b))) &self]
             [(is-nil-box &l) (flt-name b)]
             [else (flt-up-name (get/box &l))]))))

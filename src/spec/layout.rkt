@@ -6,6 +6,12 @@
 
 (provide layout-definitions)
 
+(define (get-px-or-% prop type wrt b)
+  (define r `(computed-style (get/elt (element ,b))))
+  `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
+        (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
+        (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) (,wrt (pbox ,b)))))
+
 (define-constraints layout-definitions
 
   (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
@@ -85,9 +91,12 @@
      ;; has no top border, no top padding, and the child has no clearance.
      (= (pt (pbox b)) 0.0) (= (bt (pbox b)) 0.0)))
 
+  (define-fun is-root-elt ((e Element)) Bool
+    (is-nil-elt (parent-name e)))
+
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
-        (is-box/root (type (pbox b)))
+        (is-root-elt (get/elt (element b)))
         (not (box-in-flow b))
         (not (is-overflow/visible (style.overflow-x (computed-style (get/elt (element b))))))
         (not (is-overflow/visible (style.overflow-y (computed-style (get/elt (element b))))))))
@@ -174,8 +183,31 @@
   (define-fun min-mr ((b Box)) Real
     (margin-min-px (style.margin-right (computed-style (get/elt (element b)))) b))
 
-  (define-fun is-root-elt ((e Element)) Bool
-    (is-nil-elt (parent-name e)))
+  (define-fun top-margin-collapses-with-children ((b Box)) Bool
+    (and (not (is-flow-root b)) (= (pt b) 0.0) (= (bt b) 0.0)))
+
+  (define-fun auto-height-for-flow-roots ((b Box)) Real
+    ;; The algorithm from section §10.6.7 of CSS 2.1
+    ,(smt-cond
+      [(is-no-box (real-fbox b)) 0.0]
+      [(is-box/line (type (lbox b)))
+       ;; If it only has inline-level children, the height is the distance between
+       ;; the top of the topmost line box and the bottom of the bottommost line box.
+       (- (bottom-border (lbox b)) (top-border (fbox b)))]
+      [(is-nil-box (flt-up-name (real-lbox b)))
+       (- (bottom-outer (lbox b)) (top-content b))]
+      [else
+       ;; If it has block-level children, the height is the distance between the
+       ;; top margin-edge of the topmost block-level child box and the
+       ;; bottom margin-edge of the bottommost block-level child box.
+       (- (max (bottom-outer (lbox b)) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
+          (top-content b))]))
+
+  (define-fun vertical-position-for-flow-boxes ((b Box)) Real
+    ,(smt-cond
+      [(is-box (vbox b)) (+ (bottom-border (vbox b)) (mtp b) (mtn b))]
+      [(top-margin-collapses-with-children (pbox b)) (top-content (pbox b))]
+      [else (+ (top-content (pbox b)) (mtp b) (mtn b))]))
 
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
@@ -327,49 +359,30 @@
        ;; any block-level children and whether it has padding or borders:
        (=> (is-height/auto (style.height r))
            ,(smt-cond
-             ;; CSS § 10.6.3, item 1: the bottom edge of the last line box,
-             ;; if the box establishes a inline formatting context with one or more lines
-             [(and (is-box lb) (is-box/line (type lb)))
+             ;; CSS § 10.6.6, first bullet
+             [(is-flow-root b)
+              (= (h b) (auto-height-for-flow-roots b))]
+             ;; CSS § 10.6.3, item 4
+             [(is-no-box lb)
+              (= (h b) 0.0)]
+             ;; CSS § 10.6.3, item 1
+             [(is-box/line (type lb))
               (=> (width-set b) (= (bottom-content b) (bottom-border lb)))]
-             [(and (is-box lb) (is-flow-root b))
-              (ite (is-nil-box (flt-up-name lb))
-                   (= (bottom-content b) (bottom-outer lb))
-                   (= (bottom-content b)
-                      (max (bottom-outer lb)
-                           (bottom-outer (get/box (flt-up-name lb))))))]
-             [(and (is-box lb) (is-box/block (type lb)))
+             [(is-box/block (type lb))
               (= (bottom-content b)
-                 ;; CSS § 10.6.3, item 2: the bottom edge of the bottom
-                 ;; (possibly collapsed) margin of its last in-flow child,
-                 ;; if the child's bottom margin does not collapse with the
-                 ;; element's bottom margin
+                 ;; CSS § 10.6.3, item 2
                  (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (is-root-elt e)))
                       (ite (and (not (box-collapsed-through b)) (box-collapsed-through lb))
-                           ;; CSS § 10.6.3, item 3: the bottom border edge of the last in-flow child
-                           ;; whose top margin doesn't collapse with the element's bottom margin
+                           ;; CSS § 10.6.3, item 3
                            (- (bottom-border lb) (mtp lb) (mtn lb))
                            (bottom-border lb)) ; Collapsed bottom margin
                       (bottom-outer lb)))] ; No collapsed bottom margin
-
-             ;; CSS § 10.6.3, item 4: zero, otherwise
-             [else (= (h b) 0.0)]))
+             ;; Block boxes may only have line or block children
+             [else false]))
 
        ;; Computing X and Y position
        (= (x b) (+ (left-content p) (ml b)))
-
-       ,(smt-cond
-         [(is-box vb)
-          (= (y b) (+ (bottom-border vb) (mtp b) (mtn b)))]
-         [(and
-           ;; Margins of the root element's box do not collapse.
-           (not (is-flow-root p))
-           ;; The top margin of an in-flow block element collapses with
-           ;; its first in-flow block-level child's top margin if the element
-           ;; has no top border, no top padding, and the child has no clearance.
-           (= (pt p) 0.0) (= (bt p) 0.0))
-          (= (y b) (top-content p))]
-         [else
-          (= (y b) (+ (top-content p) (mtp b) (mtn b)))])
+       (= (y b) (vertical-position-for-flow-boxes b))
 
        ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
            `(>= (,field b) 0.0))))
@@ -458,20 +471,7 @@
        ;; CSS 2.1 § 10.6.7 : In certain cases, the height of an
        ;; element that establishes a block formatting context is computed as follows:
        (=> (and (width-set b) (is-height/auto (style.height r)))
-           (= (h b)
-              (ite (is-box (real-fbox b))
-                   (ite (is-box/line (type lb))
-                        ;; If it only has inline-level children, the height is the distance between
-                        ;; the top of the topmost line box and the bottom of the bottommost line box.
-                        (- (bottom-border lb) (top-border fb))
-                        ;; If it has block-level children, the height is the distance between the
-                        ;; top margin-edge of the topmost block-level child box and the
-                        ;; bottom margin-edge of the bottommost block-level child box.
-                        (- (ite (not (is-nil-box (flt-up-name (real-lbox b))))
-                                (max (bottom-outer lb) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
-                                (bottom-outer lb))
-                           (top-content b)))
-                   0.0)))
+           (= (h b) (auto-height-for-flow-roots b)))
 
        ;; TODO : In addition, if the element has any floating descendants whose bottom margin edge
        ;; is below the element's bottom content edge, then the height is increased to include
@@ -594,7 +594,94 @@
           :named restriction-4)))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
-    (is-box/block (type b)))
+    ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
+               [p (pbox b)] [pp (ppbox b)] [fb (fbox b)] [lb (lbox b)])
+
+       (= (type b) box/block)
+       (= (mtp b) (max (mt b) 0.0))
+       (= (mtn b) (min (mt b) 0.0))
+       (= (mbp b) (max (mb b) 0.0))
+       (= (mbn b) (min (mb b) 0.0))
+
+       ;; Floating block element layout
+       ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
+                            (padding-top padding pt) (padding-bottom padding pb)
+                            (border-top-width border bt) (border-right-width border br)
+                            (border-bottom-width border bb) (border-left-width border bl))])
+           (match-define (list prop type field) item)
+           `(and
+             (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
+             (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
+                 (= (,field b) (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) r)) (w p))))))
+
+       (= (xo b) (yo b) 0.0)
+
+       ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
+       ,(smt-let ([temp-top ,(get-px-or-% 'top 'offset 'h 'b)]
+                  [temp-bottom ,(get-px-or-% 'bottom 'offset 'h 'b)]
+                  [temp-height ,(get-px-or-% 'height 'height 'h 'b)])
+
+          ;; Pre-item 1 and item 3
+          (=> (and (is-offset/auto (style.bottom r)) (is-height/auto (style.height r)))
+              (and (= (top-outer b)
+                      (ite (is-offset/auto (style.top r))
+                           (vertical-position-for-flow-boxes b)
+                           (+ (top-content pp) temp-top)))
+                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
+                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
+                   (= (h b) (auto-height-for-flow-roots b))))
+
+          ;; Pre-item 2
+          (=> (and (not (is-offset/auto (style.top r))) (not (is-offset/auto (style.bottom r)))
+                   (not (is-height/auto (style.height r))))
+              (and (= (top-outer b) (+ (top-content pp) temp-top))
+                   (=> (not (is-margin/auto (style.margin-top r))) (= (mt b) ,(get-px-or-% 'margin-top 'margin 'w 'b)))
+                   (=> (not (is-margin/auto (style.margin-bottom r))) (= (mb b) ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
+                   (=> (and (is-margin/auto (style.margin-top r)) (is-margin/auto (style.margin-bottom r)))
+                       (= (mt b) (mb b)))
+                   (=> (or (is-margin/auto (style.margin-top r)) (is-margin/auto (style.margin-bottom r)))
+                       (= (bottom-outer b) (- (bottom-content pp) temp-bottom)))
+                   (= (h b) temp-height)))
+
+          ;; Item 1
+          (=> (and (is-offset/auto (style.top r)) (is-height/auto (style.height r)) (not (is-offset/auto (style.bottom r))))
+              (and (= (bottom-outer b) (- (bottom-content pp) temp-bottom))
+                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
+                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
+                   (= (h b) (auto-height-for-flow-roots b))))
+
+          ;; Item 2
+          (=> (and (not (is-offset/auto (style.top r))) (is-height/auto (style.height r)) (not (is-offset/auto (style.bottom r))))
+              (and (= (top-outer b) (vertical-position-for-flow-boxes b))
+                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
+                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
+                   (= (h b) (auto-height-for-flow-roots b))))
+
+          ;; Item 4
+          (=> (and (is-offset/auto (style.top r)) (not (is-height/auto (style.height r))) (not (is-offset/auto (style.bottom r))))
+              (and (= (bottom-outer b) (- (bottom-content pp) temp-bottom))
+                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
+                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
+                   (= (h b) temp-height)))
+
+          ;; Item 5
+          (=> (and (not (is-offset/auto (style.top r))) (is-height/auto (style.height r)) (not (is-offset/auto (style.bottom r))))
+              (and (= (top-outer b) (+ (top-content pp) temp-top))
+                   (= (bottom-outer b) (- (bottom-content pp) temp-bottom))
+                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
+                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))))
+
+          ;; Item 6
+          (=> (and (is-offset/auto (style.bottom r)) (not (is-height/auto (style.height r))) (not (is-offset/auto (style.top r))))
+              (and (= (top-outer b) (+ (top-content pp) temp-top))
+                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
+                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
+                   (= (h b) temp-height))))
+
+       ;; TODO: x, w, mr, ml, stfwidth, w-from-stfwidth, width-set
+
+       ))
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
