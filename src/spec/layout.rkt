@@ -620,64 +620,37 @@
        ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
        ,(smt-let ([temp-top ,(get-px-or-% 'top 'offset 'h 'b)]
                   [temp-bottom ,(get-px-or-% 'bottom 'offset 'h 'b)]
-                  [temp-height ,(get-px-or-% 'height 'height 'h 'b)])
+                  [temp-height ,(get-px-or-% 'height 'height 'h 'b)]
+                  [top? (not (is-offset/auto (style.top r)))]
+                  [bottom? (not (is-offset/auto (style.bottom r)))]
+                  [height? (not (is-height/auto (style.height r)))])
 
-          ;; Pre-item 1 and item 3
-          (=> (and (is-offset/auto (style.bottom r)) (is-height/auto (style.height r)))
-              (and (= (top-outer b)
-                      (ite (is-offset/auto (style.top r))
-                           (vertical-position-for-flow-boxes b)
-                           (+ (top-content pp) temp-top)))
-                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
-                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
-                   (= (h b) (auto-height-for-flow-roots b))))
+          (=> top? (= (top-outer b) (+ (top-content pp) temp-top)))
+          (=> height? (= (h b) temp-height))
+          (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-boxes b)))
+          (=> (and (not height?) (not (and top? bottom?)))
+              (= (h b) (auto-height-for-flow-roots b)))
+          (=> (and bottom? (not (and top? height?)))
+              (= (bottom-outer b) (- (bottom-content pp) temp-bottom)))
+
+          ;; Margins work identically unless overspecified
+          (=> (not (and top? height? bottom?))
+              (and
+               (= (mt b) (margin-min-px (style.margin-top r) b))
+               (= (mb b) (margin-min-px (style.margin-bottom r) b))))
 
           ;; Pre-item 2
-          (=> (and (not (is-offset/auto (style.top r))) (not (is-offset/auto (style.bottom r)))
-                   (not (is-height/auto (style.height r))))
-              (and (= (top-outer b) (+ (top-content pp) temp-top))
-                   (=> (not (is-margin/auto (style.margin-top r))) (= (mt b) ,(get-px-or-% 'margin-top 'margin 'w 'b)))
-                   (=> (not (is-margin/auto (style.margin-bottom r))) (= (mb b) ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
-                   (=> (and (is-margin/auto (style.margin-top r)) (is-margin/auto (style.margin-bottom r)))
+          (=> (and top? bottom? height?)
+              (and (=> (not (is-margin/auto (style.margin-top r)))
+                       (= (mt b) (margin-min-px (style.margin-top r) b)))
+                   (=> (not (is-margin/auto (style.margin-bottom r)))
+                       (= (mb b) (margin-min-px (style.margin-bottom r) b)))
+                   (=> (and (is-margin/auto (style.margin-top r))
+                            (is-margin/auto (style.margin-bottom r)))
                        (= (mt b) (mb b)))
-                   (=> (or (is-margin/auto (style.margin-top r)) (is-margin/auto (style.margin-bottom r)))
-                       (= (bottom-outer b) (- (bottom-content pp) temp-bottom)))
-                   (= (h b) temp-height)))
-
-          ;; Item 1
-          (=> (and (is-offset/auto (style.top r)) (is-height/auto (style.height r)) (not (is-offset/auto (style.bottom r))))
-              (and (= (bottom-outer b) (- (bottom-content pp) temp-bottom))
-                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
-                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
-                   (= (h b) (auto-height-for-flow-roots b))))
-
-          ;; Item 2
-          (=> (and (not (is-offset/auto (style.top r))) (is-height/auto (style.height r)) (not (is-offset/auto (style.bottom r))))
-              (and (= (top-outer b) (vertical-position-for-flow-boxes b))
-                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
-                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
-                   (= (h b) (auto-height-for-flow-roots b))))
-
-          ;; Item 4
-          (=> (and (is-offset/auto (style.top r)) (not (is-height/auto (style.height r))) (not (is-offset/auto (style.bottom r))))
-              (and (= (bottom-outer b) (- (bottom-content pp) temp-bottom))
-                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
-                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
-                   (= (h b) temp-height)))
-
-          ;; Item 5
-          (=> (and (not (is-offset/auto (style.top r))) (is-height/auto (style.height r)) (not (is-offset/auto (style.bottom r))))
-              (and (= (top-outer b) (+ (top-content pp) temp-top))
-                   (= (bottom-outer b) (- (bottom-content pp) temp-bottom))
-                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
-                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))))
-
-          ;; Item 6
-          (=> (and (is-offset/auto (style.bottom r)) (not (is-height/auto (style.height r))) (not (is-offset/auto (style.top r))))
-              (and (= (top-outer b) (+ (top-content pp) temp-top))
-                   (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top 'margin 'w 'b)))
-                   (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom 'margin 'w 'b)))
-                   (= (h b) temp-height))))
+                   (=> (or (is-margin/auto (style.margin-top r))
+                           (is-margin/auto (style.margin-bottom r)))
+                       (= (bottom-outer b) (- (bottom-content pp) temp-bottom))))))
 
        ;; TODO: x, w, mr, ml, stfwidth, w-from-stfwidth, width-set
 
