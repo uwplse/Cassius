@@ -115,7 +115,7 @@
       [else ;; %s
        (max val (%of (min-width.% (style.min-width (computed-style e))) (w (pbox (get/box (flow-box e))))))]))
     ;(ite (is-min-width/px (style.min-width (computed-style e)))
-    ;    (max val (min-width.px (style.min-width (computed-style e)))) 
+    ;    (max val (min-width.px (style.min-width (computed-style e))))
     ;    ;; Leaving here for future percentage support
     ;    val))
 
@@ -126,12 +126,12 @@
       [(is-max-width/% (style.max-width (computed-style e)))
        (min val (%of (max-width.% (style.max-width (computed-style e))) (w (pbox (get/box (flow-box e))))))]
       [else
-       val]))    
+       val]))
     ;(ite (is-max-width/px (style.max-width (computed-style e)))
     ;     (min val (max-width.px (style.max-width (computed-style e))))
     ;     ;; Leaving here for future percentage support
     ;     val)
-  
+
   (define-fun min-height-limit ((val Real) (e Element)) Real
     ,(smt-cond
       [(is-min-height/px (style.min-height (computed-style e)))
@@ -139,10 +139,10 @@
       [else
        (max val (%of (min-height.% (style.min-height (computed-style e))) (h (pbox (get/box (flow-box e))))))]))
     ;(ite (is-min-height/px (style.min-height (computed-style e)))
-    ;    (max val (min-height.px (style.min-height (computed-style e)))) 
+    ;    (max val (min-height.px (style.min-height (computed-style e))))
     ;    ;; Leaving here for future percentage support
     ;    val))
-  
+
   (define-fun max-height-limit ((val Real) (e Element)) Real
     ,(smt-cond
       [(is-max-height/px (style.max-height (computed-style e)))
