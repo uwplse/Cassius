@@ -176,7 +176,7 @@
          (element-set! elt ':id `(bad ,iname)))]
       [`((style ,elt-name ,prop) ,_ ...)
        (define elt (elt-from-name elt-name))
-       (define old-style (element-get elt ':style))
+       (define old-style (css-denormalize-body (element-get elt ':style)))
        (element-set! elt ':style
                      (if (dict-has-key? old-style prop)
                          (dict-update old-style prop (λ (x) (list `(bad ,(car x)))))
@@ -565,7 +565,16 @@
           (emit '(echo "User stylesheet"))
           (for ([name user-style-names] [rule sheet] [i (in-naturals)] #:when name)
             (rule-constraints emit name rule i #:browser? #f)))]
-       [else '()])
+       [else
+        (if (>= (length doms) 2)
+          (for/list ([elts (apply map list (map (compose sequence->list in-tree dom-tree) doms))])
+            (define styles
+              (for/list ([elt elts] #:when (is-element? elt))
+                `(specified-style ,(dump-elt elt))))
+            (if (> (length styles) 1)
+                `(assert (= ,@styles))
+                `(assert true)))
+          '())])
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))

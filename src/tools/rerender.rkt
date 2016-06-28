@@ -19,25 +19,25 @@
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate)
   (match-define
-   (problem desc url header sheet (list document) features test)
+   (problem desc url header sheet documents features test)
    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
-  (define document*
-    ((if truncate (curry dom-limit-depth truncate) identity) document))
+  (define documents*
+    (map (if truncate (curry dom-limit-depth truncate) identity) documents))
 
   (define res
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) (list document*) #:debug debug)))
+      (solve (list sheet) documents* #:debug debug)))
 
   (match res
-    [(success _ (list tree))
+    [(success _ trees)
      (eprintf "Inferred stylesheet\n")
      (printf "<!doctype html>\n<html>\n")
      (printf "<style>\n~a\n</style>" header)
      (printf "<body>\n")
-     (let loop ([tree tree])
+     (let loop ([tree (car trees)])
        (match (car tree)
          [(list (or 'LINE 'VIEW 'ANON) _ ...) (for-each loop (cdr tree))]
          [(list (or 'BLOCK 'INLINE 'MAGIC) attrs ...)
