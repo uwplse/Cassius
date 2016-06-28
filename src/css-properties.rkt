@@ -91,7 +91,7 @@
 (define-css-type (Position static relative absolute fixed)
   [position static])
 
-(define-css-type (Offset (px Real) auto)
+(define-css-type (Offset (px Real) (% Real) auto)
   [top auto]
   [right auto]
   [bottom auto]
