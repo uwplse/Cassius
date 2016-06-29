@@ -46,11 +46,12 @@
 
 (struct result (file problem test section status description features output time url))
 
-(define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)])
+(define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)] #:feature [feature #f])
   (define probs (call-with-input-file file parse-file))
 
   (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))]
-        #:when (or (not fast?) (subset? (problem-features prob) supported-features)))
+        #:when (or (not fast?) (subset? (problem-features prob) supported-features))
+        #:when (or (not feature) (set-member? (problem-features prob) feature)))
     (match-define (problem desc url header sheet documents features test) prob)
     (eprintf "~a\t~a\t" file pname)
     (define-values (ubase uname udir?) (split-path url))
@@ -91,7 +92,7 @@
 (define (file-name-stem fn)
   (first (string-split (last (string-split fn "/")) ".")))
 
-(define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f])
+(define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f] #:feature [feature #f])
   (define index
     (if classify
         (for*/hash ([sec (call-with-input-file classify read-json)] [(k v) (in-hash sec)])
@@ -100,7 +101,7 @@
 
   (define resultss
     (for/list ([file files])
-      (run-file-tests file #:debug debug #:fast fast? #:index index)))
+      (run-file-tests file #:debug debug #:fast fast? #:index index #:feature feature)))
   (define results (apply append resultss))
 
   (define out (if outname (open-output-file (format "~a.json" outname) #:exists 'replace) (current-output-port)))
@@ -166,6 +167,7 @@
   (define out-file #f)
   (define classify #f)
   (define fast #f)
+  (define feature #f)
 
   (command-line
    #:program "cassius"
@@ -186,5 +188,7 @@
     (set! fast #t)]
    [("--index") sname "File name with section information for tests"
     (set! classify sname)]
+   [("--test") fname "Test a particular feature"
+    (set! feature (string->symbol fname))]
    #:args fnames
-   (run-report fnames #:debug debug #:output out-file #:fast fast #:classify classify)))
+   (run-report fnames #:debug debug #:output out-file #:fast fast #:classify classify #:feature feature)))
