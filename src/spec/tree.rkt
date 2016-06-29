@@ -172,13 +172,15 @@
                     (flt-name (get/box &p)))
                (flt-up-name (get/box &v))))
        :opt false)
+       (!
        (= (flt-up-name b)
           ,(smt-cond
             [(or (is-position/absolute (position b)) (is-position/fixed (position b)))
              (ite (is-nil-box &v) nil-box (flt-up-name (get/box &v)))]
             [(not (is-float/none (float b))) &self]
             [(is-nil-box &l) (flt-name b)]
-            [else (flt-up-name (get/box &l))]))))
+            [else (flt-up-name (get/box &l))]))
+       :opt false)))
 
   (define-fun link-inline-box ((b Box) (&self BoxName) (&p BoxName) (&v BoxName) (&n BoxName) (&f BoxName) (&l BoxName)) Bool
     ,(smt-let ([e (get/elt (element b))])
