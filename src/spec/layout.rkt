@@ -671,9 +671,9 @@
                        (= (bottom-outer b) (- (bottom-content pp) temp-bottom))))))
 
        ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
-       ,(smt-let ([temp-left ,(get-px-or-% 'left 'offset 'h 'b)]
-                  [temp-bottom ,(get-px-or-% 'right 'offset 'h 'b)]
-                  [temp-width ,(get-px-or-% 'width 'width 'h 'b)]
+       ,(smt-let ([temp-left ,(get-px-or-% 'left 'offset 'w 'b)]
+                  [temp-right ,(get-px-or-% 'right 'offset 'w 'b)]
+                  [temp-width ,(get-px-or-% 'width 'width 'w 'b)]
                   [left? (not (is-offset/auto (style.left r)))]
                   [right? (not (is-offset/auto (style.right r)))]
                   [width? (not (is-width/auto (style.width r)))])
@@ -698,9 +698,9 @@
 
           (=> (and left? width? right?)
               (=> (not (is-margin/auto (style.margin-left r)))
-                  (= (ml b) (margin-min-px (style.margin-left r))))
+                  (= (ml b) (margin-min-px (style.margin-left r) b)))
               (=> (not (is-margin/auto (style.margin-right r)))
-                  (= (mr b) (margin-min-px (style.margin-right r))))
+                  (= (mr b) (margin-min-px (style.margin-right r) b)))
               (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
                   (= (ml b) (mr b)))
               (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
