@@ -28,6 +28,10 @@
          (for/list ([rule rules])
            (if (equal? rule '?) '(? ?) rule)))
        (hash-set! sheets name rules*)]
+      [`(define-document ,name ,tree)
+       (hash-set! docs name (dom name (rendering-context #f) tree))]
+      [`(define-document (,name #:width ,width) ,tree)
+       (hash-set! docs name (dom name (rendering-context #f)  `([VIEW :w ,width] ,tree)))]
       [`(define-document (,name #:width ,width #:browser ,browser) ,tree)
        (hash-set! docs name (dom name (rendering-context browser)
                                  `([VIEW :w ,width] ,tree)))]
