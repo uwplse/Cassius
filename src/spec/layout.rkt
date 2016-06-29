@@ -205,7 +205,7 @@
 
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     ,(smt-cond
-      [(is-box (vbox b)) (+ (bottom-border (vbox b)) (mtp b) (mtn b))]
+      [(is-box (vbox b)) (+ (bottom-border (vbox b)) (max (mtp b) (mbp (vbox b))) (min (mtn b) (mbn (vbox b))))]
       [(top-margin-collapses-with-children (pbox b)) (top-content (pbox b))]
       [else (+ (top-content (pbox b)) (mtp b) (mtn b))]))
 
