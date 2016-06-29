@@ -10,7 +10,7 @@
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
 
-(define supported-features '(float % unknown-selector box-sizing min-width max-width min-height max-height position))
+(define supported-features '(float % unknown-selector box-sizing min-width max-width position))
 
 (define z3-path (find-executable-path "z3"))
 

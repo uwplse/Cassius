@@ -267,28 +267,28 @@
        (ite (is-position/relative (style.position r))
             (and
              (=> (is-offset/px (style.left r))
-                 (= (xo b) (offset.px (style.left r))))
+                 (= (xo b) (+ (offset.px (style.left r)) (xo p))))
              (=> (is-offset/% (style.left r))
-                 (= (xo b) (%of (offset.% (style.left r)) (w p))))
+                 (= (xo b) (+ (%of (offset.% (style.left r)) (w p)) (xo p))))
              (=> (is-offset/px (style.top r))
-                 (= (yo b) (offset.px (style.top r))))
+                 (= (yo b) (+ (offset.px (style.top r)) (yo p))))
              (=> (is-offset/% (style.top r))
-                 (= (yo b) (%of (offset.px (style.top r)) (h p))))
+                 (= (yo b) (+ (%of (offset.px (style.top r)) (h p)) (yo p))))
              (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
-                 (= (xo b) (- (offset.px (style.right r)))))
+                 (= (xo b) (- (xo p) (offset.px (style.right r)))))
              (=> (and (is-offset/auto (style.left r)) (is-offset/% (style.right r)))
-                 (= (xo b) (- (%of (offset.px (style.right r)) (w p)))))
+                 (= (xo b) (- (xo p) (%of (offset.px (style.right r)) (w p)))))
              (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
-                 (= (yo b) (- (offset.px (style.bottom r)))))
+                 (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
              (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
-                 (= (yo b) (- (%of (offset.px (style.bottom r)) (w p)))))
+                 (= (yo b) (- (yo p) (%of (offset.px (style.bottom r)) (w p)))))
              (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
-                 (= (xo b) 0.0))
+                 (= (xo b) (xo p)))
              (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
-                 (= (yo b) 0.0)))
+                 (= (yo b) (yo p))))
             (and
-             (= (xo b) 0.0)
-             (= (yo b) 0.0)))
+             (= (xo b) (xo p))
+             (= (yo b) (yo p))))
 
        (=> (is-width/% (style.width r))
            (and
@@ -441,21 +441,28 @@
        (ite (is-position/relative (style.position r))
             (and
              (=> (is-offset/px (style.left r))
-                 (= (xo b) (offset.px (style.left r))))
+                 (= (xo b) (+ (offset.px (style.left r)) (xo p))))
+             (=> (is-offset/% (style.left r))
+                 (= (xo b) (+ (%of (offset.% (style.left r)) (w p)) (xo p))))
              (=> (is-offset/px (style.top r))
-                 (= (yo b) (offset.px (style.top r))))
+                 (= (yo b) (+ (offset.px (style.top r)) (yo p))))
+             (=> (is-offset/% (style.top r))
+                 (= (yo b) (+ (%of (offset.px (style.top r)) (h p)) (yo p))))
              (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
-                 (= (xo b) (- (offset.px (style.right r)))))
+                 (= (xo b) (- (xo p) (offset.px (style.right r)))))
+             (=> (and (is-offset/auto (style.left r)) (is-offset/% (style.right r)))
+                 (= (xo b) (- (xo p) (%of (offset.px (style.right r)) (w p)))))
              (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
-                 (= (yo b) (- (offset.px (style.bottom r)))))
+                 (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
+             (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
+                 (= (yo b) (- (yo p) (%of (offset.px (style.bottom r)) (w p)))))
              (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
-                 (= (xo b) 0.0))
+                 (= (xo b) (xo p)))
              (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
-                 (= (yo b) 0.0)))
+                 (= (yo b) (yo p))))
             (and
-             (= (xo b) 0.0)
-             (= (yo b) 0.0)))
-
+             (= (xo b) (xo p))
+             (= (yo b) (yo p))))
 
        ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
          (=> (is-width/auto (style.width r))
@@ -597,7 +604,7 @@
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
-               [p (pbox b)] [pp (ppbox b)] [fb (fbox b)] [lb (lbox b)])
+               [p (pbox b)] [pp (ppbox b)])
 
        (= (type b) box/block)
        (= (mtp b) (max (mt b) 0.0))
@@ -617,7 +624,16 @@
              (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
                  (= (,field b) (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) r)) (w p))))))
 
-       (= (xo b) (yo b) 0.0)
+       (= (xo b) (xo p))
+       (= (yo b) (yo p))
+
+       (let ([l (real-lbox b)] [v (real-vbox b)])
+         (= (stfwidth b)
+            (ite (is-width/auto (style.width r))
+                 (max
+                  (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)
+                  (ite (is-box v) (stfwidth v) 0.0))
+                 (w b))))
 
        ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
        ,(smt-let ([temp-top ,(get-px-or-% 'top 'offset 'h 'b)]
@@ -654,9 +670,41 @@
                            (is-margin/auto (style.margin-bottom r)))
                        (= (bottom-outer b) (- (bottom-content pp) temp-bottom))))))
 
-       ;; TODO: x, w, mr, ml, stfwidth, w-from-stfwidth, width-set
+       ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
+       ,(smt-let ([temp-left ,(get-px-or-% 'left 'offset 'h 'b)]
+                  [temp-bottom ,(get-px-or-% 'right 'offset 'h 'b)]
+                  [temp-width ,(get-px-or-% 'width 'width 'h 'b)]
+                  [left? (not (is-offset/auto (style.left r)))]
+                  [right? (not (is-offset/auto (style.right r)))]
+                  [width? (not (is-width/auto (style.width r)))])
 
-       ))
+          (width-set b)
+
+          ;; Margins work identically unless overspecified
+          (=> (not (and left? width? right?))
+              (and
+               (= (ml b) (margin-min-px (style.margin-left r) b))
+               (= (mr b) (margin-min-px (style.margin-right r) b))))
+
+          (=> left? (= (left-outer b) (+ (left-content pp) temp-left)))
+          (=> width? (and (= (w b) temp-width) (not (w-from-stfwidth b))))
+          (=> (and (not width?) (not (and left? right?)))
+              (and (= (w b) (stfwidth b)) (w-from-stfwidth b)))
+          (=> (and (not left?) (not right?))
+              (= (left-outer b) (left-content p)))
+          (=> (and right? (not (and left? width?)))
+              (= (right-outer b) (- (right-content pp) temp-right)))
+          (=> (and left? right?) (not (w-from-stfwidth b)))
+
+          (=> (and left? width? right?)
+              (=> (not (is-margin/auto (style.margin-left r)))
+                  (= (ml b) (margin-min-px (style.margin-left r))))
+              (=> (not (is-margin/auto (style.margin-right r)))
+                  (= (mr b) (margin-min-px (style.margin-right r))))
+              (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                  (= (ml b) (mr b)))
+              (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                  (= (right-outer b) (- (right-content pp) temp-right)))))))
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
@@ -698,7 +746,8 @@
        (= (mtn b) (min (mt b) 0.0))
        (= (mbp b) (max (mb b) 0.0))
        (= (mbn b) (min (mb b) 0.0))
-       (= (xo b) (yo b) 0.0)
+       (= (xo b) (xo p))
+       (= (yo b) (yo p))
 
        (let ([l* (real-lbox b)] [v* (real-vbox b)])
          (= (stfwidth b)
@@ -720,7 +769,9 @@
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
 
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
+       (= (xo b) (xo p))
+       (= (yo b) (yo p))
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
            `(= (,field b) 0.0))
 
        ;; This is super-weak, but for now it really is our formalization of line layout
@@ -732,7 +783,9 @@
                [f (fbox b)] [l (lbox b)])
        (= (type b) box/line)
 
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl xo yo)])
+       (= (xo b) (xo p))
+       (= (yo b) (yo p))
+       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
            `(= (,field b) 0.0))
 
        (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
