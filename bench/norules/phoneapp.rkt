@@ -4,7 +4,8 @@ div { outline: 1px solid black; }")
 
 (define-stylesheet main)
 
-(define-document (mockup #:width 750)
+(define-document mockup
+ ([VIEW :w 750 :h 1334]
   ((BLOCK :tag html :w 750 :x 0 :y 0 :style ())
    ((BLOCK :tag header :x 0 :y 0 :w 750 :h 109 :style ([height ?])))
    ((BLOCK :tag body :w 750 :x 0 :y 109.0
@@ -45,7 +46,7 @@ div { outline: 1px solid black; }")
        ((BLOCK :tag rect :w 250 :h 150 :x 425 :y 884.0
                :style ([height ?] [width ?])))))))
    ((BLOCK :tag g
-           :style ([width (px 600)] [margin-left (px -300)] [position absolute] [bottom (px 0)] [left (% 50)] [height (px 150)]))
+           :style ([width ?] [margin-left ?] [position ?] [bottom ?] [left ?] [height ?]))
     ((BLOCK :tag rect :w 100 :h 100 :x 100 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
     ((BLOCK :tag rect :w 100 :h 100 :x 250 :y 1209.0
@@ -53,9 +54,10 @@ div { outline: 1px solid black; }")
     ((BLOCK :tag rect :w 100 :h 100 :x 400 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
     ((BLOCK :tag rect :w 100 :h 100 :x 550 :y 1209.0
-            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?]))))))
+            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))))))
 
-(define-document (bigger #:width 1100)
+(define-document bigger
+ ([VIEW :w 1100 :h 1920]
   ((BLOCK :tag html :w 1100 :x 0 :y 0.0 :style ())
    ((BLOCK :tag header :x 0 :y 0 :w 1100 :h 109 :style ([height ?])))
    ((BLOCK :tag body :w 1100 :x 0 :y 109.0 :style ([padding ? ? ? ?]))
@@ -103,7 +105,7 @@ div { outline: 1px solid black; }")
     ((BLOCK :tag rect :w 100 :h 100 :x 575 :y 1795.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
     ((BLOCK :tag rect :w 100 :h 100 :x 725 :y 1795.0
-            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?]))))))
+            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))))))
 
 (define-problem one
   #:header header
@@ -115,7 +117,8 @@ div { outline: 1px solid black; }")
   #:sheet main
   #:documents mockup bigger)
 
-(define-document (mockup-correct #:width 750)
+(define-document mockup-correct
+ ([VIEW :w 750 :h 1334]
   ((BLOCK :tag html :w 750 :x 0 :y 0
           :style ())
    ((BLOCK :tag header :x 0 :y 0 :w 750 :h 109 :style ([height (px 109)])))
@@ -168,7 +171,7 @@ div { outline: 1px solid black; }")
     ((BLOCK :tag rect :w 100 :h 100 :x 400 :y 1209.0
             :style ([float left] [height (px 100)] [width (px 100)] [margin (px 25) (px 25) (px 25) (px 25)])))
     ((BLOCK :tag rect :w 100 :h 100 :x 550 :y 1209.0
-            :style ([float left] [height (px 100)] [width (px 100)] [margin (px 25) (px 25) (px 25) (px 25)]))))))
+            :style ([float left] [height (px 100)] [width (px 100)] [margin (px 25) (px 25) (px 25) (px 25)])))))))
 
 (define-problem one-done
   #:header header
