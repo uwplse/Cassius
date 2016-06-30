@@ -11,19 +11,22 @@
 
 (define (rule->string rule)
   (define selector (car rule))
-  (match-define (list (list properties values) ...) (filter list? (cdr rule)))
+  (match-define (list (list properties valuess ...) ...) (filter list? (cdr rule)))
   (with-output-to-string
     (λ ()
       (when (member ':style rule) (printf "[inline style] "))
       (printf "~a {\n" (selector->string selector))
-      (for ([property properties] [value values])
-        (match value
-          [`(bad ,val)
-           (printf "  \33[1;31m~a: ~a\33[0m;\n" property (value->string val))]
-          [`(bad)
-           (printf "  \33[9;31m~a\33[0m;\n" property)]
-          [_
-           (printf "  ~a: ~a;\n" property (value->string value))]))
+      (for ([property properties] [values valuess])
+        (printf "  ~a:" property)
+        (for ([value values])
+          (match value
+            [`(,(or 'px '% 'em 'ex) 0)
+             (printf " 0")]
+            [`(bad ,val)
+             (printf " \33[1;31m~a\33[0m" (value->string val))]
+            [_
+             (printf " ~a" (value->string value))]))
+        (printf ";\n"))
       (printf "}"))))
 
 (define/match (value->string value)

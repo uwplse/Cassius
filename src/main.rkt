@@ -178,9 +178,10 @@
        (define elt (elt-from-name elt-name))
        (define old-style (css-denormalize-body (element-get elt ':style)))
        (element-set! elt ':style
-                     (if (dict-has-key? old-style prop)
-                         (dict-update old-style prop (λ (x) (list `(bad ,(car x)))))
-                         (dict-set old-style prop '((bad)))))]
+                     (css-normalize-body
+                      (if (dict-has-key? old-style prop)
+                          (dict-update old-style prop (λ (x) (list `(bad ,(car x)))))
+                          (dict-set old-style prop '((bad))))))]
       [_ (void)]))
   (values (hash-values stylesheet*) trees))
 
@@ -338,7 +339,7 @@
   (define allow-new-properties? (member '? (cdr rule)))
   (define pairs
     (filter (λ (x) (or (not (symbol? (cadr x))) (not (or (css-ex? (cadr x)) (css-em? (cadr x))))))
-            (css-denormalize-body (filter list? (cdr rule)))))
+            (filter list? (cdr rule))))
 
   (for ([(prop _t _d) (in-css-properties)])
     (match (assoc prop pairs)
