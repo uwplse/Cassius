@@ -498,7 +498,6 @@
 
        ;; CSS 2.1, § 9.5.1, item 1: The left outer edge of a left-floating box
        ;; may not be to the left of the left edge of its containing block.
-       ;; TODO: An analogous rule holds for right-floating elements.
        (=> (is-float/left (float b)) (>= (left-outer b) (left-content p)))
        (=> (is-float/right (float b)) (>= (right-content p) (right-outer b)))
 
@@ -581,7 +580,7 @@
                     (horizontally-adjacent b flt)
                     (= (right-outer b) (left-outer flt)))))
 
-       ;; Three restrictions on floats to make solving efficient
+       ;; Four restrictions on floats to make solving efficient
 
        ;; R1: No negative margins on floats; otherwise they can overlap
        (! (and ,@(for/list ([m '(mt mr mb ml)]) `(>= (,m b) 0.0)))
