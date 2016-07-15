@@ -25,7 +25,7 @@
 (define-syntax-rule (define-css-type (name decl ...) [prop default] ...)
   (begin
     (hash-set! css-types-hash 'name (css-constructor 'name '(decl ...)))
-    (hash-set! css-property-hash 'prop (cons 'name (css-expand 'name 'default))) ...))
+    (hash-set! css-property-hash 'prop (cons 'name 'default)) ...))
 
 (define (in-css-properties)
   (in-parallel

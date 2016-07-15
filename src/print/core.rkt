@@ -103,7 +103,7 @@
        [_ (format "Specified: ~a" line)])]
     [`((root ,prop ,_))
      (for/first ([(prop* type default) (in-css-properties)] #:when (eq? prop prop*))
-       (format "The root box has { ~a: ~a; }" prop (value->string (extract-value default))))]
+       (format "The root box has { ~a: ~a; }" prop (value->string default)))]
     [_ (format "~a: ~a" name line) #;#f]))
 
 (define (print-unsat-core core stylesheet)

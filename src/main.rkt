@@ -65,7 +65,7 @@
   (for/list ([(prop type default) (in-css-properties)]
              [(value score) (in-groups 2 rec)]
              ;; TODO Hack on text-align
-             #:unless (or (and (equal? prop 'text-align) (equal? value 'text-align/left)) (value=? type value default)))
+             #:unless (or (and (equal? prop 'text-align) (equal? value 'text-align/left)) (value=? type value (dump-value prop default))))
     `[,prop ,(extract-value value)]))
 
 (define (split-symbol s)
@@ -101,13 +101,13 @@
 (define (prop->prefix prop)
   (slower (css-type prop)))
 
-(define (dump-value prop value)
-  (define prefix (prop->prefix prop))
+(define (dump-value type value)
+  (define prefix (slower type))
   (match value
     [(? symbol?) (sformat "~a/~a" prefix value)]
     [(list 'px n) (list (sformat "~a/px" prefix) n)]
     [(list '% n) (list (sformat "~a/%" prefix) n)]
-    [0 (dump-value prop '(px 0))]))
+    [0 (dump-value type '(px 0))]))
 
 (define (dump-selector selector)
   (match selector
@@ -341,7 +341,7 @@
     (filter (λ (x) (or (not (symbol? (cadr x))) (not (or (css-ex? (cadr x)) (css-em? (cadr x))))))
             (filter list? (cdr rule))))
 
-  (for ([(prop _t _d) (in-css-properties)])
+  (for ([(prop type _d) (in-css-properties)])
     (match (assoc prop pairs)
       [(list _ '?)
        (emit `(assert (! (= (,(sformat "rule.~a?" prop) ,name) true)
@@ -349,7 +349,7 @@
       [(list _ val)
        (emit `(assert (! (= (,(sformat "rule.~a?" prop) ,name) true)
                          :named ,(sformat "rule/~a/~a/?" name prop))))
-       (emit `(assert (! (= (,(sformat "rule.~a" prop) ,name) ,(dump-value prop val))
+       (emit `(assert (! (= (,(sformat "rule.~a" prop) ,name) ,(dump-value type val))
                          :named ,(sformat "rule/~a/~a" name prop) :opt false)))]
       [#f
        (when (not allow-new-properties?)
@@ -420,15 +420,15 @@
 (define (style-constraints dom emit elt)
   (when (element-get elt ':style)
     (define style (css-denormalize-body (element-get elt ':style)))
-    (for ([(prop _t default) (in-css-properties)])
+    (for ([(prop type default) (in-css-properties)])
       (match (dict-ref style prop #f)
         ['(?) (void)]
         [(list val)
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
-                              ,(dump-value prop val))
+                              ,(dump-value type val))
                            :named ,(sformat "style/~a/~a" (element-name elt) prop))))]
         [#f
-         (define value (if (equal? prop 'text-align) 'text-align/left default))
+         (define value (dump-value type (if (equal? prop 'text-align) 'left default)))
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
                            :named ,(sformat "style/~a/~a" (element-name elt) prop))))])))) 
 

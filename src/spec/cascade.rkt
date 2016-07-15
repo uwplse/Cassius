@@ -16,6 +16,14 @@
       (sformat "id/~a" id)
       'no-id))
 
+(define (dump-value type value)
+  (define prefix (slower type))
+  (match value
+    [(? symbol?) (sformat "~a/~a" prefix value)]
+    [(list 'px n) (list (sformat "~a/px" prefix) n)]
+    [(list '% n) (list (sformat "~a/%" prefix) n)]
+    [0 (dump-value type '(px 0))]))
+
 (define (selector-matches? sel elt)
   "Given an element and a selector, returns a Z3 expression for when that element matches"
   (match sel
@@ -157,11 +165,11 @@
           (or
             (and (is-useDefault (,(sformat "style.~a$" property) ,re))
                  (= (,(sformat "style.~a" property) ,re)
-                    (ite (,(sformat "is-~a/inherit" (type->prefix type)) ,default)
+                    (ite (,(sformat "is-~a/inherit" (type->prefix type)) ,(dump-value type default))
                          ;; TODO: Assumes property is not inherited, which is false for text-align
                          (,(sformat "style.~a" property)
                           (computed-style (parent (get/elt ,(element-name elt)))))
-                         ,default)))
+                         ,(dump-value type default))))
             ,@(for/list ([(name rule) (in-dict applicable-rules)])
                 `(and
                   (,(sformat "rule.~a?" property) ,name)
@@ -174,7 +182,7 @@
                           (ite (is-elt (parent (get/elt ,(element-name elt))))
                                (,(sformat "style.~a" property)
                                 (computed-style (parent (get/elt ,(element-name elt)))))
-                               ,default)
+                               ,(dump-value type default))
                           (,(sformat "rule.~a" property) ,name)))))))
            :named ,(sformat "cascade/eq/~a/~a" (element-name elt) property)))))))
 
