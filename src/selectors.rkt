@@ -1,11 +1,10 @@
 #lang racket
 
-(require "common.rkt")
-(require "dom.rkt")
-(require "css-properties.rkt")
+(require "common.rkt" "dom.rkt" "css-properties.rkt")
+(module+ test (require rackunit))
+(provide equivalence-classes)
 
-(module+ test
-  (require rackunit))
+
 
 (define (selector-matches? sel elt)
   "Given an element and a selector, returns whether the selector matches the element"
@@ -138,27 +137,58 @@
 (define (rule-matchlist rules elts)
   (define scores (rule-scores rules))
   (define matches (for/list ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
-  (define props (for/list ([rule rules]) (map car (filter list? (cdr rule)))))
+  (define props (for/list ([rule rules]) (filter list? (cdr rule))))
   (map cdr (sort (map list* scores props matches) score<? #:key car)))
 
 (define (matchlist-find matchlist elt prop)
   (for/first ([(props matchset) (in-dict matchlist)] [i (in-naturals)]
-              #:when (and (set-member? matchset elt) (set-member? props prop)))
+              #:when (and (set-member? matchset elt) (set-member? (map car props) prop)))
     i))
 
 (define (equivalence-classes rules elts)
   (define ml (rule-matchlist rules elts))
-  (for/hash ([(type _) (in-css-types)])
-    (define hash (make-hash))
-    (for* ([(prop type* _) (in-css-properties)] [elt elts] #:when (equal? type type*))
-      (dict-set! hash (cons prop elt) (matchlist-find ml elt prop)))
-    (values type hash)))
+  (for/hash ([(prop type* default) (in-css-properties)])
+    (define class-hash (make-hash))
+    (define value-hash (make-hash))
+    (for* ([elt elts])
+      (define idx (matchlist-find ml elt prop))
+      (define value
+        (cond
+         [(number? idx)
+          (car (dict-ref (car (list-ref ml idx)) prop))]
+         [(not idx)
+          (if (equal? prop 'text-align) 'left default)]))
+      (dict-set! value-hash idx value)
+      (dict-set! class-hash elt idx))
+    (values prop (cons class-hash value-hash))))
 
-;; An inequality is a list (and AND) of lists (and OR) of atoms (type elt1 prop1 elt2 prop2)
+;; An inequality is a list (and AND) of lists (and OR) of atoms
+;; Each atom is either (prop elt1 elt2)
+;; or (prop elt1 '= val1)
 
 (define (equivalence-classes-avoid? classes ineq-or-and)
   (for/and ([ineq-or ineq-or-and])
     (for/or ([ineq ineq-or])
-      (match-define (list type elt1 prop1 elt2 prop2) ineq)
-      (define hash (dict-ref classes type))
-      (not (equal? (dict-ref hash (cons prop1 elt1)) (dict-ref hash (cons prop2 elt2)))))))
+      (match ineq
+        [(list prop elt1 elt2)
+         (define hash (car (dict-ref classes prop)))
+         (not (equal? (dict-ref hash elt1) (dict-ref hash elt2)))]
+        [(list prop elt1 '= val)
+         (match-define (cons class-hash value-hash) (dict-ref classes prop))
+         (not (equal? (dict-ref value-hash (dict-ref class-hash elt1)) val))]))))
+
+;; We now move on to enumerating all selectors
+
+(require racket/generator)
+
+(define (all-selectors tags classes ids #:depth [depth 3])
+  (define atomic-selectors
+    `(* ,@(map (curry list 'tag) tags) ,@(map (curry list 'class) classes) ,@(map (curry list 'id) ids)))
+  (reap [sow]
+        (for ([i (in-range 1 (+ 1 depth))])
+          (if (= i 1)
+              (for-each sow atomic-selectors)
+              (for-each (λ (x) (sow (cons 'desc x)) (sow (cons 'child x)))
+                        (cartesian-product (build-list i (const atomic-selectors))))))))
+
+;(define (all-selectorsets tags classes ids #:depth [depth 3] #:number [number 9]))
