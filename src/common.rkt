@@ -5,7 +5,8 @@
  sformat slower
  flags all-flags supported-features
  tree-size sdiff in-groups sequence-cons cartesian-product trieify
- xor ->number z3-path value=?)
+ xor ->number z3-path value=?
+ attribute?)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -111,3 +112,6 @@
       (value=? #f (lower a) (lower b))]
      [_ #f])
    (equal?/recur a b (curry value=? prop))))
+
+(define (attribute? s)
+  (and (symbol? s) (string-prefix? (symbol->string s) ":")))
