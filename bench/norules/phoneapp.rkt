@@ -33,7 +33,7 @@ div { outline: 1px solid black; }")
    (margin-right ?)
    (margin-bottom ?)
    (margin-left ?))
-  ((child (tag g) (tag rect))
+  ((tag rect)
    (float ?)
    (margin-top ?)
    (margin-right ?)
@@ -43,7 +43,7 @@ div { outline: 1px solid black; }")
    (padding-right ?)
    (padding-bottom ?)
    (padding-left ?))
-  ((child (tag g) (tag rect) (tag rect))
+  ((tag img)
    (height ?) (width ?))
   ((tag footer)
    (width ?)
@@ -52,7 +52,7 @@ div { outline: 1px solid black; }")
    (bottom ?)
    (left ?)
    (height ?))
-  ((child (tag footer) (tag rect))
+  ((tag icon)
    (float ?)
    (width ?)
    (height ?)
@@ -80,37 +80,37 @@ div { outline: 1px solid black; }")
      ((BLOCK :tag g :style ())
       ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 359.0
               :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag rect :w 250 :h 150 :x 75 :y 384.0
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 384.0
                :style ([height ?] [width ?]))))
       ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 359.0
               :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag rect :w 250 :h 150 :x 425 :y 384.0
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 384.0
                :style ([height ?] [width ?]))))
       ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 609.0
               :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag rect :w 250 :h 150 :x 75 :y 634.0
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 634.0
                :style ([height ?] [width ?]))))
       ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 609.0
               :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag rect :w 250 :h 150 :x 425 :y 634.0
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 634.0
                :style ([height ?] [width ?]))))
       ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 859.0
               :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag rect :w 250 :h 150 :x 75 :y 884.0
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 884.0
                :style ([height ?] [width ?]))))
       ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 859.0
               :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag rect :w 250 :h 150 :x 425 :y 884.0
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 884.0
                :style ([height ?] [width ?])))))))
    ((BLOCK :tag footer
            :style ([width ?] [margin-left ?] [position ?] [bottom ?] [left ?] [height ?]))
-    ((BLOCK :tag rect :w 100 :h 100 :x 100 :y 1209.0
+    ((BLOCK :tag icon :w 100 :h 100 :x 100 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
-    ((BLOCK :tag rect :w 100 :h 100 :x 250 :y 1209.0
+    ((BLOCK :tag icon :w 100 :h 100 :x 250 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
-    ((BLOCK :tag rect :w 100 :h 100 :x 400 :y 1209.0
+    ((BLOCK :tag icon :w 100 :h 100 :x 400 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
-    ((BLOCK :tag rect :w 100 :h 100 :x 550 :y 1209.0
+    ((BLOCK :tag icon :w 100 :h 100 :x 550 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))))))
 
 (define-document bigger
