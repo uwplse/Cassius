@@ -2,7 +2,64 @@
 * { padding: 0; margin: 0; }
 div { outline: 1px solid black; }")
 
-(define-stylesheet main)
+(define-stylesheet main
+  ((tag body)
+   (padding-top ?)
+   (padding-right ?)
+   (padding-bottom ?)
+   (padding-left ?))
+  ((tag header)
+   (height ?))
+  ((tag form)
+   (width ?)
+   (height ?)
+   (margin-top ?)
+   (margin-right ?)
+   (margin-bottom ?)
+   (margin-left ?)
+   (padding-top ?)
+   (padding-right ?)
+   (padding-bottom ?)
+   (padding-left ?))
+  ((tag btn)
+   (height ?)
+   (width ?)
+   (float ?)
+   (margin-right ?)
+   (margin-left ?))
+  ((tag h1)
+   (height ?)
+   (margin-top ?)
+   (margin-right ?)
+   (margin-bottom ?)
+   (margin-left ?))
+  ((child (tag g) (tag rect))
+   (float ?)
+   (margin-top ?)
+   (margin-right ?)
+   (margin-bottom ?)
+   (margin-left ?)
+   (padding-top ?)
+   (padding-right ?)
+   (padding-bottom ?)
+   (padding-left ?))
+  ((child (tag g) (tag rect) (tag rect))
+   (height ?) (width ?))
+  ((tag footer)
+   (width ?)
+   (margin-left ?)
+   (position ?)
+   (bottom ?)
+   (left ?)
+   (height ?))
+  ((child (tag footer) (tag rect))
+   (float ?)
+   (width ?)
+   (height ?)
+   (margin-top ?)
+   (margin-right ?)
+   (margin-bottom ?)
+   (margin-left ?)))
 
 (define-document mockup
  ([VIEW :w 750 :h 1334]
@@ -14,11 +71,11 @@ div { outline: 1px solid black; }")
      ((BLOCK :tag form :w 500 :h 75 :x 125 :y 159.0
              :style ([margin ? ? ? ?] [padding ? ? ? ?] [width ?] [height ?]))
       ((BLOCK :tag div :style ())
-       ((BLOCK :tag btn :w 215 :h 55 :x 135 :y 169.0
-               :style ([height ?] [width ?] [float ?] [margin-right ?])))
-       ((BLOCK :tag btn :w 215 :h 55 :x 400 :y 169.0
-               :style ([height ?] [width ?] [float ?])))))
-     ((BLOCK :tag rect :w 650 :h 75 :x 50 :y 259.0
+       ((BLOCK :tag btn :w 235 :h 55 :x 135 :y 169.0
+               :style ([height ?] [width ?] [float ?] [margin-right ?] [margin-left ?])))
+       ((BLOCK :tag btn :w 235 :h 55 :x 380 :y 169.0
+               :style ([height ?] [width ?] [float ?] [margin-right ?] [margin-left ?])))))
+     ((BLOCK :tag h1 :w 650 :h 75 :x 50 :y 259.0
              :style ([height ?] [margin ? ? ? ?])))
      ((BLOCK :tag g :style ())
       ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 359.0
@@ -45,7 +102,7 @@ div { outline: 1px solid black; }")
               :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
        ((BLOCK :tag rect :w 250 :h 150 :x 425 :y 884.0
                :style ([height ?] [width ?])))))))
-   ((BLOCK :tag g
+   ((BLOCK :tag footer
            :style ([width ?] [margin-left ?] [position ?] [bottom ?] [left ?] [height ?]))
     ((BLOCK :tag rect :w 100 :h 100 :x 100 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
