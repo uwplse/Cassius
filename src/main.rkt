@@ -7,6 +7,7 @@
 (require "css-properties.rkt")
 (require "browser-style.rkt")
 (require "spec/tree.rkt")
+(require "selectors.rkt")
 (require "spec/layout.rkt")
 (require "spec/cascade.rkt")
 
@@ -320,6 +321,29 @@
     [(list (or 'and 'desc 'child) sels ...)
      (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
 
+(define (selector-constraints emit rules dom)
+  (emit '(echo "Generating selector constraints"))
+  (define elts
+    (for/list ([elt (in-tree (dom-tree dom))] #:when (is-element? elt)) elt))
+  (define eqs (equivalence-classes rules elts))
+  (for ([(prop type default) (in-css-properties)])
+    (match-define (cons class-hash value-hash) (dict-ref eqs prop))
+    (for ([(class value) (in-dict value-hash)])
+      (define const (sformat "value/~a/~a" prop (or class 'none)))
+      (if (eq? value '?)
+          (emit `(declare-const ,const ,type))
+          (emit `(define-const ,const ,type ,(dump-value type value))))
+      (define elts (for/list ([(elt class*) (in-dict class-hash)] #:when (equal? class class*)) elt))
+      (for ([elt elts])
+        (define assertname (sformat "~a^~a" const (element-name elt)))
+        (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
+                          :named ,assertname))))
+      (for ([elt1 elts] [elt2 elts])
+        (define assertname (sformat "~a^~a^~a" const (element-name elt1) (element-name elt2)))
+        (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt1)))
+                            (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt2))))
+                          :named ,assertname)))))))
+
 (define (rule-constraints emit name rule i #:browser? [browser? #f])
   (define from-style? (member ':style (cdr rule)))
   (emit `(declare-const ,name Rule))
@@ -532,7 +556,7 @@
     (list
      tree-constraints
      box-constraints style-constraints
-     (procedure-rename
+     #;(procedure-rename
       (cascade-constraints (append browser-style-names user-style-names) (append browser-style sheet))
       'cascade-constraints)
      box-link-constraints info-constraints box-element-constraints
@@ -557,7 +581,7 @@
                :named no-element-no-box))
 
     ; Stylesheet
-    ,@(cond
+    #;,@(cond
        [(set-member? (flags) 'rules)
         (reap [emit]
           (emit '(echo "Browser stylesheet"))
@@ -576,6 +600,9 @@
                 `(assert (= ,@styles))
                 `(assert true)))
           '())])
+    ,@(reap [emit]
+            (when (set-member? (flags) 'rules)
+              (for/list ([dom doms]) (selector-constraints emit (append browser-style sheet) dom))))
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
