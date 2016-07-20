@@ -1,9 +1,26 @@
 #lang racket
 (require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt"
-         "css-rules.rkt" "css-properties.rkt"
-         "browser-style.rkt" "spec/tree.rkt" "selectors.rkt" "spec/layout.rkt" "spec/cascade.rkt")
+         "selectors.rkt"
+         "css-properties.rkt" "browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced)
+
+(define (css-normalize-body body)
+  (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
+    (if (andmap (curry dict-has-key? body) parts)
+        (dict-set
+         (for/fold ([body body]) ([part parts])
+           (dict-remove body part))
+         prop
+         (for/list ([part parts]) (car (dict-ref body part))))
+        body)))
+
+(define (css-denormalize-body body)
+  (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
+    (if (dict-has-key? body prop)
+        (for/fold ([body (dict-remove body prop)]) ([part parts] [value (dict-ref body prop)])
+           (dict-set body part (list value)))
+        body)))
 
 (define (extract-rules stylesheet trees smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
@@ -190,24 +207,6 @@
                       ,(either element-lchild 'nil-elt))
         :named ,(sformat "tree/~a" (element-name elt)))))))
 
-(define ((cascade-constraints names rules) dom emit elt)
-  (when (and (set-member? (flags) 'rules) (is-element? elt) (not (equal? (element-type elt) 'MAGIC)))
-    (for-each emit (cascade-rules names rules elt))))
-
-(define (compute-score rule)
-  "Given a selector, return a list of counts (ids classes elts)"
-  (match rule
-    [`? #f]
-    [`(id ,id) `(1 0 0)]
-    [`(class ,cls) `(0 1 0)]
-    [`(tag ,tag) `(0 0 1)]
-    [`* '(0 0 0)]
-    [(list (? string?) sub) (compute-score sub)]
-    [(list 'or sels ...)
-     (map (curry apply max) (apply (curry map list) (map compute-score sels)))]
-    [(list (or 'and 'desc 'child) sels ...)
-     (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
-
 (define (selector-constraints emit rules dom)
   (emit '(echo "Generating selector constraints"))
   (define elts
@@ -230,62 +229,6 @@
         (define assertname (sformat "~a^~a" const (element-name elt)))
         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
                           :named ,assertname)))))))
-
-(define (rule-constraints emit name rule i #:browser? [browser? #f])
-  (define from-style? (member ':style (cdr rule)))
-  (emit `(declare-const ,name Rule))
-  (emit `(assert (! (is-a-rule ,name ,(if browser? 'UserAgent 'AuthorNormal)
-                               ,i ,(if from-style? 'true 'false))
-                    :named ,(sformat "rule/~a/a-rule" name))))
-  (cond
-    [(or from-style? (and (not (equal? (car rule) '?)) (dump-selector (car rule))))
-     (match-define (list ids classes tags) (compute-score (car rule)))
-     (emit `(assert (= (score ,name) (cascadeScore (origin ,name) (isFromStyle ,name) ,ids ,classes ,tags (index ,name)))))]
-    [else
-     (emit `(assert (= (score ,name) (compute-score ,name))))
-     (when (dump-selector (car rule))
-       (emit `(assert (! (= (selector ,name) ,(dump-selector (car rule)))
-                         :named ,(sformat "rule/~a/selector" name)))))])
-
-  (define allow-new-properties? (member '? (cdr rule)))
-  (define pairs
-    (filter (λ (x) (or (not (symbol? (cadr x))) (not (or (css-ex? (cadr x)) (css-em? (cadr x))))))
-            (filter list? (cdr rule))))
-
-  (for ([(prop type _d) (in-css-properties)])
-    (match (assoc prop pairs)
-      [(list _ '?)
-       (emit `(assert (! (= (,(sformat "rule.~a?" prop) ,name) true)
-                         :named ,(sformat "rule/~a/~a/?" name prop))))]
-      [(list _ val)
-       (emit `(assert (! (= (,(sformat "rule.~a?" prop) ,name) true)
-                         :named ,(sformat "rule/~a/~a/?" name prop))))
-       (emit `(assert (! (= (,(sformat "rule.~a" prop) ,name) ,(dump-value type val))
-                         :named ,(sformat "rule/~a/~a" name prop) :opt false)))]
-      [#f
-       (when (not allow-new-properties?)
-         (emit `(assert (! (= (,(sformat "rule.~a?" prop) ,name) false)
-                           :named ,(sformat "rule/~a/~a/?" name prop)))))])))
-
-(define (minimizality-constraints emit names sheet)
-  (for ([name names] [rule sheet] [i (in-naturals)] #:when name)
-    ;; Optimize for short CSS
-    (when (set-member? (flags) 'opt)
-      ;; Each enabled property costs one line
-      (for* ([type css-properties] [property (cdr type)])
-        (emit `(assert-soft (not (,(sformat "rule.~a?" property) ,name)) :weight 1)))
-      ;; Each block with an enabled property costs two line (open/selector and close brace)
-      (emit
-       `(assert-soft
-         (and ,@(for*/list ([type css-properties] [property (cdr type)])
-                  `(not (,(sformat "rule.~a?" property) ,name))))
-         :weight 2))
-      ;; Each shorthand rule can save space if all its properties exist
-      (for ([(short-name subproperties) (in-dict css-shorthand-properties)])
-        (emit `(assert-soft
-                (and ,@(for/list ([subprop subproperties])
-                         (list (sformat "rule.~a?" subprop) name)))
-                :weight 3))))))
 
 (define (box-element-constraints dom emit elt)
   (define bname (box-name elt))
@@ -421,12 +364,20 @@
       (Document ,@(for/list ([dom doms]) (dump-dom dom)))
       (ElementName ,@element-names nil-elt)
       (BoxName ,@box-names nil-box)))
-    ,@css-declarations
+    ;,@css-declarations
+    (declare-datatypes ()
+      (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
+       (Style (style ,@(for/list ([(prop type default) (in-css-properties)])
+                         `(,(sformat "style.~a" prop) ,type))))))
+    (define-const border/thin Border (border/px 1))
+    (define-const border/medium Border (border/px 3))
+    (define-const border/thick Border (border/px 5))
+    (define-const text-align/start Text-Align text-align/left)
+    (define-const text-align/end Text-Align text-align/right)
     ,@tree-types
     ,@(global dom-define-get/elt)
     ,@(global dom-define-get/box)
-
-    ,@css-functions
+    ;,@css-functions
     ,@link-definitions
     ,@layout-definitions
     (assert (and (= (element no-box) nil-elt) (= (flow-box no-elt) nil-box)))
