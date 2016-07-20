@@ -2,7 +2,7 @@
 (require "../common.rkt")
 (require "../smt.rkt")
 (require "../dom.rkt")
-(require "../css-properties.rkt")
+(require "css-properties.rkt")
 
 (provide layout-definitions)
 

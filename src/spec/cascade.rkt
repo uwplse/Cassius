@@ -2,7 +2,7 @@
 (require "../common.rkt")
 (require "../dom.rkt")
 (require "../css-rules.rkt")
-(require "../css-properties.rkt")
+(require "css-properties.rkt")
 
 (provide cascade-rules name-rules)
 

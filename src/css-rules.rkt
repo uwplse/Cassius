@@ -3,7 +3,7 @@
 (require "common.rkt")
 (require "smt.rkt")
 (require "dom.rkt")
-(require "css-properties.rkt")
+(require "spec/css-properties.rkt")
 
 (provide css-declarations css-functions
          css-properties css-property-pairs css-defaults

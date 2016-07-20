@@ -1,5 +1,5 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "css-properties.rkt")
+(require "common.rkt" "dom.rkt" "spec/css-properties.rkt")
 
 (provide dump-tag extract-tag dump-id extract-id dump-class
          dump-elt dump-box dump-dom extract-style

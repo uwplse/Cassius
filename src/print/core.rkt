@@ -1,9 +1,9 @@
 #lang racket
 (require srfi/13)
 (require "../common.rkt")
-(require "../browser-style.rkt")
 (require "../dom.rkt")
-(require "../css-properties.rkt")
+(require "../spec/browser-style.rkt")
+(require "../spec/css-properties.rkt")
 (require "../spec/cascade.rkt")
 (require "css.rkt")
 

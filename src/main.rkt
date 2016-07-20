@@ -1,7 +1,7 @@
 #lang racket
 (require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt"
          "selectors.rkt"
-         "css-properties.rkt" "browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
+         "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced)
 

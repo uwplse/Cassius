@@ -1,7 +1,7 @@
 #lang racket
 (require "../common.rkt")
 (require "../smt.rkt")
-(require "../css-properties.rkt")
+(require "css-properties.rkt")
 
 (provide tree-types link-definitions)
 

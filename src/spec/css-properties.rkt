@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt")
+(require "../common.rkt")
 (provide in-css-properties in-css-types *%* css-shorthand-properties)
 
 (define css-types-hash (make-hash))

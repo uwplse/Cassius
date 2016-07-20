@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "dom.rkt" "css-properties.rkt" data/heap)
+(require "common.rkt" "dom.rkt" "spec/css-properties.rkt" data/heap)
 (module+ test (require rackunit))
 (provide equivalence-classes
          make-enumeration-state step*! add-ineqs!)
