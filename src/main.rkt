@@ -504,18 +504,6 @@
     (emit `(assert (! (element-info ,(dump-elt elt) ,tagname ,idname)
                       :named ,(sformat "info/~a" (element-name elt)))))))
 
-(define (getter-definitions doms)
-  (reap [sow]
-        (dom-define-get/elt doms sow)
-        (dom-define-get/box doms sow)))
-
-(define (dfs-constraints doms . constraints)
-  (reap [sow]
-        (for ([cns constraints])
-          (sow `(echo ,(format "Generating ~a" (object-name cns))))
-          (for* ([dom doms] [elt (in-tree (dom-tree dom))])
-            (cns dom sow elt)))))
-
 (define (collect-tags-ids-classes doms)
   (reap [save-tag save-id save-class]
     (for* ([dom doms] [elt (in-tree (dom-tree dom))])
@@ -531,12 +519,11 @@
 
   (eprintf ";; ~a elements, ~a boxes\n" (length element-names) (length box-names))
 
-  (define constraints
-    (list
-     tree-constraints
-     box-constraints style-constraints
-     box-link-constraints info-constraints box-element-constraints
-     layout-constraints))
+  (define (global f) (reap [sow] (f doms sow)))
+  (define (per-element f)
+    (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
+  (define (per-box f)
+    (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
 
   `((set-option :produce-unsat-cores true)
     (echo "Basic definitions")
@@ -549,7 +536,9 @@
       (BoxName ,@box-names nil-box)))
     ,@css-declarations
     ,@tree-types
-    ,@(getter-definitions doms)
+    ,@(global dom-define-get/elt)
+    ,@(global dom-define-get/box)
+
     ,@css-functions
     ,@link-definitions
     ,@layout-definitions
@@ -558,7 +547,13 @@
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
-    ,@(apply dfs-constraints doms constraints)
+    ,@(per-element tree-constraints)
+    ,@(per-box box-constraints)
+    ,@(per-box style-constraints)
+    ,@(per-box box-link-constraints)
+    ,@(per-box info-constraints)
+    ,@(per-box box-element-constraints)
+    ,@(per-box layout-constraints)
     ; Selectors
     ,@(reap [emit]
             (when (set-member? (flags) 'rules)
