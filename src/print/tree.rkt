@@ -20,13 +20,18 @@
    (format ":style \"~a\""
            (string-join
             (for/list ([(property value) (in-dict value)])
-              (match (car value)
-                [`(bad ,val)
-                 (format "\33[1;31m~a: ~a\33[0m" property (value->string val))]
-                [`(bad)
-                 (format "\33[9;31m~a\33[0m" property)]
-                [val
-                 (format "~a: ~a" property (value->string val))]))
+              (if (equal? value '((bad)))
+                  (format "\33[9;31m~a\33[0m" property)
+                   (format "~a: ~a"
+                           property
+                           (string-join
+                            (for/list ([value values])
+                              (match value
+                                [`(bad ,val)
+                            (format "\33[1;31m~a\33[0m" (value->string val))]
+                                [val
+                                 (format "~a" (value->string val))]))
+                            " "))))
             "; "))]
   [(_ `(bad ,value)) (format "\33[1;31m~a ~a\33[0m" cmd value)]
   [(_ `(fixed ,value)) (format "\33[1;32m~a ~a\33[0m" cmd value)]

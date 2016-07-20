@@ -14,19 +14,24 @@
   (match-define (list (list properties valuess ...) ...) (filter list? (cdr rule)))
   (with-output-to-string
     (λ ()
-      (when (member ':style rule) (printf "[inline style] "))
+      (when (member ':style rule) (printf "[inline] "))
+      (when (member ':browser rule) (printf "[browser] "))
+      (when (member ':user rule) (printf "[user] "))
       (printf "~a {\n" (selector->string selector))
       (for ([property properties] [values valuess])
         (printf "  ~a:" property)
-        (for ([value values])
-          (match value
-            [`(,(or 'px '% 'em 'ex) 0)
-             (printf " 0")]
-            [`(bad ,val)
-             (printf " \33[1;31m~a\33[0m" (value->string val))]
-            [_
-             (printf " ~a" (value->string value))]))
-        (printf ";\n"))
+        (for ([(property values) (in-dict value)])
+          (if (equal? value '((bad)))
+              (printf "  \33[9;31m~a\33[0m;\n" property)
+              (printf "  ~a: ~a;\n" property 
+                      (string-join
+                       (for/list ([value values])
+                         (match value
+                           [`(bad ,val)
+                            (format "\33[1;31m~a\33[0m" (value->string val))]
+                           [val
+                            (format "~a" (value->string val))]))
+                       " ")))))
       (printf "}"))))
 
 (define/match (value->string value)
