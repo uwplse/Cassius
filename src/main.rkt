@@ -334,14 +334,14 @@
           (emit `(declare-const ,const ,type))
           (emit `(define-const ,const ,type ,(dump-value type value))))
       (define elts (for/list ([(elt class*) (in-dict class-hash)] #:when (equal? class class*)) elt))
-      (for ([elt elts])
-        (define assertname (sformat "~a^~a" const (element-name elt)))
-        (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
-                          :named ,assertname))))
       (for ([elt1 elts] [elt2 elts])
         (define assertname (sformat "~a^~a^~a" const (element-name elt1) (element-name elt2)))
         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt1)))
                             (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt2))))
+                          :named ,assertname))))
+      (for ([elt elts])
+        (define assertname (sformat "~a^~a" const (element-name elt)))
+        (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
                           :named ,assertname)))))))
 
 (define (rule-constraints emit name rule i #:browser? [browser? #f])
@@ -600,13 +600,14 @@
                 `(assert (= ,@styles))
                 `(assert true)))
           '())])
-    ,@(reap [emit]
-            (when (set-member? (flags) 'rules)
-              (for/list ([dom doms]) (selector-constraints emit (append browser-style sheet) dom))))
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
-   ,@(apply dfs-constraints doms constraints)))
+    ,@(apply dfs-constraints doms constraints)
+    ,@(reap [emit]
+            (when (set-member? (flags) 'rules)
+              (for/list ([dom doms]) (selector-constraints emit (append browser-style sheet) dom))))
+    ))
 
 (define (add-test constraints test)
   (match-define `(forall (,vars ...) ,body) test)
