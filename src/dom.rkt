@@ -2,7 +2,8 @@
 (require "common.rkt")
 
 (provide (struct-out dom) (struct-out rendering-context)
-         (struct-out element) parse-tree unparse-tree in-tree element-get element-get* element-set! element-remove!
+         (struct-out element) parse-tree unparse-tree in-tree in-elements in-boxes
+         element-get element-get* element-set! element-remove!
          element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
          box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
          elt-from-name reset-elt-names! is-element?)
@@ -135,6 +136,12 @@
 
 (define (in-tree elt)
   (apply sequence-append (in-value elt) (map in-tree (element-children elt))))
+
+(define (in-boxes dom)
+  (in-tree (dom-tree dom)))
+
+(define (in-elements dom)
+  (sequence-filter is-element? (in-boxes dom)))
 
 (define elt-names (make-hasheq))
 (define (reset-elt-names!) (void) #;(set! elt-names (make-hasheq)))

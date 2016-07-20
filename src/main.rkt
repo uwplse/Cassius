@@ -516,49 +516,25 @@
           (for* ([dom doms] [elt (in-tree (dom-tree dom))])
             (cns dom sow elt)))))
 
+(define (collect-tags-ids-classes doms)
+  (reap [save-tag save-id save-class]
+    (for* ([dom doms] [elt (in-tree (dom-tree dom))])
+      (when (element-get elt ':id) (save-id (dump-id (element-get elt ':id))))
+      (when (element-get elt ':tag) (save-tag (dump-tag (element-get elt ':tag))))
+      (when (element-get elt ':class)
+        (for-each (compose save-class dump-class) (element-get elt ':class))))))
+
 (define (all-constraints sheet doms)
-  (define browsers (remove-duplicates (map (compose rendering-context-browser dom-context) doms)))
-  (unless (= (length browsers) 1)
-    (error "Different browsers on different documents not yet supported"))
-  (define browser-style (get-sheet (car browsers)))
+  (define-values (tags ids classes) (collect-tags-ids-classes doms))
+  (define element-names (for*/list ([dom doms] [elt (in-elements dom)]) (element-name elt)))
+  (define box-names (for*/list ([dom doms] [elt (in-boxes dom)]) (box-name elt)))
 
-  (define browser-style-names (name-rules (car browsers) browser-style (map dom-tree doms)))
-  (define user-style-names (name-rules 'user sheet (map dom-tree doms)))
-
-  (define-values (tags ids classes)
-    (reap [save-tag save-id save-class]
-          (for* ([dom doms] [elt (in-tree (dom-tree dom))])
-            (when (element-get elt ':id) (save-id (dump-id (element-get elt ':id))))
-            (when (element-get elt ':tag) (save-tag (dump-tag (element-get elt ':tag))))
-            (when (element-get elt ':class)
-              (for-each (compose save-class dump-class) (element-get elt ':class))))
-
-          ; TODO: Not dealing with saving browser style names currently because the logic was buggy for appending those to this list
-          (for ([name user-style-names] [rule sheet])
-            (when name
-              ; add tags and ids into the list
-              (match (car rule)
-                [`(tag ,tagname) (save-tag (dump-tag tagname))]
-                [`(id ,idname) (save-id (dump-id idname))]
-                [`(class ,classname) (save-class (dump-class classname))]
-                [_ (void)])))))
-
-  (define element-names
-    (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) (element-name elt)))
-  (define box-names
-    (for*/list ([dom doms] [elt (in-tree (dom-tree dom))]) (box-name elt)))
-
-  (define rule-names (filter identity (append browser-style-names user-style-names)))
-
-  (eprintf ";; ~a rules, ~a elements, ~a boxes\n" (length rule-names) (length element-names) (length box-names))
+  (eprintf ";; ~a elements, ~a boxes\n" (length element-names) (length box-names))
 
   (define constraints
     (list
      tree-constraints
      box-constraints style-constraints
-     #;(procedure-rename
-      (cascade-constraints (append browser-style-names user-style-names) (append browser-style sheet))
-      'cascade-constraints)
      box-link-constraints info-constraints box-element-constraints
      layout-constraints))
 
@@ -577,36 +553,18 @@
     ,@css-functions
     ,@link-definitions
     ,@layout-definitions
-    (assert (! (and (= (element no-box) nil-elt) (= (flow-box no-elt) nil-box))
-               :named no-element-no-box))
+    (assert (and (= (element no-box) nil-elt) (= (flow-box no-elt) nil-box)))
 
-    ; Stylesheet
-    #;,@(cond
-       [(set-member? (flags) 'rules)
-        (reap [emit]
-          (emit '(echo "Browser stylesheet"))
-          (for ([name browser-style-names] [rule browser-style] [i (in-naturals)] #:when name)
-            (rule-constraints emit name rule i #:browser? #t))
-          (emit '(echo "User stylesheet"))
-          (for ([name user-style-names] [rule sheet] [i (in-naturals)] #:when name)
-            (rule-constraints emit name rule i #:browser? #f)))]
-       [else
-        (if (>= (length doms) 2)
-          (for/list ([elts (apply map list (map (compose sequence->list in-tree dom-tree) doms))])
-            (define styles
-              (for/list ([elt elts] #:when (is-element? elt))
-                `(specified-style ,(dump-elt elt))))
-            (if (> (length styles) 1)
-                `(assert (= ,@styles))
-                `(assert true)))
-          '())])
     ; DOMs
     (echo "Elements must be initialized")
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
     ,@(apply dfs-constraints doms constraints)
+    ; Selectors
     ,@(reap [emit]
             (when (set-member? (flags) 'rules)
-              (for/list ([dom doms]) (selector-constraints emit (append browser-style sheet) dom))))
+              (for/list ([dom doms])
+                (define browser-style (get-sheet (rendering-context-browser (dom-context dom))))
+                (selector-constraints emit (append browser-style sheet) dom))))
     ))
 
 (define (add-test constraints test)
