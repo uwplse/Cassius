@@ -1,50 +1,9 @@
 #lang racket
-(require "common.rkt")
-(require "dom.rkt")
-(require "smt.rkt")
-(require "z3.rkt")
-(require "css-rules.rkt")
-(require "css-properties.rkt")
-(require "browser-style.rkt")
-(require "spec/tree.rkt")
-(require "selectors.rkt")
-(require "spec/layout.rkt")
-(require "spec/cascade.rkt")
+(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt"
+         "css-rules.rkt" "css-properties.rkt"
+         "browser-style.rkt" "spec/tree.rkt" "selectors.rkt" "spec/layout.rkt" "spec/cascade.rkt")
 
 (provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced)
-
-(define (dump-tag tag)
-  (if tag
-      (string->symbol (string-replace (format "tag/~a" (slower tag)) ":" ".."))
-      'no-tag))
-
-(define (dump-id id)
-  (if id
-      (sformat "id/~a" id)
-      'no-id))
-
-(define (dump-class class)
-  (sformat "class/~a" class))
-
-(define (dump-elt elt)
-  (if elt
-      (sformat "~a-elt" (element-name elt))
-      'no-elt))
-
-(define (dump-box box)
-  (if box
-      (sformat "~a-box" (box-name box))
-      'no-box))
-
-(define (dump-dom dom)
-  (sformat "~a-doc" (dom-name dom)))
-
-(define (extract-tag tag)
-  (and (not (equal? tag 'no-tag))
-       (string->symbol (string-replace (~a (second (split-symbol tag))) ".." ":"))))
-
-(define (extract-id id)
-  (and (not (equal? id 'no-id)) (second (split-symbol id))))
 
 (define (extract-rules stylesheet trees smt-out)
   (for/list ([rule stylesheet] [i (in-naturals)])
@@ -61,14 +20,6 @@
                             #:when enabled?)
                    (list prop (extract-value value))))]))))
 
-(define (extract-style style-expr)
-  (match-define (list 'style rec ...) style-expr)
-  (for/list ([(prop type default) (in-css-properties)]
-             [(value score) (in-groups 2 rec)]
-             ;; TODO Hack on text-align
-             #:unless (or (and (equal? prop 'text-align) (equal? value 'text-align/left)) (value=? type value (dump-value prop default))))
-    `[,prop ,(extract-value value)]))
-
 (define (split-symbol s)
   (for/list ([part (string-split (~a s) "/")])
     (or (string->number part) (string->symbol part))))
@@ -84,58 +35,8 @@
 (define (css-em? x)
   (string-suffix? (~a (last (split-symbol x))) "em"))
 
-(define (extract-selector sel)
-  (match sel
-    ['sel/all '*]
-    [`(sel/id ,id) (list 'id (string->symbol (substring (~a id) 3)))]
-    [`(sel/tag ,tag) (list 'tag (string->symbol (substring (~a tag) 4)))]))
-
-(define (extract-value value)
-  (match value
-    [(list (? (css-type-ending? 'px)) x) (list 'px x)]
-    [(list (? (css-type-ending? '%)) x)
-     (if (ormap (curry = x) (*%*)) ; Percentages that aren't in the list are its first element
-         (list '% x)
-         (list '% (car (*%*))))]
-    [(? symbol?) (last (split-symbol value))]))
-
-(define (prop->prefix prop)
-  (slower (css-type prop)))
-
-(define (dump-value type value)
-  (define prefix (slower type))
-  (match value
-    [(? symbol?) (sformat "~a/~a" prefix value)]
-    [(list 'px n) (list (sformat "~a/px" prefix) n)]
-    [(list '% n) (list (sformat "~a/%" prefix) n)]
-    [0 (dump-value type '(px 0))]))
-
-(define (dump-selector selector)
-  (match selector
-    [`(id ,id) `(sel/id ,(dump-id id))]
-    [`(tag ,tag) `(sel/tag ,(dump-tag tag))]
-    [`* `sel/all]
-    [_ #f]))
-
 (define (split-line-name var)
-  (for/list ([part (string-split (~a var) "^")])
-    (match (string-split part "/")
-      [(list _) part]
-      [(list parts ...) (map (curryr with-input-from-string read) parts)])))
-
-(define (extract-tag-name constraint)
-  (define cstyle (first constraint))
-  (match cstyle
-    [`(compute-style ,property ,elt-name tag ,tagname ,id)
-     tagname]
-    [_ (void)]))
-
-(define (extract-id-name constraint)
-  (define cstyle (first constraint))
-  (match cstyle
-    [`(compute-style ,property ,elt-name tag ,tagname ,id)
-     id]
-    [_ (void)]))
+  (map split-symbol (string-split (~a var) "^")))
 
 ;; Does tagging of bad
 (define (extract-core query stylesheet trees vars)
@@ -161,20 +62,6 @@
                   [else
                    line]))))
        (hash-set! stylesheet* idx rule*)]
-      [`((info ,elt-name) ,compute-style ...)
-       (define tag-name (extract-tag-name compute-style))
-       (define id-name (extract-id-name compute-style))
-       (define elt (elt-from-name elt-name))
-       (define fname (element-get elt ':tag))
-       (define iname (element-get elt ':id))
-       (define (no-bad field)
-         (match field
-           [`(bad ,tag) #f]
-           [_ #t]))
-       (when (no-bad fname)
-         (element-set! elt ':tag `(bad ,fname)))
-       (when (and (no-bad iname) iname)
-         (element-set! elt ':id `(bad ,iname)))]
       [`((style ,elt-name ,prop) ,_ ...)
        (define elt (elt-from-name elt-name))
        (define old-style (css-denormalize-body (element-get elt ':style)))
