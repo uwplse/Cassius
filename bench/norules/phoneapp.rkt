@@ -113,6 +113,44 @@ div { outline: 1px solid black; }")
     ((BLOCK :tag icon :w 100 :h 100 :x 550 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))))))
 
+(define-stylesheet test
+  )
+
+(define-document mockup*
+ ([VIEW :w 750 :h 1334]
+  ((BLOCK :tag html :w 750 :x 0 :y 0)
+   ((BLOCK :tag header :x 0 :y 0 :w 750 :h 109))
+   ((BLOCK :tag body :w 750 :x 0 :y 109.0)
+    ((BLOCK :tag div)
+     ((BLOCK :tag form :w 500 :h 75 :x 125 :y 159.0)
+      ((BLOCK :tag div)
+       ((BLOCK :tag btn :w 235 :h 55 :x 135 :y 169.0))
+       ((BLOCK :tag btn :w 235 :h 55 :x 380 :y 169.0))))
+     ((BLOCK :tag h1 :w 650 :h 75 :x 50 :y 259.0))
+     ((BLOCK :tag g)
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 359.0)
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 384.0)))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 359.0)
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 384.0)))
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 609.0)
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 634.0)))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 609.0)
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 634.0)))
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 859.0)
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 884.0)))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 859.0)
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 884.0))))))
+   ((BLOCK :tag footer)
+    ((BLOCK :tag icon :w 100 :h 100 :x 100 :y 1209.0))
+    ((BLOCK :tag icon :w 100 :h 100 :x 250 :y 1209.0))
+    ((BLOCK :tag icon :w 100 :h 100 :x 400 :y 1209.0))
+    ((BLOCK :tag icon :w 100 :h 100 :x 550 :y 1209.0))))))
+
+(define-problem test
+  #:header header
+  #:sheet test
+  #:documents mockup*)
+
 (define-document bigger
  ([VIEW :w 1100 :h 1920]
   ((BLOCK :tag html :w 1100 :x 0 :y 0.0 :style ())
