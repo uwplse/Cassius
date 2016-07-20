@@ -4,7 +4,6 @@
 (require "../input.rkt")
 (require "../frontend.rkt")
 (require "../modify-dom.rkt")
-(require "../print/core.rkt")
 (require "../print/tree.rkt")
 
 (provide run-file)

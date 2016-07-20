@@ -9,7 +9,6 @@
 (require "input.rkt")
 (require "modify-dom.rkt")
 (require "model-check.rkt")
-(require "print/core.rkt")
 (require "print/css.rkt")
 (require "print/smt.rkt")
 (require math/base)
@@ -79,7 +78,7 @@
      #;(printf "~a~a" (header->string header) (stylesheet->string model))
      (eprintf "Synthesized a stylesheet. Success!\n")]
     [(#f (failure stylesheet trees))
-     (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))]
+     #;(eprintf "Unsatisfiable, core of ~a constraints\n" (length core))]
     [(`(forall (,vars ...) ,query) (success stylesheet tree))
      #;(print-counterexample model documents sheet)
      #;(for ([var vars])
