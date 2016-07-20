@@ -396,7 +396,7 @@
     ,@(reap [emit]
             (when (set-member? (flags) 'rules)
               (for/list ([dom doms])
-                (define browser-style (get-sheet (rendering-context-browser (dom-context dom))))
+                (define browser-style (get-sheet (dom-context dom ':browser)))
                 (selector-constraints emit (append browser-style sheet) dom))))
     ))
 

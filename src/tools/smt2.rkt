@@ -8,14 +8,14 @@
 (require "../print/smt.rkt")
 
 (define (run-file fname pname #:output [outname #f] #:truncate truncate)
-  (match-define
-   (problem desc url header sheet documents features test)
-   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define document (dict-ref problem ':documents))
+  (define sheets (dict-ref problem ':sheets))
 
   (define documents*
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
 
-  (displayln (smt->string (constraints (list sheet) documents*))))
+  (displayln (smt->string (constraints sheets documents*))))
 
 (module+ main
   (define out-file #f)

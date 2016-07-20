@@ -8,9 +8,9 @@
 (require "../print/tree.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:truncate truncate)
-  (match-define
-   (problem desc url header sheet documents features test)
-   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define document (dict-ref problem ':documents))
+  (define sheets (dict-ref problem ':sheets))
 
   (define documents* (if truncate (map (curry dom-limit-depth truncate) documents) documents))
 
@@ -18,12 +18,12 @@
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents* test #:debug debug)))
+      (solve sheets documents* test #:debug debug)))
 
   (match res
     [(success stylesheet trees)
      (eprintf "Counterexample found!\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex))))]
     [(failure stylesheet trees)
      (eprintf "Verified.\n")]
     [(list 'error e)

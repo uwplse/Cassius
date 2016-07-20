@@ -10,9 +10,9 @@
 (require "../print/css.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate)
-  (match-define
-   (problem desc url header sheet documents features test)
-   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define document (dict-ref problem ':documents))
+  (define sheets (dict-ref problem ':sheets))
 
   (define documents*
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
@@ -21,7 +21,7 @@
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents* #:debug debug)))
+      (solve sheets documents* #:debug debug)))
 
   (match res
     [(success stylesheet trees)

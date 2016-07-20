@@ -11,9 +11,9 @@
 (require "../main.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate #:repair-all repair-all #:max-repairs max-repairs)
-  (match-define
-    (problem desc url header sheet documents features test)
-    (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define document (dict-ref problem ':documents))
+  (define sheets (dict-ref problem ':sheets))
   
   (define documents*
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
@@ -41,7 +41,7 @@
        (eprintf "\nTerminated.\n") #t]))
   
   ; First, run solve without any repair holes
-  (define result (solve-problem (list sheet) documents* debug))
+  (define result (solve-problem sheets documents* debug))
   (define last-repaired-trees '()) ; Keeps track of the last tree we have tried to repair. If we have already tried this one, go to the last phase.
   (define continue #t)
   
@@ -76,7 +76,7 @@
           (set! continue (not (equal? last-repaired-trees new-trees)))
           (when continue
             (printf "\nAttempting to repair the document... \n\n")
-            (set! result (solve-problem (list sheet) doms debug)))
+            (set! result (solve-problem sheets doms debug)))
             
           (set! last-repaired-trees new-trees)]
          [(equal? repair-all 't)
@@ -85,7 +85,7 @@
               (define new-tree (replace-ids-with-holes t))
               (match-define (dom name ctx tree) d)
               (dom name ctx new-tree)))
-          (set! result (solve-problem (list sheet) doms debug))])]))
+          (set! result (solve-problem sheets doms debug))])]))
   
   ; Attempt to repair all holes at once
   (for ([i 1])
@@ -103,7 +103,7 @@
            (match-define (dom name ctx tree) d)
            (dom name ctx new-tree)))
        
-       (set! result (solve-problem (list sheet) doms debug))]
+       (set! result (solve-problem sheets doms debug))]
       [(list 'error e)
        ((error-display-handler) (exn-message e) e) #t]
       ['break

@@ -1,15 +1,14 @@
 #lang racket
 (require "common.rkt")
 
-(provide (struct-out dom) (struct-out rendering-context)
+(provide (struct-out dom)
          (struct-out element) parse-tree unparse-tree in-tree in-elements in-boxes
          element-get element-get* element-set! element-remove!
          element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
          box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
          elt-from-name reset-elt-names! is-element?)
 
-(struct dom (name context tree))
-(struct rendering-context (browser))
+(struct dom (name properties tree))
 (struct element (type name* attrs parent* children)
         #:mutable
         #:methods gen:custom-write
@@ -17,6 +16,9 @@
            (fprintf port "[~a ~a]"
                     (element-type elt)
                     (string-join (map ~a (element-attrs elt)) " ")))])
+
+(define (dom-context dom key #:default [default #f])
+  (dict-ref (dom-properties dom) key default))
 
 (define (parse-tree tree)
   (let loop ([tree tree] [parent #f])

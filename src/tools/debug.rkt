@@ -10,25 +10,9 @@
 (require "../print/css.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate)
-  (match-define
-   (problem desc url header sheet documents features test)
-   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
-
-   ;; problem = procedure -- ?
-   ;; desc = #t/#f value
-   ;; url = #t/#f value
-   ;; header = straight HTML code
-   ;; documents = (#<dom> #<dom>) -- looks like list of #<dom> args
-   ;; features = () ?
-   ;; test = #t/#f value
-   ;; sheet = parsed css code in the format as follows:
-   ;;
-   ;; (((tag html) (margin-top (px 0)) (margin-right (px 0)) (margin-bottom (px 0))
-   ;; (margin-left (px 0)) (padding-top (px 0)) (padding-right (px 0))
-   ;; (padding-bottom (px 0)) (padding-left (px 0))) ((tag body) (margin-top (px 0))
-   ;; (margin-right auto) (margin-bottom (px 0)) (margin-left auto) (padding-top (px 0)) (padding-right (px 10)) (padding-bottom (px 90)) (padding-left (px 10)) (width (px 630))) ((tag pre) (margin-top (px 21.6)) (margin-right (px 0)) (margin-bottom (px 30.6)) (margin-left (px 0)) (padding-top (px 9)) (padding-right (px 9)) (padding-bottom (px 9)) (padding-left (px 9))) ((tag h1) (margin-top (px 36)) (margin-bottom (px 0))) ((tag p) (text-align inherit) (margin-top (px 18)) (margin-right (px 0)) (margin-bottom (px 18)) (margin-left (px 0))) ((id postamble) (text-align center) (margin-top (px 18))))
-
-
+  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define document (dict-ref problem ':documents))
+  (define sheets (dict-ref problem ':sheets))
 
   (define documents*
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
@@ -37,7 +21,7 @@
     (with-handlers
         ([exn:break? (λ (e) 'break)]
          [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents* #:debug debug)))
+      (solve sheets documents* #:debug debug)))
 
   (match res
     [(success stylesheet trees)
