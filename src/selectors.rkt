@@ -410,4 +410,38 @@
                   (sow new-elts)))))
       (loop new-changes)))
 
-  (hash-values descs))
+  descs)
+
+(define (ineq-selectors ineq selhash)
+  (match-define (list prop elt1 val) ineq)
+  (define (elts-good? elts)
+    (if (element? val)
+        (xor (set-member? elts elt1) (set-member? elts val))
+        (set-member? elts elt1)))
+  (for ([(elts sel) (in-hash selhash)] #:when (elts-good? elts))
+    sel))
+
+(define (ineqs-rules ineqs selhash)
+  (hitting-set (map (curry append-map (curryr ineq-selectors selhash)) ineqs)))
+
+(define (ineqs-rules->z3 ineq rules elts)
+  (match-define (list prop elt1 val) ineq)
+  (define scores (rule-scores rules))
+
+  (cond
+   [(not (element? val))
+    `(or
+      ,@(for/list ([rule rules] [elts eltss] [i (in-naturals)]
+                   #:when (selector-matches? rule elt1))
+          `(property ,prop ,i)))]
+   [(element? val)
+    (define sorted-rules
+      (reverse (sort (map cons (range (length rules)) scores) score<? #:key cdr)))
+    (for/fold ([expr 'false])
+        ([(i score) (in-dict sorted-rules)]
+         #:when (or (selector-matches? (list-ref rules i) elt1)
+                    (selector-matches? (list-ref rules i) val)))
+      (define sel (list-ref rules i))
+      (if (and (selector-matches? sel elt1) (selector-matches? sel val))
+          `(and (not (property ,prop ,i)) ,expr)
+          `(or (property ,prop ,i) ,expr)))]))
