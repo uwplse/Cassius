@@ -364,3 +364,50 @@
              (heap-count (enumeration-state-pq es)))
     (eprintf "Producing ~a\n" x))
   (or x (step*! es (+ n 1))))
+
+(define (set-intersect-sorted l1 l2)
+  (define s1 (apply set l1))
+  (filter (curry set-member? s1) l2))
+
+(define (all-selectors elts)
+  (define atoms
+    (for/hash ([a (atomic-values elts)])
+      (values (filter (curry selector-matches? a) elts) a)))
+
+  (define ands (make-hash (list (cons elts '*))))
+
+  (let loop ([changes (hash-keys ands)])
+    (unless (null? changes)
+      (define new-changes
+        (reap [sow]
+              (for* ([elts changes] [(elts* a) atoms])
+                ;; The sort is because set-intersect doesn't keep sorted lists sorted
+                (define new-elts (set-intersect-sorted elts elts*))
+                (unless (or (dict-has-key? ands new-elts) (null? new-elts))
+                  (define old-sel (dict-ref ands elts))
+                  (define new-sel
+                    (match old-sel
+                      ['* a]
+                      [(list 'and rest ...) `(and ,@rest ,a)]
+                      [_ `(and ,old-sel ,a)]))
+                  (dict-set! ands new-elts new-sel)
+                  (sow new-elts)))))
+      (loop new-changes)))
+
+  (define descs (hash-copy ands))
+
+  (let loop ([changes (hash-keys descs)])
+    (unless (null? changes)
+      (define new-changes
+        (reap [sow]
+              (for* ([elts changes] [(elts* tail) ands] [head '(child desc)])
+                (define old-sel (dict-ref descs elts))
+                (define new-sel (list head old-sel tail))
+                ;; The sort is because set-intersect doesn't keep sorted lists sorted
+                (define new-elts (filter (curry selector-matches? new-sel) elts))
+                (unless (or (dict-has-key? descs new-elts) (null? new-elts))
+                  (dict-set! descs new-elts new-sel)
+                  (sow new-elts)))))
+      (loop new-changes)))
+
+  (hash-values descs))
