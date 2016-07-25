@@ -12,7 +12,7 @@
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate #:repair-all repair-all #:max-repairs max-repairs)
   (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
-  (define document (dict-ref problem ':documents))
+  (define documents (dict-ref problem ':documents))
   (define sheets (dict-ref problem ':sheets))
   
   (define documents*

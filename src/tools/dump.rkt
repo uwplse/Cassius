@@ -6,7 +6,7 @@
 
 (define (dump-problem fname pname #:truncate [truncate #f] #:screenshot [screenshot #f])
   (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
-  (define document (dict-ref problem ':documents))
+  (define documents (dict-ref problem ':documents))
 
   (define tree
     (dom-tree
