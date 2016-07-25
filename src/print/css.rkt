@@ -3,8 +3,7 @@
 (provide stylesheet->string header->string value->string selector->string rule->string)
 
 (define (stylesheet->string sheet)
-  (format "/* Generated code below */\n\n~a\n"
-          (string-join (map rule->string sheet) "\n\n")))
+  (string-join (map rule->string sheet) "\n\n"))
 
 (define (header->string header)
   (format "/* Hand-written header */\n\n~a\n\n" header))
@@ -19,19 +18,17 @@
       (when (member ':user rule) (printf "[user] "))
       (printf "~a {\n" (selector->string selector))
       (for ([property properties] [values valuess])
-        (printf "  ~a:" property)
-        (for ([(property values) (in-dict value)])
-          (if (equal? value '((bad)))
-              (printf "  \33[9;31m~a\33[0m;\n" property)
-              (printf "  ~a: ~a;\n" property 
-                      (string-join
-                       (for/list ([value values])
-                         (match value
-                           [`(bad ,val)
-                            (format "\33[1;31m~a\33[0m" (value->string val))]
-                           [val
-                            (format "~a" (value->string val))]))
-                       " ")))))
+        (if (equal? values '((bad)))
+            (printf "  \33[9;31m~a\33[0m;\n" property)
+            (printf "  ~a: ~a;\n" property 
+                    (string-join
+                     (for/list ([value values])
+                       (match value
+                         [`(bad ,val)
+                          (format "\33[1;31m~a\33[0m" (value->string val))]
+                         [val
+                          (format "~a" (value->string val))]))
+                     " "))))
       (printf "}"))))
 
 (define/match (value->string value)

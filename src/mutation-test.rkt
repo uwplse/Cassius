@@ -52,7 +52,7 @@
   (define probs (call-with-input-file file parse-file))
 
   (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))]
-             #:when (subset? (problem-features prob) supported-features)
+             #:when (subset? (dict-ref prob ':features) supported-features)
              [n (in-range repeat)])
     (match-define (problem desc url header sheet documents features test) prob)
     (eprintf "~a\t~a\t" file pname)

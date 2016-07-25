@@ -4,7 +4,7 @@
 (require "common.rkt")
 (require "z3o.rkt")
 
-(provide z3-solve z3-prepare z3-namelines (struct-out model) (struct-out unsat-core) z3-clean)
+(provide z3-solve z3-prepare z3-namelines (struct-out model) (struct-out unsat-core) z3-clean z3-check-sat)
 
 (struct model (bindings) #:prefab)
 (struct unsat-core (bad-lines) #:prefab)
@@ -221,20 +221,21 @@
 
 (define (z3-prepare exprs)
   (define start (current-inexact-milliseconds))
-  (append
-   (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
-     #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
-     (action exprs))
-   '((check-sat-using
-      (then
-       (! propagate-values
-          :push_ite_arith true
-          :algebraic_number_evaluator false
-          :bit2bool false
-          :local_ctx true
-          :hoist_mul true
-          :flat false)
-       nnf occf smt)))))
+  (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
+    #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
+    (action exprs)))
+
+(define z3-check-sat
+  '(check-sat-using
+    (then
+     (! propagate-values
+        :push_ite_arith true
+        :algebraic_number_evaluator false
+        :bit2bool false
+        :local_ctx true
+        :hoist_mul true
+        :flat false)
+     nnf occf smt)))
 
 (define (z3-clean exprs)
   (append (z3-clean-no-opt (z3-strip-inner-names exprs)) '((check-sat))))

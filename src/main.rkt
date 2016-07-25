@@ -3,7 +3,7 @@
          "selectors.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 
-(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced)
+(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced selector-constraints)
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -342,7 +342,7 @@
       (when (element-get elt ':class)
         (for-each (compose save-class dump-class) (element-get elt ':class))))))
 
-(define (all-constraints sheet doms)
+(define (all-constraints doms)
   (define-values (tags ids classes) (collect-tags-ids-classes doms))
   (define element-names (for*/list ([dom doms] [elt (in-elements dom)]) (element-name elt)))
   (define box-names (for*/list ([dom doms] [elt (in-boxes dom)]) (box-name elt)))
@@ -392,12 +392,6 @@
     ,@(per-box info-constraints)
     ,@(per-box box-element-constraints)
     ,@(per-box layout-constraints)
-    ; Selectors
-    ,@(reap [emit]
-            (when (set-member? (flags) 'rules)
-              (for/list ([dom doms])
-                (define browser-style (get-sheet (dom-context dom ':browser)))
-                (selector-constraints emit (append browser-style sheet) dom))))
     ))
 
 (define (add-test constraints test)
@@ -413,12 +407,21 @@
 (struct success (stylesheet elements))
 (struct failure (stylesheet trees))
 
-(define (solve-constraints stylesheet trees constraints #:debug [debug? #f])
-  (match (z3-solve constraints #:debug debug?)
+(define (solve-constraints sheet doms constraints #:debug [debug? #f])
+  (define trees (map dom-tree doms))
+  (define full-constraints
+    (append constraints
+            (reap [emit]
+                  (for/list ([dom doms])
+                    (define browser-style (get-sheet (dom-context dom ':browser)))
+                    (selector-constraints emit (append browser-style sheet) dom)))
+            (list z3-check-sat)))
+
+  (match (z3-solve full-constraints #:debug debug?)
     [(model m)
      (for-each (curryr extract-tree! m) trees)
      (extract-counterexample! m)
-     (success (extract-rules stylesheet trees m) (map unparse-tree trees))]
+     (success (extract-rules sheet trees m) (map unparse-tree trees))]
     [(unsat-core c)
-     (define-values (stylesheet* trees*) (extract-core constraints stylesheet trees c))
+     (define-values (stylesheet* trees*) (extract-core constraints sheet trees c))
      (failure stylesheet* (map unparse-tree trees*))]))

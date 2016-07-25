@@ -1,7 +1,3 @@
-(define-header header "
-* { padding: 0; margin: 0; }
-div { outline: 1px solid black; }")
-
 (define-stylesheet main
   ((tag body)
    (padding-top ?)
@@ -61,62 +57,7 @@ div { outline: 1px solid black; }")
    (margin-bottom ?)
    (margin-left ?)))
 
-(define-document mockup
- ([VIEW :w 750 :h 1334]
-  ((BLOCK :tag html :w 750 :x 0 :y 0 :style ())
-   ((BLOCK :tag header :x 0 :y 0 :w 750 :h 109 :style ([height ?])))
-   ((BLOCK :tag body :w 750 :x 0 :y 109.0
-           :style ([padding ? ? ? ?]))
-    ((BLOCK :tag div :style ())
-     ((BLOCK :tag form :w 500 :h 75 :x 125 :y 159.0
-             :style ([margin ? ? ? ?] [padding ? ? ? ?] [width ?] [height ?]))
-      ((BLOCK :tag div :style ())
-       ((BLOCK :tag btn :w 235 :h 55 :x 135 :y 169.0
-               :style ([height ?] [width ?] [float ?] [margin-right ?] [margin-left ?])))
-       ((BLOCK :tag btn :w 235 :h 55 :x 380 :y 169.0
-               :style ([height ?] [width ?] [float ?] [margin-right ?] [margin-left ?])))))
-     ((BLOCK :tag h1 :w 650 :h 75 :x 50 :y 259.0
-             :style ([height ?] [margin ? ? ? ?])))
-     ((BLOCK :tag g :style ())
-      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 359.0
-              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 384.0
-               :style ([height ?] [width ?]))))
-      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 359.0
-              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 384.0
-               :style ([height ?] [width ?]))))
-      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 609.0
-              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 634.0
-               :style ([height ?] [width ?]))))
-      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 609.0
-              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 634.0
-               :style ([height ?] [width ?]))))
-      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 859.0
-              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 884.0
-               :style ([height ?] [width ?]))))
-      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 859.0
-              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
-       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 884.0
-               :style ([height ?] [width ?])))))))
-   ((BLOCK :tag footer
-           :style ([width ?] [margin-left ?] [position ?] [bottom ?] [left ?] [height ?]))
-    ((BLOCK :tag icon :w 100 :h 100 :x 100 :y 1209.0
-            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
-    ((BLOCK :tag icon :w 100 :h 100 :x 250 :y 1209.0
-            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
-    ((BLOCK :tag icon :w 100 :h 100 :x 400 :y 1209.0
-            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
-    ((BLOCK :tag icon :w 100 :h 100 :x 550 :y 1209.0
-            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))))))
-
-(define-stylesheet test
-  )
-
-(define-document mockup*
+(define-document (mockup)
  ([VIEW :w 750 :h 1334]
   ((BLOCK :tag html :w 750 :x 0 :y 0)
    ((BLOCK :tag header :x 0 :y 0 :w 750 :h 109))
@@ -146,12 +87,7 @@ div { outline: 1px solid black; }")
     ((BLOCK :tag icon :w 100 :h 100 :x 400 :y 1209.0))
     ((BLOCK :tag icon :w 100 :h 100 :x 550 :y 1209.0))))))
 
-(define-problem test
-  #:header header
-  #:sheet test
-  #:documents mockup*)
-
-(define-document bigger
+(define-document (bigger)
  ([VIEW :w 1100 :h 1920]
   ((BLOCK :tag html :w 1100 :x 0 :y 0.0 :style ())
    ((BLOCK :tag header :x 0 :y 0 :w 1100 :h 109 :style ([height ?])))
@@ -203,16 +139,66 @@ div { outline: 1px solid black; }")
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))))))
 
 (define-problem one
-  #:header header
-  #:sheet main
-  #:documents mockup)
+  :sheets main
+  :documents mockup)
 
 (define-problem two
-  #:header header
-  #:sheet main
-  #:documents mockup bigger)
+  :sheets main
+  :documents mockup bigger)
 
-(define-document mockup-correct
+(define-document (mockup-restricted)
+ ([VIEW :w 750 :h 1334]
+  ((BLOCK :tag html :w 750 :x 0 :y 0 :style ())
+   ((BLOCK :tag header :x 0 :y 0 :w 750 :h 109 :style ([height ?])))
+   ((BLOCK :tag body :w 750 :x 0 :y 109.0
+           :style ([padding ? ? ? ?]))
+    ((BLOCK :tag div :style ())
+     ((BLOCK :tag form :w 500 :h 75 :x 125 :y 159.0
+             :style ([margin ? ? ? ?] [padding ? ? ? ?] [width ?] [height ?]))
+      ((BLOCK :tag div :style ())
+       ((BLOCK :tag btn :w 235 :h 55 :x 135 :y 169.0
+               :style ([height ?] [width ?] [float ?] [margin-right ?] [margin-left ?])))
+       ((BLOCK :tag btn :w 235 :h 55 :x 380 :y 169.0
+               :style ([height ?] [width ?] [float ?] [margin-right ?] [margin-left ?])))))
+     ((BLOCK :tag h1 :w 650 :h 75 :x 50 :y 259.0
+             :style ([height ?] [margin ? ? ? ?])))
+     ((BLOCK :tag g :style ())
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 359.0
+              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 384.0
+               :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 359.0
+              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 384.0
+               :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 609.0
+              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 634.0
+               :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 609.0
+              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 634.0
+               :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 50 :y 859.0
+              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag img :w 250 :h 150 :x 75 :y 884.0
+               :style ([height ?] [width ?]))))
+      ((BLOCK :tag rect :w 300 :h 200 :x 400 :y 859.0
+              :style ([float ?] [padding ? ? ? ?] [margin ? ? ? ?]))
+       ((BLOCK :tag img :w 250 :h 150 :x 425 :y 884.0
+               :style ([height ?] [width ?])))))))
+   ((BLOCK :tag footer
+           :style ([width ?] [margin-left ?] [position ?] [bottom ?] [left ?] [height ?]))
+    ((BLOCK :tag icon :w 100 :h 100 :x 100 :y 1209.0
+            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
+    ((BLOCK :tag icon :w 100 :h 100 :x 250 :y 1209.0
+            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
+    ((BLOCK :tag icon :w 100 :h 100 :x 400 :y 1209.0
+            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))
+    ((BLOCK :tag icon :w 100 :h 100 :x 550 :y 1209.0
+            :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))))))
+
+(define-document (mockup-correct)
  ([VIEW :w 750 :h 1334]
   ((BLOCK :tag html :w 750 :x 0 :y 0
           :style ())
@@ -269,11 +255,9 @@ div { outline: 1px solid black; }")
             :style ([float left] [height (px 100)] [width (px 100)] [margin (px 25) (px 25) (px 25) (px 25)])))))))
 
 (define-problem one-done
-  #:header header
-  #:sheet main
-  #:documents mockup-correct)
+  :sheets main
+  :documents mockup-correct)
 
 (define-problem two-done
-  #:header header
-  #:sheet main
-  #:documents mockup-correct bigger)
+  :sheets main
+  :documents mockup-correct bigger)
