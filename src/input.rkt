@@ -8,7 +8,6 @@
 
 (define (parse-file port)
   (define problems (make-hash))
-  (define headers (make-hash))
   (define sheets (make-hash))
   (define docs (make-hash))
 
@@ -18,8 +17,11 @@
        (hash-set! sheets name rules)]
       [`(define-document (,name ,rest ...) ,tree)
        (define properties (attributes->dict rest))
-       (hash-set! docs name (dom name  tree))]
+       (hash-set! docs name (dom name properties tree))]
       [`(define-problem ,name ,rest ...)
-       (hash-set! problems name (attributes->dict rest))]))
+       (define properties (attributes->dict rest))
+       (set! properties (dict-update properties ':sheets (curry map (curry dict-ref sheets))))
+       (set! properties (dict-update properties ':documents (curry map (curry dict-ref docs))))
+       (hash-set! problems name properties)]))
 
   problems)

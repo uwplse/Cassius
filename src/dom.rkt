@@ -3,7 +3,7 @@
 
 (provide (struct-out dom)
          (struct-out element) parse-tree unparse-tree in-tree in-elements in-boxes
-         element-get element-get* element-set! element-remove!
+         element-get element-get* element-set! element-remove! dom-context
          element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
          box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
          elt-from-name reset-elt-names! is-element?)
