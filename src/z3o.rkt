@@ -23,9 +23,12 @@
 
     (for ([cmd cmds])
       (match cmd
-        [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type ...)
+        [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type _ ...)
          (hash-set! store name #f)]
         [_ 'ok]))
+
+    (for ([name '(border/medium border/thin border/thick text-align/start text-align/end)])
+      (hash-set! store name #t))
 
     (for ([cmd cmds])
       (match cmd
@@ -40,7 +43,7 @@
     (apply append
            (for/list ([cmd cmds])
              (match cmd
-               [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type ...)
+               [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type _ ...)
                 (if (hash-ref store name #t)
                     (list cmd)
                     empty)]

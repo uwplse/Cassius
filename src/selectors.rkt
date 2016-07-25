@@ -133,6 +133,9 @@
      [((car <s) (car l2) (car l1)) false]
      [else (loop (cdr <s) (cdr l1) (cdr l2))])))
 
+(define ((output<? f <?) a b)
+  (<? (f a) (f b)))
+
 (define score<? (lex<? io<? boolean<? < < < <))
 
 (struct rulematch (rule elts idx)
@@ -151,10 +154,12 @@
 (define (rule-matchlist rules elts)
   (define scores (rule-scores rules))
   (define matches (for/list ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
-  (map cdr (sort
-            (for/list ([s scores] [r rules] [m matches] [i (in-naturals)])
-              (cons s (rulematch r m i)))
-            score<? #:key car)))
+  (map cdr
+       (reverse ; Reverse so that HIGHEST score comes first
+        (sort
+         (for/list ([s scores] [r rules] [m matches] [i (in-naturals)])
+           (cons s (rulematch r m i)))
+         score<? #:key car))))
 
 (define (matchlist-find matchlist elt prop)
   (for/first ([rm matchlist] [i (in-naturals)]
@@ -182,14 +187,14 @@
   (define ml (rule-matchlist rules elts))
   (matchlist-equivalence-classes ml elts))
 
-;; An inequality is either (prop elt1 elt2) or (prop elt1 '= val1)
+;; An inequality is either (prop elt1 elt2) or (prop elt1 val1)
 
 (define (equivalence-classes-avoid? classes ineq)
   (match ineq
-    [(list prop elt1 elt2)
+    [(list prop (? element? elt1) (? element? elt2))
      (define hash (car (dict-ref classes prop)))
      (not (equal? (dict-ref hash elt1) (dict-ref hash elt2)))]
-    [(list prop elt1 '= val)
+    [(list prop (? element? elt1) val)
      (match-define (cons class-hash value-hash) (dict-ref classes prop))
      (not (equal? (dict-ref value-hash (dict-ref class-hash elt1)) val))]))
 
@@ -209,7 +214,7 @@
 (define (step-ineq rules elts ineq)
   (define ml (rule-matchlist rules elts))
   (define classes (matchlist-equivalence-classes ml elts))
-  (match-define (or (list prop elt1 _) (list prop elt1 '= _)) ineq)
+  (match-define (list prop (? element? elt1) val) ineq)
   (define hash (car (dict-ref classes prop)))
   ;; We assume the ineq is NOT satisfied
   (define sidx (dict-ref hash elt1)) ;; sidx: index in sort order
@@ -217,9 +222,12 @@
   ;; or enable that property earlier on
   (define change-property
     (for/list ([i (in-range (if sidx sidx (length ml)))])
-      (define idx (rulematch-idx (list-ref ml i)))
+      (define rm (list-ref ml i))
+      (define idx (rulematch-idx rm))
       (define rule (list-ref rules idx))
       (and (not (dict-has-key? (filter list? (cdr rule)) prop))
+           (or (set-member? (rulematch-elts rm) elt1)
+               (and (element? val) (set-member? (rulematch-elts rm) val)))
            (list-set rules idx (rule-append-property rule prop)))))
   
   (define change-selector
@@ -275,15 +283,6 @@
     [_
      (list* `(child * ,sel) `(desc * ,sel) (step-and sel atoms))]))
 
-;; As a simple check, we throw out rules where a selector doesn't match anything
-;; TODO: We'll need to reconsider this at some point, I guess
-;; This must guarantee that stepping doesn't make invalid rules valid
-
-(define (rules-valid? rules elts)
-  (define ml (rule-matchlist rules elts))
-  (for/and ([rm ml])
-    (not (null? (rulematch-elts rm)))))
-
 ;; Here is a simple scoring function for rules.
 ;; The key is that every step must only increase the score,
 ;; so that the A* minimality guarantee holds.
@@ -291,15 +290,15 @@
 (define (selector-score selector)
   (match selector
     ['* 10]
-    [(list 'tag _) 20]
-    [(list 'class _) 25]
+    [(list 'tag _) 10]
+    [(list 'class _) 15]
     [(list 'id _) 30]
     [(list 'and subs ...)
-     (apply + 10 (map selector-score subs))]
+     (apply + 1 (map selector-score subs))]
     [(list 'desc subs ...)
-     (apply + 10 (map selector-score subs))]
+     (apply + 2 (map selector-score subs))]
     [(list 'child subs ...)
-     (apply + 15 (map selector-score subs))]))
+     (apply + 10 (map selector-score subs))]))
 
 (define (rules-score rules)
   (apply +
@@ -309,49 +308,59 @@
 
 ;; Now we can do the full enumeration state
 
-(struct enumeration-state (elts ineqs pq seen) #:mutable)
+(struct enumeration-state (elts ineqs pq seen hs hs-when) #:mutable)
 
 (define (score&rules<? sr1 sr2)
-  (<= (car sr1) (car sr2)))
+  ((lex<? (output<? length <) < (const true)) sr1 sr2))
 
 (define (make-enumeration-state elts)
   (define heap (make-heap score&rules<?))
-  (heap-add! heap (cons 0 '()))
-  (enumeration-state elts '() heap (mutable-set)))
+  (heap-add! heap (list '() 0 '()))
+  (enumeration-state elts '() heap (mutable-set) '() 0))
 
 (define (step! es)
-  (match-define (enumeration-state elts ineq-and pq seen) es)
-  (match-define (cons _ rules) (heap-min pq))
-  
-  (define eqcls (equivalence-classes rules elts))
-  (define bad-ineqs
-    (let loop ([ineq-and ineq-and])
-      (match ineq-and
-        ['() '()]
-        [(cons ineq-or ineq-and*)
-         (define bad-ineqs (filter (curry equivalence-classes-avoid? eqcls) ineq-or))
-         (if (null? bad-ineqs)
-             ineq-or
-             (loop ineq-and*))])))
+  (match-define (enumeration-state elts ineq-and pq seen hs hs-when) es)
+  (match-define (list bad-ineqs score rules) (heap-min pq))
+  (eprintf "~a ~a ~a\n" (length bad-ineqs) score rules)
+  (heap-remove-min! pq)
 
-  (cond
-   [(null? bad-ineqs)
-    rules]
-   [else
-    (heap-remove-min! pq)
-    (when (rules-valid? rules elts) ;; Don't build on top of invalid rules
-      (define opts (apply append (for/list ([ineq bad-ineqs]) (step-ineq rules elts ineq))))
-      (for ([opt opts])
-        (define ml (rule-matchlist opt elts))
-        (unless (set-member? seen ml)
-          (heap-add! pq (cons (rules-score opt) opt))
-          (set-add! seen ml))))
-    #f]))
+  (let/ec return
+    (when (null? bad-ineqs) (return rules))
+    (define opts (step-ineq rules elts (car bad-ineqs)))
+    (for ([opt opts])
+      (define ml (rule-matchlist opt elts))
+      (unless (or (ormap (compose null? rulematch-elts) ml) (set-member? seen ml) (check-duplicates ml #:key rulematch-elts))
+        (define eqcls (matchlist-equivalence-classes ml elts))
+        (define ineqs* (filter (compose not (curry equivalence-classes-avoid? eqcls)) hs))
+        (define score (rules-score opt))
+        (eprintf "-> ~a ~a ~a\n" (length ineqs*) score opt)
+        (cond
+         [(null? ineqs*)
+          (return opt)]
+         [else
+          (heap-add! pq (list ineqs* score opt))
+          (set-add! seen ml)])))
+    (return #f)))
 
 (define (add-ineqs! es ineqs)
-  (set-enumeration-state-ineqs! es (append (enumeration-state-ineqs es) (list ineqs))))
+  (define new-ineqs (cons ineqs (enumeration-state-ineqs es)))
+  (set-enumeration-state-ineqs! es new-ineqs)
+  (set-enumeration-state-hs-when! es (length new-ineqs))
+  (define hs (hitting-set new-ineqs))
+  (pretty-print hs)
+  (set-enumeration-state-hs! es hs)
+  (set-enumeration-state-seen! es (mutable-set))
+  (define heap (make-heap score&rules<?))
+  (heap-add! heap (list hs 0 '()))
+  (set-enumeration-state-pq! es heap))
 
-(define (step*! es)
+(define (hitting-set ineqs)
+  (map first ineqs))
+
+(define (step*! es [n 0])
   (define x (step! es))
-  (pretty-print (heap-min (enumeration-state-pq es)))
-  (or x (step*! es)))
+  (when x
+    (eprintf "Skipped ~a stylesheets of ~a options\n" n
+             (heap-count (enumeration-state-pq es)))
+    (eprintf "Producing ~a\n" x))
+  (or x (step*! es (+ n 1))))
