@@ -134,14 +134,14 @@
   (let loop ([ineqs '()])
     (define sheet (ineqs->stylesheet ineqs selhash))
     (define eqcls (equivalence-classes sheet elts))
-    (log-phase "Have possible selector (weight ~a)" (rules-score sheet))
+    (log-phase "Chose new sketch (weight ~a)" (rules-score sheet))
     (match (z3-solve (append query (sheet-constraints doms sheet) (list z3-check-sat)))
-      [(model m)
+      [(list 'model m)
        (log-phase "Synthesized stylesheet!")
        (reset-elt-names!)
        ;; TODO - return (success _ _)
        ]
-      [(unsat-core c)
+      [(list 'core c)
        (define new-ineqs (extract-ineqs eqcls c))
        #|
        (define good-props

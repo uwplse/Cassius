@@ -418,10 +418,10 @@
             (list z3-check-sat)))
 
   (match (z3-solve full-constraints #:debug debug?)
-    [(model m)
+    [(list 'model m)
      (for-each (curryr extract-tree! m) trees)
      (extract-counterexample! m)
      (success (extract-rules sheet trees m) (map unparse-tree trees))]
-    [(unsat-core c)
+    [(list 'core c)
      (define-values (stylesheet* trees*) (extract-core constraints sheet trees c))
      (failure stylesheet* (map unparse-tree trees*))]))

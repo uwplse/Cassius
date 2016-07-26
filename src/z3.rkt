@@ -4,10 +4,7 @@
 (require "common.rkt")
 (require "z3o.rkt")
 
-(provide z3-solve z3-prepare z3-namelines (struct-out model) (struct-out unsat-core) z3-clean z3-check-sat)
-
-(struct model (bindings) #:prefab)
-(struct unsat-core (bad-lines) #:prefab)
+(provide z3-solve z3-prepare z3-namelines z3-clean z3-check-sat)
 
 (define-runtime-path bin "..")
 
@@ -63,7 +60,7 @@
                    (write "(get-unsat-core)")
                    (let ([msg2 (read out)])
                      (debug #:tag 'output "<- ~a\n" msg2)
-                     (unsat-core msg2))]
+                     (list 'core msg2))]
                   ['sat
                    (if (null? rest)
                        (begin
@@ -74,7 +71,7 @@
                   [`(objectives ,_)
                    (loop rest #f)]
                   [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
-                   (begin0 (model (for/hash ([c consts] [v vals]) (values c (de-z3ify v))))
+                   (begin0 (list 'model (for/hash ([c consts] [v vals]) (values c (de-z3ify v))))
                      (for ([cmd rest])
                        (write (~a cmd))
                        (debug #:tag 'eval ">>> ~a → ~a\n" cmd (read out)))
