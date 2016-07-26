@@ -71,6 +71,8 @@
                          (write "(get-model)")
                          (loop rest (current-inexact-milliseconds)))
                        (loop rest #f))]
+                  [`(objectives ,_)
+                   (loop rest #f)]
                   [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
                    (begin0 (model (for/hash ([c consts] [v vals]) (values c (de-z3ify v))))
                      (for ([cmd rest])

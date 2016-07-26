@@ -1,9 +1,10 @@
 #lang racket
 
-(require "common.rkt" "dom.rkt" "spec/css-properties.rkt" data/heap)
+(require "common.rkt" "dom.rkt" "spec/css-properties.rkt" data/heap "z3.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes
-         make-enumeration-state step*! add-ineqs!)
+         make-enumeration-state step*! add-ineqs!
+         rules-score all-selectors ineqs->stylesheet hitting-set)
 
 
 
@@ -354,8 +355,22 @@
   (heap-add! heap (list hs 0 '()))
   (set-enumeration-state-pq! es heap))
 
-(define (hitting-set ineqs)
-  (map first ineqs))
+(define (hitting-set xss)
+  (define atom-names
+    (for/hash ([atom (remove-duplicates (apply append xss))] [i (in-naturals)])
+      (values atom (sformat "atom/~a" i))))
+  (define constraints
+    (append
+     (for/list ([name (in-hash-values atom-names)])
+       `(declare-const ,name Bool))
+     (for/list ([name (in-hash-values atom-names)])
+       `(assert-soft (not ,name)))
+     (for/list ([xs xss])
+       `(assert (or ,@(for/list ([x xs]) (dict-ref atom-names x)))))
+     '((check-sat))))
+  (define out (model-bindings (z3-solve constraints)))
+  (for/list ([(atom name) (in-hash atom-names)] #:when (dict-ref out name))
+    atom))
 
 (define (step*! es [n 0])
   (define x (step! es))
@@ -418,30 +433,56 @@
     (if (element? val)
         (xor (set-member? elts elt1) (set-member? elts val))
         (set-member? elts elt1)))
-  (for ([(elts sel) (in-hash selhash)] #:when (elts-good? elts))
+  (for/list ([(elts sel) (in-hash selhash)] #:when (elts-good? elts))
     sel))
 
 (define (ineqs-rules ineqs selhash)
-  (hitting-set (map (curry append-map (curryr ineq-selectors selhash)) ineqs)))
+  (hitting-set (map (compose remove-duplicates (curry append-map (curryr ineq-selectors selhash))) ineqs)))
 
-(define (ineqs-rules->z3 ineq rules elts)
+(define (ineq-rules->z3 ineq rules elts)
   (match-define (list prop elt1 val) ineq)
-  (define scores (rule-scores rules))
+  (define scores (rule-scores (map list rules)))
 
   (cond
    [(not (element? val))
     `(or
-      ,@(for/list ([rule rules] [elts eltss] [i (in-naturals)]
+      false
+      ,@(for/list ([rule rules] [i (in-naturals)]
                    #:when (selector-matches? rule elt1))
-          `(property ,prop ,i)))]
+          (sformat "property/~a/~a" prop i)))]
    [(element? val)
     (define sorted-rules
-      (reverse (sort (map cons (range (length rules)) scores) score<? #:key cdr)))
+      (sort (map cons (range (length rules)) scores) score<? #:key cdr))
     (for/fold ([expr 'false])
         ([(i score) (in-dict sorted-rules)]
          #:when (or (selector-matches? (list-ref rules i) elt1)
                     (selector-matches? (list-ref rules i) val)))
       (define sel (list-ref rules i))
       (if (and (selector-matches? sel elt1) (selector-matches? sel val))
-          `(and (not (property ,prop ,i)) ,expr)
-          `(or (property ,prop ,i) ,expr)))]))
+          `(and (not ,(sformat "property/~a/~a" prop i)) ,expr)
+          `(or ,(sformat "property/~a/~a" prop i) ,expr)))]))
+
+(define (ineqs-rules->z3 ineqss rules elts)
+  (define props (for/list ([(prop _t _d) (in-css-properties)]) prop))
+  (append
+   (for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
+     `(declare-const ,(sformat "property/~a/~a" prop i) Bool))
+   (for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
+     `(assert-soft (not ,(sformat "property/~a/~a" prop i))))
+   (for/list ([ineqs ineqss])
+     `(assert
+       (or ,@(map (curryr ineq-rules->z3 rules elts) ineqs))))))
+
+(define (ineqs-rules->properties ineqs rules elts)
+  (define z3 (ineqs-rules->z3 ineqs rules elts))
+  (define out (model-bindings (z3-solve (append z3 '((check-sat))))))
+  (for/list ([selector rules] [i (in-naturals)])
+    (cons selector
+          (for/list ([(prop _t _d) (in-css-properties)]
+                     #:when (dict-ref out (sformat "property/~a/~a" prop i)))
+            `[,prop ?]))))
+
+(define (ineqs->stylesheet ineqs selhash)
+  (define elts (for/first ([(elts sel) (in-hash selhash)] #:when (equal? sel '*)) elts))
+  (define rules (ineqs-rules ineqs selhash))
+  (ineqs-rules->properties ineqs rules elts))

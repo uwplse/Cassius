@@ -129,12 +129,12 @@
            (length query) (tree-size query))
 
   (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
-  (define es (make-enumeration-state elts))
+  (define selhash (all-selectors elts))
 
-  (let loop ()
-    (define sheet (step*! es))
+  (let loop ([ineqs '()])
+    (define sheet (ineqs->stylesheet ineqs selhash))
     (define eqcls (equivalence-classes sheet elts))
-    (log-phase "Have possible selector")
+    (log-phase "Have possible selector (weight ~a)" (rules-score sheet))
     (match (z3-solve (append query (sheet-constraints doms sheet) (list z3-check-sat)))
       [(model m)
        (log-phase "Synthesized stylesheet!")
@@ -142,18 +142,19 @@
        ;; TODO - return (success _ _)
        ]
       [(unsat-core c)
-       (define ineqs (extract-ineqs eqcls c))
+       (define new-ineqs (extract-ineqs eqcls c))
+       #|
        (define good-props
          '(height width position left bottom float
                   padding-top padding-left padding-right padding-bottom
                   margin-left margin-right margin-top margin-bottom))
        (define ineqs* (filter (compose (curry set-member? good-props) car) ineqs))
-       #;(for ([ineq ineqs*])
+       (for ([ineq ineqs*])
          (eprintf "~a: ~a ≠ ~a\n" (first ineq) (element-name (second ineq))
                   (if (element? (third ineq)) (element-name (third ineq)) (third ineq))))
-       (log-phase "Found new set of ~a inequalities" (length ineqs*))
-       (add-ineqs! es ineqs*)
-       (loop)])))
+       |#
+       (log-phase "Found new set of ~a inequalities (~a total sets, ~a minimum hitting set)" (length new-ineqs) (+ 1 (length ineqs)) (length (hitting-set (cons new-ineqs ineqs))))
+       (loop (cons new-ineqs ineqs))])))
 
 (define (split-symbol s)
   (for/list ([part (string-split (~a s) "/")])
