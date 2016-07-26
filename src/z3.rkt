@@ -6,128 +6,64 @@
 
 (provide z3-solve z3-prepare z3-namelines z3-clean z3-check-sat)
 
-(define-runtime-path bin "..")
+(define (z3-process #:flags [flags '("-st")])
+  (define-values (process z3-out z3-in z3-err)
+    (apply subprocess #f #f #f z3-path "-smt2" "-in" flags))
 
-; Invokes Z3 and returns #f if unsatisfiable
-; or a map from constant names to values if satisfiable.
-(define (z3-solve encoding #:debug [debug? #f])
-  (define-values (process out in err)
-    (subprocess #f #f #f z3-path "-st" "-smt2" "-in"))
+  (define soft? false)
+  
+  (define (send cmd)
+    (with-handlers
+        ([exn:break? (λ (e) (subprocess-kill process #t) (raise e))]
+         [exn:fail:syntax? (λ (e) (raise-syntax-error 'Z3 (exn-message e) cmd))])
+      (define response?
+        (match cmd
+          [(list 'echo s)
+           (fprintf z3-in "; ~a\n" s)
+           false]
+          [(list 'assert-soft _ ...)
+           (fprintf z3-in "~a\n" cmd)
+           (set! soft? true)
+           false]
+          [_
+           (fprintf z3-in "~a\n" cmd)
+           true]))
+      (flush-output z3-in)
+      (define out
+        (if response?
+            (parse-output (read z3-out))
+            'success))
+      (if (and (equal? out 'sat) soft?)
+          (parse-output (read z3-out))
+          out)))
 
-  (define lines (inexact->exact (ceiling (/ (log (+ 1 (length encoding))) (log 10)))))
-  (define asserts (make-hash))
+  (send '(set-option :print-success true))
+  send)
 
-  (define line 1)
+(define (parse-output msg)
+  (match msg
+    [`(error ,description)
+     (match-define (list line/col text) (string-split description ": "))
+     (match-define (list "line" (app string->number line) "column" (app string->number column))
+                   (string-split line/col))
+     (raise-syntax-error 'Z3 "Z3 error (~a:~a)" line column text)]
+    ['unsupported
+     (error "Z3 unsupported\n")]
+    [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
+     (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))]
+    [(? eof-object?)
+     (error "Z3 error: premature EOF received")]
+    [_ msg]))
 
-  (define (debug #:tag [tag #f] fmt . args)
-    (when (or (not tag) (eq? debug? #t) (and (list? debug?) (member tag debug?)))
-      (apply eprintf fmt args)))
-
-  (define (write val)
-    (debug #:tag 'input "~a ~a\n" (~r line #:min-width (+ 1 lines)) val)
-    (set! line (+ 1 line))
-    (fprintf in (format "~a\n" val))
-    (flush-output in))
-
-  (dynamic-wind
-    (λ () (void))
-    (λ ()
-      (with-handlers ([exn:break? (lambda (e) (subprocess-kill process #t) (raise e))])
-        (let loop ([rest encoding] [paused? #f])
-          (cond
-           [(byte-ready? out)
-            (cond
-             [(char-whitespace? (peek-char out))
-              (read-char out)
-              (loop rest paused?)]
-             [(char=? (peek-char out) #\|)
-              (debug #:tag 'optimality "<- ~a" (read-line))
-              (loop rest paused?)]
-             [else
-              (let ([msg (read out)])
-                (when paused?
-                  (debug #:tag 'timing "... ~ams\n"
-                         (inexact->exact (round (- (current-inexact-milliseconds) paused?)))))
-                (debug #:tag 'output "<- ~a\n" msg)
-                (match msg
-                  [`(error ,text)
-                   (match (map string-split (string-split text ":"))
-                     [`(("line" ,l "column" ,c) ,rest)
-                      (error (format "Z3 error: ~a\n  line:" text) (list-ref encoding (- (string->number l) 1)))])]
-                  ['unsupported
-                   (error "Z3 error: unsupported\n")]
-                  ['unsat
-                   (write "(get-unsat-core)")
-                   (let ([msg2 (read out)])
-                     (debug #:tag 'output "<- ~a\n" msg2)
-                     (list 'core msg2))]
-                  ['sat
-                   (if (null? rest)
-                       (begin
-                         (debug #:tag 'sat ">>> get-model\n")
-                         (write "(get-model)")
-                         (loop rest (current-inexact-milliseconds)))
-                       (loop rest #f))]
-                  [`(objectives ,_)
-                   (loop rest #f)]
-                  [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
-                   (begin0 (list 'model (for/hash ([c consts] [v vals]) (values c (de-z3ify v))))
-                     (for ([cmd rest])
-                       (write (~a cmd))
-                       (debug #:tag 'eval ">>> ~a → ~a\n" cmd (read out)))
-                     (close-output-port in)
-                     (when (or (eq? debug? #t) (and (list? debug?) (member 'stats debug?)))
-                       (copy-port out (current-error-port))))]
-                  [`(goals (goal ,args ...) ...)
-                   (loop rest #f)]
-                  [(? eof-object?)
-                   (error "Premature EOF received")]))])]
-           [paused?
-            (sync/enable-break out)
-            (loop rest paused?)]
-           [(null? rest)
-            (sync/enable-break out)
-            (loop rest (current-inexact-milliseconds))]
-           [#t
-            (match (car rest)
-              [`(echo ,x)
-               (write (format "; ~a" x))
-               (loop (cdr rest) paused?)]
-              [`(check-sat)
-               (write "(check-sat)")
-               (debug #:tag 'tactic ">>> sat\n")
-               (loop (cdr rest) (current-inexact-milliseconds))]
-              [`(apply ,args ...)
-               (write (~a (car rest)))
-               (debug #:tag 'tactic ">>> ~a\n" (string-join (map ~a args) " "))
-               (loop (cdr rest) (current-inexact-milliseconds))]
-              [`(assert (! ,expr :named ,name))
-               (write (~a (car rest)))
-               (hash-set! asserts name expr)
-               (loop (cdr rest) paused?)]
-              [_
-               (write (~a (car rest)))
-               (loop (cdr rest) paused?)])]))))
-    (λ ()
-      (close-output-port in)
-      (close-input-port out)
-      (close-input-port err)
-      (subprocess-kill process #t))))
-
-; Writes the given encoding to the specified port.
-(define (write-encoding encoding port #:debug [debug #f])
-  (define line 0)
-  (define (write . args)
-    (set! line (+ line 1))
-    (apply fprintf port args)
-    (when debug
-      (printf "~a " (~a line #:width 4))
-      (apply printf args)))
-
-  (write "(set-option :produce-unsat-cores true)\n")
-  (for ([expr encoding])
-    (write "~a\n" expr))
-  (flush-output port))
+(define (z3-solve encoding)
+  (define z3 (z3-process))
+  (let/ec return
+    (for ([line encoding])
+      (match (z3 line)
+        ['unsat (return `(core ,(z3 '(get-unsat-core))))]
+        ['sat (return `(model ,(z3 '(get-model))))]
+        [(list 'objectives _) (return `(model ,(z3 '(get-model))))]
+        ['success (void)]))))
 
 (define (dict-remove* dict keys)
   (for/fold ([dict dict]) ([key keys])
@@ -153,13 +89,6 @@
      (de-z3ify (replace-terms body (map cons names values)))]
     [(list args ...) (map de-z3ify args)]
     [else v]))
-
-(define (z3-literal? expr)
-  (match expr
-    [(? number?) #t]
-    [(? symbol?) #t]
-    [`(as ,val ,sort) #t]
-    [_ #f]))
 
 (define to-resolve
   (append
