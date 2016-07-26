@@ -155,7 +155,7 @@
   (let loop ([ineqs '()])
     (define sheet (ineqs->stylesheet ineqs selhash))
     (define eqcls (equivalence-classes sheet elts))
-    (log-phase "Chose new sketch (weight ~a)" (rules-score sheet))
+    (log-phase "Chose new sketch ~a" sheet)
     (z3-send z3 (append '((pop) (push)) (sheet-constraints doms sheet)))
     (match (z3-check-sat z3 #:strategy cassius-check-sat)
       [(list 'model m)
@@ -175,7 +175,7 @@
          (eprintf "~a: ~a ≠ ~a\n" (first ineq) (element-name (second ineq))
                   (if (element? (third ineq)) (element-name (third ineq)) (third ineq))))
        |#
-       (log-phase "Found new set of ~a inequalities (~a total sets, ~a minimum hitting set)" (length new-ineqs) (+ 1 (length ineqs)) (length (hitting-set (cons new-ineqs ineqs))))
+       (log-phase "Found new set of ~a inequalities (~a total sets)" (length new-ineqs) (+ 1 (length ineqs)))
        (loop (cons new-ineqs ineqs))])))
 
 (define (split-symbol s)

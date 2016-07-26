@@ -3,8 +3,7 @@
 (require "common.rkt" "dom.rkt" "spec/css-properties.rkt" data/heap "z3.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes
-         make-enumeration-state step*! add-ineqs!
-         rules-score all-selectors ineqs->stylesheet hitting-set)
+         all-selectors ineqs->stylesheet hitting-set)
 
 
 
@@ -188,60 +187,6 @@
   (define ml (rule-matchlist rules elts))
   (matchlist-equivalence-classes ml elts))
 
-;; An inequality is either (prop elt1 elt2) or (prop elt1 val1)
-
-(define (equivalence-classes-avoid? classes ineq)
-  (match ineq
-    [(list prop (? element? elt1) (? element? elt2))
-     (define hash (car (dict-ref classes prop)))
-     (not (equal? (dict-ref hash elt1) (dict-ref hash elt2)))]
-    [(list prop (? element? elt1) val)
-     (match-define (cons class-hash value-hash) (dict-ref classes prop))
-     (not (equal? (dict-ref value-hash (dict-ref class-hash elt1)) val))]))
-
-(define-syntax-rule (assume prop)
-  (unless prop
-    (error "Property ~a failed!" 'prop)))
-
-;; We now move on to enumerating all selectors
-;; We do this somewhat intelligently--we look at *which* selector
-;; causes us to fail the inequality check.
-
-(define (rule-append-property rule prop)
-  (match-define (list selector (? attribute? attrs) ... (? list? props) ...) rule)
-  `(,selector ,@attrs ,@(sort (cons `(,prop ?) props) symbol<? #:key car)))
-
-;; TODO: Duplicate code
-(define (step-ineq rules elts ineq)
-  (define ml (rule-matchlist rules elts))
-  (define classes (matchlist-equivalence-classes ml elts))
-  (match-define (list prop (? element? elt1) val) ineq)
-  (define hash (car (dict-ref classes prop)))
-  ;; We assume the ineq is NOT satisfied
-  (define sidx (dict-ref hash elt1)) ;; sidx: index in sort order
-  ;; So we must do one of two things: step that selector,
-  ;; or enable that property earlier on
-  (define change-property
-    (for/list ([i (in-range (if sidx sidx (length ml)))])
-      (define rm (list-ref ml i))
-      (define idx (rulematch-idx rm))
-      (define rule (list-ref rules idx))
-      (and (not (dict-has-key? (filter list? (cdr rule)) prop))
-           (or (set-member? (rulematch-elts rm) elt1)
-               (and (element? val) (set-member? (rulematch-elts rm) val)))
-           (list-set rules idx (rule-append-property rule prop)))))
-  
-  (define change-selector
-    (if sidx
-        (let* ([idx (rulematch-idx (list-ref ml sidx))]
-               [rule (list-ref rules idx)])
-          (for/list ([sel* (step-selector (car rule) elts)])
-            (list-set rules idx
-                      (cons sel* (cdr rule)))))
-        (list (append rules '((*))))))
-
-  (append (filter identity change-property) change-selector))
-
 ;; This steps selectors
 
 (define (get-tcis elts)
@@ -259,102 +204,6 @@
   (define-values (tags classes ids) (get-tcis elts))
   (append (map (curry list 'tag) tags) (map (curry list 'class) classes) (map (curry list 'id) ids)))
 
-(define (step-selector sel elts)
-  (define atoms (atomic-values elts))
-  (step-selector* sel atoms))
-
-(define (step-and sel atoms)
-  (match sel
-    ['* atoms]
-    [(? (curry set-member? atoms))
-     (filter (compose not check-duplicates)
-             (map (curry list 'and sel) atoms))]
-    [(list 'and _ ...)
-     (filter (compose not check-duplicates)
-             (map (compose (curry append sel) list) atoms))]))
-
-(define (step-selector* sel atoms)
-  (match sel
-    [(list (or 'child 'desc) subsels ...)
-     (cons
-      (list* (car sel) '* subsels)
-      (for/list ([subsel subsels] [i (in-naturals 1)]
-                 #:when true [subsel* (step-and subsel atoms)])
-        (list-set sel i subsel*)))]
-    [_
-     (list* `(child * ,sel) `(desc * ,sel) (step-and sel atoms))]))
-
-;; Here is a simple scoring function for rules.
-;; The key is that every step must only increase the score,
-;; so that the A* minimality guarantee holds.
-
-(define (selector-score selector)
-  (match selector
-    ['* 10]
-    [(list 'tag _) 10]
-    [(list 'class _) 15]
-    [(list 'id _) 30]
-    [(list 'and subs ...)
-     (apply + 1 (map selector-score subs))]
-    [(list 'desc subs ...)
-     (apply + 2 (map selector-score subs))]
-    [(list 'child subs ...)
-     (apply + 10 (map selector-score subs))]))
-
-(define (rules-score rules)
-  (apply +
-         (for/list ([rule rules])
-           (+ 100 (length (filter list? (cdr rule))) ;; 10 pts per rule, 1 pt per property
-              (selector-score (car rule))))))
-
-;; Now we can do the full enumeration state
-
-(struct enumeration-state (elts ineqs pq seen hs hs-when) #:mutable)
-
-(define (score&rules<? sr1 sr2)
-  ((lex<? (output<? length <) < (const true)) sr1 sr2))
-
-(define (make-enumeration-state elts)
-  (define heap (make-heap score&rules<?))
-  (heap-add! heap (list '() 0 '()))
-  (enumeration-state elts '() heap (mutable-set) '() 0))
-
-(define (step! es)
-  (match-define (enumeration-state elts ineq-and pq seen hs hs-when) es)
-  (match-define (list bad-ineqs score rules) (heap-min pq))
-  (eprintf "~a ~a ~a\n" (length bad-ineqs) score rules)
-  (heap-remove-min! pq)
-
-  (let/ec return
-    (when (null? bad-ineqs) (return rules))
-    (define opts (step-ineq rules elts (car bad-ineqs)))
-    (for ([opt opts])
-      (define ml (rule-matchlist opt elts))
-      (unless (or (ormap (compose null? rulematch-elts) ml) (set-member? seen ml) (check-duplicates ml #:key rulematch-elts))
-        (define eqcls (matchlist-equivalence-classes ml elts))
-        (define ineqs* (filter (compose not (curry equivalence-classes-avoid? eqcls)) hs))
-        (define score (rules-score opt))
-        (eprintf "-> ~a ~a ~a\n" (length ineqs*) score opt)
-        (cond
-         [(null? ineqs*)
-          (return opt)]
-         [else
-          (heap-add! pq (list ineqs* score opt))
-          (set-add! seen ml)])))
-    (return #f)))
-
-(define (add-ineqs! es ineqs)
-  (define new-ineqs (cons ineqs (enumeration-state-ineqs es)))
-  (set-enumeration-state-ineqs! es new-ineqs)
-  (set-enumeration-state-hs-when! es (length new-ineqs))
-  (define hs (hitting-set new-ineqs))
-  (pretty-print hs)
-  (set-enumeration-state-hs! es hs)
-  (set-enumeration-state-seen! es (mutable-set))
-  (define heap (make-heap score&rules<?))
-  (heap-add! heap (list hs 0 '()))
-  (set-enumeration-state-pq! es heap))
-
 (define (hitting-set xss)
   (define atom-names
     (for/hash ([atom (remove-duplicates (apply append xss))] [i (in-naturals)])
@@ -370,14 +219,6 @@
   (match-define (list 'model out) (z3-solve constraints))
   (for/list ([(atom name) (in-hash atom-names)] #:when (dict-ref out name))
     atom))
-
-(define (step*! es [n 0])
-  (define x (step! es))
-  (when x
-    (eprintf "Skipped ~a stylesheets of ~a options\n" n
-             (heap-count (enumeration-state-pq es)))
-    (eprintf "Producing ~a\n" x))
-  (or x (step*! es (+ n 1))))
 
 (define (set-intersect-sorted l1 l2)
   (define s1 (apply set l1))
