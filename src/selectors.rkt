@@ -366,8 +366,7 @@
      (for/list ([name (in-hash-values atom-names)])
        `(assert-soft (not ,name)))
      (for/list ([xs xss])
-       `(assert (or ,@(for/list ([x xs]) (dict-ref atom-names x)))))
-     '((check-sat))))
+       `(assert (or ,@(for/list ([x xs]) (dict-ref atom-names x)))))))
   (match-define (list 'model out) (z3-solve constraints))
   (for/list ([(atom name) (in-hash atom-names)] #:when (dict-ref out name))
     atom))
@@ -475,7 +474,7 @@
 
 (define (ineqs-rules->properties ineqs rules elts)
   (define z3 (ineqs-rules->z3 ineqs rules elts))
-  (match-define (list 'model out) (z3-solve (append z3 '((check-sat)))))
+  (match-define (list 'model out) (z3-solve z3))
   (for/list ([selector rules] [i (in-naturals)])
     (cons selector
           (for/list ([(prop _t _d) (in-css-properties)]

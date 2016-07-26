@@ -56,7 +56,7 @@
   (map split-symbol (string-split (~a var) "^")))
 
 ;; Does tagging of bad
-(define (extract-core query stylesheet trees vars)
+(define (extract-core stylesheet trees vars)
   (define stylesheet* (make-hash))
   (for ([name vars])
     (match (split-line-name name)
@@ -407,21 +407,13 @@
 (struct success (stylesheet elements))
 (struct failure (stylesheet trees))
 
-(define (solve-constraints sheet doms constraints #:debug [debug? #f])
+(define (solve-constraints sheet doms out #:debug [debug? #f])
   (define trees (map dom-tree doms))
-  (define full-constraints
-    (append constraints
-            (reap [emit]
-                  (for/list ([dom doms])
-                    (define browser-style (get-sheet (dom-context dom ':browser)))
-                    (selector-constraints emit (append browser-style sheet) dom)))
-            (list z3-check-sat)))
-
-  (match (z3-solve full-constraints #:debug debug?)
+  (match out
     [(list 'model m)
      (for-each (curryr extract-tree! m) trees)
      (extract-counterexample! m)
      (success (extract-rules sheet trees m) (map unparse-tree trees))]
     [(list 'core c)
-     (define-values (stylesheet* trees*) (extract-core constraints sheet trees c))
+     (define-values (stylesheet* trees*) (extract-core sheet trees c))
      (failure stylesheet* (map unparse-tree trees*))]))

@@ -21,6 +21,18 @@
        (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
        `(,prop ,(elt-from-name elt1) ,value)])))
 
+(define cassius-check-sat
+  '(check-sat-using
+    (then
+     (! propagate-values
+        :push_ite_arith true
+        :algebraic_number_evaluator false
+        :bit2bool false
+        :local_ctx true
+        :hoist_mul true
+        :flat false)
+     nnf occf smt)))
+
 (define (constraints sheets docs [test #f] #:debug [debug? #f])
   (define time-start (current-inexact-milliseconds))
   (define (log-phase fmt . args)
@@ -52,7 +64,7 @@
 
   (reset-elt-names!)
 
-  (append query (sheet-constraints doms (apply append sheets)) (list z3-check-sat)))
+  (append query (sheet-constraints doms (apply append sheets)) (list cassius-check-sat)))
 
 (define (solve sheets docs [test #f] #:debug [debug? #f])
   (define time-start (current-inexact-milliseconds))
@@ -74,6 +86,7 @@
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))
 
+  (set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))
   (if (memq 'z3o (flags))
       (set! query (z3-prepare query))
@@ -83,7 +96,12 @@
   (log-phase "Prepared ~a constraints of ~a terms"
            (length query) (tree-size query))
 
-  (define res (solve-constraints (car sheets) doms query))
+  (define out
+    (let ([z3 (z3-process)])
+      (z3-send z3 query)
+      (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
+        (z3-kill z3))))
+  (define res (solve-constraints (car sheets) doms out))
 
   (log-phase "Solved constraints")
 
@@ -130,12 +148,16 @@
 
   (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
   (define selhash (all-selectors elts))
+  (define z3 (z3-process))
+  (z3-send z3 query)
+  (z3-send z3 '((push)))
 
   (let loop ([ineqs '()])
     (define sheet (ineqs->stylesheet ineqs selhash))
     (define eqcls (equivalence-classes sheet elts))
     (log-phase "Chose new sketch (weight ~a)" (rules-score sheet))
-    (match (z3-solve (append query (sheet-constraints doms sheet) (list z3-check-sat)))
+    (z3-send z3 (append '((pop) (push)) (sheet-constraints doms sheet)))
+    (match (z3-check-sat z3 #:strategy cassius-check-sat)
       [(list 'model m)
        (log-phase "Synthesized stylesheet!")
        (reset-elt-names!)

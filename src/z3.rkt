@@ -4,35 +4,43 @@
 (require "common.rkt")
 (require "z3o.rkt")
 
-(provide z3-solve z3-prepare z3-namelines z3-clean z3-check-sat)
+(provide z3-process z3-send z3-check-sat z3-kill z3-solve z3-prepare z3-namelines z3-clean)
 
 (define (z3-process #:flags [flags '("-st")])
   (define-values (process z3-out z3-in z3-err)
     (apply subprocess #f #f #f z3-path "-smt2" "-in" flags))
 
   (define soft? false)
+
+  (define (kill)
+    (close-output-port z3-in)
+    (close-input-port z3-out)
+    (close-input-port z3-err)
+    (subprocess-kill process true))
+
+  (define (ffprintf port fmt . vs)
+    (apply fprintf port fmt vs)
+    (flush-output port))
   
   (define (send cmd)
     (with-handlers
-        ([exn:break? (λ (e) (subprocess-kill process #t) (raise e))]
+        ([exn:break? (λ (e) (kill) (raise e))]
          [exn:fail:syntax? (λ (e) (raise-syntax-error 'Z3 (exn-message e) cmd))])
-      (define response?
-        (match cmd
-          [(list 'echo s)
-           (fprintf z3-in "; ~a\n" s)
-           false]
-          [(list 'assert-soft _ ...)
-           (fprintf z3-in "~a\n" cmd)
-           (set! soft? true)
-           false]
-          [_
-           (fprintf z3-in "~a\n" cmd)
-           true]))
-      (flush-output z3-in)
       (define out
-        (if response?
-            (parse-output (read z3-out))
-            'success))
+        (match cmd
+          [(list 'kill)
+           (kill)
+           'success]
+          [(list 'echo s)
+           (ffprintf z3-in "; ~a\n" s)
+           'success]
+          [(list 'assert-soft _ ...)
+           (ffprintf z3-in "~a\n" cmd)
+           (set! soft? true)
+           'success]
+          [_
+           (ffprintf z3-in "~a\n" cmd)
+           (parse-output (read z3-out))]))
       (if (and (equal? out 'sat) soft?)
           (parse-output (read z3-out))
           out)))
@@ -55,15 +63,27 @@
      (error "Z3 error: premature EOF received")]
     [_ msg]))
 
+(define (z3-send process cmds)
+  (for ([line cmds])
+    (define out (process line))
+    (unless (equal? 'success out)
+      (raise (make-exn:fail (format "Z3: ~a;\n  ~a" out line) (current-continuation-marks))))))
+
+(define (z3-check-sat process #:strategy [strategy '(check-sat)])
+  (match (process strategy)
+    ['unsat `(core ,(process '(get-unsat-core)))]
+    [(or 'sat (list 'objectives _)) `(model ,(process '(get-model)))]))
+
+(define (z3-kill process)
+  (z3-send process '((kill)))
+  (void))
+
 (define (z3-solve encoding)
   (define z3 (z3-process))
-  (let/ec return
-    (for ([line encoding])
-      (match (z3 line)
-        ['unsat (return `(core ,(z3 '(get-unsat-core))))]
-        ['sat (return `(model ,(z3 '(get-model))))]
-        [(list 'objectives _) (return `(model ,(z3 '(get-model))))]
-        ['success (void)]))))
+  (z3-send z3 encoding)
+  (define out (z3-check-sat z3))
+  (z3-kill z3)
+  out)
 
 (define (dict-remove* dict keys)
   (for/fold ([dict dict]) ([key keys])
@@ -152,18 +172,6 @@
   (for/fold ([exprs exprs]) ([action (flatten *emitter-passes*)])
     #;(eprintf "  [~a / ~a]\n~a" (- (current-inexact-milliseconds) start) (tree-size exprs) action)
     (action exprs)))
-
-(define z3-check-sat
-  '(check-sat-using
-    (then
-     (! propagate-values
-        :push_ite_arith true
-        :algebraic_number_evaluator false
-        :bit2bool false
-        :local_ctx true
-        :hoist_mul true
-        :flat false)
-     nnf occf smt)))
 
 (define (z3-clean exprs)
   (append (z3-clean-no-opt (z3-strip-inner-names exprs)) '((check-sat))))
