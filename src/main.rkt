@@ -207,11 +207,8 @@
                       ,(either element-lchild 'nil-elt))
         :named ,(sformat "tree/~a" (element-name elt)))))))
 
-(define (selector-constraints emit rules dom)
+(define (selector-constraints emit eqs dom)
   (emit '(echo "Generating selector constraints"))
-  (define elts
-    (for/list ([elt (in-tree (dom-tree dom))] #:when (is-element? elt)) elt))
-  (define eqs (equivalence-classes rules elts))
   (for ([(prop type default) (in-css-properties)])
     (match-define (cons class-hash value-hash) (dict-ref eqs prop))
     (for ([(class value) (in-dict value-hash)])
@@ -356,6 +353,7 @@
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
 
   `((set-option :produce-unsat-cores true)
+    (set-option :sat.minimize_core true)
     (echo "Basic definitions")
     (declare-datatypes
      () ; No parameters

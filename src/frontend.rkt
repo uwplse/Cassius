@@ -8,8 +8,11 @@
 (define (sheet-constraints doms sheet)
   (reap [emit]
         (for/list ([dom doms])
-          (define browser-style (get-sheet (dom-context dom ':browser)))
-          (selector-constraints emit (append browser-style sheet) dom))))
+          (define browser-style (get-sheet (and (dom-context dom ':browser) (car (dom-context dom ':browser)))))
+          (define elts
+            (for/list ([elt (in-tree (dom-tree dom))] #:when (is-element? elt)) elt))
+          (define eqs (equivalence-classes (append browser-style sheet) elts))
+          (selector-constraints emit eqs dom))))
 
 (define (extract-ineqs eqcls core)
   (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))
@@ -49,11 +52,12 @@
       (dom name ctx (parse-tree tree))))
 
   (define query (all-constraints doms))
+  (set! query (append query (sheet-constraints doms (car sheets))))
+  (when test (set! query (add-test query test)))
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))
 
-  (when test (set! query (add-test query test)))
   (if (memq 'z3o (flags))
       (set! query (z3-prepare query))
       (set! query (z3-clean query)))
@@ -64,7 +68,7 @@
 
   (reset-elt-names!)
 
-  (append query (sheet-constraints doms (apply append sheets)) (list cassius-check-sat)))
+  (append query (list cassius-check-sat)))
 
 (define (solve sheets docs [test #f] #:debug [debug? #f])
   (define time-start (current-inexact-milliseconds))
@@ -82,12 +86,12 @@
       (dom name ctx (parse-tree tree))))
 
   (define query (all-constraints doms))
+  (set! query (append query (sheet-constraints doms (car sheets))))
+  (when test (set! query (add-test query test)))
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))
 
-  (set! query (append query (sheet-constraints doms (car sheets))))
-  (when test (set! query (add-test query test)))
   (if (memq 'z3o (flags))
       (set! query (z3-prepare query))
       (set! query (z3-clean query)))
@@ -151,10 +155,11 @@
   (define z3 (z3-process))
   (z3-send z3 query)
   (z3-send z3 '((push)))
+  (define browser-style (get-sheet (and (dom-context (car doms) ':browser) (car (dom-context  (car doms) ':browser)))))
 
   (let loop ([ineqs '()])
     (define sheet (ineqs->stylesheet ineqs selhash))
-    (define eqcls (equivalence-classes sheet elts))
+    (define eqcls (equivalence-classes (append browser-style sheet) elts))
     (log-phase "Chose new sketch ~a" sheet)
     (z3-send z3 (append '((pop) (push)) (sheet-constraints doms sheet)))
     (match (z3-check-sat z3 #:strategy cassius-check-sat)
