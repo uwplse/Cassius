@@ -54,7 +54,7 @@
      (match-define (list line/col text) (string-split description ": "))
      (match-define (list "line" (app string->number line) "column" (app string->number column))
                    (string-split line/col))
-     (raise-syntax-error 'Z3 "Z3 error (~a:~a)" line column text)]
+     (raise-syntax-error 'Z3 (format "Z3 error (~a:~a)" line column) text)]
     ['unsupported
      (error "Z3 unsupported\n")]
     [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
@@ -67,7 +67,7 @@
   (for ([line cmds])
     (define out (process line))
     (unless (equal? 'success out)
-      (raise (make-exn:fail (format "Z3: ~a;\n  ~a" out line) (current-continuation-marks))))))
+      (raise (make-exn:fail (format "~a;\n  ~a" out line) (current-continuation-marks))))))
 
 (define (z3-check-sat process #:strategy [strategy '(check-sat)])
   (match (process strategy)

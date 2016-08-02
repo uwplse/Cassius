@@ -212,12 +212,12 @@
     (append
      (for/list ([name (in-hash-values atom-names)])
        `(declare-const ,name Bool))
-     (for/list ([name (in-hash-values atom-names)])
+     #;(for/list ([name (in-hash-values atom-names)])
        `(assert-soft (not ,name)))
      (for/list ([xs xss])
        `(assert (or ,@(for/list ([x xs]) (dict-ref atom-names x)))))))
   (match-define (list 'model out) (z3-solve constraints))
-  (for/list ([(atom name) (in-hash atom-names)] #:when (dict-ref out name))
+  (for/list ([(atom name) (in-hash atom-names)] #:when (dict-ref out name #f))
     atom))
 
 (define (set-intersect-sorted l1 l2)
@@ -307,7 +307,7 @@
   (append
    (for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
      `(declare-const ,(sformat "property/~a/~a" prop i) Bool))
-   (for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
+   #;(for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
      `(assert-soft (not ,(sformat "property/~a/~a" prop i))))
    (for/list ([ineqs ineqss])
      `(assert
@@ -319,7 +319,7 @@
   (for/list ([selector rules] [i (in-naturals)])
     (cons selector
           (for/list ([(prop _t _d) (in-css-properties)]
-                     #:when (dict-ref out (sformat "property/~a/~a" prop i)))
+                     #:when (dict-ref out (sformat "property/~a/~a" prop i) #f))
             `[,prop ?]))))
 
 (define (ineqs->stylesheet ineqs selhash)
