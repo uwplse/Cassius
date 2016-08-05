@@ -170,16 +170,6 @@
        ]
       [(list 'core c)
        (define new-ineqs (extract-ineqs eqcls c))
-       #|
-       (define good-props
-         '(height width position left bottom float
-                  padding-top padding-left padding-right padding-bottom
-                  margin-left margin-right margin-top margin-bottom))
-       (define ineqs* (filter (compose (curry set-member? good-props) car) ineqs))
-       (for ([ineq ineqs*])
-         (eprintf "~a: ~a ≠ ~a\n" (first ineq) (element-name (second ineq))
-                  (if (element? (third ineq)) (element-name (third ineq)) (third ineq))))
-       |#
        (log-phase "Found new set of ~a inequalities (~a total sets)" (length new-ineqs) (+ 1 (length ineqs)))
        (loop (cons new-ineqs ineqs))])))
 

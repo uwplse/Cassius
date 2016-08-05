@@ -204,7 +204,7 @@
   (define-values (tags classes ids) (get-tcis elts))
   (append (map (curry list 'tag) tags) (map (curry list 'class) classes) (map (curry list 'id) ids)))
 
-(define (hitting-set xss)
+(define (hitting-set xss #:extra [extra 0])
   (define atom-names
     (for/hash ([atom (remove-duplicates (apply append xss))] [i (in-naturals)])
       (values atom (sformat "atom/~a" i))))
@@ -215,7 +215,9 @@
      #;(for/list ([name (in-hash-values atom-names)])
        `(assert-soft (not ,name)))
      (for/list ([xs xss])
-       `(assert (or ,@(for/list ([x xs]) (dict-ref atom-names x)))))))
+       `(assert (or ,@(for/list ([x xs]) (dict-ref atom-names x)))))
+     (for/list ([xs xss])
+       `(assert-soft (< ,extra (+ ,@(for/list ([x xs]) `(ite ,(dict-ref atom-names x) 1 0))))))))
   (match-define (list 'model out) (z3-solve constraints))
   (for/list ([(atom name) (in-hash atom-names)] #:when (dict-ref out name #f))
     atom))
@@ -276,8 +278,11 @@
   (for/list ([(elts sel) (in-hash selhash)] #:when (elts-good? elts))
     sel))
 
-(define (ineqs-rules ineqs selhash)
-  (hitting-set (map (compose remove-duplicates (curry append-map (curryr ineq-selectors selhash))) ineqs)))
+(define (ineqs-rules ineqss selhash)
+  (hitting-set
+   #:extra 1
+   (for/list ([ineqs ineqss])
+     (remove-duplicates (append-map (curryr ineq-selectors selhash) ineqs)))))
 
 (define (ineq-rules->z3 ineq rules elts)
   (match-define (list prop elt1 val) ineq)
@@ -311,7 +316,9 @@
      `(assert-soft (not ,(sformat "property/~a/~a" prop i))))
    (for/list ([ineqs ineqss])
      `(assert
-       (or ,@(map (curryr ineq-rules->z3 rules elts) ineqs))))))
+       (or ,@(map (curryr ineq-rules->z3 rules elts) ineqs))))
+   (for/list ([xs ineqss])
+     `(assert-soft (< 1 (+ ,@(for/list ([x xs]) `(ite ,(ineq-rules->z3 x rules elts) 1 0))))))))
 
 (define (ineqs-rules->properties ineqs rules elts)
   (define z3 (ineqs-rules->z3 ineqs rules elts))
