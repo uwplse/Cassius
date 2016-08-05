@@ -32,7 +32,7 @@
 
     (for ([cmd cmds])
       (match cmd
-        [`(assert ,expr)
+        [`(,(or 'assert 'assert-soft) ,expr)
          (find-used expr)]
         [(list 'define-fun name (list types ...) rtype body)
          (list 'define-fun name types rtype (find-used body))]
