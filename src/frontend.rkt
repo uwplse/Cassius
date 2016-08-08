@@ -172,10 +172,3 @@
        (define new-ineqs (extract-ineqs eqcls c))
        (log-phase "Found new set of ~a inequalities (~a total sets)" (length new-ineqs) (+ 1 (length ineqs)))
        (loop (cons new-ineqs ineqs))])))
-
-(define (split-symbol s)
-  (for/list ([part (string-split (~a s) "/")])
-    (or (string->number part) (string->symbol part))))
-
-(define (split-line-name var)
-  (map split-symbol (string-split (~a var) "^")))

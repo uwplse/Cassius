@@ -37,10 +37,6 @@
                             #:when enabled?)
                    (list prop (extract-value value))))]))))
 
-(define (split-symbol s)
-  (for/list ([part (string-split (~a s) "/")])
-    (or (string->number part) (string->symbol part))))
-
 (define ((css-type-ending? v) x)
   (match (split-symbol x)
     [(list _ ... (== v)) #t]
@@ -51,9 +47,6 @@
 
 (define (css-em? x)
   (string-suffix? (~a (last (split-symbol x))) "em"))
-
-(define (split-line-name var)
-  (map split-symbol (string-split (~a var) "^")))
 
 ;; Does tagging of bad
 (define (extract-core stylesheet trees vars)

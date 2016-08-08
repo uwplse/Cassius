@@ -46,15 +46,6 @@
              #:unless (or (and (equal? prop 'text-align) (equal? value 'text-align/left)) (value=? type value (dump-value prop default))))
     `[,prop ,(extract-value value)]))
 
-(define (split-symbol s)
-  (for/list ([part (string-split (~a s) "/")])
-    (or (string->number part) (string->symbol part))))
-
-(define ((css-type-ending? v) x)
-  (match (split-symbol x)
-    [(list _ ... (== v)) #t]
-    [_ #f]))
-
 (define (dump-value type value)
   (define prefix (slower type))
   (match value
@@ -65,8 +56,8 @@
 
 (define (extract-value value)
   (match value
-    [(list (? (css-type-ending? 'px)) x) (list 'px x)]
-    [(list (? (css-type-ending? '%)) x)
+    [(list (app split-symbol (list _ ... 'px)) x) (list 'px x)]
+    [(list (app split-symbol (list _ ... '%)) x)
      (if (ormap (curry = x) (*%*)) ; Percentages that aren't in the list are its first element
          (list '% x)
          (list '% (car (*%*))))]
