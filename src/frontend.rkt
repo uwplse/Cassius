@@ -167,7 +167,8 @@
               (cons
                (for/list ([(ineq id) ineq-ids] #:when (equivalence-classes-avoid? eqcls ineq)) id)
                (unbox avoid-ids)))
-    (draw-cores (reverse (unbox core-ids)) (reverse (unbox avoid-ids)) #:to "/tmp/status.png")
+    (when (set-member? (flags) 'core-img)
+      (draw-cores (reverse (unbox core-ids)) (reverse (unbox avoid-ids)) #:to "/tmp/status.png"))
 
     (log-phase "Chose new sketch ~a" sheet)
     (z3-send z3 (append '((pop) (push)) (sheet-constraints doms sheet)))
@@ -186,7 +187,9 @@
                       (dict-set! ineq-ids ineq (dict-count ineq-ids)))
                     (dict-ref ineq-ids ineq))
                   (unbox core-ids)))
-       (draw-cores (reverse (unbox core-ids)) (reverse (unbox avoid-ids)) #:to "/tmp/status.png")
+
+       (when (set-member? (flags) 'core-img)
+         (draw-cores (reverse (unbox core-ids)) (reverse (unbox avoid-ids)) #:to "/tmp/status.png"))
 
        (log-phase "Found new set of ~a inequalities (~a total sets)" (length new-ineqs) (+ 1 (length ineqs)))
        (loop (cons new-ineqs ineqs))])))
