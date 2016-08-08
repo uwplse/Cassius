@@ -162,12 +162,14 @@
   (let loop ([ineqs '()])
     (define sheet (ineqs->stylesheet ineqs selhash))
     (define eqcls (equivalence-classes (append browser-style sheet) elts))
+
     (set-box! avoid-ids
               (cons
                (for/list ([(ineq id) ineq-ids] #:when (equivalence-classes-avoid? eqcls ineq)) id)
                (unbox avoid-ids)))
-    (log-phase "Chose new sketch ~a" sheet)
     (draw-cores (reverse (unbox core-ids)) (reverse (unbox avoid-ids)) #:to "/tmp/status.png")
+
+    (log-phase "Chose new sketch ~a" sheet)
     (z3-send z3 (append '((pop) (push)) (sheet-constraints doms sheet)))
     (match (z3-check-sat z3 #:strategy cassius-check-sat)
       [(list 'model m)
@@ -184,6 +186,7 @@
                       (dict-set! ineq-ids ineq (dict-count ineq-ids)))
                     (dict-ref ineq-ids ineq))
                   (unbox core-ids)))
+       (draw-cores (reverse (unbox core-ids)) (reverse (unbox avoid-ids)) #:to "/tmp/status.png")
 
        (log-phase "Found new set of ~a inequalities (~a total sets)" (length new-ineqs) (+ 1 (length ineqs)))
        (loop (cons new-ineqs ineqs))])))
