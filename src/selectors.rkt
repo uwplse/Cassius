@@ -2,7 +2,7 @@
 
 (require "common.rkt" "dom.rkt" "spec/css-properties.rkt" data/heap "z3.rkt")
 (module+ test (require rackunit))
-(provide equivalence-classes
+(provide equivalence-classes equivalence-classes-avoid?
          all-selectors ineqs->stylesheet hitting-set)
 
 
@@ -186,6 +186,15 @@
 (define (equivalence-classes rules elts)
   (define ml (rule-matchlist rules elts))
   (matchlist-equivalence-classes ml elts))
+
+(define (equivalence-classes-avoid? classes ineq)
+  (match ineq
+    [(list prop (? element? elt1) (? element? elt2))
+     (define hash (car (dict-ref classes prop)))
+     (not (equal? (dict-ref hash elt1) (dict-ref hash elt2)))]
+    [(list prop (? element? elt1) val)
+     (match-define (cons class-hash value-hash) (dict-ref classes prop))
+     (not (equal? (dict-ref value-hash (dict-ref class-hash elt1)) val))]))
 
 ;; This steps selectors
 
