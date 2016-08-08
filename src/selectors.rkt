@@ -162,21 +162,22 @@
          score<? #:key car))))
 
 (define (matchlist-find matchlist elt prop)
-  (for/first ([rm matchlist] [i (in-naturals)]
+  (for/first ([rm matchlist]
               #:when (and (set-member? (rulematch-elts rm) elt)
                           (set-member? (map car (rulematch-props rm)) prop)))
-    i))
+    rm))
 
 (define (matchlist-equivalence-classes ml elts)
   (for/hash ([(prop type* default) (in-css-properties)])
     (define class-hash (make-hash))
     (define value-hash (make-hash))
     (for* ([elt elts])
-      (define idx (matchlist-find ml elt prop))
+      (define rm (matchlist-find ml elt prop))
+      (define idx (and rm (rulematch-idx rm)))
       (define value
         (cond
          [(number? idx)
-          (car (dict-ref (rulematch-props (list-ref ml idx)) prop))]
+          (car (dict-ref (rulematch-props rm) prop))]
          [(not idx)
           (if (equal? prop 'text-align) 'left default)]))
       (dict-set! value-hash idx value)

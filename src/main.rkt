@@ -3,7 +3,7 @@
          "selectors.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 
-(provide all-constraints add-test solve-constraints (struct-out success) (struct-out failure) replace-ids-with-holes reset-replaced selector-constraints)
+(provide all-constraints add-test replace-ids-with-holes reset-replaced selector-constraints extract-core extract-rules extract-counterexample! extract-tree!)
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -394,17 +394,3 @@
     (assert (! (and ,@(for/list ([&var &vars]) `(is-box (get/box ,&var)))
                     (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body)))
                :named test))))
-
-(struct success (stylesheet elements))
-(struct failure (stylesheet trees))
-
-(define (solve-constraints sheet doms out #:debug [debug? #f])
-  (define trees (map dom-tree doms))
-  (match out
-    [(list 'model m)
-     (for-each (curryr extract-tree! m) trees)
-     (extract-counterexample! m)
-     (success (extract-rules sheet trees m) (map unparse-tree trees))]
-    [(list 'core c)
-     (define-values (stylesheet* trees*) (extract-core sheet trees c))
-     (failure stylesheet* (map unparse-tree trees*))]))

@@ -1,7 +1,10 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt"
-         "selectors.rkt" "spec/browser-style.rkt")
+         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt")
 (provide constraints solve synthesize (struct-out success) (struct-out failure))
+
+(struct success (stylesheet elements))
+(struct failure (stylesheet trees))
 
 (define (sheet-constraints doms sheet)
   (reap [emit]
@@ -103,7 +106,17 @@
       (z3-send z3 query)
       (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
         (z3-kill z3))))
-  (define res (solve-constraints (car sheets) doms out))
+
+  (define trees (map dom-tree doms))
+  (define res
+    (match out
+      [(list 'model m)
+       (for-each (curryr extract-tree! m) trees)
+       (extract-counterexample! m)
+       (success (extract-rules (car sheets) trees m) (map unparse-tree trees))]
+      [(list 'core c)
+       (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
+       (failure stylesheet* (map unparse-tree trees*))]))
 
   (log-phase "Solved constraints")
 
@@ -174,10 +187,17 @@
     (z3-send z3 (append '((pop) (push)) (sheet-constraints doms sheet)))
     (match (z3-check-sat z3 #:strategy cassius-check-sat)
       [(list 'model m)
+       (define sheet*
+         (for/list ([rule (append browser-style sheet)] [idx (in-naturals)])
+           (append (list (car rule)) (filter symbol? (cdr rule))
+                   (for/list ([(prop value) (in-dict (filter list? (cdr rule)))])
+                     (match value
+                       [(list '?) (list prop (extract-value (dict-ref m (sformat "value/~a/~a" prop idx))))]
+                       [(list _) (cons prop value)])))))
        (log-phase "Synthesized stylesheet!")
-       (reset-elt-names!)
        ;; TODO - return (success _ _)
-       ]
+       (reset-elt-names!)
+       (success (drop sheet* (length browser-style)) (map (compose unparse-tree dom-tree) doms))]
       [(list 'core c)
        (define new-ineqs (extract-ineqs eqcls c))
        (set-box! core-ids
