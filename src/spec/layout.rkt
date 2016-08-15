@@ -642,13 +642,13 @@
                   [bottom? (not (is-offset/auto (style.bottom r)))]
                   [height? (not (is-height/auto (style.height r)))])
 
-          (=> top? (= (top-outer b) (+ (top-content pp) temp-top)))
+          (=> top? (= (top-border b) (+ (top-content pp) temp-top)))
           (=> height? (= (h b) temp-height))
           (=> (and (not top?) (not bottom?)) (= (y b) (vertical-position-for-flow-boxes b)))
           (=> (and (not height?) (not (and top? bottom?)))
               (= (h b) (auto-height-for-flow-roots b)))
           (=> (and bottom? (not (and top? height?)))
-              (= (bottom-outer b) (- (bottom-content pp) temp-bottom)))
+              (= (bottom-border b) (- (bottom-content pp) temp-bottom)))
 
           ;; Margins work identically unless overspecified
           (=> (not (and top? height? bottom?))
@@ -667,7 +667,7 @@
                        (= (mt b) (mb b)))
                    (=> (or (is-margin/auto (style.margin-top r))
                            (is-margin/auto (style.margin-bottom r)))
-                       (= (bottom-outer b) (- (bottom-content pp) temp-bottom))))))
+                       (= (bottom-border b) (- (bottom-content pp) temp-bottom))))))
 
        ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
        ,(smt-let ([temp-left ,(get-px-or-% 'left 'offset 'w 'b)]
@@ -685,14 +685,14 @@
                (= (ml b) (margin-min-px (style.margin-left r) b))
                (= (mr b) (margin-min-px (style.margin-right r) b))))
 
-          (=> left? (= (left-outer b) (+ (left-content pp) temp-left)))
+          (=> left? (= (left-border b) (+ (left-content pp) temp-left)))
           (=> width? (and (= (w b) temp-width) (not (w-from-stfwidth b))))
           (=> (and (not width?) (not (and left? right?)))
               (and (= (w b) (stfwidth b)) (w-from-stfwidth b)))
           (=> (and (not left?) (not right?))
-              (= (left-outer b) (left-content p)))
+              (= (left-border b) (left-content p)))
           (=> (and right? (not (and left? width?)))
-              (= (right-outer b) (- (right-content pp) temp-right)))
+              (= (right-border b) (- (right-content pp) temp-right)))
           (=> (and left? right?) (not (w-from-stfwidth b)))
 
           (=> (and left? width? right?)
@@ -703,7 +703,7 @@
               (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
                   (= (ml b) (mr b)))
               (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
-                  (= (right-outer b) (- (right-content pp) temp-right)))))))
+                  (= (right-border b) (- (right-content pp) temp-right)))))))
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
