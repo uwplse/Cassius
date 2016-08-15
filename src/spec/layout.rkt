@@ -644,7 +644,7 @@
 
           (=> top? (= (top-outer b) (+ (top-content pp) temp-top)))
           (=> height? (= (h b) temp-height))
-          (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-boxes b)))
+          (=> (and (not top?) (not bottom?)) (= (y b) (vertical-position-for-flow-boxes b)))
           (=> (and (not height?) (not (and top? bottom?)))
               (= (h b) (auto-height-for-flow-roots b)))
           (=> (and bottom? (not (and top? height?)))
