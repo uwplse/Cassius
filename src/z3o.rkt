@@ -260,7 +260,7 @@
      (map (curryr capture-avoiding-substitute bindings) body)]
     [_ body]))
 
-(define ((z3-expand . fn-names) cmds)
+(define ((z3-expand fn-names #:clear [clear? false]) cmds)
   (define fns (make-hash))
 
   (define (expand-term expr)
@@ -278,7 +278,9 @@
     (match cmd
       [`(define-fun ,(? (curryr memq fn-names) name) ((,names ,types) ...) ,rtype ,body)
        (hash-set! fns name (list names (expand-term body)))
-       `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-term body))]
+       (if clear?
+           `(echo ,(format "(define-fun ~a ...)" name))
+           `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-term body)))]
       [`(define-fun ,name ((,names ,types) ...) ,rtype ,body)
        `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-term body))]
       [(list 'assert expr)
