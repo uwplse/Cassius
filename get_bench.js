@@ -488,6 +488,9 @@ function dump_rule(sel, style, features, is_from_style) {
         if (sname.startsWith("-")) continue; // Skip browser-specific styles for now.
         var val = style[sname];
         var tname = sname;
+        if (val == "inherit") {
+            features["inherit"] = true;
+        }
         if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
             var tname = tname.split("-", 2)[0];
         }
