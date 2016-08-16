@@ -46,12 +46,21 @@
 
 (struct result (file problem test section status description features output time url))
 
-(define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)] #:feature [feature #f])
+(define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)] #:feature [feature #f] #:old-json [old-json #f])
   (define probs (call-with-input-file file parse-file))
+  (define passes-filter?
+    (if old-json
+         (curry set-member?
+                (for/list ([rec (call-with-input-file old-json read-json)]
+                           #:unless (equal? (dict-ref rec 'status) "success"))
+                  (dict-ref rec 'test)))
+        (const true)))
 
   (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))]
         #:when (or (not fast?) (subset? (dict-ref prob ':features) supported-features))
-        #:when (or (not feature) (set-member? (dict-ref prob ':features) feature)))
+        #:when (or (not feature) (set-member? (dict-ref prob ':features) feature))
+        #:when (let-values ([(_1 uname _2) (split-path (car (dict-ref prob ':url)))])
+                 (passes-filter? (~a uname))))
     (eprintf "~a\t~a\t" file pname)
     (define-values (ubase uname udir?) (split-path (car (dict-ref prob ':url))))
 
@@ -91,7 +100,7 @@
 (define (file-name-stem fn)
   (first (string-split (last (string-split fn "/")) ".")))
 
-(define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f] #:feature [feature #f])
+(define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f] #:feature [feature #f] #:old-json [old-json #f])
   (define index
     (if classify
         (for*/hash ([sec (call-with-input-file classify read-json)] [(k v) (in-hash sec)])
@@ -100,7 +109,7 @@
 
   (define resultss
     (for/list ([file files])
-      (run-file-tests file #:debug debug #:fast fast? #:index index #:feature feature)))
+      (run-file-tests file #:debug debug #:fast fast? #:index index #:feature feature #:old-json old-json)))
   (define results (apply append resultss))
 
   (define out (if outname (open-output-file (format "~a.json" outname) #:exists 'replace) (current-output-port)))
@@ -164,6 +173,7 @@
 (module+ main
   (define debug '())
   (define out-file #f)
+  (define old-json #f)
   (define classify #f)
   (define fast #f)
   (define feature #f)
@@ -187,7 +197,9 @@
     (set! fast #t)]
    [("--index") sname "File name with section information for tests"
     (set! classify sname)]
+   [("--rerun") json "Old JSON file of failures to rerun"
+    (set! old-json json)]
    [("--test") fname "Test a particular feature"
     (set! feature (string->symbol fname))]
    #:args fnames
-   (run-report fnames #:debug debug #:output out-file #:fast fast #:classify classify #:feature feature)))
+   (run-report fnames #:debug debug #:old-json old-json #:output out-file #:fast fast #:classify classify #:feature feature)))
