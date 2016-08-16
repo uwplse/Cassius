@@ -688,7 +688,11 @@
           (=> left? (= (left-border b) (+ (left-content pp) temp-left)))
           (=> width? (and (= (w b) temp-width) (not (w-from-stfwidth b))))
           (=> (and (not width?) (not (and left? right?)))
-              (and (= (w b) (stfwidth b)) (w-from-stfwidth b)))
+              (and (= (w b)
+                      (let ([l (real-lbox b)] [v (real-vbox b)])
+                        (max
+                         (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)
+                         (ite (is-box v) (stfwidth v) 0.0)))) (w-from-stfwidth b)))
           (=> (and (not left?) (not right?))
               (= (left-border b) (left-content p)))
           (=> (and right? (not (and left? width?)))

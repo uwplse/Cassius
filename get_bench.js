@@ -546,7 +546,7 @@ function dump_rule(sel, style, features, is_from_style) {
         }
         out += "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
     }
-    return out
+    return out;
 }
 
 function dump_features(features) {

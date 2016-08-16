@@ -99,7 +99,7 @@
     [(list 'class cls) '(0 1 0)]
     [(list 'tag tag) '(0 0 1)]
     ['* '(0 0 0)]
-    [(list 'fake _ ...) '(0 0 0)]
+    [(list 'fake _ ...) '(0 0 1)] ; TODO: Should it be 0 0 0 ?
     [(list (or 'and 'desc 'child) sels ...)
      (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
 
