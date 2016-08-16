@@ -52,10 +52,6 @@ class CassiusInput():
     def __init__(self, fd, urls, name):
         self.fd = fd
         self.fd.write(""";; python get_bench.py --name {} {}
-
-(define-header header
-"")
-
 """.format(name, " ".join("'{}'".format(url) for url in urls)))
         self.fd.flush()
         self.ids = []

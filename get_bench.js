@@ -552,7 +552,7 @@ function dump_features(features) {
         if (!features.hasOwnProperty(f)) continue;
         text += f + " ";
     }
-    return "(" + text.trim() + ")";
+    return text.trim();
 }
 
 function dump_tree(page) {
@@ -618,12 +618,12 @@ function page2cassius(name) {
         text += dump_rule("#" + eid, style[eid], features, true);
     }
     text += ")\n\n";
-    text += "(define-document (" + name + " #:width " + page.props.w +  " #:browser firefox)";
+    text += "(define-document (" + name + " :browser firefox)\n ([VIEW :w " + page.props.w + "]";
     text += dump_tree(page);
-    text += ")\n\n";
+    text += "))\n\n";
 
     var title = dump_string(document.title);
-    text += "(define-problem " + name + "\n  " + title + "\n  #:url \"" + location + "\"\n  #:header header\n  #:sheet " + name  + "\n  #:documents " + name + "\n  #:features " + dump_features(features) + ")";
+    text += "(define-problem " + name + "\n  :desc " + title + "\n  :url \"" + location + "\"\n  :header header\n  :sheets " + name  + "\n  :documents " + name + "\n  :features " + dump_features(features) + ")";
     return text;
 }
 
