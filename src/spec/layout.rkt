@@ -845,6 +845,5 @@
             (= (y b) (top-content p)))
        (= (x b) (left-content p))
        (= (mt b) (mr b) (mb b) (ml b) 0.0)
-       (= (mtn b) (mbn b) (mtp b) (mbp b) 0.0)
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) (pl b) 0.0))))
