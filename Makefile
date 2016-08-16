@@ -1,4 +1,4 @@
-CSSWG_PATH=/home/pavpan/src/csswg-test
+CSSWG_PATH=/home/src/csswg-test
 TEST_FILES=$(wildcard bench/*.rkt)
 TESTS=$(TEST_FILES:bench/%.rkt=%:verify)
 SRC=$(wildcard cassius/*)
