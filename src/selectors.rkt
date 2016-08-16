@@ -10,6 +10,8 @@
 (define (selector-matches? sel elt)
   "Given an element and a selector, returns whether the selector matches the element"
   (match sel
+    [`(fake ,true ,subsels ...)
+     (ormap (curryr selector-matches? elt) subsels)]
     [`* true]
     [`(id ,id)
      (define eid (and (element-get elt ':id) (slower (element-get elt ':id))))
@@ -97,6 +99,7 @@
     [(list 'class cls) '(0 1 0)]
     [(list 'tag tag) '(0 0 1)]
     ['* '(0 0 0)]
+    [(list 'fake _ ...) '(0 0 0)]
     [(list (or 'and 'desc 'child) sels ...)
      (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
 

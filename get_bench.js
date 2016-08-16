@@ -464,9 +464,9 @@ function rescue_selector(sel) {
         }
     }
     if (ids.length) {
-        return "(" + dump_string(sel) + " (or (id " + ids.join(") (id ") + ")))";
+        return "(fake " + dump_string(sel) + " (id " + ids.join(") (id ") + "))";
     } else {
-        return "(" + dump_string(sel) + " (or))";
+        return "(fake " + dump_string(sel) + ")";
     }
 }
 
@@ -533,12 +533,17 @@ function dump_rule(sel, style, features, is_from_style) {
 
     if (!has_good_prop) return "";
 
-    var sel_text = dump_selector(sel);
-    if (!sel_text) {
-        features["unknown-selector"] = true;
-        sel_text = rescue_selector(sel);
+    var sels = sel.split(",");
+    var out = "";
+    for (var i = 0; i < sels.length; i++) {
+        var sel_text = dump_selector(sels[i]);
+        if (!sel_text) {
+            features["unknown-selector"] = true;
+            sel_text = rescue_selector(sels[i]);
+        }
+        out += "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
     }
-    return "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
+    return out
 }
 
 function dump_features(features) {
