@@ -50,11 +50,10 @@
   (define probs (call-with-input-file file parse-file))
 
   (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))]
-        #:when (or (not fast?) (subset? (problem-features prob) supported-features))
-        #:when (or (not feature) (set-member? (problem-features prob) feature)))
-    (match-define (problem desc url header sheet documents features test) prob)
+        #:when (or (not fast?) (subset? (dict-ref prob ':features) supported-features))
+        #:when (or (not feature) (set-member? (dict-ref prob ':features) feature)))
     (eprintf "~a\t~a\t" file pname)
-    (define-values (ubase uname udir?) (split-path url))
+    (define-values (ubase uname udir?) (split-path (car (dict-ref prob ':url))))
 
     (define out (open-output-string))
     (define eng
@@ -63,7 +62,7 @@
                   (with-handlers
                       ([exn:break? (λ (e) 'break)]
                        [exn:fail? (λ (e) (list 'error e))])
-                    (solve (list sheet) documents #:debug debug))))))
+                    (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug))))))
     (define t (current-inexact-milliseconds))
     (define res
       (with-handlers ([exn:fail? (λ (e) 'error)])
@@ -80,11 +79,11 @@
         ['break 'break]
         [(success stylesheet trees) 'success]
         [(failure stylesheet trees)
-         (if (null? (set-subtract features supported-features)) 'fail 'unsupported)]))
+         (if (null? (set-subtract (dict-ref prob ':features) supported-features)) 'fail 'unsupported)]))
     (eprintf "~a\n" status)
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (problem-desc prob) (problem-features prob) (get-output-string out) runtime
-            (problem-url prob))))
+            status (dict-ref prob ':desc) (dict-ref prob ':features) (get-output-string out) runtime
+            (car (dict-ref prob ':url)))))
 
 (define (number-or-empty? x)
   (if (zero? x) "" x))
