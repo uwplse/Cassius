@@ -1,29 +1,5 @@
 ;; python get_bench.py 'http://pavpanchekha.com/blog/ubuntu-on-lvm.html' 'http://pavpanchekha.com/blog/organization.html'
 
-;; EDITS:
-; - <HTML> and <BODY> have :h turned off; no idea why it doesn't work
-
-(define-header header
-"html { background-color: #f1f1f1; color: #2E3436; }
-body { font-size: 18px; line-height: 1.333; text-rendering: optimizeLegibility; font-family: 'PT Serif', serif; }
-pre { font-family: 'Open Sans Light', 'Inconsolata', 'Deja Vu Sans Mono', monospace; font-weight: 300;}
-h1 { font-family: 'Open Sans Semibold', 'Deja Vu Sans', 'Georgia', sans; font-weight: 600;
-     font-size: 24px; line-height: 1; letter-spacing: -.03em; color: #555753;}
-p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
-#content p {text-align: justify}
-#postamble p {font-size: 13px; line-height: 1.23;}")
-
-(define-stylesheet unknown-sheet
-  ? ? ? ?)
-
-(define-stylesheet partial-good-sheet
-  ((tag html) ?)
-  ((tag body) ?)
-  ((tag pre) ?)
-  ((tag h1) ?)
-  ((tag p) ?)
-  ((id postamble) ?))
-
 (define-stylesheet good-sheet
   ((tag html)
    [margin-top (px 0)]
@@ -226,4 +202,4 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
 
 (define-problem main
   :sheets good-sheet
-  :documents doma)
+  :documents doma domb)
