@@ -57,18 +57,20 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
    [margin-top (px 36)]
    [margin-bottom (px 0)])
   ((tag p)
-   [text-align inherit]
+   #|[text-align inherit]|#
    [margin-top (px 18)]
    [margin-right (px 0)]
    [margin-bottom (px 18)]
    [margin-left (px 0)])
+  ((child (id postamble) (tag p))
+   [text-align center])
   ((id postamble)
-   [text-align center]
    [margin-top (px 18)]))
 
 ;; From http://pavpanchekha.com/blog/ubuntu-on-lvm.html
 
-(define-document (doma #:width 958)
+(define-document (doma :browser firefox)
+ ([VIEW :w 958]
   ([BLOCK :tag HTML :x 0 :y 0 :w 958 #|:h (/ 10291 12)|#]
    ([BLOCK :tag BODY :x 154 :y 36 :w 650 #|:h (/ 8779 12)|#]
     ([BLOCK :tag DIV :id content :x 164 :y 36 :w 630 :h 582]
@@ -121,11 +123,12 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 326.5 :y (/ 7789 12) :w 108 :h 15])
        ([TEXT :x 434.5 :y (/ 7789 12) :w 95  :h 15])
        ([TEXT :x 529.5 :y (/ 7789 12) :w 119 :h 15])
-       ([TEXT :x 648.5 :y (/ 7789 12) :w 4   :h 15])))))))
+       ([TEXT :x 648.5 :y (/ 7789 12) :w 4   :h 15]))))))))
 
 ;; From http://pavpanchekha.com/blog/organization.html
 
-(define-document (domb #:width 945)
+(define-document (domb :browser firefox)
+ ([VIEW :w 945]
   ([BLOCK :tag HTML :x 0 :y 0 :w 945]
    ([BLOCK :tag BODY :x 147.5 :y 36 :w 650 #|:h (/ 33465 30)|#]
     ([BLOCK :tag DIV :id content :x 157.5 :y 36 :w 630 :h 978.5]
@@ -219,47 +222,8 @@ p { -moz-hyphens: auto; -webkit-hyphens: auto; hyphens: auto;}
        ([TEXT :x 320 :y 1033 :w 108 :h 15])
        ([TEXT :x 428 :y 1033 :w 95 :h 15])
        ([TEXT :x 523 :y 1033 :w 119 :h 15])
-       ([TEXT :x 642 :y 1033 :w 4 :h 15])))))))
+       ([TEXT :x 642 :y 1033 :w 4 :h 15]))))))))
 
-(define-problem verify
-  #:header header
-  #:sheet good-sheet
-  #:documents doma domb)
-
-(define-problem sketch
-  #:header header
-  #:sheet partial-good-sheet
-  #:documents doma domb)
-
-(define-problem synthesize
-  #:header header
-  #:sheet unknown-sheet
-  #:documents doma domb)
-
-; A model tester
-
-(define-document (template #:width 958)
-  ([BLOCK :tag HTML :x 0 :y 0 :w 958]
-   ([BLOCK :tag BODY :x 154 :y 36 :w 650]
-    ([BLOCK :tag DIV :id content :x 164 :y 36 :w 630]
-     ([BLOCK :tag H1 :x 164 :y 36 :w 630 :h 24]
-      ([LINE  :x 164 :y 36 :w 630 :h 24]
-       ([TEXT :x 164 :y 31.5 :h 33])))
-     ([BLOCK :tag P :w 630]
-      ([LINE  :w 630 :h 24]
-       ([TEXT :w (between 0 630) :h 21]))
-      *)
-     *
-     ([BLOCK :tag DIV :id postamble :x 164 :w 630 :h 16]
-      ([BLOCK :tag P :x 164 :w 630 :h 16]
-       ([LINE  :x 164 :w 630 :h 16]
-        ([TEXT :x 305.5 :w 21  :h 15])
-        ([TEXT :x 326.5 :w 108 :h 15])
-        ([TEXT :x 434.5 :w 95  :h 15])
-        ([TEXT :x 529.5 :w 119 :h 15])
-        ([TEXT :x 648.5 :w 4   :h 15]))))))))
-
-(define-problem modelcheck
-  #:test (forall (b1 b2) (=> (and (is-box/text b1) (is-box/text b2)) (not (overlaps b1 b2))))
-  #:sheet good-sheet
-  #:documents template)
+(define-problem main
+  :sheets good-sheet
+  :documents doma)
