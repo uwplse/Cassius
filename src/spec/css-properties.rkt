@@ -6,7 +6,7 @@
 (define css-types-hash (make-hash))
 (define css-property-hash (make-hash))
 
-(define *%* (make-parameter '(0 1 1.5 5 10 15 18 20 25 29 50 62 66 80 100 101 125 200)))
+(define *%* (make-parameter '(0 1 1.5 2 5 10 15 18 20 25 29 50 62 66 80 100 101 125 200)))
 
 (define (css-constructor name items)
   (for/list ([variant (list* 'inherit items)])

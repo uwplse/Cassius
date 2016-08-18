@@ -190,9 +190,11 @@
        (define sheet*
          (for/list ([rule (append browser-style sheet)] [idx (in-naturals)])
            (append (list (car rule)) (filter symbol? (cdr rule))
-                   (for/list ([(prop value) (in-dict (filter list? (cdr rule)))])
+                   (for/list ([(prop value) (in-dict (filter list? (cdr rule)))]
+                              #:when (dict-has-key? m (sformat "value/~a/~a" prop idx)))
                      (match value
-                       [(list '?) (list prop (extract-value (dict-ref m (sformat "value/~a/~a" prop idx))))]
+                       [(list '?)
+                        (list prop (extract-value (dict-ref m (sformat "value/~a/~a" prop idx))))]
                        [(list _) (cons prop value)])))))
        (log-phase "Synthesized stylesheet!")
        ;; TODO - return (success _ _)

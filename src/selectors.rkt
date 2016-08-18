@@ -272,7 +272,7 @@
         (reap [sow]
               (for* ([elts changes] [(elts* tail) ands] [head '(child desc)])
                 (define old-sel (dict-ref descs elts))
-                (define new-sel (list head old-sel tail))
+                (define new-sel (list head tail old-sel))
                 ;; The sort is because set-intersect doesn't keep sorted lists sorted
                 (define new-elts (filter (curry selector-matches? new-sel) elts))
                 (unless (or (dict-has-key? descs new-elts) (null? new-elts))
