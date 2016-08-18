@@ -8,12 +8,14 @@
 
 (define (sheet-constraints doms sheet)
   (reap [emit]
-        (for/list ([dom doms])
-          (define browser-style (get-sheet (and (dom-context dom ':browser) (car (dom-context dom ':browser)))))
-          (define elts
-            (for/list ([elt (in-tree (dom-tree dom))] #:when (is-element? elt)) elt))
-          (define eqs (equivalence-classes (append browser-style sheet) elts))
-          (selector-constraints emit eqs dom))))
+        (define browser-styles (map (curryr dom-context ':browser) doms))
+        (unless (= (length (remove-duplicates browser-styles)) 1)
+          (error "Multiple documents with different browsers not supported"))
+        (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
+        (define elts
+          (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) elt))
+        (define eqs (equivalence-classes (append browser-style sheet) elts))
+        (selector-constraints emit eqs dom)))
 
 (define (extract-ineqs eqcls core)
   (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))
