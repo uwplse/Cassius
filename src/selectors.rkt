@@ -3,6 +3,7 @@
 (require "common.rkt" "dom.rkt" "spec/css-properties.rkt" data/heap "z3.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes equivalence-classes-avoid?
+         selector-matches?
          all-selectors ineqs->stylesheet hitting-set)
 
 
