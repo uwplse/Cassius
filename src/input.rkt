@@ -10,6 +10,7 @@
   (define problems (make-hash))
   (define sheets (make-hash))
   (define docs (make-hash))
+  (define layouts (make-hash))
   (define actions (make-hash))
   (define handlers (make-hash))
 
@@ -17,9 +18,11 @@
     (match expr
       [`(define-stylesheet ,name ,rules ...)
        (dict-set! sheets name rules)]
-      [`(define-document (,name ,rest ...) ,tree)
+      [`(define-layout (,name ,rest ...) ,tree)
        (define properties (attributes->dict rest))
        (dict-set! docs name (dom name properties tree))]
+      [`(define-document ,name ,tree)
+       (dict-set! layouts name tree)]
       [`(define-action ,name ,evt (,froms ,tos) ...)
        (define deref (curry map (curry dict-ref docs)))
        (dict-set! actions name (cons evt (map cons (deref froms) (deref tos))))]
