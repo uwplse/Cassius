@@ -1,15 +1,15 @@
 #lang racket
-(require "common.rkt")
+(require "common.rkt" "registry.rkt")
 
 (provide (struct-out dom)
          (struct-out element) parse-tree unparse-tree in-tree in-elements in-boxes
          element-get element-get* element-set! element-remove! dom-context
-         element-name element-parent element-next element-prev element-fchild element-lchild element-anscestors
-         box-name box-parent box-next box-prev box-fchild box-lchild box-anscestors
-         elt-from-name reset-elt-names! is-element?)
+         element-parent element-next element-prev element-fchild element-lchild element-anscestors
+         box-parent box-next box-prev box-fchild box-lchild box-anscestors
+         is-element?)
 
 (struct dom (name properties tree))
-(struct element (type name* attrs parent* children)
+(struct element (type attrs parent* children)
         #:mutable
         #:methods gen:custom-write
         [(define (write-proc elt port mode)
@@ -23,8 +23,7 @@
 (define (parse-tree tree)
   (let loop ([tree tree] [parent #f])
     (match-define `([,type ,attrs ...] ,children ...) tree)
-    (define elt (element type (void) attrs parent (void)))
-    (set-element-name*! elt (elt-name elt))
+    (define elt (element type attrs parent (void)))
     (define chld (map (curryr loop elt) children))
     (set-element-children! elt chld)
     elt))
@@ -33,16 +32,6 @@
   (cons
    (list* (element-type tree) (element-attrs tree))
    (map unparse-tree (element-children tree))))
-
-(define (box-name elt)
-  (if elt
-      (sformat "~a-flow" (element-name* elt))
-      'nil-box))
-
-(define (element-name elt)
-  (if elt
-      (element-name* elt)
-      'nil-elt))
 
 (define (element-get elt name #:default [default #f])
   (for/first ([(k v) (in-groups 2 (element-attrs elt))] #:when (equal? name k)) v))
@@ -144,13 +133,3 @@
 
 (define (in-elements dom)
   (sequence-filter is-element? (in-boxes dom)))
-
-(define elt-names (make-hasheq))
-(define (reset-elt-names!) (void) #;(set! elt-names (make-hasheq)))
-(define (elt-name def)
-  (hash-ref! elt-names def (lambda () (sformat "elt$~a" (hash-count elt-names)))))
-
-(define (elt-from-name name)
-  (for/first ([(key val) (in-hash elt-names)] #:when (eq? val name))
-    key))
-

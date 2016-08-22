@@ -1,5 +1,5 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt"
+(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt"
          "selectors.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 
@@ -57,7 +57,7 @@
        (define field-name
          (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
            ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
-       (define elt (elt-from-name elt-name))
+       (define elt (by-name 'elt elt-name))
        (element-set! elt field-name `(bad ,(element-get elt field-name)))]
       [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
        (define rule (hash-ref! stylesheet* idx (list-ref stylesheet idx)))
@@ -73,7 +73,7 @@
                    line]))))
        (hash-set! stylesheet* idx rule*)]
       [`((style ,elt-name ,prop) ,_ ...)
-       (define elt (elt-from-name elt-name))
+       (define elt (by-name 'elt elt-name))
        (define old-style (css-denormalize-body (element-get elt ':style)))
        (element-set! elt ':style
                      (css-normalize-body
@@ -180,14 +180,13 @@
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)])
     (when (equal? (car (split-symbol name)) 'counterexample)
-      (define elt (elt-from-name (string->symbol (car (string-split (~a value) "-")))))
+      (define elt (by-name 'elt (string->symbol (car (string-split (~a value) "-")))))
       (set-element-attrs! elt (list* ':cex `(bad ,(string-join (cdr (string-split (~a name) "/")) "/")) (element-attrs elt))))))
 
 (define (tree-constraints dom emit elt)
   (when (is-element? elt)
     (define (either field default)
-      (let ([e (field elt)])
-        (if e (element-name e) default)))
+      (name 'elt (field elt) 'nil-elt))
     (emit
      `(assert
        (!
@@ -198,7 +197,7 @@
                       ,(either element-next 'nil-elt)
                       ,(either element-fchild 'nil-elt)
                       ,(either element-lchild 'nil-elt))
-        :named ,(sformat "tree/~a" (element-name elt)))))))
+        :named ,(sformat "tree/~a" (dump-elt elt)))))))
 
 (define (selector-constraints emit eqs dom)
   (emit '(echo "Generating selector constraints"))
@@ -210,19 +209,19 @@
           (emit `(declare-const ,const ,type))
           (emit `(define-const ,const ,type ,(dump-value type value))))
       (define elts (for/list ([(elt class*) (in-dict class-hash)] #:when (equal? class class*)) elt))
-      (for* ([elt1 elts] [elt2 elts] #:when (symbol<? (element-name elt1) (element-name elt2)))
-        (define assertname (sformat "~a^~a^~a" const (element-name elt1) (element-name elt2)))
+      (for* ([elt1 elts] [elt2 elts] #:when (symbol<? (name 'elt elt1) (name 'elt elt2)))
+        (define assertname (sformat "~a^~a^~a" const (name 'elt elt1) (name 'elt elt2)))
         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt1)))
                             (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt2))))
                           :named ,assertname))))
       (for ([elt elts])
-        (define assertname (sformat "~a^~a" const (element-name elt)))
+        (define assertname (sformat "~a^~a" const (name 'elt elt)))
         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
                           :named ,assertname)))))))
 
 (define (box-element-constraints dom emit elt)
-  (define bname (box-name elt))
-  (define ename (element-name elt))
+  (define bname (name 'box elt))
+  (define ename (name 'elt elt))
   (if (is-element? elt)
       (emit `(assert (! (link-element-box ,ename ,bname) :named ,(sformat "box-element/~a" ename))))
       (emit `(assert (! (link-anon-box ,bname) :named ,(sformat "box-element/~a" ename))))))
@@ -232,7 +231,7 @@
     (emit `(declare-const ,(dump-elt elt) Element)))
   (define body
     (for*/fold ([body 'no-elt]) ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt))
-      `(ite (,(sformat "is-~a" (element-name elt)) &elt) ,(dump-elt elt) ,body)))
+      `(ite (,(sformat "is-~a" (name 'elt elt)) &elt) ,(dump-elt elt) ,body)))
   (emit `(define-fun get/elt ((&elt ElementName)) Element ,body)))
 
 (define (dom-define-get/box doms emit)
@@ -240,7 +239,7 @@
     (emit `(declare-const ,(dump-box box) Box)))
   (define body
     (for*/fold ([body 'no-box]) ([dom doms] [box (in-tree (dom-tree dom))])
-      `(ite (,(sformat "is-~a" (box-name box)) &box) ,(dump-box box) ,body)))
+      `(ite (,(sformat "is-~a" (name 'box box)) &box) ,(dump-box box) ,body)))
   (emit `(define-fun get/box ((&box BoxName)) Box ,body)))
 
 (define (number*? x)
@@ -259,7 +258,7 @@
         [`(not ,(? number*? value)) `(not (= ,expr ,value))]
         [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min ,expr ,max)]))
 
-    (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (element-name elt)))))))
+    (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (name 'elt elt)))))))
 
 (define (style-constraints dom emit elt)
   (when (element-get elt ':style)
@@ -270,11 +269,11 @@
         [(list val)
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
                               ,(dump-value type val))
-                           :named ,(sformat "style/~a/~a" (element-name elt) prop))))]
+                           :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))]
         [#f
          (define value (dump-value type (if (equal? prop 'text-align) 'left default)))
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
-                           :named ,(sformat "style/~a/~a" (element-name elt) prop))))])))) 
+                           :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 
 (define (box-link-constraints dom emit elt)
   (define cns
@@ -287,13 +286,13 @@
       ['INLINE 'link-inline-box]
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns ,(dump-box elt)
-                          ,(box-name elt)
-                          ,(box-name (box-parent elt))
-                          ,(box-name (box-prev elt))
-                          ,(box-name (box-next elt))
-                          ,(box-name (box-fchild elt))
-                          ,(box-name (box-lchild elt)))
-                    :named ,(sformat "link-box/~a" (element-name elt))))))
+                          ,(name 'box elt)
+                          ,(name 'box (box-parent elt) 'nil-box)
+                          ,(name 'box (box-prev elt) 'nil-box)
+                          ,(name 'box (box-next elt) 'nil-box)
+                          ,(name 'box (box-fchild elt) 'nil-box)
+                          ,(name 'box (box-lchild elt) 'nil-box))
+                    :named ,(sformat "link-box/~a" (name 'elt elt))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -307,7 +306,7 @@
       ['TEXT 'a-text-box]))
   (when cns
     (emit `(assert (! (,cns ,(dump-box elt))
-                      :named ,(sformat "box/~a/~a" (slower (element-type elt)) (element-name elt)))))))
+                      :named ,(sformat "box/~a/~a" (slower (element-type elt)) (name 'elt elt)))))))
 
 (define (info-constraints dom emit elt)
   (when (is-element? elt)
@@ -322,7 +321,7 @@
           (dump-id (element-get elt ':id))))
 
     (emit `(assert (! (element-info ,(dump-elt elt) ,tagname ,idname)
-                      :named ,(sformat "info/~a" (element-name elt)))))))
+                      :named ,(sformat "info/~a" (name 'elt elt)))))))
 
 (define (collect-tags-ids-classes doms)
   (reap [save-tag save-id save-class]
@@ -334,8 +333,8 @@
 
 (define (all-constraints doms)
   (define-values (tags ids classes) (collect-tags-ids-classes doms))
-  (define element-names (for*/list ([dom doms] [elt (in-elements dom)]) (element-name elt)))
-  (define box-names (for*/list ([dom doms] [elt (in-boxes dom)]) (box-name elt)))
+  (define element-names (for*/list ([dom doms] [elt (in-elements dom)]) (name 'elt elt)))
+  (define box-names (for*/list ([dom doms] [elt (in-boxes dom)]) (name 'box elt)))
 
   (eprintf ";; ~a elements, ~a boxes\n" (length element-names) (length box-names))
 

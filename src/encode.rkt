@@ -1,5 +1,5 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "spec/css-properties.rkt")
+(require "common.rkt" "dom.rkt" "spec/css-properties.rkt" "registry.rkt")
 
 (provide dump-tag extract-tag dump-id extract-id dump-class
          dump-elt dump-box dump-dom extract-style
@@ -27,12 +27,12 @@
 
 (define (dump-elt elt)
   (if elt
-      (sformat "~a-elt" (element-name elt))
+      (sformat "~a-elt" (name 'elt elt))
       'no-elt))
 
 (define (dump-box box)
   (if box
-      (sformat "~a-box" (box-name box))
+      (sformat "~a-box" (name 'box box))
       'no-box))
 
 (define (dump-dom dom)

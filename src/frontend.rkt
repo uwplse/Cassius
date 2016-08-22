@@ -1,6 +1,6 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt"
-         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt")
+         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt")
 (provide constraints solve synthesize (struct-out success) (struct-out failure))
 
 (struct success (stylesheet elements))
@@ -21,11 +21,11 @@
   (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))
     (match var
       [`((value ,prop ,cls) (,elt1) (,elt2))
-       `(,prop ,(elt-from-name elt1) ,(elt-from-name elt2))]
+       `(,prop ,(by-name 'elt elt1) ,(by-name 'elt elt2))]
       [`((value ,prop ,cls) (,elt1))
        (define cls* (if (equal? cls 'none) #f cls))
        (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
-       `(,prop ,(elt-from-name elt1) ,value)])))
+       `(,prop ,(by-name 'elt elt1) ,value)])))
 
 (define cassius-check-sat
   '(check-sat-using
@@ -68,8 +68,6 @@
 
   (log-phase "Prepared ~a constraints of ~a terms"
            (length query) (tree-size query))
-
-  (reset-elt-names!)
 
   (append query (list cassius-check-sat)))
 
@@ -121,8 +119,6 @@
        (failure stylesheet* (map unparse-tree trees*))]))
 
   (log-phase "Solved constraints")
-
-  (reset-elt-names!)
 
   res)
 
@@ -200,7 +196,6 @@
                        [(list _) (cons prop value)])))))
        (log-phase "Synthesized stylesheet!")
        ;; TODO - return (success _ _)
-       (reset-elt-names!)
        (success (drop sheet* (length browser-style)) (map (compose unparse-tree dom-tree) doms))]
       [(list 'core c)
        (define new-ineqs (extract-ineqs eqcls c))
