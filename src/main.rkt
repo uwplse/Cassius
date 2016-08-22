@@ -184,20 +184,17 @@
       (set-element-attrs! elt (list* ':cex `(bad ,(string-join (cdr (string-split (~a name) "/")) "/")) (element-attrs elt))))))
 
 (define (tree-constraints dom emit elt)
-  (when (is-element? elt)
-    (define (either field default)
-      (name 'elt (field elt) 'nil-elt))
-    (emit
-     `(assert
-       (!
-        (link-element ,(dump-elt elt)
-                      ,(dump-dom dom)
-                      ,(either element-parent 'nil-elt)
-                      ,(either element-prev 'nil-elt)
-                      ,(either element-next 'nil-elt)
-                      ,(either element-fchild 'nil-elt)
-                      ,(either element-lchild 'nil-elt))
-        :named ,(sformat "tree/~a" (dump-elt elt)))))))
+  (emit
+   `(assert
+     (!
+      (link-element ,(dump-elt elt)
+                    ,(dump-dom dom)
+                    ,(name 'elt (element-parent elt) 'nil-elt)
+                    ,(name 'elt (element-prev   elt) 'nil-elt)
+                    ,(name 'elt (element-next   elt) 'nil-elt)
+                    ,(name 'elt (element-fchild elt) 'nil-elt)
+                    ,(name 'elt (element-lchild elt) 'nil-elt))
+      :named ,(sformat "tree/~a" (dump-elt elt))))))
 
 (define (selector-constraints emit eqs dom)
   (emit '(echo "Generating selector constraints"))
@@ -309,19 +306,18 @@
                       :named ,(sformat "box/~a/~a" (slower (element-type elt)) (name 'elt elt)))))))
 
 (define (info-constraints dom emit elt)
-  (when (is-element? elt)
-    (define tagname
-      (if (equal? (element-get elt ':tag) '?)
-          `(tagname ,(dump-elt elt))
-          (dump-tag (element-get elt ':tag))))
+  (define tagname
+    (if (equal? (element-get elt ':tag) '?)
+        `(tagname ,(dump-elt elt))
+        (dump-tag (element-get elt ':tag))))
 
-    (define idname
-      (if (equal? (element-get elt ':id) '?)
-          `(idname ,(dump-elt elt))
-          (dump-id (element-get elt ':id))))
+  (define idname
+    (if (equal? (element-get elt ':id) '?)
+        `(idname ,(dump-elt elt))
+        (dump-id (element-get elt ':id))))
 
-    (emit `(assert (! (element-info ,(dump-elt elt) ,tagname ,idname)
-                      :named ,(sformat "info/~a" (name 'elt elt)))))))
+  (emit `(assert (! (element-info ,(dump-elt elt) ,tagname ,idname)
+                    :named ,(sformat "info/~a" (name 'elt elt))))))
 
 (define (collect-tags-ids-classes doms)
   (reap [save-tag save-id save-class]
@@ -379,7 +375,7 @@
     ,@(per-box box-constraints)
     ,@(per-box style-constraints)
     ,@(per-box box-link-constraints)
-    ,@(per-box info-constraints)
+    ,@(per-element info-constraints)
     ,@(per-box box-element-constraints)
     ,@(per-box layout-constraints)
     ))
