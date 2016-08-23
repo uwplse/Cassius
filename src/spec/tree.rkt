@@ -150,6 +150,10 @@
      (= (element (get/box &b)) &e)
      (= (flow-box (get/elt &e)) &b)))
 
+  (define-fun link-anon-element ((&e ElementName)) Bool
+    (and
+     (= (flow-box (get/elt &e)) nil-box)))
+
   (define-fun link-anon-box ((&b BoxName)) Bool
     (and
      (is-box (get/box &b))

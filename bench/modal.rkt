@@ -55,7 +55,7 @@
    ([body]
     ([h1] "Hello, Modal!")
     ([button :id clickme] "Launch demo modal")
-    ([div :class (modal backdrop)]
+    ([div :class (modal backdrop) :no-display]
      ([div :class (modal dialog)]
       ([button :class (modal close)]
        ([img]))

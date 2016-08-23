@@ -1,6 +1,6 @@
 #lang racket
 (require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt"
-         "selectors.rkt"
+         "selectors.rkt" "match.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 
 (provide all-constraints add-test replace-ids-with-holes reset-replaced selector-constraints extract-core extract-rules extract-counterexample! extract-tree!)
@@ -215,12 +215,21 @@
         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
                           :named ,assertname)))))))
 
-(define (box-element-constraints dom emit elt)
-  (define bname (name 'box elt))
-  (define ename (name 'elt elt))
-  (if (is-element? elt)
-      (emit `(assert (! (link-element-box ,ename ,bname) :named ,(sformat "box-element/~a" ename))))
-      (emit `(assert (! (link-anon-box ,bname) :named ,(sformat "box-element/~a" ename))))))
+(define (box-element-constraints doms)
+  (reap [emit]
+    (for ([dom doms])
+      (define other (link-elts-boxes (dom-elements dom) (dom-boxes dom)))
+      (for ([elt (in-elements dom)])
+        (define ename (name 'elt elt))
+        (match (other elt)
+          [#f
+           (emit `(assert (! (link-anon-element ,ename) :named ,(sformat "box-element/~a" ename))))]
+          [box
+           (define bname (name 'box box))
+           (emit `(assert (! (link-element-box ,ename ,bname) :named ,(sformat "box-element/~a" ename))))]))
+      (for ([box (in-boxes dom)] #:when (not (other box)))
+        (define bname (name 'box box))
+        (emit `(assert (! (link-anon-box ,bname) :named ,(sformat "box-element/~a" bname))))))))
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
@@ -372,7 +381,7 @@
     ,@(per-box style-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-element info-constraints)
-    #;,@(per-box box-element-constraints)
+    ,@(box-element-constraints doms)
     ,@(per-box layout-constraints)
     ))
 
