@@ -6,8 +6,9 @@
  flags all-flags supported-features
  tree-size sdiff in-groups sequence-cons cartesian-product trieify
  xor ->number z3-path value=?
- attribute? attributes->dict
- split-symbol split-line-name)
+ attribute? attributes->dict dict->attributes
+ split-symbol split-line-name
+ assert)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -117,12 +118,15 @@
 (define (attribute? s)
   (and (symbol? s) (string-prefix? (symbol->string s) ":")))
 
-(define (attributes->dict elts)
-  (match elts
+(define (attributes->dict attrs)
+  (match attrs
     [(list (? attribute? k) (? (compose not attribute?) v) ... rest ...)
      (cons (cons k v) (attributes->dict rest))]
     [(list)
      (list)]))
+
+(define (dict->attributes dict)
+  (apply append (dict->list dict)))
 
 (define (split-symbol s)
   (for/list ([part (string-split (~a s) "/")])
@@ -130,3 +134,7 @@
 
 (define (split-line-name var)
   (map split-symbol (string-split (~a var) "^")))
+
+(define (assert x msg . args)
+  (unless x
+    (error (apply format msg args))))

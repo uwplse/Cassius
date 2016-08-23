@@ -1,5 +1,5 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt"
+(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt"
          "selectors.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 
@@ -58,7 +58,7 @@
          (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
            ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
        (define elt (by-name 'elt elt-name))
-       (element-set! elt field-name `(bad ,(element-get elt field-name)))]
+       (node-set! elt field-name `(bad ,(node-get elt field-name)))]
       [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
        (define rule (hash-ref! stylesheet* idx (list-ref stylesheet idx)))
        (define rule*
@@ -74,8 +74,8 @@
        (hash-set! stylesheet* idx rule*)]
       [`((style ,elt-name ,prop) ,_ ...)
        (define elt (by-name 'elt elt-name))
-       (define old-style (css-denormalize-body (element-get elt ':style)))
-       (element-set! elt ':style
+       (define old-style (css-denormalize-body (node-get elt ':style)))
+       (node-set! elt ':style
                      (css-normalize-body
                       (if (dict-has-key? old-style prop)
                           (dict-update old-style prop (λ (x) (list `(bad ,(car x)))))
@@ -154,21 +154,19 @@
   (define box-height (+ bt pt h pb bb))
   (define box-x (+ x xo))
   (define box-y (+ y yo))
-  (element-set! elt ':w box-width)
-  (element-set! elt ':h box-height)
-  (element-set! elt ':x box-x)
-  (element-set! elt ':y box-y))
+  (node-set! elt ':w box-width)
+  (node-set! elt ':h box-height)
+  (node-set! elt ':x box-x)
+  (node-set! elt ':y box-y))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt doc tag id spec-style comp-style &v &p &n &f &l &b) result)
-  (when (equal?  (element-get elt ':tag) '?)
-    (element-set! elt ':tag `(fixed ,(extract-tag tag))))
-  (element-set! elt ':style (extract-style spec-style))
-  (when (equal?  (element-get elt ':id) '?)
+  (node-set! elt ':style (extract-style spec-style))
+  (when (equal?  (node-get elt ':id) '?)
     (define new-id (extract-id id))
     (if (equal? new-id 'no-id)
-        (element-remove! elt ':id)
-        (element-set! elt ':id new-id))))
+        (node-remove! elt ':id)
+        (node-set! elt ':id new-id))))
 
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
@@ -181,7 +179,8 @@
   (for ([(name value) (in-hash smt-out)])
     (when (equal? (car (split-symbol name)) 'counterexample)
       (define elt (by-name 'elt (string->symbol (car (string-split (~a value) "-")))))
-      (set-element-attrs! elt (list* ':cex `(bad ,(string-join (cdr (string-split (~a name) "/")) "/")) (element-attrs elt))))))
+      (define var (string-join (cdr (string-split (~a name) "/")) "/"))
+      (node-add! elt ':cex `(bad ,var)))))
 
 (define (tree-constraints dom emit elt)
   (emit
@@ -189,11 +188,11 @@
      (!
       (link-element ,(dump-elt elt)
                     ,(dump-dom dom)
-                    ,(name 'elt (element-parent elt) 'nil-elt)
-                    ,(name 'elt (element-prev   elt) 'nil-elt)
-                    ,(name 'elt (element-next   elt) 'nil-elt)
-                    ,(name 'elt (element-fchild elt) 'nil-elt)
-                    ,(name 'elt (element-lchild elt) 'nil-elt))
+                    ,(name 'elt (node-parent elt) 'nil-elt)
+                    ,(name 'elt (node-prev   elt) 'nil-elt)
+                    ,(name 'elt (node-next   elt) 'nil-elt)
+                    ,(name 'elt (node-fchild elt) 'nil-elt)
+                    ,(name 'elt (node-lchild elt) 'nil-elt))
       :named ,(sformat "tree/~a" (dump-elt elt))))))
 
 (define (selector-constraints emit eqs dom)
@@ -224,18 +223,18 @@
       (emit `(assert (! (link-anon-box ,bname) :named ,(sformat "box-element/~a" ename))))))
 
 (define (dom-define-get/elt doms emit)
-  (for* ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt))
+  (for* ([dom doms] [elt (in-elements dom)])
     (emit `(declare-const ,(dump-elt elt) Element)))
   (define body
-    (for*/fold ([body 'no-elt]) ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt))
+    (for*/fold ([body 'no-elt]) ([dom doms] [elt (in-elements dom)])
       `(ite (,(sformat "is-~a" (name 'elt elt)) &elt) ,(dump-elt elt) ,body)))
   (emit `(define-fun get/elt ((&elt ElementName)) Element ,body)))
 
 (define (dom-define-get/box doms emit)
-  (for* ([dom doms] [box (in-tree (dom-tree dom))])
+  (for* ([dom doms] [box (in-boxes dom)])
     (emit `(declare-const ,(dump-box box) Box)))
   (define body
-    (for*/fold ([body 'no-box]) ([dom doms] [box (in-tree (dom-tree dom))])
+    (for*/fold ([body 'no-box]) ([dom doms] [box (in-boxes dom)])
       `(ite (,(sformat "is-~a" (name 'box box)) &box) ,(dump-box box) ,body)))
   (emit `(define-fun get/box ((&box BoxName)) Box ,body)))
 
@@ -246,7 +245,8 @@
     [_ #f]))
 
 (define (box-constraints dom emit elt)
-  (for ([(cmd arg) (in-dict (element-get* elt '(:x :y :w :h)))])
+  (for ([cmd '(:x :y :w :h)] #:when (node-get* elt cmd #:default #f))
+    (define arg (node-get elt cmd))
     (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
@@ -258,8 +258,8 @@
     (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (name 'elt elt)))))))
 
 (define (style-constraints dom emit elt)
-  (when (element-get elt ':style)
-    (define style (css-denormalize-body (element-get elt ':style)))
+  (when (node-get elt ':style)
+    (define style (css-denormalize-body (node-get elt ':style)))
     (for ([(prop type default) (in-css-properties)])
       (match (dict-ref style prop #f)
         ['(?) (void)]
@@ -274,7 +274,7 @@
 
 (define (box-link-constraints dom emit elt)
   (define cns
-    (match (element-type elt)
+    (match (node-type elt)
       ['BLOCK 'link-block-box]
       ['VIEW  'link-block-box]
       ['ANON 'link-block-box]
@@ -284,16 +284,16 @@
       ['TEXT 'link-text-box]))
   (emit `(assert (! (,cns ,(dump-box elt)
                           ,(name 'box elt)
-                          ,(name 'box (box-parent elt) 'nil-box)
-                          ,(name 'box (box-prev elt) 'nil-box)
-                          ,(name 'box (box-next elt) 'nil-box)
-                          ,(name 'box (box-fchild elt) 'nil-box)
-                          ,(name 'box (box-lchild elt) 'nil-box))
+                          ,(name 'box (node-parent elt) 'nil-box)
+                          ,(name 'box (node-prev elt) 'nil-box)
+                          ,(name 'box (node-next elt) 'nil-box)
+                          ,(name 'box (node-fchild elt) 'nil-box)
+                          ,(name 'box (node-lchild elt) 'nil-box))
                     :named ,(sformat "link-box/~a" (name 'elt elt))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
-    (match (element-type elt)
+    (match (node-type elt)
       ['BLOCK 'a-block-box]
       ['VIEW 'a-view-box]
       ['ANON 'an-anon-block-box]
@@ -303,29 +303,25 @@
       ['TEXT 'a-text-box]))
   (when cns
     (emit `(assert (! (,cns ,(dump-box elt))
-                      :named ,(sformat "box/~a/~a" (slower (element-type elt)) (name 'elt elt)))))))
+                      :named ,(sformat "box/~a/~a" (slower (node-type elt)) (name 'elt elt)))))))
 
 (define (info-constraints dom emit elt)
-  (define tagname
-    (if (equal? (element-get elt ':tag) '?)
-        `(tagname ,(dump-elt elt))
-        (dump-tag (element-get elt ':tag))))
-
+  (define tagname (dump-tag (node-type elt)))
   (define idname
-    (if (equal? (element-get elt ':id) '?)
+    (if (equal? (node-get elt ':id) '?)
         `(idname ,(dump-elt elt))
-        (dump-id (element-get elt ':id))))
+        (dump-id (node-get elt ':id))))
 
   (emit `(assert (! (element-info ,(dump-elt elt) ,tagname ,idname)
                     :named ,(sformat "info/~a" (name 'elt elt))))))
 
 (define (collect-tags-ids-classes doms)
   (reap [save-tag save-id save-class]
-    (for* ([dom doms] [elt (in-tree (dom-tree dom))])
-      (when (element-get elt ':id) (save-id (dump-id (element-get elt ':id))))
-      (when (element-get elt ':tag) (save-tag (dump-tag (element-get elt ':tag))))
-      (when (element-get elt ':class)
-        (for-each (compose save-class dump-class) (element-get elt ':class))))))
+    (for* ([dom doms] [elt (in-elements dom)])
+      (when (node-get elt ':id) (save-id (dump-id (node-get elt ':id))))
+      (save-tag (dump-tag (node-type elt)))
+      (when (node-get elt ':class)
+        (for-each (compose save-class dump-class) (node-get elt ':class))))))
 
 (define (all-constraints doms)
   (define-values (tags ids classes) (collect-tags-ids-classes doms))
@@ -376,7 +372,7 @@
     ,@(per-box style-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-element info-constraints)
-    ,@(per-box box-element-constraints)
+    #;,@(per-box box-element-constraints)
     ,@(per-box layout-constraints)
     ))
 

@@ -107,16 +107,16 @@
 
 (define-action open-dialog
   (click (id clickme))
-  (snap-0 snap-1))
+  (dom-0 dom-1))
 
 (define-action close-dialog
   (click (class close))
-  (snap-1 snap-0))
+  (dom-1 dom-0))
 
 (define-problem actions
   :sheets main
   :layouts snap-0 snap-1
-  ;:documents dom-0 dom-1
-  :documents snap-0 snap-1
+  :documents dom-0 dom-1
+  ;:documents snap-0 snap-1
   :actions open-dialog close-dialog
   :handlers open-dialog close-dialog)

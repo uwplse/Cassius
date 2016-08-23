@@ -9,18 +9,18 @@
   (define documents (dict-ref problem ':documents))
 
   (define tree
-    (dom-tree
+    (dom-elements
      (first
       (if truncate (map (curry dom-limit-depth truncate) documents) documents))))
   
   (printf "<!doctype html>\n<html><body>\n")
   (when screenshot
-    (define w (element-get (dom-tree (first documents)) ':w))
+    (define w (node-get (dom-elements (first documents)) ':w))
     (printf "<img src='~a' width='~a' style='opacity:.4;position:absolute;top:0;left:0;'/>"
             screenshot w))
   
   (define (px->vw x)
-    (* (/ x (element-get (dom-tree (first documents)) :w)) 100))
+    (* (/ x (node-get (dom-elements (first documents)) :w)) 100))
 
   (let loop ([tree tree])
     (match (car tree)

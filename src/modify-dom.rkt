@@ -6,9 +6,10 @@
 (provide dom-strip-positions dom-print-all dom-limit-depth dom-not-something dom-strip-attrs)
 
 (define ((dom-transform! l) d)
-  (match-define (dom name ctx tree) d)
+  (match-define (dom name ctx elts boxes) d)
   (dom name ctx
-       (let loop ([tree tree])
+       elts
+       (let loop ([tree boxes])
          (cons (cons (caar tree) (l (caar tree) (cdar tree)))
                (map loop (cdr tree))))))
 
@@ -45,20 +46,20 @@
 
 
 (define (dom-limit-depth n d)
-  (match-define (dom name ctx tree) d)
+  (match-define (dom name ctx elts boxes) d)
 
-  (dom name ctx
-       (let loop ([n n] [tree tree])
+  (dom name ctx elts
+       (let loop ([n n] [tree boxes])
          (if (= n 0)
              `([MAGIC ,@ (cdar tree)])
              (cons (car tree) (map (curry loop (- n 1)) (cdr tree)))))))
 
 (define (dom-not-something d)
-  (match-define (dom name ctx tree) d)
+  (match-define (dom name ctx elts boxes) d)
   
   (define constraints 0)
 
-  (let loop ([tree tree])
+  (let loop ([tree boxes])
     (when (member (caar tree) '(LINE BLOCK INLINE))
       (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree)))))
     (for-each loop (cdr tree)))
@@ -67,8 +68,8 @@
   (set! constraints 0)
 
   ;; Not my fault
-  (dom name ctx
-       (let loop ([tree tree])
+  (dom name ctx elts
+       (let loop ([tree boxes])
          (cond
           [(> constraints idx) tree]
           [(member (caar tree) '(LINE BLOCK INLINE))

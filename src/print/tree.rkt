@@ -4,7 +4,7 @@
 (require "css.rkt")
 (provide tree->string)
 
-(define (tree->string tree #:indent [indent 0] #:attrs [attrs '(:tag :id :class)])
+(define (tree->string tree #:indent [indent 0] #:attrs [attrs '(:id :class)])
   (format "~a([~a~a]~a~a)"
           (build-string indent (const #\space))
           (caar tree)

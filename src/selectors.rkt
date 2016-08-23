@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "dom.rkt" "spec/css-properties.rkt" data/heap "z3.rkt")
+(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" data/heap "z3.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes equivalence-classes-avoid?
          selector-matches?
@@ -15,15 +15,15 @@
      (ormap (curryr selector-matches? elt) subsels)]
     [`* true]
     [`(id ,id)
-     (define eid (and (element-get elt ':id) (slower (element-get elt ':id))))
+     (define eid (and (node-get elt ':id) (slower (node-get elt ':id))))
      (when (equal? eid '?)
        (raise (make-exn:fail:unsupported "Holes in identifiers are not supported" (current-continuation-marks))))
      (equal? eid id)]
     [`(class ,cls)
-     (define ecls (if (element-get elt ':class) (map slower (element-get elt ':class)) '()))
+     (define ecls (if (node-get elt ':class) (map slower (node-get elt ':class)) '()))
      (set-member? ecls cls)]
     [`(tag ,tag)
-     (define etag (and (element-get elt ':tag) (slower (element-get elt ':tag))))
+     (define etag (node-type elt))
      (when (equal? etag '?)
        (raise (make-exn:fail:unsupported "Holes in tag names are not supported" (current-continuation-marks))))
      (equal? etag tag)]
@@ -31,50 +31,48 @@
     [(list 'desc sels ...)
      (match-define (cons sel rsels) (reverse sels))
      (and (selector-matches? sel elt)
-          (let loop ([rsels rsels] [anscestors (element-anscestors elt)])
+          (let loop ([rsels rsels] [elt elt])
             (cond
              [(null? rsels) true]
-             [(null? anscestors) false]
-             [(selector-matches? (car rsels) (car anscestors))
-              (loop (cdr rsels) (cdr anscestors))]
+             [(not (node-parent elt)) false]
+             [(selector-matches? (car rsels) elt)
+              (loop (cdr rsels) (node-parent elt))]
              [else
-              (loop rsels (cdr anscestors))])))]
+              (loop rsels (node-parent elt))])))]
     [(list 'child sels ...)
      (match-define (cons sel rsels) (reverse sels))
      (and (selector-matches? sel elt)
-          (let loop ([rsels rsels] [anscestors (element-anscestors elt)])
+          (let loop ([rsels rsels] [elt elt])
             (cond
              [(null? rsels) true]
-             [(null? anscestors) false]
-             [(selector-matches? (car rsels) (car anscestors))
-              (loop (cdr rsels) (cdr anscestors))]
-             [else
-              false])))]))
+             [(not (node-parent elt)) false]
+             [(selector-matches? (car rsels) elt)
+              (loop (cdr rsels) (node-parent elt))]
+             [else false])))]))
 
 (module+ test
   (define tree
-    '([VIEW]
-      ([BLOCK :tag html] ; 1
-       ([BLOCK :tag body] ; 2
-        ([BLOCK :tag div :id content] ; 3
-         ([BLOCK :tag H1 :class (title)]) ; 4
-         ([BLOCK :tag div :class (abstract)] ; 5
-          ([BLOCK :tag blockquote] ; 6
-           ([BLOCK :tag p]))) ; 7
-         ([BLOCK :tag p]) ; 8
-         ([BLOCK :tag div :class (aside)] ; 9
-          ([BLOCK :tag p]))))))) ; 10
+    '([html] ; 0
+      ([body] ; 1
+       ([div :id content] ; 2
+        ([H1 :class (title)]) ; 3
+        ([div :class (abstract)] ; 4
+         ([blockquote] ; 5
+          ([p]))) ; 6
+        ([p]) ; 7
+        ([div :class (aside)] ; 8
+         ([p])))))) ; 9
   (define ptree (parse-tree tree))
   (define (get-element elt n)
     "Gets the nth element, or returns the total number of elements seen"
     (if (= n 0)
         elt
-        (let loop ([child (element-fchild elt)] [i 1])
+        (let loop ([child (node-fchild elt)] [i 1])
           (if (not child)
               i
               (let ([out (get-element child (- n i))])
                 (if (number? out)
-                    (loop (element-next child) (+ i out))
+                    (loop (node-next child) (+ i out))
                     out))))))
   (define (check-selector sel ns)
     (for ([n (in-range 1 11)])
@@ -194,10 +192,10 @@
 
 (define (equivalence-classes-avoid? classes ineq)
   (match ineq
-    [(list prop (? element? elt1) (? element? elt2))
+    [(list prop (? node? elt1) (? node? elt2))
      (define hash (car (dict-ref classes prop)))
      (not (equal? (dict-ref hash elt1) (dict-ref hash elt2)))]
-    [(list prop (? element? elt1) val)
+    [(list prop (? node? elt1) val)
      (match-define (cons class-hash value-hash) (dict-ref classes prop))
      (not (equal? (dict-ref value-hash (dict-ref class-hash elt1)) val))]))
 
@@ -206,12 +204,11 @@
 (define (get-tcis elts)
   (define-values (tags classes ids)
     (for/reap [tag! class! id!] ([elt elts])
-      (when (element-get elt ':tag)
-        (tag! (slower (element-get elt ':tag))))
-      (when (element-get elt ':class)
-        (for-each (compose id! slower) (element-get elt ':class)))
-      (when (element-get elt ':id)
-        (id! (slower (element-get elt ':id))))))
+      (tag! (slower (node-type elt)))
+      (when (node-get elt ':class)
+        (for-each (compose id! slower) (node-get elt ':class)))
+      (when (node-get elt ':id)
+        (id! (slower (node-get elt ':id))))))
   (values (remove-duplicates tags) (remove-duplicates classes) (remove-duplicates ids)))
 
 (define (atomic-values elts)
@@ -286,7 +283,7 @@
 (define (ineq-selectors ineq selhash)
   (match-define (list prop elt1 val) ineq)
   (define (elts-good? elts)
-    (if (element? val)
+    (if (node? val)
         (xor (set-member? elts elt1) (set-member? elts val))
         (set-member? elts elt1)))
   (for/list ([(elts sel) (in-hash selhash)] #:when (elts-good? elts))
@@ -303,13 +300,13 @@
   (define scores (rule-scores (map list rules)))
 
   (cond
-   [(not (element? val))
+   [(not (node? val))
     `(or
       false
       ,@(for/list ([rule rules] [i (in-naturals)]
                    #:when (selector-matches? rule elt1))
           (sformat "property/~a/~a" prop i)))]
-   [(element? val)
+   [(node? val)
     (define sorted-rules
       (sort (map cons (range (length rules)) scores) score<? #:key cdr))
     (for/fold ([expr 'false])

@@ -1,5 +1,5 @@
 #lang racket
-(require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt"
+(require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt")
 (provide constraints solve synthesize (struct-out success) (struct-out failure))
 
@@ -13,7 +13,7 @@
           (error "Multiple documents with different browsers not supported"))
         (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
         (define elts
-          (for*/list ([dom doms] [elt (in-tree (dom-tree dom))] #:when (is-element? elt)) elt))
+          (for*/list ([dom doms] [elt (in-elements dom)]) elt))
         (define eqs (equivalence-classes (append browser-style sheet) elts))
         (selector-constraints emit eqs dom)))
 
@@ -51,8 +51,8 @@
 
   (define doms
     (for/list ([d docs])
-      (match-define (dom name ctx tree) d)
-      (dom name ctx (parse-tree tree))))
+      (match-define (dom name ctx elts boxes) d)
+      (dom name ctx (parse-tree elts) (parse-tree boxes))))
 
   (define query (all-constraints doms))
   (set! query (append query (sheet-constraints doms (car sheets))))
@@ -83,8 +83,8 @@
 
   (define doms
     (for/list ([d docs])
-      (match-define (dom name ctx tree) d)
-      (dom name ctx (parse-tree tree))))
+      (match-define (dom name ctx elts boxes) d)
+      (dom name ctx (parse-tree elts) (parse-tree boxes))))
 
   (define query (all-constraints doms))
   (set! query (append query (sheet-constraints doms (car sheets))))
@@ -107,7 +107,7 @@
       (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
         (z3-kill z3))))
 
-  (define trees (map dom-tree doms))
+  (define trees (map dom-boxes doms))
   (define res
     (match out
       [(list 'model m)
@@ -122,14 +122,6 @@
 
   res)
 
-(define (simplify-ineqs ineqs)
-  (for/list ([group (group-by car ineqs)])
-    (define endpoints
-      (apply append (filter (λ (x) (= (length x) 1))
-                            (group-by identity (append-map rest group)))))
-    (cons (first (first group))
-          (if (element? (car endpoints)) endpoints (reverse endpoints)))))
-
 (define (synthesize docs [test #f] #:debug [debug? #f])
   (define time-start (current-inexact-milliseconds))
   (define (log-phase fmt . args)
@@ -142,8 +134,8 @@
 
   (define doms
     (for/list ([d docs])
-      (match-define (dom name ctx tree) d)
-      (dom name ctx (parse-tree tree))))
+      (match-define (dom name ctx elts boxes) d)
+      (dom name ctx (parse-tree elts) (parse-tree boxes))))
 
   (define query (all-constraints doms))
 
@@ -196,7 +188,7 @@
                        [(list _) (cons prop value)])))))
        (log-phase "Synthesized stylesheet!")
        ;; TODO - return (success _ _)
-       (success (drop sheet* (length browser-style)) (map (compose unparse-tree dom-tree) doms))]
+       (success (drop sheet* (length browser-style)) (map (compose unparse-tree dom-elements) doms))]
       [(list 'core c)
        (define new-ineqs (extract-ineqs eqcls c))
        (set-box! core-ids

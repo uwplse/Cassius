@@ -12,11 +12,6 @@
 
 (define num-holes 5)
 
-(define (change-width d w)
-  (define (tree-change-width tree)
-    (cons (list* (caar tree) ':w w (apply append (for/list ([(k v) (in-groups 2 (cdar tree))] #:when (not (equal? k ':w))) (list k v)))) (cdr tree)))
-  (dom (dom-name d) (dom-context d) (tree-change-width (dom-tree d))))
-
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate)
   (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
   (define documents (dict-ref problem ':documents))
