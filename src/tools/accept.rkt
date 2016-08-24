@@ -1,13 +1,8 @@
 #lang racket
 
-(require racket/cmdline)
-(require "../common.rkt")
-(require "../input.rkt")
-(require "../frontend.rkt")
-(require "../dom.rkt")
-(require "../modify-dom.rkt")
-(require "../print/tree.rkt")
-(require "../print/css.rkt")
+(require racket/cmdline
+         "../common.rkt" "../input.rkt" "../tree.rkt" "../dom.rkt" "../modify-dom.rkt"
+         "../frontend.rkt" "../actions.rkt" "../print/tree.rkt" "../print/css.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate)
   (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
@@ -16,6 +11,14 @@
 
   (define documents*
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
+
+  (for ([action (dict-ref problem ':actions '())])
+    (match-define (list act (cons froms tos) ...) action)
+    (for ([from froms] [to tos])
+      (define from* (parse-tree from))
+      (interpret-action act (dict-ref problem ':handlers '()) from*)
+      (unless (tree=? (parse-tree to) from*)
+        (eprintf "Failed action: ~a\n" act))))
 
   (define res
     (with-handlers
