@@ -9,7 +9,7 @@
   (define docs (make-hash))
   (define layouts (make-hash))
   (define actions (make-hash))
-  (define handlers (make-hash))
+  (define scripts (make-hash))
 
   (for ([expr (in-port read port)])
     (match expr
@@ -23,8 +23,9 @@
       [`(define-action ,name ,target ,evt (,froms ,tos) ...)
        (define deref (curry map (curry dict-ref docs)))
        (dict-set! actions name (list* target evt (map cons (deref froms) (deref tos))))]
-      [`(define-handler ,name ,sel (,evt ,bindings ...) ,acts ...)
-       (dict-set! handlers name (list* sel evt bindings acts))]
+      [`(define-script ,name
+          (handle ,sel (,evt ,bindings ...) ,acts ...) ...)
+       (dict-set! scripts name (map list* sel evt bindings acts))]
       [`(define-problem ,name ,rest ...)
        (define properties (attributes->dict rest))
        (define (get-from key hash)
@@ -38,7 +39,7 @@
        (get-from ':documents docs)
        (get-from ':layouts layouts)
        (get-from ':actions actions)
-       (get-from ':handlers handlers)
+       (get-from ':scripts scripts)
 
        (when (and (dict-has-key? properties ':layouts) (dict-has-key? properties ':documents))
          (define layouts*

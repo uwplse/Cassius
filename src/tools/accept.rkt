@@ -16,7 +16,7 @@
     (match-define (list target act (cons froms tos) ...) action)
     (for ([from froms] [to tos])
       (define from* (parse-tree from))
-      (interpret-action target act (dict-ref problem ':handlers '()) from*)
+      (interpret-action target act (apply append (dict-ref problem ':scripts '())) from*)
       (unless (tree=? (parse-tree to) from*)
         (eprintf "Failed action: ~a\n" act))))
 

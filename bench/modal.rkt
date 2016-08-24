@@ -99,11 +99,11 @@
        ([MAGIC :tag img :w 10 :h 10 :x 1240 :y 30]))
       ([MAGIC :tag content :x 660 :y 20 :w 600 :h 200])))))))
 
-(define-handler open-dialog (id clickme) (click)
-  (add-class (select (and (class modal) (class backdrop))) in))
-
-(define-handler close-dialog (desc (class in) (class close)) (click)
-  (remove-class (parent (parent this)) in))
+(define-script main
+  (handle (id clickme) (click)
+    (add-class (select (and (class modal) (class backdrop))) in))
+  (handle (desc (class in) (class close)) (click)
+    (remove-class (parent (parent this)) in)))
 
 (define-action open-dialog (id clickme) (click)
   (dom-0 dom-1))
@@ -117,4 +117,4 @@
   :documents dom-0 dom-1
   ;:documents snap-0 snap-1
   :actions open-dialog close-dialog
-  :handlers open-dialog close-dialog)
+  :scripts main)
