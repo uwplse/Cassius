@@ -54,7 +54,7 @@
       (match-define (dom name ctx elts boxes) d)
       (dom name ctx (parse-tree elts) (parse-tree boxes))))
 
-  (define query (all-constraints doms))
+  (define query (all-constraints (car sheets) doms))
   (set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))
 
@@ -86,7 +86,7 @@
       (match-define (dom name ctx elts boxes) d)
       (dom name ctx (parse-tree elts) (parse-tree boxes))))
 
-  (define query (all-constraints doms))
+  (define query (all-constraints (car sheets) doms))
   (set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))
 
@@ -137,7 +137,7 @@
       (match-define (dom name ctx elts boxes) d)
       (dom name ctx (parse-tree elts) (parse-tree boxes))))
 
-  (define query (all-constraints doms))
+  (define query (all-constraints '() doms)) ; TODO: What to do about sheets?
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))

@@ -215,10 +215,10 @@
         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
                           :named ,assertname)))))))
 
-(define (box-element-constraints doms)
+(define (box-element-constraints sheet doms)
   (reap [emit]
     (for ([dom doms])
-      (define other (link-elts-boxes (dom-elements dom) (dom-boxes dom)))
+      (define other (link-elts-boxes sheet (dom-elements dom) (dom-boxes dom)))
       (for ([elt (in-elements dom)])
         (define ename (name 'elt elt))
         (match (other elt)
@@ -332,7 +332,7 @@
       (when (node-get elt ':class)
         (for-each (compose save-class dump-class) (node-get elt ':class))))))
 
-(define (all-constraints doms)
+(define (all-constraints sheet doms)
   (define-values (tags ids classes) (collect-tags-ids-classes doms))
   (define element-names (for*/list ([dom doms] [elt (in-elements dom)]) (name 'elt elt)))
   (define box-names (for*/list ([dom doms] [elt (in-boxes dom)]) (name 'box elt)))
@@ -381,7 +381,7 @@
     ,@(per-box style-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-element info-constraints)
-    ,@(box-element-constraints doms)
+    ,@(box-element-constraints sheet doms)
     ,@(per-box layout-constraints)
     ))
 

@@ -55,7 +55,7 @@
    ([body]
     ([h1] "Hello, Modal!")
     ([button :id clickme] "Launch demo modal")
-    ([div :class (modal backdrop) :no-display]
+    ([div :class (modal backdrop)]
      ([div :class (modal dialog)]
       ([button :class (modal close)]
        ([img]))
@@ -102,7 +102,7 @@
 (define-handler open-dialog (id clickme) (click target)
   (add-class (select (and (class modal) (class backdrop))) in))
 
-(define-handler close-dialog (and (class close) (class in)) (click target)
+(define-handler close-dialog (desc (class in) (class close)) (click target)
   (remove-class (parent (parent target)) in))
 
 (define-action open-dialog
