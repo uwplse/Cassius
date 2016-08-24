@@ -100,6 +100,9 @@
 (define-css-type (Box-Sizing border-box content-box)
   [box-sizing content-box])
 
+(define-css-type (Display block inline none)
+  [display inline])
+
 (define css-shorthand-properties
   '((margin margin-top margin-right margin-bottom margin-left)
     (padding padding-top padding-right padding-bottom padding-left)
