@@ -13,10 +13,10 @@
     (if truncate (map (curry dom-limit-depth truncate) documents) documents))
 
   (for ([action (dict-ref problem ':actions '())])
-    (match-define (list act (cons froms tos) ...) action)
+    (match-define (list target act (cons froms tos) ...) action)
     (for ([from froms] [to tos])
       (define from* (parse-tree from))
-      (interpret-action act (dict-ref problem ':handlers '()) from*)
+      (interpret-action target act (dict-ref problem ':handlers '()) from*)
       (unless (tree=? (parse-tree to) from*)
         (eprintf "Failed action: ~a\n" act))))
 

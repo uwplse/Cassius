@@ -99,18 +99,16 @@
        ([MAGIC :tag img :w 10 :h 10 :x 1240 :y 30]))
       ([MAGIC :tag content :x 660 :y 20 :w 600 :h 200])))))))
 
-(define-handler open-dialog (id clickme) (click target)
+(define-handler open-dialog (id clickme) (click)
   (add-class (select (and (class modal) (class backdrop))) in))
 
-(define-handler close-dialog (desc (class in) (class close)) (click target)
-  (remove-class (parent (parent target)) in))
+(define-handler close-dialog (desc (class in) (class close)) (click)
+  (remove-class (parent (parent this)) in))
 
-(define-action open-dialog
-  (click (id clickme))
+(define-action open-dialog (id clickme) (click)
   (dom-0 dom-1))
 
-(define-action close-dialog
-  (click (class close))
+(define-action close-dialog (class close) (click)
   (dom-1 dom-0))
 
 (define-problem actions

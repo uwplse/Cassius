@@ -3,27 +3,30 @@
 (require "selectors.rkt" "tree.rkt")
 (provide interpret-action)
 
-(define (interpret-action act handlers tree)
-  (define-values (type target vals)
+(define (interpret-action target-expr act handlers tree)
+  (match-define (list target)
+                (for/list ([elt (in-tree tree)] #:when (selector-matches? target-expr elt)) elt))
+
+  (define-values (type vals)
     (match act
-      [(list 'click sel)
-       (define elts (for/list ([elt (in-tree tree)] #:when (selector-matches? sel elt)) elt))
-       (when (not (= (length elts) 1))
-         (error "Invalid click action on more than one element" elts))
-       (values 'click (car elts) (list (car elts)))]))
+      [`(click) (values 'click (list))]))
+
   (define handler
     (for/first ([handler handlers]
                 #:when (equal? (second handler) type)
                 #:when (selector-matches? (first handler) target))
       handler))
-  (when handler
-    (match-define (list sel evt vars actions ...) handler)
-    (define env (map cons vars vals))
-    (for ([line actions])
-      (interpret-line tree line env))))
 
-(define (interpret-line tree script env)
-  (match script
+  (when handler
+    (match-define (list sel evt vars script ...) handler)
+    (interpret-script tree script (cons (cons 'this (list target)) (map cons vars vals)))))
+
+(define (interpret-script tree script env)
+  (for ([line script])
+    (interpret-line tree line env)))
+
+(define (interpret-line tree line env)
+  (match line
     [(list 'add-class eltexpr cls)
      (define elts (interpret-eltexpr tree eltexpr env))
      (for ([elt elts])
@@ -40,4 +43,4 @@
     [(list 'parent expr)
      (map node-parent (interpret-eltexpr tree expr env))]
     [(? symbol?)
-     (list (dict-ref env eltexpr))]))
+     (dict-ref env eltexpr)]))

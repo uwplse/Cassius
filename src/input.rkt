@@ -20,9 +20,9 @@
        (dict-set! layouts name (dom name properties tree tree))]
       [`(define-document ,name ,tree)
        (dict-set! docs name tree)]
-      [`(define-action ,name ,evt (,froms ,tos) ...)
+      [`(define-action ,name ,target ,evt (,froms ,tos) ...)
        (define deref (curry map (curry dict-ref docs)))
-       (dict-set! actions name (cons evt (map cons (deref froms) (deref tos))))]
+       (dict-set! actions name (list* target evt (map cons (deref froms) (deref tos))))]
       [`(define-handler ,name ,sel (,evt ,bindings ...) ,acts ...)
        (dict-set! handlers name (list* sel evt bindings acts))]
       [`(define-problem ,name ,rest ...)
