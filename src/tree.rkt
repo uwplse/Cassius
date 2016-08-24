@@ -8,7 +8,7 @@
 (struct node (type attrs parent children) #:mutable
         #:methods gen:custom-write
         [(define (write-proc node port mode)
-           (fprintf port "[~a ~a]" (node-type node) (string-join (map ~a (node-attrs node)) " ")))])
+           (fprintf port "[~a ~a]" (node-type node) (string-join (map ~a (dict->attributes (node-attrs node))) " ")))])
 
 (define (tree-copy tree)
   (assert (not (node-parent tree)) "To (tree-copy) you must pass the root of the tree")
