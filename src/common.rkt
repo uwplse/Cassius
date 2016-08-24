@@ -4,7 +4,7 @@
  reap for/reap for*/reap
  sformat slower
  flags all-flags supported-features
- tree-size sdiff in-groups sequence-cons cartesian-product trieify
+ tree-size sdiff in-groups sequence-cons cartesian-product trieify snoc
  xor ->number z3-path value=?
  attribute? attributes->dict dict->attributes
  split-symbol split-line-name
@@ -138,3 +138,6 @@
 (define (assert x msg . args)
   (unless x
     (error (apply format msg args))))
+
+(define (snoc lst x)
+  (append lst (list x)))

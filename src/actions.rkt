@@ -1,6 +1,6 @@
 #lang racket
 
-(require "selectors.rkt" "tree.rkt")
+(require "common.rkt" "selectors.rkt" "tree.rkt" "dom.rkt")
 (provide interpret-action)
 
 (define (interpret-action target-expr act handlers tree)
@@ -44,3 +44,37 @@
      (map node-parent (interpret-eltexpr tree expr env))]
     [(? symbol?)
      (dict-ref env eltexpr)]))
+
+(define (synthesize-script env tree1 tree2)
+  (define (sort-queue queue)
+    (sort queue < #:key length))
+  (let/ec return
+    (let loop ([queue '(())])
+      (match-define (cons candidate queue*) queue)
+      (define (enqueue new)
+        (loop (sort-queue (append new queue*))))
+
+      (define result (tree-copy tree1))
+      (interpret-script result candidate env)
+      (match (elements-difference result tree2)
+        [#f (return candidate)]
+        [(list 'add-class elt cls)
+         (define eltexprs (synthesize-eltexprs env elt result))
+         (enqueue (for/list ([ee eltexprs]) (snoc candidate `(add-class ,ee ,cls))))]
+        [(list 'remove-class elt cls)
+         (define eltexprs (synthesize-eltexprs env elt result))
+         (enqueue (for/list ([ee eltexprs]) (snoc candidate `(remove-class ,ee ,cls))))]))))
+
+(define (synthesize-eltexprs env elt tree)
+  (define selhash (all-selectors (sequence->list (in-tree tree))))
+  (append
+   (for/list ([(elts sel) selhash] #:when (set-member? elts elt))
+     (list 'select sel))
+   (reap [sow]
+     (for ([(var val) (in-dict env)])
+       (let loop ([elt* val] [k sow])
+         (cond
+          [(equal? elt* elt) (k var)]
+          [(node-parent elt*)
+           (loop (node-parent elt*) (λ (x) (k (list 'parent x))))]
+          [else (void)]))))))
