@@ -20,7 +20,7 @@
        (raise (make-exn:fail:unsupported "Holes in identifiers are not supported" (current-continuation-marks))))
      (equal? eid id)]
     [`(class ,cls)
-     (define ecls (if (node-get elt ':class) (map slower (node-get elt ':class)) '()))
+     (define ecls (map slower (node-get elt ':class #:default '())))
      (set-member? ecls cls)]
     [`(tag ,tag)
      (define etag (node-type elt))
@@ -205,8 +205,7 @@
   (define-values (tags classes ids)
     (for/reap [tag! class! id!] ([elt elts])
       (tag! (slower (node-type elt)))
-      (when (node-get elt ':class)
-        (for-each (compose id! slower) (node-get elt ':class)))
+      (for-each (compose class! slower) (node-get elt ':class #:default '()))
       (when (node-get elt ':id)
         (id! (slower (node-get elt ':id))))))
   (values (remove-duplicates tags) (remove-duplicates classes) (remove-duplicates ids)))
