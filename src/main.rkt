@@ -195,7 +195,7 @@
                     ,(name 'elt (node-lchild elt) 'nil-elt))
       :named ,(sformat "tree/~a" (dump-elt elt))))))
 
-(define (selector-constraints emit eqs dom)
+(define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
   (for ([(prop type default) (in-css-properties)])
     (match-define (cons class-hash value-hash) (dict-ref eqs prop))

@@ -15,7 +15,7 @@
         (define elts
           (for*/list ([dom doms] [elt (in-elements dom)]) elt))
         (define eqs (equivalence-classes (append browser-style sheet) elts))
-        (selector-constraints emit eqs dom)))
+        (selector-constraints emit eqs)))
 
 (define (extract-ineqs eqcls core)
   (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))

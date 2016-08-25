@@ -9,9 +9,6 @@
           (for/fold ([s s]) ([(from to) (in-dict replacements)])
             (string-replace s from to))))
 
-(define (indent s)
-  (string-trim (string-replace (string-append "  " s) "\n" "\n  ") "  " #:left? #f))
-
 (define (script->string script)
   (string-join
    (for/list ([handler script])

@@ -2,7 +2,7 @@
 
 (provide
  reap for/reap for*/reap
- sformat slower
+ sformat slower indent
  flags all-flags supported-features
  tree-size sdiff in-groups sequence-cons cartesian-product trieify snoc
  xor ->number z3-path value=?
@@ -141,3 +141,6 @@
 
 (define (snoc lst x)
   (append lst (list x)))
+
+(define (indent s [prefix "  "])
+  (string-trim (string-replace (string-append prefix s) "\n" (string-append "\n" prefix)) prefix #:left? #f))
