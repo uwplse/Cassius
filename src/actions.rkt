@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "selectors.rkt" "tree.rkt" "dom.rkt")
-(provide interpret-action synthesize-script synthesize-handler)
+(provide interpret-action synthesize-code synthesize-handler)
 
 (define (interpret-action-core target-expr act tree)
   (match-define (list target)
@@ -23,11 +23,11 @@
       handler))
 
   (when handler
-    (match-define (list sel evt vars script ...) handler)
-    (interpret-script tree script (cons (cons 'this (list target)) (map cons vars vals)))))
+    (match-define (list sel evt vars code ...) handler)
+    (interpret-code tree code (cons (cons 'this (list target)) (map cons vars vals)))))
 
-(define (interpret-script tree script env)
-  (for ([line script])
+(define (interpret-code tree code env)
+  (for ([line code])
     (interpret-line tree line env)))
 
 (define (interpret-line tree line env)
@@ -58,9 +58,9 @@
   (define sel
     (let ([good-sels (filter (curryr set-member? target) (hash-keys selhash))])
       (dict-ref selhash (argmin set-count target))))
-  (list sel type (map car (cdr env)) (synthesize-script env tree1 tree2)))
+  (list sel type (map car (cdr env)) (synthesize-code env tree1 tree2)))
 
-(define (synthesize-script env tree1 tree2)
+(define (synthesize-code env tree1 tree2)
   (define (sort-queue queue)
     (sort queue < #:key length))
   (let/ec return
@@ -70,7 +70,7 @@
         (loop (sort-queue (append new queue*))))
 
       (define result (tree-copy tree1))
-      (interpret-script result candidate env)
+      (interpret-code result candidate env)
       (match (elements-difference result tree2)
         [#f (return candidate)]
         [(list 'add-class elt cls)

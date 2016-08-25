@@ -1,12 +1,9 @@
 #lang racket
 (require "../common.rkt")
-(provide stylesheet->string header->string value->string selector->string rule->string)
+(provide stylesheet->string value->string selector->string rule->string)
 
 (define (stylesheet->string sheet)
   (string-join (map rule->string sheet) "\n\n"))
-
-(define (header->string header)
-  (format "/* Hand-written header */\n\n~a\n\n" header))
 
 (define (rule->string rule)
   (define selector (car rule))
