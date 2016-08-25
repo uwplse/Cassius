@@ -329,8 +329,8 @@
     (for* ([dom doms] [elt (in-elements dom)])
       (when (node-get elt ':id) (save-id (dump-id (node-get elt ':id))))
       (save-tag (dump-tag (node-type elt)))
-      (when (node-get elt ':class)
-        (for-each (compose save-class dump-class) (node-get elt ':class))))))
+      (when (node-get* elt ':class)
+        (for-each (compose save-class dump-class) (node-get* elt ':class))))))
 
 (define (all-constraints sheet doms)
   (define-values (tags ids classes) (collect-tags-ids-classes doms))

@@ -35,11 +35,11 @@
     [(list 'add-class eltexpr cls)
      (define elts (interpret-eltexpr tree eltexpr env))
      (for ([elt elts])
-       (node-set! elt ':class (remove-duplicates (append (node-get elt ':class #:default '()) (list cls)))))]
+       (node-set*! elt ':class (remove-duplicates (append (node-get* elt ':class #:default '()) (list cls)))))]
     [(list 'remove-class eltexpr cls)
      (define elts (interpret-eltexpr tree eltexpr env))
      (for ([elt elts])
-       (node-set! elt ':class (filter (λ (x) (not (equal? x cls))) (node-get elt ':class #:default '()))))]))
+       (node-set*! elt ':class (filter (λ (x) (not (equal? x cls))) (node-get* elt ':class #:default '()))))]))
 
 (define (interpret-eltexpr tree eltexpr env)
   (match eltexpr

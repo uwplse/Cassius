@@ -32,7 +32,7 @@
   [(`(,_ 0.0)) "0"]
   [(`(px ,px)) (format "~apx" px)]
   [(`(% ,pct)) (format "~a%" pct)]
-  [((? symbol?)) (~a value)])
+  [(_) (~a value)])
 
 (define (selector->string selector)
   (match selector

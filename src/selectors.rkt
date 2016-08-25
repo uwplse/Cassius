@@ -20,7 +20,7 @@
        (raise (make-exn:fail:unsupported "Holes in identifiers are not supported" (current-continuation-marks))))
      (equal? eid id)]
     [`(class ,cls)
-     (define ecls (map slower (node-get elt ':class #:default '())))
+     (define ecls (map slower (node-get* elt ':class #:default '())))
      (set-member? ecls cls)]
     [`(tag ,tag)
      (define etag (node-type elt))
@@ -55,12 +55,12 @@
     '([html] ; 0
       ([body] ; 1
        ([div :id content] ; 2
-        ([H1 :class (title)]) ; 3
-        ([div :class (abstract)] ; 4
+        ([H1 :class title]) ; 3
+        ([div :class abstract] ; 4
          ([blockquote] ; 5
           ([p]))) ; 6
         ([p]) ; 7
-        ([div :class (aside)] ; 8
+        ([div :class aside] ; 8
          ([p])))))) ; 9
   (define ptree (parse-tree tree))
   (define (get-element elt n)
@@ -205,7 +205,7 @@
   (define-values (tags classes ids)
     (for/reap [tag! class! id!] ([elt elts])
       (tag! (slower (node-type elt)))
-      (for-each (compose class! slower) (node-get elt ':class #:default '()))
+      (for-each (compose class! slower) (node-get* elt ':class #:default '()))
       (when (node-get elt ':id)
         (id! (slower (node-get elt ':id))))))
   (values (remove-duplicates tags) (remove-duplicates classes) (remove-duplicates ids)))
