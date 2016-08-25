@@ -65,12 +65,12 @@
 
 (define-layout (snap-0 :browser firefox)
  ([VIEW :w 1920]
-  ([BLOCK :tag html :x 0 :y 0 :w 1920 :h 107]
-   ([BLOCK :tag body :x 0 :y 20 :w 1920 :h 87]
-    ([BLOCK :tag h1 :x 0 :y 20 :w 1920 :h 37]
+  ([BLOCK :x 0 :y 0 :w 1920 :h 107]
+   ([BLOCK :x 0 :y 20 :w 1920 :h 87]
+    ([BLOCK :x 0 :y 20 :w 1920 :h 37]
      ([LINE :h 37]
       ([TEXT :x 0 :y 21.3 :w 209 :h 37])))
-    ([BLOCK :tag a :x 0 :y 67 :w 400 :h 40 :id clickme]
+    ([BLOCK :x 0 :y 67 :w 400 :h 40]
      ([LINE :h 19]
       ([TEXT :x 10 :y 79.6 :w 163 :h 19])))))))
 
@@ -87,19 +87,19 @@
 
 (define-layout (snap-1 :browser firefox)
  ([VIEW :w 1920]
-  ([BLOCK :tag html :x 0 :y 0 :w 1920 :h 107]
-   ([BLOCK :tag body :x 0 :y 20 :w 1920 :h 87]
-    ([BLOCK :tag h1 :x 0 :y 20 :w 1920 :h 37]
+  ([BLOCK :x 0 :y 0 :w 1920 :h 107]
+   ([BLOCK :x 0 :y 20 :w 1920 :h 87]
+    ([BLOCK :x 0 :y 20 :w 1920 :h 37]
      ([LINE :h 37]
       ([TEXT :x 0 :y 21.3 :w 209 :h 37])))
-    ([BLOCK :tag a :x 0 :y 67 :w 400 :h 40 :id clickme]
+    ([BLOCK :x 0 :y 67 :w 400 :h 40]
      ([LINE :h 19]
       ([TEXT :x 10 :y 79.6 :w 163 :h 19])))
-    ([BLOCK :tag div :class modal backdrop in :x 0 :y 0 :w 1920 :h 1080]
-     ([BLOCK :tag div :class modal dialog :w 600 :h 200 :x 660 :y 20]
-      ([BLOCK :tag a :class modal close :w 10 :h 10 :x 1240 :y 30]
-       ([MAGIC :tag img :w 16 :h 16 :x 1234 :y 30]))
-      ([MAGIC :tag content :x 660 :y 20 :w 600 :h 200])))))))
+    ([BLOCK :x 0 :y 0 :w 1920 :h 1080]
+     ([BLOCK :w 600 :h 200 :x 660 :y 20]
+      ([BLOCK :w 10 :h 10 :x 1240 :y 30]
+       ([MAGIC :w 16 :h 16 :x 1234 :y 30]))
+      ([MAGIC :x 660 :y 20 :w 600 :h 200])))))))
 
 (define-script main
   (handle (id clickme) (click)
