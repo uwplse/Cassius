@@ -15,9 +15,9 @@
      (with-output-to-string
        (λ ()
          (match-define (list sel evt vars code ...) handler)
-         (printf "$(~a).on(~a, function(~a) {\n"
-                 (string->js-string (selector->string sel))
+         (printf "$(document).on(~a, ~a, function(~a) {\n"
                  (string->js-string (~a evt))
+                 (string->js-string (selector->string sel))
                  (string-join (map ~a vars) " "))
          (define env (list* (cons 'this "$(this)") (for/list ([v vars]) (cons v (~a v)))))
          (for ([line code])
