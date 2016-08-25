@@ -1,14 +1,17 @@
 #lang racket
 (require "registry.rkt" "common.rkt")
 (provide parse-tree unparse-tree tree-copy tree=?
-         node? node-type node-parent node-children
+         node? node-type node-parent node-children* node-children node-attrs
          node-get node-get* node-set! node-set*! node-add! node-remove!
          node-prev node-next node-fchild node-lchild in-tree)
 
-(struct node (type attrs parent children) #:mutable
+(struct node (type attrs parent children*) #:mutable
         #:methods gen:custom-write
         [(define (write-proc node port mode)
            (fprintf port "[~a ~a]" (node-type node) (string-join (map ~a (dict->attributes (node-attrs node))) " ")))])
+
+(define (node-children node)
+  (filter node? (node-children* node)))
 
 (define (tree-copy tree)
   (assert (not (node-parent tree)) "To (tree-copy) you must pass the root of the tree")
@@ -21,13 +24,15 @@
   (let loop ([tree tree] [parent #f])
     (match-define `([,type ,attrs ...] ,subtrees ...) tree)
     (define n (node type (attributes->dict attrs) parent (void)))
-    (set-node-children! n (map (curryr loop n) (filter list? subtrees)))
+    (set-node-children*! n (for/list ([k subtrees]) (if (list? k) (loop k n) k)))
     n))
 
 (define (unparse-tree node)
-  (list*
-   (list* (node-type node) (dict->attributes (node-attrs node)))
-   (map unparse-tree (node-children node))))
+  (if (node? node)
+      (list*
+       (list* (node-type node) (dict->attributes (node-attrs node)))
+       (map unparse-tree (node-children* node)))
+      node))
 
 (define (node-get node name #:default [default #f])
   (apply values (node-get* node name #:default (list default))))
