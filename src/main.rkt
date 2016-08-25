@@ -53,12 +53,12 @@
   (define stylesheet* (make-hash))
   (for ([name vars])
     (match (split-line-name name)
-      [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,elt-name) ,_ ...)
+      [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,box-name) ,_ ...)
        (define field-name
          (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
            ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
-       (define elt (by-name 'elt elt-name))
-       (node-set! elt field-name `(bad ,(node-get elt field-name)))]
+       (define box (by-name 'box box-name))
+       (node-set! box field-name `(bad ,(node-get box field-name)))]
       [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
        (define rule (hash-ref! stylesheet* idx (list-ref stylesheet idx)))
        (define rule*
@@ -74,7 +74,7 @@
        (hash-set! stylesheet* idx rule*)]
       [`((style ,elt-name ,prop) ,_ ...)
        (define elt (by-name 'elt elt-name))
-       (define old-style (css-denormalize-body (node-get elt ':style)))
+       (define old-style (css-denormalize-body (node-get elt ':style '())))
        (node-set! elt ':style
                      (css-normalize-body
                       (if (dict-has-key? old-style prop)
@@ -264,7 +264,7 @@
         [`(not ,(? number*? value)) `(not (= ,expr ,value))]
         [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min ,expr ,max)]))
 
-    (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (name 'elt elt)))))))
+    (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (name 'box elt)))))))
 
 (define (style-constraints dom emit elt)
   (when (node-get elt ':style)
@@ -298,7 +298,7 @@
                           ,(name 'box (node-next elt) 'nil-box)
                           ,(name 'box (node-fchild elt) 'nil-box)
                           ,(name 'box (node-lchild elt) 'nil-box))
-                    :named ,(sformat "link-box/~a" (name 'elt elt))))))
+                    :named ,(sformat "link-box/~a" (name 'box elt))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -312,7 +312,7 @@
       ['TEXT 'a-text-box]))
   (when cns
     (emit `(assert (! (,cns ,(dump-box elt))
-                      :named ,(sformat "box/~a/~a" (slower (node-type elt)) (name 'elt elt)))))))
+                      :named ,(sformat "box/~a/~a" (slower (node-type elt)) (name 'box elt)))))))
 
 (define (info-constraints dom emit elt)
   (define tagname (dump-tag (node-type elt)))
@@ -378,7 +378,7 @@
     (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
     ,@(per-element tree-constraints)
     ,@(per-box box-constraints)
-    ,@(per-box style-constraints)
+    ,@(per-element style-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-element info-constraints)
     ,@(box-element-constraints sheet doms)

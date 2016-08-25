@@ -14,6 +14,6 @@
     default]))
 
 (define (by-name kind name)
-  (for/first ([(name* thing) (dict-ref name-registry kind)]
+  (for/first ([(thing name*) (dict-ref name-registry kind)]
               #:when (equal? name name*))
     thing))
