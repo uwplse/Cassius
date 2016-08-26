@@ -113,7 +113,8 @@
       [(list 'model m)
        (for-each (curryr extract-tree! m) trees)
        (extract-counterexample! m)
-       (success (extract-rules (car sheets) trees m) (map unparse-tree trees))]
+       (define sheet* (car sheets)) ; (extract-rules (car sheets) trees m)
+       (success sheet* (map unparse-tree trees))]
       [(list 'core c)
        (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
        (failure stylesheet* (map unparse-tree trees*))]))

@@ -54,7 +54,7 @@
 
 (define (node-prev node)
   (define sibs (if (node-parent node) (node-children (node-parent node)) (list node)))
-  (for/first ([prev (sequence-cons #f sibs)] [node* sibs] #:when (equal? node node*)) prev))
+  (for/first ([prev (cons #f sibs)] [node* sibs] #:when (equal? node node*)) prev))
 
 (define (node-next node)
   (define sibs (if (node-parent node) (node-children (node-parent node)) (list node)))

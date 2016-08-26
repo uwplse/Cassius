@@ -10,6 +10,65 @@
 (require "../print/css.rkt")
 (require "../main.rkt")
 
+; Replace all bad tags and ids with holes
+; TODO: It is kind of strange & hacky to have this weird global variable thing, but I can't figure out how to avoid it currently.. Maybe Pavel can think of a better way
+; with his wicked racket skills?
+(define replaced #f)
+(define (reset-replaced)
+  (set! replaced #f))
+
+(define (replace-ids-with-holes tree one)
+  (define (match-attr attr)
+    (match attr
+      [`(bad ,val) val]
+      [_ attr]))
+
+  (for/list ([t tree])
+    (match t
+      [`((,block ...) ,rest ...)
+       (replace-ids-with-holes t one)]
+      [`(,block :tag (bad ,val) :id (bad ,idval) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret
+         (cond
+           [(and (not (equal? (slower (symbol->string val)) 'html))
+                  (not (equal? (slower (symbol->string val)) 'body))
+                  (not replaced)
+                  (not (equal? idval '?)))
+             (when (and one (not replaced))
+               (set! replaced #t))
+             (cond
+               [(not one)
+                 (list block ':tag '? ':id '?)]
+               [else
+                 (list block ':tag val ':id '?)])]
+           [else
+             (list block ':tag val ':id idval)]))
+       (append ret vals)]
+      [`(,block :tag (bad ,val) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret
+         (cond
+           [(and (not (equal? (slower (symbol->string val)) 'html))
+                  (not (equal? (slower (symbol->string val)) 'body))
+                  (not replaced)
+                  (not (equal? val '?)))
+            (when (and one (not replaced))
+               (set! replaced #t))
+             (list block ':tag '?)]
+           [else
+             (list block ':tag val)]))
+       (append ret vals)]
+      [`(,block ,attr (bad ,val) ,rest ...)
+       (define vals (map (λ (t) (match-attr t)) rest))
+       (define ret (list block attr val))
+       (append ret vals)]
+      [`(,block ,attr ,val ,rest ...)
+       (define ret (list block attr val))
+       (append ret rest)]
+      [_ (replace-ids-with-holes t one)])))
+
+
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate #:repair-all repair-all #:max-repairs max-repairs)
   (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
   (define documents (dict-ref problem ':documents))
@@ -70,8 +129,8 @@
               (displayln (tree->string t #:attrs '(:x :y :w :h)))
               (printf "\n")
               
-              (match-define (dom name ctx tree) d)
-              (dom name ctx t)))
+              (match-define (dom name ctx elements boxes) d)
+              (dom name ctx elements t)))
 
           (set! continue (not (equal? last-repaired-trees new-trees)))
           (when continue
@@ -83,8 +142,8 @@
           (define doms
             (for/list ([d documents*] [t trees])
               (define new-tree (replace-ids-with-holes t))
-              (match-define (dom name ctx tree) d)
-              (dom name ctx new-tree)))
+              (match-define (dom name ctx elements boxes) d)
+              (dom name ctx elements new-tree)))
           (set! result (solve-problem sheets doms debug))])]))
   
   ; Attempt to repair all holes at once
@@ -100,8 +159,8 @@
          (for/list ([d documents*] [t trees])
            (reset-replaced)
            (define new-tree (replace-ids-with-holes t #f))
-           (match-define (dom name ctx tree) d)
-           (dom name ctx new-tree)))
+           (match-define (dom name ctx elements boxes) d)
+           (dom name ctx elements new-tree)))
        
        (set! result (solve-problem sheets doms debug))]
       [(list 'error e)
@@ -118,14 +177,14 @@
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))
        
        (printf "\n\nUnable to repair the document... Attempting to repair by synthesizing a new rule.\n\n")
-       (set! sheet (append (list (list '? '?)) sheet))    
+       (set! stylesheet (append (list (list '? '?)) stylesheet))    
        (define doms
          (for/list ([d documents*] [t trees])
            (define new-tree (replace-ids-with-holes t #f))
-           (match-define (dom name ctx tree) d)
-           (dom name ctx new-tree)))
+           (match-define (dom name ctx elements boxes) d)
+           (dom name ctx elements new-tree)))
        
-       (match-result (solve-problem (list sheet) doms debug))]    
+       (match-result (solve-problem (list stylesheet) doms debug))]    
       [(list 'error e)
        ((error-display-handler) (exn-message e) e) #t]
       ['break

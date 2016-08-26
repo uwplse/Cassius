@@ -40,8 +40,7 @@
 
 (define (extract-style style-expr)
   (match-define (list 'style rec ...) style-expr)
-  (for/list ([(prop type default) (in-css-properties)]
-             [(value score) (in-groups 2 rec)]
+  (for/list ([(prop type default) (in-css-properties)] [value rec]
              ;; TODO Hack on text-align
              #:unless (or (and (equal? prop 'text-align) (equal? value 'text-align/left)) (value=? type value (dump-value prop default))))
     `[,prop ,(extract-value value)]))

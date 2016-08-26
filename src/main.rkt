@@ -3,7 +3,7 @@
          "selectors.rkt" "match.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 
-(provide all-constraints add-test replace-ids-with-holes reset-replaced selector-constraints extract-core extract-rules extract-counterexample! extract-tree!)
+(provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!)
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -22,26 +22,6 @@
            (dict-set body part (list value)))
         body)))
 
-(define (extract-rules stylesheet trees smt-out)
-  (for/list ([rule stylesheet] [i (in-naturals)])
-    (define rule-name (sformat "user/~a" i))
-    (if (not (hash-has-key? smt-out rule-name))
-        rule
-        (match (hash-ref smt-out rule-name)
-          [(list 'rule sel idx origin is-from-style score rest ...)
-           (cons (if (equal? '? (car rule))
-                     (extract-selector sel)
-                     (car rule))
-                 (for/list ([(value enabled?) (in-groups 2 rest)]
-                            [(prop type default) (in-css-properties)]
-                            #:when enabled?)
-                   (list prop (extract-value value))))]))))
-
-(define ((css-type-ending? v) x)
-  (match (split-symbol x)
-    [(list _ ... (== v)) #t]
-    [_ #f]))
-
 (define (css-ex? x)
   (string-suffix? (~a (last (split-symbol x))) "ex"))
 
@@ -59,19 +39,6 @@
            ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
        (define box (by-name 'box box-name))
        (node-set! box field-name `(bad ,(node-get box field-name)))]
-      [`((rule user ,idx ,prop) ,_ ...) ; TODO: Update to include browser styles
-       (define rule (hash-ref! stylesheet* idx (list-ref stylesheet idx)))
-       (define rule*
-         (cons (car rule)
-               (for/list ([line (cdr rule)])
-                 (cond
-                  [(not (list? line))
-                   line]
-                  [(equal? (car line) prop)
-                   `(,prop (bad ,(cadr line)))]
-                  [else
-                   line]))))
-       (hash-set! stylesheet* idx rule*)]
       [`((style ,elt-name ,prop) ,_ ...)
        (define elt (by-name 'elt elt-name))
        (define old-style (css-denormalize-body (node-get elt ':style '())))
@@ -82,64 +49,6 @@
                           (dict-set old-style prop '((bad))))))]
       [_ (void)]))
   (values (hash-values stylesheet*) trees))
-
-; Replace all bad tags and ids with holes
-; TODO: It is kind of strange & hacky to have this weird global variable thing, but I can't figure out how to avoid it currently.. Maybe Pavel can think of a better way
-; with his wicked racket skills?
-(define replaced #f)
-(define (reset-replaced)
-  (set! replaced #f))
-
-(define (replace-ids-with-holes tree one)
-  (define (match-attr attr)
-    (match attr
-      [`(bad ,val) val]
-      [_ attr]))
-
-  (for/list ([t tree])
-    (match t
-      [`((,block ...) ,rest ...)
-       (replace-ids-with-holes t one)]
-      [`(,block :tag (bad ,val) :id (bad ,idval) ,rest ...)
-       (define vals (map (λ (t) (match-attr t)) rest))
-       (define ret
-         (cond
-           [(and (not (equal? (slower (symbol->string val)) 'html))
-                  (not (equal? (slower (symbol->string val)) 'body))
-                  (not replaced)
-                  (not (equal? idval '?)))
-             (when (and one (not replaced))
-               (set! replaced #t))
-             (cond
-               [(not one)
-                 (list block ':tag '? ':id '?)]
-               [else
-                 (list block ':tag val ':id '?)])]
-           [else
-             (list block ':tag val ':id idval)]))
-       (append ret vals)]
-      [`(,block :tag (bad ,val) ,rest ...)
-       (define vals (map (λ (t) (match-attr t)) rest))
-       (define ret
-         (cond
-           [(and (not (equal? (slower (symbol->string val)) 'html))
-                  (not (equal? (slower (symbol->string val)) 'body))
-                  (not replaced)
-                  (not (equal? val '?)))
-            (when (and one (not replaced))
-               (set! replaced #t))
-             (list block ':tag '?)]
-           [else
-             (list block ':tag val)]))
-       (append ret vals)]
-      [`(,block ,attr (bad ,val) ,rest ...)
-       (define vals (map (λ (t) (match-attr t)) rest))
-       (define ret (list block attr val))
-       (append ret vals)]
-      [`(,block ,attr ,val ,rest ...)
-       (define ret (list block attr val))
-       (append ret rest)]
-      [_ (replace-ids-with-holes t one)])))
 
 (define (extract-box! box elt)
   (match-define
