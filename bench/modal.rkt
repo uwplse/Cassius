@@ -12,14 +12,15 @@
    [margin-top (px 20)]
    [margin-bottom (px 10)]
    [font-size (px 36)])
-  ((tag a)
+  ((id clickme)
    [width (px 380)]
    [height (px 20)]
    [padding-left (px 10)]
    [padding-right (px 10)]
    [padding-top (px 10)]
    [padding-bottom (px 10)]
-   [background gray])
+   [background gray]
+   [cursor pointer])
   ((and (class modal) (class backdrop))
    [display none]
    [position fixed]
@@ -50,7 +51,9 @@
    [padding-top (px 0)]
    [padding-bottom (px 0)]
    [width auto]
-   [height auto]))
+   [height auto])
+  ((tag section)
+   (min-height (px 200))))
 
 (define-document dom-0
   ([html]
@@ -61,7 +64,7 @@
      ([div :class modal dialog]
       ([a :class modal close]
        ([img :src "http://www.famfamfam.com/lab/icons/mini/icons/action_stop.gif"]))
-      ([content]))))))
+      ([section]))))))
 
 (define-layout (snap-0 :browser firefox)
  ([VIEW :w 1920]
@@ -83,7 +86,7 @@
      ([div :class modal dialog]
       ([a :class modal close]
        ([img :src "http://www.famfamfam.com/lab/icons/mini/icons/action_stop.gif"]))
-      ([content]))))))
+      ([section]))))))
 
 (define-layout (snap-1 :browser firefox)
  ([VIEW :w 1920]
