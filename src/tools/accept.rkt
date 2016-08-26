@@ -17,8 +17,10 @@
     (for ([from froms] [to tos])
       (define from* (parse-tree from))
       (interpret-action target act (apply append (dict-ref problem ':scripts '())) from*)
-      (unless (tree=? (parse-tree to) from*)
-        (eprintf "Failed action: ~a\n" act))))
+      (define diff (elements-difference (parse-tree to) from*))
+      (when diff
+        (eprintf "Failed ~a on ~a\n  " act target)
+        (pretty-print diff))))
 
   (define res
     (with-handlers

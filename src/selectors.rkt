@@ -42,7 +42,7 @@
     [(list 'child sels ...)
      (match-define (cons sel rsels) (reverse sels))
      (and (selector-matches? sel elt)
-          (let loop ([rsels rsels] [elt elt])
+          (let loop ([rsels rsels] [elt (node-parent elt)])
             (cond
              [(null? rsels) true]
              [(not (node-parent elt)) false]

@@ -15,14 +15,9 @@
 
 (define (interpret-action target-expr act handlers tree)
   (match-define (list type target vals ...) (interpret-action-core target-expr act tree))
-
-  (define handler
-    (for/first ([handler handlers]
-                #:when (equal? (second handler) type)
-                #:when (selector-matches? (first handler) target))
-      handler))
-
-  (when handler
+  (define active-handlers
+    (filter (λ (h) (and (equal? (second h) type) (selector-matches? (first h) target))) handlers))
+  (for ([handler active-handlers])
     (match-define (list sel evt vars code ...) handler)
     (interpret-code tree code (cons (cons 'this (list target)) (map cons vars vals)))))
 
