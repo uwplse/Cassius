@@ -2,7 +2,7 @@
 
 (require "common.rkt")
 
-(provide smt-cond asserts smt-let define-constraints)
+(provide smt-cond asserts smt-let define-constraints smt-replace)
 
 (define-syntax smt-cond
   (syntax-rules (else)
@@ -19,3 +19,15 @@
 
 (define-syntax-rule (smt-let bindings constraints ...)
   `(let bindings (and constraints ...)))
+
+(define (smt-replace expr bindings)
+  (match expr
+    [(? (curry dict-has-key? bindings))
+     (dict-ref bindings expr)]
+    [(list (app list (? (curry dict-has-key? bindings) f)) args ...)
+     (apply (dict-ref bindings f) args)]
+    [(list f vars ...) (cons f (map (curryr smt-replace bindings) vars))]
+    [`(let ((,vars ,vals) ...) ,body)
+     `(let (,@(map list vars (map (curryr smt-replace bindings) vals)))
+        ,(smt-replace body (dict-remove* bindings vars)))]
+    [_ expr]))
