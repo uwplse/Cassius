@@ -2,7 +2,7 @@
 
 (require "common.rkt")
 
-(provide smt-cond asserts smt-let define-constraints smt-replace)
+(provide smt-cond asserts smt-let define-constraints smt-replace smt-and)
 
 (define-syntax smt-cond
   (syntax-rules (else)
@@ -31,3 +31,12 @@
      `(let (,@(map list vars (map (curryr smt-replace bindings) vals)))
         ,(smt-replace body (dict-remove* bindings vars)))]
     [_ expr]))
+
+(define (smt-and . pieces)
+  (define pieces* (filter (λ (x) (not (equal? x 'true))) pieces))
+  (if (ormap (curry equal? 'false) pieces*)
+      'false
+      (match pieces*
+        ['() 'true]
+        [(list x) x]
+        [xs (cons 'and xs)])))
