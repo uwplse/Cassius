@@ -2,7 +2,7 @@
 
 (provide
  reap for/reap for*/reap
- sformat slower indent tree-size snoc
+ sformat slower indent tree-size snoc dict-remove*
  flags all-flags supported-features
  xor ->number z3-path value=?
  attribute? attributes->dict dict->attributes
@@ -96,3 +96,7 @@
 
 (define (indent s [prefix "  "])
   (string-trim (string-replace (string-append prefix s) "\n" (string-append "\n" prefix)) prefix #:left? #f))
+
+(define (dict-remove* dict keys)
+  (for/fold ([dict dict]) ([key keys])
+    (dict-remove dict key)))

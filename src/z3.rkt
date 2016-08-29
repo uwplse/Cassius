@@ -85,10 +85,6 @@
   (z3-kill z3)
   out)
 
-(define (dict-remove* dict keys)
-  (for/fold ([dict dict]) ([key keys])
-    (dict-remove dict key)))
-
 (define (replace-terms expr bindings)
   (match expr
     [(? (curry dict-has-key? bindings))
