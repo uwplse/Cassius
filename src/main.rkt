@@ -96,7 +96,6 @@
    `(assert
      (!
       (link-element ,(dump-elt elt)
-                    ,(dump-dom dom)
                     ,(name 'elt (node-parent elt) 'nil-elt)
                     ,(name 'elt (node-prev   elt) 'nil-elt)
                     ,(name 'elt (node-next   elt) 'nil-elt)
@@ -230,7 +229,7 @@
         `(idname ,(dump-elt elt))
         (dump-id (node-get elt ':id))))
 
-  (emit `(assert (! (element-info ,(dump-elt elt) ,tagname ,idname)
+  (emit `(assert (! (element-info ,(dump-elt elt))
                     :named ,(sformat "info/~a" (name 'elt elt))))))
 
 (define (collect-tags-ids-classes doms)
@@ -259,10 +258,7 @@
     (echo "Basic definitions")
     (declare-datatypes
      () ; No parameters
-     ((Id no-id ,@(remove-duplicates ids))
-      (TagNames no-tag ,@(remove-duplicates tags))
-      (Document ,@(for/list ([dom doms]) (dump-dom dom)))
-      (ElementName ,@element-names nil-elt)
+     ((ElementName ,@element-names nil-elt)
       (BoxName ,@box-names nil-box)))
     ;,@css-declarations
     (declare-datatypes ()
@@ -284,7 +280,6 @@
 
     ; DOMs
     (echo "Elements must be initialized")
-    (assert (forall ((e ElementName)) (! (an-element (get/elt e)) :named element)))
     ,@(per-element tree-constraints)
     ,@(per-box box-constraints)
     ,@(per-element style-constraints)

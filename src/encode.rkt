@@ -2,7 +2,7 @@
 (require "common.rkt" "dom.rkt" "spec/css-properties.rkt" "registry.rkt")
 
 (provide dump-tag extract-tag dump-id extract-id dump-class
-         dump-elt dump-box dump-dom extract-style
+         dump-elt dump-box extract-style
          dump-value extract-value dump-selector extract-selector)
 
 (define (dump-tag tag)
@@ -34,9 +34,6 @@
   (if box
       (sformat "~a-box" (name 'box box))
       'no-box))
-
-(define (dump-dom dom)
-  (sformat "~a-doc" (dom-name dom)))
 
 (define (extract-style style-expr)
   (match-define (list 'style rec ...) style-expr)

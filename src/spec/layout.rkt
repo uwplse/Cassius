@@ -98,9 +98,6 @@
         (not (is-overflow/visible (style.overflow-x (computed-style (get/elt (element b))))))
         (not (is-overflow/visible (style.overflow-y (computed-style (get/elt (element b))))))))
 
-  (define-fun an-element ((e Element)) Bool
-    true)
-
   (define-fun a-view-box ((b Box)) Bool
     (and
      ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])

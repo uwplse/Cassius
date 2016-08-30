@@ -36,8 +36,7 @@
                 (element ElementName)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
-           (elt (document Document) (tagname TagNames) (idname Id)
-                (specified-style Style) (computed-style Style)
+           (elt (specified-style Style) (computed-style Style)
                 (previous-name ElementName) (parent-name ElementName) (next-name ElementName)
                 (first-child-name ElementName) (last-child-name ElementName)
                 (flow-box BoxName))))))
@@ -79,22 +78,18 @@
   (define-fun pbbox ((box Box)) Box (get/box (pb-name box)))
   (define-fun ppbox ((box Box)) Box (get/box (pp-name box)))
 
-  (define-fun link-element ((elt Element) (doc Document) (p ElementName)
+  (define-fun link-element ((elt Element) (p ElementName)
                             (v ElementName) (n ElementName) (f ElementName)
                             (l ElementName)) Bool
     (and (is-elt elt)
-         (= (document elt) doc)
          (= (parent-name elt) p)
          (= (previous-name elt) v)
          (= (next-name elt) n)
          (= (first-child-name elt) f)
          (= (last-child-name elt) l)))
 
-  (define-fun element-info ((elt Element) (tag TagNames) (&idname Id)) Bool
-    (and (= (tagname elt) tag) (= (idname elt) &idname)
-         (not (is-no-tag (tagname elt)))
-
-         ,@(for/list ([(prop type _d) (in-css-properties)])
+  (define-fun element-info ((elt Element)) Bool
+    (and ,@(for/list ([(prop type _d) (in-css-properties)])
              `(not (,(sformat "is-~a/inherit" (type->prefix type))
                     (,(sformat "style.~a" prop) (specified-style elt)))))
 
@@ -105,7 +100,6 @@
                               text-align overflow-x overflow-y position top bottom left right)])
              `(= (,(sformat "style.~a" prop) (computed-style elt))
                  (,(sformat "style.~a" prop) (specified-style elt))))
-
 
          ,(prop-is-positive 'width 'width 'elt)
          ,(prop-is-positive 'min-width 'min-width 'elt)
