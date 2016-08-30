@@ -90,22 +90,29 @@
               (node-children elt)
               (filter (λ (x) (not (equal? (node-type x) 'TEXT))) (node-children box)))))
 
-(define (synthesize-dom elts boxes1 boxes2)
+(define (synthesize-dom sheet elts1 boxes1 boxes2)
   (define match1-constraints
     (smt-replace
-     (link/root/c elts boxes1)
+     (link/root/c elts1 boxes1)
      (list (cons '(displayed) (λ (elt) (sformat "d1/~a" (name 'elt elt)))))))
   (define match2-constraints
     (smt-replace
-     (link/root/c elts boxes2)
+     (link/root/c elts1 boxes2)
      (list (cons '(displayed) (λ (elt) (sformat "d2/~a" (name 'elt elt)))))))
 
-  (z3-solve
-   `(,@(for/list ([elt (in-tree elts)]) `(declare-const ,(sformat "d1/~a" (name 'elt elt)) Bool))
-     ,@(for/list ([elt (in-tree elts)]) `(declare-const ,(sformat "d2/~a" (name 'elt elt)) Bool))
-     (assert ,match1-constraints)
-     (assert ,match2-constraints)
-     ,@(for/list ([elt (in-tree elts)])
-         `(assert-soft ,(sformat "d1/~a" (name 'elt elt))))
-     ,@(for/list ([elt (in-tree elts)])
-         `(assert-soft (= ,(sformat "d1/~a" (name 'elt elt)) ,(sformat "d2/~a" (name 'elt elt))))))))
+  (reap [sow]
+        (match-define (list 'model out)
+          (z3-solve
+           `(,@(for/list ([elt (in-tree elts1)]) `(declare-const ,(sformat "d1/~a" (name 'elt elt)) Bool))
+             ,@(for/list ([elt (in-tree elts1)]) `(declare-const ,(sformat "d2/~a" (name 'elt elt)) Bool))
+             (assert ,match1-constraints)
+             (assert ,match2-constraints)
+             ,@(for/list ([elt (in-tree elts1)])
+                 `(assert-soft ,(sformat "d1/~a" (name 'elt elt))))
+             ,@(for/list ([elt (in-tree elts1)])
+                 `(assert-soft (= ,(sformat "d1/~a" (name 'elt elt)) ,(sformat "d2/~a" (name 'elt elt))))))))
+        (for ([elt (in-tree elts1)])
+          (let ([d1 (dict-ref out (sformat "d1/~a" (name 'elt elt)))]
+                [d2 (dict-ref out (sformat "d2/~a" (name 'elt elt)))])
+            (unless (equal? d1 d2)
+              (sow elt))))))
