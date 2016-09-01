@@ -40,14 +40,7 @@
      nnf occf smt)))
 
 (define (constraints sheets docs [test #f] #:debug [debug? #f])
-  (define time-start (current-inexact-milliseconds))
-  (define (log-phase fmt . args)
-    (let* ([now (current-inexact-milliseconds)]
-           [delta (- now time-start)])
-      (set! time-start now)
-      (apply eprintf (string-append "[~as] " fmt "\n")
-             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
-             args)))
+  (define log-phase (make-log))
 
   (define doms
     (for/list ([d docs])
@@ -72,14 +65,7 @@
   (append query (list cassius-check-sat)))
 
 (define (solve sheets docs [test #f] #:debug [debug? #f])
-  (define time-start (current-inexact-milliseconds))
-  (define (log-phase fmt . args)
-    (let* ([now (current-inexact-milliseconds)]
-           [delta (- now time-start)])
-      (set! time-start now)
-      (apply eprintf (string-append "[~as] " fmt "\n")
-             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
-             args)))
+  (define log-phase (make-log))
 
   (define doms
     (for/list ([d docs])
@@ -124,14 +110,7 @@
   res)
 
 (define (synthesize docs [test #f] #:debug [debug? #f])
-  (define time-start (current-inexact-milliseconds))
-  (define (log-phase fmt . args)
-    (let* ([now (current-inexact-milliseconds)]
-           [delta (- now time-start)])
-      (set! time-start now)
-      (apply eprintf (string-append "[~as] " fmt "\n")
-             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
-             args)))
+  (define log-phase (make-log))
 
   (define doms
     (for/list ([d docs])

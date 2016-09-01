@@ -7,7 +7,7 @@
  xor ->number z3-path value=?
  attribute? attributes->dict dict->attributes
  split-symbol split-line-name
- assert)
+ assert make-log)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -100,3 +100,13 @@
 (define (dict-remove* dict keys)
   (for/fold ([dict dict]) ([key keys])
     (dict-remove dict key)))
+
+(define (make-log)
+  (define time-start (current-inexact-milliseconds))
+  (lambda (fmt . args)
+    (let* ([now (current-inexact-milliseconds)]
+           [delta (- now time-start)])
+      (set! time-start now)
+      (apply eprintf (string-append "[~as] " fmt "\n")
+             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
+             args))))
