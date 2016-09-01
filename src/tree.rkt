@@ -44,7 +44,7 @@
   (set-node-attrs! node (dict-set (node-attrs node) name (list value))))
 
 (define (node-add! node name value)
-  (set-node-attrs! node (cons value (dict-ref (node-attrs node) name '()))))
+  (node-set*! node name (cons value (node-get* node name #:default '()))))
 
 (define (node-set*! node name value)
   (set-node-attrs! node (dict-set (node-attrs node) name value)))
