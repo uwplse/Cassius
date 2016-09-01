@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "selectors.rkt" "smt.rkt" "registry.rkt" "z3.rkt")
-(provide link-elts-boxes)
+(provide link-elts-boxes link/root/c synthesize-displayed synthesize-dom)
 
 (define (sheet->display? elts sheet)
   (define eqs (equivalence-classes sheet (sequence->list (in-tree elts))))
@@ -90,7 +90,7 @@
               (node-children elt)
               (filter (λ (x) (not (equal? (node-type x) 'TEXT))) (node-children box)))))
 
-(define (synthesize-dom sheet elts1 boxes1 boxes2)
+(define (synthesize-displayed elts1 boxes1 boxes2)
   (define match1-constraints
     (smt-replace
      (link/root/c elts1 boxes1)
@@ -100,19 +100,30 @@
      (link/root/c elts1 boxes2)
      (list (cons '(displayed) (λ (elt) (sformat "d2/~a" (name 'elt elt)))))))
 
-  (reap [sow]
-        (match-define (list 'model out)
-          (z3-solve
-           `(,@(for/list ([elt (in-tree elts1)]) `(declare-const ,(sformat "d1/~a" (name 'elt elt)) Bool))
-             ,@(for/list ([elt (in-tree elts1)]) `(declare-const ,(sformat "d2/~a" (name 'elt elt)) Bool))
-             (assert ,match1-constraints)
-             (assert ,match2-constraints)
-             ,@(for/list ([elt (in-tree elts1)])
-                 `(assert-soft ,(sformat "d1/~a" (name 'elt elt))))
-             ,@(for/list ([elt (in-tree elts1)])
-                 `(assert-soft (= ,(sformat "d1/~a" (name 'elt elt)) ,(sformat "d2/~a" (name 'elt elt))))))))
-        (for ([elt (in-tree elts1)])
-          (let ([d1 (dict-ref out (sformat "d1/~a" (name 'elt elt)))]
-                [d2 (dict-ref out (sformat "d2/~a" (name 'elt elt)))])
-            (unless (equal? d1 d2)
-              (sow elt))))))
+  (define problem
+    `(,@(for/list ([elt (in-tree elts1)]) `(declare-const ,(sformat "d1/~a" (name 'elt elt)) Bool))
+       ,@(for/list ([elt (in-tree elts1)]) `(declare-const ,(sformat "d2/~a" (name 'elt elt)) Bool))
+       (assert ,match1-constraints)
+       (assert ,match2-constraints)
+       ,@(for/list ([elt (in-tree elts1)])
+           `(assert-soft ,(sformat "d1/~a" (name 'elt elt))))
+       ,@(for/list ([elt (in-tree elts1)])
+           `(assert-soft (= ,(sformat "d1/~a" (name 'elt elt)) ,(sformat "d2/~a" (name 'elt elt)))))))
+  (z3-solve problem))
+
+(define (synthesize-dom elts1 boxes1 boxes2)
+  (match-define (list 'model out) (synthesize-displayed elts1 boxes1 boxes2))
+
+  (define elts2 (tree-copy elts1))
+  (for ([elt (in-tree elts1)] [elt* (in-tree elts2)])
+    (let ([d1 (dict-ref out (sformat "d1/~a" (name 'elt elt)))]
+          [d2 (dict-ref out (sformat "d2/~a" (name 'elt elt)))])
+      (unless (equal? d1 d2)
+        (node-add! elt* ':class 'new-class))))
+  (define out*
+    (let ([h (make-hash)])
+      (for ([elt (in-tree elts1)] [elt* (in-tree elts2)])
+        (dict-set! h elt (dict-ref out (sformat "d1/~a" (name 'elt elt))))
+        (dict-set! h elt* (dict-ref out (sformat "d2/~a" (name 'elt elt)))))
+      h))
+  (values out* elts2))
