@@ -57,7 +57,28 @@
    (margin-bottom ?)
    (margin-left ?)))
 
-(define-document (mockup)
+(define-document main
+  ([html]
+   ([header])
+   ([body]
+    ([div]
+     ([form]
+      ([div] ([btn]) ([btn])))
+     ([h1])
+     ([g]
+      ([rect] ([img]))
+      ([rect] ([img]))
+      ([rect] ([img]))
+      ([rect] ([img]))
+      ([rect] ([img]))
+      ([rect] ([img])))))
+   ([footer]
+    ([icon])
+    ([icon])
+    ([icon])
+    ([icon]))))
+
+(define-layout (mockup)
  ([VIEW :w 750 :h 1334]
   ((BLOCK :tag html :w 750 :x 0 :y 0)
    ((BLOCK :tag header :x 0 :y 0 :w 750 :h 109))
@@ -87,7 +108,7 @@
     ((BLOCK :tag icon :w 100 :h 100 :x 400 :y 1209.0))
     ((BLOCK :tag icon :w 100 :h 100 :x 550 :y 1209.0))))))
 
-(define-document (bigger)
+(define-layout (bigger)
  ([VIEW :w 1100 :h 1920]
   ((BLOCK :tag html :w 1100 :x 0 :y 0.0 :style ())
    ((BLOCK :tag header :x 0 :y 0 :w 1100 :h 109 :style ([height ?])))
@@ -140,13 +161,15 @@
 
 (define-problem one
   :sheets main
-  :documents mockup)
+  :documents main
+  :layouts mockup)
 
 (define-problem two
   :sheets main
-  :documents mockup bigger)
+  :documents main main
+  :layouts mockup bigger)
 
-(define-document (mockup-restricted)
+(define-layout (mockup-restricted)
  ([VIEW :w 750 :h 1334]
   ((BLOCK :tag html :w 750 :x 0 :y 0 :style ())
    ((BLOCK :tag header :x 0 :y 0 :w 750 :h 109 :style ([height ?])))
@@ -198,7 +221,7 @@
     ((BLOCK :tag icon :w 100 :h 100 :x 550 :y 1209.0
             :style ([float ?] [height ?] [width ?] [margin ? ? ? ?])))))))
 
-(define-document (mockup-correct)
+(define-layout (mockup-correct)
  ([VIEW :w 750 :h 1334]
   ((BLOCK :tag html :w 750 :x 0 :y 0
           :style ())
@@ -256,8 +279,10 @@
 
 (define-problem one-done
   :sheets main
-  :documents mockup-correct)
+  :documents main
+  :layouts mockup-correct)
 
 (define-problem two-done
   :sheets main
-  :documents mockup-correct bigger)
+  :documents main main
+  :layouts mockup-correct bigger)
