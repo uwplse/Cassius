@@ -123,19 +123,18 @@
         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
                           :named ,assertname)))))))
 
-(define (box-element-constraints sheet doms)
+(define (box-element-constraints matchers doms)
   (reap [emit]
-    (for ([dom doms])
-      (define other (link-elts-boxes sheet (dom-elements dom) (dom-boxes dom)))
+    (for ([dom doms] [matcher matchers])
       (for ([elt (in-elements dom)])
         (define ename (name 'elt elt))
-        (match (other elt)
+        (match (matcher elt)
           [#f
            (emit `(assert (! (link-anon-element ,ename) :named ,(sformat "box-element/~a" ename))))]
           [box
            (define bname (name 'box box))
            (emit `(assert (! (link-element-box ,ename ,bname) :named ,(sformat "box-element/~a" ename))))]))
-      (for ([box (in-boxes dom)] #:when (not (other box)))
+      (for ([box (in-boxes dom)] #:when (not (matcher box)))
         (define bname (name 'box box))
         (emit `(assert (! (link-anon-box ,bname) :named ,(sformat "box-element/~a" bname))))))))
 
@@ -240,7 +239,7 @@
       (when (node-get* elt ':class)
         (for-each (compose save-class dump-class) (node-get* elt ':class))))))
 
-(define (all-constraints sheet doms)
+(define (all-constraints matcher doms)
   (define-values (tags ids classes) (collect-tags-ids-classes doms))
   (define element-names (for*/list ([dom doms] [elt (in-elements dom)]) (name 'elt elt)))
   (define box-names (for*/list ([dom doms] [elt (in-boxes dom)]) (name 'box elt)))
@@ -285,7 +284,7 @@
     ,@(per-element style-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-element info-constraints)
-    ,@(box-element-constraints sheet doms)
+    ,@(box-element-constraints matcher doms)
     ,@(per-box layout-constraints)
     ))
 

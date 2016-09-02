@@ -92,13 +92,11 @@
 
 (define (synthesize-displayed elts1 boxes1 boxes2)
   (define match1-constraints
-    (smt-replace
-     (link/root/c elts1 boxes1)
-     (list (cons '(displayed) (λ (elt) (sformat "d1/~a" (name 'elt elt)))))))
+    (smt-replace (link/root/c elts1 boxes1)
+      [`(displayed ,elt) (sformat "d1/~a" (name 'elt elt))]))
   (define match2-constraints
-    (smt-replace
-     (link/root/c elts1 boxes2)
-     (list (cons '(displayed) (λ (elt) (sformat "d2/~a" (name 'elt elt)))))))
+    (smt-replace (link/root/c elts1 boxes2)
+      [`(displayed ,elt) (sformat "d2/~a" (name 'elt elt))]))
 
   (define problem
     `(,@(for/list ([elt (in-tree elts1)]) `(declare-const ,(sformat "d1/~a" (name 'elt elt)) Bool))
@@ -126,4 +124,15 @@
         (dict-set! h elt (dict-ref out (sformat "d1/~a" (name 'elt elt))))
         (dict-set! h elt* (dict-ref out (sformat "d2/~a" (name 'elt elt)))))
       h))
-  (values out* elts2))
+
+  (define (display? elt) (dict-ref out* elt))
+
+  (define matches (make-hasheq))
+  (define (match! elt box)
+    (dict-set! matches elt box)
+    (dict-set! matches box elt))
+
+  (link/root match! display? elts1 boxes1)
+  (define (matcher x) (dict-ref matches x #f))
+
+  (values display? matcher elts2))

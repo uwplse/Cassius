@@ -1,6 +1,6 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt"
-         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt")
+         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt" "match.rkt")
 (provide constraints solve synthesize (struct-out success) (struct-out failure))
 
 (struct success (stylesheet elements))
@@ -21,11 +21,11 @@
   (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))
     (match var
       [`((value ,prop ,cls) (,elt1) (,elt2))
-       `(,prop ,(by-name 'elt elt1) ,(by-name 'elt elt2))]
+       `(not (= (,prop ,(by-name 'elt elt1)) (,prop ,(by-name 'elt elt2))))]
       [`((value ,prop ,cls) (,elt1))
        (define cls* (if (equal? cls 'none) #f cls))
        (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
-       `(,prop ,(by-name 'elt elt1) ,value)])))
+       `(not (= (,prop ,(by-name 'elt elt1)) ,value))])))
 
 (define cassius-check-sat
   '(check-sat-using
@@ -41,13 +41,10 @@
 
 (define (constraints sheets docs [test #f] #:debug [debug? #f])
   (define log-phase (make-log))
+  (define doms (map parse-dom docs))
 
-  (define doms
-    (for/list ([d docs])
-      (match-define (dom name ctx elts boxes) d)
-      (dom name ctx (parse-tree elts) (parse-tree boxes))))
-
-  (define query (all-constraints (car sheets) doms))
+  (define matchers (for/list ([dom doms]) (link-elts-boxes (car sheets) (dom-elements dom) (dom-boxes dom))))
+  (define query (all-constraints matchers doms))
   (set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))
 
@@ -66,13 +63,10 @@
 
 (define (solve sheets docs [test #f] #:debug [debug? #f])
   (define log-phase (make-log))
+  (define doms (map parse-dom docs))
 
-  (define doms
-    (for/list ([d docs])
-      (match-define (dom name ctx elts boxes) d)
-      (dom name ctx (parse-tree elts) (parse-tree boxes))))
-
-  (define query (all-constraints (car sheets) doms))
+  (define matchers (for/list ([dom doms]) (link-elts-boxes (car sheets) (dom-elements dom) (dom-boxes dom))))
+  (define query (all-constraints matchers doms))
   (set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))
 
@@ -111,16 +105,13 @@
 
 (define (synthesize docs [test #f] #:debug [debug? #f])
   (define log-phase (make-log))
+  (define doms (map parse-dom docs))
 
-  (define doms
-    (for/list ([d docs])
-      (match-define (dom name ctx elts boxes) d)
-      (dom name ctx (parse-tree elts) (parse-tree boxes))))
+  ; TODO: There should be a better matcher available here
+  (define matchers (for/list ([dom doms]) (link-elts-boxes '() (dom-elements dom) (dom-boxes dom))))
 
-  (define query (all-constraints '() doms)) ; TODO: What to do about sheets?
-
-  (log-phase "Produced ~a constraints of ~a terms"
-             (length query) (tree-size query))
+  (define query (all-constraints matchers doms))
+  (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
 
   (when test (set! query (add-test query test)))
   (if (memq 'z3o (flags))
@@ -143,7 +134,7 @@
   (define core-ids (box (list)))
 
   (let loop ([ineqs '()])
-    (define sheet (ineqs->stylesheet ineqs selhash))
+    (define sheet (synthesize-css-sketch (map (curry cons 'or) ineqs) selhash))
     (define eqcls (equivalence-classes (append browser-style sheet) elts))
 
     (set-box! avoid-ids

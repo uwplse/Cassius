@@ -1,10 +1,9 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" data/heap "z3.rkt")
+(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "z3.rkt" "smt.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes equivalence-classes-avoid?
-         selector-matches?
-         all-selectors ineqs->stylesheet hitting-set)
+         selector-matches? all-selectors synthesize-css-sketch)
 
 
 
@@ -40,15 +39,13 @@
              [else
               (loop rsels (node-parent elt))])))]
     [(list 'child sels ...)
-     (match-define (cons sel rsels) (reverse sels))
-     (and (selector-matches? sel elt)
-          (let loop ([rsels rsels] [elt (node-parent elt)])
-            (cond
-             [(null? rsels) true]
-             [(not (node-parent elt)) false]
-             [(selector-matches? (car rsels) elt)
-              (loop (cdr rsels) (node-parent elt))]
-             [else false])))]))
+     (let loop ([rsels (reverse sels)] [elt elt])
+       (cond
+        [(null? rsels) true]
+        [(not (node-parent elt)) false]
+        [(selector-matches? (car rsels) elt)
+         (loop (cdr rsels) (node-parent elt))]
+        [else false]))]))
 
 (module+ test
   (define tree
@@ -192,10 +189,10 @@
 
 (define (equivalence-classes-avoid? classes ineq)
   (match ineq
-    [(list prop (? node? elt1) (? node? elt2))
+    [`(not (= (,prop ,(? node? elt1)) (,prop ,(? node? elt2))))
      (define hash (car (dict-ref classes prop)))
      (not (equal? (dict-ref hash elt1) (dict-ref hash elt2)))]
-    [(list prop (? node? elt1) val)
+    [`(not (= (,prop ,(? node? elt1)) ,val))
      (match-define (cons class-hash value-hash) (dict-ref classes prop))
      (not (equal? (dict-ref value-hash (dict-ref class-hash elt1)) val))]))
 
@@ -233,8 +230,7 @@
     atom))
 
 (define (set-intersect-sorted l1 l2)
-  (define s1 (apply set l1))
-  (filter (curry set-member? s1) l2))
+  (filter (curry set-member? (apply set l1)) l2))
 
 (define (all-selectors elts)
   (define atoms
@@ -288,58 +284,80 @@
   (for/list ([(elts sel) (in-hash selhash)] #:when (elts-good? elts))
     sel))
 
-(define (ineqs-rules ineqss selhash)
-  (hitting-set
-   #:extra 1
-   (for/list ([ineqs ineqss])
-     (remove-duplicates (append-map (curryr ineq-selectors selhash) ineqs)))))
+(define (synthesize-selectors constraints selhash)
+  (define selectors (make-hash))
+  (define constraints*
+    (for/list ([constraint constraints])
+      (smt-replace constraint
+        [`(not (= (,prop ,(? node? elt1)) (,prop ,(? node? elt2))))
+         (apply smt-or
+                (for/list ([(elts sel) (in-hash selhash)]
+                           #:when (xor (set-member? elts elt1) (set-member? elts elt2)))
+                  (dict-ref! selectors sel (λ () (sformat "sel/~a" (dict-count selectors))))))]
+        [`(not (= (,prop ,(? node? elt)) ,value))
+         (apply smt-or
+                (for/list ([(elts sel) (in-hash selhash)]
+                           #:when (set-member? elts elt))
+                  (dict-ref! selectors sel (λ () (sformat "sel/~a" (dict-count selectors))))))])))
 
-(define (ineq-rules->z3 ineq rules elts)
-  (match-define (list prop elt1 val) ineq)
-  (define scores (rule-scores (map list rules)))
+  (define query
+    `(,@(for/list ([(sel name) selectors])
+          `(declare-const ,name Bool))
+      ,@(map (curry list 'assert) constraints*)
+      ,@(for/list ([constraint constraints*])
+          `(assert-soft
+            ,(smt-replace constraint
+               [`(or ,a ,b ,c ...)
+                `(< 1 (+ ,@(for/list ([x (list* a b c)]) `(ite ,x 1 0))))])))))
 
-  (cond
-   [(not (node? val))
-    `(or
-      false
-      ,@(for/list ([rule rules] [i (in-naturals)]
-                   #:when (selector-matches? rule elt1))
-          (sformat "property/~a/~a" prop i)))]
-   [(node? val)
-    (define sorted-rules
-      (sort (map cons (range (length rules)) scores) score<? #:key cdr))
-    (for/fold ([expr 'false])
-        ([(i score) (in-dict sorted-rules)]
-         #:when (or (selector-matches? (list-ref rules i) elt1)
-                    (selector-matches? (list-ref rules i) val)))
-      (define sel (list-ref rules i))
-      (if (and (selector-matches? sel elt1) (selector-matches? sel val))
-          `(and (not ,(sformat "property/~a/~a" prop i)) ,expr)
-          `(or ,(sformat "property/~a/~a" prop i) ,expr)))]))
+  (match-define (list 'model out) (z3-solve query))
+  (for/list ([(sel name) selectors] #:when (dict-ref out name #f))
+    sel))
 
-(define (ineqs-rules->z3 ineqss rules elts)
+(define (synthesize-properties constraints rules elts)
   (define props (for/list ([(prop _t _d) (in-css-properties)]) prop))
-  (append
-   (for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
-     `(declare-const ,(sformat "property/~a/~a" prop i) Bool))
-   #;(for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
-     `(assert-soft (not ,(sformat "property/~a/~a" prop i))))
-   (for/list ([ineqs ineqss])
-     `(assert
-       (or ,@(map (curryr ineq-rules->z3 rules elts) ineqs))))
-   (for/list ([xs ineqss])
-     `(assert-soft (< 1 (+ ,@(for/list ([x xs]) `(ite ,(ineq-rules->z3 x rules elts) 1 0))))))))
+  (define scores (rule-scores (map list rules)))
+  (define sorted-rules
+    (sort (map cons (range (length rules)) scores) score<? #:key cdr))
 
-(define (ineqs-rules->properties ineqs rules elts)
-  (define z3 (ineqs-rules->z3 ineqs rules elts))
-  (match-define (list 'model out) (z3-solve z3))
+  (define constraints*
+    (for/list ([constraint constraints])
+      (smt-replace constraint
+        [`(not (= (,prop ,(? node? elt1)) (,prop ,(? node? elt2))))
+         (for/fold ([expr 'false])
+             ([(i score) (in-dict sorted-rules)]
+              #:when (or (selector-matches? (list-ref rules i) elt1)
+                         (selector-matches? (list-ref rules i) elt2)))
+           (define sel (list-ref rules i))
+           (if (and (selector-matches? sel elt1) (selector-matches? sel elt2))
+               (smt-and `(not ,(sformat "property/~a/~a" prop i)) expr)
+               (smt-or (sformat "property/~a/~a" prop i) expr)))]
+        [`(not (= (,prop ,(? node? elt1)) ,value))
+         (apply
+          smt-or
+          (for/list ([rule rules] [i (in-naturals)]
+                     #:when (selector-matches? rule elt1))
+            (sformat "property/~a/~a" prop i)))])))
+
+  (define query
+    (append
+     (for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
+       `(declare-const ,(sformat "property/~a/~a" prop i) Bool))
+     (map (curry list 'assert) constraints*)
+     (for/list ([constraint constraints*])
+       `(assert-soft
+         ,(smt-replace constraint
+            [`(or ,a ,b ,c ...)
+             `(< 1 (+ ,@(for/list ([x (list* a b c)]) `(ite ,x 1 0))))])))))
+    
+  (match-define (list 'model out) (z3-solve query))
   (for/list ([selector rules] [i (in-naturals)])
     (cons selector
           (for/list ([(prop _t _d) (in-css-properties)]
                      #:when (dict-ref out (sformat "property/~a/~a" prop i) #f))
             `[,prop ?]))))
 
-(define (ineqs->stylesheet ineqs selhash)
+(define (synthesize-css-sketch constraints selhash)
   (define elts (for/first ([(elts sel) (in-hash selhash)] #:when (equal? sel '*)) elts))
-  (define rules (ineqs-rules ineqs selhash))
-  (ineqs-rules->properties ineqs rules elts))
+  (define rules (synthesize-selectors constraints selhash))
+  (synthesize-properties constraints rules elts))
