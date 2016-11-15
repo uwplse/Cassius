@@ -44,3 +44,5 @@ header li { float: left; margin: 1em 2em 1em 0; }
     display: block; width: 90px;
 }
 #news time:after { content: ":"; }
+
+.abstract { margin: .5em 1em; }

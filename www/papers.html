@@ -12,16 +12,15 @@
     <p>Automated Reasoning for Web Page Layout</p>
     <ul>
       <li><a href="./#news">News</a></li>
-      <li><a href="oopsla16.html">OOPSLA'16 Paper</a></li>
+      <li><a href="papers.html">Papers</a></li>
       <li><a href="https://github.com/uwplse/cassius/issues">Report a Bug</a></li>
       <li><a href="https://github.com/uwplse/cassius/">Source Code</a></li>
     </ul>
   </header>
 
-  <p>The first paper on <a href="./">Cassius</a> was published at
-  OOPSLA 2016.</p>
+  <p><a href="./">Cassius</a> has led to several published academic papers.</p>
 
-  <h2>Abstract</h2>
+  <h2>OOPSLA’16: Automated Reasoning for Web Page Layout</h2>
 
   <blockquote class="abstract">
     <p>
@@ -51,13 +50,42 @@
     </p>
   </blockquote>
 
-  <h2>Paper</h2>
-
   <p>
     The paper explains how Cassius works, the main limitations that
     make its efficient translation to SMT possible, and the various
     tools that can be built atop it. The paper is available
     in <a href="oopsla16-paper.pdf">PDF format</a>.
+  </p>
+
+  <h2>FSE’16 Doctoral Symposium: Generating Interactive Web Pages from Storyboards</h2>
+
+  <blockquote class="abstract">
+    <p>
+      Web design is a visual art, but web designs are code. Designers
+      work visually and must then manually translate their designs to
+      code. We propose using synthesis to automatically translate the
+      storyboards designers already produce into CSS stylesheets and
+      JavaScript code. To build a synthesis tool for this complex
+      domain, we will use a novel composition mechanism that allows
+      splitting the synthesis task among domain-specific solvers.
+    </p>
+
+    <p>
+      We have built a domain-specific solver for CSS stylesheets;
+      solvers for DOM actions and JavaScript code can be built with
+      similar techniques. To compose the three domain-specific
+      solvers, we propose using partial counterexamples to exchange
+      information between different domains. Early results suggest
+      that this composition mechanism is fast and allows specializing
+      each solver to its domain.
+    </p>
+  </blockquote>
+
+  <p>
+    The paper explains the larger plans for building upon the
+    OOPSLA’16 work to create a synthesizer for interactive web pages.
+    The paper is available in <a href="fse16ds-paper.pdf">PDF
+    format</a>.
   </p>
 
 </body>
