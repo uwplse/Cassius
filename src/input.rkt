@@ -28,8 +28,6 @@
          (for/list ([rule rules])
            (if (equal? rule '?) '(? ?) rule)))
        (hash-set! sheets name rules*)]
-      [`(define-document ,name ,tree)
-       (hash-set! docs name (dom name (rendering-context #f) tree))]
       [`(define-document (,name #:width ,width) ,tree)
        (hash-set! docs name (dom name (rendering-context #f)  `([VIEW :w ,width] ,tree)))]
       [`(define-document (,name #:width ,width #:browser ,browser) ,tree)
@@ -37,6 +35,8 @@
                                  `([VIEW :w ,width] ,tree)))]
       [`(define-document (,name #:width ,width) ,tree)
        (hash-set! docs name (dom name (rendering-context #f)  `([VIEW :w ,width] ,tree)))]
+      [`(define-document ,name ,tree)
+       (hash-set! docs name (dom name (rendering-context #f) tree))]
       [`(define-header ,name ,header)
        (hash-set! headers name header)]
       [`(define-problem ,name #:test ,test #:sheet ,sheet #:documents ,documents ...)

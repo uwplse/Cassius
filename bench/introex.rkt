@@ -44,7 +44,7 @@
      ([LINE]
       ([TEXT :x 0 :y 451 :w 76 :h 19]))))))
 
-(define-problem main
+(define-problem verify
   #:test (forall (x) (=> (and (not (is-nil-elt (element x))) (is-box (pbox x)) (is-tag/div (tagname (get/elt (element x))))) (within x (pbox x))))
   #:sheet main
   #:documents four)
