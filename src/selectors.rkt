@@ -5,9 +5,25 @@
 (provide equivalence-classes equivalence-classes-avoid?
          selector-matches? all-selectors synthesize-css-sketch)
 
+(define (property? sym)
+  (and (symbol? sym)
+       (for/first ([(property type default) (in-css-properties)] #:when (equal? property sym)) true)))
 
+(define-by-match selector?
+  `*
+  `(id ,(? symbol?))
+  `(class ,(? symbol?))
+  `(tag ,(? symbol?))
+  `(and ,(? selector?) ...)
+  `(desc ,(? selector?) ...)
+  `(child ,(? selector?) ...)
+  `(fake ,(? string?) ,(? selector?) ...))
 
-(define (selector-matches? sel elt)
+(define-by-match rule?
+  (list (? selector?) (? attribute?) ... (? (list/c property? any/c)) ...))
+
+(define/contract (selector-matches? sel elt)
+  (-> selector? node? boolean?)
   "Given an element and a selector, returns whether the selector matches the element"
   (match sel
     [`(fake ,true ,subsels ...)
@@ -88,7 +104,14 @@
   (check-selector '(child (tag div) (tag p)) '(8 10))
   (check-selector '(child (and (tag div) (id content)) (tag p)) '(8)))
 
-(define (compute-score selector)
+(define-by-match partial-selector-score?
+  (list (? number?) (? number?) (? number?)))
+
+(define-by-match selector-score?
+  (list (or 'browser 'user 'author) (? boolean?) (? number?) (? number?) (? number?)))
+
+(define/contract (compute-score selector)
+  (-> selector? selector-score?)
   "Given a selector, return a list (ids classes tags) of counts"
   (match selector
     [(list 'id id) '(1 0 0)]
@@ -99,7 +122,8 @@
     [(list (or 'and 'desc 'child) sels ...)
      (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
 
-(define (rule-scores rules)
+(define/contract (rule-scores rules)
+  (-> (listof rule?) (listof selector-score?))
   "Given a list of rules, return a list of cascade scores (io fromstyle ids classes tags idx)"
   (for/list ([rule rules] [i (in-naturals)])
     (match-define (list selector (? attribute? attrs) ... (? list? props) ...) rule)
@@ -113,27 +137,6 @@
   [((or 'browser 'user) 'author) true]
   [('browser 'user) true]
   [(_ _) false])
-
-(define (boolean<? b1 b2)
-  (and (not b1) b2))
-
-(define ((lex<? . <s) l1 l2)
-  (when (not (= (length <s) (length l1) (length l2)))
-    (raise
-     (make-exn:fail:contract
-      (format "(lex<? ~a): arguments must have length ~a; arguments were: ~a ~a"
-              (~v <s) (length <s) (~v l1) (~v l2))
-      (current-continuation-marks))))
-
-  (let loop ([<s <s] [l1 l1] [l2 l2])
-    (cond
-     [(and (null? <s) (null? l1) (null? l2)) false] ; equal
-     [((car <s) (car l1) (car l2)) true]
-     [((car <s) (car l2) (car l1)) false]
-     [else (loop (cdr <s) (cdr l1) (cdr l2))])))
-
-(define ((output<? f <?) a b)
-  (<? (f a) (f b)))
 
 (define score<? (lex<? io<? boolean<? < < < <))
 
@@ -150,7 +153,8 @@
 (define (rulematch-props rm)
   (filter list? (cdr (rulematch-rule rm))))
 
-(define (rule-matchlist rules elts)
+(define/contract (rule-matchlist rules elts)
+  (-> (listof rule?) (listof node?) (listof rulematch?))
   (define scores (rule-scores rules))
   (define matches (for/list ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
   (map cdr
@@ -160,13 +164,18 @@
            (cons s (rulematch r m i)))
          score<? #:key car))))
 
-(define (matchlist-find matchlist elt prop)
+(define/contract (matchlist-find matchlist elt prop)
+  (-> (listof rulematch?) node? property? rulematch?)
   (for/first ([rm matchlist]
               #:when (and (set-member? (rulematch-elts rm) elt)
                           (set-member? (map car (rulematch-props rm)) prop)))
     rm))
 
+(define equivalence-classes?
+  (hash/c property? (cons/c (hash/c node? integer?) (hash/c integer? any/c))))
+
 (define (matchlist-equivalence-classes ml elts)
+  (-> (listof rulematch?) (listof node?) equivalence-classes?)
   (for/hash ([(prop type* default) (in-css-properties)])
     (define class-hash (make-hash))
     (define value-hash (make-hash))
@@ -184,6 +193,7 @@
     (values prop (cons class-hash value-hash))))
 
 (define (equivalence-classes rules elts)
+  (-> (listof rule?) (listof node?) equivalence-classes?)
   (define ml (rule-matchlist rules elts))
   (matchlist-equivalence-classes ml elts))
 
@@ -244,7 +254,6 @@
       (define new-changes
         (reap [sow]
               (for* ([elts changes] [(elts* a) atoms])
-                ;; The sort is because set-intersect doesn't keep sorted lists sorted
                 (define new-elts (set-intersect-sorted elts elts*))
                 (unless (or (dict-has-key? ands new-elts) (null? new-elts))
                   (define old-sel (dict-ref ands elts))

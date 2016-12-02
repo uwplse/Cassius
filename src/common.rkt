@@ -7,7 +7,9 @@
  xor ->number z3-path value=?
  attribute? attributes->dict dict->attributes
  split-symbol split-line-name
- assert make-log)
+ assert make-log
+ boolean<? lex<? output<?
+ define-by-match)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -110,3 +112,34 @@
       (apply eprintf (string-append "[~as] " fmt "\n")
              (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
              args))))
+
+(define (boolean<? b1 b2)
+  (and (not b1) b2))
+
+(define ((lex<? . <s) l1 l2)
+  (when (not (= (length <s) (length l1) (length l2)))
+    (raise
+     (make-exn:fail:contract
+      (format "(lex<? ~a): arguments must have length ~a; arguments were: ~a ~a"
+              (~v <s) (length <s) (~v l1) (~v l2))
+      (current-continuation-marks))))
+
+  (let loop ([<s <s] [l1 l1] [l2 l2])
+    (cond
+     [(and (null? <s) (null? l1) (null? l2)) false] ; equal
+     [((car <s) (car l1) (car l2)) true]
+     [((car <s) (car l2) (car l1)) false]
+     [else (loop (cdr <s) (cdr l1) (cdr l2))])))
+
+(define ((output<? f <?) a b)
+  (<? (f a) (f b)))
+
+(define-syntax-rule (define-by-match name patterns ...)
+  (define name
+    (flat-named-contract
+     'name
+     (λ (var)
+       (let name ([var var])
+         (match var
+           [patterns true] ...
+           [_ false]))))))
