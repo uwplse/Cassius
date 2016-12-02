@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "z3.rkt" "smt.rkt")
+(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "z3.rkt" "smt.rkt" "solver.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes equivalence-classes-avoid?
          selector-matches? all-selectors synthesize-css-sketch)
@@ -369,4 +369,12 @@
 (define (synthesize-css-sketch constraints selhash)
   (define elts (for/first ([(elts sel) (in-hash selhash)] #:when (equal? sel '*)) elts))
   (define rules (synthesize-selectors constraints selhash))
-  (synthesize-properties constraints rules elts))
+  (list 'fwd (synthesize-properties constraints rules elts)))
+
+(define (css-sketch-solver inputs constraints)
+  (match-define (list elts boxes matchings) inputs)
+  (define all-elts (append-map (compose sequence->list in-tree) elts))
+  (define selhash (all-selectors elts))
+
+  (define rules (synthesize-selectors constraints selhash))
+  (list 'fwd (synthesize-properties constraints rules all-elts)))
