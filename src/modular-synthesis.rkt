@@ -1,6 +1,13 @@
 #lang racket
 (module+ test (require rackunit))
 
+(define (solver/c language1 language2)
+  (match-define (cons syntax1 semantics1) language1)
+  (match-define (cons syntax2 semantics2) language2)
+  (-> semantics2 syntax1
+      (or/c (list/c (symbols 'fwd) syntax2)
+            (list/c (symbols 'bwd) semantics1))))
+
 (define (solver-compose f g #:add [add cons])
   (define intermediate-program #f)
   (define intermediate-spec '())

@@ -174,7 +174,7 @@
 (define equivalence-classes?
   (hash/c property? (cons/c (hash/c node? integer?) (hash/c integer? any/c))))
 
-(define (matchlist-equivalence-classes ml elts)
+(define/contract (matchlist-equivalence-classes ml elts)
   (-> (listof rulematch?) (listof node?) equivalence-classes?)
   (for/hash ([(prop type* default) (in-css-properties)])
     (define class-hash (make-hash))
@@ -192,12 +192,18 @@
       (dict-set! class-hash elt idx))
     (values prop (cons class-hash value-hash))))
 
-(define (equivalence-classes rules elts)
+(define/contract (equivalence-classes rules elts)
   (-> (listof rule?) (listof node?) equivalence-classes?)
   (define ml (rule-matchlist rules elts))
   (matchlist-equivalence-classes ml elts))
 
-(define (equivalence-classes-avoid? classes ineq)
+(define-by-match inequality?
+  `(not (= (,(? property?) ,(? node?)) (,(? property?) ,(? node?))))
+  `(not (= (,(? property?) ,(? node?)) ,_)))
+
+(define/contract (equivalence-classes-avoid? classes ineq)
+  (-> equivalence-classes? inequality? boolean?)
+  "Whether a set of equivalence classes satisfies a particular inequality"
   (match ineq
     [`(not (= (,prop ,(? node? elt1)) (,prop ,(? node? elt2))))
      (define hash (car (dict-ref classes prop)))
@@ -205,8 +211,6 @@
     [`(not (= (,prop ,(? node? elt1)) ,val))
      (match-define (cons class-hash value-hash) (dict-ref classes prop))
      (not (equal? (dict-ref value-hash (dict-ref class-hash elt1)) val))]))
-
-;; This steps selectors
 
 (define (get-tcis elts)
   (define-values (tags classes ids)
@@ -217,32 +221,19 @@
         (id! (slower (node-get elt ':id))))))
   (values (remove-duplicates tags) (remove-duplicates classes) (remove-duplicates ids)))
 
-(define (atomic-values elts)
+(define/contract (atomic-values elts)
+  (-> (listof node?) (listof selector?))
+  "Constructs all atomic selectors allowed for a set of elements."
   (define-values (tags classes ids) (get-tcis elts))
   (append (map (curry list 'tag) tags) (map (curry list 'class) classes) (map (curry list 'id) ids)))
 
-(define (hitting-set xss #:extra [extra 0])
-  (define atom-names
-    (for/hash ([atom (remove-duplicates (apply append xss))] [i (in-naturals)])
-      (values atom (sformat "atom/~a" i))))
-  (define constraints
-    (append
-     (for/list ([name (in-hash-values atom-names)])
-       `(declare-const ,name Bool))
-     #;(for/list ([name (in-hash-values atom-names)])
-       `(assert-soft (not ,name)))
-     (for/list ([xs xss])
-       `(assert (or ,@(for/list ([x xs]) (dict-ref atom-names x)))))
-     (for/list ([xs xss])
-       `(assert-soft (< ,extra (+ ,@(for/list ([x xs]) `(ite ,(dict-ref atom-names x) 1 0))))))))
-  (match-define (list 'model out) (z3-solve constraints))
-  (for/list ([(atom name) (in-hash atom-names)] #:when (dict-ref out name #f))
-    atom))
+(define selhash? (hash/c (listof node?) selector?))
 
-(define (set-intersect-sorted l1 l2)
-  (filter (curry set-member? (apply set l1)) l2))
+(define/contract (all-selectors elts)
+  (-> (listof node?) selhash?)
+  "Constructs, from a set of nodes, the set of all distinct selectors.
+Selectors with the same specificity and elements are not considered distinct."
 
-(define (all-selectors elts)
   (define atoms
     (for/hash ([a (atomic-values elts)])
       (values (filter (curry selector-matches? a) elts) a)))
@@ -254,7 +245,7 @@
       (define new-changes
         (reap [sow]
               (for* ([elts changes] [(elts* a) atoms])
-                (define new-elts (set-intersect-sorted elts elts*))
+                (define new-elts (list-intersect elts elts*))
                 (unless (or (dict-has-key? ands new-elts) (null? new-elts))
                   (define old-sel (dict-ref ands elts))
                   (define new-sel
@@ -284,7 +275,9 @@
 
   descs)
 
-(define (ineq-selectors ineq selhash)
+(define/contract (ineq-selectors ineq selhash)
+  (-> inequality? selhash? (listof selector?))
+  "Finds all selectors that match one side of an inequality"
   (match-define (list prop elt1 val) ineq)
   (define (elts-good? elts)
     (if (node? val)
@@ -293,7 +286,13 @@
   (for/list ([(elts sel) (in-hash selhash)] #:when (elts-good? elts))
     sel))
 
+;; Interpreted as an AND of ORs of inequalities
+
+(define constraints? (listof (listof inequality?)))
+
 (define (synthesize-selectors constraints selhash)
+  (-> constraints? selhash? (listof selector?))
+
   (define selectors (make-hash))
   (define constraints*
     (for/list ([constraint constraints])
@@ -323,7 +322,9 @@
   (for/list ([(sel name) selectors] #:when (dict-ref out name #f))
     sel))
 
-(define (synthesize-properties constraints rules elts)
+(define (synthesize-properties constraints rules)
+  (-> constraints? selhash? (listof selector?))
+
   (define props (for/list ([(prop _t _d) (in-css-properties)]) prop))
   (define scores (rule-scores (map list rules)))
   (define sorted-rules
@@ -367,14 +368,11 @@
             `[,prop ?]))))
 
 (define (synthesize-css-sketch constraints selhash)
-  (define elts (for/first ([(elts sel) (in-hash selhash)] #:when (equal? sel '*)) elts))
   (define rules (synthesize-selectors constraints selhash))
-  (list 'fwd (synthesize-properties constraints rules elts)))
+  (list 'fwd (synthesize-properties constraints rules)))
 
 (define (css-sketch-solver inputs constraints)
   (match-define (list elts boxes matchings) inputs)
-  (define all-elts (append-map (compose sequence->list in-tree) elts))
   (define selhash (all-selectors elts))
-
   (define rules (synthesize-selectors constraints selhash))
-  (list 'fwd (synthesize-properties constraints rules all-elts)))
+  (list 'fwd (synthesize-properties constraints rules)))

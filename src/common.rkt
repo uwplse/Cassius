@@ -9,7 +9,8 @@
  split-symbol split-line-name
  assert make-log
  boolean<? lex<? output<?
- define-by-match)
+ define-by-match
+ list-intersect)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -143,3 +144,8 @@
          (match var
            [patterns true] ...
            [_ false]))))))
+
+(define/contract (list-intersect l1 l2)
+  (-> (list/c any/c) (list/c any/c) (list/c any/c))
+  "Intersect two lists, maintaining the order of the first list."
+  (filter (curry set-member? (apply set l1)) l2))
