@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "z3.rkt" "smt.rkt" "solver.rkt")
+(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "z3.rkt" "smt.rkt" "modular-synthesis.rkt" "dom.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes equivalence-classes-avoid?
          selector-matches? all-selectors synthesize-css-sketch)
@@ -369,10 +369,12 @@ Selectors with the same specificity and elements are not considered distinct."
 
 (define (synthesize-css-sketch constraints selhash)
   (define rules (synthesize-selectors constraints selhash))
-  (list 'fwd (synthesize-properties constraints rules)))
+  (synthesize-properties constraints rules))
+
+(define selhash-cache (make-parameter (make-hash)))
 
 (define (css-sketch-solver inputs constraints)
-  (match-define (list elts boxes matchings) inputs)
-  (define selhash (all-selectors elts))
+  (match-define (list doms matchings) inputs)
+  (define selhash (hash-ref! (selhash-cache) doms (λ () (map all-selectors (dom-elements doms)))))
   (define rules (synthesize-selectors constraints selhash))
-  (list 'fwd (synthesize-properties constraints rules)))
+  (list 'fwd doms matchings (synthesize-properties constraints rules)))

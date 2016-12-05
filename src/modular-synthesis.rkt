@@ -16,16 +16,16 @@
     (let loop ()
       (if intermediate-program
           (match (g intermediate-program spec)
-            [`(fwd ,out) out]
-            [`(bwd ,spec*)
+            [(cons 'fwd out) out]
+            [(cons 'bwd spec*)
              (set! intermediate-spec (add spec* intermediate-spec))
              (set! intermediate-program #f)
              (loop)])
           (match (f sketch intermediate-spec)
-            [`(fwd ,out)
+            [(cons 'fwd out)
              (set! intermediate-program out)
              (loop)]
-            [`(bwd ,spec*) spec*])))))
+            [(cons 'bwd spec*) spec*])))))
 
 (module+ test
   ;; This is a very stupid synthesizer that synthesizes a list of values

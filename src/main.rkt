@@ -5,6 +5,18 @@
 
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!)
 
+(define cassius-check-sat
+  '(check-sat-using
+    (then
+     (! propagate-values
+        :push_ite_arith true
+        :algebraic_number_evaluator false
+        :bit2bool false
+        :local_ctx true
+        :hoist_mul true
+        :flat false)
+     nnf occf smt)))
+
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
     (if (andmap (curry dict-has-key? body) parts)
@@ -297,3 +309,53 @@
     (assert (! (and ,@(for/list ([&var &vars]) `(is-box (get/box ,&var)))
                     (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body)))
                :named test))))
+
+(define z3-process-cache (make-parameter (make-hash)))
+
+(define (css-values-solver inputs constraints)
+  (match-define (list doms matchings sketch) inputs)
+  ;; constraints is empty, all that is contained in boxes
+
+  ;; TODO Print progress & phases
+  (define z3 (hash-ref! (z3-process-cache) (list doms matchings)
+                        (λ () (let* ([query ((if (set-member? (flags) 'z3o) z3-prepare z3-clean)
+                                             (all-constraints matchings doms))]
+                                     [z3p (z3-process)])
+                                (z3-send z3 query)
+                                (z3-send z3 '((push)))))))
+
+  (define browser-style (get-sheet (and (dom-context (car doms) ':browser) (car (dom-context  (car doms) ':browser)))))
+
+  (define eqcls (equivalence-classes (append browser-style sketch) (map dom-elements doms)))
+  
+  (z3-send z3 (append '((pop) (push)) (sheet-constraints doms eqcls)))
+  
+  (match (z3-check-sat z3 #:strategy cassius-check-sat)
+    [(list 'model m)
+     (list 'fwd doms matchings (drop (length browser-style) (extract-sheet (append browser-style sketch) m)))]
+    [(list 'core c)
+     (list 'bwd (extract-ineqs eqcls c))]))
+
+(define (sheet-constraints doms eqcls)
+  (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
+  (reap [emit] (selector-constraints emit eqcls)))
+
+(define (extract-sheet sheet m)
+  (for/list ([rule sheet] [idx (in-naturals)])
+    (append (list (car rule)) (filter symbol? (cdr rule))
+            (for/list ([(prop value) (in-dict (filter list? (cdr rule)))]
+                       #:when (dict-has-key? m (sformat "value/~a/~a" prop idx)))
+              (match value
+                [(list '?)
+                 (list prop (extract-value (dict-ref m (sformat "value/~a/~a" prop idx))))]
+                [(list _) (cons prop value)])))))
+
+(define (extract-ineqs eqcls core)
+  (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))
+    (match var
+      [`((value ,prop ,cls) (,elt1) (,elt2))
+       `(not (= (,prop ,(by-name 'elt elt1)) (,prop ,(by-name 'elt elt2))))]
+      [`((value ,prop ,cls) (,elt1))
+       (define cls* (if (equal? cls 'none) #f cls))
+       (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
+       `(not (= (,prop ,(by-name 'elt elt1)) ,value))])))
