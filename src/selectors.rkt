@@ -290,7 +290,7 @@ Selectors with the same specificity and elements are not considered distinct."
 
 (define constraints? (listof (listof inequality?)))
 
-(define (synthesize-selectors constraints selhash)
+(define/contract (synthesize-selectors constraints selhash)
   (-> constraints? selhash? (listof selector?))
 
   (define selectors (make-hash))
@@ -322,7 +322,7 @@ Selectors with the same specificity and elements are not considered distinct."
   (for/list ([(sel name) selectors] #:when (dict-ref out name #f))
     sel))
 
-(define (synthesize-properties constraints rules)
+(define/contract (synthesize-properties constraints rules)
   (-> constraints? selhash? (listof selector?))
 
   (define props (for/list ([(prop _t _d) (in-css-properties)]) prop))

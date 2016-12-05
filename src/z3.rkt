@@ -4,7 +4,7 @@
 (require "common.rkt")
 (require "z3o.rkt")
 
-(provide z3-process z3-send z3-check-sat z3-kill z3-solve z3-prepare z3-namelines z3-clean)
+(provide make-z3 z3-process z3-send z3-check-sat z3-kill z3-solve z3-prepare z3-namelines z3-clean z3-try-solve)
 
 (define (z3-process #:flags [flags '("-st")])
   (define-values (process z3-out z3-in z3-err)
@@ -48,6 +48,11 @@
   (send '(set-option :print-success true))
   send)
 
+(define (make-z3 #:flags [flags '("-st")] . cmdss)
+  (define proc (z3-process #:flags flags))
+  (for-each (curry z3-send proc) cmdss)
+  proc)
+
 (define (parse-output msg)
   (match msg
     [`(error ,description)
@@ -68,6 +73,14 @@
     (define out (process line))
     (unless (equal? 'success out)
       (raise (make-exn:fail (format "~a;\n  ~a" out line) (current-continuation-marks))))))
+
+(define (z3-try-solve process cmds #:strategy [strategy '(check-sat)])
+  (z3-send process '((push)))
+  (z3-send process cmds)
+  (let ([out (z3-check-sat process #:strategy strategy)])
+    (when (equal? (first out) 'core)
+      (z3-send process '((pop))))
+    out))
 
 (define (z3-check-sat process #:strategy [strategy '(check-sat)])
   (match (process strategy)
