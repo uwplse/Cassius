@@ -4,8 +4,9 @@
 (provide link-elts-boxes link/root/c synthesize-displayed synthesize-dom)
 
 (define (sheet->display? elts sheet)
-  (define eqs (equivalence-classes sheet (sequence->list (in-tree elts))))
-  (λ (elt)
+  #;(define eqs (equivalence-classes sheet (sequence->list (in-tree elts))))
+  (λ (elt) true)
+  #;(λ (elt)
     (match-define (cons class-hash value-hash) (dict-ref eqs 'display))
     (not (equal? 'none (dict-ref value-hash (dict-ref class-hash elt))))))
 

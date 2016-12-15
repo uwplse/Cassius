@@ -40,9 +40,9 @@
            'success]
           [_
            (ffprintf z3-in "~a\n" cmd)
-           (parse-output (read z3-out))]))
+           (parse-output (read z3-out) cmd)]))
       (if (and (equal? out 'sat) soft?)
-          (parse-output (read z3-out))
+          (parse-output (read z3-out) cmd)
           out)))
 
   (send '(set-option :print-success true))
@@ -53,7 +53,7 @@
   (for-each (curry z3-send proc) cmdss)
   proc)
 
-(define (parse-output msg)
+(define (parse-output msg input)
   (match msg
     [`(error ,description)
      (match-define (list line/col text) (string-split description ": "))
@@ -61,7 +61,7 @@
                    (string-split line/col))
      (raise-syntax-error 'Z3 (format "Z3 error (~a:~a)" line column) text)]
     ['unsupported
-     (error "Z3 unsupported\n")]
+     (error "Z3 unsupported:" input)]
     [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
      (for/hash ([c consts] [v vals]) (values c (de-z3ify v)))]
     [(? eof-object?)

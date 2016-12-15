@@ -2,8 +2,11 @@
 (require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt"
          "selectors.rkt" "match.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
+(module+ test (require rackunit))
+(provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
+         css-values-solver)
 
-(provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!)
+
 
 (define cassius-check-sat
   '(check-sat-using
@@ -114,6 +117,42 @@
                     ,(name 'elt (node-fchild elt) 'nil-elt)
                     ,(name 'elt (node-lchild elt) 'nil-elt))
       :named ,(sformat "tree/~a" (dump-elt elt))))))
+
+(define (rule-allows-property? props prop)
+  (or (set-member? props '?)
+      (and (dict-has-key? props prop)
+           (not (null? (dict-ref props prop))))))
+
+(define (selector*-constraints emit elts rules)
+  (define ml (rule-matchlist rules elts))
+
+  (for ([rm ml])
+    (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
+    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? props prop))
+      (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
+      (cond
+       [(equal? '? (car (dict-ref (filter list? props) prop '(?))))
+        (emit `(declare-const ,propname ,type))
+        (emit `(declare-const ,(sformat "~a?" propname) Bool))]
+       [else
+        (emit `(define-const ,propname ,type ,(dump-value type (dict-ref (filter list? props) prop))))
+        (emit `(define-const ,(sformat "~a?" propname) Bool true))])))
+
+  (for* ([(prop type default) (in-css-properties)] [elt elts])
+    (define nonecond
+      (for/fold ([no-match-so-far 'true])
+          ([rm ml]
+           #:when (selector-matches? (car (rulematch-rule rm)) elt)
+           #:when (rule-allows-property? (rulematch-rule rm) prop))
+        (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
+        (define propname? (sformat "value/~a/~a?" (rulematch-idx rm) prop))
+        (emit `(assert (! (=> (and ,no-match-so-far ,propname?)
+                              (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,propname))
+                          :named ,(sformat "~a^~a" propname (dump-elt elt)))))
+        `(and ,no-match-so-far (not ,propname?))))
+    (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
+                                       ,(dump-value type (if (equal? type 'Text-Align) 'left default))))
+                      :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
@@ -265,7 +304,7 @@
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
 
   `((set-option :produce-unsat-cores true)
-    (set-option :sat.minimize_core true)
+    ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
     (declare-datatypes
      () ; No parameters
@@ -321,34 +360,50 @@
                         (λ () (let* ([query ((if (set-member? (flags) 'z3o) z3-prepare z3-clean)
                                              (all-constraints matchings doms))]
                                      [z3p (z3-process)])
-                                (z3-send z3 query)
-                                (z3-send z3 '((push)))))))
+                                (z3-send z3p query)
+                                (z3-send z3p '((push)))
+                                z3p))))
 
   (define browser-style (get-sheet (and (dom-context (car doms) ':browser) (car (dom-context  (car doms) ':browser)))))
 
-  (define eqcls (equivalence-classes (append browser-style sketch) (map dom-elements doms)))
-  
-  (z3-send z3 (append '((pop) (push)) (sheet-constraints doms eqcls)))
-  
+  ;(define elts (append-map (compose sequence->list in-tree dom-elements) doms))
+  ;(define eqcls (equivalence-classes (append browser-style sketch) elts))
+  (z3-send z3 (append '((pop) (push)) (sheet*-constraints doms (append browser-style sketch))))
+
   (match (z3-check-sat z3 #:strategy cassius-check-sat)
     [(list 'model m)
-     (list 'fwd doms matchings (drop (length browser-style) (extract-sheet (append browser-style sketch) m)))]
+     (list 'fwd doms matchings (drop (extract-sheet (append browser-style sketch) m) (length browser-style)))]
     [(list 'core c)
-     (list 'bwd (extract-ineqs eqcls c))]))
+     (pretty-print c)
+     (list 'bwd #;(extract-ineqs eqcls c)
+           )]))
 
 (define (sheet-constraints doms eqcls)
   (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
   (reap [emit] (selector-constraints emit eqcls)))
 
+(define (sheet*-constraints doms rules)
+  (reap [emit] (for ([dom doms]) (selector*-constraints emit (sequence->list (in-tree (dom-elements dom))) rules))))
+
 (define (extract-sheet sheet m)
   (for/list ([rule sheet] [idx (in-naturals)])
-    (append (list (car rule)) (filter symbol? (cdr rule))
-            (for/list ([(prop value) (in-dict (filter list? (cdr rule)))]
-                       #:when (dict-has-key? m (sformat "value/~a/~a" prop idx)))
-              (match value
-                [(list '?)
-                 (list prop (extract-value (dict-ref m (sformat "value/~a/~a" prop idx))))]
-                [(list _) (cons prop value)])))))
+    (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
+    `(,selector
+      ,@attrs
+      ,@
+      (filter list?
+              (for/fold ([props props])
+                  ([(prop type default) (in-css-properties)]
+                   #:when (dict-ref m (sformat "value/~a/~a?" idx prop) #f))
+                (define value (extract-value (dict-ref m (sformat "value/~a/~a" idx prop))))
+                (let loop ([props props])
+                  (cond
+                   [(equal? '(?) props)
+                    (cons (list prop value) props)]
+                   [(equal? (caar props) prop)
+                    (cons (list prop value) (cdr props))]
+                   [else
+                    (cons (car props) (loop (cdr props)))])))))))
 
 (define (extract-ineqs eqcls core)
   (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))
@@ -359,3 +414,31 @@
        (define cls* (if (equal? cls 'none) #f cls))
        (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
        `(not (= (,prop ,(by-name 'elt elt1)) ,value))])))
+
+(module+ test
+  (require "match.rkt")
+
+  (define elts
+    '([html] ; 0
+      ([body] ; 1
+       ([div])))) ; 2
+
+  (define boxes
+    '([VIEW :w 400 :h 400]
+      ([BLOCK :w 400 :h 105 :x 0 :y 0]
+       ([BLOCK :w 400 :h 100 :x 0 :y 5]
+        ([BLOCK :w 200 :h 100 :x 100 :y 5])))))
+
+  (define css-sketch
+    '(((tag div) [width ?] [margin-left ?] [height ?])
+      ((tag body) [margin-top ?])))
+
+  (define dom* (dom 'test '() (parse-tree elts) (parse-tree boxes)))
+  (define matching (link-elts-boxes css-sketch (dom-elements dom*) (dom-boxes dom*)))
+
+  (define input (list (list dom*) (list matching) css-sketch))
+
+  (check-match (css-values-solver input #f)
+               (list 'fwd (list (== dom*)) (list (== matching))
+                     `(((tag div) [width (px ,(== 200 =))] [margin-left (px ,(== 100 =))] [height (px ,(== 100 =))])
+                       ((tag body) [margin-top (px ,(== 5 =))])))))

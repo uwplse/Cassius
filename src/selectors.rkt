@@ -3,7 +3,10 @@
 (require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "z3.rkt" "smt.rkt" "modular-synthesis.rkt" "dom.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes equivalence-classes-avoid?
-         selector-matches? all-selectors synthesize-css-sketch)
+         selector-matches? all-selectors synthesize-css-sketch
+         css-sketch-solver rule-matchlist (struct-out rulematch))
+
+
 
 (define (property? sym)
   (and (symbol? sym)
@@ -21,6 +24,9 @@
 
 (define-by-match rule?
   (list (? selector?) (? attribute?) ... (? (list/c property? any/c)) ...))
+
+(define-by-match partial-rule?
+  (list (? selector?) (? attribute?) ... (or (? (list/c property? any/c)) '?) ...))
 
 (define/contract (selector-matches? sel elt)
   (-> selector? node? boolean?)
@@ -108,10 +114,10 @@
   (list (? number?) (? number?) (? number?)))
 
 (define-by-match selector-score?
-  (list (or 'browser 'user 'author) (? boolean?) (? number?) (? number?) (? number?)))
+  (list (or 'browser 'user 'author) (? boolean?) (? number?) (? number?) (? number?) (? number?)))
 
 (define/contract (compute-score selector)
-  (-> selector? selector-score?)
+  (-> selector? partial-selector-score?)
   "Given a selector, return a list (ids classes tags) of counts"
   (match selector
     [(list 'id id) '(1 0 0)]
@@ -123,10 +129,10 @@
      (map (curry apply +) (apply (curry map list) (map compute-score sels)))]))
 
 (define/contract (rule-scores rules)
-  (-> (listof rule?) (listof selector-score?))
+  (-> (listof partial-rule?) (listof selector-score?))
   "Given a list of rules, return a list of cascade scores (io fromstyle ids classes tags idx)"
   (for/list ([rule rules] [i (in-naturals)])
-    (match-define (list selector (? attribute? attrs) ... (? list? props) ...) rule)
+    (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
     (define browser? (set-member? attrs ':browser))
     (define user? (set-member? attrs ':user))
     (define style? (set-member? attrs ':style))
@@ -154,7 +160,7 @@
   (filter list? (cdr (rulematch-rule rm))))
 
 (define/contract (rule-matchlist rules elts)
-  (-> (listof rule?) (listof node?) (listof rulematch?))
+  (-> (listof partial-rule?) (listof node?) (listof rulematch?))
   (define scores (rule-scores rules))
   (define matches (for/list ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
   (map cdr
@@ -165,14 +171,14 @@
          score<? #:key car))))
 
 (define/contract (matchlist-find matchlist elt prop)
-  (-> (listof rulematch?) node? property? rulematch?)
+  (-> (listof rulematch?) node? property? (or/c rulematch? #f))
   (for/first ([rm matchlist]
               #:when (and (set-member? (rulematch-elts rm) elt)
                           (set-member? (map car (rulematch-props rm)) prop)))
     rm))
 
 (define equivalence-classes?
-  (hash/c property? (cons/c (hash/c node? integer?) (hash/c integer? any/c))))
+  (hash/c property? (cons/c (hash/c node? (or/c integer? #f)) (hash/c (or/c integer? #f) any/c))))
 
 (define/contract (matchlist-equivalence-classes ml elts)
   (-> (listof rulematch?) (listof node?) equivalence-classes?)
