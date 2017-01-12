@@ -57,6 +57,25 @@
    (margin-bottom ?)
    (margin-left ?)))
 
+(define-stylesheet main-selector
+  ((tag body) ?)
+  ((tag header)
+   ?)
+  ((tag form)
+   ?)
+  ((tag btn)
+   ?)
+  ((tag h1)
+   ?)
+  ((tag rect)
+   ?)
+  ((tag img)
+   ?)
+  ((tag footer)
+   ?)
+  ((tag icon)
+   ?))
+
 (define-document main
   ([html]
    ([header])
@@ -161,6 +180,11 @@
 
 (define-problem one
   :sheets main
+  :documents main
+  :layouts mockup)
+
+(define-problem one-selector
+  :sheets main-selector
   :documents main
   :layouts mockup)
 

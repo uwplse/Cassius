@@ -391,7 +391,7 @@
     `(,selector
       ,@attrs
       ,@
-      (filter list?
+      (filter (λ (x) (and (list? x) (= (length x) 2) (not (equal? (second x) '?))))
               (for/fold ([props props])
                   ([(prop type default) (in-css-properties)]
                    #:when (dict-ref m (sformat "value/~a/~a?" idx prop) #f))
