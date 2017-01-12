@@ -267,7 +267,7 @@ function infer_lines(box, parent) {
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
         } else if (b.type == "BLOCK" || b.type == "MAGIC") {
             parent.children.push(b);
-        } else if (b.type == "INLINE" && b.props.tag && b.props.tag.toLowerCase() == "br") {
+        } else if (b.type == "INLINE" && b.props.br) {
             new_line();
         } else if (b.type == "INLINE") {
             stack.push(b);
@@ -322,7 +322,6 @@ function make_boxes(elt, inflow, styles, features) {
         var r = elt.getBoundingClientRect();
         var s = cs(elt);
         var box = Block(elt, {
-            tag: elt.tagName,
             x: r.x, y: r.y, w: r.width, h: r.height,
             /*
             mt: val2px(s["margin-top"]), mr: val2px(s["margin-right"]),
@@ -333,9 +332,6 @@ function make_boxes(elt, inflow, styles, features) {
             bb: val2px(s["border-bottom-width"]), bl: val2px(s["border-left-width"]),
             */
         });
-
-        if (elt.id) box.props.id = elt.id;
-        if (elt.classList.length) box.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
         inflow.children.push(box);
 
@@ -356,15 +352,9 @@ function make_boxes(elt, inflow, styles, features) {
         if (r.length == 1 && false) {
             box = Inline(elt, {tag: elt.tagName, x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
         } else {
-            box = Inline(elt, {tag: elt.tagName});
+            box = Inline(elt, {});
         }
-        if (elt.id) box.props["id"] = elt.id;
-        if (elt.classList.length) box.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
-        if (elt.style.length) {
-            var eid = gensym();
-            if (!elt.id) box.props.id = eid;
-            styles[eid] = elt.style;
-        }
+        if (elt.tagName.toLowerCase() == "BR") box.props.br = true;
         inflow.children.push(box);
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
@@ -386,13 +376,10 @@ function make_boxes(elt, inflow, styles, features) {
         var r = elt.getBoundingClientRect();
         var s = cs(elt);
         var box = Magic(elt, {
-            tag: elt.tagName, x: r.x, y: r.y, w: r.width, h: r.height,
+            x: r.x, y: r.y, w: r.width, h: r.height,
             mt: val2px(s["margin-top"], features), mr: val2px(s["margin-right"], features), 
             mb: val2px(s["margin-bottom"], features), ml: val2px(s["margin-left"], features),
         });
-
-        if (elt.id) box.props.id = elt.id;
-        if (elt.classList.length) box.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
@@ -431,7 +418,7 @@ function dump_selector(sel) {
         if (sub[0] === "") sub.shift();
         sub = sub.map(dump_primitive_selector);
         if (sub.indexOf(false) !== -1) return false;
-        return "(and " + sub.join(" ") + ")"
+        return sub.length == 1 ? sub[0] : ("(and " + sub.join(" ") + ")");
     } else {
         return false;
     }
@@ -563,12 +550,16 @@ function dump_tree(page) {
     var indent = "  ";
 
     function recurse(box) {
-        text += "\n" + indent + "(" + box.toString();
-        var idt = indent;
-        indent += " ";
-        for (var i = 0; i < box.children.length; i++) recurse(box.children[i]);
-        indent = idt;
-        text += ")";
+        if (typeof box === "object") {
+            text += "\n" + indent + "(" + box.toString();
+            var idt = indent;
+            indent += " ";
+            for (var i = 0; i < box.children.length; i++) recurse(box.children[i]);
+            indent = idt;
+            text += ")";
+        } else if (typeof box === "string") {
+            text += " " + dump_string(box)
+        }
     }
 
     for (var i = 0; i < page.children.length; i++) recurse(page.children[i]);
@@ -604,6 +595,40 @@ function dump_stylesheet(ss, features) {
     return text;
 }
 
+function dump_document() {
+    var elt = document.documentElement;
+    
+    function recurse(elt) {
+        if (is_comment(elt)) {
+            return false;
+        } else if (is_text(elt)) {
+            if (elt.textContent.search(/^\s+$/) === -1) {
+                return elt.textContent;
+            } else {
+                return false;
+            }
+        } else if (elt.tagName === "HEAD" || elt.tagName === "SCRIPT") {
+            return false;
+        } else {
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {});
+            if (elt.id) rec.props["id"] = elt.id;
+            if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
+            
+            for (var i = 0; i < elt.childNodes.length; i++) {
+                if (is_comment(elt.childNodes[i])) continue;
+                var b = recurse(elt.childNodes[i]);
+                if (b) rec.children.push(b);
+            }
+            return rec;
+        }
+    }
+
+    var s = recurse(elt);
+    var b = new Box("document", document, {});
+    b.children.push(s);
+    return b;
+}
+
 function page2cassius(name) {
     var features = {};
 
@@ -621,12 +646,15 @@ function page2cassius(name) {
         text += dump_rule("#" + eid, style[eid], features, true);
     }
     text += ")\n\n";
-    text += "(define-document (" + name + " :browser firefox)\n ([VIEW :w " + page.props.w + "]";
+    text += "(define-layout (" + name + " :browser firefox)\n ([VIEW :w " + page.props.w + "]";
     text += dump_tree(page);
     text += "))\n\n";
+    text += "(define-document " + name;
+    text += dump_tree(dump_document());
+    text += ")\n\n";
 
     var title = dump_string(document.title);
-    text += "(define-problem " + name + "\n  :desc " + title + "\n  :url \"" + location + "\"\n  :header header\n  :sheets " + name  + "\n  :documents " + name + "\n  :features " + dump_features(features) + ")";
+    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";
     return text;
 }
 
