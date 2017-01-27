@@ -76,10 +76,10 @@
      :browser
      [margin-left auto]
      [margin-right auto]
-     [border-top (px 1)]
-     [border-right (px 1)]
-     [border-bottom (px 1)]
-     [border-left (px 1)])
+     [border-top-width (px 1)]
+     [border-right-width (px 1)]
+     [border-bottom-width (px 1)]
+     [border-left-width (px 1)])
     ((tag menu)
      :browser
      [margin-left (px 0)]
@@ -100,7 +100,6 @@
      [margin-bottom (px 16)])
     ((tag pre)
      :browser
-     [white-space pre]
      [margin-top (px 16)]
      [margin-bottom (px 16)]
      [margin-left (px 0)]
