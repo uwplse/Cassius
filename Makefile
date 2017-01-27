@@ -25,8 +25,8 @@ download:
 bench/css/%.rkt: get_bench.py get_bench.js
 	@ xvfb-run -s '-screen 0 1920x10800x24' python2 get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/css21/$*/*.xht))
 
-bench/alexa/%.rkt: get_bench.py get_bench.js bench/alexa/%.html
-	@ xvfb-run -s '-screen 0 1920x10800x24' python2 get_bench.py --name alexa/$* file://$(PWD)/bench/alexa/$*.html
+bench/freewebtemplates/%.rkt: get_bench.py get_bench.js bench/alexa/%.html
+	sh bench/freewebtemplates.sh $*
 
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
 	racket src/report.rkt $(FLAGS) --index tests.json -o reports/csswg $^
