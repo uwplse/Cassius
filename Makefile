@@ -1,4 +1,4 @@
-CSSWG_PATH=/home/src/csswg-test
+CSSWG_PATH=$(HOME)/src/csswg-test
 TEST_FILES=$(wildcard bench/*.rkt)
 TESTS=$(TEST_FILES:bench/%.rkt=%:verify)
 SRC=$(wildcard cassius/*)
@@ -28,7 +28,10 @@ bench/css/%.rkt: get_bench.py get_bench.js
 bench/alexa/%.rkt: get_bench.py get_bench.js bench/alexa/%.html
 	@ xvfb-run -s '-screen 0 1920x10800x24' python2 get_bench.py --name alexa/$* file://$(PWD)/bench/alexa/$*.html
 
-reports/csswg.html: $(wildcard bench/css/*.rkt)
+reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
 	racket src/report.rkt $(FLAGS) --index tests.json -o reports/csswg $^
+
+rerun-tests:
+	racket src/report.rkt $(FLAGS) --fast --rerun reports/csswg.json --index tests.json -o reports/csswg $(wildcard bench/css/*.rkt)
 
 get-csswg: bench/css/floats.rkt bench/css/margin-padding-clear.rkt
