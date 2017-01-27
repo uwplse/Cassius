@@ -83,9 +83,10 @@
 
   (define out
     (let ([z3 (z3-process)])
-      (z3-send z3 query)
-      (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
-        (z3-kill z3))))
+      (with-handlers ([exn? (λ (e) (z3-kill z3) (raise e))])
+        (z3-send z3 query)
+        (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
+          (z3-kill z3)))))
 
   (define trees (map dom-boxes doms))
   (define res
