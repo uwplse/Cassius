@@ -79,7 +79,7 @@ function val2px(val, features) {
     } else if (val.match(/^-?[0-9.]+in$/)) {
         return +val.substr(0, val.length - 2)*96;
     } else if (match = val.match(/^([\d.]+)([^\d.]+)$/)) {
-        features[match[2]] = true;
+        features["unit:" + match[2]] = true;
         throw "Error, " + val + " is not a known unit";
     } else {
         throw "Error, " + val + " is not a pixel quantity."
@@ -290,7 +290,7 @@ function infer_lines(box, parent) {
 }
 
 function make_boxes(elt, inflow, styles, features) {
-    if (BadTags.indexOf(elt.tagName) !== -1) features[elt.tagName] = true;
+    if (BadTags.indexOf(elt.tagName) !== -1) features["tag:" + elt.tagName] = true;
 
     if (elt.style && elt.style.length) {
         var eid = elt.id || gensym();
@@ -362,14 +362,14 @@ function make_boxes(elt, inflow, styles, features) {
         }
     } else {
         if (cs(elt).display.startsWith("table")) {
-            features["tables"] = true;
+            features["display:table"] = true;
         } else if (cs(elt).display == "inline-block") {
-            features["inline-block"] = true;
+            features["display:inline-block"] = true;
         } else if (cs(elt).display == "list-item") {
-            features["list-item"] = true;
+            features["display:lists"] = true;
         } else {
             console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
-            features["unknown-display"] = true;
+            features["display:unknown"] = true;
         }
 
         // Quit iterating downward, who knows what is in this element
@@ -476,7 +476,7 @@ function dump_rule(sel, style, features, is_from_style) {
         var val = style[sname];
         var tname = sname;
         if (val == "inherit") {
-            features["inherit"] = true;
+            features["css:inherit"] = true;
         }
         if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
             var tname = tname.split("-", 2)[0];
@@ -510,7 +510,7 @@ function dump_rule(sel, style, features, is_from_style) {
         }
 
         if (BadProps.indexOf(sname) !== -1) {
-            features[sname] = true;
+            features["css:" + sname] = true;
         }
         
         if (Props.indexOf(sname) !== -1) {

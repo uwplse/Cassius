@@ -15,7 +15,8 @@
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
 
-(define supported-features '(float % unknown-selector box-sizing min-width max-width position))
+(define supported-features
+  '(css:float unit:% unknown-selector css:box-sizing css:min-width css:max-width css:position))
 
 (define z3-path (find-executable-path "z3"))
 
