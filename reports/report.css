@@ -1,11 +1,11 @@
 body { width: 900px; margin: 3em 0; padding: 0 10px; }
-table.results { width: 100%; vertical-align: top; }
+table { width: 100%; vertical-align: top; }
 .results tr td:nth-child(3) { font-size: 80%; max-width: 400px; height: 2em; }
-.fail, .success, .timeout, .unsupported {text-align: center;}
-.fail    {background-color: #ff5e3a; color: #f7f7f7;}
-.success {background-color: #0bd318;}
-.timeout {background-color: #ff9500;}
-.unsupported {background-color: #8e8e93;}
+.fail td:last-child, .success td:last-child, .timeout td:last-child, .unsupported td:last-child {text-align: center;}
+.fail td:last-child {background-color: #ff5e3a; color: #f7f7f7;}
+.success td:last-child {background-color: #0bd318;}
+.timeout td:last-child {background-color: #ff9500;}
+.unsupported td:last-child {background-color: #8e8e93;}
 #sections td { padding: .25em .5em; }
 #sections td:nth-child(3) { font-weight: bold; }
 th { text-align: left; }
