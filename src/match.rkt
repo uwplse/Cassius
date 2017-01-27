@@ -4,11 +4,13 @@
 (provide link-elts-boxes link/root/c synthesize-displayed synthesize-dom)
 
 (define (sheet->display? elts sheet)
-  #;(define eqs (equivalence-classes sheet (sequence->list (in-tree elts))))
-  (λ (elt) true)
-  #;(λ (elt)
-    (match-define (cons class-hash value-hash) (dict-ref eqs 'display))
-    (not (equal? 'none (dict-ref value-hash (dict-ref class-hash elt))))))
+  (if (ormap (curryr set-member? '?) sheet)
+      (λ (elt) (not (equal? (node-type elt) 'head)))
+      (let ([eqs (equivalence-classes sheet (sequence->list (in-tree elts)))])
+        (λ (elt)
+          (match-define (cons class-hash value-hash) (dict-ref eqs 'display))
+          (and (not (equal? (node-type elt) 'head))
+               (not (equal? 'none (dict-ref value-hash (dict-ref class-hash elt)))))))))
 
 (define (link-elts-boxes sheet elts boxes)
   (define elt->box (make-hasheq))
@@ -26,7 +28,8 @@
     (link/block match! display? elt (node-fchild box))))
 
 (define (link/block match! display? elt box)
-  (match* ((node-type box) (set-member? (map node-type (node-children box)) 'LINE))
+  (define child-types (map node-type (node-children box)))
+  (match* ((node-type box) (or (set-member? child-types 'LINE) (set-member? child-types 'ANON)))
     [('MAGIC _)
      (match! elt box)]
     [('BLOCK #t)
