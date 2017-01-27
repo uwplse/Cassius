@@ -1,13 +1,8 @@
 #lang racket
 
-(require racket/path)
-(require racket/set)
-(require racket/engine)
-(require racket/cmdline)
-(require json)
-(require "common.rkt")
-(require "input.rkt")
-(require "frontend.rkt")
+(require racket/path racket/set racket/engine racket/cmdline)
+(require json (only-in xml write-xexpr))
+(require "common.rkt" "input.rkt" "frontend.rkt")
 
 (define (normalize-index name section)
   (if (string=? (last (string-split (~a name) "-")) (substring section 1))
@@ -91,7 +86,7 @@
          (if (null? (set-subtract (dict-ref prob ':features) supported-features)) 'fail 'unsupported)]))
     (eprintf "~a\n" status)
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (dict-ref prob ':desc) (dict-ref prob ':features) (get-output-string out) runtime
+            status (car (dict-ref prob ':title)) (dict-ref prob ':features) (get-output-string out) runtime
             (car (dict-ref prob ':url)))))
 
 (define (number-or-empty? x)
@@ -99,6 +94,12 @@
 
 (define (file-name-stem fn)
   (first (string-split (last (string-split fn "/")) ".")))
+
+(define (call-with-output-to outname #:extension [extension #f] #:exists [exists 'error] f . args)
+  (if outname
+      (call-with-output-file (if extension (format "~a.~a" outname extension) outname) #:exists exists
+        (apply curry f args))
+      (apply f args (current-output-port))))
 
 (define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f] #:feature [feature #f] #:old-json [old-json #f])
   (define index
@@ -112,63 +113,70 @@
       (run-file-tests file #:debug debug #:fast fast? #:index index #:feature feature #:old-json old-json)))
   (define results (apply append resultss))
 
-  (define out (if outname (open-output-file (format "~a.json" outname) #:exists 'replace) (current-output-port)))
-  (write-json
+  (call-with-output-to
+   outname #:extension "json" #:exists 'replace
+   write-json
    (for/list ([res results])
      (match-define (result file problem test section status description features output time url) res)
-     (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time))))
-   out)
-  (when outname (close-output-port out))
-  
-  (set! out (if outname (open-output-file (format "~a.html" outname) #:exists 'replace) (current-output-port)))
-  (parameterize ([current-output-port out])
-    (printf "<!doctype html>\n<html lang='en_US'>\n<meta charset='utf8' />\n")
-    (printf "<link rel='stylesheet' href='report.css' />\n")
-    (printf "<title>Cassius results for ~a</title>\n" (string-join files ", "))
-    (printf "<body>\n")
+     (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time)))))
 
-    (printf "<table id='sections'>\n")
-    (printf "<tr><th>Section</th><th>Passing</th><th>Failing</th><th>Unsupported</th></tr>\n")
-    (for ([section (sort (remove-duplicates (map result-section results)) section<?)])
-      (define sresults (filter (λ (x) (equal? (result-section x) section)) results))
-      (printf "<tr><td>~a</td><td>~a</td><td>~a</td><td>~a</td><td>~a</td></tr>\n"
-              section
-              (number-or-empty? (count (λ (x) (equal? (result-status x) 'success)) sresults))
-              (number-or-empty? (count (λ (x) (member (result-status x) '(error fail))) sresults))
-              (number-or-empty? (count (λ (x) (member (result-status x) '(unsupported timeout))) sresults))
-              (string-join
-               (for/list ([r sresults] #:when (member (result-status r) '(error fail)))
-                 (format "<a href='~a'>~a:~a</a>" (result-url r) (file-name-stem (result-file r)) (result-problem r))) ",")
-              ))
-    (printf "</table>\n")
+  (define (row #:cell [cell 'td] #:hide [hide #f] #:class [class #f] . args)
+    `(tr (,@(if class `((class ,class)) '()))
+         ,@(for/list ([arg args]) `(,cell () ,(if (equal? arg hide) "" arg)))))
 
-    (for ([fname files] [results resultss])
-      (printf "<h2>~a</h2>\n" fname)
-      (printf "<table class='results'>\n")
-      (for ([res results] #:when (not (member (result-status res) '(success unsupported))))
-        (match-define (result file problem test section status description features output time url) res)
-        (printf "<tr><td>~a</td><td><a href='~a'>~a</a></td><td>~a</td><td class='~a'>~a</td></tr>\n"
-                problem url test description status
-                (match status ['success "✔"] ['fail "✘"] ['timeout "🕡"]
-                  ['unsupported
-                   (define probfeats (set-subtract features supported-features))
-                   (format "<span title='~a'>☹</span>" (string-join (map ~a probfeats) ", "))]
-                  ['error "!"])))
-      (printf "</table>\n"))
+  (define (count-type set t)
+    (count (λ (x) (equal? (result-status x) t)) set))
 
-    (printf "<h2>Status totals</h2>\n")
-    (printf "<dl>\n")
-    (for ([status '(success fail timeout unsupported error)])
-      (printf "<dt>~a</dt><dd>~a</dd>\n" status (count (λ (x) (equal? (result-status x) status)) results)))
-    (printf "</dl>\n")
-    (printf "<h2>Feature totals</h2>\n")
-    (printf "<dl>\n")
-    (for ([feature (remove-duplicates (append-map result-features results))])
-      (printf "<dt>~a</dt><dd>~a only, ~a has </dd>\n" feature (count (λ (x) (equal? (result-features x) (list feature))) results) (count (λ (x) (member feature (result-features x))) results)))
-    (printf "</dl>\n")
-    (printf "</body>\n")
-    (printf "</html>\n"))
-  (when outname (close-output-port out)))
+  (define (set->results set)
+    (map (compose number->string (curry count-type set)) '(success fail error timeout unsupported)))
+
+  (call-with-output-to
+   outname #:extension "html" #:exists 'replace
+   write-xexpr
+   `(html ((lang "en_US"))
+     (meta ((charset "utf8")))
+     (link ((rel "stylesheet") (href "report.css")))
+     (title ,(format "Cassius results for ~a" (string-join files ", ")))
+     (body ()
+      (table ((id "sections") (rules "groups"))
+       (thead ()
+        ,(row #:cell 'th "Section" "Pass" "Fail" "Error" "Time" "Skip")
+        ,(apply row `(strong "Total") (set->results results) #:hide "0"))
+       (tbody ()
+        ,@(for/list ([section (sort (remove-duplicates (map result-section results)) section<?)])
+            (define sresults (filter (λ (x) (equal? (result-section x) section)) results))
+            (keyword-apply
+             row '(#:hide) '("0")
+             (string-replace section "s" "§" #:all? #f)
+             (append
+              (set->results sresults)
+              `((span ()
+                 ,@(for/list ([r sresults] #:when (member (result-status r) '(error fail)))
+                     `(a ((href ,(result-url r)))
+                         ,(format "~a:~a" (file-name-stem (result-file r)) (result-problem r)))))))))))
+      (section ()
+       (h2 () "Feature totals")
+       (table ()
+        (thead () ,(row #:cell 'th "Feature" "# Blocking" "# Necessary"))
+        ,@(for/list ([feature (remove-duplicates (append-map result-features results))])
+            (row (~a feature)
+                 (~a (count (λ (x) (equal? (result-features x) (list feature))) results))
+                 (~a (count (λ (x) (member feature (result-features x))) results))))))
+      (section ()
+       (h2 () "Failing tests")
+       (table ()
+       ,@(for/list ([fname files] [results resultss])
+           `(tbody
+             (tr () (th ((colspan "4")) ,fname))
+             ,@(for/list ([res results] #:when (not (member (result-status res) '(success unsupported))))
+                 (match-define (result file problem test section status description features output time url) res)
+                 (row #:class (~a status) (~a problem) `(a ((href ,url)) ,(~a test)) description
+                      (match status
+                        ['success "✔"] ['fail "✘"] ['timeout "🕡"]
+                        ['unsupported
+                         (define probfeats (set-subtract features supported-features))
+                         `(span ((title ,(string-join (map ~a probfeats) ", "))) "☹")]
+                        ['error "!"])))))))))))
 
 (module+ main
   (define debug '())

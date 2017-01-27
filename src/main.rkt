@@ -118,7 +118,8 @@
                     ,(name 'elt (node-lchild elt) 'nil-elt))
       :named ,(sformat "tree/~a" (dump-elt elt))))))
 
-(define (rule-allows-property? props prop)
+(define (rule-allows-property? rule prop)
+  (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
   (or (set-member? props '?)
       (and (dict-has-key? props prop)
            (not (null? (dict-ref props prop))))))
@@ -128,14 +129,14 @@
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
-    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? props prop))
+    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop))
       (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
       (cond
        [(equal? '? (car (dict-ref (filter list? props) prop '(?))))
         (emit `(declare-const ,propname ,type))
         (emit `(declare-const ,(sformat "~a?" propname) Bool))]
        [else
-        (emit `(define-const ,propname ,type ,(dump-value type (dict-ref (filter list? props) prop))))
+        (emit `(define-const ,propname ,type ,(dump-value type (car (dict-ref (filter list? props) prop)))))
         (emit `(define-const ,(sformat "~a?" propname) Bool true))])))
 
   (for* ([(prop type default) (in-css-properties)] [elt elts])
