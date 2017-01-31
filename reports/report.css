@@ -1,11 +1,14 @@
 body { width: 900px; margin: 3em 0; padding: 0 10px; }
 table { width: 100%; vertical-align: top; }
+td { }
 .results tr td:nth-child(3) { font-size: 80%; max-width: 400px; height: 2em; }
 .fail td:last-child, .success td:last-child, .timeout td:last-child, .unsupported td:last-child {text-align: center;}
 .fail td:last-child {background-color: #ff5e3a; color: #f7f7f7;}
 .success td:last-child {background-color: #0bd318;}
 .timeout td:last-child {background-color: #ff9500;}
 .unsupported td:last-child {background-color: #8e8e93;}
-#sections td { padding: .25em .5em; }
-#sections td:nth-child(3) { font-weight: bold; }
+#sections td, #sections th { padding: .25em; min-width: 3em; text-align: right; }
+#sections td:first-child, #sections td:last-child { text-align: left; }
+#sections td:last-child { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 600px;}
+#sections td:last-child a { margin: .5ex; }
 th { text-align: left; }
