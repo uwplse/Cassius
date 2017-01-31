@@ -1,7 +1,7 @@
 #lang racket
 
 (provide
- reap for/reap for*/reap
+ reap for/reap for*/reap for/append
  sformat slower indent tree-size snoc dict-remove*
  flags all-flags supported-features
  xor ->number z3-path value=?
@@ -37,6 +37,9 @@
 
 (define-syntax-rule (for*/reap [sows ...] (iters ...) body ...)
   (reap [sows ...] (for* (iters ...) body ...)))
+
+(define-syntax-rule (for/append (iters ...) body ...)
+  (apply append (for/list (iters ...) body ...)))
 
 (define (sformat templ . args)
   (string->symbol (apply format templ args)))

@@ -89,9 +89,6 @@
             status (car (dict-ref prob ':title)) (dict-ref prob ':features) (get-output-string out) runtime
             (car (dict-ref prob ':url)))))
 
-(define (number-or-empty? x)
-  (if (zero? x) "" x))
-
 (define (file-name-stem fn)
   (first (string-split (last (string-split fn "/")) ".")))
 
@@ -101,17 +98,15 @@
         (apply curry f args))
       (apply f args (current-output-port))))
 
-(define (run-report files #:debug [debug '()] #:output [outname #f] #:fast [fast? #f] #:classify [classify #f] #:feature [feature #f] #:old-json [old-json #f])
-  (define index
-    (if classify
-        (for*/hash ([sec (call-with-input-file classify read-json)] [(k v) (in-hash sec)])
-          (values (normalize-index k v) v))
-        (hash)))
+(define (row #:cell [cell 'td] #:hide [hide #f] #:class [class #f] . args)
+  `(tr (,@(if class `((class ,class)) '()))
+       ,@(for/list ([arg args]) `(,cell () ,(if (equal? arg hide) "" arg)))))
 
-  (define resultss
-    (for/list ([file files])
-      (run-file-tests file #:debug debug #:fast fast? #:index index #:feature feature #:old-json old-json)))
-  (define results (apply append resultss))
+(define (write-report results #:output [outname #f])
+  (define (count-type set t)
+    (count (λ (x) (equal? (result-status x) t)) set))
+  (define (set->results set)
+    (map (compose number->string (curry count-type set)) '(success fail error timeout unsupported)))
 
   (call-with-output-to
    outname #:extension "json" #:exists 'replace
@@ -120,23 +115,13 @@
      (match-define (result file problem test section status description features output time url) res)
      (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time)))))
 
-  (define (row #:cell [cell 'td] #:hide [hide #f] #:class [class #f] . args)
-    `(tr (,@(if class `((class ,class)) '()))
-         ,@(for/list ([arg args]) `(,cell () ,(if (equal? arg hide) "" arg)))))
-
-  (define (count-type set t)
-    (count (λ (x) (equal? (result-status x) t)) set))
-
-  (define (set->results set)
-    (map (compose number->string (curry count-type set)) '(success fail error timeout unsupported)))
-
   (call-with-output-to
    outname #:extension "html" #:exists 'replace
    write-xexpr
    `(html ((lang "en_US"))
      (meta ((charset "utf8")))
      (link ((rel "stylesheet") (href "report.css")))
-     (title ,(format "Cassius results for ~a" (string-join files ", ")))
+     (title ,(format "Cassius results for ~a" (string-join (remove-duplicates (map result-file results)) ", ")))
      (body ()
       (table ((id "sections") (rules "groups"))
        (thead ()
@@ -165,10 +150,10 @@
       (section ()
        (h2 () "Failing tests")
        (table ()
-       ,@(for/list ([fname files] [results resultss])
+       ,@(for/list ([group-results (group-by result-file results)])
            `(tbody
-             (tr () (th ((colspan "4")) ,fname))
-             ,@(for/list ([res results] #:when (not (member (result-status res) '(success unsupported))))
+             (tr () (th ((colspan "4")) ,(result-file (car group-results))))
+             ,@(for/list ([res group-results] #:when (not (member (result-status res) '(success unsupported))))
                  (match-define (result file problem test section status description features output time url) res)
                  (row #:class (~a status) (~a problem) `(a ((href ,url)) ,(~a test)) description
                       (match status
@@ -182,7 +167,7 @@
   (define debug '())
   (define out-file #f)
   (define old-json #f)
-  (define classify #f)
+  (define index (hash))
   (define fast #f)
   (define feature #f)
 
@@ -204,10 +189,16 @@
    [("--fast") "Skip tests with unsupported features"
     (set! fast #t)]
    [("--index") sname "File name with section information for tests"
-    (set! classify sname)]
+    (set!
+     index
+     (for*/hash ([sec (call-with-input-file sname read-json)] [(k v) (in-hash sec)])
+       (values (normalize-index k v) v)))]
    [("--rerun") json "Old JSON file of failures to rerun"
     (set! old-json json)]
    [("--test") fname "Test a particular feature"
     (set! feature (string->symbol fname))]
    #:args fnames
-   (run-report fnames #:debug debug #:old-json old-json #:output out-file #:fast fast #:classify classify #:feature feature)))
+   (write-report
+    #:output out-file
+    (for/append ([file fnames])
+      (run-file-tests file #:debug debug #:fast fast #:index index #:feature feature #:old-json old-json)))))
