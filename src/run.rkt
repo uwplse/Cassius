@@ -8,7 +8,6 @@
 (require "frontend.rkt")
 (require "input.rkt")
 (require "modify-dom.rkt")
-(require "model-check.rkt")
 (require "print/css.rkt")
 (require "print/smt.rkt")
 (require math/base)
@@ -47,18 +46,7 @@
             (when (not (member 'solver debug))
               (printf "~a\n" (get-output-string port)))
             (pretty-print tree)])
-         (when (not solve?) (stop #t)))
-         #;(for* ([i (in-naturals)] [concrete (generate-from-template tree i)])
-           (define port (if (member 'solver debug) out (open-output-string)))
-           (parameterize ([current-output-port port] [current-error-port port])
-             (match (solve-problem "" sheet (list (dom name ctx concrete)) port solve debug test)
-               [#t (printf ". ")]
-               [#f
-                (newline)
-                (when (not (member 'solver debug))
-                  (write (get-output-string port)))
-                (pretty-print concrete)]))
-           (when (not solve) (stop #t)))]))
+         (when (not solve?) (stop #t)))]))
   (when outname (close-output-port out))
   res)
 
