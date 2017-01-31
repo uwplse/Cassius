@@ -9,7 +9,40 @@
 (require "common.rkt")
 (require "input.rkt")
 (require "frontend.rkt")
-(require "modify-dom.rkt")
+
+(define (dom-not-something d)
+  (match-define (dom name ctx elts boxes) d)
+  
+  (define constraints 0)
+
+  (let loop ([tree boxes])
+    (when (member (caar tree) '(LINE BLOCK INLINE))
+      (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree)))))
+    (for-each loop (cdr tree)))
+  
+  (define idx (random-integer 0 constraints))
+  (set! constraints 0)
+
+  ;; Not my fault
+  (dom name ctx elts
+       (let loop ([tree boxes])
+         (cond
+          [(> constraints idx) tree]
+          [(member (caar tree) '(LINE BLOCK INLINE))
+           (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree))))
+           (cons (cons (caar tree)
+                       (let loop2 ([n (- constraints idx)] [props (cdar tree)])
+                         (cond
+                          [(null? props) props]
+                          [(and (= n 1) (member (car props) '(:x :y :w :h)))
+                           (list* (car props) `(not ,(cadr props)) (cddr props))]
+                          [(and (member (car props) '(:x :y :w :h)))
+                           (list* (car props) (cadr props) (loop2 (- n 1) (cddr props)))]
+                          [else
+                           (list* (car props) (cadr props) (loop2 n (cddr props)))])))
+                 (map loop (cdr tree)))]
+          [else (cons (car tree) (map loop (cdr tree)))]))))
+
 
 (define (normalize-index name section)
   (if (string=? (last (string-split (~a name) "-")) (substring section 1))

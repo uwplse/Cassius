@@ -1,7 +1,7 @@
 #lang racket
 (require "common.rkt" "registry.rkt" "tree.rkt")
 
-(provide (struct-out dom) dom-context in-elements in-boxes elements-difference all-tags-classes-ids parse-dom)
+(provide (struct-out dom) dom-context in-elements in-boxes elements-difference all-tags-classes-ids parse-dom dom-limit-depth)
 
 (struct dom (name properties elements boxes))
 (struct element (type attrs parent* children)
@@ -44,3 +44,12 @@
       (when (node-get elt ':id)
         (id! (slower (node-get elt ':id))))))
   (values (remove-duplicates tags) (remove-duplicates classes) (remove-duplicates ids)))
+
+(define (dom-limit-depth n d)
+  (match-define (dom name ctx elts boxes) d)
+
+  (dom name ctx elts
+       (let loop ([n n] [tree boxes])
+         (if (= n 0)
+             `([MAGIC ,@(cdar tree)])
+             (cons (car tree) (map (curry loop (- n 1)) (cdr tree)))))))

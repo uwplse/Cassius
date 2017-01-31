@@ -1,7 +1,7 @@
 #lang racket
 (require "../common.rkt")
 (require "../dom.rkt")
-(require "../modify-dom.rkt")
+(require "../dom.rkt")
 (require "../input.rkt")
 
 (define (dump-problem fname pname #:truncate [truncate #f] #:screenshot [screenshot #f])

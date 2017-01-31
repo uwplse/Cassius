@@ -7,7 +7,7 @@
 (require "main.rkt")
 (require "frontend.rkt")
 (require "input.rkt")
-(require "modify-dom.rkt")
+(require "dom.rkt")
 (require "print/css.rkt")
 (require "print/smt.rkt")
 (require math/base)

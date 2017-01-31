@@ -4,7 +4,7 @@
 (require "../common.rkt")
 (require "../input.rkt")
 (require "../frontend.rkt")
-(require "../modify-dom.rkt")
+(require "../dom.rkt")
 (require "../print/css.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate)

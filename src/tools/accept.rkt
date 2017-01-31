@@ -1,7 +1,7 @@
 #lang racket
 
 (require racket/cmdline
-         "../common.rkt" "../input.rkt" "../tree.rkt" "../dom.rkt" "../modify-dom.rkt"
+         "../common.rkt" "../input.rkt" "../tree.rkt" "../dom.rkt"
          "../frontend.rkt" "../actions.rkt" "../print/tree.rkt" "../print/css.rkt")
 
 (define (run-file fname pname #:debug [debug '()] #:truncate truncate)

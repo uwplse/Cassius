@@ -5,7 +5,6 @@
 (require "../input.rkt")
 (require "../frontend.rkt")
 (require "../dom.rkt")
-(require "../modify-dom.rkt")
 (require "../print/tree.rkt")
 (require "../print/css.rkt")
 

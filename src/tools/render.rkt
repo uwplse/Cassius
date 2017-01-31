@@ -2,11 +2,26 @@
 
 (require "../common.rkt")
 (require "../input.rkt")
+(require "../dom.rkt")
 (require "../frontend.rkt")
-(require "../modify-dom.rkt")
 (require "../print/tree.rkt")
 
 (provide run-file)
+
+(define (dom-strip-positions d)
+  (match-define (dom name ctx elts boxes) d)
+  (define boxes*
+    (let loop ([tree boxes])
+      (match-define (list (list type cmds ...) children ...) tree)
+      (cons
+       (match type
+         [(or 'BLOCK 'INLINE)
+             (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y :w :h)) car) (attributes->dict cmds))))]
+         ['TEXT
+          (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y)) car) (attributes->dict cmds))))]
+         [_ (cons type cmds)])
+       (map loop children))))
+  (dom name ctx elts boxes*))
 
 (define num-holes 5)
 
