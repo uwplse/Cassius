@@ -8,16 +8,12 @@ Opens a page in Firefox, causes it to execute get_bench.js, and saves the result
 """
 
 from selenium import webdriver
+import sys
 import warnings
-import threading
-import os, sys, shutil
-import urlparse, urllib
+import urlparse
 import collections
 import argparse
 
-PORT=8000
-PATH="."
-SCREENSHOT=False
 SCRIPT=open("get_bench.js").read()
 
 def make_browser():
@@ -26,30 +22,7 @@ def make_browser():
     profile.set_preference("security.mixed_content.block_display_content", False)
     return webdriver.Firefox(firefox_profile=profile)
 
-class CassiusInput():
-    def __init__(self, fd, urls, name):
-        self.fd = fd
-        self.fd.write(""";; python get_bench.py --name {} {}
-""".format(name, " ".join("'{}'".format(url) for url in urls)))
-        self.fd.flush()
-        self.ids = []
-
-    def write(self, id, text):
-        self.fd.write(text + "\n\n")
-        self.fd.flush()
-        self.ids.append(id)
-
-    def close(self):
-        self.fd.flush()
-
-def get_bench_output(browser, letter, url, file):
-    browser.execute_script("window.LETTER = arguments[0];", letter)
-    browser.execute_script(SCRIPT)
-    elt = browser.find_element_by_id("-x-cassius-output-block");
-    text = elt.text.encode("utf8")
-    file.write("doc-" + letter, ";; From {}\n\n{}".format(url, text))
-
-def main(urls, name=None):
+def main(urls, name=None, screenshot=False):
     browser = make_browser()
 
     try:
@@ -68,28 +41,28 @@ def main(urls, name=None):
     
         for (netloc, urls) in sorted(site_to_pages.items()):
             fname = "bench/{}.rkt".format(netloc)
-            with open(fname, "wb") as f:
-                fi = CassiusInput(f, urls, netloc)
+            with open(fname, "wb") as fi:
+                print "Saving layout to {}:".format(fname),
+                sys.stdout.flush()
                 for i, url in enumerate(urls):
-                    letter = str(i+1).rjust(len(str(len(urls))), "0")
-                    iname = "bench/{}-{}.png".format(netloc, letter)
+                    id = str(i+1).rjust(len(str(len(urls))), "0")
                     try:
                         browser.get(url)
-                        if SCREENSHOT:
+                        if screenshot:
+                            iname = "bench/{}-{}.png".format(netloc, id)
                             print "Saving screenshot to", iname
                             browser.save_screenshot(iname)
-                        print "Saving layout to {}".format(fname)
-                        get_bench_output(browser, letter, url, fi)
+                        browser.execute_script("window.LETTER = arguments[0];", id)
+                        browser.execute_script(SCRIPT)
+                        elt = browser.find_element_by_id("-x-cassius-output-block");
+                        text = elt.text.encode("utf8")
+                        fi.write(";; From {}\n\n{}\n\n".format(url, text))
+                        print "{}".format(id),
+                        sys.stdout.flush()
                     except:
+                        import traceback
+                        traceback.print_exc()
                         continue
-                    scheme, _, _, _, _, _ = urlparse.urlparse(url)
-                    #if scheme == "http":
-                    #    src = urllib.urlopen(url)
-                    #    fname2 = "bench/{}-{}.html".format(netloc, letter)
-                    #    print "Saving source to {}".format(fname2)
-                    #    with open(fname2, "wb") as f2:
-                    #        shutil.copyfileobj(src, f2)
-                fi.close()
     finally:
         browser.quit()
 
@@ -100,6 +73,4 @@ if __name__ == "__main__":
     p.add_argument("--screenshot", dest="screenshot", default=False, action="store_true", help="File name under bench/.")
     args = p.parse_args()
     
-    SCREENSHOT = args.screenshot
-
-    main(args.urls, name=args.name)
+    main(args.urls, name=args.name, screenshot=args.screenshot)

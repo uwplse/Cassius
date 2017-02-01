@@ -103,7 +103,7 @@ function cs(elt) {
     if (!elt || elt.nodeType !== document.ELEMENT_NODE) console.trace();
     return window.getComputedStyle(elt);
 }
-function is_text(elt) {return elt.nodeType == document.TEXT_NODE;}
+function is_text(elt) {return elt.nodeType == document.TEXT_NODE || elt.nodeType == document.CDATA_SECTION_NODE;}
 function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt).display == "inline";}
 function is_block(elt) {return cs(elt).display == "block";}
