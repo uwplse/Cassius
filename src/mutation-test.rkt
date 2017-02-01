@@ -36,14 +36,14 @@
                  (map loop (cdr tree)))]
           [else (cons (car tree) (map loop (cdr tree)))]))))
 
-
 (define (run-mutation-tests file #:debug [debug '()] #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
   (define probs (call-with-input-file file parse-file))
 
   (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))] #:when (valid? prob)
              [_ (in-range repeat)])
     (eprintf "~a\t~a\t" file pname)
-    (define-values (res runtime) (run-problem prob #:debug debug))
+    (define prob* (dict-update prob ':documents (curry map dom-not-something)))
+    (define-values (res runtime) (run-problem prob* #:debug debug))
     (define supported? (null? (set-subtract (dict-ref prob ':features) supported-features)))
 
     (define status
