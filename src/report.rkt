@@ -39,64 +39,56 @@
 (define (section<? s1 s2)
   (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
-(struct result (file problem test section status description features output time url))
+(struct result (file problem test section status description features time url))
 
-(define (run-file-tests file #:debug [debug '()] #:fast [fast? #f] #:index [index (hash)] #:feature [feature #f] #:old-json [old-json #f])
+(define (run-file-tests file #:debug [debug '()] #:valid [valid? (const true)] #:index [index (hash)])
   (define probs (call-with-input-file file parse-file))
-  (define passes-filter?
-    (if old-json
-         (curry set-member?
-                (for/list ([rec (call-with-input-file old-json read-json)]
-                           #:unless (equal? (dict-ref rec 'status) "success"))
-                  (dict-ref rec 'test)))
-        (const true)))
 
-  (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))]
-        #:when (or (not fast?) (subset? (dict-ref prob ':features) supported-features))
-        #:when (or (not feature) (set-member? (dict-ref prob ':features) feature))
-        #:when (let-values ([(_1 uname _2) (split-path (car (dict-ref prob ':url)))])
-                 (passes-filter? (~a uname))))
+  (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))] #:when (valid? prob))
     (eprintf "~a\t~a\t" file pname)
-    (define-values (ubase uname udir?) (split-path (car (dict-ref prob ':url))))
 
-    (define out (open-output-string))
     (define eng
       (engine (λ (_)
-                (parameterize ([current-error-port out] [current-output-port out])
+                (parameterize ([current-error-port (open-output-string)]
+                               [current-output-port (open-output-string)])
                   (with-handlers
                       ([exn:break? (λ (e) 'break)]
                        [exn:fail? (λ (e) (list 'error e))])
                     (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug))))))
+
     (define t (current-inexact-milliseconds))
-    (define res
-      (with-handlers ([exn:fail? (λ (e) 'error)])
-        (if (engine-run 60000 eng) (engine-result eng) 'timeout))) ; 1m max
+    (define res (if (engine-run 60000 eng) (engine-result eng) 'timeout)) ; 1m max
     (define runtime (- (current-inexact-milliseconds) t))
     (engine-kill eng)
+
     (define status
       (match res
         ['timeout 'timeout]
         [(list 'error e)
          (newline)
          ((error-display-handler) (exn-message e) e)
+         (newline)
          'error]
         ['break 'break]
         [(success stylesheet trees) 'success]
         [(failure stylesheet trees)
          (if (null? (set-subtract (dict-ref prob ':features) supported-features)) 'fail 'unsupported)]))
     (eprintf "~a\n" status)
+
+    (define uname (file-name-stem (car (dict-ref prob ':url))))
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features) (get-output-string out) runtime
+            status (car (dict-ref prob ':title)) (dict-ref prob ':features) runtime
             (car (dict-ref prob ':url)))))
 
 (define (file-name-stem fn)
-  (first (string-split (last (string-split fn "/")) ".")))
+  (define-values (_1 uname _2) (split-path fn))
+  uname)
 
 (define (call-with-output-to outname #:extension [extension #f] #:exists [exists 'error] f . args)
   (if outname
       (call-with-output-file (if extension (format "~a.~a" outname extension) outname) #:exists exists
         (apply curry f args))
-      (apply f args (current-output-port))))
+      (apply f (append args (list (current-output-port))))))
 
 (define (row #:cell [cell 'td] #:hide [hide #f] #:class [class #f] . args)
   `(tr (,@(if class `((class ,class)) '()))
@@ -112,7 +104,7 @@
    outname #:extension "json" #:exists 'replace
    write-json
    (for/list ([res results])
-     (match-define (result file problem test section status description features output time url) res)
+     (match-define (result file problem test section status description features time url) res)
      (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time)))))
 
   (call-with-output-to
@@ -154,7 +146,7 @@
            `(tbody
              (tr () (th ((colspan "4")) ,(result-file (car group-results))))
              ,@(for/list ([res group-results] #:when (not (member (result-status res) '(success unsupported))))
-                 (match-define (result file problem test section status description features output time url) res)
+                 (match-define (result file problem test section status description features time url) res)
                  (row #:class (~a status) (~a problem) `(a ((href ,url)) ,(~a test)) description
                       (match status
                         ['success "✔"] ['fail "✘"] ['timeout "🕡"]
@@ -163,42 +155,45 @@
                          `(span ((title ,(string-join (map ~a probfeats) ", "))) "☹")]
                         ['error "!"])))))))))))
 
+(define-syntax-rule (and! var function)
+  (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
+
 (module+ main
   (define debug '())
   (define out-file #f)
   (define old-json #f)
   (define index (hash))
-  (define fast #f)
-  (define feature #f)
+  (define valid? (const true))
 
   (command-line
    #:program "cassius"
    #:multi
    [("-d" "--debug") type "Turn on debug information"
     (set! debug (cons (string->symbol type) debug))]
-   [("-f" "--feature") name "Toggle a feature; use -name and +name to unset or set"
-    (cond
-      [(equal? (substring name 0 1) "+") (flags (cons (string->symbol (substring name 1)) (flags)))]
-      [(equal? (substring name 0 1) "-") (flags (remove (string->symbol (substring name 1)) (flags)))]
-      [else
-       (define name* (string->symbol name))
-       (flags (if (memq name* (flags)) (remove name* (flags)) (cons name* (flags))))])]
+   [("+x") name "Set an option" (flags (cons (string->symbol name) (flags)))]
+   [("-x") name "Unset an option" (flags (cons (string->symbol name) (flags)))]
    #:once-each
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
-   [("--fast") "Skip tests with unsupported features"
-    (set! fast #t)]
    [("--index") sname "File name with section information for tests"
     (set!
      index
      (for*/hash ([sec (call-with-input-file sname read-json)] [(k v) (in-hash sec)])
        (values (normalize-index k v) v)))]
-   [("--rerun") json "Old JSON file of failures to rerun"
-    (set! old-json json)]
-   [("--test") fname "Test a particular feature"
-    (set! feature (string->symbol fname))]
+   [("--supported") "Skip tests with unsupported features"
+    (and! valid? (λ (p) (subset? (dict-ref p ':features) supported-features)))]
+   [("--failed") json "Run only tests that failed in given JSON file"
+    (define failed-tests
+      (for/list ([rec (call-with-input-file json read-json)]
+                 #:unless (equal? (dict-ref rec 'status) "success"))
+        (dict-ref rec 'test)))
+    (and! valid?
+          (λ (p) (set-member? failed-tests (~a (file-name-stem (car (dict-ref p ':url)))))))]
+   [("--feature") fname "Test a particular feature"
+    (and! valid? (λ (p) (set-member? (dict-ref p ':features) (string->symbol fname))))]
    #:args fnames
+   (pretty-print out-file)
    (write-report
     #:output out-file
     (for/append ([file fnames])
-      (run-file-tests file #:debug debug #:fast fast #:index index #:feature feature #:old-json old-json)))))
+      (run-file-tests file #:debug debug #:valid valid? #:index index)))))
