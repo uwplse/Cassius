@@ -4,6 +4,8 @@
 (require json (only-in xml write-xexpr))
 (require "common.rkt" "input.rkt" "frontend.rkt")
 
+(provide run-problem write-report normalize-index normalize-uname section<? file-name-stem and! (struct-out result))
+
 (define (normalize-index name section)
   (if (string=? (last (string-split (~a name) "-")) (substring section 1))
       (string-join (drop-right (string-split (~a name) "-") 1) "-")
@@ -39,40 +41,43 @@
 (define (section<? s1 s2)
   (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
+(define (run-problem prob #:debug debug)
+  (define eng
+    (engine (λ (_)
+              (parameterize ([current-error-port (open-output-string)]
+                             [current-output-port (open-output-string)])
+                (with-handlers
+                    ([exn:break? (λ (e) 'break)]
+                     [exn:fail? (λ (e)
+                                  (newline)
+                                  ((error-display-handler) (exn-message e) e)
+                                  (newline)
+                                  (list 'error e))])
+                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug))))))
+
+  (define t (current-inexact-milliseconds))
+  (define res (if (engine-run 60000 eng) (engine-result eng) 'timeout)) ; 1m max
+  (define runtime (- (current-inexact-milliseconds) t))
+  (engine-kill eng)
+  (values res runtime))
+
 (struct result (file problem test section status description features time url))
 
-(define (run-file-tests file #:debug [debug '()] #:valid [valid? (const true)] #:index [index (hash)])
+(define (run-regression-tests file #:debug [debug '()] #:valid [valid? (const true)] #:index [index (hash)])
   (define probs (call-with-input-file file parse-file))
 
   (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))] #:when (valid? prob))
     (eprintf "~a\t~a\t" file pname)
-
-    (define eng
-      (engine (λ (_)
-                (parameterize ([current-error-port (open-output-string)]
-                               [current-output-port (open-output-string)])
-                  (with-handlers
-                      ([exn:break? (λ (e) 'break)]
-                       [exn:fail? (λ (e) (list 'error e))])
-                    (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug))))))
-
-    (define t (current-inexact-milliseconds))
-    (define res (if (engine-run 60000 eng) (engine-result eng) 'timeout)) ; 1m max
-    (define runtime (- (current-inexact-milliseconds) t))
-    (engine-kill eng)
+    (define-values (res runtime) (run-problem prob #:debug debug))
+    (define supported? (null? (set-subtract (dict-ref prob ':features) supported-features)))
 
     (define status
       (match res
         ['timeout 'timeout]
-        [(list 'error e)
-         (newline)
-         ((error-display-handler) (exn-message e) e)
-         (newline)
-         'error]
+        [(list 'error e) 'error]
         ['break 'break]
         [(success stylesheet trees) 'success]
-        [(failure stylesheet trees)
-         (if (null? (set-subtract (dict-ref prob ':features) supported-features)) 'fail 'unsupported)]))
+        [(failure stylesheet trees) (if supported? 'fail 'unsupported)]))
     (eprintf "~a\n" status)
 
     (define uname (file-name-stem (car (dict-ref prob ':url))))
@@ -161,12 +166,11 @@
 (module+ main
   (define debug '())
   (define out-file #f)
-  (define old-json #f)
   (define index (hash))
   (define valid? (const true))
 
   (command-line
-   #:program "cassius"
+   #:program "report"
    #:multi
    [("-d" "--debug") type "Turn on debug information"
     (set! debug (cons (string->symbol type) debug))]
@@ -196,4 +200,4 @@
    (write-report
     #:output out-file
     (for/append ([file fnames])
-      (run-file-tests file #:debug debug #:valid valid? #:index index)))))
+      (run-regression-tests file #:debug debug #:valid valid? #:index index)))))
