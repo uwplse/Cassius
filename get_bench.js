@@ -661,7 +661,7 @@ function page2cassius(name) {
 function cassius(name) {
     var pre = document.createElement("pre");
     pre.id = "-x-cassius-output-block";
-    pre.innerHTML = page2cassius(name);
+    pre.innerText = page2cassius(name);
     with (pre.style) {
         background = "white", color = "black";
         position = "absolute", top = "0", left = "0";
