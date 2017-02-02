@@ -1,4 +1,5 @@
 #lang racket
+(require (for-syntax syntax/parse))
 
 (provide
  reap for/reap for*/reap for/append
@@ -10,7 +11,7 @@
  assert make-log
  boolean<? lex<? output<?
  define-by-match
- list-intersect)
+ list-intersect multi-command-line)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -153,3 +154,31 @@
   (-> (list/c any/c) (list/c any/c) (list/c any/c))
   "Intersect two lists, maintaining the order of the first list."
   (filter (curry set-member? (apply set l1)) l2))
+
+(define-syntax (multi-command-line stx)
+  (syntax-parse stx
+   [(_ #:program big-name args ... #:subcommands [name:str subargs ...] ...)
+    #'(let ([true-name big-name])
+        (command-line
+         #:program true-name
+         args ...
+         #:args (type . rest)
+         (match type
+           [name
+            (multi-command-line
+             #:program (format "~a ~a" true-name name)
+             #:argv rest
+             args ...
+             subargs ...)] ...)))]
+   [(_ args ... #:subcommands [name:str subargs ...] ...)
+    #'(command-line
+       args ...
+       #:args (type . rest)
+       (match type
+         [name
+          (multi-command-line
+           #:argv rest
+           args ...
+           subargs ...)] ...))]
+   [(_ args ...)
+    #'(command-line args ...)]))

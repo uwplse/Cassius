@@ -225,7 +225,7 @@
   (define valid? (const true))
   (define repeat 1)
 
-  (command-line
+  (multi-command-line
    #:program "report"
    #:multi
    [("-d" "--debug") type "Turn on debug information"
@@ -251,11 +251,19 @@
           (λ (p) (set-member? failed-tests (~a (file-name-stem (car (dict-ref p ':url)))))))]
    [("--feature") fname "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features) (string->symbol fname))))]
-   [("-n" "--repeat") n "How many random bugs try per test"
-    (set! repeat (string->number n))]
-   #:args (type . fnames)
-   (define test (match type ["regression" run-regression-tests] ["mutation" run-mutation-tests]))
-   (write-report
-    #:output out-file
-    (for/append ([file fnames])
-      (test file #:debug debug #:valid valid? #:index index #:repeat repeat)))))
+   #:subcommands
+   ["regression"
+    #:args fnames
+    (write-report
+     #:output out-file
+     (for/append ([file fnames])
+       (run-regression-tests file #:debug debug #:valid valid? #:index index #:repeat repeat)))]
+   ["mutation"
+    #:once-each
+    [("-n" "--repeat") n "How many random bugs to try per test"
+     (set! repeat (string->number n))]
+    #:args fnames
+    (write-report
+     #:output out-file
+     (for/append ([file fnames])
+       (run-mutation-tests file #:debug debug #:valid valid? #:index index #:repeat repeat)))]))
