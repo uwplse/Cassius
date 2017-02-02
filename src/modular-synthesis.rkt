@@ -35,8 +35,9 @@
     (define pN (length prefix))
     (or
      (for/first ([entry spec] #:when (and (< (car entry) pN) (not (= (list-ref prefix (car entry)) (cdr entry)))))
-       `(bwd ,entry))
+       `(bwd . ,entry))
      `(fwd
+       .
        ,(append
          prefix
          (for/list ([i (range pN (+ pN 4))])
