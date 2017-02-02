@@ -218,6 +218,18 @@
 (define-syntax-rule (and! var function)
   (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
 
+(define (read-index iname)
+  (for*/hash ([sec (call-with-input-file iname read-json)] [(k v) (in-hash sec)])
+    (values (normalize-index k v) v)))
+
+(define (read-failed-tests jname)
+  (define failed-tests
+    (for/list ([rec (call-with-input-file jname read-json)]
+               #:unless (equal? (dict-ref rec 'status) "success"))
+      (dict-ref rec 'test)))
+
+  (λ (p) (set-member? failed-tests (~a (file-name-stem (car (dict-ref p ':url)))))))
+
 (module+ main
   (define debug '())
   (define out-file #f)
@@ -227,37 +239,34 @@
 
   (multi-command-line
    #:program "report"
+
    #:multi
    [("-d" "--debug") type "Turn on debug information"
     (set! debug (cons (string->symbol type) debug))]
    [("+x") name "Set an option" (flags (cons (string->symbol name) (flags)))]
    [("-x") name "Unset an option" (flags (cons (string->symbol name) (flags)))]
+
    #:once-each
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
-   [("--index") sname "File name with section information for tests"
-    (set!
-     index
-     (for*/hash ([sec (call-with-input-file sname read-json)] [(k v) (in-hash sec)])
-       (values (normalize-index k v) v)))]
+   [("--index") index-file "File name with section information for tests"
+    (set! index (read-index index-file))]
    [("--supported") "Skip tests with unsupported features"
     (and! valid? (λ (p) (subset? (dict-ref p ':features) supported-features)))]
-   [("--failed") json "Run only tests that failed in given JSON file"
-    (define failed-tests
-      (for/list ([rec (call-with-input-file json read-json)]
-                 #:unless (equal? (dict-ref rec 'status) "success"))
-        (dict-ref rec 'test)))
-    (and! valid?
-          (λ (p) (set-member? failed-tests (~a (file-name-stem (car (dict-ref p ':url)))))))]
-   [("--feature") fname "Test a particular feature"
-    (and! valid? (λ (p) (set-member? (dict-ref p ':features) (string->symbol fname))))]
+   [("--failed") json-file "Run only tests that failed in given JSON file"
+    (and! valid? (read-failed-tests json-file))]
+   [("--feature") feature "Test a particular feature"
+    (and! valid? (λ (p) (set-member? (dict-ref p ':features) (string->symbol feature))))]
+
    #:subcommands
+
    ["regression"
     #:args fnames
     (write-report
      #:output out-file
      (for/append ([file fnames])
        (run-regression-tests file #:debug debug #:valid valid? #:index index #:repeat repeat)))]
+
    ["mutation"
     #:once-each
     [("-n" "--repeat") n "How many random bugs to try per test"
