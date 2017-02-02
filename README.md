@@ -18,7 +18,7 @@ of Z3. (Make sure to pass through all arguments.)
 
 Test out your Cassius installation by running, from the top-level directory,
 
-    ./cassius accept bench/introex.rkt verify
+    racket src/run.rkt accept bench/introex.rkt verify
 
 This should churn for a few seconds and say, "Accepted".
 
@@ -27,7 +27,7 @@ Using Cassius
 
 Run Cassius with
 
-    ./cassius [tool] [file] [instance]
+    racket src/run.rkt [tool] [file] [instance]
 
 The `./cassius` script runs Cassius. It takes four arguments: the tool
 to run, the file to run on, and the example in that file. 
@@ -42,7 +42,7 @@ The currently-supported tools are:
 
 For example, to run the the `smt2` tool, run:
 
-    ./cassius smt2 bench/introex.rkt sketch > /tmp/out.z3
+    racket src/run.rkt smt2 bench/introex.rkt sketch > /tmp/out.z3
 
 This puts a file with all the generated constraints into
 `/tmp/out.z3`.
@@ -67,7 +67,7 @@ Cassius currently supports a fragment of CSS 2.1:
 + Floats
 + Percentage margins, widths, or padding
 + Borders
-+ Some positioning
++ Positioning
 + A few miscellaneous properties, like `box-sizing`.
 
 Cassius development is tracked
