@@ -1,5 +1,5 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt"
+(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
          "selectors.rkt" "match.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 (module+ test (require rackunit))
@@ -284,16 +284,13 @@
   (emit `(assert (! (element-info ,(dump-elt elt))
                     :named ,(sformat "info/~a" (name 'elt elt))))))
 
-(define (collect-tags-ids-classes doms)
-  (reap [save-tag save-id save-class]
-    (for* ([dom doms] [elt (in-elements dom)])
-      (when (node-get elt ':id) (save-id (dump-id (node-get elt ':id))))
-      (save-tag (dump-tag (node-type elt)))
-      (when (node-get* elt ':class)
-        (for-each (compose save-class dump-class) (node-get* elt ':class))))))
-
 (define (all-constraints matcher doms)
-  (define-values (tags ids classes) (collect-tags-ids-classes doms))
+  (define-values (tags ids)
+    (reap [tag! id!]
+          (for ([dom doms])
+            (let-values ([(tags classes ids) (all-tags-classes-ids (dom-elements dom))])
+              (for-each (compose tag! dump-tag) tags)
+              (for-each (compose id! dump-id) ids)))))
   (define element-names (for*/list ([dom doms] [elt (in-elements dom)]) (name 'elt elt)))
   (define box-names (for*/list ([dom doms] [elt (in-boxes dom)]) (name 'box elt)))
 

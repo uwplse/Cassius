@@ -1,7 +1,7 @@
 #lang racket
 (require "common.rkt" "dom.rkt" "spec/css-properties.rkt" "registry.rkt")
 
-(provide dump-tag extract-tag dump-id extract-id dump-class
+(provide dump-tag extract-tag dump-id extract-id
          dump-elt dump-box extract-style
          dump-value extract-value dump-selector extract-selector)
 
@@ -22,9 +22,6 @@
 (define (extract-id id)
   (and (not (equal? id 'no-id)) (second (split-symbol id))))
 
-(define (dump-class class)
-  (sformat "class/~a" class))
-
 (define (dump-elt elt)
   (if elt
       (sformat "~a-elt" (name 'elt elt))
@@ -39,7 +36,8 @@
   (match-define (list 'style rec ...) style-expr)
   (for/list ([(prop type default) (in-css-properties)] [value rec]
              ;; TODO Hack on text-align
-             #:unless (or (and (equal? prop 'text-align) (equal? value 'text-align/left)) (value=? type value (dump-value prop default))))
+             #:unless (or (and (equal? prop 'text-align) (equal? value 'text-align/left))
+                          (value=? type value (dump-value prop default))))
     `[,prop ,(extract-value value)]))
 
 (define (dump-value type value)
