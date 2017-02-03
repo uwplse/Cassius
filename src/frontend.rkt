@@ -1,5 +1,5 @@
 #lang racket
-(require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt"
+(require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt" "match.rkt")
 (provide constraints solve synthesize (struct-out success) (struct-out failure))
 
@@ -26,18 +26,6 @@
        (define cls* (if (equal? cls 'none) #f cls))
        (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
        `(not (= (,prop ,(by-name 'elt elt1)) ,value))])))
-
-(define cassius-check-sat
-  '(check-sat-using
-    (then
-     (! propagate-values
-        :push_ite_arith true
-        :algebraic_number_evaluator false
-        :bit2bool false
-        :local_ctx true
-        :hoist_mul true
-        :flat false)
-     nnf occf smt)))
 
 (define (constraints sheets docs [test #f] #:debug [debug? #f])
   (define log-phase (make-log))

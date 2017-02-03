@@ -1,6 +1,6 @@
 #lang racket
 (require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
-         "selectors.rkt" "match.rkt"
+         "selectors.rkt" "match.rkt" "solver.rkt"
          "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
@@ -8,17 +8,6 @@
 
 
 
-(define cassius-check-sat
-  '(check-sat-using
-    (then
-     (! propagate-values
-        :push_ite_arith true
-        :algebraic_number_evaluator false
-        :bit2bool false
-        :local_ctx true
-        :hoist_mul true
-        :flat false)
-     nnf occf smt)))
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
