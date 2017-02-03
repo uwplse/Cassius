@@ -1,8 +1,7 @@
 #lang racket
 
 (require "common.rkt")
-
-(provide smt-cond asserts smt-let define-constraints smt-replace smt-replace-terms smt-and smt-or)
+(provide define-constraints smt-cond smt-let smt-and smt-or smt-replace smt-replace-terms)
 
 (define-syntax smt-cond
   (syntax-rules (else)
@@ -13,9 +12,6 @@
 
 (define-syntax-rule (define-constraints name body ...)
   (define name `(body ...)))
-
-(define-syntax-rule (asserts constraints ...)
-  (list `(assert (and constraints ...))))
 
 (define-syntax-rule (smt-let bindings constraints ...)
   `(let bindings (and constraints ...)))
@@ -37,20 +33,6 @@
         ['() 'false]
         [(list x) x]
         [xs (cons 'or xs)])))
-
-#|
-(define (smt-replace expr bindings)
-  (match expr
-    [(? (curry dict-has-key? bindings))
-     (dict-ref bindings expr)]
-    [(list (app list (? (curry dict-has-key? bindings) f)) args ...)
-     (apply (dict-ref bindings f) args)]
-    [(list f vars ...) (cons f (map (curryr smt-replace bindings) vars))]
-    [`(let ((,vars ,vals) ...) ,body)
-     `(let (,@(map list vars (map (curryr smt-replace bindings) vals)))
-        ,(smt-replace body (dict-remove* bindings vars)))]
-    [_ expr]))
-|#
 
 (define (smt-replace-terms expr bindings)
   (match expr
