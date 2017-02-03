@@ -6,6 +6,7 @@
 (define css-types-hash (make-hash))
 (define css-property-hash (make-hash))
 
+;; This weird list is the one necessary to pass the CSSWG tests.
 (define *%* (make-parameter '(0 1 1.5 2 5 10 15 18 20 25 29 50 62 66 80 100 101 125 200)))
 
 (define (css-constructor name items)
@@ -15,12 +16,6 @@
       [(list (? symbol? constructor) (? symbol? type))
        (list (sformat "~a/~a" (slower name) constructor)
              (list (sformat "~a.~a" (slower name) constructor) type))])))
-
-(define (css-expand name value)
-  (match value
-    [(? symbol?) (sformat "~a/~a" (slower name) value)]
-    [(list (? symbol? constructor) value)
-     (list (sformat "~a/~a" (slower name) constructor) value)]))
 
 (define-syntax-rule (define-css-type (name decl ...) [prop default] ...)
   (begin
