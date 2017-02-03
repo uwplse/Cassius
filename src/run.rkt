@@ -38,8 +38,7 @@
        [exn:fail? (λ (e) (list 'error e))])
     (solve sheets documents #:debug debug)))
 
-(define (do-accept fname pname #:debug [debug '()])
-  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+(define (do-accept problem #:debug [debug '()])
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
     [(success stylesheet trees)
      (eprintf "Accepted!\n")]
@@ -52,8 +51,7 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-debug fname pname #:debug [debug '()])
-  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+(define (do-debug problem #:debug [debug '()])
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
     [(success stylesheet trees)
      (eprintf "Different renderings possible.\n")
@@ -65,8 +63,7 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-dump fname pname #:screenshot [screenshot #f])
-  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+(define (do-dump problem #:screenshot [screenshot #f])
   (match-define (list (dom _ _ _ tree)) (dict-ref problem ':documents))
   (define w (node-get tree ':w))
   (write-xexpr
@@ -90,8 +87,7 @@
                                                   (/ (* (->number (cadr (member attr attrs))) w) 100)))))))
             (append-map loop (cdr tree)))]))))))
 
-(define (do-export fname pname)
-  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+(define (do-export problem)
   (display
    (elements->string
     (parse-tree (dom-elements (car (dict-ref problem ':documents))))
@@ -99,8 +95,7 @@
     #:scripts (dict-ref problem ':scripts '())
     #:title (dict-ref problem ':title #f))))
 
-(define (do-render fname pname #:debug [debug '()] #:truncate truncate)
-  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+(define (do-render problem #:debug [debug '()] #:truncate truncate)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
   (match (wrapped-solve (dict-ref problem ':sheets) documents #:debug debug)
     [(success stylesheet trees)
@@ -113,8 +108,7 @@
     ['break
      (eprintf "Rendering terminated.\n")]))
 
-(define (do-sketch fname pname #:debug [debug '()])
-  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+(define (do-sketch problem #:debug [debug '()])
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
     [(success stylesheet trees)
      (displayln (stylesheet->string stylesheet))]
@@ -125,12 +119,10 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-smt2 fname pname)
-  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+(define (do-smt2 problem)
   (displayln (smt->string (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents)))))
 
-(define (do-verify fname pname #:debug debug)
-  (define problem (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+(define (do-verify problem #:debug debug)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
     [(success stylesheet trees)
      (eprintf "Counterexample found!\n")
@@ -141,6 +133,9 @@
      ((error-display-handler) (exn-message e) e)]
     ['break
      (eprintf "Terminated.\n")]))
+
+(define (get-problem fname pname)
+  (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
 (module+ main
   (define debug '())
@@ -158,28 +153,28 @@
    #:subcommands
    ["accept"
     #:args (fname problem)
-    (do-accept fname problem #:debug debug)]
+    (do-accept (get-problem fname problem) #:debug debug)]
    ["debug"
     #:args (fname problem)
-    (do-debug fname problem #:debug debug)]
+    (do-debug (get-problem fname problem) #:debug debug)]
    ["dump"
     #:once-each
     [("--screenshot") sname "File with a web page screenshot"
      (set! screenshot sname)]
     #:args (fname problem)
-    (do-debug fname problem #:debug debug)]
+    (do-debug (get-problem fname problem) #:debug debug)]
    ["export"
     #:args (fname problem)
-    (do-export fname problem)]
+    (do-export (get-problem fname problem))]
    ["render"
     #:args (fname problem)
-    (do-render fname problem #:debug debug)]
+    (do-render (get-problem fname problem) #:debug debug)]
    ["sketch"
     #:args (fname problem)
-    (do-sketch fname problem #:debug debug)]
+    (do-sketch (get-problem fname problem) #:debug debug)]
    ["smt2"
     #:args (fname problem)
-    (do-smt2 fname problem)]
+    (do-smt2 (get-problem fname problem))]
    ["verify"
     #:args (fname problem)
-    (do-verify fname problem #:debug debug)]))
+    (do-verify (get-problem fname problem) #:debug debug)]))
