@@ -1,8 +1,7 @@
 #lang racket
 
 (require racket/runtime-path racket/path)
-(require "common.rkt")
-(require "z3o.rkt")
+(require "common.rkt" "z3o.rkt" "smt.rkt")
 
 (provide make-z3 z3-process z3-send z3-check-sat z3-kill z3-solve z3-prepare z3-namelines z3-clean z3-try-solve)
 
@@ -98,16 +97,6 @@
   (z3-kill z3)
   out)
 
-(define (replace-terms expr bindings)
-  (match expr
-    [(? (curry dict-has-key? bindings))
-     (dict-ref bindings expr)]
-    [`(let ((,vars ,vals) ...) ,body)
-     `(let (,@(map list vars (map (curryr replace-terms bindings) vals)))
-        ,(replace-terms body (dict-remove* bindings vars)))]
-    [(? list?) (map (curryr replace-terms bindings) expr)]
-    [_ expr]))
-
 (define (de-z3ify v)
   (match v
     [(== 'true) #t]
@@ -115,7 +104,7 @@
     [`(- ,n) (- (de-z3ify n))]
     [`(/ ,n ,d) (/ (de-z3ify n) (de-z3ify d))]
     [`(let ((,names ,values) ...) ,body)
-     (de-z3ify (replace-terms body (map cons names values)))]
+     (de-z3ify (smt-replace-terms body (map cons names values)))]
     [(list args ...) (map de-z3ify args)]
     [else v]))
 
