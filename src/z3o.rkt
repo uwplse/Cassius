@@ -488,6 +488,14 @@
 
   (define (simpl expr)
     (match expr
+      [`(ite ,a ,b ,c)
+       (match (simpl1 (list 'ite (simpl a) b c))
+         [`(ite ,a ,b ,c) (simpl1 `(ite ,a ,(simpl b) ,(simpl c)))]
+         [expr (simpl expr)])]
+      [`(=> ,a ,b)
+       (match (simpl1 (list '=> (simpl a) b))
+         [`(=> ,a ,b) (simpl1 `(=> ,a ,(simpl b)))]
+         [expr (simpl expr)])]
       [(? list?) (simpl1 (map simpl expr))]
       [_ expr]))
 
