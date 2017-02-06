@@ -14,7 +14,7 @@
    '(float textalign box-in-flow)
    '(previous next parent fchild lchild)
    '(real-pbox real-fbox real-lbox real-vbox real-nbox)
-   '(pbox pbbox vbox fbox lbox nbox vbox fltbox)
+   '(pflow pbbox fflow lflow nflow vflow fltbox)
    ))
 
 (define to-expand-2

@@ -10,7 +10,7 @@
   (define r `(computed-style (get/elt (element ,b))))
   `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
-        (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) (,wrt (pbox ,b)))))
+        (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) (,wrt (pflow ,b)))))
 
 (define-constraints layout-definitions
 
@@ -79,14 +79,14 @@
   (define-fun top-margins-collapse-parent ((b Box)) Bool
     (and
      ;; Margins of the root element's box do not collapse.
-     (not (is-box/root (type (pbox (pbox b)))))
+     (not (is-box/root (type (pflow (pflow b)))))
      ;; Margins between a floated box and any other box do not collapse
      ;; (not even between a float and its in-flow children).
-     (is-float/none (float (pbox b)))
+     (is-float/none (float (pflow b)))
      ;; The top margin of an in-flow block element collapses with
      ;; its first in-flow block-level child's top margin if the element
      ;; has no top border, no top padding, and the child has no clearance.
-     (= (pt (pbox b)) 0.0) (= (bt (pbox b)) 0.0)))
+     (= (pt (pflow b)) 0.0) (= (bt (pflow b)) 0.0)))
 
   (define-fun is-root-elt ((e Element)) Bool
     (is-nil-elt (parent-name e)))
@@ -109,14 +109,14 @@
 
   (define-fun box-collapsed-through ((b Box)) Bool
     (and (= (box-height b) 0.0)
-         (or (is-no-box (lbox b)) (= (box-height (lbox b)) 0.0))))
+         (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
 
   (define-fun min-width-limit ((val Real) (e Element)) Real
     ,(smt-cond
       [(is-min-width/px (style.min-width (computed-style e)))
        (max val (min-width.px (style.min-width (computed-style e))))]
       [else ;; %s
-       (max val (%of (min-width.% (style.min-width (computed-style e))) (w (pbox (get/box (flow-box e))))))]))
+       (max val (%of (min-width.% (style.min-width (computed-style e))) (w (pflow (get/box (flow-box e))))))]))
     ;(ite (is-min-width/px (style.min-width (computed-style e)))
     ;    (max val (min-width.px (style.min-width (computed-style e))))
     ;    ;; Leaving here for future percentage support
@@ -127,7 +127,7 @@
       [(is-max-width/px (style.max-width (computed-style e)))
        (min val (max-width.px (style.max-width (computed-style e))))]
       [(is-max-width/% (style.max-width (computed-style e)))
-       (min val (%of (max-width.% (style.max-width (computed-style e))) (w (pbox (get/box (flow-box e))))))]
+       (min val (%of (max-width.% (style.max-width (computed-style e))) (w (pflow (get/box (flow-box e))))))]
       [else
        val]))
     ;(ite (is-max-width/px (style.max-width (computed-style e)))
@@ -140,7 +140,7 @@
       [(is-min-height/px (style.min-height (computed-style e)))
        (max val (min-height.px (style.min-height (computed-style e))))]
       [else
-       (max val (%of (min-height.% (style.min-height (computed-style e))) (h (pbox (get/box (flow-box e))))))]))
+       (max val (%of (min-height.% (style.min-height (computed-style e))) (h (pflow (get/box (flow-box e))))))]))
     ;(ite (is-min-height/px (style.min-height (computed-style e)))
     ;    (max val (min-height.px (style.min-height (computed-style e))))
     ;    ;; Leaving here for future percentage support
@@ -151,7 +151,7 @@
       [(is-max-height/px (style.max-height (computed-style e)))
        (min val (max-height.px (style.max-height (computed-style e))))]
       [(is-max-height/% (style.max-height (computed-style e)))
-       (min val (%of (max-height.% (style.max-height (computed-style e))) (h (pbox (get/box (flow-box e))))))]
+       (min val (%of (max-height.% (style.max-height (computed-style e))) (h (pflow (get/box (flow-box e))))))]
       [else val]))
     ;;(ite (is-max-height/px (style.max-height (computed-style e)))
     ;    (min val (max-height.px (style.max-height (computed-style e))))
@@ -161,14 +161,14 @@
   (define-fun margin-min-px ((m Margin) (b Box)) Real
     ,(smt-cond
       [(is-margin/px m) (margin.px m)]
-      [(is-margin/% m) (%of (margin.% m) (w (pbox b)))]
+      [(is-margin/% m) (%of (margin.% m) (w (pflow b)))]
       [else 0]))
 
   (define-fun min-w ((b Box)) Real
     (let ([width (style.width (computed-style (get/elt (element b))))])
       ,(smt-cond
         [(is-width/px width) (width.px width)]
-        [(is-width/% width) (%of (width.% width) (w (pbox b)))]
+        [(is-width/% width) (%of (width.% width) (w (pflow b)))]
         [else 0])))
 
   (define-fun min-ml ((b Box)) Real
@@ -184,28 +184,28 @@
     ;; The algorithm from section §10.6.7 of CSS 2.1
     ,(smt-cond
       [(is-no-box (real-fbox b)) 0.0]
-      [(is-box/line (type (lbox b)))
+      [(is-box/line (type (lflow b)))
        ;; If it only has inline-level children, the height is the distance between
        ;; the top of the topmost line box and the bottom of the bottommost line box.
-       (- (bottom-border (lbox b)) (top-border (fbox b)))]
+       (- (bottom-border (lflow b)) (top-border (fflow b)))]
       [(is-nil-box (flt-up-name (real-lbox b)))
-       (- (bottom-outer (lbox b)) (top-content b))]
+       (- (bottom-outer (lflow b)) (top-content b))]
       [else
        ;; If it has block-level children, the height is the distance between the
        ;; top margin-edge of the topmost block-level child box and the
        ;; bottom margin-edge of the bottommost block-level child box.
-       (- (max (bottom-outer (lbox b)) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
+       (- (max (bottom-outer (lflow b)) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
           (top-content b))]))
 
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     ,(smt-cond
-      [(is-box (vbox b)) (+ (bottom-border (vbox b)) (max (mtp b) (mbp (vbox b))) (min (mtn b) (mbn (vbox b))))]
-      [(top-margin-collapses-with-children (pbox b)) (top-content (pbox b))]
-      [else (+ (top-content (pbox b)) (mtp b) (mtn b))]))
+      [(is-box (vflow b)) (+ (bottom-border (vflow b)) (max (mtp b) (mbp (vflow b))) (min (mtn b) (mbn (vflow b))))]
+      [(top-margin-collapses-with-children (pflow b)) (top-content (pflow b))]
+      [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
 
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
-               [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)])
+               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
        (= (type b) box/block)
        (= (float b) float/none)
@@ -385,7 +385,7 @@
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
-               [p (pbox b)] [vb (vbox b)] [fb (fbox b)] [lb (lbox b)] [flt (fltbox b)])
+               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)] [flt (fltbox b)])
 
        (= (type b) box/block)
        (= (mtp b) (max (mt b) 0.0))
@@ -532,8 +532,8 @@
        ;; SIMPL: May not be higher than the top of the previous float or flow box
        (=> (is-box flt) (>= (top-outer b) (top-outer flt)))
        (=> (is-box vb) (>= (top-outer b) (top-outer vb)))
-       (=> (and (is-box vb) (is-box (lbox vb)))
-           (>= (top-outer b) (top-outer (lbox vb))))
+       (=> (and (is-box vb) (is-box (lflow vb)))
+           (>= (top-outer b) (top-outer (lflow vb))))
 
        ;; CSS 2.1, § 9.5.1, item 7: A left-floating box that has another
        ;; left-floating box to its left may not have its right outer edge
@@ -597,7 +597,7 @@
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
-               [p (pbox b)] [pp (ppbox b)])
+               [p (pflow b)] [pp (ppbox b)])
 
        (= (type b) box/block)
        (= (mtp b) (max (mt b) 0.0))
@@ -703,7 +703,7 @@
                   (= (right-border b) (- (right-content pp) temp-right)))))))
 
   (define-fun an-inline-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [p (pbox b)] [v (vbox b)] [l (lbox b)]
+    ,(smt-let ([e (get/elt (element b))] [p (pflow b)] [v (vflow b)] [l (lflow b)]
                [r (computed-style (get/elt (element b)))])
        (= (type b) box/inline)
 
@@ -750,8 +750,8 @@
             (max (ite (is-box l*) (+ (min-ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (min-mr l*)) 0.0)
                  (ite (is-box v*) (stfwidth v*) 0.0))))
 
-       (= (left-outer (fbox b)) (left-content b))
-       (= (right-outer (lbox b)) (right-content b))
+       (= (left-outer (fflow b)) (left-content b))
+       (= (right-outer (lflow b)) (right-content b))
        ;; This is maybe too loose
        (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
        ;; This is maybe too tight
@@ -759,7 +759,7 @@
        (=> (is-box v) (= (left-outer b) (right-outer v)))))
 
   (define-fun a-text-box ((b Box)) Bool
-    ,(smt-let ([p (pbox b)] [v (vbox b)])
+    ,(smt-let ([p (pflow b)] [v (vflow b)])
        (= (type b) box/text)
 
        ;; Only true if there are no wrapping opportunities in the box
@@ -775,8 +775,8 @@
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-line-box ((b Box)) Bool
-    ,(smt-let ([p (pbox b)] [v (vbox b)] [n (nbox b)] [flt (fltbox b)]
-               [f (fbox b)] [l (lbox b)])
+    ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (fltbox b)]
+               [f (fflow b)] [l (lflow b)])
        (= (type b) box/line)
 
        (= (xo b) (xo p))
@@ -832,7 +832,7 @@
     (or (is-box/block (type b)) (is-box/inline (type b))))
 
   (define-fun an-anon-block-box ((b Box)) Bool
-    ,(smt-let ([p (pbox b)] [v (vbox b)] [l (lbox b)])
+    ,(smt-let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
        (a-block-flow-box b)
        (= (w b) (w p))
        (not (w-from-stfwidth b))
