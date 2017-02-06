@@ -5,9 +5,6 @@
 
 (provide tree-types link-definitions)
 
-(define (type->prefix type)
-  (if (eq? (slower type) 'textalign) 'text-align (slower type)))
-
 (define (prop-is-positive prop type elt)
   `(and
     (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) (specified-style ,elt)))
@@ -90,7 +87,7 @@
 
   (define-fun element-info ((elt Element)) Bool
     (and ,@(for/list ([(prop type _d) (in-css-properties)])
-             `(not (,(sformat "is-~a/inherit" (type->prefix type))
+             `(not (,(sformat "is-~a/inherit" (slower type))
                     (,(sformat "style.~a" prop) (specified-style elt)))))
 
          ,@(for/list ([prop '(width min-width max-width min-height max-height
