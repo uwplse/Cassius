@@ -154,6 +154,30 @@
        (- (max (bottom-outer (lflow b)) (bottom-outer (get/box (&flt-up (lbox b)))))
           (top-content b))]))
 
+  (define-fun auto-height-for-flow-blocks ((b Box)) Bool
+    (let ([lb (lflow b)] [e (box-elt b)])
+      ,(smt-cond
+        ;; CSS § 10.6.6, first bullet
+        [(is-flow-root b)
+         (= (h b) (auto-height-for-flow-roots b))]
+        ;; CSS § 10.6.3, item 4
+        [(is-no-box lb)
+         (= (h b) 0.0)]
+        ;; CSS § 10.6.3, item 1
+        [(is-box/line (type lb))
+         (=> (width-set b) (= (bottom-content b) (bottom-border lb)))]
+        [(is-box/block (type lb))
+         (= (bottom-content b)
+            ;; CSS § 10.6.3, item 2
+            (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (is-root-elt e)))
+                 (ite (and (not (box-collapsed-through b)) (box-collapsed-through lb))
+                      ;; CSS § 10.6.3, item 3
+                      (- (bottom-border lb) (mtp lb) (mtn lb))
+                      (bottom-border lb)) ; Collapsed bottom margin
+                 (bottom-outer lb)))] ; No collapsed bottom margin
+        ;; Block boxes may only have line or block children
+        [else false])))
+
   (define-fun margins-collapse ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
@@ -260,17 +284,11 @@
                             (border-bottom-width border bb) (border-left-width border bl))])
            ;; Set properties that are settable with lengths
            (match-define (list prop type field) item)
-           `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-                   (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
-
-       ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
-             (=> (is-margin/% (,(sformat "style.margin-~a" dir) r))
-                 (= (,(sformat "m~a" letter) b) (%of (margin.% (,(sformat "style.margin-~a" dir) r)) (w p))))
-             (=> (is-border/% (,(sformat "style.border-~a-width" dir) r))
-                 (= (,(sformat "b~a" letter) b) (%of (border.% (,(sformat "style.border-~a-width" dir) r)) (w p))))
-             (=> (is-padding/% (,(sformat "style.padding-~a" dir) r))
-                 (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))))
+             (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
+                 (= (,field b) (%of (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)) (w p))))
+             (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))))
 
        (ite (is-position/relative (style.position r))
             (relatively-positioned b)
@@ -297,38 +315,9 @@
                               (pr l) (br l) (min-mr l)) 0)
                       (ite (is-box v) (stfwidth v) 0.0))
                  (w b))))
-
-       ;; Width and horizontal margins out of the way, let's do height and vertical margins
-       ;; CSS § 10.6.3 If 'margin-top', or 'margin-bottom' are 'auto', their used value is 0.
        (=> (is-margin/auto (style.margin-top r)) (= (mt b) 0.0))
        (=> (is-margin/auto (style.margin-bottom r)) (= (mb b) 0.0))
-
-       ;; If 'height' is 'auto', the height depends on whether the element has
-       ;; any block-level children and whether it has padding or borders:
-       (=> (is-height/auto (style.height r))
-           ,(smt-cond
-             ;; CSS § 10.6.6, first bullet
-             [(is-flow-root b)
-              (= (h b) (auto-height-for-flow-roots b))]
-             ;; CSS § 10.6.3, item 4
-             [(is-no-box lb)
-              (= (h b) 0.0)]
-             ;; CSS § 10.6.3, item 1
-             [(is-box/line (type lb))
-              (=> (width-set b) (= (bottom-content b) (bottom-border lb)))]
-             [(is-box/block (type lb))
-              (= (bottom-content b)
-                 ;; CSS § 10.6.3, item 2
-                 (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (is-root-elt e)))
-                      (ite (and (not (box-collapsed-through b)) (box-collapsed-through lb))
-                           ;; CSS § 10.6.3, item 3
-                           (- (bottom-border lb) (mtp lb) (mtn lb))
-                           (bottom-border lb)) ; Collapsed bottom margin
-                      (bottom-outer lb)))] ; No collapsed bottom margin
-             ;; Block boxes may only have line or block children
-             [else false]))
-
-       ;; Computing X and Y position
+       (=> (is-height/auto (style.height r)) (auto-height-for-flow-blocks b))
        (= (x b) (+ (left-content p) (ml b)))
        (= (y b) (vertical-position-for-flow-boxes b))))
 
