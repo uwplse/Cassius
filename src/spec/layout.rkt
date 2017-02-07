@@ -76,6 +76,20 @@
          (<= (box-right b1) (box-right b2))
          (<= (box-bottom b1) (box-bottom b2))))
 
+  (define-fun is-root-elt ((e Element)) Bool
+    (is-nil-elt (&pelt e)))
+
+  (define-fun is-flow-root ((b Box)) Bool
+    (or (is-box/root (type b))
+        (is-root-elt (box-elt b))
+        (not (box-in-flow b))
+        (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
+        (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b)))))))
+
+  (define-fun box-collapsed-through ((b Box)) Bool
+    (and (= (box-height b) 0.0)
+         (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
+
   (define-fun top-margins-collapse-parent ((b Box)) Bool
     (and
      ;; Margins of the root element's box do not collapse.
@@ -88,72 +102,17 @@
      ;; has no top border, no top padding, and the child has no clearance.
      (= (pt (pflow b)) 0.0) (= (bt (pflow b)) 0.0)))
 
-  (define-fun is-root-elt ((e Element)) Bool
-    (is-nil-elt (&pelt e)))
-
-  (define-fun is-flow-root ((b Box)) Bool
-    (or (is-box/root (type b))
-        (is-root-elt (box-elt b))
-        (not (box-in-flow b))
-        (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
-        (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b)))))))
-
   (define-fun a-view-box ((b Box)) Bool
     (and
      ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
          `(= (,field b) 0.0))
      (= (type b) box/root)))
 
-  (define-fun box-collapsed-through ((b Box)) Bool
-    (and (= (box-height b) 0.0)
-         (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
+  (define-fun min-max-width ((val Real) (b Box)) Real
+    (max ,(get-px-or-% 'min-width 'min-width 'w 'b) (min val ,(get-px-or-% 'max-width 'max-width 'w 'b))))
 
-  (define-fun min-width-limit ((val Real) (e Element)) Real
-    ,(smt-cond
-      [(is-min-width/px (style.min-width (computed-style e)))
-       (max val (min-width.px (style.min-width (computed-style e))))]
-      [else ;; %s
-       (max val (%of (min-width.% (style.min-width (computed-style e))) (w (pflow (elt-box e)))))]))
-    ;(ite (is-min-width/px (style.min-width (computed-style e)))
-    ;    (max val (min-width.px (style.min-width (computed-style e))))
-    ;    ;; Leaving here for future percentage support
-    ;    val))
-
-  (define-fun max-width-limit ((val Real) (e Element)) Real
-    ,(smt-cond
-      [(is-max-width/px (style.max-width (computed-style e)))
-       (min val (max-width.px (style.max-width (computed-style e))))]
-      [(is-max-width/% (style.max-width (computed-style e)))
-       (min val (%of (max-width.% (style.max-width (computed-style e))) (w (pflow (elt-box e)))))]
-      [else
-       val]))
-    ;(ite (is-max-width/px (style.max-width (computed-style e)))
-    ;     (min val (max-width.px (style.max-width (computed-style e))))
-    ;     ;; Leaving here for future percentage support
-    ;     val)
-
-  (define-fun min-height-limit ((val Real) (e Element)) Real
-    ,(smt-cond
-      [(is-min-height/px (style.min-height (computed-style e)))
-       (max val (min-height.px (style.min-height (computed-style e))))]
-      [else
-       (max val (%of (min-height.% (style.min-height (computed-style e))) (h (pflow (elt-box e)))))]))
-    ;(ite (is-min-height/px (style.min-height (computed-style e)))
-    ;    (max val (min-height.px (style.min-height (computed-style e))))
-    ;    ;; Leaving here for future percentage support
-    ;    val))
-
-  (define-fun max-height-limit ((val Real) (e Element)) Real
-    ,(smt-cond
-      [(is-max-height/px (style.max-height (computed-style e)))
-       (min val (max-height.px (style.max-height (computed-style e))))]
-      [(is-max-height/% (style.max-height (computed-style e)))
-       (min val (%of (max-height.% (style.max-height (computed-style e))) (h (pflow (elt-box e)))))]
-      [else val]))
-    ;;(ite (is-max-height/px (style.max-height (computed-style e)))
-    ;    (min val (max-height.px (style.max-height (computed-style e))))
-    ;     ;; Leaving here for future percentage support
-    ;    ;; val))
+  (define-fun min-max-height ((val Real) (b Box)) Real
+    (max ,(get-px-or-% 'min-height 'min-height 'h 'b) (min val ,(get-px-or-% 'max-height 'max-height 'h 'b))))
 
   (define-fun margin-min-px ((m Margin) (b Box)) Real
     ,(smt-cond
@@ -241,10 +200,10 @@
             (width-set b)
             (not (w-from-stfwidth b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
+               (min-max-width (width.px (style.width r)) b))))
        (=> (is-height/px (style.height r))
            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
+              (min-max-height (height.px (style.height r)) b)))
 
        ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
@@ -286,20 +245,19 @@
             (width-set b)
             (not (w-from-stfwidth b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               (min-width-limit (max-width-limit
-                                 (ite (w-from-stfwidth p)
-                                      0.0
-                                      (%of (width.% (style.width r)) (w p))) e) e))))
+               (min-max-width (ite (w-from-stfwidth p)
+                                   0.0
+                                   (%of (width.% (style.width r)) (w p))) b))))
        (=> (is-height/% (style.height r))
            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-height-limit (max-height-limit (%of (height.% (style.height r)) (h p)) e) e)))
+              (min-max-height (%of (height.% (style.height r)) (h p)) b)))
 
        ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
        ;; The following constraints must hold among the used values of the other properties:
        ;; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
        (= (w p) (+ (ml b) (box-width b) (mr b)))
 
-       (let ([w* (min-width-limit (max-width-limit (min-w b) e) e)]
+       (let ([w* (min-max-width (min-w b) b)]
              [ml* (min-ml b)]
              [mr* (min-mr b)])
          (let ([overflow? (> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))])
@@ -409,19 +367,19 @@
             (width-set b)
             (not (w-from-stfwidth b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               (min-width-limit (max-width-limit (width.px (style.width r)) e) e))))
+               (min-max-width (width.px (style.width r)) b))))
        (=> (is-width/% (style.width r))
            (and (width-set b)
                 (not (w-from-stfwidth b))
                 ;; TODO: what if (w-from-stfwidth p)
                 (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                   (min-width-limit (max-width-limit (%of (width.% (style.width r)) (w p)) e) e))))
+                   (min-max-width (%of (width.% (style.width r)) (w p)) b))))
        (=> (is-height/px (style.height r))
            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-height-limit (max-height-limit (height.px (style.height r)) e) e)))
+              (min-max-height (height.px (style.height r)) b)))
        (=> (is-height/% (style.height r))
            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-height-limit (max-height-limit (%of (height.% (style.height r)) (h p)) e) e)))
+              (min-max-height (%of (height.% (style.height r)) (h p)) b)))
 
 
        ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
@@ -460,7 +418,7 @@
              (and
               (width-set b)
               (w-from-stfwidth b)
-              (= (w b) (min-width-limit (max-width-limit (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l)) 0.0) e) e))))
+              (= (w b) (min-max-width (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l)) 0.0) b))))
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
                  (max
@@ -681,7 +639,7 @@
           (=> (and (not width?) (not (and left? right?)))
               (and (= (w b)
                       (let ([l (lbox b)] [v (vbox b)])
-                        (min-width-limit (max-width-limit (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0) e) e)))
+                        (min-max-width (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0) b)))
                    (w-from-stfwidth b)))
           (=> (and (not left?) (not right?))
               (= (left-border b) (left-content p)))
