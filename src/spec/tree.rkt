@@ -110,7 +110,11 @@
          (= (&vbox box) &v)
          (= (&nbox box) &n)
          (= (&fbox box) &f)
-         (= (&lbox box) &l)))
+         (= (&lbox box) &l)
+         ,@(for/list ([field '(bl br bt bb pl pr pb pt w h mtp mbp stfwidth)])
+             `(>= (,field box) 0.0))
+         ,@(for/list ([field '(mtn mbn)])
+             `(<= (,field box) 0.0))))
 
   ;; `match-element-box` matchs elements and boxes together.
   ;; `match-anon-element` and `match-anon-box` do the same for

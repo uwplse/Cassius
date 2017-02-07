@@ -7,8 +7,12 @@
   (syntax-rules (else)
     [(smt-cond [else body])
      `body]
+    [(smt-cond [else body ...])
+     `(and body ...)]
     [(smt-cond [test body] rest ...)
-     `(ite test body ,(smt-cond rest ...))]))
+     `(ite test body ,(smt-cond rest ...))]
+    [(smt-cond [test body ...] rest ...)
+     `(ite test (and body ...) ,(smt-cond rest ...))]))
 
 (define-syntax-rule (define-constraints name body ...)
   (define name `(body ...)))

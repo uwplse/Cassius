@@ -102,12 +102,6 @@
      ;; has no top border, no top padding, and the child has no clearance.
      (= (pt (pflow b)) 0.0) (= (bt (pflow b)) 0.0)))
 
-  (define-fun a-view-box ((b Box)) Bool
-    (and
-     ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
-         `(= (,field b) 0.0))
-     (= (type b) box/root)))
-
   (define-fun min-max-width ((val Real) (b Box)) Real
     (max ,(get-px-or-% 'min-width 'min-width 'w 'b) (min val ,(get-px-or-% 'max-width 'max-width 'w 'b))))
 
@@ -182,11 +176,74 @@
                     (ite (box-collapsed-through lb) (min (mbn lb) (mtn lb)) (mbn lb)) 0.0)
                (ite (< (mb b) 0.0) (mb b) 0.0)))))
 
+  (define-fun margins-dont-collapse ((b Box)) Bool
+    (and
+     (= (mtp b) (max (mt b) 0.0))
+     (= (mtn b) (min (mt b) 0.0))
+     (= (mbp b) (max (mb b) 0.0))
+     (= (mbn b) (min (mb b) 0.0))))
+
+  (define-fun relatively-positioned ((b Box)) Bool
+    ,(smt-let ([r (computed-style (box-elt b))] [p (pflow b)])
+       (=> (is-offset/px (style.left r))
+           (= (xo b) (+ (offset.px (style.left r)) (xo p))))
+       (=> (is-offset/% (style.left r))
+           (= (xo b) (+ (%of (offset.% (style.left r)) (w p)) (xo p))))
+       (=> (is-offset/px (style.top r))
+           (= (yo b) (+ (offset.px (style.top r)) (yo p))))
+       (=> (is-offset/% (style.top r))
+           (= (yo b) (+ (%of (offset.px (style.top r)) (h p)) (yo p))))
+       (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
+           (= (xo b) (- (xo p) (offset.px (style.right r)))))
+       (=> (and (is-offset/auto (style.left r)) (is-offset/% (style.right r)))
+           (= (xo b) (- (xo p) (%of (offset.px (style.right r)) (w p)))))
+       (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
+           (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
+       (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
+           (= (yo b) (- (yo p) (%of (offset.px (style.bottom r)) (w p)))))
+       (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
+           (= (xo b) (xo p)))
+       (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
+           (= (yo b) (yo p)))))
+  
+  (define-fun no-relative-offset ((b Box)) Bool
+    ,(smt-let ([r (computed-style (box-elt b))] [p (pflow b)])
+       (= (xo b) (xo p))
+       (= (yo b) (yo p))))
+
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     ,(smt-cond
       [(is-box (vflow b)) (+ (bottom-border (vflow b)) (max (mtp b) (mbp (vflow b))) (min (mtn b) (mbn (vflow b))))]
       [(top-margin-collapses-with-children (pflow b)) (top-content (pflow b))]
       [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
+
+  (define-fun flow-horizontal-margins ((b Box)) Bool
+    ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
+    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))] [p (pflow b)] )
+       (= (w p) (+ (ml b) (box-width b) (mr b)))
+       (not (w-from-stfwidth b))
+       (let ([w* (min-max-width (min-w b) b)]
+             [ml* (min-ml b)]
+             [mr* (min-mr b)])
+         ,(smt-cond
+           [(> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))
+            (= (w b) w*)
+            (= (ml b) ml*)
+            (width-set b)]
+           [(is-width/auto (style.width r))
+            (= (ml b) ml*)
+            (= (mr b) mr*)
+            (width-set b)]
+           [else
+            (= (w b) w*)
+            (width-set b)
+            ,(smt-cond
+              [(not (is-margin/auto (style.margin-left r)))
+               (= (ml b) ml*)]
+              [(not (is-margin/auto (style.margin-right r)))
+               (= (mr b) mr*)]
+              [else
+               (= (ml b) (mr b))])]))))
 
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
@@ -206,16 +263,6 @@
            `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
                    (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
 
-       (=> (is-width/px (style.width r))
-           (and
-            (width-set b)
-            (not (w-from-stfwidth b))
-            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               (min-max-width (width.px (style.width r)) b))))
-       (=> (is-height/px (style.height r))
-           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-max-height (height.px (style.height r)) b)))
-
        ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
            `(and
              (=> (is-margin/% (,(sformat "style.margin-~a" dir) r))
@@ -226,81 +273,20 @@
                  (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))))
 
        (ite (is-position/relative (style.position r))
-            (and
-             (=> (is-offset/px (style.left r))
-                 (= (xo b) (+ (offset.px (style.left r)) (xo p))))
-             (=> (is-offset/% (style.left r))
-                 (= (xo b) (+ (%of (offset.% (style.left r)) (w p)) (xo p))))
-             (=> (is-offset/px (style.top r))
-                 (= (yo b) (+ (offset.px (style.top r)) (yo p))))
-             (=> (is-offset/% (style.top r))
-                 (= (yo b) (+ (%of (offset.px (style.top r)) (h p)) (yo p))))
-             (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
-                 (= (xo b) (- (xo p) (offset.px (style.right r)))))
-             (=> (and (is-offset/auto (style.left r)) (is-offset/% (style.right r)))
-                 (= (xo b) (- (xo p) (%of (offset.px (style.right r)) (w p)))))
-             (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
-                 (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
-             (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
-                 (= (yo b) (- (yo p) (%of (offset.px (style.bottom r)) (w p)))))
-             (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
-                 (= (xo b) (xo p)))
-             (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
-                 (= (yo b) (yo p))))
-            (and
-             (= (xo b) (xo p))
-             (= (yo b) (yo p))))
+            (relatively-positioned b)
+            (no-relative-offset b))
 
-       (=> (is-width/% (style.width r))
+       (=> (not (is-width/auto (style.width r)))
            (and
-            (width-set b)
-            (not (w-from-stfwidth b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               (min-max-width (ite (w-from-stfwidth p)
-                                   0.0
-                                   (%of (width.% (style.width r)) (w p))) b))))
-       (=> (is-height/% (style.height r))
+               ,(get-px-or-% 'width 'width 'w 'b))
+            (width-set b)
+            (not (w-from-stfwidth b))))
+       (=> (not (is-height/auto (style.height r)))
            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-max-height (%of (height.% (style.height r)) (h p)) b)))
+              ,(get-px-or-% 'height 'height 'h 'b)))
 
-       ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
-       ;; The following constraints must hold among the used values of the other properties:
-       ;; 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
-       (= (w p) (+ (ml b) (box-width b) (mr b)))
-
-       (let ([w* (min-max-width (min-w b) b)]
-             [ml* (min-ml b)]
-             [mr* (min-mr b)])
-         (let ([overflow? (> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))])
-           (and
-
-            (not (w-from-stfwidth b))
-
-            ;; It overflows. So what do we do? Ignore margin-right
-            (=> overflow? (and (= (w b) w*) (= (ml b) ml*) (width-set b)))
-
-            ;; No overflow, but width: auto, so width dominates
-            (=> (and (not overflow?)) (is-width/auto (style.width r))
-                (and (= (ml b) ml*) (= (mr b) mr*) (width-set b)))
-
-            ;; No overflow, width given, ignore auto margin
-            (=> (and (not overflow?)
-                     (not (is-width/auto (style.width r))))
-                (and (= (w b) w*)
-                     (width-set b)
-                     (=> (not (is-margin/auto (style.margin-left r)))
-                         (= (ml b) ml*))
-                     (=> (and
-                          (is-margin/auto (style.margin-left r))
-                          (not (is-margin/auto (style.margin-right r))))
-                         (= (mr b) mr*))))
-
-            ;; No overflow, margin: ? auto, so centered
-            (=> (and (not overflow?)
-                     (not (is-width/auto (style.width r)))
-                     (is-margin/auto (style.margin-left r))
-                     (is-margin/auto (style.margin-right r)))
-                (and (= (w b) w*) (= (ml b) (mr b)) (width-set b))))))
+       (flow-horizontal-margins b)
 
        (let ([l (lbox b)] [v (vbox b)])
          (= (stfwidth b)
@@ -344,20 +330,14 @@
 
        ;; Computing X and Y position
        (= (x b) (+ (left-content p) (ml b)))
-       (= (y b) (vertical-position-for-flow-boxes b))
-
-       ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
-           `(>= (,field b) 0.0))))
+       (= (y b) (vertical-position-for-flow-boxes b))))
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)] [flt (flt b)])
 
        (= (type b) box/block)
-       (= (mtp b) (max (mt b) 0.0))
-       (= (mtn b) (min (mt b) 0.0))
-       (= (mbp b) (max (mb b) 0.0))
-       (= (mbn b) (min (mb b) 0.0))
+       (margins-dont-collapse b)
 
        ;; Floating block element layout
        ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
@@ -399,30 +379,8 @@
                  (= (,(sformat "m~a" letter) b) 0)))
 
        (ite (is-position/relative (style.position r))
-            (and
-             (=> (is-offset/px (style.left r))
-                 (= (xo b) (+ (offset.px (style.left r)) (xo p))))
-             (=> (is-offset/% (style.left r))
-                 (= (xo b) (+ (%of (offset.% (style.left r)) (w p)) (xo p))))
-             (=> (is-offset/px (style.top r))
-                 (= (yo b) (+ (offset.px (style.top r)) (yo p))))
-             (=> (is-offset/% (style.top r))
-                 (= (yo b) (+ (%of (offset.px (style.top r)) (h p)) (yo p))))
-             (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
-                 (= (xo b) (- (xo p) (offset.px (style.right r)))))
-             (=> (and (is-offset/auto (style.left r)) (is-offset/% (style.right r)))
-                 (= (xo b) (- (xo p) (%of (offset.px (style.right r)) (w p)))))
-             (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
-                 (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
-             (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
-                 (= (yo b) (- (yo p) (%of (offset.px (style.bottom r)) (w p)))))
-             (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
-                 (= (xo b) (xo p)))
-             (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
-                 (= (yo b) (yo p))))
-            (and
-             (= (xo b) (xo p))
-             (= (yo b) (yo p))))
+            (relatively-positioned b)
+            (no-relative-offset b))
 
        ,(smt-let ([l (lbox b)] [v (vbox b)])
          (=> (is-width/auto (style.width r))
@@ -452,9 +410,6 @@
        ;; CSS 2.1 § 9.5.1 : When the float occurs between two collapsing margins, the float is
        ;; positioned as if it had an otherwise empty anonymous block parent taking part in the flow.
        ;; The position of such a parent is defined by the rules in the section on margin collapsing.
-
-       ,@(for/list ([field '(bl br bt bb pl pr pb pt w h)])
-           `(>= (,field b) 0.0))
 
        ;; CSS 2.1, § 9.5.1, item 1: The left outer edge of a left-floating box
        ;; may not be to the left of the left edge of its containing block.
@@ -566,10 +521,7 @@
                [p (pflow b)] [pp (ppflow b)])
 
        (= (type b) box/block)
-       (= (mtp b) (max (mt b) 0.0))
-       (= (mtn b) (min (mt b) 0.0))
-       (= (mbp b) (max (mb b) 0.0))
-       (= (mbn b) (min (mb b) 0.0))
+       (margins-dont-collapse b)
 
        ;; Floating block element layout
        ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
@@ -583,8 +535,7 @@
              (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
                  (= (,field b) (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) r)) (w p))))))
 
-       (= (xo b) (xo p))
-       (= (yo b) (yo p))
+       (no-relative-offset b)
 
        (let ([l (lbox b)] [v (vbox b)])
          (= (stfwidth b)
@@ -704,12 +655,8 @@
                  (= (,(sformat "b~a" letter) b) (%of (border.% (,(sformat "style.border-~a-width" dir) r)) (w p))))
              (=> (is-padding/% (,(sformat "style.padding-~a" dir) r))
                  (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))))
-       (= (mtp b) (max (mt b) 0.0))
-       (= (mtn b) (min (mt b) 0.0))
-       (= (mbp b) (max (mb b) 0.0))
-       (= (mbn b) (min (mb b) 0.0))
-       (= (xo b) (xo p))
-       (= (yo b) (yo p))
+       (margins-dont-collapse b)
+       (no-relative-offset b)
 
        (let ([l* (lbox b)] [v* (vbox b)])
          (= (stfwidth b)
@@ -731,8 +678,7 @@
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
 
-       (= (xo b) (xo p))
-       (= (yo b) (yo p))
+       (no-relative-offset b)
        (zero-box-model b)
 
        ;; This is super-weak, but for now it really is our formalization of line layout
@@ -744,8 +690,7 @@
                [f (fflow b)] [l (lflow b)])
        (= (type b) box/line)
 
-       (= (xo b) (xo p))
-       (= (yo b) (yo p))
+       (no-relative-offset b)
        (zero-box-model b)
 
        (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
@@ -791,6 +736,12 @@
          (ite (! (is-float/none (float b)) :named flow)
               (a-block-flow-box b)
               (a-block-float-box b))))
+
+  (define-fun a-view-box ((b Box)) Bool
+    (and
+     (= (type b) box/root)
+     (zero-box-model b)
+     (= (xo b) (yo b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
     (or (is-box/block (type b)) (is-box/inline (type b))))
