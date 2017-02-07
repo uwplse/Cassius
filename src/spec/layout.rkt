@@ -12,6 +12,24 @@
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
         (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) (,wrt (pflow ,b)))))
 
+(define fields
+  '((padding-left padding pl) (padding-right padding pr)
+    (padding-top padding pt) (padding-bottom padding pb)
+    (margin-left margin ml) (margin-right margin mr)
+    (margin-top margin mt) (margin-bottom margin mb)
+    (border-top-width border bt) (border-right-width border br)
+    (border-bottom-width border bb) (border-left-width border bl)))
+
+(define (extract-field field)
+  (match-define (cons prop type)
+    (for/first ([rec fields] #:when (equal? (last rec) field))
+      (cons (first rec) (second rec))))
+  `(and
+    (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
+        (= (,field b) (%of (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)) (w p))))
+    (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
+        (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))))
+
 (define-constraints layout-definitions
 
   (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
@@ -277,18 +295,7 @@
        (= (float b) float/none)
        (margins-collapse b)
 
-       ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
-                            (padding-top padding pt) (padding-bottom padding pb)
-                            (margin-top margin mt) (margin-bottom margin mb)
-                            (border-top-width border bt) (border-right-width border br)
-                            (border-bottom-width border bb) (border-left-width border bl))])
-           ;; Set properties that are settable with lengths
-           (match-define (list prop type field) item)
-           `(and
-             (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
-                 (= (,field b) (%of (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)) (w p))))
-             (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))))
+       ,@(map extract-field '(pt pr pb pl mt mb bt br bb bl))
 
        (ite (is-position/relative (style.position r))
             (relatively-positioned b)
@@ -328,19 +335,7 @@
        (= (type b) box/block)
        (margins-dont-collapse b)
 
-       ;; Floating block element layout
-       ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
-                            (padding-top padding pt) (padding-bottom padding pb)
-                            (border-top-width border bt) (border-right-width border br)
-                            (border-bottom-width border bb) (border-left-width border bl)
-                            (margin-top margin mt) (margin-bottom margin mb)
-                            (margin-right margin mr) (margin-left margin ml))])
-           (match-define (list prop type field) item)
-           `(and
-             (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
-             (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
-                 (= (,field b) (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) r)) (w p))))))
+       ,@(map extract-field '(pt pr pb pl mt mr mb ml bt br bb bl))
 
        (=> (is-width/px (style.width r))
            (and
@@ -512,17 +507,7 @@
        (= (type b) box/block)
        (margins-dont-collapse b)
 
-       ;; Floating block element layout
-       ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
-                            (padding-top padding pt) (padding-bottom padding pb)
-                            (border-top-width border bt) (border-right-width border br)
-                            (border-bottom-width border bb) (border-left-width border bl))])
-           (match-define (list prop type field) item)
-           `(and
-             (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-                 (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
-             (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
-                 (= (,field b) (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) r)) (w p))))))
+       ,@(map extract-field '(pt pr pb pl bt br bb bl))
 
        (no-relative-offset b)
 
@@ -612,40 +597,12 @@
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [v (vflow b)] [l (lflow b)])
        (= (type b) box/inline)
+       ,@(map extract-field '(pt pr pb pl bt br bb bl))
 
-       ;; The ‘width’ and ‘height’ properties do not apply. For each
-       ;; of ‘left’, ‘right’, ‘top’, ‘bottom’, ‘margin-left’,
-       ;; ‘margin-right’, ‘margin-top’ and ‘margin-bottom’, the used
-       ;; value is equal to the computed value, except that a computed
-       ;; value of ‘auto’ becomes a used value of ‘0’.
-       ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
-                            (padding-top padding pt) (padding-bottom padding pb)
-                            (margin-top margin mt) (margin-bottom margin mb)
-                            (margin-right margin mr) (margin-left margin ml))])
-           (match-define (list prop type field) item)
-           `(=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-                (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)))))
-
-       ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
-           `(= (,(sformat "b~a" letter) b)
-               (ite (and (is-border/px (,(sformat "style.border-~a-width" dir) r))
-                         (not (is-border-style/none (,(sformat "style.border-~a-style" dir) r)))
-                         (not (is-border-style/hidden (,(sformat "style.border-~a-style" dir) r))))
-                    (border.px (,(sformat "style.border-~a-width" dir) r))
-                    0.0)))
-
-       ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
-           `(and
-             (=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
-                 (= (,(sformat "m~a" letter) b) 0))
-             (=> (is-margin/% (,(sformat "style.margin-~a" dir) r))
-                 (= (,(sformat "m~a" letter) b) (%of (margin.% (,(sformat "style.margin-~a" dir) r)) (w p))))
-             (=> (is-border/% (,(sformat "style.border-~a-width" dir) r))
-                 (= (,(sformat "b~a" letter) b) (%of (border.% (,(sformat "style.border-~a-width" dir) r)) (w p))))
-             (=> (is-padding/% (,(sformat "style.padding-~a" dir) r))
-                 (= (,(sformat "p~a" letter) b) (%of (padding.% (,(sformat "style.padding-~a" dir) r)) (w p))))))
        (margins-dont-collapse b)
-       (no-relative-offset b)
+       (ite (is-position/relative (style.position r))
+            (relatively-positioned b)
+            (no-relative-offset b))
 
        (let ([l* (lbox b)] [v* (vbox b)])
          (= (stfwidth b)
@@ -654,10 +611,7 @@
 
        (= (left-outer (fflow b)) (left-content b))
        (= (right-outer (lflow b)) (right-content b))
-       ;; This is maybe too loose
        (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
-       ;; This is maybe too tight
-       ;;(= (- (top-outer b) (top-content p)) (- (bottom-content p) (bottom-outer b)))
        (=> (is-box v) (= (left-outer b) (right-outer v)))))
 
   (define-fun a-text-box ((b Box)) Bool
