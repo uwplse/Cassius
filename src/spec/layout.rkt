@@ -136,6 +136,13 @@
   (define-fun top-margin-collapses-with-children ((b Box)) Bool
     (and (not (is-flow-root b)) (= (pt b) 0.0) (= (bt b) 0.0)))
 
+  (define-fun zero-box-model ((b Box)) Bool
+    (and
+     (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0)
+     (= (mt b) (mr b) (mb b) (ml b) 0.0)
+     (= (bt b) (br b) (bb b) (bl b) 0.0)
+     (= (pt b) (pr b) (pb b) (pl b) 0.0)))
+
   (define-fun auto-height-for-flow-roots ((b Box)) Real
     ;; The algorithm from section §10.6.7 of CSS 2.1
     ,(smt-cond
@@ -153,18 +160,8 @@
        (- (max (bottom-outer (lflow b)) (bottom-outer (get/box (&flt-up (lbox b)))))
           (top-content b))]))
 
-  (define-fun vertical-position-for-flow-boxes ((b Box)) Real
-    ,(smt-cond
-      [(is-box (vflow b)) (+ (bottom-border (vflow b)) (max (mtp b) (mbp (vflow b))) (min (mtn b) (mbn (vflow b))))]
-      [(top-margin-collapses-with-children (pflow b)) (top-content (pflow b))]
-      [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
-
-  (define-fun a-block-flow-box ((b Box)) Bool
-    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
-               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
-
-       (= (type b) box/block)
-       (= (float b) float/none)
+  (define-fun margins-collapse ((b Box)) Bool
+    ,(smt-let ([e (box-elt b)] [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
        (= (mtp b)
           (max (ite (and (not (is-root-elt e)) (is-box fb) (= (pt b) 0.0) (= (bt b) 0.0)) (mtp fb) 0.0)
@@ -183,7 +180,21 @@
        (= (mbn b)
           (min (ite (and (not (is-root-elt e)) (is-box lb) (= (pb b) 0.0) (= (bb b) 0.0))
                     (ite (box-collapsed-through lb) (min (mbn lb) (mtn lb)) (mbn lb)) 0.0)
-               (ite (< (mb b) 0.0) (mb b) 0.0)))
+               (ite (< (mb b) 0.0) (mb b) 0.0)))))
+
+  (define-fun vertical-position-for-flow-boxes ((b Box)) Real
+    ,(smt-cond
+      [(is-box (vflow b)) (+ (bottom-border (vflow b)) (max (mtp b) (mbp (vflow b))) (min (mtn b) (mbn (vflow b))))]
+      [(top-margin-collapses-with-children (pflow b)) (top-content (pflow b))]
+      [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
+
+  (define-fun a-block-flow-box ((b Box)) Bool
+    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
+               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
+
+       (= (type b) box/block)
+       (= (float b) float/none)
+       (margins-collapse b)
 
        ,@(for/list ([item '((padding-left padding pl) (padding-right padding pr)
                             (padding-top padding pt) (padding-bottom padding pb)
@@ -722,8 +733,7 @@
 
        (= (xo b) (xo p))
        (= (yo b) (yo p))
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-           `(= (,field b) 0.0))
+       (zero-box-model b)
 
        ;; This is super-weak, but for now it really is our formalization of line layout
        (horizontally-adjacent b p)
@@ -736,8 +746,7 @@
 
        (= (xo b) (xo p))
        (= (yo b) (yo p))
-       ,@(for/list ([field '(mtp mtn mbp mbn mt mr mb ml pt pr pb pl bt br bb bl)])
-           `(= (,field b) 0.0))
+       (zero-box-model b)
 
        (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
                  (is-float/left (float flt)))
@@ -796,6 +805,4 @@
             (= (y b) (+ (bottom-border v) (mbp v) (mbn v)))
             (= (y b) (top-content p)))
        (= (x b) (left-content p))
-       (= (mt b) (mr b) (mb b) (ml b) 0.0)
-       (= (bt b) (br b) (bb b) (bl b) 0.0)
-       (= (pt b) (pr b) (pb b) (pl b) 0.0))))
+       (zero-box-model b))))
