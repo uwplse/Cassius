@@ -1,7 +1,7 @@
 #lang racket
 (require "common.rkt" "registry.rkt" "tree.rkt")
 
-(provide (struct-out dom) dom-context in-elements in-boxes elements-difference all-tags-classes-ids parse-dom)
+(provide (struct-out dom) dom-context in-elements in-boxes elements-difference parse-dom)
 
 (struct dom (name properties elements boxes))
 (struct element (type attrs parent* children)
@@ -35,12 +35,3 @@
 (define (parse-dom doc)
   (match-define (dom name ctx elts boxes) doc)
   (dom name ctx (parse-tree elts) (parse-tree boxes)))
-
-(define (all-tags-classes-ids elements)
-  (define-values (tags classes ids)
-    (for/reap [tag! class! id!] ([elt (in-tree elements)])
-      (tag! (slower (node-type elt)))
-      (for-each (compose class! slower) (node-get* elt ':class #:default '()))
-      (when (node-get elt ':id)
-        (id! (slower (node-get elt ':id))))))
-  (values (remove-duplicates tags) (remove-duplicates classes) (remove-duplicates ids)))

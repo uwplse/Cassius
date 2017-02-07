@@ -1,21 +1,24 @@
 #lang racket
+(require "z3o.rkt" "common.rkt")
 (provide z3-prepare z3-clean z3-namelines cassius-check-sat)
 
 (define to-resolve
   (append
-   '(get/elt flow-box first-child-name last-child-name parent-name previous-name next-name)
-   '(get/box element pb-name v-name flt-name flt-up-name n-name)
-   '(real-p-name real-v-name real-n-name real-f-name real-l-name)))
+   '(get/elt &box &pelt &velt &nelt &felt &lelt)
+   '(get/box &elt &pbox &vbox &nbox &fbox &lbox)
+   '(&pbflow &ppflow &vflow &nflow &flt &flt-up)))
 
 (define to-expand
   (append
-   '(link-element link-block-box link-inline-box link-text-box link-line-box link-element-box link-root-element link-anon-box)
-   '(an-element a-root-element element-info is-a-rule)
-   '(float textalign box-in-flow)
-   '(previous next parent fchild lchild)
-   '(real-pbox real-fbox real-lbox real-vbox real-nbox)
-   '(pflow pbbox fflow lflow nflow vflow fltbox)
-   ))
+   '(link-element link-box)
+   '(match-element-box match-anon-box match-anon-element)
+   '(link-flow-simple link-flow-root link-flow-block)
+   '(float position box-in-flow box-positioned)
+   '(compute-style)
+   '(pelt velt nelt felt lelt)
+   '(pbox fbox lbox vbox nbox)
+   '(pflow fflow lflow nflow vflow)
+   '(ppflow pbflow flt)))
 
 (define to-expand-2
   '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box a-view-box))

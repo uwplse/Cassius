@@ -1,7 +1,8 @@
 #lang racket
 (require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
          "selectors.rkt" "match.rkt" "solver.rkt"
-         "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt" "spec/layout.rkt")
+         "spec/css-properties.rkt" "spec/browser-style.rkt"
+         "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          css-values-solver)
@@ -59,9 +60,10 @@
    (list 'box
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
          pt pr pb pl bt br bb bl stfwidth w-from-stfwidth
-         real-p-name real-n-name real-v-name real-f-name
-         real-l-name width-set pb-name pp-name n-name v-name flt-name flt-up-name float
-         textalign position element)
+         &pbox &vbox &nbox &fbox &lbox
+         width-set
+         &pbflow &ppflow &nflow &vflow &flt &flt-up
+         textalign &elt)
    box)
   (define box-width (+ bl pl w pr br))
   (define box-height (+ bt pt h pb bb))
@@ -73,13 +75,8 @@
   (node-set! elt ':y box-y))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt doc tag id spec-style comp-style &v &p &n &f &l &b) result)
-  (node-set! elt ':style (extract-style spec-style))
-  (when (equal?  (node-get elt ':id) '?)
-    (define new-id (extract-id id))
-    (if (equal? new-id 'no-id)
-        (node-remove! elt ':id)
-        (node-set! elt ':id new-id))))
+  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt &box) result)
+  (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
@@ -172,13 +169,13 @@
         (define ename (name 'elt elt))
         (match (matcher elt)
           [#f
-           (emit `(assert (! (link-anon-element ,ename) :named ,(sformat "box-element/~a" ename))))]
+           (emit `(assert (! (match-anon-element ,ename) :named ,(sformat "box-element/~a" ename))))]
           [box
            (define bname (name 'box box))
-           (emit `(assert (! (link-element-box ,ename ,bname) :named ,(sformat "box-element/~a" ename))))]))
+           (emit `(assert (! (match-element-box ,ename ,bname) :named ,(sformat "box-element/~a" ename))))]))
       (for ([box (in-boxes dom)] #:when (not (matcher box)))
         (define bname (name 'box box))
-        (emit `(assert (! (link-anon-box ,bname) :named ,(sformat "box-element/~a" bname))))))))
+        (emit `(assert (! (match-anon-box ,bname) :named ,(sformat "box-element/~a" bname))))))))
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
@@ -231,23 +228,23 @@
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 
 (define (box-link-constraints dom emit elt)
-  (define cns
+  (emit `(assert (! (link-box
+                     ,(dump-box elt)
+                     ,(name 'box (node-parent elt) 'nil-box)
+                     ,(name 'box (node-prev elt) 'nil-box)
+                     ,(name 'box (node-next elt) 'nil-box)
+                     ,(name 'box (node-fchild elt) 'nil-box)
+                     ,(name 'box (node-lchild elt) 'nil-box))
+                    :named ,(sformat "link-box/~a" (name 'box elt)))))
+
+  (define flow-linker
     (match (node-type elt)
-      ['BLOCK 'link-block-box]
-      ['VIEW  'link-block-box]
-      ['ANON 'link-block-box]
-      ['MAGIC 'link-block-box]
-      ['LINE 'link-line-box]
-      ['INLINE 'link-inline-box]
-      ['TEXT 'link-text-box]))
-  (emit `(assert (! (,cns ,(dump-box elt)
-                          ,(name 'box elt)
-                          ,(name 'box (node-parent elt) 'nil-box)
-                          ,(name 'box (node-prev elt) 'nil-box)
-                          ,(name 'box (node-next elt) 'nil-box)
-                          ,(name 'box (node-fchild elt) 'nil-box)
-                          ,(name 'box (node-lchild elt) 'nil-box))
-                    :named ,(sformat "link-box/~a" (name 'box elt))))))
+      ['BLOCK 'link-flow-block]
+      ['VIEW 'link-flow-root]
+      [_ 'link-flow-simple]))
+
+  (emit `(assert (! (,flow-linker ,(dump-box elt) ,(name 'box elt))
+                    :named ,(sformat "link-flow/~a" (name 'box elt))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -270,21 +267,10 @@
         `(idname ,(dump-elt elt))
         (dump-id (node-get elt ':id))))
 
-  (emit `(assert (! (element-info ,(dump-elt elt))
+  (emit `(assert (! (compute-style ,(dump-elt elt))
                     :named ,(sformat "info/~a" (name 'elt elt))))))
 
 (define (all-constraints matcher doms)
-  (define-values (tags ids)
-    (reap [tag! id!]
-          (for ([dom doms])
-            (let-values ([(tags classes ids) (all-tags-classes-ids (dom-elements dom))])
-              (for-each (compose tag! dump-tag) tags)
-              (for-each (compose id! dump-id) ids)))))
-  (define element-names (for*/list ([dom doms] [elt (in-elements dom)]) (name 'elt elt)))
-  (define box-names (for*/list ([dom doms] [elt (in-boxes dom)]) (name 'box elt)))
-
-  (eprintf ";; ~a elements, ~a boxes\n" (length element-names) (length box-names))
-
   (define (global f) (reap [sow] (f doms sow)))
   (define (per-element f)
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
@@ -295,14 +281,12 @@
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
     (declare-datatypes
-     () ; No parameters
-     ((ElementName ,@element-names nil-elt)
-      (BoxName ,@box-names nil-box)))
-    ;,@css-declarations
-    (declare-datatypes ()
-      (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
-       (Style (style ,@(for/list ([(prop type default) (in-css-properties)])
-                         `(,(sformat "style.~a" prop) ,type))))))
+     ()
+     ((ElementName nil-elt ,@(per-element (λ (_ sow elt) (sow (name 'elt elt)))))
+      (BoxName nil-box ,@(per-box (λ (_ sow box) (sow (name 'box box)))))
+      ,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
+      (Style (style ,@(for/list ([(prop type default) (in-css-properties)])
+                        `(,(sformat "style.~a" prop) ,type))))))
     (define-const border/thin Border (border/px 1))
     (define-const border/medium Border (border/px 3))
     (define-const border/thick Border (border/px 5))
@@ -313,11 +297,8 @@
     ,@(global dom-define-get/box)
     ;,@css-functions
     ,@link-definitions
+    ,@style-computation
     ,@layout-definitions
-    (assert (and (= (element no-box) nil-elt) (= (flow-box no-elt) nil-box)))
-
-    ; DOMs
-    (echo "Elements must be initialized")
     ,@(per-element tree-constraints)
     ,@(per-box box-constraints)
     ,@(per-element style-constraints)

@@ -282,7 +282,7 @@
 
   (for/list ([cmd cmds])
     (match cmd
-      [`(define-fun ,(? (curryr memq fn-names) name) ((,names ,types) ...) ,rtype ,body)
+      [`(define-fun ,(? (curry set-member? fn-names) name) ((,names ,types) ...) ,rtype ,body)
        (hash-set! fns name (list names (expand-function body fns)))
        (if clear?
            `(echo ,(format "(define-fun ~a ...)" name))

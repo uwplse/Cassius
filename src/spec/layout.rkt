@@ -7,7 +7,7 @@
 (provide layout-definitions)
 
 (define (get-px-or-% prop type wrt b)
-  (define r `(computed-style (get/elt (element ,b))))
+  (define r `(computed-style (box-elt ,b)))
   `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
         (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) (,wrt (pflow ,b)))))
@@ -89,23 +89,20 @@
      (= (pt (pflow b)) 0.0) (= (bt (pflow b)) 0.0)))
 
   (define-fun is-root-elt ((e Element)) Bool
-    (is-nil-elt (parent-name e)))
+    (is-nil-elt (&pelt e)))
 
   (define-fun is-flow-root ((b Box)) Bool
     (or (is-box/root (type b))
-        (is-root-elt (get/elt (element b)))
+        (is-root-elt (box-elt b))
         (not (box-in-flow b))
-        (not (is-overflow/visible (style.overflow-x (computed-style (get/elt (element b))))))
-        (not (is-overflow/visible (style.overflow-y (computed-style (get/elt (element b))))))))
+        (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
+        (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b)))))))
 
   (define-fun a-view-box ((b Box)) Bool
     (and
      ,@(for/list ([field '(x y xo yo pl pr pt pb bl br bt bb ml mr mt mb mtp mbp mtn mbn)])
          `(= (,field b) 0.0))
-     (= (type b) box/root)
-     (= (n-name b) nil-box)
-     (= (flt-name b) nil-box)
-     (= (v-name b) nil-box)))
+     (= (type b) box/root)))
 
   (define-fun box-collapsed-through ((b Box)) Bool
     (and (= (box-height b) 0.0)
@@ -116,7 +113,7 @@
       [(is-min-width/px (style.min-width (computed-style e)))
        (max val (min-width.px (style.min-width (computed-style e))))]
       [else ;; %s
-       (max val (%of (min-width.% (style.min-width (computed-style e))) (w (pflow (get/box (flow-box e))))))]))
+       (max val (%of (min-width.% (style.min-width (computed-style e))) (w (pflow (elt-box e)))))]))
     ;(ite (is-min-width/px (style.min-width (computed-style e)))
     ;    (max val (min-width.px (style.min-width (computed-style e))))
     ;    ;; Leaving here for future percentage support
@@ -127,7 +124,7 @@
       [(is-max-width/px (style.max-width (computed-style e)))
        (min val (max-width.px (style.max-width (computed-style e))))]
       [(is-max-width/% (style.max-width (computed-style e)))
-       (min val (%of (max-width.% (style.max-width (computed-style e))) (w (pflow (get/box (flow-box e))))))]
+       (min val (%of (max-width.% (style.max-width (computed-style e))) (w (pflow (elt-box e)))))]
       [else
        val]))
     ;(ite (is-max-width/px (style.max-width (computed-style e)))
@@ -140,7 +137,7 @@
       [(is-min-height/px (style.min-height (computed-style e)))
        (max val (min-height.px (style.min-height (computed-style e))))]
       [else
-       (max val (%of (min-height.% (style.min-height (computed-style e))) (h (pflow (get/box (flow-box e))))))]))
+       (max val (%of (min-height.% (style.min-height (computed-style e))) (h (pflow (elt-box e)))))]))
     ;(ite (is-min-height/px (style.min-height (computed-style e)))
     ;    (max val (min-height.px (style.min-height (computed-style e))))
     ;    ;; Leaving here for future percentage support
@@ -151,7 +148,7 @@
       [(is-max-height/px (style.max-height (computed-style e)))
        (min val (max-height.px (style.max-height (computed-style e))))]
       [(is-max-height/% (style.max-height (computed-style e)))
-       (min val (%of (max-height.% (style.max-height (computed-style e))) (h (pflow (get/box (flow-box e))))))]
+       (min val (%of (max-height.% (style.max-height (computed-style e))) (h (pflow (elt-box e)))))]
       [else val]))
     ;;(ite (is-max-height/px (style.max-height (computed-style e)))
     ;    (min val (max-height.px (style.max-height (computed-style e))))
@@ -165,17 +162,17 @@
       [else 0]))
 
   (define-fun min-w ((b Box)) Real
-    (let ([width (style.width (computed-style (get/elt (element b))))])
+    (let ([width (style.width (computed-style (box-elt b)))])
       ,(smt-cond
         [(is-width/px width) (width.px width)]
         [(is-width/% width) (%of (width.% width) (w (pflow b)))]
         [else 0])))
 
   (define-fun min-ml ((b Box)) Real
-    (margin-min-px (style.margin-left (computed-style (get/elt (element b)))) b))
+    (margin-min-px (style.margin-left (computed-style (box-elt b))) b))
 
   (define-fun min-mr ((b Box)) Real
-    (margin-min-px (style.margin-right (computed-style (get/elt (element b)))) b))
+    (margin-min-px (style.margin-right (computed-style (box-elt b))) b))
 
   (define-fun top-margin-collapses-with-children ((b Box)) Bool
     (and (not (is-flow-root b)) (= (pt b) 0.0) (= (bt b) 0.0)))
@@ -183,18 +180,18 @@
   (define-fun auto-height-for-flow-roots ((b Box)) Real
     ;; The algorithm from section §10.6.7 of CSS 2.1
     ,(smt-cond
-      [(is-no-box (real-fbox b)) 0.0]
+      [(is-no-box (fbox b)) 0.0]
       [(is-box/line (type (lflow b)))
        ;; If it only has inline-level children, the height is the distance between
        ;; the top of the topmost line box and the bottom of the bottommost line box.
        (- (bottom-border (lflow b)) (top-border (fflow b)))]
-      [(is-nil-box (flt-up-name (real-lbox b)))
+      [(is-nil-box (&flt-up (lbox b)))
        (- (bottom-outer (lflow b)) (top-content b))]
       [else
        ;; If it has block-level children, the height is the distance between the
        ;; top margin-edge of the topmost block-level child box and the
        ;; bottom margin-edge of the bottommost block-level child box.
-       (- (max (bottom-outer (lflow b)) (bottom-outer (get/box (flt-up-name (real-lbox b)))))
+       (- (max (bottom-outer (lflow b)) (bottom-outer (get/box (&flt-up (lbox b)))))
           (top-content b))]))
 
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
@@ -204,7 +201,7 @@
       [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
 
   (define-fun a-block-flow-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
+    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
        (= (type b) box/block)
@@ -336,7 +333,7 @@
                      (is-margin/auto (style.margin-right r)))
                 (and (= (w b) w*) (= (ml b) (mr b)) (width-set b))))))
 
-       (let ([l (real-lbox b)] [v (real-vbox b)])
+       (let ([l (lbox b)] [v (vbox b)])
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
                  (max (ite (is-box l)
@@ -384,8 +381,8 @@
            `(>= (,field b) 0.0))))
 
   (define-fun a-block-float-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
-               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)] [flt (fltbox b)])
+    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
+               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)] [flt (flt b)])
 
        (= (type b) box/block)
        (= (mtp b) (max (mt b) 0.0))
@@ -458,7 +455,7 @@
              (= (xo b) (xo p))
              (= (yo b) (yo p))))
 
-       ,(smt-let ([l (real-lbox b)] [v (real-vbox b)])
+       ,(smt-let ([l (lbox b)] [v (vbox b)])
          (=> (is-width/auto (style.width r))
              (and
               (width-set b)
@@ -596,8 +593,8 @@
           :named restriction-4)))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [r (computed-style (get/elt (element b)))]
-               [p (pflow b)] [pp (ppbox b)])
+    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
+               [p (pflow b)] [pp (ppflow b)])
 
        (= (type b) box/block)
        (= (mtp b) (max (mt b) 0.0))
@@ -620,7 +617,7 @@
        (= (xo b) (xo p))
        (= (yo b) (yo p))
 
-       (let ([l (real-lbox b)] [v (real-vbox b)])
+       (let ([l (lbox b)] [v (vbox b)])
          (= (stfwidth b)
             (ite (is-width/auto (style.width r))
                  (max
@@ -683,7 +680,7 @@
           (=> width? (and (= (w b) temp-width) (not (w-from-stfwidth b))))
           (=> (and (not width?) (not (and left? right?)))
               (and (= (w b)
-                      (let ([l (real-lbox b)] [v (real-vbox b)])
+                      (let ([l (lbox b)] [v (vbox b)])
                         (min-width-limit (max-width-limit (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0) e) e)))
                    (w-from-stfwidth b)))
           (=> (and (not left?) (not right?))
@@ -703,8 +700,8 @@
                   (= (right-border b) (- (right-content pp) temp-right)))))))
 
   (define-fun an-inline-box ((b Box)) Bool
-    ,(smt-let ([e (get/elt (element b))] [p (pflow b)] [v (vflow b)] [l (lflow b)]
-               [r (computed-style (get/elt (element b)))])
+    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
+               [p (pflow b)] [v (vflow b)] [l (lflow b)])
        (= (type b) box/inline)
 
        ;; The ‘width’ and ‘height’ properties do not apply. For each
@@ -745,7 +742,7 @@
        (= (xo b) (xo p))
        (= (yo b) (yo p))
 
-       (let ([l* (real-lbox b)] [v* (real-vbox b)])
+       (let ([l* (lbox b)] [v* (vbox b)])
          (= (stfwidth b)
             (max (ite (is-box l*) (+ (min-ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (min-mr l*)) 0.0)
                  (ite (is-box v*) (stfwidth v*) 0.0))))
@@ -763,7 +760,7 @@
        (= (type b) box/text)
 
        ;; Only true if there are no wrapping opportunities in the box
-       (= (stfwidth b) (max (w b) (ite (is-box (real-vbox b)) (stfwidth (real-vbox b)) 0.0)))
+       (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
 
        (= (xo b) (xo p))
        (= (yo b) (yo p))
@@ -775,7 +772,7 @@
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-line-box ((b Box)) Bool
-    ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (fltbox b)]
+    ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
                [f (fflow b)] [l (lflow b)])
        (= (type b) box/line)
 
@@ -800,13 +797,13 @@
                          (- (left-outer flt) (left-content p))))
                  ;; Previous element is a float; see restrictions on floats
                  (is-box flt)
-                 (= (v-name b) (v-name flt)))])
+                 (= (&vflow b) (&vflow flt)))])
          (and
           (=> c (= (top-outer b) (bottom-outer flt)))
           (=> (and (not c) (is-no-box v)) (= (y b) (top-content p)))
           (=> (and (not c) (is-box v)) (= (y b) (bottom-border v)))))
 
-       (let ([l* (real-lbox b)] [v* (real-vbox b)])
+       (let ([l* (lbox b)] [v* (vbox b)])
          (= (stfwidth b)
             (min (w b)
                  (max

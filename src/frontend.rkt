@@ -53,6 +53,11 @@
   (define log-phase (make-log))
   (define doms (map parse-dom docs))
 
+  (log-phase "Read ~a documents with ~a elements and ~a boxes"
+             (length doms)
+             (length (append-map (compose sequence->list in-tree dom-elements) doms))
+             (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
+
   (define matchers (for/list ([dom doms]) (link-elts-boxes (car sheets) (dom-elements dom) (dom-boxes dom))))
   (define query (all-constraints matchers doms))
   (set! query (append query (sheet-constraints doms (car sheets))))
