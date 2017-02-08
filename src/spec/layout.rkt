@@ -287,6 +287,14 @@
               [else
                (= (ml b) (mr b))])]))))
 
+  (define-fun compute-stfwidth ((b Box)) Real
+    (let ([l (lbox b)] [v (vbox b)] [r (computed-style (box-elt b))])
+      (ite (is-width/auto (style.width r))
+           (max
+            (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)
+            (ite (is-box v) (stfwidth v) 0.0))
+           (w b))))
+
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
@@ -313,15 +321,7 @@
 
        (flow-horizontal-margins b)
 
-       (let ([l (lbox b)] [v (vbox b)])
-         (= (stfwidth b)
-            (ite (is-width/auto (style.width r))
-                 (max (ite (is-box l)
-                           (+ (min-ml l) (bl l) (pl l)
-                              (min (w l) (stfwidth l))
-                              (pr l) (br l) (min-mr l)) 0)
-                      (ite (is-box v) (stfwidth v) 0.0))
-                 (w b))))
+       (= (stfwidth b) (compute-stfwidth b))
        (=> (is-margin/auto (style.margin-top r)) (= (mt b) 0.0))
        (=> (is-margin/auto (style.margin-bottom r)) (= (mb b) 0.0))
        (=> (is-height/auto (style.height r)) (auto-height-for-flow-blocks b))
@@ -371,13 +371,8 @@
              (and
               (width-set b)
               (w-from-stfwidth b)
-              (= (w b) (min-max-width (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l)) 0.0) b))))
-         (= (stfwidth b)
-            (ite (is-width/auto (style.width r))
-                 (max
-                  (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)
-                  (ite (is-box v) (stfwidth v) 0.0))
-                 (w b))))
+              (= (w b) (min-max-width (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l)) 0.0) b)))))
+       (= (stfwidth b) (compute-stfwidth b))
 
        ;; CSS 2.1 § 10.6.7 : In certain cases, the height of an
        ;; element that establishes a block formatting context is computed as follows:
@@ -511,13 +506,7 @@
 
        (no-relative-offset b)
 
-       (let ([l (lbox b)] [v (vbox b)])
-         (= (stfwidth b)
-            (ite (is-width/auto (style.width r))
-                 (max
-                  (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)
-                  (ite (is-box v) (stfwidth v) 0.0))
-                 (w b))))
+       (= (stfwidth b) (compute-stfwidth b))
 
        ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
        ,(smt-let ([temp-top ,(get-px-or-% 'top 'offset 'h 'b)]
@@ -604,11 +593,7 @@
             (relatively-positioned b)
             (no-relative-offset b))
 
-       (let ([l* (lbox b)] [v* (vbox b)])
-         (= (stfwidth b)
-            (max (ite (is-box l*) (+ (min-ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (min-mr l*)) 0.0)
-                 (ite (is-box v*) (stfwidth v*) 0.0))))
-
+       (= (stfwidth b) (compute-stfwidth b))
        (= (left-outer (fflow b)) (left-content b))
        (= (right-outer (lflow b)) (right-content b))
        (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
@@ -658,12 +643,7 @@
           (=> (and (not c) (is-no-box v)) (= (y b) (top-content p)))
           (=> (and (not c) (is-box v)) (= (y b) (bottom-border v)))))
 
-       (let ([l* (lbox b)] [v* (vbox b)])
-         (= (stfwidth b)
-            (min (w b)
-                 (max
-                  (ite (is-box l*) (+ (min-ml l*) (bl l*) (pl l*) (stfwidth l*) (pr l*) (br l*) (min-mr l*)) 0.0)
-                  (ite (is-box v*) (stfwidth v*) 0.0)))))
+       (= (stfwidth b) (compute-stfwidth b))
 
        (=> (is-text-align/left (textalign b)) (= (left-border f) (left-content b)))
        (=> (is-text-align/justify (textalign b))
