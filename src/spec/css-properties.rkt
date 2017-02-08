@@ -1,7 +1,7 @@
 #lang racket
 
 (require "../common.rkt")
-(provide in-css-properties in-css-types *%* css-shorthand-properties)
+(provide in-css-properties in-css-types *%* css-shorthand-properties css-type css-properties css-types)
 
 (define css-types-hash (make-hash))
 (define css-property-hash (make-hash))
@@ -108,3 +108,13 @@
     (border-bottom border-bottom-width border-bottom-style)
     (border-left border-left-width border-left-style)
     (overflow overflow-x overflow-y)))
+
+(define (css-properties)
+  (dict-keys css-property-hash))
+
+(define (css-types)
+  (dict-keys css-types-hash))
+
+(define (css-type property)
+  (match-define (cons type default) (dict-ref css-property-hash property))
+  type)

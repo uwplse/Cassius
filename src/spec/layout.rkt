@@ -30,6 +30,11 @@
     (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
         (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))))
 
+(define (zero-auto-margins dirs)
+  (for/list ([dir dirs])
+    (define letter (sformat "~a" (substring (~a dir) 0 1)))
+    `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0))))
+
 (define-constraints layout-definitions
 
   (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
@@ -156,7 +161,7 @@
      (= (pt b) (pr b) (pb b) (pl b) 0.0)))
 
   (define-fun auto-height-for-flow-roots ((b Box)) Real
-    ;; The algorithm from section §10.6.7 of CSS 2.1
+    ;; CSS 2.1 § 10.6.7
     ,(smt-cond
       [(is-no-box (fbox b)) 0.0]
       [(is-box/line (type (lflow b)))
@@ -301,30 +306,21 @@
 
        (= (type b) box/block)
        (= (float b) float/none)
-       (margins-collapse b)
-
-       ,@(map extract-field '(pt pr pb pl mt mb bt br bb bl))
 
        (ite (is-position/relative (style.position r))
             (relatively-positioned b)
             (no-relative-offset b))
 
-       (=> (not (is-width/auto (style.width r)))
-           (and
-            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               ,(get-px-or-% 'width 'width 'w 'b))
-            (width-set b)
-            (not (w-from-stfwidth b))))
-       (=> (not (is-height/auto (style.height r)))
-           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              ,(get-px-or-% 'height 'height 'h 'b)))
-
        (flow-horizontal-margins b)
+       (ite (is-height/auto (style.height r))
+            (auto-height-for-flow-blocks b)
+            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+               ,(get-px-or-% 'height 'height 'h 'b)))
 
+       (margins-collapse b)
+       ,@(map extract-field '(pt pr pb pl mt mb bt br bb bl))
        (= (stfwidth b) (compute-stfwidth b))
-       (=> (is-margin/auto (style.margin-top r)) (= (mt b) 0.0))
-       (=> (is-margin/auto (style.margin-bottom r)) (= (mb b) 0.0))
-       (=> (is-height/auto (style.height r)) (auto-height-for-flow-blocks b))
+       ,@(zero-auto-margins '(top bottom))
        (= (x b) (+ (left-content p) (ml b)))
        (= (y b) (vertical-position-for-flow-boxes b))))
 
@@ -336,48 +332,28 @@
        (margins-dont-collapse b)
 
        ,@(map extract-field '(pt pr pb pl mt mr mb ml bt br bb bl))
+       ,@(zero-auto-margins '(left right top bottom))
 
-       (=> (is-width/px (style.width r))
+       (= (w-from-stfwidth b) (is-width/auto (style.width r)))
+       (ite (is-width/auto (style.width r))
            (and
             (width-set b)
-            (not (w-from-stfwidth b))
+            (= (w b) (min-max-width (ite (is-box lb) (+ (min-ml lb) (bl lb) (pl lb) (stfwidth lb) (pr lb) (br lb) (min-mr lb)) 0.0) b)))
+           (and ;; TODO: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               (min-max-width (width.px (style.width r)) b))))
-       (=> (is-width/% (style.width r))
-           (and (width-set b)
-                (not (w-from-stfwidth b))
-                ;; TODO: what if (w-from-stfwidth p)
-                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                   (min-max-width (%of (width.% (style.width r)) (w p)) b))))
-       (=> (is-height/px (style.height r))
-           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-max-height (height.px (style.height r)) b)))
-       (=> (is-height/% (style.height r))
-           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-              (min-max-height (%of (height.% (style.height r)) (h p)) b)))
+               ,(get-px-or-% 'width 'width 'w 'b))
+            (width-set b)))
 
-
-       ;; If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
-       ,@(for/list ([(dir letter) (in-dict '((left . l) (right . r) (top . t) (bottom . b)))])
-           `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r))
-                 (= (,(sformat "m~a" letter) b) 0)))
+       (ite (is-height/auto (style.height r))
+            (=> (width-set b) (= (h b) (auto-height-for-flow-roots b)))
+            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+               ,(get-px-or-% 'height 'height 'h 'b)))
 
        (ite (is-position/relative (style.position r))
             (relatively-positioned b)
             (no-relative-offset b))
 
-       ,(smt-let ([l (lbox b)] [v (vbox b)])
-         (=> (is-width/auto (style.width r))
-             (and
-              (width-set b)
-              (w-from-stfwidth b)
-              (= (w b) (min-max-width (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l)) 0.0) b)))))
        (= (stfwidth b) (compute-stfwidth b))
-
-       ;; CSS 2.1 § 10.6.7 : In certain cases, the height of an
-       ;; element that establishes a block formatting context is computed as follows:
-       (=> (and (width-set b) (is-height/auto (style.height r)))
-           (= (h b) (auto-height-for-flow-roots b)))
 
        ;; TODO : In addition, if the element has any floating descendants whose bottom margin edge
        ;; is below the element's bottom content edge, then the height is increased to include
@@ -501,11 +477,8 @@
 
        (= (type b) box/block)
        (margins-dont-collapse b)
-
        ,@(map extract-field '(pt pr pb pl bt br bb bl))
-
        (no-relative-offset b)
-
        (= (stfwidth b) (compute-stfwidth b))
 
        ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
@@ -543,7 +516,7 @@
                            (is-margin/auto (style.margin-bottom r)))
                        (= (bottom-border b) (- (bottom-content pp) temp-bottom))))))
 
-       ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
+       ;; Phase 2: Width, via CSS 2.1 § 10.6.4, w, x, ml, mr
        ,(smt-let ([temp-left ,(get-px-or-% 'left 'offset 'w 'b)]
                   [temp-right ,(get-px-or-% 'right 'offset 'w 'b)]
                   [temp-width ,(get-px-or-% 'width 'width 'w 'b)]
@@ -602,25 +575,21 @@
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)])
        (= (type b) box/text)
-
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
+       ;; This is super-weak, but for now it really is our formalization of line layout
+       (horizontally-adjacent b p)
 
        (no-relative-offset b)
        (zero-box-model b)
-
-       ;; This is super-weak, but for now it really is our formalization of line layout
-       (horizontally-adjacent b p)
        (=> (is-box v) (= (x b) (right-border v)))))
 
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
                [f (fflow b)] [l (lflow b)])
        (= (type b) box/line)
-
        (no-relative-offset b)
        (zero-box-model b)
-
        (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
                  (is-float/left (float flt)))
             (= (left-outer b) (right-outer flt))
