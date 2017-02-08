@@ -495,88 +495,91 @@
        (float-rules b)
        (float-restrictions b)))
 
+  (define-fun positioned-vertical-layout ((b Box)) Bool
+     ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
+                [temp-top ,(get-px-or-% 'top 'offset 'h 'b)]
+                [temp-bottom ,(get-px-or-% 'bottom 'offset 'h 'b)]
+                [temp-height ,(get-px-or-% 'height 'height 'h 'b)]
+                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
+                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
+                [height? (not (is-height/auto (style.height (computed-style (box-elt b)))))])
+
+        (=> top? (= (top-border b) (+ (top-content pp) temp-top)))
+        (=> height? (= (h b) temp-height))
+        (=> (and (not top?) (not bottom?)) (= (y b) (vertical-position-for-flow-boxes b)))
+        (=> (and (not height?) (not (and top? bottom?)))
+            (= (h b) (auto-height-for-flow-roots b)))
+        (=> (and bottom? (not (and top? height?)))
+            (= (bottom-border b) (- (bottom-content pp) temp-bottom)))
+
+        ;; Margins work identically unless overspecified
+        (=> (not (and top? height? bottom?))
+            (and
+             (= (mt b) (margin-min-px (style.margin-top r) b))
+             (= (mb b) (margin-min-px (style.margin-bottom r) b))))
+
+        ;; Pre-item 2
+        (=> (and top? bottom? height?)
+            (and (=> (not (is-margin/auto (style.margin-top r)))
+                     (= (mt b) (margin-min-px (style.margin-top r) b)))
+                 (=> (not (is-margin/auto (style.margin-bottom r)))
+                     (= (mb b) (margin-min-px (style.margin-bottom r) b)))
+                 (=> (and (is-margin/auto (style.margin-top r))
+                          (is-margin/auto (style.margin-bottom r)))
+                     (= (mt b) (mb b)))
+                 (=> (or (is-margin/auto (style.margin-top r))
+                         (is-margin/auto (style.margin-bottom r)))
+                     (= (bottom-border b) (- (bottom-content pp) temp-bottom)))))))
+
+
+  (define-fun positioned-vertical-layout ((b Box)) Bool
+     ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)] [p (pflow b)]
+                [temp-left ,(get-px-or-% 'left 'offset 'w 'b)]
+                [temp-right ,(get-px-or-% 'right 'offset 'w 'b)]
+                [temp-width ,(get-px-or-% 'width 'width 'w 'b)]
+                [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
+                [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
+                [width? (not (is-width/auto (style.width (computed-style (box-elt b)))))])
+
+        (width-set b)
+
+        ;; Margins work identically unless overspecified
+        (=> (not (and left? width? right?))
+            (and
+             (= (ml b) (margin-min-px (style.margin-left r) b))
+             (= (mr b) (margin-min-px (style.margin-right r) b))))
+
+        (=> left? (= (left-border b) (+ (left-content pp) temp-left)))
+        (=> width? (and (= (w b) temp-width) (not (w-from-stfwidth b))))
+        (=> (and (not width?) (not (and left? right?)))
+            (and (= (w b) (usable-stfwidth b))
+                 (w-from-stfwidth b)))
+        (=> (and (not left?) (not right?))
+            (= (left-border b) (left-content p)))
+        (=> (and right? (not (and left? width?)))
+            (= (right-border b) (- (right-content pp) temp-right)))
+        (=> (and left? right?) (not (w-from-stfwidth b)))
+
+        (=> (and left? width? right?)
+            (=> (not (is-margin/auto (style.margin-left r)))
+                (= (ml b) (margin-min-px (style.margin-left r) b)))
+            (=> (not (is-margin/auto (style.margin-right r)))
+                (= (mr b) (margin-min-px (style.margin-right r) b)))
+            (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                (= (ml b) (mr b)))
+            (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                (= (right-border b) (- (right-content pp) temp-right))))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
-    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
-               [p (pflow b)] [pp (ppflow b)])
+    (and
+     (= (type b) box/block)
+     (margins-dont-collapse b)
+     ,@(map extract-field '(pt pr pb pl bt br bb bl))
+     (no-relative-offset b)
+     (= (stfwidth b) (compute-stfwidth b))
 
-       (= (type b) box/block)
-       (margins-dont-collapse b)
-       ,@(map extract-field '(pt pr pb pl bt br bb bl))
-       (no-relative-offset b)
-       (= (stfwidth b) (compute-stfwidth b))
-
-       ;; Phase 1: Height, via CSS 2.1 § 10.6.4, h, y, mt, mb
-       ,(smt-let ([temp-top ,(get-px-or-% 'top 'offset 'h 'b)]
-                  [temp-bottom ,(get-px-or-% 'bottom 'offset 'h 'b)]
-                  [temp-height ,(get-px-or-% 'height 'height 'h 'b)]
-                  [top? (not (is-offset/auto (style.top r)))]
-                  [bottom? (not (is-offset/auto (style.bottom r)))]
-                  [height? (not (is-height/auto (style.height r)))])
-
-          (=> top? (= (top-border b) (+ (top-content pp) temp-top)))
-          (=> height? (= (h b) temp-height))
-          (=> (and (not top?) (not bottom?)) (= (y b) (vertical-position-for-flow-boxes b)))
-          (=> (and (not height?) (not (and top? bottom?)))
-              (= (h b) (auto-height-for-flow-roots b)))
-          (=> (and bottom? (not (and top? height?)))
-              (= (bottom-border b) (- (bottom-content pp) temp-bottom)))
-
-          ;; Margins work identically unless overspecified
-          (=> (not (and top? height? bottom?))
-              (and
-               (= (mt b) (margin-min-px (style.margin-top r) b))
-               (= (mb b) (margin-min-px (style.margin-bottom r) b))))
-
-          ;; Pre-item 2
-          (=> (and top? bottom? height?)
-              (and (=> (not (is-margin/auto (style.margin-top r)))
-                       (= (mt b) (margin-min-px (style.margin-top r) b)))
-                   (=> (not (is-margin/auto (style.margin-bottom r)))
-                       (= (mb b) (margin-min-px (style.margin-bottom r) b)))
-                   (=> (and (is-margin/auto (style.margin-top r))
-                            (is-margin/auto (style.margin-bottom r)))
-                       (= (mt b) (mb b)))
-                   (=> (or (is-margin/auto (style.margin-top r))
-                           (is-margin/auto (style.margin-bottom r)))
-                       (= (bottom-border b) (- (bottom-content pp) temp-bottom))))))
-
-       ;; Phase 2: Width, via CSS 2.1 § 10.6.4, w, x, ml, mr
-       ,(smt-let ([temp-left ,(get-px-or-% 'left 'offset 'w 'b)]
-                  [temp-right ,(get-px-or-% 'right 'offset 'w 'b)]
-                  [temp-width ,(get-px-or-% 'width 'width 'w 'b)]
-                  [left? (not (is-offset/auto (style.left r)))]
-                  [right? (not (is-offset/auto (style.right r)))]
-                  [width? (not (is-width/auto (style.width r)))])
-
-          (width-set b)
-
-          ;; Margins work identically unless overspecified
-          (=> (not (and left? width? right?))
-              (and
-               (= (ml b) (margin-min-px (style.margin-left r) b))
-               (= (mr b) (margin-min-px (style.margin-right r) b))))
-
-          (=> left? (= (left-border b) (+ (left-content pp) temp-left)))
-          (=> width? (and (= (w b) temp-width) (not (w-from-stfwidth b))))
-          (=> (and (not width?) (not (and left? right?)))
-              (and (= (w b) (usable-stfwidth b))
-                   (w-from-stfwidth b)))
-          (=> (and (not left?) (not right?))
-              (= (left-border b) (left-content p)))
-          (=> (and right? (not (and left? width?)))
-              (= (right-border b) (- (right-content pp) temp-right)))
-          (=> (and left? right?) (not (w-from-stfwidth b)))
-
-          (=> (and left? width? right?)
-              (=> (not (is-margin/auto (style.margin-left r)))
-                  (= (ml b) (margin-min-px (style.margin-left r) b)))
-              (=> (not (is-margin/auto (style.margin-right r)))
-                  (= (mr b) (margin-min-px (style.margin-right r) b)))
-              (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
-                  (= (ml b) (mr b)))
-              (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
-                  (= (right-border b) (- (right-content pp) temp-right)))))))
+     (positioned-vertical-layout b)
+     (positioned-horizontal-layout b)))
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
