@@ -528,7 +528,7 @@
                      (= (bottom-border b) (- (bottom-content pp) temp-bottom)))))))
 
 
-  (define-fun positioned-vertical-layout ((b Box)) Bool
+  (define-fun positioned-horizontal-layout ((b Box)) Bool
      ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)] [p (pflow b)]
                 [temp-left ,(get-px-or-% 'left 'offset 'w 'b)]
                 [temp-right ,(get-px-or-% 'right 'offset 'w 'b)]
@@ -567,15 +567,15 @@
                 (= (right-border b) (- (right-content pp) temp-right))))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
-    (and
-     (= (type b) box/block)
-     (margins-dont-collapse b)
-     ,@(map extract-field '(pt pr pb pl bt br bb bl))
-     (no-relative-offset b)
-     (= (stfwidth b) (compute-stfwidth b))
+    ,(smt-let ([r (computed-style (box-elt b))] [p (pflow b)])
+      (= (type b) box/block)
+      (margins-dont-collapse b)
+      ,@(map extract-field '(pt pr pb pl bt br bb bl))
+      (no-relative-offset b)
+      (= (stfwidth b) (compute-stfwidth b))
 
-     (positioned-vertical-layout b)
-     (positioned-horizontal-layout b)))
+      (positioned-vertical-layout b)
+      (positioned-horizontal-layout b)))
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
