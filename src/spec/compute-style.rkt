@@ -2,6 +2,12 @@
 (require "../common.rkt" "../smt.rkt" "css-properties.rkt")
 (provide style-computation)
 
+;; This file defines the translation from specified to computed
+;; styles. The specified style happens after all the cascading and so
+;; on occurs, but it differs from the specified style in three weird
+;; cases where CSS wants "bad" but legal values not to participate in
+;; inheritance.
+
 (define (prop-is-positive prop elt)
   (define type (slower (css-type prop)))
   `(and

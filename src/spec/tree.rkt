@@ -2,32 +2,31 @@
 (require "../common.rkt" "../smt.rkt")
 (provide tree-types link-definitions)
 
+;; This file defines the tree structures used in Cassius's SMT
+;; encoding of CSS. It defines the Element and Box classes, and
+;; functions to properly establish the pointers each holds.
+
 (define-constraints tree-types
   (declare-datatypes ()
      ((Box no-box
            (box (type BoxType)
-                (x Real) (y Real) (w Real) (h Real)
-                (xo Real) (yo Real)
-                (mt Real) (mr Real) (mb Real) (ml Real)
-                (mtp Real) (mtn Real) (mbp Real) (mbn Real)
-                (pt Real) (pr Real) (pb Real) (pl Real)
-                (bt Real) (br Real) (bb Real) (bl Real)
+                (x Real) (y Real) (w Real) (h Real) ; X, Y and width/height
+                (xo Real) (yo Real) ; X and Y offset
+                (mt Real) (mr Real) (mb Real) (ml Real) ; margins
+                (mtp Real) (mtn Real) (mbp Real) (mbn Real) ; top/bottom positive/negative margins for collapsing
+                (pt Real) (pr Real) (pb Real) (pl Real) ; padding
+                (bt Real) (br Real) (bb Real) (bl Real) ; border
                 (stfwidth Real) (w-from-stfwidth Bool)
-                (&pbox BoxName)
-                (&vbox BoxName) (&nbox BoxName)
-                (&fbox BoxName) (&lbox BoxName)
-                (width-set Bool)
-                (&nflow BoxName) (&vflow BoxName)
-                (&pbflow BoxName) (&ppflow BoxName)
-                (&flt BoxName) (&flt-up BoxName)
-                ;; Because text-align inherits by default, it needs a
-                ;; slot in the box type to propagate values from
-                ;; parent to child.
-                (textalign Text-Align)
+                (&pbox BoxName) (&vbox BoxName) (&nbox BoxName) (&fbox BoxName) (&lbox BoxName) ; box tree pointers
+                (width-set Bool) ; used for dependency creation only
+                (&nflow BoxName) (&vflow BoxName) ; flow tree pointers
+                (&pbflow BoxName) (&ppflow BoxName) ; parent block and parent positioned pointers
+                (&flt BoxName) (&flt-up BoxName) ; previous and rightmost-child floating boxes
+                (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt ElementName)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
-           (elt (specified-style Style) (computed-style Style)
+           (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (&pelt ElementName) (&velt ElementName) (&nelt ElementName)
                 (&felt ElementName) (&lelt ElementName)
                 (&box BoxName)))))
@@ -91,7 +90,7 @@
     (ite (=> (is-box (lbox b)) (box-in-flow (lbox b)))
          (lbox b) (vflow (lbox b))))
 
-  ;; `link-element` and `link-box` define the element and box trees
+  ;; `link-element` and `link-box` set the element and box tree pointers
   (define-fun link-element
     ((elt Element) (&p ElementName) (&v ElementName) (&n ElementName)
      (&f ElementName) (&l ElementName)) Bool

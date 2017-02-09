@@ -1,13 +1,15 @@
 #lang racket
-
 (require "../common.rkt")
 (provide in-css-properties in-css-types *%* css-shorthand-properties css-type css-properties css-types)
 
+;; The CSS properties and data types Cassius supports. The file is in
+;; three parts: helper macros, type and property definitions, and
+;; helper functions
+
+
+;; Macros for defining CSS types and properties
 (define css-types-hash (make-hash))
 (define css-property-hash (make-hash))
-
-;; This weird list is the one necessary to pass the CSSWG tests.
-(define *%* (make-parameter '(0 1 1.5 2 5 10 15 18 20 25 29 50 62 66 80 100 101 125 200)))
 
 (define (css-constructor name items)
   (for/list ([variant (list* 'inherit items)])
@@ -22,14 +24,10 @@
     (hash-set! css-types-hash 'name (css-constructor 'name '(decl ...)))
     (hash-set! css-property-hash 'prop (cons 'name 'default)) ...))
 
-(define (in-css-properties)
-  (in-parallel
-   (in-hash-keys css-property-hash)
-   (sequence-map car (in-hash-values css-property-hash))
-   (sequence-map cdr (in-hash-values css-property-hash))))
+;; CSS datatypes and the properties that use them
 
-(define (in-css-types)
-  (in-hash css-types-hash))
+(define *%* ; The valid percentage values in Cassius's CSS model
+  (make-parameter '(0 1 1.5 2 5 10 15 18 20 25 29 50 62 66 80 100 101 125 200)))
 
 (define-css-type (Width auto (px Real) (% Real))
   [width auto])
@@ -109,6 +107,8 @@
     (border-left border-left-width border-left-style)
     (overflow overflow-x overflow-y)))
 
+;; Helper Functions
+
 (define (css-properties)
   (dict-keys css-property-hash))
 
@@ -118,3 +118,12 @@
 (define (css-type property)
   (match-define (cons type default) (dict-ref css-property-hash property))
   type)
+
+(define (in-css-properties)
+  (in-parallel
+   (in-hash-keys css-property-hash)
+   (sequence-map car (in-hash-values css-property-hash))
+   (sequence-map cdr (in-hash-values css-property-hash))))
+
+(define (in-css-types)
+  (in-hash css-types-hash))
