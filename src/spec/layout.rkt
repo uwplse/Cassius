@@ -310,30 +310,6 @@
             (ite (is-box v) (stfwidth v) 0.0))
            (w b))))
 
-  (define-fun a-block-flow-box ((b Box)) Bool
-    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
-               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
-
-       (= (type b) box/block)
-       (= (float b) float/none)
-
-       (ite (is-position/relative (style.position r))
-            (relatively-positioned b)
-            (no-relative-offset b))
-
-       (flow-horizontal-margins b)
-       (ite (is-height/auto (style.height r))
-            (auto-height-for-flow-blocks b)
-            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-               ,(get-px-or-% 'height 'height 'h 'b)))
-
-       (margins-collapse b)
-       ,@(map extract-field '(pt pr pb pl mt mb bt br bb bl))
-       (= (stfwidth b) (compute-stfwidth b))
-       ,@(zero-auto-margins '(top bottom))
-       (= (x b) (+ (left-content p) (ml b)))
-       (= (y b) (vertical-position-for-flow-boxes b))))
-
   (define-fun float-rules ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [flt (flt b)] [vb (vbox b)])
        ;; CSS 2.1 § 9.5.1 : When the float occurs between two
@@ -458,39 +434,6 @@
        (=> (and (is-box flt) (not (= (float flt) (float b))))
            (not (horizontally-adjacent flt b)))))
 
-  (define-fun a-block-float-box ((b Box)) Bool
-    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
-               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)] [flt (flt b)])
-
-       (= (type b) box/block)
-       (margins-dont-collapse b)
-
-       ,@(map extract-field '(pt pr pb pl mt mr mb ml bt br bb bl))
-       ,@(zero-auto-margins '(left right top bottom))
-
-       (= (w-from-stfwidth b) (is-width/auto (style.width r)))
-       (ite (is-width/auto (style.width r))
-           (and
-            (width-set b)
-            (= (w b) (usable-stfwidth b)))
-           (and ;; TODO: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
-            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               ,(get-px-or-% 'width 'width 'w 'b))
-            (width-set b)))
-
-       (ite (is-height/auto (style.height r))
-            (=> (width-set b) (= (h b) (auto-height-for-flow-roots b)))
-            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-               ,(get-px-or-% 'height 'height 'h 'b)))
-
-       (ite (is-position/relative (style.position r))
-            (relatively-positioned b)
-            (no-relative-offset b))
-
-       (= (stfwidth b) (compute-stfwidth b))
-       (float-rules b)
-       (float-restrictions b)))
-
   (define-fun positioned-vertical-layout ((b Box)) Bool
      ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
                 [temp-top ,(get-px-or-% 'top 'offset 'h 'b)]
@@ -566,6 +509,63 @@
             (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
                 (= (right-border b) (- (right-content pp) temp-right))))))
 
+  (define-fun a-block-flow-box ((b Box)) Bool
+    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
+               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
+
+       (= (type b) box/block)
+       (= (float b) float/none)
+
+       (ite (is-position/relative (style.position r))
+            (relatively-positioned b)
+            (no-relative-offset b))
+
+       (flow-horizontal-margins b)
+       (ite (is-height/auto (style.height r))
+            (auto-height-for-flow-blocks b)
+            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+               ,(get-px-or-% 'height 'height 'h 'b)))
+
+       (margins-collapse b)
+       ,@(map extract-field '(pt pr pb pl mt mb bt br bb bl))
+       (= (stfwidth b) (compute-stfwidth b))
+       ,@(zero-auto-margins '(top bottom))
+       (= (x b) (+ (left-content p) (ml b)))
+       (= (y b) (vertical-position-for-flow-boxes b))))
+
+  (define-fun a-block-float-box ((b Box)) Bool
+    ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
+               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)] [flt (flt b)])
+
+       (= (type b) box/block)
+       (margins-dont-collapse b)
+
+       ,@(map extract-field '(pt pr pb pl mt mr mb ml bt br bb bl))
+       ,@(zero-auto-margins '(left right top bottom))
+
+       (= (w-from-stfwidth b) (is-width/auto (style.width r)))
+       (ite (is-width/auto (style.width r))
+           (and
+            (width-set b)
+            (= (w b) (usable-stfwidth b)))
+           (and ;; TODO: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
+            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+               ,(get-px-or-% 'width 'width 'w 'b))
+            (width-set b)))
+
+       (ite (is-height/auto (style.height r))
+            (=> (width-set b) (= (h b) (auto-height-for-flow-roots b)))
+            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+               ,(get-px-or-% 'height 'height 'h 'b)))
+
+       (ite (is-position/relative (style.position r))
+            (relatively-positioned b)
+            (no-relative-offset b))
+
+       (= (stfwidth b) (compute-stfwidth b))
+       (float-rules b)
+       (float-restrictions b)))
+
   (define-fun a-block-positioned-box ((b Box)) Bool
     ,(smt-let ([r (computed-style (box-elt b))] [p (pflow b)])
       (= (type b) box/block)
@@ -576,6 +576,15 @@
 
       (positioned-vertical-layout b)
       (positioned-horizontal-layout b)))
+
+  (define-fun a-block-box ((b Box)) Bool
+    ,(smt-cond
+      [(box-positioned b)
+       (a-block-positioned-box b)]
+      [(box-in-flow b)
+       (a-block-flow-box b)]
+      [else
+       (a-block-float-box b)]))
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
@@ -643,13 +652,6 @@
        (=> (is-text-align/right (textalign b)) (= (right-border l) (right-content b)))
        (=> (is-text-align/center (textalign b))
            (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))))
-
-  (define-fun a-block-box ((b Box)) Bool
-    (ite (! (or (is-position/fixed (position b)) (is-position/absolute (position b))) :named positioned)
-         (a-block-positioned-box b)
-         (ite (! (is-float/none (float b)) :named flow)
-              (a-block-flow-box b)
-              (a-block-float-box b))))
 
   (define-fun a-view-box ((b Box)) Bool
     (and
