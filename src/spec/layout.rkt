@@ -1,9 +1,5 @@
 #lang racket
-(require "../common.rkt")
-(require "../smt.rkt")
-(require "../dom.rkt")
-(require "css-properties.rkt")
-
+(require "../common.rkt" "../smt.rkt" "css-properties.rkt")
 (provide layout-definitions)
 
 (define (get-px-or-% prop type wrt b)
