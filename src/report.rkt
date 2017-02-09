@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/path racket/set racket/engine racket/cmdline math/base)
+(require racket/path racket/set racket/sandbox racket/cmdline math/base)
 (require json (only-in xml write-xexpr))
 (require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt")
 
@@ -73,23 +73,16 @@
   (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
 (define (run-problem prob #:debug debug)
-  (define eng
-    (engine (λ (_)
-              (parameterize ([current-error-port (open-output-string)]
-                             [current-output-port (open-output-string)])
-                (with-handlers
-                    ([exn:break? (λ (e) 'break)]
-                     [exn:fail? (λ (e)
-                                  (newline)
-                                  ((error-display-handler) (exn-message e) e)
-                                  (newline)
-                                  (list 'error e))])
-                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug))))))
-
   (define t (current-inexact-milliseconds))
-  (define res (if (engine-run 60000 eng) (engine-result eng) 'timeout)) ; 1m max
+  (define res 'timeout)
+  (with-handlers
+      ([exn:fail:resource? (λ (e) (set! res 'timeout))]
+       [exn:fail? (λ (e) (set! res (list 'error e)))])
+    (with-deep-time-limit 60
+      (parameterize ([current-error-port (open-output-string)]
+                     [current-output-port (open-output-string)])
+        (set! res (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug)))))
   (define runtime (- (current-inexact-milliseconds) t))
-  (engine-kill eng)
   (values res runtime))
 
 (struct result (file problem test section status description features time url))
@@ -100,7 +93,7 @@
   (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))] #:when (valid? prob))
     (eprintf "~a\t~a\t" file pname)
     (define-values (res runtime) (run-problem prob #:debug debug))
-    (define supported? (null? (set-subtract (dict-ref prob ':features) supported-features)))
+    (define supported? (null? (set-subtract (dict-ref prob ':features '()) supported-features)))
 
     (define status
       (match res
@@ -111,10 +104,10 @@
         [(failure stylesheet trees) (if supported? 'fail 'unsupported)]))
     (eprintf "~a\n" status)
 
-    (define uname (file-name-stem (car (dict-ref prob ':url))))
+    (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features) runtime
-            (car (dict-ref prob ':url)))))
+            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+            (car (dict-ref prob ':url '("/tmp"))))))
 
 (define (run-mutation-tests file #:debug [debug '()] #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
   (define probs (call-with-input-file file parse-file))
@@ -124,7 +117,7 @@
     (eprintf "~a\t~a\t" file pname)
     (define prob* (dict-update prob ':documents (curry map dom-not-something)))
     (define-values (res runtime) (run-problem prob* #:debug debug))
-    (define supported? (null? (set-subtract (dict-ref prob ':features) supported-features)))
+    (define supported? (null? (set-subtract (dict-ref prob ':features '()) supported-features)))
 
     (define status
       (match res
@@ -135,10 +128,10 @@
         [(failure stylesheet trees) 'success]))
     (eprintf "~a\n" status)
 
-    (define uname (file-name-stem (car (dict-ref prob ':url))))
+    (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
     (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features) runtime
-            (car (dict-ref prob ':url)))))
+            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+            (car (dict-ref prob ':url '("/tmp"))))))
 
 (define (file-name-stem fn)
   (define-values (_1 uname _2) (split-path fn))
@@ -228,7 +221,7 @@
                #:unless (equal? (dict-ref rec 'status) "success"))
       (dict-ref rec 'test)))
 
-  (λ (p) (set-member? failed-tests (~a (file-name-stem (car (dict-ref p ':url)))))))
+  (λ (p) (set-member? failed-tests (~a (file-name-stem (car (dict-ref p ':url '("/tmp"))))))))
 
 (module+ main
   (define debug '())
@@ -252,11 +245,11 @@
    [("--index") index-file "File name with section information for tests"
     (set! index (read-index index-file))]
    [("--supported") "Skip tests with unsupported features"
-    (and! valid? (λ (p) (subset? (dict-ref p ':features) supported-features)))]
+    (and! valid? (λ (p) (subset? (dict-ref p ':features '()) supported-features)))]
    [("--failed") json-file "Run only tests that failed in given JSON file"
     (and! valid? (read-failed-tests json-file))]
    [("--feature") feature "Test a particular feature"
-    (and! valid? (λ (p) (set-member? (dict-ref p ':features) (string->symbol feature))))]
+    (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
 
    #:subcommands
 
