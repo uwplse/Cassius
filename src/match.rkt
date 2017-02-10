@@ -121,7 +121,7 @@
     (let ([d1 (dict-ref out (sformat "d1/~a" (name 'elt elt)))]
           [d2 (dict-ref out (sformat "d2/~a" (name 'elt elt)))])
       (unless (equal? d1 d2)
-        (node-add! elt* ':class 'new-class))))
+        (node-set! elt* ':class (cons 'new-class (node-get elt* ':class '()))))))
   (define out*
     (let ([h (make-hash)])
       (for ([elt (in-tree elts1)] [elt* (in-tree elts2)])

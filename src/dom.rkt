@@ -21,9 +21,9 @@
 (define (elements-difference from to)
   (let/ec return
     (let loop ([from from] [to to])
-      (for ([cls (set-subtract (node-get* to ':class #:default '()) (node-get* from ':class #:default '()))])
+      (for ([cls (set-subtract (node-get to ':class #:default '()) (node-get from ':class #:default '()))])
         (return (list 'add-class from cls)))
-      (for ([cls (set-subtract (node-get* from ':class #:default '()) (node-get* to ':class #:default '()))])
+      (for ([cls (set-subtract (node-get from ':class #:default '()) (node-get to ':class #:default '()))])
         (return (list 'remove-class from cls)))
       (unless (equal? (node-get from ':id) (node-get to ':id))
         (return (list 'set-id from (node-get to ':id))))
