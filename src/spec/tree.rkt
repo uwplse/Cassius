@@ -122,7 +122,7 @@
     (and
      (= (&elt (get/box &b)) &e)
      (= (&box (get/elt &e)) &b)
-     (= (textalign (pflow (get/box &b)))
+     (= (textalign (get/box &b))
         (style.text-align (computed-style (get/elt &e))))))
 
   (define-fun match-anon-element ((&e ElementName)) Bool
@@ -131,7 +131,7 @@
   (define-fun match-anon-box ((&b BoxName)) Bool
     (and
      (= (&elt (get/box &b)) nil-elt)
-     (= (textalign (pflow (get/box &b)))
+     (= (textalign (get/box &b))
         (ite (is-no-box (pflow (get/box &b)))
              text-align/left
              (textalign (pflow (get/box &b)))))))
