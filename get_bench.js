@@ -2,7 +2,7 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height".split(" ");
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size".split(" ");
 BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space content font-size".split(" ");
 BadTags = "img input svg:svg".split(" ");
 
@@ -92,6 +92,15 @@ function val2pct(val, features) {
         return +val.substr(0, val.length - 1);
     } else {
         throw "Error, " + val + " is not a percentage quantity."
+    }
+}
+
+function val2em(val, features) {
+    var match;
+    if (val.match(/^-?[0-9.]+em$/)) {
+        return +val.substr(0, val.length - 2);
+    } else {
+        throw "Error, " + val + " is not a em quantity."
     }
 }
 
@@ -457,6 +466,19 @@ function rescue_selector(sel) {
     }
 }
 
+function dump_length(val, features) {
+    try {
+        val = "(px " + f2r(val2px(val, features)) + ")";
+    } catch (e) {}
+    try {
+        val = "(% " + f2r(val2pct(val, features)) + ")";
+    } catch (e) {}
+    try {
+        val = "(em " + f2r(val2em(val, features)) + ")";
+    } catch (e) {}
+    return val;
+}
+
 function dump_rule(sel, style, features, is_from_style) {
     var nodes;
     try {
@@ -481,34 +503,17 @@ function dump_rule(sel, style, features, is_from_style) {
         if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
             var tname = tname.split("-", 2)[0];
         }
+
         try {
             val = "(px " + f2r(val2px(val, features)) + ")";
         } catch (e) {}
         try {
             val = "(% " + f2r(val2pct(val, features)) + ")";
         } catch (e) {}
-        
         try {
-            if (val.match(/^(-?[0-9.]+)em$/) && nodes.length > 0) {
-                var em = val.substr(0, val.length - 2);
-                if (em2px !== null) {
-                } else if (style.hasOwnProperty("font-size")) {
-                    em2px = val2px(style["font-size"], features);
-                } else {
-                    // HAXX: See if we can convert the EMs to PXs
-                    for (var j = 0; j < nodes.length; j++) {
-                        var ifs = val2px(cs(nodes[j])["font-size"], features);
-                        if (em2px === null) em2px = ifs
-                        if (em2px === ifs) continue;
-                        throw "Different font sizes for em value `" + sel + "`";
-                    }
-                }
-                val = "(px " + f2r(em2px * em) + ")";
-            }
-        } catch (e) {
-            console.warn(e);
-        }
-
+            val = "(em " + f2r(val2em(val, features)) + ")";
+        } catch (e) {}
+        
         if (BadProps.indexOf(sname) !== -1) {
             features["css:" + sname] = true;
         }

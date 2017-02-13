@@ -7,7 +7,9 @@
   (define type (slower (css-type prop)))
   `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
-        (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) (,wrt (pflow ,b)))))
+        (ite (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) ,r))
+             (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) (,wrt (pflow ,b)))
+             (%of (* 100 (,(sformat "~a.em" type) (,(sformat "style.~a" prop) ,r))) (font-size ,b)))))
 
 (define fields
   '((padding-left padding pl) (padding-right padding pr)
@@ -25,7 +27,9 @@
     (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
         (= (,field b) (%of (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)) (w p))))
     (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-        (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))))
+        (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
+    (=> (,(sformat "is-~a/em" type) (,(sformat "style.~a" prop) r))
+        (= (,field b) (%of (* 100.0 (,(sformat "~a.em" type) (,(sformat "style.~a" prop) r))) (font-size b))))))
 
 (define (zero-auto-margins dirs)
   (for/list ([dir dirs])
@@ -120,14 +124,11 @@
     ,(smt-cond
       [(is-margin/px m) (margin.px m)]
       [(is-margin/% m) (%of (margin.% m) (w (pflow b)))]
-      [else 0]))
+      [(is-margin/em m) (%of (* 100 (margin.em m)) (font-size b))]
+      [else 0.0]))
 
   (define-fun min-w ((b Box)) Real
-    (let ([width (style.width (computed-style (box-elt b)))])
-      ,(smt-cond
-        [(is-width/px width) (width.px width)]
-        [(is-width/% width) (%of (width.% width) (w (pflow b)))]
-        [else 0])))
+    (ite (is-width/auto (style.width (computed-style (box-elt b)))) 0.0 ,(get-px-or-% 'width 'w 'b)))
 
   (define-fun min-ml ((b Box)) Real
     (margin-min-px (style.margin-left (computed-style (box-elt b))) b))
@@ -226,18 +227,26 @@
            (= (xo b) (+ (offset.px (style.left r)) (xo p))))
        (=> (is-offset/% (style.left r))
            (= (xo b) (+ (%of (offset.% (style.left r)) (w p)) (xo p))))
+       (=> (is-offset/em (style.left r))
+           (= (xo b) (+ (%of (* 100 (offset.em (style.left r))) (font-size b)) (xo p))))
        (=> (is-offset/px (style.top r))
            (= (yo b) (+ (offset.px (style.top r)) (yo p))))
        (=> (is-offset/% (style.top r))
-           (= (yo b) (+ (%of (offset.px (style.top r)) (h p)) (yo p))))
+           (= (yo b) (+ (%of (offset.% (style.top r)) (h p)) (yo p))))
+       (=> (is-offset/em (style.top r))
+           (= (yo b) (+ (%of (* 100 (offset.em (style.top r))) (font-size b)) (yo p))))
        (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
            (= (xo b) (- (xo p) (offset.px (style.right r)))))
        (=> (and (is-offset/auto (style.left r)) (is-offset/% (style.right r)))
-           (= (xo b) (- (xo p) (%of (offset.px (style.right r)) (w p)))))
+           (= (xo b) (- (xo p) (%of (offset.% (style.right r)) (w p)))))
+       (=> (and (is-offset/auto (style.left r)) (is-offset/em (style.right r)))
+           (= (xo b) (- (xo p) (%of (* 100 (offset.em (style.right r))) (font-size b)))))
        (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
            (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
        (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
-           (= (yo b) (- (yo p) (%of (offset.px (style.bottom r)) (w p)))))
+           (= (yo b) (- (yo p) (%of (offset.% (style.bottom r)) (w p)))))
+       (=> (and (is-offset/auto (style.top r)) (is-offset/em (style.bottom r)))
+           (= (yo b) (- (yo p) (%of (* 100 (offset.em (style.bottom r))) (font-size b)))))
        (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
            (= (xo b) (xo p)))
        (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
@@ -297,6 +306,18 @@
             (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)
             (ite (is-box v) (stfwidth v) 0.0))
            (w b))))
+
+  (define-fun resolve-font-size ((b Box)) Real
+    (let ([e (box-elt b)])
+      ,(smt-cond
+        [(is-font-size/px (style.font-size (computed-style e)))
+         (font-size.px (style.font-size (computed-style e)))]
+        [(is-font-size/% (style.font-size (computed-style e)))
+         (%of (font-size.% (style.font-size (computed-style e)))
+              (font-size (pbox b)))]
+        [else ; em
+         (%of (* 100 (font-size.em (style.font-size (computed-style e))))
+              (font-size (pbox b)))])))
 
   (define-fun float-rules ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [flt (flt b)] [vb (vbox b)])
@@ -517,6 +538,7 @@
        ,@(map extract-field '(pt pr pb pl bt br bb bl))
        (= (stfwidth b) (compute-stfwidth b))
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
+       (= (font-size b) (resolve-font-size b))
 
        ,(smt-cond
          [(or (is-position/absolute (position b)) (is-position/fixed (position b)))
@@ -537,6 +559,7 @@
             (relatively-positioned b)
             (no-relative-offset b))
 
+       (= (font-size b) (resolve-font-size b))
        (= (stfwidth b) (compute-stfwidth b))
        (= (left-outer (fflow b)) (left-content b))
        (= (right-outer (lflow b)) (right-content b))
@@ -550,6 +573,7 @@
        (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
        ;; This is super-weak, but for now it really is our formalization of line layout
        (horizontally-adjacent b p)
+       (= (font-size b) (font-size p))
 
        (no-relative-offset b)
        (zero-box-model b)
@@ -584,6 +608,7 @@
           (=> (and (not c) (is-box v)) (= (y b) (bottom-border v)))))
 
        (= (stfwidth b) (compute-stfwidth b))
+       (= (font-size b) (font-size p))
 
        (=> (is-text-align/left (textalign b)) (= (left-border f) (left-content b)))
        (=> (is-text-align/justify (textalign b))
@@ -597,6 +622,7 @@
     (and
      (= (type b) box/root)
      (zero-box-model b)
+     (= (font-size b) 18)
      (= (xo b) (yo b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
@@ -609,6 +635,7 @@
        (margins-collapse b)
        (flow-horizontal-layout b)
        (= (w b) (w p))
+       (= (font-size b) (font-size p))
        (not (w-from-stfwidth b))
        (= (bottom-content b) (bottom-border l))
        (ite (is-box v)

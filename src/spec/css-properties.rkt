@@ -29,37 +29,37 @@
 (define *%* ; The valid percentage values in Cassius's CSS model
   (make-parameter '(0 1 1.5 2 5 10 15 18 20 25 29 50 62 66 80 100 101 125 200)))
 
-(define-css-type (Width auto (px Real) (% Real))
+(define-css-type (Width auto (px Real) (% Real) (em Real))
   [width auto])
 
-(define-css-type (Min-Width (px Real) (% Real))
+(define-css-type (Min-Width (px Real) (% Real) (em Real))
   [min-width (px 0)])
 
-(define-css-type (Max-Width none (px Real) (% Real))
+(define-css-type (Max-Width none (px Real) (% Real) (em Real))
   [max-width none])
 
-(define-css-type (Height auto (px Real) (% Real))
+(define-css-type (Height auto (px Real) (% Real) (em Real))
   [height auto])
 
-(define-css-type (Min-Height (px Real) (% Real))
+(define-css-type (Min-Height (px Real) (% Real) (em Real))
   [min-height (px 0)])
 
-(define-css-type (Max-Height none (px Real) (% Real))
+(define-css-type (Max-Height none (px Real) (% Real) (em Real))
   [max-height none])
 
-(define-css-type (Margin auto (px Real) (% Real))
+(define-css-type (Margin auto (px Real) (% Real) (em Real))
   [margin-top auto]
   [margin-right (px 0)]
   [margin-bottom auto]
   [margin-left (px 0)])
 
-(define-css-type (Padding (px Real) (% Real))
+(define-css-type (Padding (px Real) (% Real) (em Real))
   [padding-top (px 0)]
   [padding-right (px 0)]
   [padding-bottom (px 0)]
   [padding-left (px 0)])
 
-(define-css-type (Border (px Real) (% Real))
+(define-css-type (Border (px Real) (% Real) (em Real))
   [border-top-width medium]
   [border-right-width medium]
   [border-bottom-width medium]
@@ -84,7 +84,7 @@
 (define-css-type (Position static relative absolute fixed)
   [position static])
 
-(define-css-type (Offset (px Real) (% Real) auto)
+(define-css-type (Offset (px Real) (% Real) (em Real) auto)
   [top auto]
   [right auto]
   [bottom auto]
@@ -95,6 +95,9 @@
 
 (define-css-type (Display block inline none)
   [display inline])
+
+(define-css-type (Font-Size (px Real) (% Real) (em Real))
+  [font-size (em 1)])
 
 (define css-shorthand-properties
   '((margin margin-top margin-right margin-bottom margin-left)

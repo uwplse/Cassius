@@ -19,6 +19,7 @@
                 (stfwidth Real) (w-from-stfwidth Bool)
                 (&pbox BoxName) (&vbox BoxName) (&nbox BoxName) (&fbox BoxName) (&lbox BoxName) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
+                (font-size Real)
                 (&nflow BoxName) (&vflow BoxName) ; flow tree pointers
                 (&pbflow BoxName) (&ppflow BoxName) ; parent block and parent positioned pointers
                 (&flt BoxName) (&flt-up BoxName) ; previous and rightmost-child floating boxes

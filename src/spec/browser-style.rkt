@@ -96,8 +96,8 @@
      :browser
      [margin-left (px 0)]
      [margin-right (px 0)]
-     [margin-top (px 16)]
-     [margin-bottom (px 16)])
+     [margin-top (em 1)]
+     [margin-bottom (em 1)])
     ((tag pre)
      :browser
      [margin-top (px 16)]

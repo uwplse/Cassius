@@ -23,7 +23,8 @@
    '(margin-top margin-right margin-bottom margin-left)
    '(padding-top padding-right padding-bottom padding-left)
    '(border-top-style border-right-style border-bottom-style border-left-style)
-   '(text-align overflow-x overflow-y position top bottom left right)))
+   '(text-align overflow-x overflow-y position top bottom left right)
+   '(font-size)))
 
 (define (prop-is-simple prop elt)
   `(= (,(sformat "style.~a" prop) (computed-style ,elt))

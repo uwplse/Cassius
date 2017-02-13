@@ -61,7 +61,7 @@
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
          pt pr pb pl bt br bb bl stfwidth w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
-         width-set
+         width-set font-size
          &pbflow &ppflow &nflow &vflow &flt &flt-up
          textalign &elt)
    box)
@@ -148,7 +148,7 @@
     (match-define (cons class-hash value-hash) (dict-ref eqs prop))
     (for ([(class value) (in-dict value-hash)])
       (define const (sformat "value/~a/~a" prop (or class 'none)))
-      (if (or (eq? value '?) (css-ex? value) (css-em? value))
+      (if (eq? value '?)
           (emit `(declare-const ,const ,type))
           (emit `(define-const ,const ,type ,(dump-value type value))))
       (define elts (for/list ([(elt class*) (in-dict class-hash)] #:when (equal? class class*)) elt))
