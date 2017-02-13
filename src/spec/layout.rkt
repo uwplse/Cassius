@@ -34,7 +34,7 @@
 (define (zero-auto-margins dirs)
   (for/list ([dir dirs])
     (define letter (sformat "~a" (substring (~a dir) 0 1)))
-    `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0))))
+    `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0.0))))
 
 (define-constraints layout-definitions
 
@@ -622,7 +622,7 @@
     (and
      (= (type b) box/root)
      (zero-box-model b)
-     (= (font-size b) 18)
+     (= (font-size b) 16.0)
      (= (xo b) (yo b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
