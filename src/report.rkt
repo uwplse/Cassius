@@ -171,7 +171,7 @@
       (table ((id "sections") (rules "groups"))
        (thead ()
         ,(row #:cell 'th "" "Pass" "Fail" "Error" "Time" "Skip" "")
-        ,(apply row `(strong "Total") (set->results results)))
+        ,(apply row `(strong "Total") (append (set->results results) "")))
        (tbody ()
         ,@(for/list ([section (sort (remove-duplicates (map result-section results)) section<?)])
             (define sresults (filter (λ (x) (equal? (result-section x) section)) results))
