@@ -501,19 +501,6 @@
 
   (define (simpl1 expr)
     (match expr
-      [`(,(? constructor-tester? tester)
-         ,(or (list (? constructor? constructor) _ ...) (? constructor? constructor)))
-       (define test-variant (string->symbol (string-join (rest (string-split (~a tester) "-")) "-")))
-       (unless (member test-variant (hash-ref constructors (hash-ref types constructor)))
-         (error "Invalid tester/constructor combination" tester constructor))
-       (if (equal? test-variant constructor) 'true 'false)]
-      [`(,(? constructor-tester? tester) ,(? (curry hash-has-key? known-constructors) var))
-       (if (equal? tester (hash-ref known-constructors var)) 'true 'false)]
-      [(? (curry hash-has-key? known-constructors) var)
-       (match (hash-ref known-constructors var)
-         ['is-true 'true]
-         ['is-false 'false]
-         [_ var])]
       [`(ite false ,a ,b) b]
       [`(ite true ,a ,b) a]
       [`(ite ,c ,a ,a) a]
@@ -540,6 +527,19 @@
              (match rest* [`() 'false] [`(,x) x] [`(,x ...) `(or ,@x)])))]
       [`(or) `false]
       [(list '= a a) 'true]
+      [`(,(? constructor-tester? tester)
+         ,(or (list (? constructor? constructor) _ ...) (? constructor? constructor)))
+       (define test-variant (string->symbol (string-join (rest (string-split (~a tester) "-")) "-")))
+       (unless (member test-variant (hash-ref constructors (hash-ref types constructor)))
+         (error "Invalid tester/constructor combination" tester constructor))
+       (if (equal? test-variant constructor) 'true 'false)]
+      [`(,(? constructor-tester? tester) ,(? (curry hash-has-key? known-constructors) var))
+       (if (equal? tester (hash-ref known-constructors var)) 'true 'false)]
+      [(? (curry hash-has-key? known-constructors) var)
+       (match (hash-ref known-constructors var)
+         ['is-true 'true]
+         ['is-false 'false]
+         [_ var])]
       [_ expr]))
 
   (for/reap [sow] ([i (in-naturals)] [cmd cmds])
@@ -622,8 +622,8 @@
 (define (z3-clean-no-opt cmds)
   (for/list ([cmd cmds])
     (match cmd
-      [`(assert (! ,term :opt ,_))
-       `(assert term)]
+      [`(assert (=> ,c (! ,terms ... :opt ,_)))
+       `(assert (=> ,c (! ,@terms)))]
       [`(assert (! ,terms ... :opt ,_))
        `(assert (! ,@terms))]
       [_ cmd])))
