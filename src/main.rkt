@@ -235,8 +235,9 @@
                      ,(name 'box (node-next elt) 'nil-box)
                      ,(name 'box (node-fchild elt) 'nil-box)
                      ,(name 'box (node-lchild elt) 'nil-box))
-                    :named ,(sformat "link-box/~a" (name 'box elt)))))
+                    :named ,(sformat "link-box/~a" (name 'box elt))))))
 
+(define (box-flow-constraints dom emit elt)
   (define flow-linker
     (match (node-type elt)
       ['BLOCK 'link-flow-block]
@@ -300,11 +301,12 @@
     ,@style-computation
     ,@layout-definitions
     ,@(per-element tree-constraints)
-    ,@(per-box box-constraints)
-    ,@(per-element style-constraints)
     ,@(per-box box-link-constraints)
-    ,@(per-element info-constraints)
+    ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
+    ,@(per-element style-constraints)
+    ,@(per-box box-flow-constraints)
+    ,@(per-element info-constraints)
     ,@(per-box layout-constraints)
     ))
 

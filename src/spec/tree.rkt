@@ -31,7 +31,13 @@
                 (&felt ElementName) (&lelt ElementName)
                 (&box BoxName)))))
 
-  (assert (and (= (&elt no-box) nil-elt) (= (&box no-elt) nil-box))))
+  ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
+      `(assert (= (,field no-elt) nil-elt)))
+  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &pbflow &ppflow &flt &flt-up)])
+      `(assert (= (,field no-box) nil-box)))
+
+  (assert (= (&elt no-box) nil-elt))
+  (assert (= (&box no-elt) nil-box)))
 
 (define-constraints link-definitions
   ;; The elements in each direction in the element tree

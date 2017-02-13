@@ -18,7 +18,8 @@
    '(pelt velt nelt felt lelt)
    '(pbox fbox lbox vbox nbox)
    '(pflow fflow lflow nflow vflow)
-   '(ppflow pbflow flt)))
+   '(ppflow pbflow flt)
+   '(box-elt elt-box)))
 
 (define to-expand-2
   '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box a-view-box))

@@ -519,7 +519,7 @@
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
 
        ,(smt-cond
-         [(box-positioned b)
+         [(or (is-position/absolute (position b)) (is-position/fixed (position b)))
           (a-block-positioned-box b)]
          [(box-in-flow b)
           (a-block-flow-box b)]
