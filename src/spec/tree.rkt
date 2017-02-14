@@ -28,6 +28,7 @@
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
+                (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
                 (&pelt ElementName) (&velt ElementName) (&nelt ElementName)
                 (&felt ElementName) (&lelt ElementName)
                 (&box BoxName)))))

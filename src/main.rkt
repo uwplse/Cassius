@@ -271,6 +271,19 @@
   (emit `(assert (! (compute-style ,(dump-elt elt))
                     :named ,(sformat "info/~a" (name 'elt elt))))))
 
+(define (replaced-constraints dom emit elt)
+  (define replaced? (set-member? '(img input) (node-type elt)))
+
+  (if replaced?
+      (emit `(assert (! (is-replaced ,(dump-elt elt)) :named ,(sformat "replaced/~a" (name 'elt elt)))))
+      (emit `(assert (! (not (replaced-element ,(dump-elt elt))) :named ,(sformat "not-replaced/~a" (name 'elt elt))))))
+  (when (node-get elt ':w)
+    (emit `(assert (! (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w)))
+                   :named ,(sformat "intrinsic-width/~a" (name 'elt elt)))))
+  (when (node-get elt ':h)
+    (emit `(assert (! (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h)))
+                   :named ,(sformat "intrinsic-height/~a" (name 'elt elt))))))
+
 (define (all-constraints matcher doms)
   (define (global f) (reap [sow] (f doms sow)))
   (define (per-element f)
@@ -307,6 +320,7 @@
     ,@(per-element style-constraints)
     ,@(per-box box-flow-constraints)
     ,@(per-element info-constraints)
+    ,@(per-element replaced-constraints)
     ,@(per-box layout-constraints)
     ))
 

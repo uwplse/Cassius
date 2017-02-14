@@ -3,7 +3,7 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; docum
 */
 
 Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size".split(" ");
-BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space content font-size".split(" ");
+BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space content font-size text-indent".split(" ");
 BadTags = "img input svg:svg".split(" ");
 
 Box = function(type, node, props) {
@@ -618,6 +618,11 @@ function dump_document() {
             var rec = new Box(elt.tagName.toLowerCase(), elt, {});
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
+
+            if (elt.tagName === "IMG" || elt.tagName === "INPUT") {
+                rec.props["w"] = elt.width;
+                rec.props["h"] = elt.height;
+            }
             
             for (var i = 0; i < elt.childNodes.length; i++) {
                 if (is_comment(elt.childNodes[i])) continue;

@@ -17,7 +17,11 @@
 (define all-flags '(opt float z3o details rules selectors))
 
 (define supported-features
-  '(css:float unit:% unknown-selector css:box-sizing css:min-width css:max-width css:position css:font-size css:overflow-x css:overflow-y unit:em css:max-height css:min-height))
+  '(css:float css:box-sizing
+    css:min-width css:max-width css:max-height css:min-height
+    css:position css:font-size css:overflow-x css:overflow-y 
+    unit:% unit:em
+    unknown-selector tag:img tag:input))
 
 (define z3-path (find-executable-path "z3"))
 

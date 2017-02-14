@@ -128,7 +128,11 @@
       [else 0.0]))
 
   (define-fun min-w ((b Box)) Real
-    (ite (is-width/auto (style.width (computed-style (box-elt b)))) 0.0 ,(get-px-or-% 'width 'w 'b)))
+    (ite (is-width/auto (style.width (computed-style (box-elt b))))
+         (ite (is-replaced (box-elt b))
+              (intrinsic-width (box-elt b))
+              0.0)
+         ,(get-px-or-% 'width 'w 'b)))
 
   (define-fun min-ml ((b Box)) Real
     (margin-min-px (style.margin-left (computed-style (box-elt b))) b))
@@ -160,6 +164,8 @@
        ;; If it only has inline-level children, the height is the distance between
        ;; the top of the topmost line box and the bottom of the bottommost line box.
        (- (bottom-border (lflow b)) (top-border (fflow b)))]
+      [(is-replaced (box-elt b))
+       (intrinsic-height (box-elt b))]
       [(is-nil-box (&flt-up (lbox b)))
        (- (bottom-outer (lflow b)) (top-content b))]
       [else
@@ -176,6 +182,8 @@
         [(is-flow-root b)
          (= (h b) (auto-height-for-flow-roots b))]
         ;; CSS 2.1 § 10.6.3, item 4
+        [(is-replaced (box-elt b))
+         (= (h b) (intrinsic-height (box-elt b)))]
         [(is-no-box lb)
          (= (h b) 0.0)]
         ;; CSS 2.1 § 10.6.3, item 1
@@ -268,7 +276,9 @@
       (min-max-width
        (ite (is-box l)
             (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l))
-            0.0)
+            (ite (is-replaced (box-elt b))
+                 (intrinsic-width (box-elt b))
+                 0.0))
        b)))
 
   (define-fun flow-horizontal-layout ((b Box)) Bool
@@ -409,10 +419,12 @@
      ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
                 [temp-top ,(get-px-or-% 'top 'h 'b)]
                 [temp-bottom ,(get-px-or-% 'bottom 'h 'b)]
-                [temp-height ,(get-px-or-% 'height 'h 'b)]
+                [temp-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height 'h 'b))]
                 [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
                 [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
-                [height? (not (is-height/auto (style.height (computed-style (box-elt b)))))])
+                [height?
+                 (not (or (is-replaced (box-elt b))
+                          (is-height/auto (style.height (computed-style (box-elt b))))))])
 
         (=> top? (= (top-border b) (+ (top-content pp) temp-top)))
         (=> height? (= (h b) temp-height))
@@ -446,10 +458,10 @@
      ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)] [p (pflow b)]
                 [temp-left ,(get-px-or-% 'left 'w 'b)]
                 [temp-right ,(get-px-or-% 'right 'w 'b)]
-                [temp-width ,(get-px-or-% 'width 'w 'b)]
+                [temp-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width 'w 'b))]
                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
-                [width? (not (is-width/auto (style.width (computed-style (box-elt b)))))])
+                [width? (not (or (is-replaced (box-elt b)) (is-width/auto (style.width (computed-style (box-elt b))))))])
 
         (width-set b)
 
@@ -511,7 +523,7 @@
        (margins-dont-collapse b)
 
        (= (w-from-stfwidth b) (is-width/auto (style.width r)))
-       (=> (is-width/auto (style.width r)) (width-set b))
+       (width-set b)
        (ite (is-width/auto (style.width r))
             (= (w b) (usable-stfwidth b))
             ;; TODO: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
