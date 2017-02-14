@@ -78,6 +78,7 @@
     (engine (λ (_)
               (parameterize ([current-error-port (open-output-nowhere)]
                              [current-output-port (open-output-nowhere)]
+                             [current-subprocess-custodian-mode 'kill]
                              [current-custodian custodian])
                 (with-handlers
                     ([exn:break? (λ (e) 'break)]
@@ -88,6 +89,7 @@
   (define res (if (engine-run 60000 eng) (engine-result eng) 'timeout)) ; 1m max
   (define runtime (- (current-inexact-milliseconds) t))
   (engine-kill eng)
+  (custodian-shutdown-all custodian)
   (values res runtime))
 
 (struct result (file problem test section status description features time url))
