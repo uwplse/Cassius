@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/path racket/set racket/sandbox racket/cmdline math/base)
+(require racket/path racket/set racket/engine racket/cmdline math/base)
 (require json (only-in xml write-xexpr))
 (require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt")
 
@@ -73,16 +73,21 @@
   (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
 (define (run-problem prob #:debug debug)
+  (define custodian (make-custodian))
+  (define eng
+    (engine (λ (_)
+              (parameterize ([current-error-port (open-output-nowhere)]
+                             [current-output-port (open-output-nowhere)]
+                             [current-custodian custodian])
+                (with-handlers
+                    ([exn:break? (λ (e) 'break)]
+                     [exn:fail? (λ (e) (list 'error e))])
+                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug))))))
+
   (define t (current-inexact-milliseconds))
-  (define res 'timeout)
-  (with-handlers
-      ([exn:fail:resource? (λ (e) (set! res 'timeout))]
-       [exn:fail? (λ (e) (set! res (list 'error e)))])
-    (with-deep-time-limit 60
-      (parameterize ([current-error-port (open-output-string)]
-                     [current-output-port (open-output-string)])
-        (set! res (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug)))))
+  (define res (if (engine-run 60000 eng) (engine-result eng) 'timeout)) ; 1m max
   (define runtime (- (current-inexact-milliseconds) t))
+  (engine-kill eng)
   (values res runtime))
 
 (struct result (file problem test section status description features time url))
@@ -171,7 +176,7 @@
       (table ((id "sections") (rules "groups"))
        (thead ()
         ,(row #:cell 'th "" "Pass" "Fail" "Error" "Time" "Skip" "")
-        ,(apply row `(strong "Total") (append (set->results results) "")))
+        ,(apply row `(strong "Total") (append (set->results results) '(""))))
        (tbody ()
         ,@(for/list ([section (sort (remove-duplicates (map result-section results)) section<?)])
             (define sresults (filter (λ (x) (equal? (result-section x) section)) results))
