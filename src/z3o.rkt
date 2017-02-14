@@ -624,6 +624,8 @@
     (match cmd
       [`(assert (=> ,c (! ,terms ... :opt ,_)))
        `(assert (=> ,c (! ,@terms)))]
+      [`(assert (! (! ,terms ...  :opt ,_) ,rest ...))
+       `(assert (! ,@terms ,@rest))]
       [`(assert (! ,terms ... :opt ,_))
        `(assert (! ,@terms))]
       [_ cmd])))
