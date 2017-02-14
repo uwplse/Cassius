@@ -44,9 +44,9 @@
   (define prefix (slower type))
   (match value
     [(? symbol?) (sformat "~a/~a" prefix value)]
-    [(list 'em n) (list (sformat "~a/em" prefix) n)]
-    [(list 'px n) (list (sformat "~a/px" prefix) n)]
-    [(list '% n) (list (sformat "~a/%" prefix) n)]
+    [(list 'em n) (list (sformat "~a/em" prefix) (exact->inexact n))]
+    [(list 'px n) (list (sformat "~a/px" prefix) (exact->inexact n))]
+    [(list '% n) (list (sformat "~a/%" prefix) (exact->inexact n))]
     [0 (dump-value type '(px 0))]))
 
 (define (extract-value value)

@@ -95,7 +95,7 @@
     #:scripts (dict-ref problem ':scripts '())
     #:title (dict-ref problem ':title #f))))
 
-(define (do-render problem #:debug [debug '()] #:truncate truncate)
+(define (do-render problem #:debug [debug '()])
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
   (match (wrapped-solve (dict-ref problem ':sheets) documents #:debug debug)
     [(success stylesheet trees)

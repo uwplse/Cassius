@@ -2,14 +2,14 @@
 
 (provide get-sheet)
 
-; Significantly via http://css-class.com/test/css/defaults/UA-style-sheet-defaults.htm
+; From https://hell.meiert.org/core/css/firefox-3.6.3.css
 
 (define firefox-sheet
   '(((tag blockquote)
      :browser
-     [margin-top (px 16)]
+     [margin-top (em 1)]
      [margin-right (px 40)]
-     [margin-bottom (px 16)]
+     [margin-bottom (em 1)]
      [margin-left (px 40)])
     ((tag body)
      :browser
@@ -28,50 +28,43 @@
      [margin-left (px 40)])
     ((tag dl)
      :browser
-     [margin-top (px 16)]
-     [margin-bottom (px 16)])
-    ((tag fieldset)
-     :browser
-     [margin-top (px 2)]
-     [margin-right (px 0)]
-     [margin-bottom (px 2)]
-     [margin-left (px 0)])
+     [margin-top (em 1)]
+     [margin-bottom (em 1)])
     ((tag figure)
      :browser
-     [margin-top (px 16)]
+     [margin-top (em 1)]
      [margin-right (px 40)]
-     [margin-bottom (px 16)]
+     [margin-bottom (em 1)]
      [margin-left (px 40)])
-    ((tag form)
-     :browser
-     [margin-top (px 0)]
-     [margin-right (px 0)]
-     [margin-bottom (px 0)]
-     [margin-left (px 0)])
     ((tag h1)
      :browser
-     [margin-top (px (/ 643 30))]
-     [margin-bottom (px (/ 643 30))])
+     [font-size (em 2)]
+     [margin-top (em .67)]
+     [margin-bottom (em .67)])
     ((tag h2)
      :browser
-     [margin-top (px (/ 1195 60))]
-     [margin-bottom (px (/ 1195 60))])
+     [font-size (em 1.5)]
+     [margin-top (em .83)]
+     [margin-bottom (em .83)])
     ((tag h3)
      :browser
-     [margin-top (px (/ 1123 60))]
-     [margin-bottom (px (/ 1123 60))])
+     [font-size (em 1.17)]
+     [margin-top (em 1)]
+     [margin-bottom (em 1)])
     ((tag h4)
      :browser
-     [margin-top (px (/ 1277 60))]
-     [margin-bottom (px (/ 1277 60))])
+     [margin-top (em 1.33)]
+     [margin-bottom (em 1.33)])
     ((tag h5)
      :browser
-     [margin-top (px (/ 1331 60))]
-     [margin-bottom (px (/ 1331 60))])
+     [font-size (em .83)]
+     [margin-top (em 1.67)]
+     [margin-bottom (em 1.67)])
     ((tag h6)
      :browser
-     [margin-top (px (/ 1498 60))]
-     [margin-bottom (px (/ 1498 60))])
+     [font-size (em 0.67)]
+     [margin-top (em 2.33)]
+     [margin-bottom (em 2.33)])
     ((tag hr)
      :browser
      [margin-left auto]
@@ -82,38 +75,27 @@
      [border-left-width (px 1)])
     ((tag menu)
      :browser
-     [margin-left (px 0)]
-     [margin-right (px 0)]
-     [margin-top (px 16)]
-     [margin-bottom (px 16)])
+     [margin-top (em 1)]
+     [margin-bottom (em 1)])
     ((tag ol)
      :browser
-     [margin-left (px 0)]
-     [margin-right (px 0)]
-     [margin-top (px 16)]
-     [margin-bottom (px 16)])
+     [margin-top (em 1)]
+     [margin-bottom (em 1)])
     ((tag p)
      :browser
-     [margin-left (px 0)]
-     [margin-right (px 0)]
      [margin-top (em 1)]
      [margin-bottom (em 1)])
     ((tag pre)
      :browser
-     [margin-top (px 16)]
-     [margin-bottom (px 16)]
-     [margin-left (px 0)]
-     [margin-right (px 0)])
+     [margin-top (em 1)]
+     [margin-bottom (em 1)])
     ((tag th)
      :browser
      [text-align center])
     ((tag ul)
      :browser
-     [margin-left (px 0)]
-     [margin-right (px 0)]
-     [margin-top (px 16)]
-     [margin-bottom (px 16)])
-    ))
+     [margin-top (em 1)]
+     [margin-bottom (em 1)])))
 
 (define (get-sheet browser)
   (match browser
