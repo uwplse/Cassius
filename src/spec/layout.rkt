@@ -636,6 +636,7 @@
      (= (type b) box/root)
      (zero-box-model b)
      (= (font-size b) 16.0)
+     (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
