@@ -22,7 +22,10 @@
    '(box-elt elt-box)))
 
 (define to-expand-2
-  '(an-inline-box a-text-box a-line-box a-block-box a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box a-view-box))
+  (append
+   '(an-inline-box a-text-box a-line-box a-block-box)
+   '(a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box a-view-box)
+   '(float-rules float-restrictions)))
 
 (define *emitter-passes*
   (list
@@ -31,6 +34,7 @@
    (z3-resolve-fns)
    #;z3-dco
    (z3-expand to-expand #:clear true)
+   (z3-expand to-expand-2 #:clear true)
    z3-unlet
    ;z3-simplif
    z3-assert-and
