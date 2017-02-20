@@ -619,9 +619,14 @@ function dump_document() {
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
-            if (elt.tagName === "IMG" || elt.tagName === "INPUT") {
-                rec.props["w"] = elt.width;
-                rec.props["h"] = elt.height;
+            if (elt.tagName === "IMG") {
+                rec.props["w"] = elt.naturalWidth;
+                rec.props["h"] = elt.naturalHeight;
+            }
+
+            if (elt.tagName === "INPUT") {
+                rec.props["w"] = elt.getBoundingClientRect().width;
+                rec.props["h"] = elt.getBoundingClientRect().height;
             }
             
             for (var i = 0; i < elt.childNodes.length; i++) {
