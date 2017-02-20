@@ -99,6 +99,8 @@ function val2em(val, features) {
     var match;
     if (val.match(/^-?[0-9.]+em$/)) {
         return +val.substr(0, val.length - 2);
+    } else if (val.match(/^-?[0-9.]+ex$/)) {
+        return +val.substr(0, val.length - 2) / 16 * 9;
     } else {
         throw "Error, " + val + " is not a em quantity."
     }
