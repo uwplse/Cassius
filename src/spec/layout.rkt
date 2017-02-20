@@ -203,6 +203,7 @@
         [else false])))
 
   (define-fun margins-collapse ((b Box)) Bool
+    ;; TODO: This is *buggy* and *incorrect*.
     ,(smt-let ([e (box-elt b)] [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
        (= (mtp b)
           (max (ite (and (not (is-root-elt e)) (is-box fb) (= (pt b) 0.0) (= (bt b) 0.0)) (mtp fb) 0.0)
@@ -417,42 +418,42 @@
            (not (horizontally-adjacent flt b)))))
 
   (define-fun positioned-vertical-layout ((b Box)) Bool
-     ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
-                [temp-top ,(get-px-or-% 'top 'h 'b)]
-                [temp-bottom ,(get-px-or-% 'bottom 'h 'b)]
-                [temp-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height 'h 'b))]
-                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
-                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
-                [height?
-                 (not (or (is-replaced (box-elt b))
-                          (is-height/auto (style.height (computed-style (box-elt b))))))])
+    ;; CSS 2.1 § 10.6.4
+    ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
+               [temp-top ,(get-px-or-% 'top 'h 'b)]
+               [temp-bottom ,(get-px-or-% 'bottom 'h 'b)]
+               [temp-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height 'h 'b))]
+               [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
+               [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
+               [height?
+                (not (or (is-replaced (box-elt b))
+                         (is-height/auto (style.height (computed-style (box-elt b))))))])
+       (=> top? (= (top-border b) (+ (top-content pp) temp-top)))
+       (=> height? (= (h b) temp-height))
+       (=> (and (not top?) (not bottom?)) (= (y b) (vertical-position-for-flow-boxes b)))
+       (=> (and (not height?) (not (and top? bottom?)))
+           (= (h b) (auto-height-for-flow-roots b)))
+       (=> (and bottom? (not (and top? height?)))
+           (= (bottom-border b) (- (bottom-content pp) temp-bottom)))
 
-        (=> top? (= (top-border b) (+ (top-content pp) temp-top)))
-        (=> height? (= (h b) temp-height))
-        (=> (and (not top?) (not bottom?)) (= (y b) (vertical-position-for-flow-boxes b)))
-        (=> (and (not height?) (not (and top? bottom?)))
-            (= (h b) (auto-height-for-flow-roots b)))
-        (=> (and bottom? (not (and top? height?)))
-            (= (bottom-border b) (- (bottom-content pp) temp-bottom)))
+       ;; Margins work identically unless overspecified
+       (=> (not (and top? height? bottom?))
+           (and
+            (= (mt b) (margin-min-px (style.margin-top r) b))
+            (= (mb b) (margin-min-px (style.margin-bottom r) b))))
 
-        ;; Margins work identically unless overspecified
-        (=> (not (and top? height? bottom?))
-            (and
-             (= (mt b) (margin-min-px (style.margin-top r) b))
-             (= (mb b) (margin-min-px (style.margin-bottom r) b))))
-
-        ;; Pre-item 2
-        (=> (and top? bottom? height?)
-            (and (=> (not (is-margin/auto (style.margin-top r)))
-                     (= (mt b) (margin-min-px (style.margin-top r) b)))
-                 (=> (not (is-margin/auto (style.margin-bottom r)))
-                     (= (mb b) (margin-min-px (style.margin-bottom r) b)))
-                 (=> (and (is-margin/auto (style.margin-top r))
-                          (is-margin/auto (style.margin-bottom r)))
-                     (= (mt b) (mb b)))
-                 (=> (or (is-margin/auto (style.margin-top r))
+       ;; Paragraph before the list, "If none of the three are 'auto'"
+       (=> (and top? bottom? height?)
+           (and (=> (not (is-margin/auto (style.margin-top r)))
+                    (= (mt b) (margin-min-px (style.margin-top r) b)))
+                (=> (not (is-margin/auto (style.margin-bottom r)))
+                    (= (mb b) (margin-min-px (style.margin-bottom r) b)))
+                (=> (and (is-margin/auto (style.margin-top r))
                          (is-margin/auto (style.margin-bottom r)))
-                     (= (bottom-border b) (- (bottom-content pp) temp-bottom)))))))
+                    (= (mt b) (mb b)))
+                (=> (or (is-margin/auto (style.margin-top r))
+                        (is-margin/auto (style.margin-bottom r)))
+                    (= (bottom-border b) (- (bottom-content pp) temp-bottom)))))))
 
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
