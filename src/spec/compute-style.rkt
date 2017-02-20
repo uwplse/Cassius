@@ -57,13 +57,13 @@
                height/auto
                (style.height (specified-style elt)))))
 
-     ;; CSS 2.1 § 9.5.1: float and positioning
+     ;; CSS 2.1 § 9.7: relationship between `float` and `position`
      ;; NOTE: The standard is ambiguous / undefined, but this is what Firefox does.
      (= (style.float (computed-style elt))
         (let ([pos (style.position (specified-style elt))])
-          (ite (or (is-position/relative pos) (is-position/static pos))
-               (style.float (specified-style elt))
-               float/none)))
+          (ite (or (is-position/absolute pos) (is-position/fixed pos))
+               float/none
+               (style.float (specified-style elt)))))
 
      ;; CSS 2.1 § 8.5.3: border-style and border-width
      ,@(for/list ([dir '(top right bottom left)])
