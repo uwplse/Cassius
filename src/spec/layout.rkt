@@ -110,10 +110,16 @@
          (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
-    (max ,(get-px-or-% 'min-width 'w 'b) (min val ,(get-px-or-% 'max-width 'w 'b))))
+    (max ,(get-px-or-% 'min-width 'w 'b)
+         (ite (is-max-width/none (style.max-width (computed-style (box-elt b))))
+              val
+              (min val ,(get-px-or-% 'max-width 'w 'b)))))
 
   (define-fun min-max-height ((val Real) (b Box)) Real
-    (max ,(get-px-or-% 'min-height 'h 'b) (min val ,(get-px-or-% 'max-height 'h 'b))))
+    (max ,(get-px-or-% 'min-height 'h 'b)
+         (ite (is-max-height/none (style.max-height (computed-style (box-elt b))))
+              val
+              (min val ,(get-px-or-% 'max-height 'h 'b)))))
 
   (define-fun margin-min-px ((m Margin) (b Box)) Real
     ,(smt-cond
