@@ -18,42 +18,32 @@
   (define (match! elt box)
     (dict-set! elt->box elt box)
     (dict-set! box->elt box elt))
-  (link/root match! (sheet->display? elts sheet) elts boxes)
+  (link match! (sheet->display? elts sheet) elts boxes)
   (λ (x) (dict-ref elt->box x (λ () (dict-ref box->elt x #f)))))
 
-(define (link/root match! display? elt box)
-  (assert (equal? (node-type box) 'VIEW)
-          "At root, box must be a VIEW box")
-  (when (display? elt)
-    (link/block match! display? elt (node-fchild box))))
+(define (collect-possible-elements . boxes)
+  (reap [sow]
+    (for ([head boxes])
+      (let loop ([box head])
+        (match (node-type box)
+          [(or 'MAGIC 'BLOCK 'INLINE) (sow box)]
+          [(or 'ANON 'LINE 'VIEW)
+           (map loop (node-children box))]
+          ['TEXT (void)])))))
 
-(define (link/block match! display? elt box)
-  (define child-types (map node-type (node-children box)))
-  (match* ((node-type box) (or (set-member? child-types 'LINE) (set-member? child-types 'ANON)))
-    [('MAGIC _)
-     (match! elt box)]
-    [('BLOCK #t)
+(define (link match! display? elt box)
+  (match (node-type box)
+    ['VIEW
+     (link match! display? elt (node-fchild box))]
+    [(or 'BLOCK 'INLINE 'MAGIC)
      (match! elt box)
-     (for-each (curry link/inline match! display?)
-               (node-children elt)
-               (filter (λ (x) (not (equal? (node-type x) 'TEXT)))
-                       (apply append (map node-children (node-children box)))))]
-    [('BLOCK #f)
-     (match! elt box)
-     (for-each (curry link/block match! display?)
-               (filter display? (node-children elt))
-               (node-children box))]
-    [('ANON #t)
-     (for-each (curry link/inline match! display?)
-               (node-children elt)
-               (filter (λ (x) (not (equal? (node-type x) 'TEXT)))
-                       (apply append (map node-children (node-children box)))))]))
-
-(define (link/inline match! display? elt box)
-  (match! elt box)
-  (for-each (curry link/inline match! display?)
-            (node-children elt)
-            (filter (λ (x) (not (equal? (node-type x) 'TEXT))) (node-children box))))
+     (define subelts (filter display? (node-children elt)))
+     (define subboxes (apply collect-possible-elements (node-children box)))
+     (cond
+      [(= (length subelts) (length subboxes))
+       (for-each (curry link match! display?) subelts subboxes)]
+      [(and (= (length subelts) 1) (andmap (λ (x) (equal? (node-type x) 'INLINE)) subboxes))
+       (for-each (curry link match! display? (first subelts)) subboxes)])]))
 
 (define (link/root/c elt box)
   (smt-and `(displayed ,elt) (link/block/c elt (node-fchild box))))
@@ -136,7 +126,7 @@
     (dict-set! matches elt box)
     (dict-set! matches box elt))
 
-  (link/root match! display? elts1 boxes1)
+  (link match! display? elts1 boxes1)
   (define (matcher x) (dict-ref matches x #f))
 
   (values display? matcher elts2))
