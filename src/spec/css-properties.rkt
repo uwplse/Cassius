@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt")
-(provide in-css-properties in-css-types *%* css-shorthand-properties css-type css-properties css-types)
+(provide in-css-properties in-css-types css-shorthand-properties css-type css-properties css-types)
 
 ;; The CSS properties and data types Cassius supports. The file is in
 ;; three parts: helper macros, type and property definitions, and
@@ -25,10 +25,6 @@
     (hash-set! css-property-hash 'prop (cons 'name 'default)) ...))
 
 ;; CSS datatypes and the properties that use them
-
-(define *%* ; The valid percentage values in Cassius's CSS model
-  (make-parameter '(0 1 1.5 2 5 10 15 18 20 25 29 50 62 66 80 100 101 125 200)))
-
 (define-css-type (Width auto (px Real) (% Real) (em Real))
   [width auto])
 

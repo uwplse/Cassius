@@ -72,11 +72,6 @@
   (define-fun between ((x Real) (y Real) (z Real)) Bool
     (or (<= x y z) (>= x y z)))
 
-  (define-fun %of ((% Real) (base Real)) Real
-    ,(let* ([%s (*%*)])
-       (for/fold ([out `(* ,(/ (car %s) 100.0) base)]) ([% (cdr %s)])
-         `(if (= % ,%) (* ,(/ % 100.0) base) ,out))))
-
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
     (or (> (bottom-outer box1) (top-outer box2) (top-outer box1))
         (> (bottom-outer box2) (top-outer box1) (top-outer box2))

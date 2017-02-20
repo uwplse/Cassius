@@ -1,6 +1,7 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
-         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt" "match.rkt")
+         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt" "match.rkt"
+         "spec/percentages.rkt")
 (provide constraints solve synthesize (struct-out success) (struct-out failure))
 
 (struct success (stylesheet elements))
@@ -57,6 +58,16 @@
              (length doms)
              (length (append-map (compose sequence->list in-tree dom-elements) doms))
              (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
+  (define %s
+    (reap [sow]
+          (for ([rule (car sheets)])
+            (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
+            (for ([(prop value) (in-dict props)])
+              (match (car value)
+                [(list 'em v) (sow (* 100 v))]
+                [(list '% v) (sow v)]
+                [_ (void)])))))
+  (*%* (set-union (*%*) %s))
 
   (define matchers (for/list ([dom doms]) (link-elts-boxes (car sheets) (dom-elements dom) (dom-boxes dom))))
   (define query (all-constraints matchers doms))
