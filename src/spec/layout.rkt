@@ -270,7 +270,7 @@
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     ,(smt-cond
       [(is-box (vflow b)) (+ (bottom-border (vflow b)) (max (mtp b) (mbp (vflow b))) (min (mtn b) (mbn (vflow b))))]
-      [(top-margin-collapses-with-children (pflow b)) (top-content (pflow b))]
+      [(and (not (is-flow-root b)) (top-margin-collapses-with-children (pflow b))) (top-content (pflow b))]
       [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
 
   (define-fun usable-stfwidth ((b Box)) Real
