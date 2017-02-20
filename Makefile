@@ -31,5 +31,8 @@ bench/freewebsitetemplates/%.rkt: get_bench.py get_bench.js
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
 	racket src/report.rkt $(FLAGS) --index bench/css/index.json -o reports/csswg regression $^
 
+reports/fwt.html reports/fwt.json: $(wildcard bench/freewebsitetemplates/*.rkt)
+	racket src/report.rkt $(FLAGS) -o reports/fwt regression $^
+
 rerun-tests:
 	racket src/report.rkt $(FLAGS) --supported --failed reports/csswg.json --index bench/css/index.json -o reports/csswg regression $(wildcard bench/css/*.rkt)
