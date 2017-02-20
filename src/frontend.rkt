@@ -54,10 +54,12 @@
   (define log-phase (make-log))
   (define doms (map parse-dom docs))
 
-  (log-phase "Read ~a documents with ~a elements and ~a boxes"
+  (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
              (length doms)
              (length (append-map (compose sequence->list in-tree dom-elements) doms))
-             (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
+             (length (append-map (compose sequence->list in-tree dom-boxes) doms))
+             (length (car sheets)))
+
   (define %s
     (reap [sow]
           (for ([rule (car sheets)])
