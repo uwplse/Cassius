@@ -17,7 +17,7 @@ publish:
 	@ echo "Uploaded to http://cassius.uwplse.org/reports/$(TIME)/"
 
 bench/css/%.rkt: get_bench.py get_bench.js
-	@ xvfb-run -s '-screen 0 1920x10800x24' python2 get_bench.py --name css/$* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/css21/$*/*.xht))
+	@ sh bench/css/get.sh $* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/css21/$*/*.xht))
 
 bench/freewebsitetemplates/%.rkt: get_bench.py get_bench.js
 	sh bench/freewebsitetemplates/get.sh $*
