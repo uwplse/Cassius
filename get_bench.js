@@ -119,6 +119,7 @@ function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt).display == "inline";}
 function is_block(elt) {return cs(elt).display == "block";}
 function is_visible(elt) {return cs(elt).display != "none";}
+function is_float(elt) {return elt.nodeType === document.ELEMENT_NODE && cs(elt).float != "none";}
 
 function is_flowroot(elt) {
     // CSS3BOX §4.2
@@ -126,6 +127,60 @@ function is_flowroot(elt) {
     return cs(elt).float !== "none" || cs(elt).overflow !== "visible" ||
         ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt).display) !== -1 ||
         ["static", "relative"].indexOf(cs(elt).position) === -1;
+}
+
+function get_fontsize(elt) {
+    var fs = cs(elt.fontSize);
+    try { return val2px(fs) } catch (e) {}
+    try { return val2pct(fs) * get_fontsize(elt.parentNode) / 100 } catch (e) {}
+    try { return val2em(margin) * get_fontsize(elt.parentNode) } catch (e) {}
+    throw "Error weird font-size value"
+}
+
+function convert_margin(margin, elt) {
+    try { return val2px(margin) } catch (e) {}
+    try { return val2pct(margin) * elt.clientWidth } catch (e) {}
+    try { return val2em(margin) * get_fontsize(elt) } catch (e) {}
+    throw "Error weird margin value";
+
+}
+
+function get_margins(elt) {
+    return {
+        top: convert_margin(cs(elt).marginTop),
+        right: convert_margin(cs(elt).marginRight),
+        bottom: convert_margin(cs(elt).marginBottom),
+        left: convert_margin(cs(elt).marginLeft)
+    };
+}
+
+function top_outer(elt) {
+    return elt.getBoundingClientRect().top - convert_margin(cs(elt).marginTop);
+}
+
+function right_outer(elt) {
+    return elt.getBoundingClientRect().right - convert_margin(cs(elt).marginRight);
+}
+
+function bottom_outer(elt) {
+    return elt.getBoundingClientRect().bottom + convert_margin(cs(elt).marginBottom);
+}
+
+function left_outer(elt) {
+    return elt.getBoundingClientRect().left - convert_margin(cs(elt).marginLeft);
+}
+
+function horizontally_adjacent(e1, e2) {
+    var b1 = bottom_outer(e1), t1 = top_outer(e1), b2 = bottom_outer(e2), t2 = top_outer(e2);
+    if (b1 >= t2 && t2 >= t1 || b2 >= t1 && t1 >= t2) {
+        if (t1 == t2 && b1 == b2) {
+            return t1 != b2;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
 }
 
 function get_lines(txt) {
@@ -646,6 +701,61 @@ function dump_document() {
     return b;
 }
 
+function compute_flt_pointer(box, prev) {
+    box.flt = prev;
+    if (box.node && is_float(box.node)) {
+        prev = null;
+        for (var i = 0; i < box.children.length; i++) {
+            prev = compute_flt_pointer(box.children[i], prev);
+        }
+        return box;
+    } else {
+        for (var i = 0; i < box.children.length; i++) {
+            prev = compute_flt_pointer(box.children[i], prev);
+        }
+        return prev;
+    }
+}
+
+function check_float_restrictions(box, parent, features) {
+    if (!features) { features = parent; parent = null };
+
+    if (parent && box.node && is_float(box.node)) {
+        var flt = box.flt;
+
+        // R1: No negative margins on floats; otherwise they can overlap
+        var m = get_margins(box.node);
+        for (var i in m) {
+            if (val < 0) features["float:R1"] = true;
+        }
+
+        // R2: The bottom of a box is farther down than the bottom of the previous box
+        if (flt) {
+            if (bottom_outer(box.node) < bottom_outer(flt.node)) features["float:R2"] = true;
+        }
+
+        // R3: If a float wraps to the next line, the previous line must be full
+        if (flt && top_outer(box.node) == bottom_outer(flt.node)) {
+            // TODO: Assumes no padding!
+            if ((cs(box.node).float == "left") ? 
+                (right_outer(flt.node) < parent.node.getBoundingClientRect().left + parent.node.clientLeft + parent.node.clientWidth) : 
+                (left_outer(flt.node) > parent.node.getBoundingClientRect().left + parent.node.clientLeft)
+                ) features["float:R3"] = true;
+        }
+
+        // R4: If this and the previous float float to different
+        // sides, they are not horizontally adjacent
+        if (flt && cs(box.node).float != cs(flt.node).float) {
+            console.log("R4", box.node, flt.node)
+            if (horizontally_adjacent(flt.node, box.node)) features["float:R4"] = true;
+        }
+    }
+
+    for (var i = 0; i < box.children.length; i++) {
+        check_float_restrictions(box.children[i], box, features);
+    }
+}
+
 function page2cassius(name) {
     var features = {};
 
@@ -669,6 +779,9 @@ function page2cassius(name) {
     text += "(define-document " + name;
     text += dump_tree(dump_document());
     text += ")\n\n";
+    
+    compute_flt_pointer(page, null);
+    check_float_restrictions(page, features);
 
     var title = dump_string(document.title);
     text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";

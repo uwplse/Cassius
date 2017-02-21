@@ -73,17 +73,15 @@
     (or (<= x y z) (>= x y z)))
 
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
-    (or (> (bottom-outer box1) (top-outer box2) (top-outer box1))
-        (> (bottom-outer box2) (top-outer box1) (top-outer box2))
-        (and (= (top-outer box1) (top-outer box2))
-             (= (bottom-outer box1) (bottom-outer box2))
+    (and (or (between (bottom-outer box1) (top-outer box2) (top-outer box1))
+             (between (bottom-outer box2) (top-outer box1) (top-outer box2)))
+         (=> (and (= (top-outer box1) (top-outer box2)) (= (bottom-outer box1) (bottom-outer box2)))
              (not (= (top-outer box1) (bottom-outer box2))))))
 
   (define-fun vertically-adjacent ((box1 Box) (box2 Box)) Bool
-    (or (> (right-outer box1) (left-outer box2) (left-outer box1))
-        (> (right-outer box2) (left-outer box1) (left-outer box2))
-        (and (= (left-outer box1) (left-outer box2))
-             (= (right-outer box1) (right-outer box2))
+    (and (or (between (right-outer box1) (left-outer box2) (left-outer box1))
+             (between (right-outer box2) (left-outer box1) (left-outer box2)))
+         (=> (and (= (left-outer box1) (left-outer box2)) (= (right-outer box1) (right-outer box2)))
              (not (= (left-outer box1) (right-outer box2))))))
 
   (define-fun overlaps ((b1 Box) (b2 Box)) Bool
