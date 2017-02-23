@@ -241,13 +241,14 @@
                     :named ,(sformat "link-box/~a" (name 'box elt))))))
 
 (define (box-flow-constraints dom emit elt)
-  (define flow-linker
+  (define (flow-linker b e)
     (match (node-type elt)
-      ['BLOCK 'link-flow-block]
-      ['VIEW 'link-flow-root]
-      [_ 'link-flow-simple]))
+      ['BLOCK `(link-flow-block ,b ,e)]
+      ['VIEW `(link-flow-root ,b ,e)]
+      ['MAGIC `(or (link-flow-block ,b ,e) (link-flow-simple ,b ,e))]
+      [_ `(link-flow-simple ,b ,e)]))
 
-  (emit `(assert (! (,flow-linker ,(dump-box elt) ,(name 'box elt))
+  (emit `(assert (! ,(flow-linker (dump-box elt) (name 'box elt))
                     :named ,(sformat "link-flow/~a" (name 'box elt))))))
 
 (define (layout-constraints dom emit elt)
