@@ -158,21 +158,23 @@
     ;; into account, e.g., floats inside absolutely positioned descendants or other floats
     ;; are not.
     ,(smt-cond
-      [(is-no-box (fbox b)) 0.0]
+      [(is-no-box (fbox b)) (min-max-height 0.0 b)]
       [(is-box/line (type (lflow b)))
        ;; If it only has inline-level children, the height is the distance between
        ;; the top of the topmost line box and the bottom of the bottommost line box.
-       (- (bottom-border (lflow b)) (top-border (fflow b)))]
+       (min-max-height (- (bottom-border (lflow b)) (top-border (fflow b))) b)]
       [(is-replaced (box-elt b))
-       (intrinsic-height (box-elt b))]
+       (min-max-height (intrinsic-height (box-elt b)) b)]
       [(is-nil-box (&flt-up (lbox b)))
-       (- (bottom-outer (lflow b)) (top-content b))]
+       (min-max-height (- (bottom-outer (lflow b)) (top-content b)) b)]
       [else
        ;; If it has block-level children, the height is the distance between the
        ;; top margin-edge of the topmost block-level child box and the
        ;; bottom margin-edge of the bottommost block-level child box.
-       (- (max (bottom-outer (lflow b)) (bottom-outer (get/box (&flt-up (lbox b)))))
-          (top-content b))]))
+       (min-max-height
+        (- (max (bottom-outer (lflow b)) (bottom-outer (get/box (&flt-up (lbox b)))))
+           (top-content b))
+        b)]))
 
   (define-fun auto-height-for-flow-blocks ((b Box)) Bool
     (let ([lb (lflow b)] [e (box-elt b)])
@@ -564,17 +566,29 @@
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [v (vflow b)] [l (lflow b)])
        (= (type b) box/inline)
-       ,@(map extract-field '(pt pr pb pl bt br bb bl))
+       ,@(map extract-field '(bt br bb bl))
+       (ite (is-replaced e)
+            (= (pt b) (pr b) (pb b) (pl b) 0.0)
+            (and ,@(map extract-field '(pt pr pb pl))))
 
+       ,@(map extract-field '(mt mr mb ml))
+       ,@(zero-auto-margins '(left right top bottom))
        (margins-dont-collapse b)
+
        (ite (is-position/relative (style.position r))
             (relatively-positioned b)
             (no-relative-offset b))
 
        (= (font-size b) (resolve-font-size b))
        (= (stfwidth b) (compute-stfwidth b))
-       (= (left-outer (fflow b)) (left-content b))
-       (= (right-outer (lflow b)) (right-content b))
+       (=> (is-replaced e) (= (h b) (intrinsic-height e)))
+       (ite (is-replaced e)
+            (= (w b) (intrinsic-width e))
+            (ite (is-box (fflow b))
+                 (and
+                  (= (left-outer (fflow b)) (left-content b))
+                  (= (right-outer (lflow b)) (right-content b)))
+                 (= (w b) 0.0)))
        (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
        (=> (is-box v) (= (left-outer b) (right-outer v)))))
 

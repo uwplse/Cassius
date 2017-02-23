@@ -123,7 +123,6 @@
 
   (define matches (make-hasheq))
   (define (match! elt box)
-    (dict-set! matches elt box)
     (dict-set! matches box elt))
 
   (link match! display? elts1 boxes1)

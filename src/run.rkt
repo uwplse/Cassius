@@ -119,8 +119,11 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-smt2 problem)
-  (displayln (smt->string (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents)))))
+(define (do-smt2 problem output)
+  (define out (smt->string (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents))))
+  (if output
+      (call-with-output-file output #:exists 'replace (curry displayln out))
+      (displayln out)))
 
 (define (do-verify problem #:debug debug)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
@@ -140,6 +143,7 @@
 (module+ main
   (define debug '())
   (define screenshot #f)
+  (define output #f)
 
   (multi-command-line
    #:program "cassius"
@@ -173,8 +177,11 @@
     #:args (fname problem)
     (do-sketch (get-problem fname problem) #:debug debug)]
    ["smt2"
+    #:once-each
+    [("-o" "--output") fname "Output constraints to a file"
+     (set! output fname)]
     #:args (fname problem)
-    (do-smt2 (get-problem fname problem))]
+    (do-smt2 (get-problem fname problem) output)]
    ["verify"
     #:args (fname problem)
     (do-verify (get-problem fname problem) #:debug debug)]))

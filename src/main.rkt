@@ -62,7 +62,7 @@
          pt pr pb pl bt br bb bl stfwidth w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
-         &pbflow &ppflow &nflow &vflow &flt &flt-up
+         &nflow &vflow &ppflow &flt &flt-up
          textalign &elt)
    box)
   (define box-width (+ bl pl w pr br))
@@ -75,7 +75,7 @@
   (node-set! elt ':y box-y))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt &box) result)
+  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)
   (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-tree! tree smt-out)
@@ -167,18 +167,14 @@
 
 (define (box-element-constraints matchers doms)
   (reap [emit]
-    (for ([dom doms] [matcher matchers])
-      (for ([elt (in-elements dom)])
-        (define ename (name 'elt elt))
-        (match (matcher elt)
-          [#f
-           (emit `(assert (! (match-anon-element ,ename) :named ,(sformat "box-element/~a" ename))))]
-          [box
-           (define bname (name 'box box))
-           (emit `(assert (! (match-element-box ,ename ,bname) :named ,(sformat "box-element/~a" ename))))]))
-      (for ([box (in-boxes dom)] #:when (not (matcher box)))
-        (define bname (name 'box box))
-        (emit `(assert (! (match-anon-box ,bname) :named ,(sformat "box-element/~a" bname))))))))
+    (for ([dom doms] [matcher matchers] #:when true [box (in-boxes dom)])
+      (match (matcher box)
+        [#f
+         (emit `(assert (! (match-anon-box ,(name 'box box))
+                           :named ,(sformat "box-element/~a" (dump-box box)))))]
+        [elt
+         (emit `(assert (! (match-element-box ,(name 'elt elt) ,(name 'box box))
+                           :named ,(sformat "box-element/~a" (dump-box box)))))]))))
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
@@ -243,10 +239,9 @@
 (define (box-flow-constraints dom emit elt)
   (define (flow-linker b e)
     (match (node-type elt)
-      ['BLOCK `(link-flow-block ,b ,e)]
+      [(or 'BLOCK 'MAGIC 'ANON) `(link-flow-block ,b ,e)]
       ['VIEW `(link-flow-root ,b ,e)]
-      ['MAGIC `(or (link-flow-block ,b ,e) (link-flow-simple ,b ,e))]
-      [_ `(link-flow-simple ,b ,e)]))
+      [(or 'LINE 'INLINE 'TEXT) `(link-flow-simple ,b ,e)]))
 
   (emit `(assert (! ,(flow-linker (dump-box elt) (name 'box elt))
                     :named ,(sformat "link-flow/~a" (name 'box elt))))))

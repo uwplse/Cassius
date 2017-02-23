@@ -21,7 +21,7 @@
                 (width-set Bool) ; used for dependency creation only
                 (font-size Real)
                 (&nflow BoxName) (&vflow BoxName) ; flow tree pointers
-                (&pbflow BoxName) (&ppflow BoxName) ; parent block and parent positioned pointers
+                (&ppflow BoxName) ; parent positioned pointers
                 (&flt BoxName) (&flt-up BoxName) ; previous and rightmost-child floating boxes
                 (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt ElementName)))
@@ -30,16 +30,14 @@
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
                 (&pelt ElementName) (&velt ElementName) (&nelt ElementName)
-                (&felt ElementName) (&lelt ElementName)
-                (&box BoxName)))))
+                (&felt ElementName) (&lelt ElementName)))))
 
   ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
       `(assert (= (,field no-elt) nil-elt)))
-  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &pbflow &ppflow &flt &flt-up)])
+  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &flt &flt-up)])
       `(assert (= (,field no-box) nil-box)))
 
-  (assert (= (&elt no-box) nil-elt))
-  (assert (= (&box no-elt) nil-box)))
+  (assert (= (&elt no-box) nil-elt)))
 
 (define-constraints link-definitions
   ;; The elements in each direction in the element tree
@@ -59,12 +57,10 @@
   ;; Three additional pointers: to the previous floating box, the
   ;; parent block box, and the parent positioned box.
   (define-fun flt ((box Box)) Box (get/box (&flt box)))
-  (define-fun pbflow ((box Box)) Box (get/box (&pbflow box)))
   (define-fun ppflow ((box Box)) Box (get/box (&ppflow box)))
 
   ;; From elements to boxes and back
   (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
-  (define-fun elt-box ((elt Element)) Box (get/box (&box elt)))
 
   ;; Helper functions for some basic primitives
   (define-fun float ((b Box)) Float
@@ -129,12 +125,8 @@
   (define-fun match-element-box ((&e ElementName) (&b BoxName)) Bool
     (and
      (= (&elt (get/box &b)) &e)
-     (= (&box (get/elt &e)) &b)
      (= (textalign (get/box &b))
         (style.text-align (computed-style (get/elt &e))))))
-
-  (define-fun match-anon-element ((&e ElementName)) Bool
-    (= (&box (get/elt &e)) nil-box))
 
   (define-fun match-anon-box ((&b BoxName)) Bool
     (and
@@ -148,31 +140,25 @@
   ;; boxes together in their flow trees. The "block" version is much
   ;; more complex than the non-block version, because so many things
   ;; can only be true of block boxes.
-  (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
-    (and
-     (= (&pbflow b) (&pbflow (pflow b)))
-     (= (&ppflow b) (&ppflow (pflow b)))
-     (= (&vflow b) (&vbox b))
-     (= (&nflow b) (&nbox b))
-     (= (&flt b) (&flt (pbflow b)))
-     (= (&flt-up b) (&flt b))))
-
   (define-fun link-flow-root ((b Box) (&b BoxName)) Bool
     (and
-     (= (&pbflow b) &b)
      (= (&ppflow b) &b)
      (= (&vflow b) nil-box)
      (= (&nflow b) nil-box)
      (= (&flt b) nil-box)
      (= (&flt-up b) nil-box)))
 
+  (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
+    (and
+     (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
+     (= (&vflow b) (&vbox b))
+     (= (&nflow b) (&nbox b))
+     (= (&flt b) (&flt (pflow b)))
+     (= (&flt-up b) (&flt b))))
+
   (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
     (and
-     (= (&pbflow b) &b)
-     (= (&ppflow b)
-        (ite (box-positioned (pbox b))
-             (&pbox b)
-             (&ppflow (pbox b))))
+     (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pbox b))))
      (= (&vflow b)
         ,(smt-cond
           [(is-no-box (vbox b)) nil-box]
@@ -187,13 +173,13 @@
       (= (&flt b)
          ,(smt-cond
            [(is-box (vbox b)) (&flt-up (vbox b))]
-           [(box-in-flow (pbox b)) (&flt (pbox b))]
+           [(box-in-flow (pbox b)) (&flt (pflow b))]
            [else nil-box]))
       :opt false)
      (!
       (= (&flt-up b)
          ,(smt-cond
-           [(box-positioned b) (ite (is-box (vbox b)) (&flt-up (vbox b)) nil-box)]
+           [(box-positioned b) (ite (is-box (vbox b)) (&flt-up (vbox b)) (&flt b))]
            [(not (is-float/none (float b))) &b]
            [(is-no-box (lbox b)) (&flt b)]
            [else (&flt-up (lbox b))]))
