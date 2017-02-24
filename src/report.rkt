@@ -166,6 +166,14 @@
    (for/list ([res results])
      (match-define (result file problem test section status description features time url) res)
      (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time)))))
+  
+  (define unsupported-features
+    (set-subtract (remove-duplicates (append-map result-features results)) supported-features))
+
+  (define (feature-row feature)
+    (list feature
+          (count (λ (x) (equal? (result-features x) (list feature))) results)
+          (count (λ (x) (member feature (result-features x))) results)))
 
   (call-with-output-to
    outname #:extension "html" #:exists 'replace
@@ -194,14 +202,12 @@
       (section ()
        (h2 () "Feature totals")
        (table ()
-        (thead () ,(row #:cell 'th "Feature" "# Blocking" "# Necessary"))
-        ,@(let ([unsupported-features (set-subtract (remove-duplicates (append-map result-features results)) supported-features)])
-            (for/list ([section (list supported-features unsupported-features)])
-              `(tbody ()
-                      ,@(for/list ([feature section])
-                          (row (~a feature)
-                               (~a (count (λ (x) (equal? (result-features x) (list feature))) results))
-                               (~a (count (λ (x) (member feature (result-features x))) results)))))))))
+        (thead () ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
+        (tbody () ,@(for/list ([data (sort (map feature-row unsupported-features) > #:key second)])
+                      (apply row (map ~a data))))
+        (thead () ,(row #:cell 'th "Supported Feature" "# Blocking" "# Necessary"))
+        (tbody () ,@(for/list ([data (sort (map feature-row supported-features) > #:key second)])
+                      (apply row (map ~a data))))))
       (section ()
        (h2 () "Failing tests")
        (table ()

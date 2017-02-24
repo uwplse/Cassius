@@ -151,8 +151,8 @@
    #:multi
    [("-d" "--debug") type "Turn on debug information"
     (set! debug (cons (string->symbol type) debug))]
-   [("+x") name "Set an option" (flags (cons (string->symbol name) (flags)))]
-   [("-x") name "Unset an option" (flags (cons (string->symbol name) (flags)))]
+   [("+x") name "Set an option" (flags (set-add (flags) (string->symbol name)))]
+   [("-x") name "Unset an option" (flags (set-remove (flags) (string->symbol name)))]
 
    #:subcommands
    ["accept"
