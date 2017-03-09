@@ -341,59 +341,58 @@
 
        ;; CSS 2.1, § 9.5.1, item 2
        ;; SIMPL: either to the right of the previous float, or below it.
-       ;; TODO: This doesn't take into account that it's just
-       ;; interactions of left floats with left floats, right floats
-       ;; with right floats
-       (or (is-no-box flt)
+       ;; MANY: forall
+       (=> (is-box flt) (= (float b) (float flt))
            (ite (is-float/left (float b))
-                (or (= (left-outer b) (right-outer flt)) (>= (top-outer b) (bottom-outer flt)))
-                (or (= (right-outer b) (left-outer flt)) (>= (top-outer b) (bottom-outer flt)))))
-
+                (or (>= (left-outer b) (right-outer flt)) (>= (top-outer b) (bottom-outer flt)))
+                (or (>= (right-outer b) (left-outer flt)) (>= (top-outer b) (bottom-outer flt)))))
 
        ;; CSS 2.1, § 9.5.1, item 3
-       ;; SIMPL: Currently impossible --- see restrictions below
-
+       ;; MANY: forall
+       (=> (is-box flt) (not (= (float b) (float flt))) (horizontally-adjacent b flt)
+           (ite (is-float/right (float b))
+                (>= (left-outer b) (right-outer flt))
+                (<= (right-outer b) (left-outer flt))))
+           
        ;; CSS 2.1, § 9.5.1, item 4
        (>= (top-outer b) (top-content p))
 
-       ;; CSS 2.1, § 9.5.1, item 5 & 6
+       ;; CSS 2.1, § 9.5.1, item 5
        ;; SIMPL: May not be higher than the top of the previous float or flow box
-       (=> (is-box flt) (>= (top-outer b) (top-outer flt)))
+       ;; TODO: incorrect when there are large negative margins
+       ;; TODO: needs preceding not previous block box
        (=> (is-box vb) (>= (top-outer b) (top-outer vb)))
-       (=> (and (is-box vb) (is-box (lflow vb)))
-           (>= (top-outer b) (top-outer (lflow vb))))
+       ;; MANY: forall
+       (=> (is-box flt) (>= (top-outer b) (top-outer flt)))
+
+       ;; CSS 2.1, § 9.5.1, item 6
+       ;; TODO: needs preceding line box
 
        ;; CSS 2.1, § 9.5.1, item 7
-       ;; TODO: This doesn't take into account that it's just
-       ;; interactions of left floats with left floats, right floats
-       ;; with right floats
-       (=> (and (is-box flt) (< (x flt) (x b)) (horizontally-adjacent b flt)
-                (is-float/left (float b)))
-           (<= (right-outer b) (right-content p)))
-       (=> (and (is-box flt) (> (x flt) (x b)) (horizontally-adjacent b flt)
-                (is-float/right (float b)))
-           (>= (left-outer b) (left-content p)))
+       ;; MANY: just use latest
+       (=> (is-box flt) (= (float b) (float flt)) (horizontally-adjacent b flt)
+           (ite (is-float/left (float b))
+                (=> (< (x flt) (x b)) (<= (right-outer b) (right-content p)))
+                (=> (> (x flt) (x b)) (>= (left-outer b) (left-content p)))))
 
        ;; CSS 2.1, § 9.5.1, item 8
-       ;; SIMPL: at its normal position, or the same y-position as previous float
+       ;; SIMPL: at its normal y-position, same as previous same-float, or
+       ;; just under the min of previous same-float and other-float
        (or (= (top-outer b) (ite (is-no-box vb) (top-content p) (bottom-outer vb)))
            (and (is-box flt) (= (top-outer b) (top-outer flt)))
+           ;; MANY: maximize bottom-outer over flts
            (and (is-box flt) (= (top-outer b) (bottom-outer flt))))
 
        ;; CSS 2.1, § 9.5.1, item 9
        ;; SIMPL: at the left/right or next to an existing floating box
-       ;; TODO: This doesn't take into account that it's just
-       ;; interactions of left floats with left floats, right floats
-       ;; with right floats
+       ;; TODO: just use latest
        (=> (is-float/left (float b))
            (or (= (left-outer b) (left-content p))
-               (and (is-box flt) (is-float/left (float flt))
-                    (horizontally-adjacent b flt)
+               (and (is-box flt) (= (float b) (float flt)) (horizontally-adjacent b flt)
                     (= (left-outer b) (right-outer flt)))))
-       (=> (is-float/right (float b))
+       (=> (is-float/right (float b)) (= (float b) (float flt))
            (or (= (right-outer b) (right-content p))
-               (and (is-box flt) (is-float/left (float flt))
-                    (horizontally-adjacent b flt)
+               (and (is-box flt) (= (float b) (float flt)) (horizontally-adjacent b flt)
                     (= (right-outer b) (left-outer flt)))))))
 
   (define-fun float-restrictions ((b Box)) Bool
