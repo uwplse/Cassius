@@ -175,6 +175,9 @@
           (count (λ (x) (equal? (result-features x) (list feature))) results)
           (count (λ (x) (member feature (result-features x))) results)))
 
+  (define (sort-features data)
+    (sort (sort data > #:key third) > #:key second))
+
   (call-with-output-to
    outname #:extension "html" #:exists 'replace
    write-xexpr
@@ -203,10 +206,10 @@
        (h2 () "Feature totals")
        (table ()
         (thead () ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
-        (tbody () ,@(for/list ([data (sort (map feature-row unsupported-features) > #:key second)])
+        (tbody () ,@(for/list ([data (sort-features (map feature-row unsupported-features))])
                       (apply row (map ~a data))))
         (thead () ,(row #:cell 'th "Supported Feature" "# Blocking" "# Necessary"))
-        (tbody () ,@(for/list ([data (sort (map feature-row supported-features) > #:key second)])
+        (tbody () ,@(for/list ([data (sort-features (map feature-row supported-features))])
                       (apply row (map ~a data))))))
       (section ()
        (h2 () "Failing tests")
@@ -223,6 +226,29 @@
                          (define probfeats (set-subtract features supported-features))
                          `(span ((title ,(string-join (map ~a probfeats) ", "))) "☹")]
                         ['error "!"])))))))))))
+
+(define (print-feature-table problems)
+  (define all-features (remove-duplicates (append-map (λ (x) (dict-ref x ':features '())) problems)))
+  (define unsupported-features (set-subtract all-features supported-features))
+
+  (define width (apply max (map (compose string-length ~a) (cons "Feature" all-features))))
+  (define (~feature feature) (~a feature #:width width))
+
+  (define (feature-row feature)
+    (list feature
+          (count (λ (x) (equal? (dict-ref x ':features '()) (list feature))) problems)
+          (count (λ (x) (member feature (dict-ref x ':features '()))) problems)))
+
+  (define (sort-features data)
+    (sort (sort data > #:key third) > #:key second))
+
+  (printf "~a\t~a\t~a\n" (~feature "Feature") "#B" "#N")
+  (for ([data (sort-features (map feature-row unsupported-features))])
+    (printf "~a\t~a\t~a\n" (~feature (first data)) (second data) (third data)))
+
+  (printf "\n~a\t~a\t~a\n" (~feature "Feature") "#B" "#N")
+  (for ([data (sort-features (map feature-row supported-features))])
+    (printf "~a\t~a\t~a\n" (~feature (first data)) (second data) (third data))))
 
 (define-syntax-rule (and! var function)
   (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
@@ -284,4 +310,9 @@
     (write-report
      #:output out-file
      (for/append ([file fnames])
-       (run-mutation-tests file #:debug debug #:valid valid? #:index index #:repeat repeat)))]))
+       (run-mutation-tests file #:debug debug #:valid valid? #:index index #:repeat repeat)))]
+
+   ["features"
+    #:args fnames
+    (print-feature-table
+     (for/append ([file fnames]) (dict-values (call-with-input-file file parse-file))))]))
