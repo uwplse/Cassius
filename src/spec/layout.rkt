@@ -399,15 +399,16 @@
   (define-fun float-restrictions ((b Box)) Bool
     ;; Four restrictions on floats to make solving efficient. Not from standard.
     ,(smt-let ([flt (flt b)] [p (pflow b)])
-       ;; R1: No negative margins on floats; otherwise they can overlap
-       ,@(for/list ([m '(mt mr mb ml)]) `(>= (,m b) 0.0))
+       ;; R1: Floats with large negative top margins do not advance the x position
+       (> (bottom-outer b) (top-outer b))
 
        ;; R2: The bottom of a box is farther down than the bottom of the previous box
        ;; Otherwise, they can make little pyramids
        (=> (is-box flt) (>= (bottom-outer b) (bottom-outer flt)))
 
        ;; R3: If a float wraps to the next line, the previous line must be full
-       (=> (and (is-box flt) (= (top-outer b) (bottom-outer flt)))
+       (=> (is-box flt) (= (top-outer b) (bottom-outer flt))
+           (not (= (top-outer b) (ite (is-no-box (vbox b)) (top-content p) (bottom-outer (vbox b)))))
            (ite (is-float/left (float b))
                 (>= (right-outer flt) (right-content p))
                 (<= (left-outer flt) (left-content p))))

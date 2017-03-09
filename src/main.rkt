@@ -298,6 +298,7 @@
     (define-const border/thin Border (border/px 1))
     (define-const border/medium Border (border/px 3))
     (define-const border/thick Border (border/px 5))
+    (define-const min-height/auto Min-Height (min-height/px 0))
     (define-const text-align/start Text-Align text-align/left)
     (define-const text-align/end Text-Align text-align/right)
     ,@tree-types
