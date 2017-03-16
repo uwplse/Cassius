@@ -69,6 +69,8 @@
 
   (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
   (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
+  (define-fun max-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< x y)) y x))
+  (define-fun min-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< y x)) y x))
   (define-fun between ((x Real) (y Real) (z Real)) Bool
     (or (<= x y z) (>= x y z)))
 
@@ -399,7 +401,8 @@
     ;; Four restrictions on floats to make solving efficient. Not from standard.
     ,(smt-let ([flt (flt b)] [p (pflow b)])
        ;; R1: Floats with large negative top margins do not advance the x position
-       (> (bottom-outer b) (top-outer b))
+       (or (> (bottom-outer b) (top-outer b))
+           (= (left-outer b) (right-outer b)))
 
        ;; R2: The bottom of a box is farther down than the bottom of the previous box
        ;; Otherwise, they can make little pyramids

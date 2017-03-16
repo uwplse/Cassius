@@ -20,6 +20,12 @@ Text = curry(Box, "TEXT")
 Magic = curry(Box, "MAGIC")
 Anon = curry(Box, "ANON")
 
+function add_feature(box, feature) {
+    var props = box.props["features"] || []
+    props.push(feature)
+    box.props["features"] = props;
+}
+
 Box.prototype.toString = function() {
     var s = "[" + this.type;
     for (var i in this.props) {
@@ -110,10 +116,7 @@ function dump_string(s) {
     return '"' + s.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + '"';
 }
 
-function cs(elt) {
-    if (!elt || elt.nodeType !== document.ELEMENT_NODE) console.trace();
-    return window.getComputedStyle(elt);
-}
+function cs(elt) {return window.getComputedStyle(elt);}
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE || elt.nodeType == document.CDATA_SECTION_NODE;}
 function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt).display == "inline";}
@@ -142,7 +145,6 @@ function convert_margin(margin, elt) {
     try { return val2pct(margin) * elt.clientWidth } catch (e) {}
     try { return val2em(margin) * get_fontsize(elt) } catch (e) {}
     throw "Error weird margin value";
-
 }
 
 function get_margins(elt) {
@@ -155,19 +157,31 @@ function get_margins(elt) {
 }
 
 function top_outer(elt) {
-    return elt.getBoundingClientRect().top - convert_margin(cs(elt).marginTop);
+    return elt.getBoundingClientRect().top - convert_margin(cs(elt).marginTop, elt);
+}
+
+function top_content(elt) {
+    return elt.getBoundingClientRect().top + elt.clientTop + convert_margin(cs(elt).paddingTop, elt);
 }
 
 function right_outer(elt) {
-    return elt.getBoundingClientRect().right - convert_margin(cs(elt).marginRight);
+    return elt.getBoundingClientRect().right - convert_margin(cs(elt).marginRight, elt);
+}
+
+function right_content(elt) {
+    return elt.getBoundingClientRect().left + elt.clientLeft + elt.clientWidth - convert_margin(cs(elt).paddingRight, elt);
 }
 
 function bottom_outer(elt) {
-    return elt.getBoundingClientRect().bottom + convert_margin(cs(elt).marginBottom);
+    return elt.getBoundingClientRect().bottom + convert_margin(cs(elt).marginBottom, elt);
 }
 
 function left_outer(elt) {
-    return elt.getBoundingClientRect().left - convert_margin(cs(elt).marginLeft);
+    return elt.getBoundingClientRect().left - convert_margin(cs(elt).marginLeft, elt);
+}
+
+function left_content(elt) {
+    return elt.getBoundingClientRect().left + elt.clientLeft + convert_margin(cs(elt).paddingLeft, elt);
 }
 
 function horizontally_adjacent(e1, e2) {
@@ -701,17 +715,77 @@ function dump_document() {
     return b;
 }
 
-function compute_flt_pointer(box, prev) {
-    box.flt = prev;
+MAX_LEFT = 0;
+MAX_RIGHT = 0;
+MAX_TOTAL = 0;
+
+function Ezone() {
+    this.left = [];
+    this.right = [];
+    this.mark = 0;
+    this.prev = null;
+    return this;
+}
+
+Ezone.prototype.add = function(box) {
+    var dir = cs(box).float;
+    var steps = this[dir];
+    var x = (dir == "left" ? right_outer : left_outer)(box);
+    var y = bottom_outer(box);
+    var mark = top_outer(box);
+    for (var i = 0; i < steps.length; i++) {
+        if (!steps[i]) continue;
+        if (bottom_outer(steps[i]) < mark) {
+            steps[i] = null;
+            continue;
+        }
+        if (cs(steps[i]).float == "left" && bottom_outer(steps[i]) <= y && right_outer(steps[i]) <= x
+            || cs(steps[i]).float == "right" && bottom_outer(steps[i]) <= y && left_outer(steps[i]) <= x) {
+            steps[i] = null;
+            continue;
+        }
+    }
+    var i = 0;
+    while (i < steps.length) {
+        if (steps[i]) i++
+        else steps.splice(i, 1);
+    }
+    steps.push(box);
+    this.mark = Math.max(this.mark, mark);
+    this.prev = box;
+
+    MAX_LEFT = Math.max(this.left.length, MAX_LEFT);
+    MAX_RIGHT = Math.max(this.right.length, MAX_RIGHT);
+    MAX_TOTAL = Math.max(this.left.length + this.right.length, MAX_TOTAL);
+}
+
+Ezone.prototype.clone = function() {
+    var x = new Ezone();
+    x.left = this.left.slice();
+    x.right = this.right.slice();
+    x.mark = this.mark;
+    x.prev = this.prev;
+    return x;
+}
+
+function compute_flt_pointer(box, prev, vbox) {
+    box.flt = prev || new Ezone();
+    box.vbox = vbox;
     if (box.node && is_float(box.node)) {
         prev = null;
+        vbox = null;
         for (var i = 0; i < box.children.length; i++) {
-            prev = compute_flt_pointer(box.children[i], prev);
+            prev = compute_flt_pointer(box.children[i], prev, vbox);
+            vbox = box;
         }
-        return box;
+        var out = box.flt.clone();
+        out.add(box.node);
+        return out;
     } else {
+        vbox = null;
         for (var i = 0; i < box.children.length; i++) {
-            prev = compute_flt_pointer(box.children[i], prev);
+            prev = compute_flt_pointer(box.children[i], prev, vbox);
+            vbox = box;
         }
         return prev;
     }
@@ -721,33 +795,49 @@ function check_float_restrictions(box, parent, features) {
     if (!features) { features = parent; parent = null };
 
     if (parent && box.node && is_float(box.node)) {
-        var flt = box.flt;
+        var flt = box.flt.prev ? box.flt.prev : null;
 
         // R1: No negative margins on floats; otherwise they can overlap
-        var m = get_margins(box.node);
-        for (var i in m) {
-            if (val < 0) features["float:R1"] = true;
+        if (bottom_outer(box.node) <= top_outer(box.node)
+            && left_outer(box.node) != right_outer(box.node)) {
+            features["float:R1"] = true;
+            add_feature(box, "float:R1")
         }
 
         // R2: The bottom of a box is farther down than the bottom of the previous box
         if (flt) {
-            if (bottom_outer(box.node) < bottom_outer(flt.node)) features["float:R2"] = true;
+            if (bottom_outer(box.node) < bottom_outer(flt)) {
+                features["float:R2"] = true;
+                add_feature(box, "float:R2");
+            }
         }
 
         // R3: If a float wraps to the next line, the previous line must be full
-        if (flt && top_outer(box.node) == bottom_outer(flt.node)) {
+        if (flt && top_outer(box.node) == bottom_outer(flt)
+            && top_outer(box.node) !== (!box.vbox ? top_content(parent.node) : bottom_outer(box.vbox.node))) {
             // TODO: Assumes no padding!
             if ((cs(box.node).float == "left") ? 
-                (right_outer(flt.node) < parent.node.getBoundingClientRect().left + parent.node.clientLeft + parent.node.clientWidth) : 
-                (left_outer(flt.node) > parent.node.getBoundingClientRect().left + parent.node.clientLeft)
-                ) features["float:R3"] = true;
+                (right_outer(flt) < right_content(parent.node)) : 
+                (left_outer(flt) > left_content(parent.node))
+                ) {
+                features["float:R3"] = true;
+                add_feature(box, "float:R3");
+            }
         }
 
         // R4: If this and the previous float float to different
         // sides, they are not horizontally adjacent
-        if (flt && cs(box.node).float != cs(flt.node).float) {
-            console.log("R4", box.node, flt.node)
-            if (horizontally_adjacent(flt.node, box.node)) features["float:R4"] = true;
+        if (flt && cs(box.node).float != cs(flt).float) {
+            if (horizontally_adjacent(flt, box.node)) {
+                features["float:R4"] = true;
+                add_feature(box, "float:R4");
+            }
+        }
+    } else if (box.type === "TEXT") {
+        if (box.props.y < box.flt.mark) {
+            console.log(box.props.y, box.flt);
+            add_feature(box, "exclusion-zone");
+            features["exclusion-zone"] = true;
         }
     }
 
@@ -767,6 +857,10 @@ function page2cassius(name) {
 
     var out = get_boxes(features);
     var page = out.view;
+    
+    compute_flt_pointer(page, null);
+    check_float_restrictions(page, features);
+
     var style = out.style;
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
@@ -779,12 +873,9 @@ function page2cassius(name) {
     text += "(define-document " + name;
     text += dump_tree(dump_document());
     text += ")\n\n";
-    
-    compute_flt_pointer(page, null);
-    check_float_restrictions(page, features);
 
     var title = dump_string(document.title);
-    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";
+    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + "\n  :max " + MAX_TOTAL + " " + MAX_LEFT + " " + MAX_RIGHT + ")";
     return text;
 }
 
