@@ -228,7 +228,8 @@ function get_lines(txt) {
         var r = new Range();
         r.setStart(txt, cursor);
         r.setEnd(txt, new_cursor);
-        ranges.push(r);
+        if (r.toString().trim() !== "")
+            ranges.push(r);
         cursor = new_cursor;
     }
 
@@ -715,9 +716,21 @@ function dump_document() {
     return b;
 }
 
-MAX_LEFT = 0;
-MAX_RIGHT = 0;
-MAX_TOTAL = 0;
+MAX = 0;
+
+function count_distinct(f, arr1, arr2) {
+    var h = {};
+    var c = 0;
+    for (var i = 0; i < arr1.length; i++) {
+        if (!h[f(arr1[i])]) c++;
+        h[f(arr1[i])] = true;
+    }
+    for (var i = 0; i < arr2.length; i++) {
+        if (!h[f(arr2[i])]) c++;
+        h[f(arr2[i])] = true;
+    }
+    return c;
+}
 
 function Ezone() {
     this.left = [];
@@ -739,8 +752,7 @@ Ezone.prototype.add = function(box) {
             steps[i] = null;
             continue;
         }
-        if (cs(steps[i]).float == "left" && bottom_outer(steps[i]) <= y && right_outer(steps[i]) <= x
-            || cs(steps[i]).float == "right" && bottom_outer(steps[i]) <= y && left_outer(steps[i]) <= x) {
+        if (bottom_outer(steps[i]) == y) {
             steps[i] = null;
             continue;
         }
@@ -754,9 +766,7 @@ Ezone.prototype.add = function(box) {
     this.mark = Math.max(this.mark, mark);
     this.prev = box;
 
-    MAX_LEFT = Math.max(this.left.length, MAX_LEFT);
-    MAX_RIGHT = Math.max(this.right.length, MAX_RIGHT);
-    MAX_TOTAL = Math.max(this.left.length + this.right.length, MAX_TOTAL);
+    MAX = Math.max(count_distinct(function(x) {return bottom_outer(x)}, this.left, this.right), MAX);
 }
 
 Ezone.prototype.clone = function() {
@@ -835,7 +845,6 @@ function check_float_restrictions(box, parent, features) {
         }
     } else if (box.type === "TEXT") {
         if (box.props.y < box.flt.mark) {
-            console.log(box.props.y, box.flt);
             add_feature(box, "exclusion-zone");
             features["exclusion-zone"] = true;
         }
@@ -875,7 +884,7 @@ function page2cassius(name) {
     text += ")\n\n";
 
     var title = dump_string(document.title);
-    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + "\n  :max " + MAX_TOTAL + " " + MAX_LEFT + " " + MAX_RIGHT + ")";
+    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + "\n  :max " + MAX + ")";
     return text;
 }
 

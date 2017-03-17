@@ -270,7 +270,7 @@
   (match expr
     [`(let ((,vars ,vals) ...) ,body)
      `(let (,@(for/list ([var vars] [val vals]) `(,var ,(expand-function val fns)))) ,(expand-function body fns))]
-    [(list (? (curry hash-has-key? fns) name) args ...)
+    [(list (and (? symbol?) (? (curry hash-has-key? fns)) name) args ...)
      (match-define (list names body) (hash-ref fns name))
      (expand-function (capture-avoiding-substitute body (map cons names args)) fns)]
     [(? list?)
@@ -295,6 +295,13 @@
 
 (define (expand-let expr)
   (match expr
+    [`(let* () ,body)
+     body]
+    [`(let* ([,var ,val] ,rest ...) ,body)
+     (expand-let
+      (capture-avoiding-substitute
+       `(let* (,@rest) ,body)
+       (list (cons var val))))]
     [`(let ([,vars ,vals] ...) ,body)
      (expand-let (capture-avoiding-substitute body (map cons vars vals)))]
     [(? list?) (cons (car expr) (map expand-let (cdr expr)))]

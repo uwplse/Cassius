@@ -1,8 +1,9 @@
 #lang racket
 (require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
-         "selectors.rkt" "match.rkt" "solver.rkt"
-         "spec/css-properties.rkt" "spec/browser-style.rkt"
-         "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt")
+         "selectors.rkt" "match.rkt" "solver.rkt")
+(require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
+         "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
+         "spec/utils.rkt" "spec/float.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          css-values-solver)
@@ -62,7 +63,7 @@
          pt pr pb pl bt br bb bl stfwidth w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
-         &nflow &vflow &ppflow &flt &flt-up
+         &nflow &vflow &ppflow ez.in ez.out
          textalign &elt)
    box)
   (define box-width (+ bl pl w pr br))
@@ -301,7 +302,10 @@
     (define-const min-height/auto Min-Height (min-height/px 0))
     (define-const text-align/start Text-Align text-align/left)
     (define-const text-align/end Text-Align text-align/right)
+    ,@common-definitions
+    ,@exclusion-zones
     ,@tree-types
+    ,@utility-definitions
     ,@(global dom-define-get/elt)
     ,@(global dom-define-get/box)
     ;,@css-functions

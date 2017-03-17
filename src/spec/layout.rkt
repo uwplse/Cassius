@@ -37,64 +37,6 @@
     `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0.0))))
 
 (define-constraints layout-definitions
-
-  (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
-  (define-fun left-border ((box Box)) Real (x box))
-  (define-fun box-left ((box Box)) Real (+ (x box) (bl box)))
-  (define-fun left-padding ((box Box)) Real (+ (x box) (bl box)))
-  (define-fun left-content ((box Box)) Real (+ (x box) (bl box) (pl box)))
-
-  (define-fun right-content ((box Box)) Real (+ (x box) (bl box) (pl box) (w box)))
-  (define-fun right-padding ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box)))
-  (define-fun box-right ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box)))
-  (define-fun right-border ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box)))
-  (define-fun right-outer ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box) (mr box)))
-
-  (define-fun top-outer ((box Box)) Real (- (y box) (mtn box) (mtp box)))
-  (define-fun top-border ((box Box)) Real (y box))
-  (define-fun box-top ((box Box)) Real (+ (y box) (bt box)))
-  (define-fun top-padding ((box Box)) Real (+ (y box) (bt box)))
-  (define-fun top-content ((box Box)) Real (+ (y box) (bt box) (pt box)))
-
-  (define-fun bottom-content ((box Box)) Real (+ (y box) (bt box) (pt box) (h box)))
-  (define-fun bottom-padding ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box)))
-  (define-fun box-bottom ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box)))
-  (define-fun bottom-border ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box)))
-  (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
-
-  (define-fun box-x ((box Box)) Real (+ (x box) (xo box)))
-  (define-fun box-y ((box Box)) Real (+ (y box) (yo box)))
-  (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
-  (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
-
-  (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
-  (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
-  (define-fun max-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< x y)) y x))
-  (define-fun min-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< y x)) y x))
-  (define-fun between ((x Real) (y Real) (z Real)) Bool
-    (or (<= x y z) (>= x y z)))
-
-  (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
-    (and (or (between (bottom-outer box1) (top-outer box2) (top-outer box1))
-             (between (bottom-outer box2) (top-outer box1) (top-outer box2)))
-         (=> (and (= (top-outer box1) (top-outer box2)) (= (bottom-outer box1) (bottom-outer box2)))
-             (not (= (top-outer box1) (bottom-outer box2))))))
-
-  (define-fun vertically-adjacent ((box1 Box) (box2 Box)) Bool
-    (and (or (between (right-outer box1) (left-outer box2) (left-outer box1))
-             (between (right-outer box2) (left-outer box1) (left-outer box2)))
-         (=> (and (= (left-outer box1) (left-outer box2)) (= (right-outer box1) (right-outer box2)))
-             (not (= (left-outer box1) (right-outer box2))))))
-
-  (define-fun overlaps ((b1 Box) (b2 Box)) Bool
-    (and (horizontally-adjacent b1 b2) (vertically-adjacent b1 b2)))
-
-  (define-fun within ((b1 Box) (b2 Box)) Bool
-    (and (<= (box-left b2) (box-left b1))
-         (<= (box-top b2) (box-top b1))
-         (<= (box-right b1) (box-right b2))
-         (<= (box-bottom b1) (box-bottom b2))))
-
   (define-fun is-root-elt ((e Element)) Bool
     (is-nil-elt (&pelt e)))
 
@@ -167,14 +109,12 @@
        (min-max-height (- (bottom-border (lflow b)) (top-border (fflow b))) b)]
       [(is-replaced (box-elt b))
        (min-max-height (intrinsic-height (box-elt b)) b)]
-      [(is-nil-box (&flt-up (lbox b)))
-       (min-max-height (- (bottom-outer (lflow b)) (top-content b)) b)]
       [else
        ;; If it has block-level children, the height is the distance between the
        ;; top margin-edge of the topmost block-level child box and the
        ;; bottom margin-edge of the bottommost block-level child box.
        (min-max-height
-        (- (max (bottom-outer (lflow b)) (bottom-outer (get/box (&flt-up (lbox b)))))
+        (- (max (bottom-outer (lflow b)) (ez.max (ez.out b)))
            (top-content b))
         b)]))
 
@@ -333,93 +273,6 @@
          (%of (* 100 (font-size.em (style.font-size (computed-style e))))
               (font-size (pbox b)))])))
 
-  (define-fun float-rules ((b Box)) Bool
-    ,(smt-let ([p (pflow b)] [flt (flt b)] [vb (vbox b)])
-       ;; CSS 2.1 § 9.5.1
-
-       ;; CSS 2.1, § 9.5.1, item 1
-       (=> (is-float/left (float b)) (>= (left-outer b) (left-content p)))
-       (=> (is-float/right (float b)) (>= (right-content p) (right-outer b)))
-
-       ;; CSS 2.1, § 9.5.1, item 2
-       ;; SIMPL: either to the right of the previous float, or below it.
-       ;; MANY: forall
-       (=> (is-box flt) (= (float b) (float flt))
-           (ite (is-float/left (float b))
-                (or (>= (left-outer b) (right-outer flt)) (>= (top-outer b) (bottom-outer flt)))
-                (or (>= (right-outer b) (left-outer flt)) (>= (top-outer b) (bottom-outer flt)))))
-
-       ;; CSS 2.1, § 9.5.1, item 3
-       ;; MANY: forall
-       (=> (is-box flt) (not (= (float b) (float flt))) (horizontally-adjacent b flt)
-           (ite (is-float/right (float b))
-                (>= (left-outer b) (right-outer flt))
-                (<= (right-outer b) (left-outer flt))))
-           
-       ;; CSS 2.1, § 9.5.1, item 4
-       (>= (top-outer b) (top-content p))
-
-       ;; CSS 2.1, § 9.5.1, item 5
-       ;; SIMPL: May not be higher than the top of the previous float or flow box
-       ;; TODO: incorrect when there are large negative margins
-       ;; TODO: needs preceding not previous block box
-       (=> (is-box vb) (>= (top-outer b) (top-outer vb)))
-       ;; MANY: forall
-       (=> (is-box flt) (>= (top-outer b) (top-outer flt)))
-
-       ;; CSS 2.1, § 9.5.1, item 6
-       ;; TODO: needs preceding line box
-
-       ;; CSS 2.1, § 9.5.1, item 7
-       ;; MANY: just use latest
-       (=> (is-box flt) (= (float b) (float flt)) (horizontally-adjacent b flt)
-           (ite (is-float/left (float b))
-                (=> (< (x flt) (x b)) (<= (right-outer b) (right-content p)))
-                (=> (> (x flt) (x b)) (>= (left-outer b) (left-content p)))))
-
-       ;; CSS 2.1, § 9.5.1, item 8
-       ;; SIMPL: at its normal y-position, same as previous same-float, or
-       ;; just under the min of previous same-float and other-float
-       (or (= (top-outer b) (ite (is-no-box vb) (top-content p) (bottom-outer vb)))
-           (and (is-box flt) (= (top-outer b) (top-outer flt)))
-           ;; MANY: maximize bottom-outer over flts
-           (and (is-box flt) (= (top-outer b) (bottom-outer flt))))
-
-       ;; CSS 2.1, § 9.5.1, item 9
-       ;; SIMPL: at the left/right or next to an existing floating box
-       ;; TODO: just use latest
-       (=> (is-float/left (float b))
-           (or (= (left-outer b) (left-content p))
-               (and (is-box flt) (= (float b) (float flt)) (horizontally-adjacent b flt)
-                    (= (left-outer b) (right-outer flt)))))
-       (=> (is-float/right (float b)) (= (float b) (float flt))
-           (or (= (right-outer b) (right-content p))
-               (and (is-box flt) (= (float b) (float flt)) (horizontally-adjacent b flt)
-                    (= (right-outer b) (left-outer flt)))))))
-
-  (define-fun float-restrictions ((b Box)) Bool
-    ;; Four restrictions on floats to make solving efficient. Not from standard.
-    ,(smt-let ([flt (flt b)] [p (pflow b)])
-       ;; R1: Floats with large negative top margins do not advance the x position
-       (or (> (bottom-outer b) (top-outer b))
-           (= (left-outer b) (right-outer b)))
-
-       ;; R2: The bottom of a box is farther down than the bottom of the previous box
-       ;; Otherwise, they can make little pyramids
-       (=> (is-box flt) (>= (bottom-outer b) (bottom-outer flt)))
-
-       ;; R3: If a float wraps to the next line, the previous line must be full
-       (=> (is-box flt) (= (top-outer b) (bottom-outer flt))
-           (not (= (top-outer b) (ite (is-no-box (vbox b)) (top-content p) (bottom-outer (vbox b)))))
-           (ite (is-float/left (float b))
-                (>= (right-outer flt) (right-content p))
-                (<= (left-outer flt) (left-content p))))
-
-       ;; R4: If this and the previous float float to different sides,
-       ;; they are not horizontally adjacent
-       (=> (and (is-box flt) (not (= (float flt) (float b))))
-           (not (horizontally-adjacent flt b)))))
-
   (define-fun positioned-vertical-layout ((b Box)) Bool
     ;; CSS 2.1 § 10.6.4
     ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
@@ -517,11 +370,12 @@
        (flow-horizontal-layout b)
 
        (= (x b) (+ (left-content p) (ml b)))
-       (= (y b) (vertical-position-for-flow-boxes b))))
+       (= (y b) (vertical-position-for-flow-boxes b))
+       (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
-               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)] [flt (flt b)])
+               [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
        ,@(map extract-field '(mt mr mb ml))
        ,@(zero-auto-margins '(left right top bottom))
@@ -540,14 +394,27 @@
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                ,(get-px-or-% 'height 'h 'b)))
 
-       (float-rules b)
-       (float-restrictions b)))
+       (let* ([ez (ez.in b)]
+              [w (- (right-outer b) (left-outer b))]
+              [h (- (bottom-outer b) (top-outer b))]
+              [y-normal (ite (is-no-box vb) (top-content p) (bottom-outer vb))]
+              [y* (ez.level ez w (left-content p) (right-content p) y-normal)]
+              [y (max y-normal y*)]
+              [x* (ez.x ez y (style.float r) (left-content p) (right-content p))]
+              [x (if (is-float/left (style.float r)) x* (- x* w))]
+              [ez* (ez.advance ez y)])
+         (and
+          (= (top-outer b) y)
+          (= (left-outer b) x)
+          (ez.can-add ez* (+ y h)) ;; This is the key restriction
+          (= (ez.out b) (ez.add ez* (style.float r) y (+ w x) (+ h y) x))))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     (and
       (margins-dont-collapse b)
       (positioned-vertical-layout b)
-      (positioned-horizontal-layout b)))
+      (positioned-horizontal-layout b)
+      (= (ez.out b) (ez.in b))))
 
   (define-fun a-block-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))] [p (pflow b)])
@@ -593,7 +460,8 @@
                   (= (right-outer (lflow b)) (right-content b)))
                  (= (w b) 0.0)))
        (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
-       (=> (is-box v) (= (left-outer b) (right-outer v)))))
+       (=> (is-box v) (= (left-outer b) (right-outer v)))
+       (= (ez.out b) (ez.in b))))
 
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)])
@@ -606,7 +474,8 @@
 
        (no-relative-offset b)
        (zero-box-model b)
-       (=> (is-box v) (= (x b) (right-border v)))))
+       (=> (is-box v) (= (x b) (right-border v)))
+       (= (ez.out b) (ez.in b))))
 
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
@@ -614,27 +483,15 @@
        (= (type b) box/line)
        (no-relative-offset b)
        (zero-box-model b)
-       (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
-                 (is-float/left (float flt)))
-            (= (left-outer b) (right-outer flt))
-            (= (left-outer b) (left-content p)))
-       (ite (and (is-box flt) (< (top-outer b) (bottom-outer flt))
-                 (is-float/right (float flt)))
-            (= (right-outer b) (left-outer flt))
-            (= (right-outer b) (right-content p)))
 
-       (let ([c (and ;; Space left for the line of text
-                 (> (- (right-outer l) (left-outer f))
-                    (ite (is-float/left (float flt))
-                         (- (right-content p) (right-outer flt))
-                         (- (left-outer flt) (left-content p))))
-                 ;; Previous element is a float; see restrictions on floats
-                 (is-box flt)
-                 (= (&vflow b) (&vflow flt)))])
+       (let ([y-normal (ite (is-no-box v) (top-content p) (bottom-border v))]
+             [ez (ez.in b)])
          (and
-          (=> c (= (top-outer b) (bottom-outer flt)))
-          (=> (and (not c) (is-no-box v)) (= (y b) (top-content p)))
-          (=> (and (not c) (is-box v)) (= (y b) (bottom-border v)))))
+          (ez.test (ez.in b) y-normal) ;; Key float restriction
+          (= (y b)
+             (max y-normal (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal)))
+          (= (left-outer b) (ez.x ez y-normal float/left (left-content p) (right-content p)))
+          (= (right-outer b) (ez.x ez y-normal float/right (left-content p) (right-content p)))))
 
        (= (stfwidth b) (compute-stfwidth b))
        (= (font-size b) (font-size p))
@@ -645,7 +502,8 @@
                 (=> (is-no-box n) (= (right-border l) (right-content b)))))
        (=> (is-text-align/right (textalign b)) (= (right-border l) (right-content b)))
        (=> (is-text-align/center (textalign b))
-           (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))))
+           (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))
+       (= (ez.out b) (ez.in b))))
 
   (define-fun a-view-box ((b Box)) Bool
     (and
@@ -653,7 +511,8 @@
      (zero-box-model b)
      (= (font-size b) 16.0)
      (= (x b) (y b) 0.0)
-     (= (xo b) (yo b) 0.0)))
+     (= (xo b) (yo b) 0.0)
+     (= (ez.out b) (ez.out (lbox b)))))
 
   (define-fun a-magic-box ((b Box)) Bool
     (or (is-box/block (type b)) (is-box/inline (type b))))
@@ -671,4 +530,5 @@
        (ite (is-box v)
             (= (y b) (+ (bottom-border v) (mbp v) (mbn v)))
             (= (y b) (top-content p)))
-       (= (x b) (left-content p)))))
+       (= (x b) (left-content p))
+       (= (ez.out b) (ez.out (lbox b))))))

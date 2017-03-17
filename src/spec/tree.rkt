@@ -22,7 +22,7 @@
                 (font-size Real)
                 (&nflow BoxName) (&vflow BoxName) ; flow tree pointers
                 (&ppflow BoxName) ; parent positioned pointers
-                (&flt BoxName) (&flt-up BoxName) ; previous and rightmost-child floating boxes
+                (ez.in EZone) (ez.out EZone)
                 (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt ElementName)))
       (BoxType box/root box/text box/inline box/block box/line)
@@ -34,7 +34,7 @@
 
   ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
       `(assert (= (,field no-elt) nil-elt)))
-  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &flt &flt-up)])
+  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow)])
       `(assert (= (,field no-box) nil-box)))
 
   (assert (= (&elt no-box) nil-elt)))
@@ -56,7 +56,6 @@
 
   ;; Three additional pointers: to the previous floating box, the
   ;; parent block box, and the parent positioned box.
-  (define-fun flt ((box Box)) Box (get/box (&flt box)))
   (define-fun ppflow ((box Box)) Box (get/box (&ppflow box)))
 
   ;; From elements to boxes and back
@@ -145,16 +144,14 @@
      (= (&ppflow b) &b)
      (= (&vflow b) nil-box)
      (= (&nflow b) nil-box)
-     (= (&flt b) nil-box)
-     (= (&flt-up b) nil-box)))
+     (= (ez.in b) (ez.init (y b)))))
 
   (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
-     (= (&flt b) (&flt (pflow b)))
-     (= (&flt-up b) (&flt b))))
+     (= (ez.in b) (ez.out (ite (is-no-box (vbox b)) (pbox b) (vbox b))))))
 
   (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
     (and
@@ -169,19 +166,9 @@
           [(is-no-box (nbox b)) nil-box]
           [(box-in-flow (nbox b)) (&nbox b)]
           [else (&nflow (nbox b))]))
-     (!
-      (= (&flt b)
-         ,(smt-cond
-           [(is-box (vbox b)) (&flt-up (vbox b))]
-           [(box-in-flow (pbox b)) (&flt (pflow b))]
-           [else nil-box]))
-      :opt false)
-     (!
-      (= (&flt-up b)
-         ,(smt-cond
-           [(box-positioned b) (ite (is-box (vbox b)) (&flt-up (vbox b)) (&flt b))]
-           [(not (is-float/none (float b))) &b]
-           [(is-no-box (lbox b)) (&flt b)]
-           [else (&flt-up (lbox b))]))
-      :opt false))))
+     (= (ez.in b) (ite (is-no-box (vbox b))
+                       (ite (box-in-flow (pbox b))
+                            (ez.out (pbox b))
+                            (ez.init (y b)))
+                       (ez.out (vbox b)))))))
 
