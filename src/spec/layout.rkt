@@ -78,10 +78,14 @@
          ,(get-px-or-% 'width 'w 'b)))
 
   (define-fun min-ml ((b Box)) Real
-    (margin-min-px (style.margin-left (computed-style (box-elt b))) b))
+    (ite (is-elt (box-elt b))
+         (margin-min-px (style.margin-left (computed-style (box-elt b))) b)
+         0.0))
 
   (define-fun min-mr ((b Box)) Real
-    (margin-min-px (style.margin-right (computed-style (box-elt b))) b))
+    (ite (is-elt (box-elt b))
+         (margin-min-px (style.margin-right (computed-style (box-elt b))) b)
+         0.0))
 
   (define-fun top-margin-collapses-with-children ((b Box)) Bool
     (and (not (is-flow-root b)) (= (pt b) 0.0) (= (bt b) 0.0)))
@@ -255,9 +259,15 @@
 
   (define-fun compute-stfwidth ((b Box)) Real
     (let ([l (lbox b)] [v (vbox b)] [r (computed-style (box-elt b))])
-      (ite (is-width/auto (style.width r))
+      (ite (or (is-no-elt (box-elt b)) (is-width/auto (style.width r)))
            (max
-            (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)
+            ,(smt-cond
+              [(is-float/left (style.float r))
+               (- (right-outer b) (left-content (pbox b)))]
+              [(is-float/right (style.float r))
+               (- (right-content (pbox b)) (left-outer b))]
+              [else
+               (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)])
             (ite (is-box v) (stfwidth v) 0.0))
            (w b))))
 
