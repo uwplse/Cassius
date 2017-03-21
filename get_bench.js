@@ -120,7 +120,12 @@ function cs(elt) {return window.getComputedStyle(elt);}
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE || elt.nodeType == document.CDATA_SECTION_NODE;}
 function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt).display == "inline";}
-function is_block(elt) {return cs(elt).display == "block";}
+function is_block(elt) {
+    return cs(elt).display == "block" ||
+        (cs(elt).display == "list-item" &&
+         (cs(elt).listStylePosition == "outside" ||
+          cs(elt).listStyleType == "none"));
+}
 function is_visible(elt) {return cs(elt).display != "none";}
 function is_float(elt) {return elt.nodeType === document.ELEMENT_NODE && cs(elt).float != "none";}
 
@@ -447,7 +452,7 @@ function make_boxes(elt, inflow, styles, features) {
         } else if (cs(elt).display == "inline-block") {
             features["display:inline-block"] = true;
         } else if (cs(elt).display == "list-item") {
-            features["display:lists"] = true;
+            features["list:inside"] = true;
         } else {
             console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
             features["display:unknown"] = true;
@@ -843,7 +848,17 @@ function check_float_restrictions(box, parent, features) {
                 add_feature(box, "float:R4");
             }
         }
-    } else if (box.type === "TEXT") {
+    }
+
+    for (var i = 0; i < box.children.length; i++) {
+        check_float_restrictions(box.children[i], box, features);
+    }
+}
+
+function check_float_registers(box, parent, features) {
+    if (!features) { features = parent; parent = null };
+
+    if (box.type === "TEXT") {
         if (box.props.y < box.flt.mark) {
             add_feature(box, "exclusion-zone");
             features["exclusion-zone"] = true;
@@ -851,7 +866,7 @@ function check_float_restrictions(box, parent, features) {
     }
 
     for (var i = 0; i < box.children.length; i++) {
-        check_float_restrictions(box.children[i], box, features);
+        check_float_registers(box.children[i], box, features);
     }
 }
 
@@ -868,7 +883,8 @@ function page2cassius(name) {
     var page = out.view;
     
     compute_flt_pointer(page, null);
-    check_float_restrictions(page, features);
+    features["float:" + MAX] = true;
+    check_float_registers(page, features);
 
     var style = out.style;
     for (var eid in style) {
@@ -884,7 +900,7 @@ function page2cassius(name) {
     text += ")\n\n";
 
     var title = dump_string(document.title);
-    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + "\n  :max " + MAX + ")";
+    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";
     return text;
 }
 

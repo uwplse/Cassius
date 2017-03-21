@@ -22,7 +22,8 @@
     css:position css:font-size css:overflow-x css:overflow-y 
     css:text-indent
     unit:% unit:em
-    unknown-selector tag:img tag:input))
+    unknown-selector tag:img tag:input
+    float:0 float:1 float:2 float:3 float:4 float:5))
 
 (define z3-path (find-executable-path "z3"))
 
