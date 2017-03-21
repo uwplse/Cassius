@@ -80,7 +80,8 @@
     ((tag ol)
      :browser
      [margin-top (em 1)]
-     [margin-bottom (em 1)])
+     [margin-bottom (em 1)]
+     [padding-left (px 40)])
     ((tag p)
      :browser
      [margin-top (em 1)]
@@ -95,7 +96,8 @@
     ((tag ul)
      :browser
      [margin-top (em 1)]
-     [margin-bottom (em 1)])))
+     [margin-bottom (em 1)]
+     [padding-left (px 40)])))
 
 (define (get-sheet browser)
   (match browser
