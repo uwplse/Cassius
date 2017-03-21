@@ -435,7 +435,7 @@ function make_boxes(elt, inflow, styles, features) {
         } else {
             box = Inline(elt, {});
         }
-        if (elt.tagName.toLowerCase() == "BR") box.props.br = true;
+        if (elt.tagName.toLowerCase() == "br") box.props.br = true;
         inflow.children.push(box);
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
