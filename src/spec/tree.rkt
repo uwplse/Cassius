@@ -151,7 +151,7 @@
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
-     (= (ez.in b) (ez.out (ite (is-no-box (vbox b)) (pbox b) (vbox b))))))
+     (= (ez.in b) (ite (is-no-box (vbox b)) (ez.in (pbox b)) (ez.out (vbox b))))))
 
   (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
     (and
@@ -168,7 +168,7 @@
           [else (&nflow (nbox b))]))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (box-in-flow (pbox b))
-                            (ez.out (pbox b))
+                            (ez.in (pbox b))
                             (ez.init (y b)))
                        (ez.out (vbox b)))))))
 
