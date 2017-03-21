@@ -1,5 +1,5 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt")
+(require "../common.rkt" "../smt.rkt" "utils.rkt")
 (provide exclusion-zones)
 
 (define *exclusion-zone-registers* (make-parameter 5))
@@ -32,20 +32,23 @@
       (ezone
        (ez.mark ez)
        ,@(for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])
+           (define (line-exists? i)
+             `(or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez)))
+
            (define (copy-register tpl #:merge merge #:new new)
              (smt-cond
-              [(<= (,(sformat "ez.y~a" i) ez) top)
+              [(and (<= (,(sformat "ez.y~a" i) ez) bottom) ,(line-exists? i))
                ,merge]
-              [overwrites? ;; yis don't change when overwriting
+              [overwrites?
                (,(sformat tpl i) ez)]
               [else
                ,(if (= i 0)
                     new
-                    `(ite (< (,(sformat "ez.y~a" (- i 1)) ez) bottom)
+                    `(ite (and (< (,(sformat "ez.y~a" (- i 1)) ez) bottom) ,(line-exists? (- i 1)))
                          ,new
                          (,(sformat tpl (- i 1)) ez)))]))
 
-           (sow (copy-register "ez.y~a" #:merge `(,(sformat "ez.y~a" i) ez) #:new `top))
+           (sow (copy-register "ez.y~a" #:merge `(,(sformat "ez.y~a" i) ez) #:new `bottom))
            (sow (copy-register "ez.l~a" #:new `right
                                #:merge `(max-if (,(sformat "ez.l~a" i) ez) (is-float/left dir) right)))
            (sow (copy-register "ez.r~a" #:new `left
@@ -61,7 +64,7 @@
      ,@(let ([transfer (λ (i tpl default)
                    (for/fold ([expr `(,(sformat tpl i) ez)])
                        ([j (in-range (*exclusion-zone-registers*))])
-                     `(ite (< (,(sformat "ez.y~a" j) ez) y)
+                     `(ite (<= (,(sformat "ez.y~a" j) ez) y)
                           ,(if (< (+ i j 1) (*exclusion-zone-registers*))
                                `(,(sformat tpl (+ i j 1)) ez)
                                default)
@@ -123,3 +126,23 @@
   (define-fun ez.test ((ez EZone) (y Real)) Bool
     ;; Assert this property with the normal-flow position of any line box
     (>= y (ez.mark ez))))
+
+(module+ test
+  (require "../z3.rkt")
+  (require rackunit)
+
+  (define out
+    (z3-solve
+     `((set-option :produce-unsat-cores true)
+       (declare-datatypes () ((Float float/left float/right float/none)))
+       ,@common-definitions
+       ,@exclusion-zones
+       
+       
+       (assert (= (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0)
+                  (ezone 0.0
+                         824.0 240.0 0.0 true false
+                         ,@(for/reap [sow] ([i (in-range 1 (*exclusion-zone-registers*))])
+                             (for-each sow '(0.0 0.0 0.0 false false)))))))))
+
+  (check-match out `(model ,_)))
