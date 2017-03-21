@@ -95,6 +95,9 @@
 (define-css-type (Font-Size (px Real) (% Real) (em Real))
   [font-size (em 1)])
 
+(define-css-type (Text-Indent (px Real) (% Real) (em Real))
+  [text-indent (px 0)])
+
 (define css-shorthand-properties
   '((margin margin-top margin-right margin-bottom margin-left)
     (padding padding-top padding-right padding-bottom padding-left)

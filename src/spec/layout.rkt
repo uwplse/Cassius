@@ -482,7 +482,14 @@
                [f (fflow b)] [l (lflow b)])
        (= (type b) box/line)
        (no-relative-offset b)
-       (zero-box-model b)
+
+       ;; Left-padding is not 0
+       (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0)
+       (= (mt b) (mr b) (mb b) (ml b) 0.0)
+       (= (bt b) (br b) (bb b) (bl b) 0.0)
+       (= (pt b) (pr b) (pb b) 0.0)
+
+       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent 'w 'b) 0))
 
        (let ([y-normal (ite (is-no-box v) (top-content p) (bottom-border v))]
              [ez (ez.in b)])
