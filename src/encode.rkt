@@ -3,7 +3,8 @@
 
 (provide dump-tag extract-tag dump-id extract-id
          dump-elt dump-box extract-style
-         dump-value extract-value dump-selector extract-selector)
+         dump-value extract-value dump-selector extract-selector
+         z3->number)
 
 (define (dump-tag tag)
   (if tag
@@ -75,3 +76,8 @@
     ['sel/all '*]
     [`(sel/id ,id) (list 'id (string->symbol (substring (~a id) 3)))]
     [`(sel/tag ,tag) (list 'tag (string->symbol (substring (~a tag) 4)))]))
+
+(define (z3->number v)
+  (match v
+    [`(/ ,a ,b) (/ a b)]
+    [_ v]))

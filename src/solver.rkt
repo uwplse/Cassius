@@ -29,6 +29,7 @@
 
 (define *emitter-passes*
   (list
+   z3-fix-rational
    z3-ground-quantifiers
    z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
    (z3-resolve-fns)
@@ -64,7 +65,7 @@
     (action exprs)))
 
 (define (z3-clean exprs)
-  (append (z3-clean-no-opt (z3-strip-inner-names exprs)) '((check-sat))))
+  (append (z3-clean-no-opt (z3-strip-inner-names (z3-fix-rational exprs))) '((check-sat))))
 
 (define (z3-namelines cmds)
   (for/list ([cmd cmds] [i (in-naturals)])
