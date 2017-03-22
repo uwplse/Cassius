@@ -4,6 +4,9 @@
 
 (define *exclusion-zone-registers* (make-parameter 5))
 
+(define (line-exists? i)
+  `(or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez)))
+
 (define-constraints exclusion-zones
   (declare-datatypes ()
      ((EZone (ezone (ez.mark Real)
@@ -32,9 +35,6 @@
       (ezone
        (ez.mark ez)
        ,@(for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])
-           (define (line-exists? i)
-             `(or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez)))
-
            (define (copy-register tpl #:merge merge #:new new)
              (smt-cond
               [(and (<= (,(sformat "ez.y~a" i) ez) bottom) ,(line-exists? i))
@@ -64,7 +64,7 @@
      ,@(let ([transfer (λ (i tpl default)
                    (for/fold ([expr `(,(sformat tpl i) ez)])
                        ([j (in-range (*exclusion-zone-registers*))])
-                     `(ite (<= (,(sformat "ez.y~a" j) ez) y)
+                     `(ite (and (<= (,(sformat "ez.y~a" j) ez) y) ,(line-exists? i))
                           ,(if (< (+ i j 1) (*exclusion-zone-registers*))
                                `(,(sformat tpl (+ i j 1)) ez)
                                default)
@@ -81,7 +81,7 @@
     ;; dir is the float direction
     ;; pl and pr are the parent's content left and right
     ,(for/fold ([x `(ite (is-float/left dir) pl pr)]) ([i (in-range (*exclusion-zone-registers*))])
-       `(ite (< (,(sformat "ez.y~a" i) ez) y)
+       `(ite (and (< y (,(sformat "ez.y~a" i) ez)) ,(line-exists? i))
             (ite (is-float/left dir)
                 (ite (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a" i) ez) pl)
                 (ite (,(sformat "ez.r~a?" i) ez) (,(sformat "ez.r~a" i) ez) pr))
@@ -98,9 +98,9 @@
                           (and (not (,(sformat "ez.l~a?" i) ez)) (not (,(sformat "ez.r~a?" i) ez)))
                           (and
                            (< y (,(sformat "ez.y~a" i) ez))
-                           (<= (- (ite (,(sformat "ez.r~a?" i) ez) (,(sformat "ez.r~a" i) ez) pr)
-                                  (ite (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a" i) ez) pl))
-                               width))))]
+                           (<= width
+                               (- (ite (,(sformat "ez.r~a?" i) ez) (,(sformat "ez.r~a" i) ez) pr)
+                                  (ite (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a" i) ez) pl))))))]
           [results (cons '(ez.mark ez) (for/list ([i (in-range (*exclusion-zone-registers*))])
                                          `(,(sformat "ez.y~a" i) ez)))])
        (match* (conditions results)
@@ -110,7 +110,7 @@
 
   (define-fun ez.max ((ez EZone)) Real
     ,(for/fold ([expr '(ez.mark ez)]) ([i (in-range (*exclusion-zone-registers*))])
-       `(ite (or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez))
+       `(ite ,(line-exists? i)
              (,(sformat "ez.y~a" i) ez)
              ,expr)))
 
@@ -118,10 +118,8 @@
     ;; Assert this property after advancing an ezone but before adding to it.
     (or
      ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
-         `(and (or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez))
-               (= (,(sformat "ez.y~a" i) ez) bottom)))
-     (not ,(let ([i (- (*exclusion-zone-registers*) 1)])
-             `(or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez))))))
+         `(and ,(line-exists? i) (= (,(sformat "ez.y~a" i) ez) bottom)))
+     (not ,(line-exists? (- (*exclusion-zone-registers*) 1)))))
 
   (define-fun ez.test ((ez EZone) (y Real)) Bool
     ;; Assert this property with the normal-flow position of any line box
@@ -131,18 +129,27 @@
   (require "../z3.rkt")
   (require rackunit)
 
-  (define out
-    (z3-solve
-     `((set-option :produce-unsat-cores true)
-       (declare-datatypes () ((Float float/left float/right float/none)))
-       ,@common-definitions
-       ,@exclusion-zones
+  (define (check-sat expr)
+    (check-match
+     (z3-solve
+      `((set-option :produce-unsat-cores true)
+        (declare-datatypes () ((Float float/left float/right float/none)))
+        ,@common-definitions
+        ,@exclusion-zones
        
        
-       (assert (= (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0)
-                  (ezone 0.0
-                         824.0 240.0 0.0 true false
-                         ,@(for/reap [sow] ([i (in-range 1 (*exclusion-zone-registers*))])
-                             (for-each sow '(0.0 0.0 0.0 false false)))))))))
+        (assert ,expr)))
+     (list 'model _)))
 
-  (check-match out `(model ,_)))
+  (check-sat
+   `(= (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0)
+       (ezone 0.0
+              824.0 240.0 0.0 true false
+              ,@(for/reap [sow] ([i (in-range 1 (*exclusion-zone-registers*))])
+                  (for-each sow '(0.0 0.0 0.0 false false))))))
+
+  (check-sat
+    `(= (ez.level (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 240.0 0.0 960.0 0.0) 0.0))
+
+  (check-sat
+   `(= (ez.x (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 0.0 float/left 0.0 960.0) 240.0)))
