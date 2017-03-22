@@ -466,6 +466,7 @@ function make_boxes(elt, inflow, styles, features) {
             mt: val2px(s["margin-top"], features), mr: val2px(s["margin-right"], features), 
             mb: val2px(s["margin-bottom"], features), ml: val2px(s["margin-left"], features),
         });
+        features["MAGIC"] = true;
 
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
