@@ -106,13 +106,13 @@
     ;; into account, e.g., floats inside absolutely positioned descendants or other floats
     ;; are not.
     ,(smt-cond
+      [(is-replaced (box-elt b))
+       (min-max-height (intrinsic-height (box-elt b)) b)]
       [(is-no-box (fbox b)) (min-max-height 0.0 b)]
       [(is-box/line (type (lflow b)))
        ;; If it only has inline-level children, the height is the distance between
        ;; the top of the topmost line box and the bottom of the bottommost line box.
        (min-max-height (- (bottom-border (lflow b)) (top-border (fflow b))) b)]
-      [(is-replaced (box-elt b))
-       (min-max-height (intrinsic-height (box-elt b)) b)]
       [else
        ;; If it has block-level children, the height is the distance between the
        ;; top margin-edge of the topmost block-level child box and the
@@ -219,16 +219,6 @@
       [(and (not (is-flow-root b)) (top-margin-collapses-with-children (pflow b))) (top-content (pflow b))]
       [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
 
-  (define-fun usable-stfwidth ((b Box)) Real
-    (let ([l (lbox b)] [v (vbox b)])
-      (min-max-width
-       (ite (is-box l)
-            (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l))
-            (ite (is-replaced (box-elt b))
-                 (intrinsic-width (box-elt b))
-                 0.0))
-       b)))
-
   (define-fun flow-horizontal-layout ((b Box)) Bool
     ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))] [p (pflow b)] )
@@ -243,9 +233,23 @@
             (= (ml b) ml*)
             (width-set b)]
            [(is-width/auto (style.width r))
-            (= (ml b) ml*)
-            (= (mr b) mr*)
-            (width-set b)]
+            (ite (and (not (is-max-width/none (style.max-width r)))
+                      (> (- (w p) ml* (bl b) (pl b) (pr b) (br b) mr*)
+                         ,(get-px-or-% 'max-width 'w 'b)))
+                 (and
+                  (= (w b) ,(get-px-or-% 'max-width 'w 'b))
+                  ,(smt-cond
+                    [(not (is-margin/auto (style.margin-left r)))
+                     (= (ml b) ml*)]
+                    [(not (is-margin/auto (style.margin-right r)))
+                     (= (mr b) mr*)]
+                    [else
+                     (= (ml b) (mr b))])
+                  (width-set b))
+                 (and
+                  (= (ml b) ml*)
+                  (= (mr b) mr*)
+                  (width-set b)))]
            [else
             (= (w b) w*)
             (width-set b)
@@ -257,10 +261,20 @@
               [else
                (= (ml b) (mr b))])]))))
 
+  (define-fun usable-stfwidth ((b Box)) Real
+    (let ([l (lbox b)] [v (vbox b)])
+      (min-max-width
+       (ite (is-box l)
+            (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l))
+            (ite (is-replaced (box-elt b))
+                 (intrinsic-width (box-elt b))
+                 0.0))
+       b)))
+
   (define-fun compute-stfwidth ((b Box)) Real
     (let ([l (lbox b)] [v (vbox b)] [r (computed-style (box-elt b))])
-      (ite (or (is-no-elt (box-elt b)) (is-width/auto (style.width r)))
-           (max
+      (max
+       (ite (or (is-no-elt (box-elt b)) (is-width/auto (style.width r)))
             ,(smt-cond
               [(is-float/left (style.float r))
                (- (right-outer b) (left-content (pbox b)))]
@@ -268,8 +282,8 @@
                (- (right-content (pbox b)) (left-outer b))]
               [else
                (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)])
-            (ite (is-box v) (stfwidth v) 0.0))
-           (w b))))
+            (w b))
+       (ite (is-box v) (stfwidth v) 0.0))))
 
   (define-fun resolve-font-size ((b Box)) Real
     (let ([e (box-elt b)])

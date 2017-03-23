@@ -30,8 +30,7 @@
     ;; Only call if `ez` has already had `ez.advance` called on it.
     (let ([overwrites?
            (or ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
-                   `(and (or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez))
-                         (= (,(sformat "ez.y~a" i) ez) bottom))))])
+                   `(and ,(line-exists? i) (= (,(sformat "ez.y~a" i) ez) bottom))))])
       (ezone
        (ez.mark ez)
        ,@(for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])

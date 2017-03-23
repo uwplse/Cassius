@@ -113,7 +113,7 @@
          (= (&nbox box) &n)
          (= (&fbox box) &f)
          (= (&lbox box) &l)
-         ,@(for/list ([field '(bl br bt bb pl pr pb pt w h mtp mbp stfwidth)])
+         ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent
              `(>= (,field box) 0.0))
          ,@(for/list ([field '(mtn mbn)])
              `(<= (,field box) 0.0))))

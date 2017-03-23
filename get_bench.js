@@ -233,8 +233,7 @@ function get_lines(txt) {
         var r = new Range();
         r.setStart(txt, cursor);
         r.setEnd(txt, new_cursor);
-        if (r.toString().trim() !== "")
-            ranges.push(r);
+        ranges.push(r);
         cursor = new_cursor;
     }
 
