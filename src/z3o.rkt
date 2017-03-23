@@ -522,6 +522,12 @@
       [`(not false) 'true]
       [`(not true) 'false]
       [`(and) `true]
+      ;; DOMAIN SPECIFIC
+      [`(is-no-box (get/box nil-box)) 'true]
+      [`(is-box ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) 'true]
+      [`(is-no-elt (get/elt nil-elt)) 'true]
+      [`(is-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'true]
+      ;; END DOMAIN SPECIFIC
       [(list 'and rest ...)
        (if (member 'false rest)
            'false
@@ -643,7 +649,7 @@
      `(! ,(fix-rational term) :named ,n)]
     [(? list?) (map fix-rational expr)]
     [(? (and/c rational? exact? (not/c integer?)))
-     `(/ (exact->inexact ,(numerator expr)) (exact->inexact ,(denominator expr)))]
+     `(/ ,(exact->inexact (numerator expr)) ,(exact->inexact (denominator expr)))]
     [_ expr]))
 
 (define (z3-fix-rational cmds)

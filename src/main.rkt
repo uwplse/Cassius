@@ -302,6 +302,15 @@
     (define-const min-height/auto Min-Height (min-height/px 0))
     (define-const text-align/start Text-Align text-align/left)
     (define-const text-align/end Text-Align text-align/right)
+    (define-const font-size/medium Font-Size (font-size/px 9))
+    (define-const font-size/medium Font-Size (font-size/px 10))
+    (define-const font-size/medium Font-Size (font-size/px 13))
+    (define-const font-size/medium Font-Size (font-size/px 16))
+    (define-const font-size/large Font-Size (font-size/px 18))
+    (define-const font-size/x-large Font-Size (font-size/px 24))
+    (define-const font-size/xx-large Font-Size (font-size/px 32))
+    (define-const font-size/smaller Font-Size (font-size/em (/ 2.0 3.0)))
+    (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
     ,@common-definitions
     ,@exclusion-zones
     ,@tree-types

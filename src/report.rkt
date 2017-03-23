@@ -4,6 +4,8 @@
 (require json (only-in xml write-xexpr))
 (require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt")
 
+(define timeout (make-parameter 60))
+
 (define (dom-not-something d)
   (match-define (dom name ctx elts boxes) d)
   
@@ -86,7 +88,7 @@
                   (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug))))))
 
   (define t (current-inexact-milliseconds))
-  (define res (if (engine-run 60000 eng) (engine-result eng) 'timeout)) ; 1m max
+  (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout)) ; 1m max
   (define runtime (- (current-inexact-milliseconds) t))
   (engine-kill eng)
   (custodian-shutdown-all custodian)
@@ -170,9 +172,16 @@
   (define unsupported-features
     (set-subtract (remove-duplicates (append-map result-features results)) (supported-features)))
 
+
   (define (feature-row feature)
     (list feature
-          (count (λ (x) (equal? (result-features x) (list feature))) results)
+          (count (λ (x) (equal? 
+                         (set-subtract
+                          (result-features x)
+                          (if (set-member? (supported-features) feature)
+                              (list)
+                              (supported-features)))
+                         (list feature))) results)
           (count (λ (x) (member feature (result-features x))) results)))
 
   (define (sort-features data)
@@ -236,7 +245,13 @@
 
   (define (feature-row feature)
     (list feature
-          (count (λ (x) (equal? (dict-ref x ':features '()) (list feature))) problems)
+          (count (λ (x) (equal? 
+                         (set-subtract
+                          (dict-ref x ':features '())
+                          (if (set-member? (supported-features) feature)
+                              (list)
+                              (supported-features)))
+                         (list feature))) problems)
           (count (λ (x) (member feature (dict-ref x ':features '()))) problems)))
 
   (define (sort-features data)
@@ -284,6 +299,8 @@
    #:once-each
    [("-o" "--output") fname "File name for final CSS file"
     (set! out-file fname)]
+   [("-t" "--timeout") s "Timeout in seconds"
+    (timeout (string->number s))]
    [("--index") index-file "File name with section information for tests"
     (set! index (read-index index-file))]
    [("--supported") "Skip tests with unsupported features"
