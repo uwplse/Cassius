@@ -109,7 +109,9 @@
       [(is-replaced (box-elt b))
        (min-max-height (intrinsic-height (box-elt b)) b)]
       [(is-no-box (fbox b)) (min-max-height 0.0 b)]
-      [(is-box/line (type (lflow b)))
+      [(is-no-box (fflow b))
+       (min-max-height (max (- (ez.max (ez.out (lbox b))) (top-content b)) 0.0) b)]
+      [(is-box/line (type (fflow b)))
        ;; If it only has inline-level children, the height is the distance between
        ;; the top of the topmost line box and the bottom of the bottommost line box.
        (min-max-height (- (bottom-border (lflow b)) (top-border (fflow b))) b)]
@@ -118,7 +120,7 @@
        ;; top margin-edge of the topmost block-level child box and the
        ;; bottom margin-edge of the bottommost block-level child box.
        (min-max-height
-        (- (max (bottom-outer (lflow b)) (ez.max (ez.out b)))
+        (- (max (ez.max (ez.out b)) (bottom-outer (lflow b)))
            (top-content b))
         b)]))
 
@@ -265,7 +267,7 @@
     (let ([l (lbox b)] [v (vbox b)])
       (min-max-width
        (ite (is-box l)
-            (+ (min-ml l) (bl l) (pl l) (stfwidth l) (pr l) (br l) (min-mr l))
+            (stfwidth l)
             (ite (is-replaced (box-elt b))
                  (intrinsic-width (box-elt b))
                  0.0))
@@ -274,15 +276,17 @@
   (define-fun compute-stfwidth ((b Box)) Real
     (let ([l (lbox b)] [v (vbox b)] [r (computed-style (box-elt b))])
       (max
-       (ite (or (is-no-elt (box-elt b)) (is-width/auto (style.width r)))
-            ,(smt-cond
-              [(is-float/left (style.float r))
-               (- (right-outer b) (left-content (pbox b)))]
-              [(is-float/right (style.float r))
-               (- (right-content (pbox b)) (left-outer b))]
-              [else
-               (ite (is-box l) (+ (min-ml l) (bl l) (pl l) (min (w l) (stfwidth l)) (pr l) (br l) (min-mr l)) 0.0)])
-            (w b))
+       ,(smt-cond
+         [(is-float/left (style.float r))
+          (- (right-outer b) (left-content (pbox b)))]
+         [(is-float/right (style.float r))
+          (- (right-content (pbox b)) (left-outer b))]
+         [else
+          (+ (min-ml b) (bl b) (max (pl b) 0.0) 
+             (ite (or (is-no-elt (box-elt b)) (is-width/auto (style.width r)))
+                  (ite (is-box l) (min (w l) (stfwidth l)) 0.0)
+                  (+ (min-ml b) (bl b) (pl b) (w b) (pr b) (br b) (min-mr b)))
+             (pr b) (br b) (min-mr b))])
        (ite (is-box v) (stfwidth v) 0.0))))
 
   (define-fun resolve-font-size ((b Box)) Real
@@ -513,7 +517,7 @@
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) 0.0)
 
-       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent 'w 'b) 0))
+       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent 'w 'p) 0.0))
 
        (let ([y-normal (ite (is-no-box v) (top-content p) (bottom-border v))]
              [ez (ez.in b)])

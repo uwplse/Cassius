@@ -642,7 +642,8 @@
     [`(! ,term :named ,n)
      `(! ,(fix-rational term) :named ,n)]
     [(? list?) (map fix-rational expr)]
-    [(? (and/c rational? exact?)) `(/ ,(numerator expr) ,(denominator expr))]
+    [(? (and/c rational? exact? (not/c integer?)))
+     `(/ (exact->inexact ,(numerator expr)) (exact->inexact ,(denominator expr)))]
     [_ expr]))
 
 (define (z3-fix-rational cmds)
