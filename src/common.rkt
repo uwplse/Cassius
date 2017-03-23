@@ -4,7 +4,7 @@
 (provide
  reap for/reap for*/reap for/append
  sformat slower indent tree-size snoc dict-remove*
- flags all-flags supported-features
+ flags all-flags supported-features support-features!
  xor ->number z3-path value=?
  attribute? attributes->dict dict->attributes
  split-symbol split-line-name
@@ -17,13 +17,23 @@
 (define all-flags '(opt float z3o details rules selectors))
 
 (define supported-features
-  '(css:float css:box-sizing
-    css:min-width css:max-width css:max-height css:min-height
-    css:position css:font-size css:overflow-x css:overflow-y 
-    css:text-indent
-    unit:% unit:em
-    unknown-selector tag:img tag:input MAGIC
-    float:0 float:1 float:2 float:3 float:4 float:5))
+  (make-parameter
+   '(css:float css:box-sizing
+     css:min-width css:max-width css:max-height css:min-height
+     css:position css:font-size css:overflow-x css:overflow-y 
+     css:text-indent
+     unit:% unit:em
+     unknown-selector tag:img tag:input MAGIC)))
+
+(define (support-features! . feats)
+  (supported-features
+   (append (supported-features)
+           (reap [sow]
+                 (let loop ([feats feats])
+                   (cond
+                    [(null? feats) (void)]
+                    [(symbol? feats) (sow feats)]
+                    [else (loop (car feats)) (loop (cdr feats))]))))))
 
 (define z3-path (find-executable-path "z3"))
 

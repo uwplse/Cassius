@@ -100,7 +100,7 @@
   (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))] #:when (valid? prob))
     (eprintf "~a\t~a\t" file pname)
     (define-values (res runtime) (run-problem prob #:debug debug))
-    (define supported? (null? (set-subtract (dict-ref prob ':features '()) supported-features)))
+    (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
 
     (define status
       (match res
@@ -124,7 +124,7 @@
     (eprintf "~a\t~a\t" file pname)
     (define prob* (dict-update prob ':documents (curry map dom-not-something)))
     (define-values (res runtime) (run-problem prob* #:debug debug))
-    (define supported? (null? (set-subtract (dict-ref prob ':features '()) supported-features)))
+    (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
 
     (define status
       (match res
@@ -168,7 +168,7 @@
      (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time)))))
   
   (define unsupported-features
-    (set-subtract (remove-duplicates (append-map result-features results)) supported-features))
+    (set-subtract (remove-duplicates (append-map result-features results)) (supported-features)))
 
   (define (feature-row feature)
     (list feature
@@ -209,7 +209,7 @@
         (tbody () ,@(for/list ([data (sort-features (map feature-row unsupported-features))])
                       (apply row (map ~a data))))
         (thead () ,(row #:cell 'th "Supported Feature" "# Blocking" "# Necessary"))
-        (tbody () ,@(for/list ([data (sort-features (map feature-row supported-features))])
+        (tbody () ,@(for/list ([data (sort-features (map feature-row (supported-features)))])
                       (apply row (map ~a data))))))
       (section ()
        (h2 () "Failing tests")
@@ -223,13 +223,13 @@
                       (match status
                         ['success "✔"] ['fail "✘"] ['timeout "🕡"]
                         ['unsupported
-                         (define probfeats (set-subtract features supported-features))
+                         (define probfeats (set-subtract features (supported-features)))
                          `(span ((title ,(string-join (map ~a probfeats) ", "))) "☹")]
                         ['error "!"])))))))))))
 
 (define (print-feature-table problems)
   (define all-features (remove-duplicates (append-map (λ (x) (dict-ref x ':features '())) problems)))
-  (define unsupported-features (set-subtract all-features supported-features))
+  (define unsupported-features (set-subtract all-features (supported-features)))
 
   (define width (apply max (map (compose string-length ~a) (cons "Feature" all-features))))
   (define (~feature feature) (~a feature #:width width))
@@ -247,7 +247,7 @@
     (printf "~a\t~a\t~a\n" (~feature (first data)) (second data) (third data)))
 
   (printf "\n~a\t~a\t~a\n" (~feature "Feature") "#B" "#N")
-  (for ([data (sort-features (map feature-row supported-features))])
+  (for ([data (sort-features (map feature-row (supported-features)))])
     (printf "~a\t~a\t~a\n" (~feature (first data)) (second data) (third data))))
 
 (define-syntax-rule (and! var function)
@@ -287,7 +287,7 @@
    [("--index") index-file "File name with section information for tests"
     (set! index (read-index index-file))]
    [("--supported") "Skip tests with unsupported features"
-    (and! valid? (λ (p) (subset? (dict-ref p ':features '()) supported-features)))]
+    (and! valid? (λ (p) (subset? (dict-ref p ':features '()) (supported-features))))]
    [("--failed") json-file "Run only tests that failed in given JSON file"
     (and! valid? (read-failed-tests json-file))]
    [("--feature") feature "Test a particular feature"

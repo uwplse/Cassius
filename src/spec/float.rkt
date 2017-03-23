@@ -2,7 +2,11 @@
 (require "../common.rkt" "../smt.rkt" "utils.rkt")
 (provide exclusion-zones)
 
-(define *exclusion-zone-registers* (make-parameter 5))
+(define *exclusion-zone-registers* (make-parameter 3))
+
+(support-features!
+ (for/list ([i (in-range (*exclusion-zone-registers*))])
+   (sformat "float:~a" (+ i 1))))
 
 (define (line-exists? i)
   `(or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez)))
