@@ -67,7 +67,7 @@
      ,@(let ([transfer (λ (i tpl default)
                    (for/fold ([expr `(,(sformat tpl i) ez)])
                        ([j (in-range (*exclusion-zone-registers*))])
-                     `(ite (and (<= (,(sformat "ez.y~a" j) ez) y) ,(line-exists? i))
+                     `(ite (and (<= (,(sformat "ez.y~a" j) ez) y) ,(line-exists? j))
                           ,(if (< (+ i j 1) (*exclusion-zone-registers*))
                                `(,(sformat tpl (+ i j 1)) ez)
                                default)
@@ -155,4 +155,8 @@
     `(= (ez.level (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 240.0 0.0 960.0 0.0) 0.0))
 
   (check-sat
-   `(= (ez.x (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 0.0 float/left 0.0 960.0) 240.0)))
+   `(= (ez.x (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 0.0 float/left 0.0 960.0) 240.0))
+
+  (check-sat
+   `(= (ez.advance (ez.add (ez.init 30.0) float/left 30.0 500.0 84.0 0.0) 30.0)
+       (ez.add (ez.init 30.0) float/left 30.0 500.0 84.0 0.0))))
