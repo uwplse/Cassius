@@ -2,10 +2,76 @@
 
 (provide get-sheet)
 
+(define baseline
+  '(((tag abbr) (display inline))
+    ((tag bdo) (display inline))
+    ((tag small) (display inline))
+    ((tag i) (display inline))
+    ((tag font) (display inline))
+    ((tag label) (display inline))
+    ((tag em) (display inline))
+    ((tag b) (display inline))
+    ((tag input) (display inline))
+    ((tag br) (display inline))
+    ((tag img) (display inline))
+    ((tag strong) (display inline))
+    ((tag a) (display inline))
+    ((tag span) (display inline))
+
+    ((tag html) (display block))
+    ((tag body) (display block))
+    ((tag p) (display block))
+    ((tag hr) (display block))
+    ((tag section) (display block))
+    ((tag footer) (display block))
+    ((tag frameset) (display block))
+    ((tag header) (display block))
+    ((tag main) (display block))
+    ((tag ol) (display block))
+    ((tag ul) (display block))
+    ((tag option) (display block))
+    ((tag textarea) (display block))
+    ((tag div) (display block))
+    ((tag h1) (display block))
+    ((tag h2) (display block))
+    ((tag h3) (display block))
+    ((tag h4) (display block))
+    ((tag h5) (display block))
+    ((tag pre) (display block))
+    ((tag iframe) (display block))
+    ((tag form) (display block))
+
+    ((tag button) (display inline-block))
+    ((tag select) (display inline-block))
+    ((tag object) (display inline-block))
+
+    ((tag head) (display none))
+    ((tag link) (display none))
+    ((tag meta) (display none))
+    ((tag noframes) (display none))
+    ((tag style) (display none))
+    ((tag script) (display none))
+    ((tag title) (display none))
+
+    ((tag li) (display list-item))
+
+    ((tag table) (display table))
+    ((tag tr) (display table-row))
+    ((tag td) (display table-cell))
+    ((tag th) (display table-cell))
+    ((tag col) (display table-column))
+    ((tag caption) (display table-caption))
+    ((tag thead) (display table-header-group))
+    ((tag tbody) (display table-row-group))
+    ((tag tfoot) (display table-footer-group))
+    ((tag colgroup) (display table-column-group))))
+
 ; From https://hell.meiert.org/core/css/firefox-3.6.3.css
 
 (define firefox-sheet
-  '(((tag blockquote)
+  '(
+
+    ((tag blockquote)
      :browser
      [margin-top (em 1)]
      [margin-right (px 40)]
@@ -101,6 +167,6 @@
 
 (define (get-sheet browser)
   (match browser
-    ['firefox firefox-sheet]
-    [#f '()]
+    ['firefox (append baseline firefox-sheet)]
+    [#f baseline]
     ['user #f]))

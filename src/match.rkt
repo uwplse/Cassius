@@ -3,23 +3,22 @@
 (require "common.rkt" "tree.rkt" "selectors.rkt" "smt.rkt" "registry.rkt" "z3.rkt")
 (provide link-elts-boxes link/root/c synthesize-displayed synthesize-dom)
 
-(define (sheet->display? elts sheet)
+(define (sheet->display elts sheet)
   (if (ormap (curryr set-member? '?) sheet)
-      (λ (elt) (not (equal? (node-type elt) 'head)))
+      (λ (elt) (if (equal? (node-type elt) 'head) 'none '?))
       (let ([eqs (equivalence-classes sheet (sequence->list (in-tree elts)))])
         (λ (elt)
           (match-define (cons class-hash value-hash) (dict-ref eqs 'display))
-          (and (not (equal? (node-type elt) 'head))
-               (not (equal? 'none (dict-ref value-hash (dict-ref class-hash elt)))))))))
+          (if (equal? (node-type elt) 'head)
+              'none
+              (dict-ref value-hash (dict-ref class-hash elt)))))))
 
 (define (link-elts-boxes sheet elts boxes)
-  (define elt->box (make-hasheq))
   (define box->elt (make-hasheq))
   (define (match! elt box)
-    (dict-set! elt->box elt box)
     (dict-set! box->elt box elt))
-  (link match! (sheet->display? elts sheet) elts boxes)
-  (λ (x) (dict-ref elt->box x (λ () (dict-ref box->elt x #f)))))
+  (link-view match! (sheet->display elts sheet) elts boxes)
+  (λ (x) (dict-ref box->elt x #f)))
 
 (define (collect-possible-elements . boxes)
   (reap [sow]
@@ -31,19 +30,92 @@
            (map loop (node-children box))]
           ['TEXT (void)])))))
 
-(define (link match! display? elt box)
-  (match (node-type box)
-    ['VIEW
-     (link match! display? elt (node-fchild box))]
-    [(or 'BLOCK 'INLINE 'MAGIC)
-     (match! elt box)
-     (define subelts (filter display? (node-children elt)))
-     (define subboxes (apply collect-possible-elements (node-children box)))
-     (cond
-      [(= (length subelts) (length subboxes))
-       (for-each (curry link match! display?) subelts subboxes)]
-      [(and (= (length subelts) 1) (andmap (λ (x) (equal? (node-type x) 'INLINE)) subboxes))
-       (for-each (curry link match! display? (first subelts)) subboxes)])]))
+(define (elt-displayed-children elt display)
+  (filter (λ (x) (or (string? x) (not (equal? (display x) 'none)))) (node-children* elt)))
+
+(define (link-complex-block match! display elt box)
+  "Link the inline children of an element, given that they must be linked in box mode"
+
+  (define (reenter es* bs)
+    (assert (equal? (node-type (caar bs)) 'ANON) "ANON not found")
+    (assert (andmap (λ (x) (equal? (node-type x) 'LINE)) (node-children (caar bs)))
+            "ANON block does not contain LINEs")
+    (define sublines (append-map node-children (node-children (caar bs))))
+
+    (for/fold ([bs* (cons sublines bs)]) ([e (reverse es*)])
+      (assert (equal? (node-type (caar bs*)) 'INLINE) "INLINE not found" e)
+      (match! (car e) (caar bs*))
+      (cons (node-children (caar bs*)) bs*)))
+
+  (let loop ([es (list (elt-displayed-children elt display))] [block-mode? #t] [bs (list (node-children box))])
+    ;(eprintf "~s ~ ~s\n" es bs)
+    (match es
+      [(list (cons e e*) es* ...)
+       ;(eprintf "Entering ~s, display ~a\n" e (if (string? e) 'text (display e)))
+       (cond
+        [(string? e)
+         (define bs* (if block-mode? (reenter es* bs) bs))
+         (assert (equal? (node-type (caar bs*)) 'TEXT) "TEXT not found" e)
+         (loop (cons e* es*) #f (cons (cdar bs*) (cdr bs*)))]
+        [(equal? (display e) 'inline-block)
+         (define bs* (if block-mode? (reenter es* bs) bs))
+         (assert (equal? (node-type (caar bs*)) 'INLINE) "INLINE not found" e)
+         (link-block match! display e (car bs*))
+         (loop (cons e* es*) #f (cons (cdar bs*) (cdr bs*)))]
+        [(equal? (display e) 'inline)
+         (define bs* (if block-mode? (reenter es* bs) bs))
+         (assert (equal? (node-type (caar bs*)) 'INLINE) "INLINE not found" e)
+         (loop (cons (elt-displayed-children e display) es) #f (cons (node-children (caar bs*)) bs*))]
+        [(equal? (display e) 'block)
+         (define bs*
+           (if (equal? (length bs) 1)
+               (car bs) ;; 
+               (cdr (last bs)))) ;; Need to exit a few blocks, so must delete head of last
+         (assert (equal? (node-type (car bs*)) 'BLOCK) "BLOCK not found" e)
+         (link-block match! display e (car bs*))
+         (loop (cons e* es*) #t (list (cdr bs*)))])]
+      [(list '() (cons e e*) es* ...)
+       (loop (cons e* es*) block-mode? (cons (cdadr bs) (cddr bs)))]
+      [(list '())
+       (void)])))
+
+(define (link-inlines match! display! elts boxs)
+  (define elts* (filter node? elts))
+  (define boxs* (apply collect-possible-elements boxs))
+
+  (cond
+   [(equal? (length elts*) (length boxs*))
+    (for ([elt elts*] [box boxs*])
+      (if (equal? (display elt) 'inline-block)
+          (link-block match! elt box)
+          (match! elt box)))]
+   #;[(equal? (length elts*) 1)
+    (for-each (curry match! (car elts)) boxs*)
+    (link-inlines match! display (car elts*) (append-map node-children boxs*))]
+   [else
+    (error "Confusing inlines, cannot match" elts boxs)]))
+
+(define (link-view match! display elt box)
+  (unless (equal? (node-type box) 'VIEW)
+    (error "link-view must be given a VIEW box to link" box))
+  (link-block match! display elt (node-fchild box)))
+
+(define (link-block match! display elt box)
+  (unless (set-member? '(block inline-block) (display elt))
+    (error "link-block must be given a block element to link"))
+
+  (match! elt box)
+
+  (define subelts (elt-displayed-children elt display))
+  (define subboxes (node-children box))
+
+  (cond
+   [(andmap (λ (x) (and (node? x) (equal? (display x) 'block))) subelts)
+    (for-each (curry link-block match! display) (filter node? subelts) subboxes)]
+   [(andmap (λ (x) (equal? (node-type x) 'LINE)) subboxes)
+    (link-inlines match! display subelts (append-map node-children subboxes))]
+   [else
+    (link-complex-block match! display elt box)]))
 
 (define (link/root/c elt box)
   (smt-and `(displayed ,elt) (link/block/c elt (node-fchild box))))
@@ -125,7 +197,7 @@
   (define (match! elt box)
     (dict-set! matches box elt))
 
-  (link match! display? elts1 boxes1)
+  (link-block match! display? elts1 boxes1)
   (define (matcher x) (dict-ref matches x #f))
 
   (values display? matcher elts2))
