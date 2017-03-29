@@ -129,20 +129,11 @@
     (>= y (ez.mark ez))))
 
 (module+ test
-  (require "../z3.rkt")
-  (require rackunit)
+  (require "test.rkt")
 
-  (define (check-sat expr)
-    (check-match
-     (z3-solve
-      `((set-option :produce-unsat-cores true)
-        (declare-datatypes () ((Float float/left float/right float/none)))
-        ,@common-definitions
-        ,@exclusion-zones
-       
-       
-        (assert ,expr)))
-     (list 'model _)))
+  (add-header! `((declare-datatypes () ((Float float/left float/right float/none)))))
+  (add-header! common-definitions)
+  (add-header! exclusion-zones)
 
   (check-sat
    `(= (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0)
