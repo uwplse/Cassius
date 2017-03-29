@@ -79,7 +79,7 @@
       [(list '())
        (void)])))
 
-(define (link-inlines match! display! elts boxs)
+(define (link-inlines match! display elts boxs)
   (define elts* (filter node? elts))
   (define boxs* (apply collect-possible-elements boxs))
 
