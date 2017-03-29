@@ -23,7 +23,8 @@
      css:position css:font-size css:overflow-x css:overflow-y 
      css:text-indent
      unit:% unit:em
-     unknown-selector tag:img tag:input MAGIC)))
+     unknown-selector tag:img tag:input
+     TEXT INLINE LINE BLOCK PAGE MAGIC)))
 
 (define (support-features! . feats)
   (supported-features
@@ -111,9 +112,9 @@
 (define (split-line-name var)
   (map split-symbol (string-split (~a var) "^")))
 
-(define (assert x msg . args)
+(define-syntax-rule (assert x msg args ...)
   (unless x
-    (error (apply format msg args))))
+    (error msg args ...)))
 
 (define (snoc lst x)
   (append lst (list x)))

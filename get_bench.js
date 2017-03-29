@@ -202,32 +202,38 @@ function horizontally_adjacent(e1, e2) {
     }
 }
 
-function get_lines(txt) {
-    function find_first_break(txt, loff, roff) {
-        if (loff !== loff || roff !== roff) throw "Error";
-        if (roff - loff < 2) return roff;
-        if (roff - loff == 2) {
-            var r2 = new Range();
-            r2.setStart(txt, loff);
-            r2.setEnd(txt, roff);
-            if (r2.getClientRects().length > 1) return loff + 1;
-            else return loff + 2;
-        }
-
-        mid = Math.round(loff + (roff - loff) / 2);
+function find_first_break(txt, loff, roff, f) {
+    console.log(loff, roff)
+    if (f) f()
+    if (loff !== loff || roff !== roff) throw "Error";
+    if (roff - loff < 2) return roff;
+    if (roff - loff == 2) {
         var r2 = new Range();
         r2.setStart(txt, loff);
-        r2.setEnd(txt, mid);
-
-        if (r2.getClientRects().length > 1) {
-            return find_first_break(txt, loff, mid);
-        } else {
-            return find_first_break(txt, mid - 1, roff);
-        }
+        r2.setEnd(txt, roff);
+        if (r2.getClientRects().length > 1) return loff + 1;
+        else return loff + 2;
     }
 
+    mid = Math.round(loff + (roff - loff) / 2);
+    var r2 = new Range();
+    r2.setStart(txt, loff);
+    r2.setEnd(txt, mid);
+
+    if (r2.getClientRects().length > 1) {
+        return find_first_break(txt, loff, mid, f);
+    } else {
+        return find_first_break(txt, mid - 1, roff, f);
+    }
+}
+
+function get_lines(txt) {
     var ranges = [];
     var cursor = 0;
+    var r =  new Range();
+    r.selectNode(txt);
+    if (r.getClientRects().length == 0) return ranges;
+
     while (cursor < txt.length) {
         var new_cursor = find_first_break(txt, cursor, txt.length);
         var r = new Range();
@@ -352,9 +358,10 @@ function infer_lines(box, parent) {
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
         } else if (b.type == "BLOCK" || b.type == "MAGIC") {
             parent.children.push(b);
-        } else if (b.type == "INLINE" && b.props.br) {
-            new_line();
         } else if (b.type == "INLINE") {
+            if (b.props.br) {
+                new_line();
+            }
             stack.push(b);
             for (var i = 0; i < b.children.length; i++) {
                 var child = b.children[i];
@@ -465,7 +472,6 @@ function make_boxes(elt, inflow, styles, features) {
             mt: val2px(s["margin-top"], features), mr: val2px(s["margin-right"], features), 
             mb: val2px(s["margin-bottom"], features), ml: val2px(s["margin-left"], features),
         });
-        features["MAGIC"] = true;
 
         for (var i = 0; i < elt.childNodes.length; i++) {
             var child = elt.childNodes[i];
@@ -684,10 +690,12 @@ function dump_document() {
         if (is_comment(elt)) {
             return false;
         } else if (is_text(elt)) {
-            if (elt.textContent.search(/^\s+$/) === -1) {
-                return elt.textContent;
-            } else {
+            var r = new Range();
+            r.selectNode(elt);
+            if (r.getClientRects().length == 0) {
                 return false;
+            } else {
+                return elt.textContent.replace(/\s+/, " ");
             }
         } else if (elt.tagName === "HEAD" || elt.tagName === "SCRIPT") {
             return false;
@@ -857,6 +865,7 @@ function check_float_restrictions(box, parent, features) {
 
 function check_float_registers(box, parent, features) {
     if (!features) { features = parent; parent = null };
+    features[box.type] = true;
 
     if (box.type === "TEXT") {
         if (box.props.y < box.flt.mark) {
