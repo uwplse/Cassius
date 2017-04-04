@@ -143,7 +143,7 @@
                   (for-each sow '(0.0 0.0 0.0 false false))))))
 
   (check-sat #hash()
-    `(= (ez.level (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 240.0 0.0 960.0 0.0) 0.0))
+   `(= (ez.level (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 240.0 0.0 960.0 0.0) 0.0))
 
   (check-sat #hash()
    `(= (ez.x (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 0.0 float/left 0.0 960.0) 240.0))
