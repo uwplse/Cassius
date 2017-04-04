@@ -135,19 +135,19 @@
   (add-header! common-definitions)
   (add-header! exclusion-zones)
 
-  (check-sat
+  (check-sat #hash()
    `(= (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0)
        (ezone 0.0
               824.0 240.0 0.0 true false
               ,@(for/reap [sow] ([i (in-range 1 (*exclusion-zone-registers*))])
                   (for-each sow '(0.0 0.0 0.0 false false))))))
 
-  (check-sat
+  (check-sat #hash()
     `(= (ez.level (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 240.0 0.0 960.0 0.0) 0.0))
 
-  (check-sat
+  (check-sat #hash()
    `(= (ez.x (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 0.0 float/left 0.0 960.0) 240.0))
 
-  (check-sat
+  (check-sat #hash()
    `(= (ez.advance (ez.add (ez.init 30.0) float/left 30.0 500.0 84.0 0.0) 30.0)
        (ez.add (ez.init 30.0) float/left 30.0 500.0 84.0 0.0))))
