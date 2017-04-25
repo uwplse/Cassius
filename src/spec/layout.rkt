@@ -422,6 +422,7 @@
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                ,(get-px-or-% 'height 'h 'b)))
 
+       ;; level -> x -> advance -> can-add -> add
        (let* ([ez (ez.in b)]
               [w (- (right-outer b) (left-outer b))]
               [h (- (bottom-outer b) (top-outer b))]

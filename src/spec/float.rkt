@@ -156,12 +156,57 @@
               ,@(for/reap [sow] ([i (in-range 1 (*exclusion-zone-registers*))])
                   (for-each sow '(0.0 0.0 0.0 false false))))))
 
-  (check-sat #hash()
-   `(= (ez.level (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 240.0 0.0 960.0 0.0) 0.0))
+  (check-sat #hash((x . Real) (y . Real))
+   `(=> (<= x (- y 240.0))
+        (= (ez.level (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) x 0.0 y 0.0) 0.0)))
 
-  (check-sat #hash()
-   `(= (ez.x (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 0.0 float/left 0.0 960.0) 240.0))
+  ;; Make sure the x position is correct after an add
+  (check-sat #hash((x . Real) (y . Real))
+   `(=> (<= x y)
+        (= (ez.x (ez.add (ez.init 0.0) float/left 0.0 x 824.0 0.0) 0.0 float/left 0.0 y) x)))
 
+  ;; Make sure that the high water mark doesn't change when adding a box smaller than the EZone
+  (check-sat #hash((x . Real) (y . Real))
+   `(=> (and (< x y) (<= y 84.0))
+        (let ((ez* (ez.add (ez.init y) float/left y 500.0 84.0 0.0)))
+          (= (ez.advance ez* x) ez*))))
+  
+  (check-sat #hash((x . Int)(y . Int))
+             `(=> (= x y) (not (< x y))))
+
+  (check-sat #hash((x . Real)(y . Real))
+             `(=> (> y 0) (ez.out? (ez.init 0) x y)))
+
+  (check-sat #hash((x . Real)(y . Real) (w . Real) (h . Real))
+             `(=> (or (> x w) (> y h)) (>= x 0) (>= y 0)
+                  (let ((ez* (ez.add (ez.init 0) float/left 0.0 w h 0.0)))
+                    (ez.out? ez* x y))))
+  
+  (check-sat #hash((x . Real)(y . Real) (w . Real) (h . Real))
+             `(=> (< x w) (< y h) (> x 0) (> y 0)
+                  (let ((ez* (ez.add (ez.init 0) float/left 0.0 w h 0.0)))
+                    (not (ez.out? ez* x y)))))
+
+  (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)
+                   (b . Real) (l . Real) (dir . Float) (ez . EZone))
+             `(=> (<= l x r) (<= t y b) (not (is-float/none dir)) (ez.can-add ez b)
+                  (let ((ez* (ez.add ez dir t r b l)))
+                    (ez.in? ez* x y))))
+
+  ;; Needs ez.valid
+  #;(check-sat #hash((x . Real) (y . Real) (w . Real) (h . Real) (ez . EZone))
+             `(=> (ez.in? ez x y) (> w 0) (> h 0) (ez.can-add ez h) (ez.in? (ez.add ez float/left 0.0 w h 0.0) x y)))
+
+  ;; New test ideas:
+  ;; Test exclusion-zone-registers (after adds) against hand-built version
+  ;;     Would be similar to first test, maybe with more adds or parameterized
   (check-sat #hash()
-   `(= (ez.advance (ez.add (ez.init 30.0) float/left 30.0 500.0 84.0 0.0) 30.0)
-       (ez.add (ez.init 30.0) float/left 30.0 500.0 84.0 0.0))))
+   `(= (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0)
+       (ezone 0.0
+              824.0 240.0 0.0 true false
+              ,@(for/reap [sow] ([i (in-range 1 (*exclusion-zone-registers*))])
+                  (for-each sow '(0.0 0.0 0.0 false false))))))
+  ;; Test "multi-layered" add (i.e., many adds, causing the high water mark to be lowered)
+  ;; Test behavior when there is no more space to add a new float
+  ;; Make sure things don't break when the number of registers exceeds 5
+  )
