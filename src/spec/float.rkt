@@ -111,6 +111,20 @@
         [((cons test conditions) (cons result results))
          `(ite ,test ,result ,(loop conditions results))])))
 
+  ;; Checks if the given point is in the exclusion zone
+  (define-fun ez.out? ((ez EZone) (x Real) (y Real)) Bool
+    (and
+     ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
+         `(or
+           (> y (,(sformat "ez.y~a" i) ez))
+           (and
+            (or (not (,(sformat "ez.r~a?" i) ez)) (< x (,(sformat "ez.r~a" i) ez)))
+            (or (not (,(sformat "ez.l~a?" i) ez)) (> x (,(sformat "ez.l~a" i) ez))))))
+    (>= y (ez.mark ez))))
+
+  (define-fun ez.in? ((ez EZone) (x Real) (y Real)) Bool
+    (not (ez.out? ez x y)))
+
   (define-fun ez.max ((ez EZone)) Real
     ,(for/fold ([expr '(ez.mark ez)]) ([i (in-range (*exclusion-zone-registers*))])
        `(ite ,(line-exists? i)
