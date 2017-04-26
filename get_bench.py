@@ -52,7 +52,7 @@ def main(urls, name=None, screenshot=False):
                             iname = "bench/{}-{}.png".format(netloc, id)
                             print "Saving screenshot to", iname
                             browser.save_screenshot(iname)
-                        browser.execute_script("window.LETTER = arguments[0];", id)
+                        browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
                         browser.execute_script(SCRIPT)
                         elt = browser.find_element_by_id("-x-cassius-output-block");
                         text = elt.text.encode("utf8")

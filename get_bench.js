@@ -35,7 +35,7 @@ Box.prototype.toString = function() {
     return s + "]";
 }
 
-LETTER = window.LETTER || "";
+LETTER = window.LETTER || "hi";
 ID = 0;
 PADDING = "0000";
 function gensym() {
@@ -120,6 +120,7 @@ function cs(elt) {return window.getComputedStyle(elt);}
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE || elt.nodeType == document.CDATA_SECTION_NODE;}
 function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt).display == "inline";}
+function is_iblock(elt) {return cs(elt).display == "inline-block";}
 function is_block(elt) {
     return cs(elt).display == "block" ||
         (cs(elt).display == "list-item" &&
@@ -202,9 +203,7 @@ function horizontally_adjacent(e1, e2) {
     }
 }
 
-function find_first_break(txt, loff, roff, f) {
-    console.log(loff, roff)
-    if (f) f()
+function find_first_break(txt, loff, roff) {
     if (loff !== loff || roff !== roff) throw "Error";
     if (roff - loff < 2) return roff;
     if (roff - loff == 2) {
@@ -221,9 +220,9 @@ function find_first_break(txt, loff, roff, f) {
     r2.setEnd(txt, mid);
 
     if (r2.getClientRects().length > 1) {
-        return find_first_break(txt, loff, mid, f);
+        return find_first_break(txt, loff, mid);
     } else {
-        return find_first_break(txt, mid - 1, roff, f);
+        return find_first_break(txt, mid - 1, roff);
     }
 }
 
@@ -274,30 +273,55 @@ function contains_text(elt) {
 }
 
 function infer_anons(box, parent) {
-    function save_anon_box() {
-        if (!anon_box) return;
-        parent.children.push(anon_box);
-    }
-    var anon_box = false;
-    for (var i = 0; i < box.children.length; i++) {
-        var child = box.children[i];
-        if (child.type == "BLOCK" || child.type == "MAGIC" || child.type == "ANON") {
-            save_anon_box();
-            parent.children.push(child);
-            anon_box = false;
-        } else {
-            if (!anon_box) {
-                anon_box = new Anon(box.node, {});
-            }
-            anon_box.children.push(child);
-        }
-    }
-    save_anon_box();
+    var estack = [box.children];
+    var bstack = [parent.children];
+    var block_mode = true;
 
-    if (parent.children.length == 1 && parent.children[0].type == "ANON") {
-        var anon = parent.children.pop();
-        for (var i = 0; i < anon.children.length; i++) {
-            parent.children.push(anon.children[i]);
+    function reenter() {
+        var b = Anon();
+        bstack[0].push(b)
+        bstack.push(b.children);
+
+        for (var i = 0; i < estack.length - 1; i++) {
+            var b = Inline(estack[i][0].node, estack[i][0].props);
+            bstack[bstack.length - 1].push(b)
+            bstack.push(b.children);
+        }
+
+        block_mode = false;
+    }
+
+    while (estack[0].length > 0) {
+        if (estack[estack.length - 1].length > 0) {
+            var e = estack[estack.length - 1][0];
+            if (e.type == "TEXT") {
+                if (block_mode) reenter(estack);
+                bstack[bstack.length - 1].push(e);
+                estack[estack.length - 1].shift();
+            } else if (e.type == "INLINE" && cs(e.node).display == "inline-block") {
+                if (block_mode) reenter(estack);
+                bstack[bstack.length - 1].push(e);
+                estack[estack.length - 1].shift();
+            } else if (e.type == "INLINE") {
+                if (block_mode) reenter(estack);
+                var b = Inline(e.node, e.props);
+                bstack[bstack.length - 1].push(b);
+                bstack.push(b.children);
+                estack.push(e.children);
+            } else if ((e.type == "BLOCK" || e.type == "MAGIC") &&
+                       (cs(e.node).position == "fixed" || cs(e.node).position == "absolute")) {
+                bstack[bstack.length - 1].push(e);
+                estack[estack.length - 1].shift();
+            } else if (e.type == "BLOCK" || e.type == "MAGIC") {
+                bstack[0].push(e);
+                estack[estack.length - 1].shift();
+                bstack = [bstack[0]];
+                block_mode = true;
+            }
+        } else {
+            bstack.pop();
+            estack.pop();
+            estack[estack.length - 1].shift();
         }
     }
 }
@@ -348,7 +372,8 @@ function infer_lines(box, parent) {
     var stack = [];
     var sstack = [];
     function go(b) {
-        if (b.type == "TEXT") {
+        if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
+            (b.type == "INLINE" && cs(b.node).display == "inline-block")) {
             var l = last_line();
             if (!fits(b, l)) {
                 l = new_line();
@@ -356,8 +381,6 @@ function infer_lines(box, parent) {
             }
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
-        } else if (b.type == "BLOCK" || b.type == "MAGIC") {
-            parent.children.push(b);
         } else if (b.type == "INLINE") {
             if (b.props.br) {
                 new_line();
@@ -381,7 +404,77 @@ function infer_lines(box, parent) {
     }
 }
 
-function make_boxes(elt, inflow, styles, features) {
+function extract_text(elt) {
+    var outs = [];
+    var ranges = get_lines(elt);
+    for (var i = 0; i < ranges.length; i++) {
+        var r = ranges[i].getClientRects();
+        if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
+        if (r.length < 1) continue;
+        r = r[0];
+        // Whitespace only line
+        var box = Text(elt, {
+            x: r.x, y: r.y, w: r.width, h: r.height,
+            // TODO: Escape correctly
+            //text: dump_string(ranges[i].toString().replace(/\s+/g, " "))
+        });
+        outs.push(box);
+    }
+    return outs;
+}
+
+function extract_block(elt, children) {
+    var r = elt.getBoundingClientRect();
+    var s = cs(elt);
+    var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
+    if (is_iblock(elt)) box.type = "INLINE";
+
+    var fake_lines = new Box("Fake", elt, {});
+    fake_lines.children = children;
+
+    infer_anons(fake_lines, box);
+    for (var i = 0; i < box.children.length; i++) {
+        if (box.children[i].type == "ANON") {
+            var b = box.children[i];
+            var b2 = Anon(b.node, b.props);
+            infer_lines(b, b2);
+            box.children[i] = b2;
+        }
+    }
+
+    if (box.children.length == 1 && box.children[0].type == "ANON") {
+        box.children = box.children[0].children;
+    }
+
+    return box;
+}
+
+function extract_inline(elt, children) {
+    var r = elt.getClientRects();
+    var box;
+    if (r.length == 1 && false) {
+        box = Inline(elt, {tag: elt.tagName, x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
+    } else {
+        box = Inline(elt, {});
+    }
+    if (elt.tagName.toLowerCase() == "br") box.props.br = true;
+    box.children = children;
+    return [box];
+}
+
+function extract_magic(elt, children) {
+    var r = elt.getBoundingClientRect();
+    var s = cs(elt);
+    var box = Magic(elt, {
+        x: r.x, y: r.y, w: r.width, h: r.height,
+    });
+
+    box.children = children;
+
+    return [box];
+}
+
+function make_boxes(elt, styles, features) {
     if (BadTags.indexOf(elt.tagName) !== -1) features["tag:" + elt.tagName] = true;
 
     if (elt.style && elt.style.length) {
@@ -390,95 +483,34 @@ function make_boxes(elt, inflow, styles, features) {
         styles[eid] = elt.style;
     }
 
-    if (is_comment(elt)) {
-        return;
-    } else if (is_text(elt)) {
-        var ranges = get_lines(elt);
-        for (var i = 0; i < ranges.length; i++) {
-            var r = ranges[i].getClientRects();
-            if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
-            if (r.length < 1) continue;
-            r = r[0];
-            // Whitespace only line
-            if (r.width == 0 || r.height == 0) continue;
-            var box = Text(elt, {
-                x: r.x, y: r.y, w: r.width, h: r.height,
-                // TODO: Escape correctly
-                //text: dump_string(ranges[i].toString().replace(/\s+/g, " "))
-            });
-            inflow.children.push(box);
-        }
-    } else if (!is_visible(elt)) {
-        return;
-    } else if (is_block(elt) && cs(elt)["clear"] === "none") {
-        var r = elt.getBoundingClientRect();
-        var s = cs(elt);
-        var box = Block(elt, {
-            x: r.x, y: r.y, w: r.width, h: r.height,
-            /*
-            mt: val2px(s["margin-top"]), mr: val2px(s["margin-right"]),
-            mb: val2px(s["margin-bottom"]), ml: val2px(s["margin-left"]),
-            pt: val2px(s["padding-top"]), pr: val2px(s["padding-right"]),
-            pb: val2px(s["padding-bottom"]), pl: val2px(s["padding-left"]),
-            bt: val2px(s["border-top-width"]), br: val2px(s["border-right-width"]),
-            bb: val2px(s["border-bottom-width"]), bl: val2px(s["border-left-width"]),
-            */
-        });
-
-        inflow.children.push(box);
-
-        var fake_lines = new Box("Fake", elt, {});
-        var fake_anons = new Box("Fake", elt, {});
-        for (var i = 0; i < elt.childNodes.length; i++) {
-            var child = elt.childNodes[i];
-            make_boxes(child, fake_lines, styles, features);
-        }
-
-        // Then break it into lines
-        infer_lines(fake_lines, fake_anons);
-        // Then add anonymous boxes
-        infer_anons(fake_anons, box);
-    } else if (is_inline (elt)) {
-        var r = elt.getClientRects();
-        var box;
-        if (r.length == 1 && false) {
-            box = Inline(elt, {tag: elt.tagName, x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
-        } else {
-            box = Inline(elt, {});
-        }
-        if (elt.tagName.toLowerCase() == "br") box.props.br = true;
-        inflow.children.push(box);
-        for (var i = 0; i < elt.childNodes.length; i++) {
-            var child = elt.childNodes[i];
-            make_boxes(child, box, styles, features);
-        }
+    if (cs(elt).display.startsWith("table")) {
+        features["display:table"] = true;
+    } else if (cs(elt).display == "inline-block") {
+        features["display:inline-block"] = true;
+    } else if (cs(elt).display == "list-item") {
+        features["list:inside"] = true;
     } else {
-        if (cs(elt).display.startsWith("table")) {
-            features["display:table"] = true;
-        } else if (cs(elt).display == "inline-block") {
-            features["display:inline-block"] = true;
-        } else if (cs(elt).display == "list-item") {
-            features["list:inside"] = true;
-        } else {
-            console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
-            features["display:unknown"] = true;
-        }
+        console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
+        features["display:unknown"] = true;
+    }
 
-        // Quit iterating downward, who knows what is in this element
-        var r = elt.getBoundingClientRect();
-        var s = cs(elt);
-        var box = Magic(elt, {
-            x: r.x, y: r.y, w: r.width, h: r.height,
-            mt: val2px(s["margin-top"], features), mr: val2px(s["margin-right"], features), 
-            mb: val2px(s["margin-bottom"], features), ml: val2px(s["margin-left"], features),
-        });
+    var children = [];
+    for (var i = 0; i < elt.childNodes.length; i++) {
+        children = children.concat(make_boxes(elt.childNodes[i], styles, features));
+    }
 
-        for (var i = 0; i < elt.childNodes.length; i++) {
-            var child = elt.childNodes[i];
-            make_boxes(child, box, styles, features);
-        }
-
-        inflow.children.push(box);
+    if (is_comment(elt)) {
+        return [];
+    } else if (is_text(elt)) {
+        return extract_text(elt)
+    } else if (!is_visible(elt)) {
+        return [];
+    } else if ((is_block(elt) || is_iblock(elt)) && cs(elt)["clear"] === "none") {
+        return [extract_block(elt, children)];
+    } else if (is_inline (elt)) {
+        return [extract_inline(elt, children)];
+    } else {
+        return [extract_magic(elt, children)];
     }
 }
 
@@ -486,7 +518,7 @@ function get_boxes(features) {
     var has_scrollbar = window.scrollMaxY !== 0;
     var view = Page(document, {w: window.innerWidth - (has_scrollbar ? 13 : 0), h: window.innerHeight});
     var style = {};
-    make_boxes(document.querySelector("html"), view, style, features);
+    view.children = make_boxes(document.querySelector("html"), style, features);
     return {view: view, style: style};
 }
 
@@ -650,7 +682,7 @@ function dump_tree(page) {
         }
     }
 
-    for (var i = 0; i < page.children.length; i++) recurse(page.children[i]);
+    recurse(page);
     return text;
 }
 
@@ -724,9 +756,7 @@ function dump_document() {
     }
 
     var s = recurse(elt);
-    var b = new Box("document", document, {});
-    b.children.push(s);
-    return b;
+    return s;
 }
 
 MAX = 0;
@@ -902,7 +932,7 @@ function page2cassius(name) {
     }
     text += ")\n\n";
     text += "(define-layout (" + name + " :browser firefox)\n ([VIEW :w " + page.props.w + "]";
-    text += dump_tree(page);
+    text += dump_tree(page.children[0]);
     text += "))\n\n";
     text += "(define-document " + name;
     text += dump_tree(dump_document());
@@ -924,7 +954,8 @@ function cassius(name) {
     }
 
     var root = document.querySelector("html");
-    root.appendChild(pre);
+    console.log(name);
+    if (name) root.appendChild(pre);
 
     var r = document.createRange();
     r.selectNodeContents(pre);
@@ -934,7 +965,7 @@ function cassius(name) {
     sel.addRange(r);
 }
 
-cassius("doc-" + LETTER);
+cassius(LETTER);
 
 function draw_rect(rect) {
     var d = document.createElement("CassiusRect");

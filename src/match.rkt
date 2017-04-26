@@ -87,7 +87,7 @@
    [(equal? (length elts*) (length boxs*))
     (for ([elt elts*] [box boxs*])
       (if (equal? (display elt) 'inline-block)
-          (link-block match! elt box)
+          (link-block match! display elt box)
           (match! elt box)))]
    #;[(equal? (length elts*) 1)
     (for-each (curry match! (car elts)) boxs*)
