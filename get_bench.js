@@ -133,9 +133,10 @@ function is_float(elt) {return elt.nodeType === document.ELEMENT_NODE && cs(elt)
 function is_flowroot(elt) {
     // CSS3BOX §4.2
     // Block progression possibilities ignored, because block;-progression assumed to be `tb`
-    return cs(elt).float !== "none" || cs(elt).overflow !== "visible" ||
-        ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt).display) !== -1 ||
-        ["static", "relative"].indexOf(cs(elt).position) === -1;
+    return elt.nodeType == document.ELEMENT_NODE &&
+        (cs(elt).float !== "none" || cs(elt).overflow !== "visible" ||
+         ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt).display) !== -1 ||
+         ["static", "relative"].indexOf(cs(elt).position) === -1);
 }
 
 function get_fontsize(elt) {
@@ -309,7 +310,7 @@ function infer_anons(inputs) {
                 bstack[bstack.length - 1].push(b);
                 bstack.push(b.children);
                 estack.push(e.children);
-            } else if ((e.type == "BLOCK" || e.type == "MAGIC") && e.nodeType == document.ELEMENT_NODE && is_flowroot(e)) {
+            } else if ((e.type == "BLOCK" || e.type == "MAGIC") && is_flowroot(e)) {
                 bstack[bstack.length - 1].push(e);
                 estack[estack.length - 1].shift();
             } else if (e.type == "BLOCK" || e.type == "MAGIC") {
@@ -321,7 +322,7 @@ function infer_anons(inputs) {
                 throw "What happened? " + e;
             }
         } else {
-            bstack.pop();
+            if (!block_mode) bstack.pop();
             estack.pop();
             estack[estack.length - 1].shift();
         }
@@ -482,7 +483,7 @@ function make_boxes(elt, styles, features) {
 
     if (elt.nodeType !== document.ELEMENT_NODE) {
         // ok
-    } else if (["none", "inline", "block", "inline-block"].indexOf(cs(elt).display) !== -1) {
+    } else if (["none", "inline", "block"/*, "inline-block"*/].indexOf(cs(elt).display) !== -1) {
         // ok
     } else if (cs(elt).display.startsWith("table")) {
         features["display:table"] = true;
@@ -506,7 +507,7 @@ function make_boxes(elt, styles, features) {
         return extract_text(elt)
     } else if (!is_visible(elt)) {
         return [];
-    } else if ((is_block(elt) || is_iblock(elt)) && cs(elt)["clear"] === "none") {
+    } else if ((is_block(elt) || /*TODO: is_iblock(elt)*/ false) && cs(elt)["clear"] === "none") {
         return [extract_block(elt, children)];
     } else if (is_inline(elt)) {
         return [extract_inline(elt, children)];
