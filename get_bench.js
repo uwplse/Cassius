@@ -272,9 +272,10 @@ function contains_text(elt) {
     return has_inline || has_text;
 }
 
-function infer_anons(box, parent) {
-    var estack = [box.children];
-    var bstack = [parent.children];
+function infer_anons(inputs) {
+    var estack = [inputs];
+    var out = [];
+    var bstack = [out];
     var block_mode = true;
 
     function reenter() {
@@ -308,8 +309,7 @@ function infer_anons(box, parent) {
                 bstack[bstack.length - 1].push(b);
                 bstack.push(b.children);
                 estack.push(e.children);
-            } else if ((e.type == "BLOCK" || e.type == "MAGIC") &&
-                       (cs(e.node).position == "fixed" || cs(e.node).position == "absolute")) {
+            } else if ((e.type == "BLOCK" || e.type == "MAGIC") && e.nodeType == document.ELEMENT_NODE && is_flowroot(e)) {
                 bstack[bstack.length - 1].push(e);
                 estack[estack.length - 1].shift();
             } else if (e.type == "BLOCK" || e.type == "MAGIC") {
@@ -317,6 +317,8 @@ function infer_anons(box, parent) {
                 estack[estack.length - 1].shift();
                 bstack = [bstack[0]];
                 block_mode = true;
+            } else {
+                throw "What happened? " + e;
             }
         } else {
             bstack.pop();
@@ -324,6 +326,8 @@ function infer_anons(box, parent) {
             estack[estack.length - 1].shift();
         }
     }
+
+    return out;
 }
 
 function infer_lines(box, parent) {
@@ -412,12 +416,7 @@ function extract_text(elt) {
         if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
         if (r.length < 1) continue;
         r = r[0];
-        // Whitespace only line
-        var box = Text(elt, {
-            x: r.x, y: r.y, w: r.width, h: r.height,
-            // TODO: Escape correctly
-            //text: dump_string(ranges[i].toString().replace(/\s+/g, " "))
-        });
+        var box = Text(elt, {x: r.x, y: r.y, w: r.width, h: r.height,});
         outs.push(box);
     }
     return outs;
@@ -426,26 +425,24 @@ function extract_text(elt) {
 function extract_block(elt, children) {
     var r = elt.getBoundingClientRect();
     var s = cs(elt);
-    var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
-    if (is_iblock(elt)) box.type = "INLINE";
 
-    var fake_lines = new Box("Fake", elt, {});
-    fake_lines.children = children;
-
-    infer_anons(fake_lines, box);
-    for (var i = 0; i < box.children.length; i++) {
-        if (box.children[i].type == "ANON") {
-            var b = box.children[i];
+    children = infer_anons(children);
+    for (var i = 0; i < children.length; i++) {
+        if (children[i].type == "ANON") {
+            var b = children[i];
             var b2 = Anon(b.node, b.props);
             infer_lines(b, b2);
-            box.children[i] = b2;
+            children[i] = b2;
         }
     }
 
-    if (box.children.length == 1 && box.children[0].type == "ANON") {
-        box.children = box.children[0].children;
+    if (children.length == 1 && children[0].type == "ANON") {
+        children = children[0].children;
     }
 
+    var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
+    if (is_iblock(elt)) box.type = "INLINE";
+    box.children = children;
     return box;
 }
 
@@ -459,7 +456,7 @@ function extract_inline(elt, children) {
     }
     if (elt.tagName.toLowerCase() == "br") box.props.br = true;
     box.children = children;
-    return [box];
+    return box;
 }
 
 function extract_magic(elt, children) {
@@ -471,7 +468,7 @@ function extract_magic(elt, children) {
 
     box.children = children;
 
-    return [box];
+    return box;
 }
 
 function make_boxes(elt, styles, features) {
@@ -483,7 +480,11 @@ function make_boxes(elt, styles, features) {
         styles[eid] = elt.style;
     }
 
-    if (cs(elt).display.startsWith("table")) {
+    if (elt.nodeType !== document.ELEMENT_NODE) {
+        // ok
+    } else if (["none", "inline", "block", "inline-block"].indexOf(cs(elt).display) !== -1) {
+        // ok
+    } else if (cs(elt).display.startsWith("table")) {
         features["display:table"] = true;
     } else if (cs(elt).display == "inline-block") {
         features["display:inline-block"] = true;
@@ -507,7 +508,7 @@ function make_boxes(elt, styles, features) {
         return [];
     } else if ((is_block(elt) || is_iblock(elt)) && cs(elt)["clear"] === "none") {
         return [extract_block(elt, children)];
-    } else if (is_inline (elt)) {
+    } else if (is_inline(elt)) {
         return [extract_inline(elt, children)];
     } else {
         return [extract_magic(elt, children)];
@@ -715,6 +716,8 @@ function dump_stylesheet(ss, features) {
     return text;
 }
 
+ELTS = []
+
 function dump_document() {
     var elt = document.documentElement;
     
@@ -732,7 +735,10 @@ function dump_document() {
         } else if (elt.tagName === "HEAD" || elt.tagName === "SCRIPT") {
             return false;
         } else {
-            var rec = new Box(elt.tagName.toLowerCase(), elt, {});
+            var num = ELTS.length;
+            elt.dataset["num"] = num;
+            ELTS.push(elt);
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num});
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
@@ -909,6 +915,16 @@ function check_float_registers(box, parent, features) {
     }
 }
 
+function annotate_box_elt(box) {
+    if (box.node && box.node.nodeType === document.ELEMENT_NODE) {
+        box.props.elt = box.node.dataset["num"];
+    }
+
+    for (var i = 0; i < box.children.length; i++) {
+        annotate_box_elt(box.children[i]);
+    }
+}
+
 function page2cassius(name) {
     var features = {};
 
@@ -918,8 +934,10 @@ function page2cassius(name) {
         text += dump_stylesheet(document.styleSheets[sid], features);
     }
 
+    var doc = dump_document();
     var out = get_boxes(features);
     var page = out.view;
+    annotate_box_elt(page);
     
     compute_flt_pointer(page, null);
     features["float:" + MAX] = true;
@@ -931,11 +949,11 @@ function page2cassius(name) {
         text += dump_rule("#" + eid, style[eid], features, true);
     }
     text += ")\n\n";
-    text += "(define-layout (" + name + " :browser firefox)\n ([VIEW :w " + page.props.w + "]";
+    text += "(define-layout (" + name + " :browser firefox :matched true)\n ([VIEW :w " + page.props.w + "]";
     text += dump_tree(page.children[0]);
     text += "))\n\n";
     text += "(define-document " + name;
-    text += dump_tree(dump_document());
+    text += dump_tree(doc);
     text += ")\n\n";
 
     var title = dump_string(document.title);
@@ -954,7 +972,6 @@ function cassius(name) {
     }
 
     var root = document.querySelector("html");
-    console.log(name);
     if (name) root.appendChild(pre);
 
     var r = document.createRange();
