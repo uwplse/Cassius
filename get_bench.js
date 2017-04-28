@@ -483,17 +483,20 @@ function make_boxes(elt, styles, features) {
 
     if (elt.nodeType !== document.ELEMENT_NODE) {
         // ok
-    } else if (["none", "inline", "block"/*, "inline-block"*/].indexOf(cs(elt).display) !== -1) {
+    } else if (["none", "list-item", "inline", "block"/*, "inline-block"*/].indexOf(cs(elt).display) !== -1) {
         // ok
     } else if (cs(elt).display.startsWith("table")) {
         features["display:table"] = true;
     } else if (cs(elt).display == "inline-block") {
         features["display:inline-block"] = true;
-    } else if (cs(elt).display == "list-item") {
-        features["list:inside"] = true;
     } else {
         console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
         features["display:unknown"] = true;
+    }
+
+    if (elt.nodeType == document.ELEMENT_NODE &&
+        cs(elt).display == "list-item" && cs(elt).listStylePosition == "inside" && cs(elt).listStyleType != "none") {
+        features["list:inside"] = true;
     }
 
     var children = [];
