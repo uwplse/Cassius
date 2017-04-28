@@ -358,8 +358,8 @@ function infer_lines(box, parent) {
         if (prev.type == "LINE" || prev.type == "INLINE") return true;
 
         var horiz_adj = (
-            txt.props.y + txt.props.h > prev.props.y && prev.props.y >= txt.props.y
-            || prev.props.y + prev.props.h > txt.props.y && txt.props.y >= prev.props.y)
+            txt.props.y + txt.props.h >= prev.props.y && prev.props.y >= txt.props.y
+            || prev.props.y + prev.props.h >= txt.props.y && txt.props.y >= prev.props.y)
 
         return horiz_adj && txt.props.x >= prev.props.x + prev.props.w;
     }
