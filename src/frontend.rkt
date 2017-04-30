@@ -49,7 +49,18 @@
                 [_ (void)])))))
   (*%* (set-union (*%*) %s))
 
-  (define matchers (for/list ([dom doms]) (link-elts-boxes (car sheets) (dom-elements dom) (dom-boxes dom))))
+  (define browser-styles (map (curryr dom-context ':browser) doms))
+  (unless (= (length (remove-duplicates browser-styles)) 1)
+    (error "Multiple documents with different browsers not supported"))
+  (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
+
+  (define matchers
+    (for/list ([dom doms])
+      (define linker
+        (if (dom-context dom ':matched)
+            link-matched-elts-boxes
+            link-elts-boxes))
+      (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
   (define query (all-constraints matchers doms))
   (set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))

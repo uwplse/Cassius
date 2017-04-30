@@ -507,7 +507,10 @@ function make_boxes(elt, styles, features) {
     if (is_comment(elt)) {
         return [];
     } else if (is_text(elt)) {
-        return extract_text(elt)
+        var out = extract_text(elt);
+        var out2 = out.filter(function(x) {return x.props.w !== 0 || x.props.h !== 0});
+        if (out.length !== out2.length) features["empty-text"] = true;
+        return out2;
     } else if (!is_visible(elt)) {
         return [];
     } else if ((is_block(elt) || /*TODO: is_iblock(elt)*/ false) && cs(elt)["clear"] === "none") {
