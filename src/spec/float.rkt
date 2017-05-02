@@ -53,9 +53,17 @@
 
            (sow (copy-register "ez.y~a" #:merge `(,(sformat "ez.y~a" i) ez) #:new `bottom))
            (sow (copy-register "ez.l~a" #:new `right
-                               #:merge `(max-if (,(sformat "ez.l~a" i) ez) (is-float/left dir) right)))
+                               #:merge `(ite (is-float/right dir) 
+										   (,(sformat "ez.l~a" i) ez)
+										   (ite (,(sformat "ez.l~a?" i) ez)
+												(max (,(sformat "ez.l~a" i) ez) right)
+												right))))
            (sow (copy-register "ez.r~a" #:new `left
-                               #:merge `(min-if (,(sformat "ez.r~a" i) ez) (is-float/right dir) left)))
+                               #:merge `(ite (is-float/left dir) 
+										   (,(sformat "ez.r~a" i) ez)
+										   (ite (,(sformat "ez.r~a?" i) ez)
+												(min (,(sformat "ez.r~a" i) ez) left)
+												left))))
            (sow (copy-register "ez.l~a?" #:new `(is-float/left dir)
                                #:merge `(or (,(sformat "ez.l~a?" i) ez) (is-float/left dir))))
            (sow (copy-register "ez.r~a?" #:new `(is-float/right dir)
@@ -120,11 +128,29 @@
            (and
             (or (not (,(sformat "ez.r~a?" i) ez)) (< x (,(sformat "ez.r~a" i) ez)))
             (or (not (,(sformat "ez.l~a?" i) ez)) (> x (,(sformat "ez.l~a" i) ez))))))
-    (>= y (ez.mark ez))))
+    (> y (ez.mark ez))))
 
   (define-fun ez.in? ((ez EZone) (x Real) (y Real)) Bool
     (not (ez.out? ez x y)))
 
+  (define-fun ez.valid? ((ez EZone)) Bool
+    (and
+     (< (ez.mark ez) (ez.y0 ez))
+     (=> (ez.l0? ez) (ez.r0? ez)
+         (<= (ez.l0 ez) (ez.r0 ez)))
+     ,@(for/list ([i (in-range 1 (*exclusion-zone-registers*))])
+         `(and
+		   (=> (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a?" (- i 1)) ez))
+		   (=> (,(sformat "ez.r~a?" i) ez) (,(sformat "ez.r~a?" (- i 1)) ez))
+           (=> (,(sformat "ez.l~a?" (- i 1)) ez) (,(sformat "ez.l~a?" i) ez)
+               (>= (,(sformat "ez.l~a" (- i 1)) ez) (,(sformat "ez.l~a" i) ez)))
+           (=> (,(sformat "ez.r~a?" (- i 1)) ez) (,(sformat "ez.r~a?" i) ez)
+               (<= (,(sformat "ez.r~a" (- i 1)) ez) (,(sformat "ez.r~a" i) ez)))
+           (< (,(sformat "ez.y~a" (- i 1)) ez) (,(sformat "ez.y~a" i) ez))
+           (=> (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez)
+               (<= (,(sformat "ez.l~a" i) ez) (,(sformat "ez.r~a" i) ez)))
+           (=> ,(line-exists? i) ,(line-exists? (- i 1)))))))
+  
   (define-fun ez.max ((ez EZone)) Real
     ,(for/fold ([expr '(ez.mark ez)]) ([i (in-range (*exclusion-zone-registers*))])
        `(ite ,(line-exists? i)
@@ -140,7 +166,10 @@
 
   (define-fun ez.test ((ez EZone) (y Real)) Bool
     ;; Assert this property with the normal-flow position of any line box
-    (>= y (ez.mark ez))))
+    (>= y (ez.mark ez)))
+
+  (define-fun ez.in-rect? ((x Real) (y Real) (t Real) (r Real) (b Real) (l Real)) Bool
+    (and (<= t y b) (<= l x r))))
 
 (module+ test
   (require "test.rkt")
@@ -177,30 +206,55 @@
   (check-sat #hash((x . Real)(y . Real))
              `(=> (> y 0) (ez.out? (ez.init 0) x y)))
 
+  ; Point outside of added ractangle is outside the EZone
   (check-sat #hash((x . Real)(y . Real) (w . Real) (h . Real))
-             `(=> (or (> x w) (> y h)) (>= x 0) (>= y 0)
+             `(=> (or (> x w) (> y h)) (>= x 0) (> y 0)
                   (let ((ez* (ez.add (ez.init 0) float/left 0.0 w h 0.0)))
                     (ez.out? ez* x y))))
-  
+
+  ; Point inside of added rectangle is inside the EZone 
   (check-sat #hash((x . Real)(y . Real) (w . Real) (h . Real))
              `(=> (< x w) (< y h) (> x 0) (> y 0)
                   (let ((ez* (ez.add (ez.init 0) float/left 0.0 w h 0.0)))
-                    (not (ez.out? ez* x y)))))
+                    (ez.in? ez* x y))))
 
+  ; Point inside of added arbitrary rectangle (no matter how it's added), is inside of the EZone
   (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)
                    (b . Real) (l . Real) (dir . Float) (ez . EZone))
-             `(=> (<= l x r) (<= t y b) (not (is-float/none dir)) (ez.can-add ez b)
+             `(=> (ez.in-rect? x y t r b l) (not (is-float/none dir)) (ez.can-add ez b)
                   (let ((ez* (ez.add ez dir t r b l)))
                     (ez.in? ez* x y))))
 
-  ;; Needs ez.valid
-  #;(check-sat #hash((x . Real) (y . Real) (w . Real) (h . Real) (ez . EZone))
-             `(=> (ez.in? ez x y) (> w 0) (> h 0) (ez.can-add ez h) (ez.in? (ez.add ez float/left 0.0 w h 0.0) x y)))
+  ; Point inside of added rectangle is inside of arbitrary EZone
+  (check-sat #hash((x . Real) (y . Real) (w . Real) (h . Real) (ez . EZone))
+             `(=> (ez.in? ez x y) (> w 0) (> h 0) (ez.valid? ez) (ez.can-add ez h)
+                  (ez.in? (ez.add ez float/left 0.0 w h 0.0) x y)))
 
+  ; Tests that advance never shrinks the EZone
+  (check-sat #hash((x . Real)(y . Real) (h . Real) (ez . EZone))
+             `(=> (ez.can-add ez h) (ez.valid? ez) (ez.in? ez x y)
+                  (ez.in? (ez.advance ez h) x y)))
+				  
+  (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)
+                   (b . Real) (l . Real) (dir . Float) (ez . EZone))
+             `(=> (not (is-float/none dir)) (ez.can-add ez b) (ez.valid? ez)
+				  (= 
+				   (ez.in? (ez.add ez dir t r b l) x y)
+				   (or 
+					 (ez.in? ez x y)
+					 (ite (is-float/left dir)
+					  (and (<= x r) (<= y b))
+					  (and (>= x l) (<= y b)))))))
+
+  (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)
+                   (b . Real) (l . Real) (dir . Float) (ez . EZone))
+             `(=> (not (is-float/none dir)) (ez.can-add ez b) (ez.valid? ez)
+				  (ez.valid? (ez.add ez dir t r b l))))
+					  
   ;; New test ideas:
   ;; Test exclusion-zone-registers (after adds) against hand-built version
   ;;     Would be similar to first test, maybe with more adds or parameterized
-  (check-sat #hash()
+  #;(check-sat #hash()
    `(= (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0)
        (ezone 0.0
               824.0 240.0 0.0 true false
