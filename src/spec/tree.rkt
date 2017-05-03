@@ -144,7 +144,7 @@
      (= (&ppflow b) &b)
      (= (&vflow b) nil-box)
      (= (&nflow b) nil-box)
-     (= (ez.in b) (ez.init (top-content (pbox b))))))
+     (= (ez.in b) (ez.init 0.0))))
 
   (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
     (and

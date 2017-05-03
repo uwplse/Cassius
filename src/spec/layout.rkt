@@ -120,7 +120,7 @@
        ;; top margin-edge of the topmost block-level child box and the
        ;; bottom margin-edge of the bottommost block-level child box.
        (min-max-height
-        (- (max (ez.max (ez.out b)) (bottom-outer (lflow b)))
+        (- (max (ez.max (ez.out (lbox b))) (bottom-outer (lflow b)))
            (top-content b))
         b)]))
 
