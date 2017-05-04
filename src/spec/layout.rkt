@@ -124,31 +124,32 @@
            (top-content b))
         b)]))
 
-  (define-fun auto-height-for-flow-blocks ((b Box)) Bool
+  (define-fun auto-height-for-flow-blocks ((b Box)) Real
     (let ([lb (lflow b)] [e (box-elt b)])
       ,(smt-cond
         ;; CSS 2.1 § 10.6.6, first bullet
         [(is-flow-root b)
-         (= (h b) (auto-height-for-flow-roots b))]
+         (auto-height-for-flow-roots b)]
         ;; CSS 2.1 § 10.6.3, item 4
         [(is-replaced (box-elt b))
-         (= (h b) (intrinsic-height (box-elt b)))]
+         (min-max-height (intrinsic-height (box-elt b)) b)]
         [(is-no-box lb)
-         (= (h b) 0.0)]
+         (min-max-height 0.0 b)]
         ;; CSS 2.1 § 10.6.3, item 1
         [(is-box/line (type lb))
-         (=> (width-set b) (= (bottom-content b) (bottom-border lb)))]
-        [(is-box/block (type lb))
-         (= (bottom-content b)
-            ;; CSS 2.1 § 10.6.3, item 2
-            (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (is-root-elt e)))
-                 (ite (and (not (box-collapsed-through b)) (box-collapsed-through lb))
-                      ;; CSS § 10.6.3, item 3
-                      (- (bottom-border lb) (mtp lb) (mtn lb))
-                      (bottom-border lb)) ; Collapsed bottom margin
-                 (bottom-outer lb)))] ; No collapsed bottom margin
-        ;; Block boxes may only have line or block children
-        [else false])))
+         (min-max-height (- (bottom-border lb) (top-content b)) b)]
+        [else ; (is-box/block (type lb)), because blocks only have block or line children
+         (min-max-height 
+          (- ;; CSS 2.1 § 10.6.3, item 2
+           (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (is-root-elt e)))
+                (ite (and (not (box-collapsed-through b)) (box-collapsed-through lb))
+                     ;; CSS § 10.6.3, item 3
+                     (- (bottom-border lb) (mtp lb) (mtn lb))
+                     (bottom-border lb)) ; Collapsed bottom margin
+                (bottom-outer lb)) ; No collapsed bottom margin
+           (top-content b))
+          b)])))
+        
 
   (define-fun margins-collapse ((b Box)) Bool
     ;; TODO: This is *buggy* and *incorrect*.
@@ -388,7 +389,7 @@
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
        (ite (is-height/auto (style.height r))
-            (auto-height-for-flow-blocks b)
+            (= (h b) (auto-height-for-flow-blocks b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                ,(get-px-or-% 'height 'h 'b)))
 
