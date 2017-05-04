@@ -35,7 +35,7 @@ Box.prototype.toString = function() {
     return s + "]";
 }
 
-LETTER = window.LETTER || "hi";
+LETTER = window.LETTER || "";
 ID = 0;
 PADDING = "0000";
 function gensym() {
@@ -44,24 +44,46 @@ function gensym() {
 }
 
 APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
+DIVISORS = [];
+
+for (var i = 1; i * i < APP_PIXEL_TO_PIXELS; i++) {
+    if (APP_PIXEL_TO_PIXELS % i == 0) {
+        DIVISORS.push(i);
+        DIVISORS.push(APP_PIXEL_TO_PIXELS / i);
+    }
+}
+
+DIVISORS.sort(function(a, b) { return a - b; });
+DIVISORS.reverse();
 
 function f2r(x) {
-    if (x == Math.floor(x)) {
-        return "" + x;
+    var out = f2q(x);
+    if (out.denom == 1) {
+        return "" + out.num;
+    } else if (out.denom == 2 || out.denom == 5 || out.denom == 10) {
+        return "" + (out.num / out.denom);
     } else {
-        var xm = Math.round(x * APP_PIXEL_TO_PIXELS);
-        var q = APP_PIXEL_TO_PIXELS;
-        while (q > 1) {
-            var r = xm - Math.floor(xm / q) * q;
-            xm = q;
-            q = r;
+        return "(/ " + out.num + " " + out.denom + ")";
+    }
+}
+
+function f2q(x) {
+    var xm = Math.round(x * APP_PIXEL_TO_PIXELS);
+        
+    for (var i = 0; i < DIVISORS.length; i++) {
+        var div = DIVISORS[i];
+        if (xm % div == 0) {
+            return { num: xm / div, denom: APP_PIXEL_TO_PIXELS / div };
         }
-        var num = Math.round(x * APP_PIXEL_TO_PIXELS / xm),
-            den = Math.round(APP_PIXEL_TO_PIXELS / xm);
-        if (den % 3 == 0) {
-            return "(/ " + num + " " + den + ")";
-        } else {
-            return "" + (num / den);
+    }
+}
+
+function test_f2q(a, b) {
+    for (var i = a * 60; i < b * 60; i++) {
+        var input = i / 60;
+        var output = f2q(input);
+        if (output.num / output.denom !== input) {
+            console.error("fq2(" + i + " / 60) == " + output.num + "/" + output.denom);
         }
     }
 }
