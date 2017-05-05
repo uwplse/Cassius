@@ -38,9 +38,14 @@
              (length (append-map (compose sequence->list in-tree dom-boxes) doms))
              (length (car sheets)))
 
+  (define browser-styles (map (curryr dom-context ':browser) doms))
+  (unless (= (length (remove-duplicates browser-styles)) 1)
+    (error "Multiple documents with different browsers not supported"))
+  (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
+
   (define %s
     (reap [sow]
-          (for ([rule (car sheets)])
+          (for* ([sheet (cons browser-style sheets)] [rule sheet])
             (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
             (for ([(prop value) (in-dict props)])
               (match (car value)
@@ -48,11 +53,6 @@
                 [(list '% v) (sow (z3->number v))]
                 [_ (void)])))))
   (*%* (set-union (*%*) %s))
-
-  (define browser-styles (map (curryr dom-context ':browser) doms))
-  (unless (= (length (remove-duplicates browser-styles)) 1)
-    (error "Multiple documents with different browsers not supported"))
-  (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
 
   (define matchers
     (for/list ([dom doms])
@@ -88,9 +88,14 @@
              (length (append-map (compose sequence->list in-tree dom-boxes) doms))
              (length (car sheets)))
 
+  (define browser-styles (map (curryr dom-context ':browser) doms))
+  (unless (= (length (remove-duplicates browser-styles)) 1)
+    (error "Multiple documents with different browsers not supported"))
+  (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
+
   (define %s
     (reap [sow]
-          (for ([rule (car sheets)])
+          (for* ([sheet (cons browser-style sheets)] [rule sheet])
             (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
             (for ([(prop value) (in-dict props)])
               (match (car value)
@@ -98,12 +103,6 @@
                 [(list '% v) (sow (z3->number v))]
                 [_ (void)])))))
   (*%* (set-union (*%*) %s))
-
-
-  (define browser-styles (map (curryr dom-context ':browser) doms))
-  (unless (= (length (remove-duplicates browser-styles)) 1)
-    (error "Multiple documents with different browsers not supported"))
-  (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
 
   (define matchers
     (for/list ([dom doms])
