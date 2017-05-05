@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt")
-(provide in-css-properties in-css-types css-shorthand-properties css-type css-properties css-types css-default)
+(provide in-css-properties in-css-types css-shorthand-properties css-type css-properties css-types css-default css-inheritable?)
 
 ;; The CSS properties and data types Cassius supports. The file is in
 ;; three parts: helper macros, type and property definitions, and
@@ -71,7 +71,7 @@
   [float none])
 
 (define-css-type (Text-Align left right center justify)
-  [text-align inherit])
+  [text-align left])
 
 (define-css-type (Overflow visible hidden auto scroll)
   [overflow-x visible]
@@ -97,6 +97,10 @@
 
 (define-css-type (Text-Indent (px Real) (% Real) (em Real))
   [text-indent (px 0)])
+
+(define inheritable-properties '(text-align))
+
+(define (css-inheritable? x) (set-member? inheritable-properties x))
 
 (define css-shorthand-properties
   '((margin margin-top margin-right margin-bottom margin-left)

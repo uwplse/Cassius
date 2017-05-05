@@ -193,7 +193,7 @@
          [(number? idx)
           (car (dict-ref (rulematch-props rm) prop))]
          [(not idx)
-          (if (equal? prop 'text-align) 'left default)]))
+          (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default)]))
       (dict-set! value-hash idx value)
       (dict-set! class-hash elt idx))
     (values prop (cons class-hash value-hash))))

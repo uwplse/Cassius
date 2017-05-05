@@ -139,7 +139,7 @@
                           :named ,(sformat "~a^~a" propname (dump-elt elt)))))
         `(and ,no-match-so-far (not ,propname?))))
     (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
-                                       ,(dump-value type (if (equal? type 'Text-Align) 'left default))))
+                                       ,(dump-value type (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default))))
                       :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
 
 (define (selector-constraints emit eqs)
@@ -223,7 +223,7 @@
                               ,(dump-value type val))
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))]
         [#f
-         (define value (dump-value type (if (equal? prop 'text-align) 'left default)))
+         (define value (dump-value type (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default)))
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 

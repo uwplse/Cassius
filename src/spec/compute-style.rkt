@@ -35,7 +35,7 @@
 
 (define (not-inherited prop elt)
   `(not (,(sformat "is-~a/inherit" (slower (css-type prop)))
-         (,(sformat "style.~a" prop) (specified-style ,elt)))))
+         (,(sformat "style.~a" prop) (computed-style ,elt)))))
 
 (define positive-properties
   (append
