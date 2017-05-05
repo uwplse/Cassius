@@ -613,13 +613,13 @@ function rescue_selector(sel) {
 
 function dump_length(val, features) {
     try {
-        val = "(px " + f2r(val2px(val, features)) + ")";
+        val = "(px " + val2px(val, features) + ")";
     } catch (e) {}
     try {
-        val = "(% " + f2r(val2pct(val, features)) + ")";
+        val = "(% " + val2pct(val, features) + ")";
     } catch (e) {}
     try {
-        val = "(em " + f2r(val2em(val, features)) + ")";
+        val = "(em " + val2em(val, features) + ")";
     } catch (e) {}
     return val;
 }
@@ -649,16 +649,8 @@ function dump_rule(sel, style, features, is_from_style) {
             var tname = tname.split("-", 2)[0];
         }
 
-        try {
-            val = "(px " + f2r(val2px(val, features)) + ")";
-        } catch (e) {}
-        try {
-            val = "(% " + f2r(val2pct(val, features)) + ")";
-        } catch (e) {}
-        try {
-            val = "(em " + f2r(val2em(val, features)) + ")";
-        } catch (e) {}
-        
+        val = dump_length(val, features);
+
         if (BadProps.indexOf(sname) !== -1) {
             features["css:" + sname] = true;
         }

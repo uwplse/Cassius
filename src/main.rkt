@@ -9,7 +9,7 @@
          css-values-solver)
 
 
-
+(define *fuzz* '(/ 1 60))
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -206,7 +206,7 @@
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg
-        [(? number*?) `(= ,expr ,arg)]
+        [(? number*?) (if *fuzz* `(< (- ,arg ,*fuzz*) ,expr (+ ,arg ,*fuzz*)) `(= ,expr ,arg))]
         [`(not ,(? number*? value)) `(not (= ,expr ,value))]
         [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min ,expr ,max)]))
 
