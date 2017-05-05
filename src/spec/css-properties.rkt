@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt")
-(provide in-css-properties in-css-types css-shorthand-properties css-type css-properties css-types)
+(provide in-css-properties in-css-types css-shorthand-properties css-type css-properties css-types css-default)
 
 ;; The CSS properties and data types Cassius supports. The file is in
 ;; three parts: helper macros, type and property definitions, and
@@ -120,6 +120,10 @@
 (define (css-type property)
   (match-define (cons type default) (dict-ref css-property-hash property))
   type)
+
+(define (css-default property)
+  (match-define (cons type default) (dict-ref css-property-hash property))
+  default)
 
 (define (in-css-properties)
   (in-parallel

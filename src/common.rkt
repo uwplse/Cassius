@@ -23,6 +23,7 @@
      css:position css:font-size css:overflow-x css:overflow-y 
      css:text-indent
      unit:% unit:em
+     empty-text text-align
      unknown-selector tag:img tag:input
      TEXT INLINE LINE BLOCK PAGE MAGIC ANON)))
 
