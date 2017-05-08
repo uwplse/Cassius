@@ -235,7 +235,7 @@
             (= (w b) w*)
             (= (ml b) ml*)
             (width-set b)]
-           [(is-width/auto (style.width r))
+           [(and (is-width/auto (style.width r)) (not (is-replaced e)))
             (ite (and (not (is-max-width/none (style.max-width r)))
                       (> (- (w p) ml* (bl b) (pl b) (pr b) (br b) mr*)
                          ,(get-px-or-% 'max-width 'w 'b)))
