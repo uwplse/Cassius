@@ -284,7 +284,7 @@
           (- (right-content (pbox b)) (left-outer b))]
          [else
           (+ (min-ml b) (bl b) (max (pl b) 0.0) 
-             (ite (or (is-no-elt (box-elt b)) (is-width/auto (style.width r)))
+             (ite (or (is-no-elt (box-elt b)) (and (not (is-replaced (box-elt b))) (is-width/auto (style.width r))))
                   (ite (is-box l) (min (w l) (stfwidth l)) 0.0)
                   (+ (min-ml b) (bl b) (pl b) (w b) (pr b) (br b) (min-mr b)))
              (pr b) (br b) (min-mr b))])
