@@ -567,6 +567,8 @@ function dump_selector(sel) {
     } else if (sel.indexOf(">") !== -1) {
         var sub = sel.split(">").map(dump_selector);
         if (sub.indexOf(false) !== -1) return false;
+        // In this case the output is incorrect!
+        if (sub[sub.length - 1].startsWith("(desc ")) features["child-over-desc"] = true;
         return "(child " + sub.join(" ") + ")";
     } else if (sel.indexOf(" ") !== -1) {
         var sub = sel.split(/\s+/).map(dump_selector);
