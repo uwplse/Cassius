@@ -33,8 +33,10 @@
   (define-fun ez.add ((ez EZone) (dir Float) (top Real) (right Real) (bottom Real) (left Real)) EZone
     ;; Only call if `ez` has already had `ez.advance` called on it.
     (let ([overwrites?
-           (or ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
-                   `(and ,(line-exists? i) (= (,(sformat "ez.y~a" i) ez) bottom))))])
+           (or
+            (>= (ez.mark ez) bottom)
+            ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
+                `(and ,(line-exists? i) (= (,(sformat "ez.y~a" i) ez) bottom))))])
       (ezone
        (ez.mark ez)
        ,@(for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])
@@ -52,14 +54,36 @@
                          (,(sformat tpl (- i 1)) ez)))]))
 
            (sow (copy-register "ez.y~a" #:merge `(,(sformat "ez.y~a" i) ez) #:new `bottom))
-           (sow (copy-register "ez.l~a" #:new `right
-                               #:merge `(max-if (,(sformat "ez.l~a" i) ez) (is-float/left dir) right)))
-           (sow (copy-register "ez.r~a" #:new `left
-                               #:merge `(min-if (,(sformat "ez.r~a" i) ez) (is-float/right dir) left)))
-           (sow (copy-register "ez.l~a?" #:new `(is-float/left dir)
-                               #:merge `(or (,(sformat "ez.l~a?" i) ez) (is-float/left dir))))
-           (sow (copy-register "ez.r~a?" #:new `(is-float/right dir)
-                               #:merge `(or (,(sformat "ez.r~a?" i) ez) (is-float/right dir))))))))
+           (sow (copy-register "ez.l~a" #:new `(ite (is-float/left dir)
+                                                    (ite (,(sformat "ez.l~a?" i) ez)
+                                                         (max (,(sformat "ez.l~a" i) ez) right)
+                                                         right)
+                                                    (,(sformat "ez.l~a" i) ez))
+                               #:merge `(ite (is-float/left dir) 
+                                             (ite (,(sformat "ez.l~a?" i) ez)
+                                                  (max (,(sformat "ez.l~a" i) ez) right)
+                                                  right)
+                                             (,(sformat "ez.l~a" i) ez))))
+           (sow (copy-register "ez.r~a" #:new `(ite (is-float/right dir)
+                                                    (ite  (,(sformat "ez.r~a?" i) ez)
+                                                          (min (,(sformat "ez.r~a" i) ez) left)
+                                                          left)
+                                                    (,(sformat "ez.r~a" i) ez))
+                               #:merge `(ite (is-float/right dir)
+                                             (ite (,(sformat "ez.r~a?" i) ez)
+                                                  (min (,(sformat "ez.r~a" i) ez) left)
+                                                  left)
+                                             (,(sformat "ez.r~a" i) ez))))
+           (sow (copy-register "ez.l~a?" #:new `(or (,(sformat "ez.l~a?" i) ez) (is-float/left dir))
+                               #:merge `(or (,(sformat "ez.l~a?" i) ez)
+                                            (and
+                                             (is-float/left dir)
+                                             (<= (,(sformat "ez.y~a" i) ez) bottom)))))
+           (sow (copy-register "ez.r~a?" #:new `(or (,(sformat "ez.r~a?" i) ez) (is-float/right dir))
+                               #:merge `(or (,(sformat "ez.r~a?" i) ez)
+                                            (and
+                                             (is-float/right dir)
+                                             (<= (,(sformat "ez.y~a" i) ez) bottom)))))))))
 
   (define-fun ez.advance ((ez EZone) (y Real)) EZone
     (ezone
@@ -111,6 +135,50 @@
         [((cons test conditions) (cons result results))
          `(ite ,test ,result ,(loop conditions results))])))
 
+  ;; Checks if the given point is outside the exclusion zone
+  (define-fun ez.out? ((ez EZone) (x Real) (y Real)) Bool
+    (and
+     ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
+         `(or
+           (> y (,(sformat "ez.y~a" i) ez))
+           (and
+            (or (not (,(sformat "ez.r~a?" i) ez)) (< x (,(sformat "ez.r~a" i) ez)))
+            (or (not (,(sformat "ez.l~a?" i) ez)) (> x (,(sformat "ez.l~a" i) ez))))))
+    (> y (ez.mark ez))))
+
+  (define-fun ez.out-inclusive? ((ez EZone) (x Real) (y Real)) Bool
+    (and
+     ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
+         `(or
+           (> y (,(sformat "ez.y~a" i) ez))
+           (and
+            (or (not (,(sformat "ez.r~a?" i) ez)) (<= x (,(sformat "ez.r~a" i) ez)))
+            (or (not (,(sformat "ez.l~a?" i) ez)) (>= x (,(sformat "ez.l~a" i) ez))))))
+    (> y (ez.mark ez))))
+  
+  (define-fun ez.in? ((ez EZone) (x Real) (y Real)) Bool
+    (not (ez.out? ez x y)))
+
+  (define-fun ez.valid? ((ez EZone)) Bool
+    (and
+     (=> ,(line-exists? 0) (< (ez.mark ez) (ez.y0 ez)))
+     (=> (ez.l0? ez) (ez.r0? ez)
+         (<= (ez.l0 ez) (ez.r0 ez)))
+     ,@(for/list ([i (in-range 1 (*exclusion-zone-registers*))])
+         `(and
+           (=> (,(sformat "ez.l~a?" i) ez)
+               (and
+                (,(sformat "ez.l~a?" (- i 1)) ez)
+                (>= (,(sformat "ez.l~a" (- i 1)) ez) (,(sformat "ez.l~a" i) ez))))
+           (=> (,(sformat "ez.r~a?" i) ez)
+               (and
+                (,(sformat "ez.r~a?" (- i 1)) ez)
+                (<= (,(sformat "ez.r~a" (- i 1)) ez) (,(sformat "ez.r~a" i) ez))))
+           (=> ,(line-exists? i)
+             (< (,(sformat "ez.y~a" (- i 1)) ez) (,(sformat "ez.y~a" i) ez)))
+           (=> (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez)
+               (<= (,(sformat "ez.l~a" i) ez) (,(sformat "ez.r~a" i) ez)))))))
+  
   (define-fun ez.max ((ez EZone)) Real
     ,(for/fold ([expr '(ez.mark ez)]) ([i (in-range (*exclusion-zone-registers*))])
        `(ite ,(line-exists? i)
@@ -126,7 +194,10 @@
 
   (define-fun ez.test ((ez EZone) (y Real)) Bool
     ;; Assert this property with the normal-flow position of any line box
-    (>= y (ez.mark ez))))
+    (>= y (ez.mark ez)))
+
+  (define-fun ez.in-rect? ((x Real) (y Real) (t Real) (r Real) (b Real) (l Real)) Bool
+    (and (<= t y b) (<= l x r))))
 
 (module+ test
   (require "test.rkt")
@@ -135,19 +206,32 @@
   (add-header! common-definitions)
   (add-header! exclusion-zones)
 
-  (check-sat #hash()
-   `(= (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0)
-       (ezone 0.0
-              824.0 240.0 0.0 true false
-              ,@(for/reap [sow] ([i (in-range 1 (*exclusion-zone-registers*))])
-                  (for-each sow '(0.0 0.0 0.0 false false))))))
+  ;; ez.add spec tests
+  (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)
+                   (b . Real) (l . Real) (dir . Float) (ez . EZone))
+             `(=> (not (is-float/none dir)) (ez.can-add ez b) (ez.valid? ez)
+                  (= (ez.in? (ez.add ez dir t r b l) x y)
+                     (or 
+                      (ez.in? ez x y)
+                      (ite (is-float/left dir)
+                           (and (<= x r) (<= y b))
+                           (and (>= x l) (<= y b)))))))
 
-  (check-sat #hash()
-   `(= (ez.level (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 240.0 0.0 960.0 0.0) 0.0))
+  (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)
+                   (b . Real) (l . Real) (dir . Float) (ez . EZone))
+             `(=> (not (is-float/none dir)) (ez.can-add ez b) (ez.valid? ez)
+                  (ez.out-inclusive? ez l b) (ez.out-inclusive? ez r b)
+                  (ez.out-inclusive? ez l t) (ez.out-inclusive? ez r t)
+                  
+                  (ez.valid? (ez.add (ez.advance ez t) dir t r b l))))
+  
+  ;; ez.advance spec tests
+  (check-sat #hash((x . Real) (y . Real) (h . Real) (ez . EZone))
+             `(=> (ez.valid? ez)
+                  (= (ez.in? (ez.advance ez h) x y)
+                     (or (ez.in? ez x y) (<= y h)))))
 
-  (check-sat #hash()
-   `(= (ez.x (ez.add (ez.init 0.0) float/left 0.0 240.0 824.0 0.0) 0.0 float/left 0.0 960.0) 240.0))
-
-  (check-sat #hash()
-   `(= (ez.advance (ez.add (ez.init 30.0) float/left 30.0 500.0 84.0 0.0) 30.0)
-       (ez.add (ez.init 30.0) float/left 30.0 500.0 84.0 0.0))))
+  (check-sat #hash((x . Real) (y . Real) (h . Real) (ez . EZone))
+             `(=> (ez.valid? ez) (ez.valid? (ez.advance ez h))))
+  
+  )
