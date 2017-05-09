@@ -8,7 +8,7 @@ Opens a page in Firefox, causes it to execute get_bench.js, and saves the result
 """
 
 from selenium import webdriver
-import sys
+import os, sys
 import warnings
 import urlparse
 import collections
@@ -20,7 +20,7 @@ def make_browser():
     profile = webdriver.FirefoxProfile()
     profile.set_preference("security.mixed_content.block_active_content", False)
     profile.set_preference("security.mixed_content.block_display_content", False)
-    return webdriver.Firefox(firefox_profile=profile)
+    return webdriver.Firefox(firefox_profile=profile, log_path=os.devnull)
 
 def main(urls, name=None, screenshot=False):
     browser = make_browser()
