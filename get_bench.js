@@ -565,11 +565,37 @@ function dump_selector(sel) {
         if (sub.indexOf(false) !== -1) return false;
         return "(or " + sub.join(" ") + ")";
     } else if (sel.indexOf(">") !== -1) {
-        var sub = sel.split(">").map(dump_selector);
-        if (sub.indexOf(false) !== -1) return false;
-        // In this case the output is incorrect!
-        if (sub[sub.length - 1].startsWith("(desc ")) features["child-over-desc"] = true;
-        return "(child " + sub.join(" ") + ")";
+        var sub = sel.split(" ");
+        // This one is complicated
+        var in_desc = true;
+        var previous = [dump_selector(sub[0])];
+        if (!previous[0]) return false;
+        for (var i = 1; i < sub.length; i++) {
+            if (sub[i] == "") continue;
+            if (sub[i] == ">") {
+                i++;
+                var next = dump_selector(sub[i]);
+                if (!next) return false;
+                if (in_desc && previous.length > 1) {
+                    previous = ["(desc " + previous.join(" ") + ")"];
+                }
+                previous.push(next);
+                in_desc = false;
+            } else {
+                var next = dump_selector(sub[i]);
+                if (!next) return false;
+                if (!in_desc && previous.length > 1) {
+                    previous = ["(child " + previous.join(" ") + ")"];
+                }
+                previous.push(next);
+                in_desc = true;
+            }
+        }
+        if (previous.length > 1) {
+            return "(" + (in_desc ? "desc" : "child") + " " + previous.join(" ") + ")";
+        } else {
+            return previous[0];
+        }
     } else if (sel.indexOf(" ") !== -1) {
         var sub = sel.split(/\s+/).map(dump_selector);
         if (sub.indexOf(false) !== -1) return false;
