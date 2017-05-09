@@ -535,7 +535,7 @@
        (=> (is-text-align/left (textalign b)) (= (left-border f) (left-content b)))
        (=> (is-text-align/justify (textalign b))
            (and (= (left-border f) (left-content b))
-                (=> (is-no-box n) (= (right-border l) (right-content b)))))
+                (=> (is-box n) (= (right-border l) (right-content b)))))
        (=> (is-text-align/right (textalign b)) (= (right-border l) (right-content b)))
        (=> (is-text-align/center (textalign b))
            (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))
