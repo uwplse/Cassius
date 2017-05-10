@@ -20,6 +20,7 @@
   `(and ,(? selector?) ...)
   `(desc ,(? selector?) ...)
   `(child ,(? selector?) ...)
+  `(pseudo-class ,(or 'first-child 'last-child))
   `(fake ,(? string?) ,(? selector?) ...))
 
 (define-by-match rule?
@@ -48,6 +49,8 @@
      (when (equal? etag '?)
        (raise (make-exn:fail:unsupported "Holes in tag names are not supported" (current-continuation-marks))))
      (equal? etag tag)]
+    [`(pseudo-class first-child) (not (node-prev elt))]
+    [`(pseudo-class last-child) (not (node-next elt))]
     [(list 'and sels ...) (andmap (curryr selector-matches? elt) sels)]
     [(list 'desc sels ...)
      (match-define (cons sel rsels) (reverse sels))
@@ -123,6 +126,7 @@
     [(list 'id id) '(1 0 0)]
     [(list 'class cls) '(0 1 0)]
     [(list 'tag tag) '(0 0 1)]
+    [(list 'pseudo-class _) '(0 1 0)]
     ['* '(0 0 0)]
     [(list 'fake _ ...) '(100 0 0)] ; TODO: Should it be 0 0 0 ?
     [(list (or 'and 'desc 'child) sels ...)
