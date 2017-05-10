@@ -24,10 +24,10 @@
   `(fake ,(? string?) ,(? selector?) ...))
 
 (define-by-match rule?
-  (list (? selector?) (? attribute?) ... (? (list/c property? any/c)) ...))
+  (list (? selector?) (? attribute?) ... (list (? property?) _ (? attribute?) ...) ...))
 
 (define-by-match partial-rule?
-  (list (? selector?) (? attribute?) ... (or (? (list/c property? any/c)) '?) ...))
+  (list (? selector?) (? attribute?) ... (or (list (? property?) _ (? attribute?) ...) '?) ...))
 
 (define/contract (selector-matches? sel elt)
   (-> selector? node? boolean?)
@@ -136,7 +136,7 @@
   (-> (listof partial-rule?) (listof selector-score?))
   "Given a list of rules, return a list of cascade scores (io fromstyle ids classes tags idx)"
   (for/list ([rule rules] [i (in-naturals)])
-    (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
+    (match-define (list (? selector? selector) (? attribute? attrs) ... _ ...) rule)
     (define browser? (set-member? attrs ':browser))
     (define user? (set-member? attrs ':user))
     (define style? (set-member? attrs ':style))

@@ -700,7 +700,13 @@ function dump_rule(sel, style, features, is_from_style) {
         
         if (Props.indexOf(sname) !== -1) {
             has_good_prop = true;
-            text += "\n   [" + sname + " " + val + "]";
+            var priority = style.getPropertyPriority(sname);
+            if (priority !== "") {
+                features["priority:" + priority] = true;
+                text += "\n   [" + sname + " " + val + " :" + priority + "]";
+            } else {
+                text += "\n   [" + sname + " " + val + "]";
+            }
         } else {
             text += "\n   #;[" + sname + " " + val + "]";
         }
