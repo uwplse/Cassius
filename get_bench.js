@@ -383,7 +383,7 @@ function infer_lines(box, parent) {
             txt.props.y + txt.props.h >= prev.props.y && prev.props.y >= txt.props.y
             || prev.props.y + prev.props.h >= txt.props.y && txt.props.y >= prev.props.y)
 
-        return horiz_adj && txt.props.x >= prev.props.x + prev.props.w;
+        return horiz_adj && txt.props.x >= prev.props.x + prev.props.w - 1/APP_PIXEL_TO_PIXELS;
     }
 
     function stackup(l, stack, sstack) {
