@@ -671,6 +671,10 @@ function dump_rule(sel, style, features, is_from_style) {
         console.warn("Invalid selector syntax, this shouldn't happen:", sel);
         return "";
     }
+
+    if (sel.indexOf(":after") !== -1 || sel.indexOf(":before") !== -1) {
+        features["css:before-after"] = true;
+    }
     var text = "";
     var has_good_prop = false;
 
