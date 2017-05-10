@@ -169,6 +169,6 @@
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (box-in-flow (pbox b))
                             (ez.in (pbox b))
-                            (ez.init (y b)))
+                            (ez.init (top-content (pbox b))))
                        (ez.out (vbox b)))))))
 
