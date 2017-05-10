@@ -373,4 +373,10 @@
    ["features"
     #:args fnames
     (print-feature-table
-     (for/append ([file fnames]) (dict-values (call-with-input-file file parse-file))))]))
+     (for/append ([file fnames]) (dict-values (call-with-input-file file parse-file))))]
+
+   ["available"
+    #:args fnames
+    (for* ([file fnames] [(name prob) (in-dict (call-with-input-file file parse-file))]
+           #:when (subset? (dict-ref prob ':features '()) (supported-features)))
+      (printf "~a ~a\n" file name))]))
