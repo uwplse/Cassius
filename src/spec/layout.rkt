@@ -90,6 +90,12 @@
   (define-fun top-margin-collapses-with-children ((b Box)) Bool
     (and (not (is-flow-root b)) (= (pt b) 0.0) (= (bt b) 0.0)))
 
+  (define-fun zero-box-model-except-collapse ((b Box)) Bool
+    (and
+     (= (mt b) (mr b) (mb b) (ml b) 0.0)
+     (= (bt b) (br b) (bb b) (bl b) 0.0)
+     (= (pt b) (pr b) (pb b) (pl b) 0.0)))
+
   (define-fun zero-box-model ((b Box)) Bool
     (and
      (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0)
@@ -557,7 +563,8 @@
   (define-fun an-anon-block-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
        (= (type b) box/block)
-       (zero-box-model b)
+       (no-relative-offset b)
+       (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b)
        (= (w b) (w p))
