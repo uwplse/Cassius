@@ -41,11 +41,12 @@
     (is-nil-elt (&pelt e)))
 
   (define-fun is-flow-root ((b Box)) Bool
-    (or (is-box/root (type b))
-        (is-root-elt (box-elt b))
-        (not (box-in-flow b))
-        (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
-        (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b)))))))
+    (and (is-elt (box-elt b))
+         (or (is-box/root (type b))
+             (is-root-elt (box-elt b))
+             (not (box-in-flow b))
+             (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
+             (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b))))))))
 
   (define-fun box-collapsed-through ((b Box)) Bool
     (and (= (box-height b) 0.0)
@@ -90,6 +91,12 @@
   (define-fun top-margin-collapses-with-children ((b Box)) Bool
     (and (not (is-flow-root b)) (= (pt b) 0.0) (= (bt b) 0.0)))
 
+  (define-fun bottom-margin-collapses-with-children ((b Box)) Bool
+    (and (not (is-flow-root b)) (= (pb b) 0.0) (= (bb b) 0.0)
+         (=> (is-elt (box-elt b))
+             (and (is-height/auto (style.height (computed-style (box-elt b))))
+                  (not (is-replaced (box-elt b)))))))
+
   (define-fun zero-box-model-except-collapse ((b Box)) Bool
     (and
      (= (mt b) (mr b) (mb b) (ml b) 0.0)
@@ -105,12 +112,6 @@
 
   (define-fun auto-height-for-flow-roots ((b Box)) Real
     ;; CSS 2.1 § 10.6.7
-
-    ;; TODO : In addition, if the element has any floating descendants whose bottom margin edge
-    ;; is below the element's bottom content edge, then the height is increased to include
-    ;; those edges. Only floats that participate in this block formatting context are taken
-    ;; into account, e.g., floats inside absolutely positioned descendants or other floats
-    ;; are not.
     ,(smt-cond
       [(is-replaced (box-elt b))
        (min-max-height (intrinsic-height (box-elt b)) b)]
@@ -147,37 +148,45 @@
         [else ; (is-box/block (type lb)), because blocks only have block or line children
          (min-max-height 
           (- ;; CSS 2.1 § 10.6.3, item 2
-           (ite (and (= (pb b) 0.0) (= (bb b) 0.0) (not (is-root-elt e)))
-                (ite (and (not (box-collapsed-through b)) (box-collapsed-through lb))
+           (ite (bottom-margin-collapses-with-children b)
+                (bottom-border lb)
+                (ite (box-collapsed-through lb)
                      ;; CSS § 10.6.3, item 3
-                     (- (bottom-border lb) (mtp lb) (mtn lb))
-                     (bottom-border lb)) ; Collapsed bottom margin
-                (bottom-outer lb)) ; No collapsed bottom margin
+                     (bottom-border lb)
+                     (bottom-outer lb)))
            (top-content b))
           b)])))
-        
 
   (define-fun margins-collapse ((b Box)) Bool
-    ;; TODO: This is *buggy* and *incorrect*.
-    ,(smt-let ([e (box-elt b)] [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
-       (= (mtp b)
-          (max (ite (and (not (is-flow-root b)) (is-box fb) (= (pt b) 0.0) (= (bt b) 0.0)) (mtp fb) 0.0)
-               (max (ite (and (is-box vb) (box-collapsed-through vb)) (mtp vb) 0.0)
-                    (max (ite (is-box vb) (mbp vb) 0.0)
-                         (ite (> (mt b) 0.0) (mt b) 0.0)))))
-       (= (mtn b)
-          (min (ite (and (not (is-flow-root b)) (is-box fb) (= (pt b) 0.0) (= (bt b) 0.0)) (mtn fb) 0.0)
-               (min (ite (and (is-box vb) (box-collapsed-through vb)) (mtn vb) 0.0)
-                    (min (ite (is-box vb) (mbn vb) 0.0)
-                         (ite (< (mt b) 0.0) (mt b) 0.0)))))
-       (= (mbp b)
-          (max (ite (and (not (is-flow-root b)) (is-box lb) (= (pb b) 0.0) (= (bb b) 0.0))
-                    (ite (box-collapsed-through lb) (max (mbp lb) (mtp lb)) (mbp lb)) 0.0)
-               (ite (> (mb b) 0.0) (mb b) 0.0)))
-       (= (mbn b)
-          (min (ite (and (not (is-flow-root b)) (is-box lb) (= (pb b) 0.0) (= (bb b) 0.0))
-                    (ite (box-collapsed-through lb) (min (mbn lb) (mtn lb)) (mbn lb)) 0.0)
-               (ite (< (mb b) 0.0) (mb b) 0.0)))))
+    (and
+     (let ([f (fflow b)] [n (nflow b)])
+       (and
+        (= (mtp b)
+           (max (ite (> (mt b) 0.0) (mt b) 0.0)
+                (max (ite (and (top-margin-collapses-with-children b) (is-box f)) (mtp f) 0.0)
+                     (ite (box-collapsed-through b)
+                          (max (ite (> (mb b) 0.0) (mb b) 0.0) (mtp n))
+                          0.0))))
+        (= (mtn b)
+           (min (ite (< (mt b) 0.0) (mt b) 0.0)
+                (min (ite (and (top-margin-collapses-with-children b) (is-box f)) (mtn f) 0.0)
+                     (ite (box-collapsed-through b)
+                          (min (ite (< (mb b) 0.0) (mb b) 0.0) (mtn n))
+                          0.0))))))
+     (let ([l (lflow b)] [v (vflow b)])
+       (and
+        (= (mbp b)
+           (max (ite (> (mb b) 0.0) (mb b) 0.0)
+                (max (ite (and (bottom-margin-collapses-with-children b) (is-box l)) (mbp l) 0.0)
+                     (ite (box-collapsed-through b)
+                          (max (ite (> (mt b) 0.0) (mt b) 0.0) (mbp v))
+                          0.0))))
+        (= (mbn b)
+           (min (ite (< (mb b) 0.0) (mb b) 0.0)
+                (min (ite (and (bottom-margin-collapses-with-children b) (is-box l)) (mbn l) 0.0)
+                     (ite (box-collapsed-through b)
+                          (min (ite (< (mt b) 0.0) (mt b) 0.0) (mbn v))
+                          0.0))))))))
 
   (define-fun margins-dont-collapse ((b Box)) Bool
     (and
@@ -223,14 +232,16 @@
        (= (yo b) (yo p))))
 
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
-    ,(smt-cond
-      [(is-box (vflow b))
-       (if (box-collapsed-through (vflow b))
-           (bottom-border (vflow b))
-           (+ (bottom-border (vflow b))
-              (max (mtp b) (mbp (vflow b))) (min (mtn b) (mbn (vflow b)))))]
-      [(and (not (is-flow-root b)) (top-margin-collapses-with-children (pflow b))) (top-content (pflow b))]
-      [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
+    (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
+      (ite (is-box v)
+           (+ (bottom-border v)
+              (ite (box-collapsed-through v)
+                  0.0
+                  (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))))
+           (+ (top-content p)
+              (ite (top-margin-collapses-with-children p)
+                   0.0
+                   (+ (mtp b) (mtn b)))))))
 
   (define-fun flow-horizontal-layout ((b Box)) Bool
     ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
@@ -575,10 +586,6 @@
        (= (font-size b) (font-size p))
        (not (w-from-stfwidth b))
        (= (bottom-content b) (bottom-border l))
-       (ite (is-box v)
-            (if (box-collapsed-through v)
-                (= (y b) (bottom-border v))
-                (= (y b) (+ (bottom-border v) (mbp v) (mbn v))))
-            (= (y b) (top-content p)))
+       (= (y b)  (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
        (= (ez.out b) (ez.out (lbox b))))))
