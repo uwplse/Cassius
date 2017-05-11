@@ -224,7 +224,11 @@
 
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     ,(smt-cond
-      [(is-box (vflow b)) (+ (bottom-border (vflow b)) (max (mtp b) (mbp (vflow b))) (min (mtn b) (mbn (vflow b))))]
+      [(is-box (vflow b))
+       (if (box-collapsed-through (vflow b))
+           (bottom-border (vflow b))
+           (+ (bottom-border (vflow b))
+              (max (mtp b) (mbp (vflow b))) (min (mtn b) (mbn (vflow b)))))]
       [(and (not (is-flow-root b)) (top-margin-collapses-with-children (pflow b))) (top-content (pflow b))]
       [else (+ (top-content (pflow b)) (mtp b) (mtn b))]))
 
@@ -572,7 +576,9 @@
        (not (w-from-stfwidth b))
        (= (bottom-content b) (bottom-border l))
        (ite (is-box v)
-            (= (y b) (+ (bottom-border v) (mbp v) (mbn v)))
+            (if (box-collapsed-through v)
+                (= (y b) (bottom-border v))
+                (= (y b) (+ (bottom-border v) (mbp v) (mbn v))))
             (= (y b) (top-content p)))
        (= (x b) (left-content p))
        (= (ez.out b) (ez.out (lbox b))))))
