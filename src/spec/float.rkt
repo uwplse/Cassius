@@ -107,12 +107,14 @@
     ;; y is the y-position of the box
     ;; dir is the float direction
     ;; pl and pr are the parent's content left and right
-    ,(for/fold ([x `(ite (is-float/left dir) pl pr)]) ([i (reverse (range (*exclusion-zone-registers*)))])
-       `(ite (and (< y (,(sformat "ez.y~a" i) ez)) ,(line-exists? i))
-            (ite (is-float/left dir)
-                (ite (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a" i) ez) pl)
-                (ite (,(sformat "ez.r~a?" i) ez) (,(sformat "ez.r~a" i) ez) pr))
-            ,x)))
+    (max pl
+         (min pr
+              ,(for/fold ([x `(ite (is-float/left dir) pl pr)]) ([i (reverse (range (*exclusion-zone-registers*)))])
+                 `(ite (and (< y (,(sformat "ez.y~a" i) ez)) ,(line-exists? i))
+                       (ite (is-float/left dir)
+                            (ite (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a" i) ez) pl)
+                            (ite (,(sformat "ez.r~a?" i) ez) (,(sformat "ez.r~a" i) ez) pr))
+                       ,x)))))
 
   (define-fun ez.level ((ez EZone) (width Real) (pl Real) (pr Real) (y Real)) Real
     ;; width is the dimensions of the box
