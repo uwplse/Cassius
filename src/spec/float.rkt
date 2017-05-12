@@ -107,7 +107,7 @@
     ;; y is the y-position of the box
     ;; dir is the float direction
     ;; pl and pr are the parent's content left and right
-    ,(for/fold ([x `(ite (is-float/left dir) pl pr)]) ([i (in-range (*exclusion-zone-registers*))])
+    ,(for/fold ([x `(ite (is-float/left dir) pl pr)]) ([i (reverse (range (*exclusion-zone-registers*)))])
        `(ite (and (< y (,(sformat "ez.y~a" i) ez)) ,(line-exists? i))
             (ite (is-float/left dir)
                 (ite (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a" i) ez) pl)
