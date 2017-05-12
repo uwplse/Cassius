@@ -334,13 +334,13 @@
                [height?
                 (not (or (is-replaced (box-elt b))
                          (is-height/auto (style.height (computed-style (box-elt b))))))])
-       (=> top? (= (top-border b) (+ (top-content pp) temp-top)))
+       (=> top? (= (top-border b) (+ (top-padding pp) temp-top)))
        (=> height? (= (h b) temp-height))
        (=> (and (not top?) (not bottom?)) (= (y b) (vertical-position-for-flow-boxes b)))
        (=> (and (not height?) (not (and top? bottom?)))
            (= (h b) (auto-height-for-flow-roots b)))
        (=> (and bottom? (not (and top? height?)))
-           (= (bottom-border b) (- (bottom-content pp) temp-bottom)))
+           (= (bottom-border b) (- (bottom-padding pp) temp-bottom)))
 
        ;; Margins work identically unless overspecified
        (=> (not (and top? height? bottom?))
@@ -359,7 +359,7 @@
                     (= (mt b) (mb b)))
                 (=> (or (is-margin/auto (style.margin-top r))
                         (is-margin/auto (style.margin-bottom r)))
-                    (= (bottom-border b) (- (bottom-content pp) temp-bottom)))))))
+                    (= (bottom-border b) (- (bottom-padding pp) temp-bottom)))))))
 
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
@@ -379,15 +379,15 @@
              (= (ml b) (margin-min-px (style.margin-left r) b))
              (= (mr b) (margin-min-px (style.margin-right r) b))))
 
-        (=> left? (= (left-border b) (+ (left-content pp) temp-left)))
+        (=> left? (= (left-border b) (+ (left-padding pp) temp-left)))
         (=> width? (and (= (w b) temp-width) (not (w-from-stfwidth b))))
         (=> (and (not width?) (not (and left? right?)))
             (and (= (w b) (usable-stfwidth b))
                  (w-from-stfwidth b)))
         (=> (and (not left?) (not right?))
-            (= (left-border b) (left-content p)))
+            (= (left-border b) (left-padding p)))
         (=> (and right? (not (and left? width?)))
-            (= (right-border b) (- (right-content pp) temp-right)))
+            (= (right-border b) (- (right-padding pp) temp-right)))
         (=> (and left? right?) (not (w-from-stfwidth b)))
 
         (=> (and left? width? right?)
@@ -398,7 +398,7 @@
             (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
                 (= (ml b) (mr b)))
             (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
-                (= (right-border b) (- (right-content pp) temp-right))))))
+                (= (right-border b) (- (right-padding pp) temp-right))))))
 
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
