@@ -26,6 +26,8 @@ def main(urls, name=None, screenshot=False):
     browser = make_browser()
 
     try:
+        urls = ["file://" + url if url.startswith("/") else url for url in urls]
+
         for url in urls:
             scheme, _, _, _, _, _ = urlparse.urlparse(url)
             if scheme not in ["http", "file"]:
