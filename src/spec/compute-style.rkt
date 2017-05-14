@@ -30,7 +30,9 @@
   `(= (,(sformat "style.~a" prop) (computed-style ,elt))
       (ite (,(sformat "is-~a/inherit" (slower (css-type prop)))
             (,(sformat "style.~a" prop) (specified-style ,elt)))
-           (,(sformat "style.~a" prop) (computed-style (pelt ,elt)))
+           (ite (is-elt (pelt ,elt))
+                (,(sformat "style.~a" prop) (computed-style (pelt ,elt)))
+                ,(css-default prop))
            (,(sformat "style.~a" prop) (specified-style ,elt)))))
 
 (define (not-inherited prop elt)
@@ -57,7 +59,7 @@
         (let ([h (style.height (specified-style elt))]
               [h* (style.height (computed-style (pelt elt)))])
           (ite (is-height/inherit h)
-               h*
+               (ite (is-elt (pelt elt) h* height/auto))
                (ite (and (is-height/% h) (is-height/auto h*))
                     height/auto
                     h))))
@@ -69,7 +71,7 @@
           (ite (or (is-position/absolute pos) (is-position/fixed pos))
                float/none
                (ite (is-float/inherit (style.float (specified-style elt)))
-                    (style.float (computed-style (pelt elt)))
+                    (ite (is-elt (pelt elt)) (style.float (computed-style (pelt elt))) float/none)
                     (style.float (specified-style elt))))))
 
      ;; CSS 2.1 § 8.5.3: border-style and border-width
@@ -79,5 +81,7 @@
                       (is-border-style/hidden (,(sformat "style.border-~a-style" dir) (computed-style elt))))
                   (border/px 0.0)
                   (ite (is-border/inherit (,(sformat "style.border-~a-width" dir) (specified-style elt)))
-                       (,(sformat "style.border-~a-width" dir) (computed-style (pelt elt)))
+                       (ite (is-elt (pelt elt))
+                            (,(sformat "style.border-~a-width" dir) (computed-style (pelt elt)))
+                            (border/px 0.0))
                        (,(sformat "style.border-~a-width" dir) (specified-style elt)))))))))
