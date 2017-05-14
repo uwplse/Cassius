@@ -179,7 +179,8 @@
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
-    (emit `(declare-const ,(dump-elt elt) Element)))
+    (emit `(declare-const ,(dump-elt elt) Element))
+    (emit `(assert (is-elt ,(dump-elt elt)))))
   (define body
     (for*/fold ([body 'no-elt]) ([dom doms] [elt (in-elements dom)])
       `(ite (,(sformat "is-~a" (name 'elt elt)) &elt) ,(dump-elt elt) ,body)))
@@ -187,7 +188,8 @@
 
 (define (dom-define-get/box doms emit)
   (for* ([dom doms] [box (in-boxes dom)])
-    (emit `(declare-const ,(dump-box box) Box)))
+    (emit `(declare-const ,(dump-box box) Box))
+    (emit `(assert (is-box ,(dump-box box)))))
   (define body
     (for*/fold ([body 'no-box]) ([dom doms] [box (in-boxes dom)])
       `(ite (,(sformat "is-~a" (name 'box box)) &box) ,(dump-box box) ,body)))
