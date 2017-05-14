@@ -87,3 +87,13 @@
         :hoist_mul true
         :flat false)
      nnf occf smt)))
+
+(module+ main
+  (command-line
+   #:args (fname)
+   (define cmds
+     (z3-prepare
+      (call-with-input-file fname
+        (λ (p) (sequence->list (in-port read p))))))
+   (for ([cmd cmds])
+     (printf "~a\n" cmd))))
