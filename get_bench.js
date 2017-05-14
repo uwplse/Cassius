@@ -802,8 +802,12 @@ function dump_document() {
             } else {
                 return elt.textContent.replace(/\s+/, " ");
             }
-        } else if (elt.tagName === "HEAD" || elt.tagName === "SCRIPT") {
+        } else if (elt.tagName.toUpperCase() === "HEAD" || elt.tagName.toUpperCase() === "SCRIPT") {
             return false;
+        } else if (typeof(elt.dataset) === "undefined"){
+            console.log("Weird element", elt);
+            var rec = new Box(elt.tagName.toLowerCase(), elt);
+            return rec;
         } else {
             var num = ELTS.length;
             elt.dataset["num"] = num;
@@ -986,8 +990,11 @@ function check_float_registers(box, parent, features) {
 }
 
 function annotate_box_elt(box) {
+
     if (box.node && box.node.nodeType === document.ELEMENT_NODE) {
-        box.props.elt = box.node.dataset["num"];
+        if (typeof(box.node.dataset) !== "undefined") {
+            box.props.elt = box.node.dataset["num"];
+        }
     }
 
     for (var i = 0; i < box.children.length; i++) {
