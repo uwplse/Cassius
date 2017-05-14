@@ -452,7 +452,7 @@
               [y* (ez.level ez w (left-content p) (right-content p) y-normal)]
               [y (max y-normal y*)]
               [x* (ez.x ez y (style.float r) (left-content p) (right-content p))]
-              [x (if (is-float/left (style.float r)) x* (- x* w))]
+              [x (ite (is-float/left (style.float r)) x* (- x* w))]
               [ez* (ez.advance ez y)])
          (and
           (= (top-outer b) y)

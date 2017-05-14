@@ -7,4 +7,4 @@
   `(define-fun %of ((% Real) (base Real)) Real
      ,(let* ([%s (*%*)])
         (for/fold ([out `(* ,(/ (car %s) 100.0) base)]) ([% (cdr %s)])
-          `(if (= % ,%) (* ,(if (integer? %) (/ % 100.0) `(/ ,% 100.0)) base) ,out)))))
+          `(ite (= % ,%) (* ,(if (integer? %) (/ % 100.0) `(/ ,% 100.0)) base) ,out)))))
