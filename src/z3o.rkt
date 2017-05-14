@@ -496,13 +496,14 @@
   (define (simpl expr)
     (match expr
       [`(ite ,a ,b ,c)
-       (match (simpl1 (list 'ite (simpl a) b c))
-         [`(ite ,a ,b ,c) (simpl1 `(ite ,a ,(simpl b) ,(simpl c)))]
-         [expr (simpl expr)])]
+       (match (simpl a)
+         ['true (simpl b)]
+         ['false (simpl c)]
+         [expr (simpl1 `(ite ,expr ,(simpl b) ,(simpl c)))])]
       [`(=> ,a ,b)
-       (match (simpl1 (list '=> (simpl a) b))
-         [`(=> ,a ,b) (simpl1 `(=> ,a ,(simpl b)))]
-         [expr (simpl expr)])]
+       (match (simpl a)
+         ['false 'true]
+         [expr (simpl1 `(=> ,expr ,(simpl b)))])]
       [(? list?) (simpl1 (map simpl expr))]
       [_ expr]))
 
