@@ -434,13 +434,17 @@
        (= (w-from-stfwidth b) (is-width/auto (style.width r)))
        (width-set b)
        (ite (is-width/auto (style.width r))
-            (= (w b) (usable-stfwidth b))
-            ;; TODO: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
+            (ite (is-replaced e)
+                 (= (w b) (usable-stfwidth b))
+                 (= (w b) (intrinsic-width e)))
+            ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
                ,(get-px-or-% 'width 'w 'b)))
 
        (ite (is-height/auto (style.height r))
-            (=> (width-set b) (= (h b) (auto-height-for-flow-roots b)))
+            (ite (is-replaced e)
+                 (=> (width-set b) (= (h b) (auto-height-for-flow-roots b)))
+                 (= (h b) (intrinsic-height e)))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                ,(get-px-or-% 'height 'h 'b)))
 
@@ -512,7 +516,8 @@
                  (= (w b) 0.0)))
        (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
        (=> (is-box v) (= (left-outer b) (right-outer v)))
-       (= (ez.out b) (ez.in b))))
+       (= (ez.out b)
+          (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)])
@@ -561,7 +566,7 @@
        (=> (is-text-align/right (textalign b)) (= (right-border l) (right-content b)))
        (=> (is-text-align/center (textalign b))
            (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))
-       (= (ez.out b) (ez.in b))))
+       (= (ez.out b) (ez.out (lbox b)))))
 
   (define-fun a-view-box ((b Box)) Bool
     (and

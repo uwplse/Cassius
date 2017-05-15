@@ -152,6 +152,11 @@ function is_block(elt) {
 function is_visible(elt) {return cs(elt).display != "none";}
 function is_float(elt) {return elt.nodeType === document.ELEMENT_NODE && cs(elt).float != "none";}
 
+function is_flow_block(elt) {
+    return elt.nodeType == document.ELEMENT_NODE &&
+        cs(elt).float === "none" && ["static", "relative"].indexOf(cs(elt).position) !== -1;
+}
+
 function is_flowroot(elt) {
     // CSS3BOX §4.2
     // Block progression possibilities ignored, because block;-progression assumed to be `tb`
@@ -332,14 +337,14 @@ function infer_anons(inputs) {
                 bstack[bstack.length - 1].push(b);
                 bstack.push(b.children);
                 estack.push(e.children);
-            } else if ((e.type == "BLOCK" || e.type == "MAGIC") && is_flowroot(e)) {
-                bstack[bstack.length - 1].push(e);
-                estack[estack.length - 1].shift();
-            } else if (e.type == "BLOCK" || e.type == "MAGIC") {
+            } else if ((e.type == "BLOCK" || e.type == "MAGIC") && is_flow_block(e.node)) {
                 bstack[0].push(e);
                 estack[estack.length - 1].shift();
                 bstack = [bstack[0]];
                 block_mode = true;
+            } else if ((e.type == "BLOCK" || e.type == "MAGIC")) {
+                bstack[bstack.length - 1].push(e);
+                estack[estack.length - 1].shift();
             } else {
                 throw "What happened? " + e;
             }
@@ -473,7 +478,7 @@ function extract_inline(elt, children) {
     var r = elt.getClientRects();
     var box;
     if (r.length == 1 && false) {
-        box = Inline(elt, {tag: elt.tagName, x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
+        box = Inline(elt, {tag: elt.tagName.toLowerCase(), x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
     } else {
         box = Inline(elt, {});
     }
@@ -495,7 +500,9 @@ function extract_magic(elt, children) {
 }
 
 function make_boxes(elt, styles, features) {
-    if (BadTags.indexOf(elt.tagName) !== -1) features["tag:" + elt.tagName] = true;
+    if (elt.tagName && BadTags.indexOf(elt.tagName.toLowerCase()) !== -1) {
+        features["tag:" + elt.tagName.toLowerCase()] = true;
+    }
 
     if (elt.style && elt.style.length) {
         var eid = elt.id || gensym();
@@ -816,12 +823,12 @@ function dump_document() {
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
-            if (elt.tagName === "IMG") {
+            if (elt.tagName.toUpperCase() === "IMG") {
                 rec.props["w"] = elt.naturalWidth;
                 rec.props["h"] = elt.naturalHeight;
             }
 
-            if (elt.tagName === "INPUT") {
+            if (elt.tagName.toUpperCase() === "INPUT" || elt.tagName.toUpperCase() === "IFRAME") {
                 rec.props["w"] = elt.getBoundingClientRect().width;
                 rec.props["h"] = elt.getBoundingClientRect().height;
             }

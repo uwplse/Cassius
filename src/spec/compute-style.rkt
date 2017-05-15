@@ -13,6 +13,8 @@
   `(and
     (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) (specified-style ,elt)))
         (<= 0.0 (,(sformat "~a.px" type) (,(sformat "style.~a" prop) (specified-style ,elt)))))
+    (=> (,(sformat "is-~a/em" type) (,(sformat "style.~a" prop) (specified-style ,elt)))
+        (<= 0.0 (,(sformat "~a.em" type) (,(sformat "style.~a" prop) (specified-style ,elt)))))
     (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) (specified-style ,elt)))
         (<= 0.0 (,(sformat "~a.%" type) (,(sformat "style.~a" prop) (specified-style ,elt)))))))
 
@@ -24,7 +26,7 @@
    '(padding-top padding-right padding-bottom padding-left)
    '(border-top-style border-right-style border-bottom-style border-left-style)
    '(text-align overflow-x overflow-y position top bottom left right)
-   '(font-size)))
+   '(font-size box-sizing display text-indent)))
 
 (define (prop-is-simple prop elt)
   `(= (,(sformat "style.~a" prop) (computed-style ,elt))
@@ -59,7 +61,7 @@
         (let ([h (style.height (specified-style elt))]
               [h* (style.height (computed-style (pelt elt)))])
           (ite (is-height/inherit h)
-               (ite (is-elt (pelt elt) h* height/auto))
+               (ite (is-elt (pelt elt)) h* height/auto)
                (ite (and (is-height/% h) (is-height/auto h*))
                     height/auto
                     h))))
@@ -85,3 +87,10 @@
                             (,(sformat "style.border-~a-width" dir) (computed-style (pelt elt)))
                             (border/px 0.0))
                        (,(sformat "style.border-~a-width" dir) (specified-style elt)))))))))
+
+(module+ test
+  (require rackunit)
+  (check set=?
+         (set-union simple-computed-properties
+                    '(height float border-top-width border-right-width border-bottom-width border-left-width))
+         (css-properties)))
