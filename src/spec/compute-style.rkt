@@ -1,5 +1,5 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt" "css-properties.rkt")
+(require "../common.rkt" "../smt.rkt" "css-properties.rkt" "../encode.rkt")
 (provide style-computation)
 
 ;; This file defines the translation from specified to computed
@@ -34,7 +34,7 @@
             (,(sformat "style.~a" prop) (specified-style ,elt)))
            (ite (is-elt (pelt ,elt))
                 (,(sformat "style.~a" prop) (computed-style (pelt ,elt)))
-                ,(css-default prop))
+                ,(dump-value (css-type prop) (css-default prop)))
            (,(sformat "style.~a" prop) (specified-style ,elt)))))
 
 (define (not-inherited prop elt)

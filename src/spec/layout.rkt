@@ -435,8 +435,8 @@
        (width-set b)
        (ite (is-width/auto (style.width r))
             (ite (is-replaced e)
-                 (= (w b) (usable-stfwidth b))
-                 (= (w b) (intrinsic-width e)))
+                 (= (w b) (intrinsic-width e))
+                 (= (w b) (usable-stfwidth b)))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
                ,(get-px-or-% 'width 'w 'b)))
@@ -559,12 +559,12 @@
        (= (stfwidth b) (compute-stfwidth b))
        (= (font-size b) (font-size p))
 
-       (=> (is-text-align/left (textalign b)) (= (left-border f) (left-content b)))
-       (=> (is-text-align/justify (textalign b))
+       (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-border f) (left-content b)))
+       (=> (and (is-text-align/justify (textalign b)) (is-box f))
            (and (= (left-border f) (left-content b))
                 (=> (is-box n) (= (right-border l) (right-content b)))))
-       (=> (is-text-align/right (textalign b)) (= (right-border l) (right-content b)))
-       (=> (is-text-align/center (textalign b))
+       (=> (and (is-text-align/right (textalign b)) (is-box f)) (= (right-border l) (right-content b)))
+       (=> (and (is-text-align/center (textalign b)) (is-box f))
            (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))
        (= (ez.out b) (ez.out (lbox b)))))
 
