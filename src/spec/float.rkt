@@ -110,8 +110,8 @@
     ,(for/fold ([x `(ite (is-float/left dir) pl pr)]) ([i (in-range (*exclusion-zone-registers*))])
        `(ite (and (< y (,(sformat "ez.y~a" i) ez)) ,(line-exists? i))
             (ite (is-float/left dir)
-                (ite (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a" i) ez) pl)
-                (ite (,(sformat "ez.r~a?" i) ez) (,(sformat "ez.r~a" i) ez) pr))
+                (ite (,(sformat "ez.l~a?" i) ez) (max (,(sformat "ez.l~a" i) ez) pl) pl)
+                (ite (,(sformat "ez.r~a?" i) ez) (min (,(sformat "ez.r~a" i) ez) pr) pr))
             ,x)))
 
   (define-fun ez.level ((ez EZone) (width Real) (pl Real) (pr Real) (y Real)) Real
@@ -126,8 +126,8 @@
                           (and
                            (< y (,(sformat "ez.y~a" i) ez))
                            (<= width
-                               (- (ite (,(sformat "ez.r~a?" i) ez) (,(sformat "ez.r~a" i) ez) pr)
-                                  (ite (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.l~a" i) ez) pl))))))]
+                               (- (ite (,(sformat "ez.r~a?" i) ez) (min (,(sformat "ez.r~a" i) ez) pr) pr)
+                                  (ite (,(sformat "ez.l~a?" i) ez) (max (,(sformat "ez.l~a" i) ez) pl) pl))))))]
           [results (cons '(ez.mark ez) (for/list ([i (in-range (*exclusion-zone-registers*))])
                                          `(,(sformat "ez.y~a" i) ez)))])
        (match* (conditions results)
@@ -146,11 +146,27 @@
             (or (not (,(sformat "ez.l~a?" i) ez)) (> x (,(sformat "ez.l~a" i) ez))))))
     (> y (ez.mark ez))))
 
+  (define-fun ez.left-at ((ez EZone) (y Real) (pl Real)) Real
+    ,(for/fold ([expr `pl]) ([i (in-range (- (*exclusion-zone-registers*) 1) -1 -1)])
+       `(ite (< y (,(sformat "ez.y~a" i) ez))
+             (ite (,(sformat "ez.l~a?" i) ez)
+                  (max (,(sformat "ez.l~a" i) ez) pl)
+                  pl)
+             ,expr)))
+
+  (define-fun ez.right-at ((ez EZone) (y Real) (pr Real)) Real
+    ,(for/fold ([expr `pr]) ([i (in-range (- (*exclusion-zone-registers*) 1) -1 -1)])
+       `(ite (< y (,(sformat "ez.y~a" i) ez))
+             (ite (,(sformat "ez.r~a?" i) ez)
+                  (min (,(sformat "ez.r~a" i) ez) pr)
+                  pr)
+             ,expr)))
+
   (define-fun ez.out-inclusive? ((ez EZone) (x Real) (y Real)) Bool
     (and
      ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
          `(or
-           (> y (,(sformat "ez.y~a" i) ez))
+           (>= y (,(sformat "ez.y~a" i) ez))
            (and
             (or (not (,(sformat "ez.r~a?" i) ez)) (<= x (,(sformat "ez.r~a" i) ez)))
             (or (not (,(sformat "ez.l~a?" i) ez)) (>= x (,(sformat "ez.l~a" i) ez))))))
@@ -233,5 +249,23 @@
 
   (check-sat #hash((x . Real) (y . Real) (h . Real) (ez . EZone))
              `(=> (ez.valid? ez) (ez.valid? (ez.advance ez h))))
+
+  ;; ez.x and ez.level spec tests
+
+  (check-sat #hash((pl . Real) (pr . Real) (width . Real) (dir . Float) (y . Real) (ez . EZone))
+             `(=> (ez.valid? ez)  (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
+                  (let ([y* (max (ez.level ez width pl pr y) y)])
+                    (<= width (- (ez.right-at ez y* pr) (ez.left-at ez y* pl))))))
+
+  ;; End to end standards tests
+  ;; Rule 1
+  (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
+                               (dir . Float) (y . Real) (ez . EZone))
+             `(=> (ez.valid? ez) (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
+                  ,(let* ([y* `(max (ez.level ez width pl pr y) y)]
+                          [x* `(ez.x ez ,y* dir pl pr)])
+                    `(ite (is-float/left dir)
+                         (>= ,x* pl)
+                         (<= ,x* pr)))))
   
   )
