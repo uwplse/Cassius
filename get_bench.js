@@ -469,7 +469,6 @@ function extract_block(elt, children) {
     }
 
     var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
-    if (is_iblock(elt)) box.type = "INLINE";
     box.children = children;
     return box;
 }
@@ -512,7 +511,7 @@ function make_boxes(elt, styles, features) {
 
     if (elt.nodeType !== document.ELEMENT_NODE) {
         // ok
-    } else if (["none", "list-item", "inline", "block"/*, "inline-block"*/].indexOf(cs(elt).display) !== -1) {
+    } else if (["none", "list-item", "inline", "block", "inline-block"].indexOf(cs(elt).display) !== -1) {
         // ok
     } else if (cs(elt).display.startsWith("table")) {
         features["display:table"] = true;
@@ -547,8 +546,10 @@ function make_boxes(elt, styles, features) {
         return out2;
     } else if (!is_visible(elt)) {
         return [];
-    } else if ((is_block(elt) || /*TODO: is_iblock(elt)*/ false) && cs(elt)["clear"] === "none") {
-        return [extract_block(elt, children)];
+    } else if ((is_block(elt) || is_iblock(elt)) && cs(elt)["clear"] === "none") {
+        var box = extract_block(elt, children);
+        if (is_iblock(elt)) box.type = "INLINE";
+        return [box];
     } else if (is_inline(elt)) {
         return [extract_inline(elt, children)];
     } else {

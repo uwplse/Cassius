@@ -89,7 +89,7 @@
 (define-css-type (Box-Sizing border-box content-box)
   [box-sizing content-box])
 
-(define-css-type (Display block inline none)
+(define-css-type (Display block inline inline-block none list-item)
   [display inline])
 
 (define-css-type (Font-Size (px Real) (% Real) (em Real))

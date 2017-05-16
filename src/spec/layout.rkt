@@ -45,6 +45,7 @@
          (or (is-box/root (type b))
              (is-root-elt (box-elt b))
              (not (box-in-flow b))
+             (is-display/inline-block (style.display (computed-style (box-elt b))))
              (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
              (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b))))))))
 
@@ -314,6 +315,7 @@
   (define-fun resolve-font-size ((b Box)) Real
     (let ([e (box-elt b)])
       ,(smt-cond
+        [(is-no-elt e) (font-size (pbox b))]
         [(is-font-size/px (style.font-size (computed-style e)))
          (font-size.px (style.font-size (computed-style e)))]
         [(is-font-size/% (style.font-size (computed-style e)))
@@ -503,19 +505,26 @@
        (ite (is-position/relative (style.position r))
             (relatively-positioned b)
             (no-relative-offset b))
-
        (= (font-size b) (resolve-font-size b))
        (= (stfwidth b) (compute-stfwidth b))
-       (=> (is-replaced e) (= (h b) (intrinsic-height e)))
-       (ite (is-replaced e)
-            (= (w b) (intrinsic-width e))
-            (ite (is-box (fflow b))
-                 (and
-                  (= (left-outer (fflow b)) (left-content b))
-                  (= (right-outer (lflow b)) (right-content b)))
-                 (= (w b) 0.0)))
+
+       ,(smt-cond
+         [(is-replaced e)
+          (= (h b) (intrinsic-height e))
+          (= (w b) (intrinsic-width e))]
+         [(is-display/inline-block (style.display r))
+          (= (h b) (auto-height-for-flow-roots b))
+          (= (w b) (usable-stfwidth b))]
+         [(is-box (fflow b))
+          (and
+           (= (left-outer (fflow b)) (left-content b))
+           (= (right-outer (lflow b)) (right-content b)))]
+         [else
+          (= (w b) 0.0)])
+
        (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
        (=> (is-box v) (= (left-outer b) (right-outer v)))
+
        (= (ez.out b)
           (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 

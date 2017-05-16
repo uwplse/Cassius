@@ -144,8 +144,7 @@
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
-  ;; There are a lot of display values we don't support, which is why we ignore them.
-  (for ([(prop type default) (in-css-properties)] #:unless (equal? prop 'display))
+  (for ([(prop type default) (in-css-properties)])
     (match-define (cons class-hash value-hash) (dict-ref eqs prop))
     (for ([(class value) (in-dict value-hash)])
       (define const (sformat "value/~a/~a" prop (or class 'none)))
