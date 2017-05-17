@@ -103,16 +103,28 @@
            (sow (transfer i "ez.l~a?" 'false))
            (sow (transfer i "ez.r~a?" 'false))))))
 
+  
+  (define-fun ez.left-at ((ez EZone) (y Real) (pl Real)) Real
+    ,(for/fold ([expr `pl]) ([i (in-range (- (*exclusion-zone-registers*) 1) -1 -1)])
+       `(ite (< y (,(sformat "ez.y~a" i) ez))
+             (ite (,(sformat "ez.l~a?" i) ez)
+                  (max (,(sformat "ez.l~a" i) ez) pl)
+                  pl)
+             ,expr)))
+
+  (define-fun ez.right-at ((ez EZone) (y Real) (pr Real)) Real
+    ,(for/fold ([expr `pr]) ([i (in-range (- (*exclusion-zone-registers*) 1) -1 -1)])
+       `(ite (< y (,(sformat "ez.y~a" i) ez))
+             (ite (,(sformat "ez.r~a?" i) ez)
+                  (min (,(sformat "ez.r~a" i) ez) pr)
+                  pr)
+             ,expr)))
+
   (define-fun ez.x ((ez EZone) (y Real) (dir Float) (pl Real) (pr Real)) Real
     ;; y is the y-position of the box
     ;; dir is the float direction
     ;; pl and pr are the parent's content left and right
-    ,(for/fold ([x `(ite (is-float/left dir) pl pr)]) ([i (in-range (*exclusion-zone-registers*))])
-       `(ite (and (< y (,(sformat "ez.y~a" i) ez)) ,(line-exists? i))
-            (ite (is-float/left dir)
-                (ite (,(sformat "ez.l~a?" i) ez) (max (,(sformat "ez.l~a" i) ez) pl) pl)
-                (ite (,(sformat "ez.r~a?" i) ez) (min (,(sformat "ez.r~a" i) ez) pr) pr))
-            ,x)))
+    (ite (is-float/left dir) (ez.left-at ez y pl) (ez.right-at ez y pr)))
 
   (define-fun ez.level ((ez EZone) (width Real) (pl Real) (pr Real) (y Real)) Real
     ;; width is the dimensions of the box
@@ -146,22 +158,6 @@
             (or (not (,(sformat "ez.l~a?" i) ez)) (> x (,(sformat "ez.l~a" i) ez))))))
     (> y (ez.mark ez))))
 
-  (define-fun ez.left-at ((ez EZone) (y Real) (pl Real)) Real
-    ,(for/fold ([expr `pl]) ([i (in-range (- (*exclusion-zone-registers*) 1) -1 -1)])
-       `(ite (< y (,(sformat "ez.y~a" i) ez))
-             (ite (,(sformat "ez.l~a?" i) ez)
-                  (max (,(sformat "ez.l~a" i) ez) pl)
-                  pl)
-             ,expr)))
-
-  (define-fun ez.right-at ((ez EZone) (y Real) (pr Real)) Real
-    ,(for/fold ([expr `pr]) ([i (in-range (- (*exclusion-zone-registers*) 1) -1 -1)])
-       `(ite (< y (,(sformat "ez.y~a" i) ez))
-             (ite (,(sformat "ez.r~a?" i) ez)
-                  (min (,(sformat "ez.r~a" i) ez) pr)
-                  pr)
-             ,expr)))
-
   (define-fun ez.out-inclusive? ((ez EZone) (x Real) (y Real)) Bool
     (and
      ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
@@ -170,7 +166,7 @@
            (and
             (or (not (,(sformat "ez.r~a?" i) ez)) (<= x (,(sformat "ez.r~a" i) ez)))
             (or (not (,(sformat "ez.l~a?" i) ez)) (>= x (,(sformat "ez.l~a" i) ez))))))
-    (> y (ez.mark ez))))
+    (>= y (ez.mark ez))))
   
   (define-fun ez.in? ((ez EZone) (x Real) (y Real)) Bool
     (not (ez.out? ez x y)))
@@ -267,5 +263,11 @@
                     `(ite (is-float/left dir)
                          (>= ,x* pl)
                          (<= ,x* pr)))))
-  
+  ;; Rule 2
+  (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
+                               (dir . Float) (y . Real) (ez . EZone))
+             `(=> (ez.valid? ez) (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
+                  (let ([y* (max (ez.level ez width pl pr y) y)])
+                    (let ([x* (ez.x ez y* dir pl pr)])
+                      (=> (> width 0) (ez.out-inclusive? ez x* y*))))))
   )
