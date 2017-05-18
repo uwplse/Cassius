@@ -77,11 +77,22 @@
         (is-position/fixed (position box))
         (is-position/relative (position box))))
 
+  (define-fun is-root-elt ((e Element)) Bool
+    (is-nil-elt (&pelt e)))
+
   (define-fun box-in-flow ((box Box)) Bool
     (and (is-box box) (is-float/none (float box))
-         (not (and (is-elt (box-elt box)) (is-display/inline-block (style.display (computed-style (box-elt box))))))
          (or (is-position/relative (position box))
              (is-position/static (position box)))))
+
+  (define-fun is-flow-root ((b Box)) Bool
+    (and (is-elt (box-elt b))
+         (or (is-box/root (type b))
+             (is-root-elt (box-elt b))
+             (not (box-in-flow b))
+             (is-display/inline-block (style.display (computed-style (box-elt b))))
+             (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
+             (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b))))))))
 
   ;; The boxes in each direction in the flow tree
   (define-fun pflow ((box Box)) Box (pbox box))
@@ -153,9 +164,9 @@
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
      (= (ez.in b) (ite (is-no-box (vbox b))
-                       (ite (box-in-flow (pbox b))
-                            (ez.in (pbox b))
-                            (ez.init (top-content (pbox b))))
+                       (ite (is-flow-root (pbox b))
+                            (ez.init (top-content (pbox b)))
+                            (ez.in (pbox b)))
                        (ez.out (vbox b))))))
 
   (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
@@ -172,8 +183,8 @@
           [(box-in-flow (nbox b)) (&nbox b)]
           [else (&nflow (nbox b))]))
      (= (ez.in b) (ite (is-no-box (vbox b))
-                       (ite (box-in-flow (pbox b))
-                            (ez.in (pbox b))
-                            (ez.init (top-content (pbox b))))
+                       (ite (is-flow-root (pbox b))
+                            (ez.init (top-content (pbox b)))
+                            (ez.in (pbox b)))
                        (ez.out (vbox b)))))))
 
