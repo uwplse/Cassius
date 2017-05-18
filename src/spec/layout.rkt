@@ -300,6 +300,10 @@
     (let ([l (lbox b)] [v (vbox b)] [r (computed-style (box-elt b))])
       (max
        ,(smt-cond
+         [(is-no-elt (box-elt b))
+          (+ (bl b) (max (pl b) 0.0) 
+             (ite (is-box l) (stfwidth l) 0.0) 
+             (pr b) (br b))]
          [(is-float/left (style.float r))
           (- (right-outer b) (left-content (pbox b)))]
          [(is-float/right (style.float r))
@@ -568,13 +572,13 @@
        (= (stfwidth b) (compute-stfwidth b))
        (= (font-size b) (font-size p))
 
-       (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-border f) (left-content b)))
+       (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
-           (and (= (left-border f) (left-content b))
-                (=> (is-box n) (= (right-border l) (right-content b)))))
-       (=> (and (is-text-align/right (textalign b)) (is-box f)) (= (right-border l) (right-content b)))
+           (and (= (left-outer f) (left-content b))
+                (=> (is-box n) (= (right-outer l) (right-content b)))))
+       (=> (and (is-text-align/right (textalign b)) (is-box f)) (= (right-outer l) (right-content b)))
        (=> (and (is-text-align/center (textalign b)) (is-box f))
-           (= (- (right-content b) (right-border l)) (- (left-border f) (left-content b))))
+           (= (- (right-content b) (right-outer l)) (- (left-outer f) (left-content b))))
        (= (ez.out b) (ez.out (lbox b)))))
 
   (define-fun a-view-box ((b Box)) Bool

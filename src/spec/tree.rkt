@@ -79,6 +79,7 @@
 
   (define-fun box-in-flow ((box Box)) Bool
     (and (is-box box) (is-float/none (float box))
+         (not (and (is-elt (box-elt box)) (is-display/inline-block (style.display (computed-style (box-elt box))))))
          (or (is-position/relative (position box))
              (is-position/static (position box)))))
 
@@ -151,7 +152,11 @@
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
-     (= (ez.in b) (ite (is-no-box (vbox b)) (ez.in (pbox b)) (ez.out (vbox b))))))
+     (= (ez.in b) (ite (is-no-box (vbox b))
+                       (ite (box-in-flow (pbox b))
+                            (ez.in (pbox b))
+                            (ez.init (top-content (pbox b))))
+                       (ez.out (vbox b))))))
 
   (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
     (and
