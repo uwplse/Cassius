@@ -16,7 +16,7 @@
                 (mtp Real) (mtn Real) (mbp Real) (mbn Real) ; top/bottom positive/negative margins for collapsing
                 (pt Real) (pr Real) (pb Real) (pl Real) ; padding
                 (bt Real) (br Real) (bb Real) (bl Real) ; border
-                (stfwidth Real) (w-from-stfwidth Bool)
+                (stfwidth Real) (stfmax Real) (w-from-stfwidth Bool)
                 (&pbox BoxName) (&vbox BoxName) (&nbox BoxName) (&fbox BoxName) (&lbox BoxName) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (font-size Real)

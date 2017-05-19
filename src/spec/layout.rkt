@@ -274,11 +274,14 @@
               [else
                (= (ml b) (mr b))])]))))
 
+  (define-fun available-width ((b Box)) Real
+    (- (w (pbox b)) (ml b) (bl b) (pl b) (pr b) (br b) (mr b)))
+
   (define-fun usable-stfwidth ((b Box)) Real
     (let ([l (lbox b)] [v (vbox b)])
       (min-max-width
        (ite (is-box l)
-            (stfwidth l)
+            (min (max (stfwidth l) (available-width b)) (stfmax l))
             (ite (is-replaced (box-elt b))
                  (intrinsic-width (box-elt b))
                  0.0))
@@ -470,6 +473,7 @@
        (= (type b) box/block)
        ,@(map extract-field '(pt pr pb pl bt br bb bl))
        (= (stfwidth b) (compute-stfwidth b))
+       (= (stfmax b) (max-if (+ (ml b) (bl b) (pl b) (stfmax (lbox b)) (pr b) (br b) (mr b)) (is-box (vbox b)) (stfmax (vbox b))))
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
 
@@ -499,6 +503,9 @@
             (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
        (= (stfwidth b) (compute-stfwidth b))
+       (= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0)
+                        (ml b) (bl b) (pl b) (w b) (pr b) (br b) (mr b)))
+
        ,(smt-cond
          [(is-replaced e)
           (= (h b) (intrinsic-height e))]
@@ -536,6 +543,7 @@
        (= (type b) box/text)
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
+       (= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (w b)))
        ;; This is super-weak, but for now it really is our formalization of line layout
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
@@ -569,6 +577,7 @@
           (= (right-outer b) (ez.x ez y-normal float/right (left-content p) (right-content p)))))
 
        (= (stfwidth b) (compute-stfwidth b))
+       (= (stfmax b) (+ (ite (is-box v) (stfmax v) 0.0) (+ (stfmax (lbox b)) (pl b))))
        (= (font-size b) (font-size p))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
@@ -599,6 +608,8 @@
        (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b)
+       (= (stfmax b) (stfmax l))
+       (= (stfwidth b) (stfwidth l))
        (= (w b) (w p))
        (= (font-size b) (font-size p))
        (not (w-from-stfwidth b))
