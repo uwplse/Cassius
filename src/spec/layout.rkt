@@ -37,18 +37,6 @@
     `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0.0))))
 
 (define-constraints layout-definitions
-  (define-fun is-root-elt ((e Element)) Bool
-    (is-nil-elt (&pelt e)))
-
-  (define-fun is-flow-root ((b Box)) Bool
-    (and (is-elt (box-elt b))
-         (or (is-box/root (type b))
-             (is-root-elt (box-elt b))
-             (not (box-in-flow b))
-             (is-display/inline-block (style.display (computed-style (box-elt b))))
-             (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
-             (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b))))))))
-
   (define-fun box-collapsed-through ((b Box)) Bool
     (and (= (box-height b) 0.0)
          (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
