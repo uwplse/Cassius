@@ -499,13 +499,24 @@
             (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
        (= (stfwidth b) (compute-stfwidth b))
+       ,(smt-cond
+         [(is-replaced e)
+          (= (h b) (intrinsic-height e))]
+         [(not (is-height/auto (style.height r)))
+          (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+             (min-max-height ,(get-px-or-% 'height 'h 'b) b))]
+         [(is-display/inline-block (style.display r))
+          (= (h b) (auto-height-for-flow-roots b))]
+         [else
+          true])
 
        ,(smt-cond
          [(is-replaced e)
-          (= (h b) (intrinsic-height e))
           (= (w b) (intrinsic-width e))]
+         [(not (is-width/auto (style.width r)))
+          (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+             (min-max-width ,(get-px-or-% 'width 'w 'b) b))]
          [(is-display/inline-block (style.display r))
-          (= (h b) (auto-height-for-flow-roots b))
           (= (w b) (usable-stfwidth b))]
          [(is-box (fflow b))
           (and
@@ -514,7 +525,7 @@
          [else
           (= (w b) 0.0)])
 
-       (<= (top-content p) (y b) (+ (top-content p) (h p) (- (h b))))
+       (<= (top-content p) (top-outer b) (+ (top-content p) (h p) (- (h b))))
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
        (= (ez.out b)
@@ -531,7 +542,7 @@
 
        (no-relative-offset b)
        (zero-box-model b)
-       (=> (is-box v) (= (x b) (right-border v)))
+       (=> (is-box v) (= (x b) (right-outer v)))
        (= (ez.out b) (ez.in b))))
 
   (define-fun a-line-box ((b Box)) Bool
