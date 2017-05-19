@@ -301,11 +301,27 @@
           (- (right-content (pbox b)) (left-outer b))]
          [else
           (+ (min-ml b) (bl b) (max (pl b) 0.0) 
-             (ite (or (is-no-elt (box-elt b)) (and (not (is-replaced (box-elt b))) (is-width/auto (style.width r))))
+             (ite (and (not (is-replaced (box-elt b))) (is-width/auto (style.width r)))
                   (ite (is-box l) (stfwidth l) 0.0)
                   (w b))
              (pr b) (br b) (min-mr b))])
        (ite (is-box v) (stfwidth v) 0.0))))
+
+  (define-fun compute-stfmax ((b Box)) Real
+    (let ([l (lbox b)] [v (vbox b)] [r (computed-style (box-elt b))])
+      ,(smt-cond
+        [(is-no-elt (box-elt b))
+         (+ (ml b) (bl b) (pl b) (ite (is-box l) (stfmax l) 0.0) (pr b) (br b) (mr b))]
+        [(is-float/left (style.float r))
+         (- (right-outer b) (left-content (pbox b)))]
+        [(is-float/right (style.float r))
+         (- (right-content (pbox b)) (left-outer b))]
+        [else
+         (+ (min-ml b) (bl b) (max (pl b) 0.0) 
+            (ite (and (not (is-replaced (box-elt b))) (is-width/auto (style.width r)))
+                 (ite (is-box l) (stfmax l) 0.0)
+                 (w b))
+            (pr b) (br b) (min-mr b))])))
 
   (define-fun resolve-font-size ((b Box)) Real
     (let ([e (box-elt b)])
@@ -473,7 +489,7 @@
        (= (type b) box/block)
        ,@(map extract-field '(pt pr pb pl bt br bb bl))
        (= (stfwidth b) (compute-stfwidth b))
-       (= (stfmax b) (max-if (+ (ml b) (bl b) (pl b) (stfmax (lbox b)) (pr b) (br b) (mr b)) (is-box (vbox b)) (stfmax (vbox b))))
+       (= (stfmax b) (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))))
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
 
@@ -503,8 +519,7 @@
             (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
        (= (stfwidth b) (compute-stfwidth b))
-       (= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0)
-                        (ml b) (bl b) (pl b) (w b) (pr b) (br b) (mr b)))
+       (= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)))
 
        ,(smt-cond
          [(is-replaced e)
