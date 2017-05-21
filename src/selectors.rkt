@@ -21,6 +21,7 @@
   `(desc ,(? selector?) ...)
   `(child ,(? selector?) ...)
   `(pseudo-class ,(or 'first-child 'last-child))
+  `(type ,(? symbol?))
   `(fake ,(? string?) ,(? selector?) ...))
 
 (define-by-match rule?
@@ -51,6 +52,8 @@
      (equal? etag tag)]
     [`(pseudo-class first-child) (not (node-prev elt))]
     [`(pseudo-class last-child) (not (node-next elt))]
+    [`(type ,type)
+     (and (node-get elt ':type) (equal? (slower (node-get elt ':type)) type))]
     [(list 'and sels ...) (andmap (curryr selector-matches? elt) sels)]
     [(list 'desc sels ...)
      (match-define (cons sel rsels) (reverse sels))
@@ -127,6 +130,7 @@
     [(list 'class cls) '(0 1 0)]
     [(list 'tag tag) '(0 0 1)]
     [(list 'pseudo-class _) '(0 1 0)]
+    [(list 'type _) '(0 0 0)]
     ['* '(0 0 0)]
     [(list 'fake _ ...) '(100 0 0)] ; TODO: Should it be 0 0 0 ?
     [(list (or 'and 'desc 'child) sels ...)

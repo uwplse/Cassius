@@ -2,9 +2,9 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent".split(" ");
-BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space content font-size text-indent".split(" ");
-BadTags = "img input svg:svg".split(" ");
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent clear".split(" ");
+BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent".split(" ");
+BadTags = "img iframe input svg:svg".split(" ");
 
 Box = function(type, node, props) {
     this.children = [];
@@ -608,8 +608,8 @@ function dump_selector(sel) {
         var sub = sel.split(/\s+/).map(dump_selector);
         if (sub.indexOf(false) !== -1) return false;
         return "(desc " + sub.join(" ") + ")";
-    } else if (match = sel.match(/^([\w-]+|\*)?((::?|\.|\#)[\w-]+)*$/)) {
-        var sub = sel.replace(/\.|\#|::?/g, "\0$&").split("\0");
+    } else if (match = sel.match(/^([\w-]+|\*)?((::?|\.|\#)[\w-]+|\[type=\"[\w-]+\"\])*$/)) {
+        var sub = sel.replace(/\[|\.|\#|::?/g, "\0$&").split("\0");
         if (sub[0] === "") sub.shift();
         sub = sub.map(dump_primitive_selector);
         if (sub.indexOf(false) !== -1) return false;
@@ -628,12 +628,14 @@ function dump_primitive_selector(sel) {
         } else {
             return false;
         }
-    } else if (match = sel.match(/^[\w-]*#([\w-]+)(.[\w-]*)?$/)) {
+    } else if (match = sel.match(/^#([\w-]+)$/)) {
         return "(id " + match[1] + ")";
     } else if (match = sel.match(/^([\w-]+)$/)) {
         return "(tag " + match[1].toLowerCase() + ")";
     } else if (match = sel.match(/^\*$/)) {
         return "*";
+    } else if (match = sel.match(/^\[type=\"([\w-]+)\"\]$/)) {
+        return "(type " + match[1] + ")";
     } else {
         return false;
     }

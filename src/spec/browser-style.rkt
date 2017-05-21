@@ -69,9 +69,7 @@
 ; From https://hell.meiert.org/core/css/firefox-3.6.3.css
 
 (define firefox-sheet
-  '(
-
-    ((tag blockquote)
+  '(((tag blockquote)
      :browser
      [margin-top (em 1)]
      [margin-right (px 40)]
@@ -163,7 +161,131 @@
      :browser
      [margin-top (em 1)]
      [margin-bottom (em 1)]
-     [padding-left (px 40)])))
+     [padding-left (px 40)])
+
+    ((tag input)
+     :browser
+     [padding-left (px 1)]
+     [padding-top (px 1)]
+     [padding-right (px 1)]
+     [padding-bottom (px 1)]
+     [border-top-width (px 2)]
+     [border-right-width (px 2)]
+     [border-bottom-width (px 2)]
+     [border-left-width (px 2)]
+     [border-top-style inset]
+     [border-right-style inset]
+     [border-bottom-style inset]
+     [border-left-style inset]
+     [text-align start]
+     [text-indent (px 0)])
+    ((and (tag input) (type hidden))
+     :browser
+     [display none :important]
+     [padding-top (px 0)]
+     [padding-right (px 0)]
+     [padding-bottom (px 0)]
+     [padding-left (px 0)]
+     [border-top-width (px 0)]
+     [border-right-width (px 0)]
+     [border-bottom-width (px 0)]
+     [border-left-width (px 0)])
+    ((and (tag input) (type image))
+     :browser
+     [padding-top (px 0)]
+     [padding-right (px 0)]
+     [padding-bottom (px 0)]
+     [padding-left (px 0)]
+     [border-top-style none]
+     [border-right-style none]
+     [border-bottom-style none]
+     [border-left-style none]
+     [font-size small])
+    ((and (tag input) (type file))
+     :browser
+     [display inline-block]
+     [padding-top (px 0)]
+     [padding-right (px 0)]
+     [padding-bottom (px 0)]
+     [padding-left (px 0)]
+     [border-top-style none]
+     [border-right-style none]
+     [border-bottom-style none]
+     [border-left-style none]
+     [overflow-x hidden]
+     [overflow-y hidden])
+    ((and (tag input) (type radio))
+     :browser
+     [margin-top (px 3)]
+     [margin-right (px 5)]
+     [margin-bottom (px 0)]
+     [margin-left (px 3)]
+     [box-sizing border-box]
+     [width (px 13)]
+     [height (px 13)]
+     [padding-top (px 0) :important]
+     [padding-right (px 0) :important]
+     [padding-bottom (px 0) :important]
+     [padding-left (px 0) :important]
+     [border-top-width (px 2) :important]
+     [border-right-width (px 2) :important]
+     [border-bottom-width (px 2) :important]
+     [border-left-width (px 2) :important]
+     [border-top-style inset :important]
+     [border-right-style inset :important]
+     [border-bottom-style inset :important]
+     [border-left-style inset :important])
+    ((and (tag input) (type checkbox))
+     :browser
+     [margin-top (px 3)]
+     [margin-right (px 3)]
+     [margin-bottom (px 3)]
+     [margin-left (px 4)]
+     [box-sizing border-box]
+     [width (px 13)]
+     [height (px 13)]
+     [padding-top (px 0) :important]
+     [padding-right (px 0) :important]
+     [padding-bottom (px 0) :important]
+     [padding-left (px 0) :important]
+     [border-top-width (px 2) :important]
+     [border-right-width (px 2) :important]
+     [border-bottom-width (px 2) :important]
+     [border-left-width (px 2) :important]
+     [border-top-style inset :important]
+     [border-right-style inset :important]
+     [border-bottom-style inset :important]
+     [border-left-style inset :important])
+    ((and (tag input) (type search))
+     :browser
+     [box-sizing border-box])
+    ((tag button)
+     :browser
+     [text-align center]
+     [text-indent (px 0)]
+     [display inline-block])
+    ((and (tag input) (type reset))
+     :browser
+     [text-align center])
+    ((and (tag input) (type button))
+     :browser
+     [text-align center])
+    ((and (tag input) (type submit))
+     :browser
+     [text-align center])
+    ((and (tag input) (type range))
+     :browser
+     [display inline-block]
+     [width (em 12)]
+     [height (em 1.3)]
+     [margin-left (em .7)]
+     [margin-right (em .7)]
+     [margin-top (px 0)]
+     [margin-bottom (px 0)])
+     [border-top-style none]
+     [border-right-style none]
+     [border-bottom-style none]
+     [border-left-style none]))
 
 (define (get-sheet browser)
   (match browser

@@ -24,7 +24,7 @@
      css:text-indent display:inline-block css:inherit css:clear
      unit:% unit:em
      empty-text text-align
-     unknown-selector tag:img
+     unknown-selector tag:img tag:input
      TEXT INLINE LINE BLOCK PAGE MAGIC ANON)))
 
 (define (support-features! . feats)
