@@ -21,7 +21,7 @@
    '(css:float css:box-sizing
      css:min-width css:max-width css:max-height css:min-height
      css:position css:font-size css:overflow-x css:overflow-y 
-     css:text-indent display:inline-block css:inherit
+     css:text-indent display:inline-block css:inherit css:clear
      unit:% unit:em
      empty-text text-align
      unknown-selector tag:img

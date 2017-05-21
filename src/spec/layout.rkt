@@ -41,6 +41,13 @@
     (and (= (box-height b) 0.0)
          (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
 
+  (define-fun has-clearance ((b Box)) Bool
+    (and (is-elt (box-elt b))
+         (or
+          (is-clear/left (style.clear (computed-style (box-elt b))))
+          (is-clear/right (style.clear (computed-style (box-elt b))))
+          (is-clear/both (style.clear (computed-style (box-elt b)))))))
+
   (define-fun min-max-width ((val Real) (b Box)) Real
     (max ,(get-px-or-% 'min-width 'w 'b)
          (ite (is-max-width/none (style.max-width (computed-style (box-elt b))))
@@ -152,13 +159,13 @@
        (and
         (= (mtp b)
            (max (ite (> (mt b) 0.0) (mt b) 0.0)
-                (max (ite (and (top-margin-collapses-with-children b) (is-box f)) (mtp f) 0.0)
+                (max (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtp f) 0.0)
                      (ite (box-collapsed-through b)
                           (max (ite (> (mb b) 0.0) (mb b) 0.0) (mtp n))
                           0.0))))
         (= (mtn b)
            (min (ite (< (mt b) 0.0) (mt b) 0.0)
-                (min (ite (and (top-margin-collapses-with-children b) (is-box f)) (mtn f) 0.0)
+                (min (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtn f) 0.0)
                      (ite (box-collapsed-through b)
                           (min (ite (< (mb b) 0.0) (mb b) 0.0) (mtn n))
                           0.0))))))
@@ -220,17 +227,36 @@
        (= (xo b) (xo p))
        (= (yo b) (yo p))))
 
+  (define-fun resolve-clear ((b Box) (default Real)) Real
+    (max-if
+     (max-if
+      default
+      (and (is-elt (box-elt b))
+           (or
+            (is-clear/left (style.clear (computed-style (box-elt b))))
+            (is-clear/both (style.clear (computed-style (box-elt b))))))
+      (ez.left-max (ez.in b)))
+     (and (is-elt (box-elt b))
+          (or
+           (is-clear/right (style.clear (computed-style (box-elt b))))
+           (is-clear/both (style.clear (computed-style (box-elt b))))))
+     (ez.right-max (ez.in b))))
+
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
-      (ite (is-box v)
-           (+ (bottom-border v)
-              (ite (box-collapsed-through v)
-                  0.0
-                  (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))))
-           (+ (top-content p)
-              (ite (top-margin-collapses-with-children p)
-                   0.0
-                   (+ (mtp b) (mtn b)))))))
+      (resolve-clear
+       b
+       (ite (is-box v)
+            ;; These parts don't check (hash-clearance) because they're
+            ;; computed "as if" there were no clearance
+            (+ (bottom-border v)
+               (ite (box-collapsed-through v)
+                    0.0
+                    (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))))
+            (+ (top-content p)
+               (ite (top-margin-collapses-with-children p)
+                    0.0
+                    (+ (mtp b) (mtn b))))))))
 
   (define-fun flow-horizontal-layout ((b Box)) Bool
     ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
@@ -582,7 +608,8 @@
 
        (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent 'w 'p) 0.0))
 
-       (let ([y-normal (ite (is-no-box v) (top-content p) (bottom-border v))]
+       (let ([y-normal
+              (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
              [ez (ez.in b)])
          (and
           (ez.test (ez.in b) y-normal) ;; Key float restriction

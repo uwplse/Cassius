@@ -98,6 +98,9 @@
 (define-css-type (Text-Indent (px Real) (% Real) (em Real))
   [text-indent (px 0)])
 
+(define-css-type (Clear none left right both)
+  [clear none])
+
 (define inheritable-properties '(text-align))
 
 (define (css-inheritable? x) (set-member? inheritable-properties x))
