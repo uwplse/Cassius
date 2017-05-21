@@ -796,6 +796,19 @@ function dump_stylesheet(ss, features) {
 
 ELTS = []
 
+function get_inherent_size(e) {
+    if (e.naturalWidth && e.naturalHeight) {
+        return {w: e.naturalWidth, h: e.naturalHeight};
+    } else {
+        return {w: e.getBoundingClientRect().width
+                - val2px(cs(e).paddingLeft) - val2px(cs(e).paddingRight)
+                - val2px(cs(e).borderLeftWidth) - val2px(cs(e).borderRightWidth),
+                h: e.getBoundingClientRect().height
+                - val2px(cs(e).paddingTop) - val2px(cs(e).paddingBottom)
+                - val2px(cs(e).borderTopWidth) - val2px(cs(e).borderBottomWidth)}
+    }
+}
+
 function dump_document() {
     var elt = document.documentElement;
     
@@ -824,16 +837,16 @@ function dump_document() {
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
-            if (elt.tagName.toUpperCase() === "IMG") {
-                rec.props["w"] = elt.naturalWidth;
-                rec.props["h"] = elt.naturalHeight;
+            if (["IMG", "INPUT", "IFRAME"].indexOf(elt.tagName.toUpperCase()) !== -1) {
+                var v = get_inherent_size(elt);
+                rec.props["w"] = v.w;
+                rec.props["h"] = v.h;
             }
 
-            if (elt.tagName.toUpperCase() === "INPUT" || elt.tagName.toUpperCase() === "IFRAME") {
-                rec.props["w"] = elt.getBoundingClientRect().width;
-                rec.props["h"] = elt.getBoundingClientRect().height;
+            if (elt.tagName.toUpperCase() === "INPUT") {
+                rec.props["type"] = elt.type;
             }
-            
+
             for (var i = 0; i < elt.childNodes.length; i++) {
                 if (is_comment(elt.childNodes[i])) continue;
                 var b = recurse(elt.childNodes[i]);
