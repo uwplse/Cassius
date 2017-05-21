@@ -35,10 +35,10 @@ bench/fwt/%.zip:
 # on every linked page, collecting the resulting JSON objects into a JSON array.
 
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
-	racket src/report.rkt regression $(FLAGS) --index bench/css/index.json -o reports/csswg $^
+	@ racket src/report.rkt regression $(FLAGS) --index bench/css/index.json -o reports/csswg $^
 
 reports/fwt.html reports/fwt.json: $(wildcard bench/fwt/*.rkt)
-	racket src/report.rkt regression $(FLAGS) --timeout 300 -o reports/fwt $^
+	@ racket src/report.rkt regression $(FLAGS) --timeout 300 -o reports/fwt $^
 
 rerun-tests:
-	racket src/report.rkt regression $(FLAGS) --supported --failed reports/csswg.json --index bench/css/index.json -o reports/csswg $(wildcard bench/css/*.rkt)
+	@ racket src/report.rkt regression $(FLAGS) --supported --failed reports/csswg.json --index bench/css/index.json -o reports/csswg $(wildcard bench/css/*.rkt)
