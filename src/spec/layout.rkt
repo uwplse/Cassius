@@ -482,8 +482,8 @@
 
        (ite (is-height/auto (style.height r))
             (ite (is-replaced e)
-                 (=> (width-set b) (= (h b) (auto-height-for-flow-roots b)))
-                 (= (h b) (intrinsic-height e)))
+                 (= (h b) (intrinsic-height e))
+                 (=> (width-set b) (= (h b) (auto-height-for-flow-roots b))))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                ,(get-px-or-% 'height 'h 'b)))
 

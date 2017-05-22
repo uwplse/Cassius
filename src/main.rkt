@@ -9,7 +9,7 @@
          css-values-solver)
 
 
-(define *fuzz* '(/ 1 60))
+(define *fuzz* '(/ 10 60))
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
