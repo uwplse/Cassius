@@ -584,7 +584,9 @@
        (= (type b) box/text)
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
-       (= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (w b)))
+       (= (stfmax b)
+          (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0)
+             (ite (and (= (w b) 0.0) (is-no-box (nbox b))) 5.0 (w b)))) ;; HAXXX
        ;; This is super-weak, but for now it really is our formalization of line layout
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
