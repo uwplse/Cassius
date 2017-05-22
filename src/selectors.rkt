@@ -20,7 +20,7 @@
   `(and ,(? selector?) ...)
   `(desc ,(? selector?) ...)
   `(child ,(? selector?) ...)
-  `(pseudo-class ,(or 'first-child 'last-child))
+  `(pseudo-class ,(or 'first-child 'last-child 'hover))
   `(type ,(? symbol?))
   `(fake ,(? string?) ,(? selector?) ...))
 
@@ -52,6 +52,7 @@
      (equal? etag tag)]
     [`(pseudo-class first-child) (not (node-prev elt))]
     [`(pseudo-class last-child) (not (node-next elt))]
+    [`(pseudo-class hover) false] ; We're never modeling hovering
     [`(type ,type)
      (and (node-get elt ':type) (equal? (slower (node-get elt ':type)) type))]
     [(list 'and sels ...) (andmap (curryr selector-matches? elt) sels)]
