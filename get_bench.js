@@ -546,7 +546,7 @@ function make_boxes(elt, styles, features) {
         return out2;
     } else if (!is_visible(elt)) {
         return [];
-    } else if ((is_block(elt) || is_iblock(elt)) && cs(elt)["clear"] === "none") {
+    } else if ((is_block(elt) || is_iblock(elt))) {
         var box = extract_block(elt, children);
         if (is_iblock(elt)) box.type = "INLINE";
         return [box];
@@ -1083,8 +1083,6 @@ function cassius(name) {
     sel.removeAllRanges();
     sel.addRange(r);
 }
-
-cassius(LETTER);
 
 function draw_rect(rect) {
     var d = document.createElement("CassiusRect");

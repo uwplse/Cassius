@@ -55,7 +55,7 @@ def main(urls, name=None, screenshot=False):
                             print "Saving screenshot to", iname
                             browser.save_screenshot(iname)
                         browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
-                        browser.execute_script(SCRIPT)
+                        browser.execute_script(SCRIPT + "; cassius(LETTER)")
                         elt = browser.find_element_by_id("-x-cassius-output-block");
                         text = elt.text.encode("utf8")
                         fi.write(";; From {}\n\n{}\n\n".format(url, text))

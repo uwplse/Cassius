@@ -281,11 +281,11 @@
      [margin-left (em .7)]
      [margin-right (em .7)]
      [margin-top (px 0)]
-     [margin-bottom (px 0)])
+     [margin-bottom (px 0)]
      [border-top-style none]
      [border-right-style none]
      [border-bottom-style none]
-     [border-left-style none]))
+     [border-left-style none])))
 
 (define (get-sheet browser)
   (match browser
