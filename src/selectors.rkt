@@ -168,6 +168,9 @@
 (define (rulematch-props rm)
   (filter list? (cdr (rulematch-rule rm))))
 
+(define (rulematch-important? rm prop)
+  (set-member? (dict-ref (rulematch-props rm) prop '()) ':important))
+
 (define/contract (rule-matchlist rules elts)
   (-> (listof partial-rule?) (listof node?) (listof rulematch?))
   (define scores (rule-scores rules))
@@ -181,10 +184,17 @@
 
 (define/contract (matchlist-find matchlist elt prop)
   (-> (listof rulematch?) node? property? (or/c rulematch? #f))
-  (for/first ([rm matchlist]
-              #:when (and (set-member? (rulematch-elts rm) elt)
-                          (set-member? (map car (rulematch-props rm)) prop)))
-    rm))
+  (define valid-rms
+    (filter
+     (λ (rm)
+       (and (set-member? (rulematch-elts rm) elt)
+            (dict-has-key? (rulematch-props rm) prop)))
+     matchlist))
+  (or
+   (for/first ([rm valid-rms] #:when (rulematch-important? rm prop))
+     rm)
+   (for/first ([rm valid-rms])
+     rm)))
 
 (define equivalence-classes?
   (hash/c property? (cons/c (hash/c node? (or/c integer? #f)) (hash/c (or/c integer? #f) any/c))))
@@ -198,10 +208,10 @@
       (define rm (matchlist-find ml elt prop))
       (define idx (and rm (rulematch-idx rm)))
       (define value
-        (cond
-         [(number? idx)
+        (match idx
+         [(? number?)
           (car (dict-ref (rulematch-props rm) prop))]
-         [(not idx)
+         [#f
           (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default)]))
       (dict-set! value-hash idx value)
       (dict-set! class-hash elt idx))
