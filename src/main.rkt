@@ -70,10 +70,10 @@
   (define box-height (+ bt pt h pb bb))
   (define box-x (+ x xo))
   (define box-y (+ y yo))
-  (node-set! elt ':w box-width)
-  (node-set! elt ':h box-height)
   (node-set! elt ':x box-x)
-  (node-set! elt ':y box-y))
+  (node-set! elt ':y box-y)
+  (node-set! elt ':w box-width)
+  (node-set! elt ':h box-height))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)

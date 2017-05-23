@@ -491,7 +491,12 @@
        (let* ([ez (ez.in b)]
               [w (- (right-outer b) (left-outer b))]
               [h (- (bottom-outer b) (top-outer b))]
-              [y-normal (ite (is-no-box vb) (top-content p) (bottom-outer vb))]
+              [y-normal
+               (ite (is-no-box vb)
+                    (top-content p)
+                    (ite (is-box/block (type vb))
+                         (bottom-outer vb)
+                         (top-outer vb)))]
               [y* (ez.level ez w (left-content p) (right-content p) y-normal)]
               [y (max y-normal y*)]
               [x* (ez.x ez y (style.float r) (left-content p) (right-content p))]
@@ -532,9 +537,7 @@
                [p (pflow b)] [v (vflow b)] [l (lflow b)])
        (= (type b) box/inline)
        ,@(map extract-field '(bt br bb bl))
-       (ite (is-replaced e)
-            (= (pt b) (pr b) (pb b) (pl b) 0.0)
-            (and ,@(map extract-field '(pt pr pb pl))))
+       ,@(map extract-field '(pt pr pb pl))
 
        ,@(map extract-field '(mt mr mb ml))
        ,@(zero-auto-margins '(left right top bottom))
