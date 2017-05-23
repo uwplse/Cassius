@@ -140,13 +140,13 @@
   (define-fun ez.left-max ((ez EZone)) Real
     ,(for/fold ([expr `(ez.mark ez)]) ([i (in-range (*exclusion-zone-registers*))])
        `(ite (,(sformat "ez.l~a?" i) ez)
-             (,(sformat "ez.l~a" i) ez)
+             (,(sformat "ez.y~a" i) ez)
              ,expr)))
 
   (define-fun ez.right-max ((ez EZone)) Real
     ,(for/fold ([expr `(ez.mark ez)]) ([i (in-range (*exclusion-zone-registers*))])
-       `(ite (,(sformat "ez.l~a?" i) ez)
-             (,(sformat "ez.l~a" i) ez)
+       `(ite (,(sformat "ez.r~a?" i) ez)
+             (,(sformat "ez.y~a" i) ez)
              ,expr)))
 
   ;; Checks if the given point is outside the exclusion zone
