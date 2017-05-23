@@ -69,7 +69,7 @@
 ; From https://hell.meiert.org/core/css/firefox-3.6.3.css
 
 (define firefox-sheet
-  '(((tag blockquote)
+  `(((tag blockquote)
      :browser
      [margin-top (em 1)]
      [margin-right (px 40)]
@@ -259,6 +259,33 @@
     ((and (tag input) (type search))
      :browser
      [box-sizing border-box])
+    ,@(for/list ([sel '((tag button)
+                        (and (tag input) (type color))
+                        (and (tag input) (type reset))
+                        (and (tag input) (type button))
+                        (and (tag input) (type submit)))])
+        (cons sel
+              '([padding-top (px 0)]
+                [padding-right (px 6)]
+                [padding-bottom (px 0)]
+                [padding-bottom (px 0)]
+                [border-top-width (px 2)]
+                [border-right-width (px 2)]
+                [border-bottom-width (px 2)]
+                [border-left-width (px 2)]
+                [border-top-style outset]
+                [border-right-style outset]
+                [border-bottom-style outset]
+                [border-left-style outset]
+                [box-sizing border-box])))
+    ,@(for/list ([sel '((tag button) ; no color
+                        (and (tag input) (type reset))
+                        (and (tag input) (type button))
+                        (and (tag input) (type submit)))])
+        (cons sel '([text-align center])))
+    ((and (tag input) (type color))
+     [width (px 64)]
+     [height (px 23)])
     ((tag button)
      :browser
      [text-align center]
