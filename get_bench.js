@@ -2,9 +2,9 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent".split(" ");
-BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space content font-size text-indent".split(" ");
-BadTags = "img input svg:svg".split(" ");
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent clear".split(" ");
+BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent".split(" ");
+BadTags = "img iframe input svg:svg".split(" ");
 
 Box = function(type, node, props) {
     this.children = [];
@@ -44,24 +44,46 @@ function gensym() {
 }
 
 APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
+DIVISORS = [];
+
+for (var i = 1; i * i < APP_PIXEL_TO_PIXELS; i++) {
+    if (APP_PIXEL_TO_PIXELS % i == 0) {
+        DIVISORS.push(i);
+        DIVISORS.push(APP_PIXEL_TO_PIXELS / i);
+    }
+}
+
+DIVISORS.sort(function(a, b) { return a - b; });
+DIVISORS.reverse();
 
 function f2r(x) {
-    if (x == Math.floor(x)) {
-        return "" + x;
+    var out = f2q(x);
+    if (out.denom == 1) {
+        return "" + out.num;
+    } else if (out.denom == 2 || out.denom == 5 || out.denom == 10) {
+        return "" + (out.num / out.denom);
     } else {
-        var xm = Math.round(x * APP_PIXEL_TO_PIXELS);
-        var q = APP_PIXEL_TO_PIXELS;
-        while (q > 1) {
-            var r = xm - Math.floor(xm / q) * q;
-            xm = q;
-            q = r;
+        return "(/ " + out.num + " " + out.denom + ")";
+    }
+}
+
+function f2q(x) {
+    var xm = Math.round(x * APP_PIXEL_TO_PIXELS);
+        
+    for (var i = 0; i < DIVISORS.length; i++) {
+        var div = DIVISORS[i];
+        if (xm % div == 0) {
+            return { num: xm / div, denom: APP_PIXEL_TO_PIXELS / div };
         }
-        var num = Math.round(x * APP_PIXEL_TO_PIXELS / xm),
-            den = Math.round(APP_PIXEL_TO_PIXELS / xm);
-        if (den % 3 == 0) {
-            return "(/ " + num + " " + den + ")";
-        } else {
-            return "" + (num / den);
+    }
+}
+
+function test_f2q(a, b) {
+    for (var i = a * 60; i < b * 60; i++) {
+        var input = i / 60;
+        var output = f2q(input);
+        if (output.num / output.denom !== input) {
+            console.error("fq2(" + i + " / 60) == " + output.num + "/" + output.denom);
         }
     }
 }
@@ -120,6 +142,7 @@ function cs(elt) {return window.getComputedStyle(elt);}
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE || elt.nodeType == document.CDATA_SECTION_NODE;}
 function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt).display == "inline";}
+function is_iblock(elt) {return cs(elt).display == "inline-block";}
 function is_block(elt) {
     return cs(elt).display == "block" ||
         (cs(elt).display == "list-item" &&
@@ -129,12 +152,18 @@ function is_block(elt) {
 function is_visible(elt) {return cs(elt).display != "none";}
 function is_float(elt) {return elt.nodeType === document.ELEMENT_NODE && cs(elt).float != "none";}
 
+function is_flow_block(elt) {
+    return elt.nodeType == document.ELEMENT_NODE &&
+        cs(elt).float === "none" && ["static", "relative"].indexOf(cs(elt).position) !== -1;
+}
+
 function is_flowroot(elt) {
     // CSS3BOX §4.2
     // Block progression possibilities ignored, because block;-progression assumed to be `tb`
-    return cs(elt).float !== "none" || cs(elt).overflow !== "visible" ||
-        ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt).display) !== -1 ||
-        ["static", "relative"].indexOf(cs(elt).position) === -1;
+    return elt.nodeType == document.ELEMENT_NODE &&
+        (cs(elt).float !== "none" || cs(elt).overflow !== "visible" ||
+         ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt).display) !== -1 ||
+         ["static", "relative"].indexOf(cs(elt).position) === -1);
 }
 
 function get_fontsize(elt) {
@@ -202,9 +231,7 @@ function horizontally_adjacent(e1, e2) {
     }
 }
 
-function find_first_break(txt, loff, roff, f) {
-    console.log(loff, roff)
-    if (f) f()
+function find_first_break(txt, loff, roff) {
     if (loff !== loff || roff !== roff) throw "Error";
     if (roff - loff < 2) return roff;
     if (roff - loff == 2) {
@@ -221,9 +248,9 @@ function find_first_break(txt, loff, roff, f) {
     r2.setEnd(txt, mid);
 
     if (r2.getClientRects().length > 1) {
-        return find_first_break(txt, loff, mid, f);
+        return find_first_break(txt, loff, mid);
     } else {
-        return find_first_break(txt, mid - 1, roff, f);
+        return find_first_break(txt, mid - 1, roff);
     }
 }
 
@@ -273,33 +300,62 @@ function contains_text(elt) {
     return has_inline || has_text;
 }
 
-function infer_anons(box, parent) {
-    function save_anon_box() {
-        if (!anon_box) return;
-        parent.children.push(anon_box);
-    }
-    var anon_box = false;
-    for (var i = 0; i < box.children.length; i++) {
-        var child = box.children[i];
-        if (child.type == "BLOCK" || child.type == "MAGIC" || child.type == "ANON") {
-            save_anon_box();
-            parent.children.push(child);
-            anon_box = false;
-        } else {
-            if (!anon_box) {
-                anon_box = new Anon(box.node, {});
-            }
-            anon_box.children.push(child);
-        }
-    }
-    save_anon_box();
+function infer_anons(inputs) {
+    var estack = [inputs];
+    var out = [];
+    var bstack = [out];
+    var block_mode = true;
 
-    if (parent.children.length == 1 && parent.children[0].type == "ANON") {
-        var anon = parent.children.pop();
-        for (var i = 0; i < anon.children.length; i++) {
-            parent.children.push(anon.children[i]);
+    function reenter() {
+        var b = Anon();
+        bstack[0].push(b)
+        bstack.push(b.children);
+
+        for (var i = 0; i < estack.length - 1; i++) {
+            var b = Inline(estack[i][0].node, estack[i][0].props);
+            bstack[bstack.length - 1].push(b)
+            bstack.push(b.children);
+        }
+
+        block_mode = false;
+    }
+
+    while (estack[0].length > 0) {
+        if (estack[estack.length - 1].length > 0) {
+            var e = estack[estack.length - 1][0];
+            if (e.type == "TEXT") {
+                if (block_mode) reenter(estack);
+                bstack[bstack.length - 1].push(e);
+                estack[estack.length - 1].shift();
+            } else if (e.type == "INLINE" && cs(e.node).display == "inline-block") {
+                if (block_mode) reenter(estack);
+                bstack[bstack.length - 1].push(e);
+                estack[estack.length - 1].shift();
+            } else if (e.type == "INLINE") {
+                if (block_mode) reenter(estack);
+                var b = Inline(e.node, e.props);
+                bstack[bstack.length - 1].push(b);
+                bstack.push(b.children);
+                estack.push(e.children);
+            } else if ((e.type == "BLOCK" || e.type == "MAGIC") && is_flow_block(e.node)) {
+                bstack[0].push(e);
+                estack[estack.length - 1].shift();
+                bstack = [bstack[0]];
+                block_mode = true;
+            } else if ((e.type == "BLOCK" || e.type == "MAGIC")) {
+                bstack[bstack.length - 1].push(e);
+                estack[estack.length - 1].shift();
+            } else {
+                throw "What happened? " + e;
+            }
+        } else {
+            if (!block_mode) bstack.pop();
+            estack.pop();
+            estack[estack.length - 1].shift();
         }
     }
+
+    return out;
 }
 
 function infer_lines(box, parent) {
@@ -329,10 +385,10 @@ function infer_lines(box, parent) {
         if (prev.type == "LINE" || prev.type == "INLINE") return true;
 
         var horiz_adj = (
-            txt.props.y + txt.props.h > prev.props.y && prev.props.y >= txt.props.y
-            || prev.props.y + prev.props.h > txt.props.y && txt.props.y >= prev.props.y)
+            txt.props.y + txt.props.h >= prev.props.y && prev.props.y >= txt.props.y
+            || prev.props.y + prev.props.h >= txt.props.y && txt.props.y >= prev.props.y)
 
-        return horiz_adj && txt.props.x >= prev.props.x + prev.props.w;
+        return horiz_adj && txt.props.x >= prev.props.x + prev.props.w - 1/APP_PIXEL_TO_PIXELS;
     }
 
     function stackup(l, stack, sstack) {
@@ -348,7 +404,8 @@ function infer_lines(box, parent) {
     var stack = [];
     var sstack = [];
     function go(b) {
-        if (b.type == "TEXT") {
+        if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
+            (b.type == "INLINE" && cs(b.node).display == "inline-block")) {
             var l = last_line();
             if (!fits(b, l)) {
                 l = new_line();
@@ -356,8 +413,6 @@ function infer_lines(box, parent) {
             }
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
-        } else if (b.type == "BLOCK" || b.type == "MAGIC") {
-            parent.children.push(b);
         } else if (b.type == "INLINE") {
             if (b.props.br) {
                 new_line();
@@ -381,8 +436,72 @@ function infer_lines(box, parent) {
     }
 }
 
-function make_boxes(elt, inflow, styles, features) {
-    if (BadTags.indexOf(elt.tagName) !== -1) features["tag:" + elt.tagName] = true;
+function extract_text(elt) {
+    var outs = [];
+    var ranges = get_lines(elt);
+    for (var i = 0; i < ranges.length; i++) {
+        var r = ranges[i].getClientRects();
+        if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
+        if (r.length < 1) continue;
+        r = r[0];
+        var box = Text(elt, {x: r.x, y: r.y, w: r.width, h: r.height,});
+        outs.push(box);
+    }
+    return outs;
+}
+
+function extract_block(elt, children) {
+    var r = elt.getBoundingClientRect();
+    var s = cs(elt);
+
+    children = infer_anons(children);
+    for (var i = 0; i < children.length; i++) {
+        if (children[i].type == "ANON") {
+            var b = children[i];
+            var b2 = Anon(b.node, b.props);
+            infer_lines(b, b2);
+            children[i] = b2;
+        }
+    }
+
+    if (children.length == 1 && children[0].type == "ANON") {
+        children = children[0].children;
+    }
+
+    var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
+    box.children = children;
+    return box;
+}
+
+function extract_inline(elt, children) {
+    var r = elt.getClientRects();
+    var box;
+    if (r.length == 1 && false) {
+        box = Inline(elt, {tag: elt.tagName.toLowerCase(), x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
+    } else {
+        box = Inline(elt, {});
+    }
+    if (elt.tagName.toLowerCase() == "br") box.props.br = true;
+    box.children = children;
+    return box;
+}
+
+function extract_magic(elt, children) {
+    var r = elt.getBoundingClientRect();
+    var s = cs(elt);
+    var box = Magic(elt, {
+        x: r.x, y: r.y, w: r.width, h: r.height,
+    });
+
+    box.children = children;
+
+    return box;
+}
+
+function make_boxes(elt, styles, features) {
+    if (elt.tagName && BadTags.indexOf(elt.tagName.toLowerCase()) !== -1) {
+        features["tag:" + elt.tagName.toLowerCase()] = true;
+    }
 
     if (elt.style && elt.style.length) {
         var eid = elt.id || gensym();
@@ -390,95 +509,51 @@ function make_boxes(elt, inflow, styles, features) {
         styles[eid] = elt.style;
     }
 
-    if (is_comment(elt)) {
-        return;
-    } else if (is_text(elt)) {
-        var ranges = get_lines(elt);
-        for (var i = 0; i < ranges.length; i++) {
-            var r = ranges[i].getClientRects();
-            if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
-            if (r.length < 1) continue;
-            r = r[0];
-            // Whitespace only line
-            if (r.width == 0 || r.height == 0) continue;
-            var box = Text(elt, {
-                x: r.x, y: r.y, w: r.width, h: r.height,
-                // TODO: Escape correctly
-                //text: dump_string(ranges[i].toString().replace(/\s+/g, " "))
-            });
-            inflow.children.push(box);
-        }
-    } else if (!is_visible(elt)) {
-        return;
-    } else if (is_block(elt) && cs(elt)["clear"] === "none") {
-        var r = elt.getBoundingClientRect();
-        var s = cs(elt);
-        var box = Block(elt, {
-            x: r.x, y: r.y, w: r.width, h: r.height,
-            /*
-            mt: val2px(s["margin-top"]), mr: val2px(s["margin-right"]),
-            mb: val2px(s["margin-bottom"]), ml: val2px(s["margin-left"]),
-            pt: val2px(s["padding-top"]), pr: val2px(s["padding-right"]),
-            pb: val2px(s["padding-bottom"]), pl: val2px(s["padding-left"]),
-            bt: val2px(s["border-top-width"]), br: val2px(s["border-right-width"]),
-            bb: val2px(s["border-bottom-width"]), bl: val2px(s["border-left-width"]),
-            */
-        });
-
-        inflow.children.push(box);
-
-        var fake_lines = new Box("Fake", elt, {});
-        var fake_anons = new Box("Fake", elt, {});
-        for (var i = 0; i < elt.childNodes.length; i++) {
-            var child = elt.childNodes[i];
-            make_boxes(child, fake_lines, styles, features);
-        }
-
-        // Then break it into lines
-        infer_lines(fake_lines, fake_anons);
-        // Then add anonymous boxes
-        infer_anons(fake_anons, box);
-    } else if (is_inline (elt)) {
-        var r = elt.getClientRects();
-        var box;
-        if (r.length == 1 && false) {
-            box = Inline(elt, {tag: elt.tagName, x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
-        } else {
-            box = Inline(elt, {});
-        }
-        if (elt.tagName.toLowerCase() == "br") box.props.br = true;
-        inflow.children.push(box);
-        for (var i = 0; i < elt.childNodes.length; i++) {
-            var child = elt.childNodes[i];
-            make_boxes(child, box, styles, features);
-        }
+    if (elt.nodeType !== document.ELEMENT_NODE) {
+        // ok
+    } else if (["none", "list-item", "inline", "block", "inline-block"].indexOf(cs(elt).display) !== -1) {
+        // ok
+    } else if (cs(elt).display.startsWith("table")) {
+        features["display:table"] = true;
+    } else if (cs(elt).display == "inline-block") {
+        features["display:inline-block"] = true;
     } else {
-        if (cs(elt).display.startsWith("table")) {
-            features["display:table"] = true;
-        } else if (cs(elt).display == "inline-block") {
-            features["display:inline-block"] = true;
-        } else if (cs(elt).display == "list-item") {
-            features["list:inside"] = true;
-        } else {
-            console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
-            features["display:unknown"] = true;
-        }
+        console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
+        features["display:unknown"] = true;
+    }
 
-        // Quit iterating downward, who knows what is in this element
-        var r = elt.getBoundingClientRect();
-        var s = cs(elt);
-        var box = Magic(elt, {
-            x: r.x, y: r.y, w: r.width, h: r.height,
-            mt: val2px(s["margin-top"], features), mr: val2px(s["margin-right"], features), 
-            mb: val2px(s["margin-bottom"], features), ml: val2px(s["margin-left"], features),
-        });
+    if (elt.nodeType == document.ELEMENT_NODE &&
+        cs(elt).display == "list-item" && cs(elt).listStylePosition == "inside" && cs(elt).listStyleType != "none") {
+        features["list:inside"] = true;
+    }
 
-        for (var i = 0; i < elt.childNodes.length; i++) {
-            var child = elt.childNodes[i];
-            make_boxes(child, box, styles, features);
-        }
+    if (elt.nodeType == document.ELEMENT_NODE && cs(elt).textAlign != "left" &&
+        elt.parentNode.nodeType == document.ELEMENT_NODE && cs(elt.parentNode).textAlign != "left") {
+        features["text-align"] = true;
+    }
 
-        inflow.children.push(box);
+    var children = [];
+    for (var i = 0; i < elt.childNodes.length; i++) {
+        children = children.concat(make_boxes(elt.childNodes[i], styles, features));
+    }
+
+    if (is_comment(elt)) {
+        return [];
+    } else if (is_text(elt)) {
+        var out = extract_text(elt);
+        var out2 = out.filter(function(x) {return x.props.w !== 0 || x.props.h !== 0});
+        if (out.length !== out2.length) features["empty-text"] = true;
+        return out2;
+    } else if (!is_visible(elt)) {
+        return [];
+    } else if ((is_block(elt) || is_iblock(elt))) {
+        var box = extract_block(elt, children);
+        if (is_iblock(elt)) box.type = "INLINE";
+        return [box];
+    } else if (is_inline(elt)) {
+        return [extract_inline(elt, children)];
+    } else {
+        return [extract_magic(elt, children)];
     }
 }
 
@@ -486,7 +561,7 @@ function get_boxes(features) {
     var has_scrollbar = window.scrollMaxY !== 0;
     var view = Page(document, {w: window.innerWidth - (has_scrollbar ? 13 : 0), h: window.innerHeight});
     var style = {};
-    make_boxes(document.querySelector("html"), view, style, features);
+    view.children = make_boxes(document.querySelector("html"), style, features);
     return {view: view, style: style};
 }
 
@@ -498,15 +573,43 @@ function dump_selector(sel) {
         if (sub.indexOf(false) !== -1) return false;
         return "(or " + sub.join(" ") + ")";
     } else if (sel.indexOf(">") !== -1) {
-        var sub = sel.split(">").map(dump_selector);
-        if (sub.indexOf(false) !== -1) return false;
-        return "(child " + sub.join(" ") + ")";
+        var sub = sel.split(" ");
+        // This one is complicated
+        var in_desc = true;
+        var previous = [dump_selector(sub[0])];
+        if (!previous[0]) return false;
+        for (var i = 1; i < sub.length; i++) {
+            if (sub[i] == "") continue;
+            if (sub[i] == ">") {
+                i++;
+                var next = dump_selector(sub[i]);
+                if (!next) return false;
+                if (in_desc && previous.length > 1) {
+                    previous = ["(desc " + previous.join(" ") + ")"];
+                }
+                previous.push(next);
+                in_desc = false;
+            } else {
+                var next = dump_selector(sub[i]);
+                if (!next) return false;
+                if (!in_desc && previous.length > 1) {
+                    previous = ["(child " + previous.join(" ") + ")"];
+                }
+                previous.push(next);
+                in_desc = true;
+            }
+        }
+        if (previous.length > 1) {
+            return "(" + (in_desc ? "desc" : "child") + " " + previous.join(" ") + ")";
+        } else {
+            return previous[0];
+        }
     } else if (sel.indexOf(" ") !== -1) {
         var sub = sel.split(/\s+/).map(dump_selector);
         if (sub.indexOf(false) !== -1) return false;
         return "(desc " + sub.join(" ") + ")";
-    } else if (match = sel.match(/^([\w-]+|\*)?((\.|\#)[\w-]+)*$/)) {
-        var sub = sel.replace(/\.|\#/g, "\0$&").split("\0");
+    } else if (match = sel.match(/^([\w-]+|\*)?((::?|\.|\#)[\w-]+|\[type=\"[\w-]+\"\])*$/)) {
+        var sub = sel.replace(/\[|\.|\#|::?/g, "\0$&").split("\0");
         if (sub[0] === "") sub.shift();
         sub = sub.map(dump_primitive_selector);
         if (sub.indexOf(false) !== -1) return false;
@@ -519,12 +622,22 @@ function dump_selector(sel) {
 function dump_primitive_selector(sel) {
     if (match = sel.match(/^\.([\w-]+)$/)) {
         return "(class " + match[1] + ")";
-    } else if (match = sel.match(/^[\w-]*#([\w-]+)(.[\w-]*)?$/)) {
+    } else if (match = sel.match(/^:([\w-]+)$/)) {
+        if (["first-child", "last-child", "hover"].indexOf(match[1]) !== -1) {
+            return "(pseudo-class " + match[1] + ")";
+        } else {
+            return false;
+        }
+    } else if (match = sel.match(/^::([\w-]+)$/)) {
+        return false;
+    } else if (match = sel.match(/^#([\w-]+)$/)) {
         return "(id " + match[1] + ")";
     } else if (match = sel.match(/^([\w-]+)$/)) {
         return "(tag " + match[1].toLowerCase() + ")";
     } else if (match = sel.match(/^\*$/)) {
         return "*";
+    } else if (match = sel.match(/^\[type=\"([\w-]+)\"\]$/)) {
+        return "(type " + match[1] + ")";
     } else {
         return false;
     }
@@ -551,13 +664,13 @@ function rescue_selector(sel) {
 
 function dump_length(val, features) {
     try {
-        val = "(px " + f2r(val2px(val, features)) + ")";
+        val = "(px " + val2px(val, features) + ")";
     } catch (e) {}
     try {
-        val = "(% " + f2r(val2pct(val, features)) + ")";
+        val = "(% " + val2pct(val, features) + ")";
     } catch (e) {}
     try {
-        val = "(em " + f2r(val2em(val, features)) + ")";
+        val = "(em " + val2em(val, features) + ")";
     } catch (e) {}
     return val;
 }
@@ -569,6 +682,10 @@ function dump_rule(sel, style, features, is_from_style) {
     } catch (e) {
         console.warn("Invalid selector syntax, this shouldn't happen:", sel);
         return "";
+    }
+
+    if (sel.indexOf(":after") !== -1 || sel.indexOf(":before") !== -1) {
+        features["css:before-after"] = true;
     }
     var text = "";
     var has_good_prop = false;
@@ -587,23 +704,21 @@ function dump_rule(sel, style, features, is_from_style) {
             var tname = tname.split("-", 2)[0];
         }
 
-        try {
-            val = "(px " + f2r(val2px(val, features)) + ")";
-        } catch (e) {}
-        try {
-            val = "(% " + f2r(val2pct(val, features)) + ")";
-        } catch (e) {}
-        try {
-            val = "(em " + f2r(val2em(val, features)) + ")";
-        } catch (e) {}
-        
+        val = dump_length(val, features);
+
         if (BadProps.indexOf(sname) !== -1) {
             features["css:" + sname] = true;
         }
         
         if (Props.indexOf(sname) !== -1) {
             has_good_prop = true;
-            text += "\n   [" + sname + " " + val + "]";
+            var priority = style.getPropertyPriority(sname);
+            if (priority !== "") {
+                features["priority:" + priority] = true;
+                text += "\n   [" + sname + " " + val + " :" + priority + "]";
+            } else {
+                text += "\n   [" + sname + " " + val + "]";
+            }
         } else {
             text += "\n   #;[" + sname + " " + val + "]";
         }
@@ -650,7 +765,7 @@ function dump_tree(page) {
         }
     }
 
-    for (var i = 0; i < page.children.length; i++) recurse(page.children[i]);
+    recurse(page);
     return text;
 }
 
@@ -683,6 +798,21 @@ function dump_stylesheet(ss, features) {
     return text;
 }
 
+ELTS = []
+
+function get_inherent_size(e) {
+    if (e.naturalWidth && e.naturalHeight) {
+        return {w: e.naturalWidth, h: e.naturalHeight};
+    } else {
+        return {w: e.getBoundingClientRect().width
+                - val2px(cs(e).paddingLeft) - val2px(cs(e).paddingRight)
+                - val2px(cs(e).borderLeftWidth) - val2px(cs(e).borderRightWidth),
+                h: e.getBoundingClientRect().height
+                - val2px(cs(e).paddingTop) - val2px(cs(e).paddingBottom)
+                - val2px(cs(e).borderTopWidth) - val2px(cs(e).borderBottomWidth)}
+    }
+}
+
 function dump_document() {
     var elt = document.documentElement;
     
@@ -697,23 +827,30 @@ function dump_document() {
             } else {
                 return elt.textContent.replace(/\s+/, " ");
             }
-        } else if (elt.tagName === "HEAD" || elt.tagName === "SCRIPT") {
+        } else if (elt.tagName.toUpperCase() === "HEAD" || elt.tagName.toUpperCase() === "SCRIPT") {
             return false;
+        } else if (typeof(elt.dataset) === "undefined"){
+            console.log("Weird element", elt);
+            var rec = new Box(elt.tagName.toLowerCase(), elt);
+            return rec;
         } else {
-            var rec = new Box(elt.tagName.toLowerCase(), elt, {});
+            var num = ELTS.length;
+            elt.dataset["num"] = num;
+            ELTS.push(elt);
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num});
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
-            if (elt.tagName === "IMG") {
-                rec.props["w"] = elt.naturalWidth;
-                rec.props["h"] = elt.naturalHeight;
+            if (["IMG", "INPUT", "IFRAME"].indexOf(elt.tagName.toUpperCase()) !== -1) {
+                var v = get_inherent_size(elt);
+                rec.props["w"] = v.w;
+                rec.props["h"] = v.h;
             }
 
-            if (elt.tagName === "INPUT") {
-                rec.props["w"] = elt.getBoundingClientRect().width;
-                rec.props["h"] = elt.getBoundingClientRect().height;
+            if (elt.tagName.toUpperCase() === "INPUT") {
+                rec.props["type"] = elt.type;
             }
-            
+
             for (var i = 0; i < elt.childNodes.length; i++) {
                 if (is_comment(elt.childNodes[i])) continue;
                 var b = recurse(elt.childNodes[i]);
@@ -724,9 +861,7 @@ function dump_document() {
     }
 
     var s = recurse(elt);
-    var b = new Box("document", document, {});
-    b.children.push(s);
-    return b;
+    return s;
 }
 
 MAX = 0;
@@ -879,6 +1014,19 @@ function check_float_registers(box, parent, features) {
     }
 }
 
+function annotate_box_elt(box) {
+
+    if (box.node && box.node.nodeType === document.ELEMENT_NODE) {
+        if (typeof(box.node.dataset) !== "undefined") {
+            box.props.elt = box.node.dataset["num"];
+        }
+    }
+
+    for (var i = 0; i < box.children.length; i++) {
+        annotate_box_elt(box.children[i]);
+    }
+}
+
 function page2cassius(name) {
     var features = {};
 
@@ -888,8 +1036,10 @@ function page2cassius(name) {
         text += dump_stylesheet(document.styleSheets[sid], features);
     }
 
+    var doc = dump_document();
     var out = get_boxes(features);
     var page = out.view;
+    annotate_box_elt(page);
     
     compute_flt_pointer(page, null);
     features["float:" + MAX] = true;
@@ -901,11 +1051,11 @@ function page2cassius(name) {
         text += dump_rule("#" + eid, style[eid], features, true);
     }
     text += ")\n\n";
-    text += "(define-layout (" + name + " :browser firefox)\n ([VIEW :w " + page.props.w + "]";
-    text += dump_tree(page);
+    text += "(define-layout (" + name + " :browser firefox :matched true)\n ([VIEW :w " + page.props.w + "]";
+    text += dump_tree(page.children[0]);
     text += "))\n\n";
     text += "(define-document " + name;
-    text += dump_tree(dump_document());
+    text += dump_tree(doc);
     text += ")\n\n";
 
     var title = dump_string(document.title);
@@ -924,7 +1074,7 @@ function cassius(name) {
     }
 
     var root = document.querySelector("html");
-    root.appendChild(pre);
+    if (name) root.appendChild(pre);
 
     var r = document.createRange();
     r.selectNodeContents(pre);
@@ -933,8 +1083,6 @@ function cassius(name) {
     sel.removeAllRanges();
     sel.addRange(r);
 }
-
-cassius("doc-" + LETTER);
 
 function draw_rect(rect) {
     var d = document.createElement("CassiusRect");

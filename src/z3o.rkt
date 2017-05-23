@@ -496,13 +496,36 @@
   (define (simpl expr)
     (match expr
       [`(ite ,a ,b ,c)
-       (match (simpl1 (list 'ite (simpl a) b c))
-         [`(ite ,a ,b ,c) (simpl1 `(ite ,a ,(simpl b) ,(simpl c)))]
-         [expr (simpl expr)])]
+       (match (simpl a)
+         ['true (simpl b)]
+         ['false (simpl c)]
+         [expr (simpl1 `(ite ,expr ,(simpl b) ,(simpl c)))])]
       [`(=> ,a ,b)
-       (match (simpl1 (list '=> (simpl a) b))
-         [`(=> ,a ,b) (simpl1 `(=> ,a ,(simpl b)))]
-         [expr (simpl expr)])]
+       (match (simpl a)
+         ['false 'true]
+         [expr (simpl1 `(=> ,expr ,(simpl b)))])]
+      [`(and ,exprs ...)
+       (let loop ([exprs exprs] [rest '()])
+         (if (null? exprs)
+             (match rest
+               ['() 'true]
+               [(list x) x]
+               [_ (cons 'and rest)])
+             (match (simpl (car exprs))
+               ['true (loop (cdr exprs) rest)]
+               ['false 'false]
+               [expr (loop (cdr exprs) (cons expr rest))])))]
+      [`(or ,exprs ...)
+       (let loop ([exprs exprs] [rest '()])
+         (if (null? exprs)
+             (match rest
+               ['() 'false]
+               [(list x) x]
+               [_ (cons 'or rest)])
+             (match (simpl (car exprs))
+               ['true 'true]
+               ['false (loop (cdr exprs) rest)]
+               [expr (loop (cdr exprs) (cons expr rest))])))]
       [(? list?) (simpl1 (map simpl expr))]
       [_ expr]))
 

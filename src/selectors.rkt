@@ -20,13 +20,15 @@
   `(and ,(? selector?) ...)
   `(desc ,(? selector?) ...)
   `(child ,(? selector?) ...)
+  `(pseudo-class ,(or 'first-child 'last-child 'hover))
+  `(type ,(? symbol?))
   `(fake ,(? string?) ,(? selector?) ...))
 
 (define-by-match rule?
-  (list (? selector?) (? attribute?) ... (? (list/c property? any/c)) ...))
+  (list (? selector?) (? attribute?) ... (list (? property?) _ (? attribute?) ...) ...))
 
 (define-by-match partial-rule?
-  (list (? selector?) (? attribute?) ... (or (? (list/c property? any/c)) '?) ...))
+  (list (? selector?) (? attribute?) ... (or (list (? property?) _ (? attribute?) ...) '?) ...))
 
 (define/contract (selector-matches? sel elt)
   (-> selector? node? boolean?)
@@ -48,6 +50,11 @@
      (when (equal? etag '?)
        (raise (make-exn:fail:unsupported "Holes in tag names are not supported" (current-continuation-marks))))
      (equal? etag tag)]
+    [`(pseudo-class first-child) (not (node-prev elt))]
+    [`(pseudo-class last-child) (not (node-next elt))]
+    [`(pseudo-class hover) false] ; We're never modeling hovering
+    [`(type ,type)
+     (and (node-get elt ':type) (equal? (slower (node-get elt ':type)) type))]
     [(list 'and sels ...) (andmap (curryr selector-matches? elt) sels)]
     [(list 'desc sels ...)
      (match-define (cons sel rsels) (reverse sels))
@@ -123,6 +130,8 @@
     [(list 'id id) '(1 0 0)]
     [(list 'class cls) '(0 1 0)]
     [(list 'tag tag) '(0 0 1)]
+    [(list 'pseudo-class _) '(0 1 0)]
+    [(list 'type _) '(0 0 0)]
     ['* '(0 0 0)]
     [(list 'fake _ ...) '(100 0 0)] ; TODO: Should it be 0 0 0 ?
     [(list (or 'and 'desc 'child) sels ...)
@@ -132,7 +141,7 @@
   (-> (listof partial-rule?) (listof selector-score?))
   "Given a list of rules, return a list of cascade scores (io fromstyle ids classes tags idx)"
   (for/list ([rule rules] [i (in-naturals)])
-    (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
+    (match-define (list (? selector? selector) (? attribute? attrs) ... _ ...) rule)
     (define browser? (set-member? attrs ':browser))
     (define user? (set-member? attrs ':user))
     (define style? (set-member? attrs ':style))
@@ -159,6 +168,9 @@
 (define (rulematch-props rm)
   (filter list? (cdr (rulematch-rule rm))))
 
+(define (rulematch-important? rm prop)
+  (set-member? (dict-ref (rulematch-props rm) prop '()) ':important))
+
 (define/contract (rule-matchlist rules elts)
   (-> (listof partial-rule?) (listof node?) (listof rulematch?))
   (define scores (rule-scores rules))
@@ -172,10 +184,17 @@
 
 (define/contract (matchlist-find matchlist elt prop)
   (-> (listof rulematch?) node? property? (or/c rulematch? #f))
-  (for/first ([rm matchlist]
-              #:when (and (set-member? (rulematch-elts rm) elt)
-                          (set-member? (map car (rulematch-props rm)) prop)))
-    rm))
+  (define valid-rms
+    (filter
+     (λ (rm)
+       (and (set-member? (rulematch-elts rm) elt)
+            (dict-has-key? (rulematch-props rm) prop)))
+     matchlist))
+  (or
+   (for/first ([rm valid-rms] #:when (rulematch-important? rm prop))
+     rm)
+   (for/first ([rm valid-rms])
+     rm)))
 
 (define equivalence-classes?
   (hash/c property? (cons/c (hash/c node? (or/c integer? #f)) (hash/c (or/c integer? #f) any/c))))
@@ -189,11 +208,11 @@
       (define rm (matchlist-find ml elt prop))
       (define idx (and rm (rulematch-idx rm)))
       (define value
-        (cond
-         [(number? idx)
+        (match idx
+         [(? number?)
           (car (dict-ref (rulematch-props rm) prop))]
-         [(not idx)
-          (if (equal? prop 'text-align) 'left default)]))
+         [#f
+          (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default)]))
       (dict-set! value-hash idx value)
       (dict-set! class-hash elt idx))
     (values prop (cons class-hash value-hash))))

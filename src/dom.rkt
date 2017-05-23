@@ -3,7 +3,7 @@
 
 (provide (struct-out dom) dom-context in-elements in-boxes elements-difference parse-dom)
 
-(struct dom (name properties elements boxes))
+(struct dom (name properties elements boxes) #:prefab)
 (struct element (type attrs parent* children)
         #:mutable
         #:methods gen:custom-write

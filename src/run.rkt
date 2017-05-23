@@ -143,7 +143,6 @@
 (module+ main
   (define debug '())
   (define screenshot #f)
-  (define output #f)
 
   (multi-command-line
    #:program "cassius"
@@ -178,9 +177,7 @@
     (do-sketch (get-problem fname problem) #:debug debug)]
    ["smt2"
     #:once-each
-    [("-o" "--output") fname "Output constraints to a file"
-     (set! output fname)]
-    #:args (fname problem)
+    #:args (fname problem output)
     (do-smt2 (get-problem fname problem) output)]
    ["verify"
     #:args (fname problem)

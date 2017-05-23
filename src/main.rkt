@@ -9,7 +9,7 @@
          css-values-solver)
 
 
-
+(define *fuzz* '(/ 10 60))
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -60,7 +60,7 @@
   (match-define
    (list 'box
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
-         pt pr pb pl bt br bb bl stfwidth w-from-stfwidth
+         pt pr pb pl bt br bb bl stfwidth stfmax w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
          &nflow &vflow &ppflow ez.in ez.out
@@ -70,10 +70,10 @@
   (define box-height (+ bt pt h pb bb))
   (define box-x (+ x xo))
   (define box-y (+ y yo))
-  (node-set! elt ':w box-width)
-  (node-set! elt ':h box-height)
   (node-set! elt ':x box-x)
-  (node-set! elt ':y box-y))
+  (node-set! elt ':y box-y)
+  (node-set! elt ':w box-width)
+  (node-set! elt ':h box-height))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)
@@ -139,13 +139,12 @@
                           :named ,(sformat "~a^~a" propname (dump-elt elt)))))
         `(and ,no-match-so-far (not ,propname?))))
     (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
-                                       ,(dump-value type (if (equal? type 'Text-Align) 'left default))))
+                                       ,(dump-value type (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default))))
                       :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
-  ;; There are a lot of display values we don't support, which is why we ignore them.
-  (for ([(prop type default) (in-css-properties)] #:unless (equal? prop 'display))
+  (for ([(prop type default) (in-css-properties)])
     (match-define (cons class-hash value-hash) (dict-ref eqs prop))
     (for ([(class value) (in-dict value-hash)])
       (define const (sformat "value/~a/~a" prop (or class 'none)))
@@ -179,7 +178,8 @@
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
-    (emit `(declare-const ,(dump-elt elt) Element)))
+    (emit `(declare-const ,(dump-elt elt) Element))
+    (emit `(assert (is-elt ,(dump-elt elt)))))
   (define body
     (for*/fold ([body 'no-elt]) ([dom doms] [elt (in-elements dom)])
       `(ite (,(sformat "is-~a" (name 'elt elt)) &elt) ,(dump-elt elt) ,body)))
@@ -187,7 +187,8 @@
 
 (define (dom-define-get/box doms emit)
   (for* ([dom doms] [box (in-boxes dom)])
-    (emit `(declare-const ,(dump-box box) Box)))
+    (emit `(declare-const ,(dump-box box) Box))
+    (emit `(assert (is-box ,(dump-box box)))))
   (define body
     (for*/fold ([body 'no-box]) ([dom doms] [box (in-boxes dom)])
       `(ite (,(sformat "is-~a" (name 'box box)) &box) ,(dump-box box) ,body)))
@@ -206,7 +207,7 @@
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg
-        [(? number*?) `(= ,expr ,arg)]
+        [(? number*?) (if *fuzz* `(< (- ,arg ,*fuzz*) ,expr (+ ,arg ,*fuzz*)) `(= ,expr ,arg))]
         [`(not ,(? number*? value)) `(not (= ,expr ,value))]
         [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min ,expr ,max)]))
 
@@ -223,7 +224,7 @@
                               ,(dump-value type val))
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))]
         [#f
-         (define value (dump-value type (if (equal? prop 'text-align) 'left default)))
+         (define value (dump-value type (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default)))
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 

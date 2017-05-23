@@ -16,3 +16,4 @@ reports/*.json
 bench/css/*.rkt
 .DS_Store
 src/compiled/
+geckodriver.log

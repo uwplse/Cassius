@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "selectors.rkt" "smt.rkt" "registry.rkt" "z3.rkt")
-(provide link-elts-boxes link/root/c synthesize-displayed synthesize-dom)
+(provide link-elts-boxes link-matched-elts-boxes link/root/c synthesize-displayed synthesize-dom)
 
 (define (sheet->display elts sheet)
   (if (ormap (curryr set-member? '?) sheet)
@@ -13,11 +13,27 @@
               'none
               (dict-ref value-hash (dict-ref class-hash elt)))))))
 
+(define (link-matched-elts-boxes sheet elts boxes)
+  (define num->elt (make-hasheq))
+  (define box->elt (make-hasheq))
+  (for ([elt (in-tree elts)] #:when (node-get elt ':num))
+    (dict-set! num->elt (node-get elt ':num) elt))
+  (for ([box (in-tree boxes)] #:when (node-get box ':elt))
+    (dict-set! box->elt box (dict-ref num->elt (node-get box ':elt))))
+  (λ (x) (dict-ref box->elt x #f)))
+
 (define (link-elts-boxes sheet elts boxes)
   (define box->elt (make-hasheq))
   (define (match! elt box)
+    (eprintf "LINK!!! ~a ~a\n" box elt)
     (dict-set! box->elt box elt))
-  (link-view match! (sheet->display elts sheet) elts boxes)
+  (define display (sheet->display elts sheet))
+  (link-view match! display elts boxes)
+  (for ([x (in-tree boxes)] #:when (set-member? '(BLOCK INLINE MAGIC) (node-type x)))
+    (eprintf "~a" x)
+    (when (dict-has-key? box->elt x)
+      (eprintf " ~~ ~a (~a)" (dict-ref box->elt x) (display (dict-ref box->elt x))))
+    (eprintf "\n"))
   (λ (x) (dict-ref box->elt x #f)))
 
 (define (collect-possible-elements . boxes)
@@ -47,11 +63,12 @@
       (match! (car e) (caar bs*))
       (cons (node-children (caar bs*)) bs*)))
 
+  (eprintf "\n\n")
   (let loop ([es (list (elt-displayed-children elt display))] [block-mode? #t] [bs (list (node-children box))])
-    ;(eprintf "~s ~ ~s\n" es bs)
+    (eprintf "~s ~ ~s\n" es bs)
     (match es
       [(list (cons e e*) es* ...)
-       ;(eprintf "Entering ~s, display ~a\n" e (if (string? e) 'text (display e)))
+       (eprintf "Entering ~s, display ~a\n" e (if (string? e) 'text (display e)))
        (cond
         [(string? e)
          (define bs* (if block-mode? (reenter es* bs) bs))
@@ -60,11 +77,12 @@
         [(equal? (display e) 'inline-block)
          (define bs* (if block-mode? (reenter es* bs) bs))
          (assert (equal? (node-type (caar bs*)) 'INLINE) "INLINE not found" e)
-         (link-block match! display e (car bs*))
+         (link-block match! display e (caar bs*))
          (loop (cons e* es*) #f (cons (cdar bs*) (cdr bs*)))]
         [(equal? (display e) 'inline)
          (define bs* (if block-mode? (reenter es* bs) bs))
          (assert (equal? (node-type (caar bs*)) 'INLINE) "INLINE not found" e)
+         (match! e (caar bs*))
          (loop (cons (elt-displayed-children e display) es) #f (cons (node-children (caar bs*)) bs*))]
         [(equal? (display e) 'block)
          (define bs*
@@ -75,7 +93,9 @@
          (link-block match! display e (car bs*))
          (loop (cons e* es*) #t (list (cdr bs*)))])]
       [(list '() (cons e e*) es* ...)
-       (loop (cons e* es*) block-mode? (cons (cdadr bs) (cddr bs)))]
+       (if block-mode?
+           (loop (cons e* es*) block-mode? bs)
+           (loop (cons e* es*) block-mode? (cons (cdadr bs) (cddr bs))))]
       [(list '())
        (void)])))
 
@@ -86,9 +106,11 @@
   (cond
    [(equal? (length elts*) (length boxs*))
     (for ([elt elts*] [box boxs*])
+      ;; TODO: does not recurse
+      (match! elt box)
       (if (equal? (display elt) 'inline-block)
-          (link-block match! elt box)
-          (match! elt box)))]
+          (link-block match! display elt box)
+          (link-inlines match! display (elt-displayed-children elt display) (node-children box))))]
    #;[(equal? (length elts*) 1)
     (for-each (curry match! (car elts)) boxs*)
     (link-inlines match! display (car elts*) (append-map node-children boxs*))]

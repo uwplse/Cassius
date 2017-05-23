@@ -94,53 +94,86 @@
   (custodian-shutdown-all custodian)
   (values res runtime))
 
-(struct result (file problem test section status description features time url))
+(struct result (file problem test section status description features time url) #:prefab)
 
-(define (run-regression-tests file #:debug [debug '()] #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
-  (define probs (call-with-input-file file parse-file))
+(define (test-regression file pname prob #:debug [debug '()] #:index [index (hash)])
+  (eprintf "~a\t~a\t" file pname)
+  (define-values (res runtime) (run-problem prob #:debug debug))
+  (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
 
-  (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))] #:when (valid? prob))
-    (eprintf "~a\t~a\t" file pname)
-    (define-values (res runtime) (run-problem prob #:debug debug))
-    (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
+  (define status
+    (match res
+      ['timeout 'timeout]
+      [(list 'error e) 'error]
+      ['break 'break]
+      [(success stylesheet trees) 'success]
+      [(failure stylesheet trees) (if supported? 'fail 'unsupported)]))
+  (eprintf "~a\n" status)
 
-    (define status
-      (match res
-        ['timeout 'timeout]
-        [(list 'error e) 'error]
-        ['break 'break]
-        [(success stylesheet trees) 'success]
-        [(failure stylesheet trees) (if supported? 'fail 'unsupported)]))
-    (eprintf "~a\n" status)
+  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
+  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+          (car (dict-ref prob ':url '("/tmp")))))
 
-    (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-            (car (dict-ref prob ':url '("/tmp"))))))
+(define (test-mutations file pname prob #:debug [debug '()] #:index [index (hash)])
+  (eprintf "~a\t~a\t" file pname)
+  (define prob* (dict-update prob ':documents (curry map dom-not-something)))
+  (define-values (res runtime) (run-problem prob* #:debug debug))
+  (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
 
-(define (run-mutation-tests file #:debug [debug '()] #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
-  (define probs (call-with-input-file file parse-file))
+  (define status
+    (match res
+      ['timeout 'timeout]
+      [(list 'error e) 'error]
+      ['break 'break]
+      [(success stylesheet trees) (if supported? 'fail 'unsupported)]
+      [(failure stylesheet trees) 'success]))
+  (eprintf "~a\n" status)
 
-  (for/list ([(pname prob) (in-dict (sort (hash->list probs) symbol<? #:key car))] #:when (valid? prob)
+  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
+  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+          (car (dict-ref prob ':url '("/tmp")))))
+
+(define (run-regression-tests probs #:debug [debug '()] #:valid [valid? (const true)] #:index [index (hash)]
+                              #:threads [threads #f])
+  (define inputs
+    (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x)))
+      (list file (car x) (cdr x) debug index)))
+
+  (if threads
+      (let ([workers
+             (build-list
+              threads
+              (λ (i)
+                (place ch
+                       (let loop ()
+                         (match-define (list self file pname prob debug index) (place-channel-get ch))
+                         (define result (test-regression file pname prob #:debug debug #:index index))
+                         (place-channel-put ch (cons self result))
+                         (loop)))))])
+        (define to-send inputs)
+        (for ([worker workers])
+          (unless (null? to-send)
+            (place-channel-put worker (cons worker (car to-send)))
+            (set! to-send (cdr to-send))))
+        (let loop ([out '()])
+          (match-define (cons worker result) (apply sync workers))
+          (unless (null? to-send)
+            (place-channel-put worker (cons worker (car to-send)))
+            (set! to-send (cdr to-send)))
+          (define out* (cons result out))
+          (if (= (length out*) (length inputs))
+              out*
+              (loop out*))))
+      (for/list ([rec inputs])
+        (match-define (list file pname prob debug index) rec)
+        (test-regression file pname prob #:debug debug #:index index))))
+
+(define (run-mutation-tests probs #:debug [debug '()] #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
+  (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
              [_ (in-range repeat)])
-    (eprintf "~a\t~a\t" file pname)
-    (define prob* (dict-update prob ':documents (curry map dom-not-something)))
-    (define-values (res runtime) (run-problem prob* #:debug debug))
-    (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
-
-    (define status
-      (match res
-        ['timeout 'timeout]
-        [(list 'error e) 'error]
-        ['break 'break]
-        [(success stylesheet trees) (if supported? 'fail 'unsupported)]
-        [(failure stylesheet trees) 'success]))
-    (eprintf "~a\n" status)
-
-    (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-            (car (dict-ref prob ':url '("/tmp"))))))
+    (test-mutations file (car x) (cdr x) #:debug debug #:index index)))
 
 (define (file-name-stem fn)
   (define-values (_1 uname _2) (split-path fn))
@@ -211,15 +244,14 @@
                  ,@(for/list ([r sresults] #:when (member (result-status r) '(error fail)))
                      `(a ((href ,(result-url r)))
                          ,(format "~a:~a" (file-name-stem (result-file r)) (result-problem r)))))))))))
-      (section ()
-       (h2 () "Feature totals")
-       (table ()
-        (thead () ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
-        (tbody () ,@(for/list ([data (sort-features (map feature-row unsupported-features))])
-                      (apply row (map ~a data))))
-        (thead () ,(row #:cell 'th "Supported Feature" "# Blocking" "# Necessary"))
-        (tbody () ,@(for/list ([data (sort-features (map feature-row (supported-features)))])
-                      (apply row (map ~a data))))))
+      ,@(if (ormap (λ (r) (equal? (result-status r) 'status)) results)
+            `(section ()
+              (h2 () "Feature totals")
+              (table ()
+               (thead () ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
+               (tbody () ,@(for/list ([data (sort-features (map feature-row unsupported-features))])
+                             (apply row (map ~a data))))))
+            '())
       (section ()
        (h2 () "Failing tests")
        (table ()
@@ -263,7 +295,10 @@
 
   (printf "\n~a\t~a\t~a\n" (~feature "Feature") "#B" "#N")
   (for ([data (sort-features (map feature-row (supported-features)))])
-    (printf "~a\t~a\t~a\n" (~feature (first data)) (second data) (third data))))
+    (printf "~a\t~a\t~a\n" (~feature (first data)) (second data) (third data)))
+
+  (printf "\n~a unsupported tests\n"
+          (count (λ (prob) (not (subset? (dict-ref prob ':features '()) (supported-features)))) problems)))
 
 (define-syntax-rule (and! var function)
   (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
@@ -286,6 +321,7 @@
   (define index (hash))
   (define valid? (const true))
   (define repeat 1)
+  (define threads #f)
 
   (multi-command-line
    #:program "report"
@@ -313,11 +349,16 @@
    #:subcommands
 
    ["regression"
+    #:once-each
+    [("--threads") t "How many threads to use"
+     (set! threads (string->number t))]
     #:args fnames
     (write-report
      #:output out-file
-     (for/append ([file fnames])
-       (run-regression-tests file #:debug debug #:valid valid? #:index index #:repeat repeat)))]
+     (let ([probs (for/append ([file fnames])
+                              (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
+                              (map (curry cons file) x))])
+       (run-regression-tests probs #:debug debug #:valid valid? #:index index #:threads threads)))]
 
    ["mutation"
     #:once-each
@@ -326,10 +367,18 @@
     #:args fnames
     (write-report
      #:output out-file
-     (for/append ([file fnames])
-       (run-mutation-tests file #:debug debug #:valid valid? #:index index #:repeat repeat)))]
+     (let ([probs (for/append ([file fnames])
+                              (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
+                              (map (curry cons file) x))])
+       (run-mutation-tests probs #:debug debug #:valid valid? #:index index #:repeat repeat)))]
 
    ["features"
     #:args fnames
     (print-feature-table
-     (for/append ([file fnames]) (dict-values (call-with-input-file file parse-file))))]))
+     (for/append ([file fnames]) (dict-values (call-with-input-file file parse-file))))]
+
+   ["available"
+    #:args fnames
+    (for* ([file fnames] [(name prob) (in-dict (call-with-input-file file parse-file))]
+           #:when (subset? (dict-ref prob ':features '()) (supported-features)))
+      (printf "~a ~a\n" file name))]))

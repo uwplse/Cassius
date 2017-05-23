@@ -16,7 +16,7 @@
                 (mtp Real) (mtn Real) (mbp Real) (mbn Real) ; top/bottom positive/negative margins for collapsing
                 (pt Real) (pr Real) (pb Real) (pl Real) ; padding
                 (bt Real) (br Real) (bb Real) (bl Real) ; border
-                (stfwidth Real) (w-from-stfwidth Bool)
+                (stfwidth Real) (stfmax Real) (w-from-stfwidth Bool)
                 (&pbox BoxName) (&vbox BoxName) (&nbox BoxName) (&fbox BoxName) (&lbox BoxName) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (font-size Real)
@@ -77,10 +77,22 @@
         (is-position/fixed (position box))
         (is-position/relative (position box))))
 
+  (define-fun is-root-elt ((e Element)) Bool
+    (is-nil-elt (&pelt e)))
+
   (define-fun box-in-flow ((box Box)) Bool
     (and (is-box box) (is-float/none (float box))
          (or (is-position/relative (position box))
              (is-position/static (position box)))))
+
+  (define-fun is-flow-root ((b Box)) Bool
+    (and (is-elt (box-elt b))
+         (or (is-box/root (type b))
+             (is-root-elt (box-elt b))
+             (not (box-in-flow b))
+             (is-display/inline-block (style.display (computed-style (box-elt b))))
+             (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
+             (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b))))))))
 
   ;; The boxes in each direction in the flow tree
   (define-fun pflow ((box Box)) Box (pbox box))
@@ -144,14 +156,18 @@
      (= (&ppflow b) &b)
      (= (&vflow b) nil-box)
      (= (&nflow b) nil-box)
-     (= (ez.in b) (ez.init (top-content (pbox b))))))
+     (= (ez.in b) (ez.init 0.0))))
 
   (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
-     (= (ez.in b) (ite (is-no-box (vbox b)) (ez.in (pbox b)) (ez.out (vbox b))))))
+     (= (ez.in b) (ite (is-no-box (vbox b))
+                       (ite (is-flow-root (pbox b))
+                            (ez.init (top-content (pbox b)))
+                            (ez.in (pbox b)))
+                       (ez.out (vbox b))))))
 
   (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
     (and
@@ -167,8 +183,8 @@
           [(box-in-flow (nbox b)) (&nbox b)]
           [else (&nflow (nbox b))]))
      (= (ez.in b) (ite (is-no-box (vbox b))
-                       (ite (box-in-flow (pbox b))
-                            (ez.in (pbox b))
-                            (ez.init (y b)))
+                       (ite (is-flow-root (pbox b))
+                            (ez.init (top-content (pbox b)))
+                            (ez.in (pbox b)))
                        (ez.out (vbox b)))))))
 
