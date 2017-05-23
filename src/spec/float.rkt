@@ -353,4 +353,14 @@
                                    (ite (is-float/left dir)
                                         (>= x x*)
                                         (<= x x*)))))))))
+
+  ;; ez.left-max
+  (check-sat #hash((pl . Real) (y . Real) (ez . EZone))
+             `(=> (ez.valid? ez) (>= y (ez.left-max ez))
+                  (= (ez.left-at ez y pl) pl)))
+
+  ;; ez.right-max
+  (check-sat #hash((pr . Real) (y . Real) (ez . EZone))
+             `(=> (ez.valid? ez) (>= y (ez.right-max ez))
+                  (= (ez.right-at ez y pr) pr)))
   )
