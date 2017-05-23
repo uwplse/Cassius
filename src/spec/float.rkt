@@ -246,7 +246,7 @@
   (check-sat #hash((x . Real) (y . Real) (h . Real) (ez . EZone))
              `(=> (ez.valid? ez) (ez.valid? (ez.advance ez h))))
 
-  ;; ez.x and ez.level spec tests
+  ;; ez.level spec tests
 
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (dir . Float) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez)  (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
@@ -292,4 +292,53 @@
                            (=> (> (+ x* width) pr) (= x* pl))
                            (=> (< (- x* width) pl) (= x* pr)))))))
 
+  ;; ez.left-at
+  (check-sat #hash((pl . Real) (width . Real) (height . Real) (y . Real) (mark . Real))
+             `(=> (> height mark)
+                  (let ([ez (ez.add (ez.init mark) float/left mark width height 0)])
+                    (ite (>= y height)
+                     (= (ez.left-at ez y pl) pl)
+                     (= (ez.left-at ez y pl) (max width pl))))))
+
+  (check-sat #hash((pl . Real) (x . Real) (y . Real) (ez . EZone))
+             `(=> (ez.valid? ez) (>= y (ez.mark ez))
+                  (< x (ez.left-at ez y pl))
+                  (or (ez.in? ez x y) (< x pl))))
+
+  ;; ez.right-at
+  (check-sat #hash((pr . Real) (width . Real) (height . Real) (y . Real) (mark . Real))
+             `(=> (> height mark)
+                  (let ([ez (ez.add (ez.init mark) float/right mark 0 height width)])
+                    (ite (>= y height)
+                     (= (ez.right-at ez y pr) pr)
+                     (= (ez.right-at ez y pr) (min width pr))))))
+
+  (check-sat #hash((pr . Real) (x . Real) (y . Real) (ez . EZone))
+             `(=> (ez.valid? ez) (>= y (ez.mark ez))
+                  (> x (ez.right-at ez y pr))
+                  (or (ez.in? ez x y) (> x pr))))
+
+  ;; Both ez.left-at and ez.right-at
+  (check-sat #hash((pl . Real) (pr . Real) (x . Real) (y . Real) (ez . EZone))
+             `(=> (>= y (ez.mark ez)) (ez.valid? ez) (<= pl pr) (< (ez.left-at ez y pl) x (ez.right-at ez y pr))
+                  (ez.out-inclusive? ez x y)))
+
+  ;; Rule 8 & 9 together
+  (check-sat #hash((pl . Real) (pr . Real) (y-normal . Real) (width . Real) (y . Real) (x . Real) (ez . EZone) (dir . Float))
+             `(=> (<= pl pr) (ez.valid? ez) (not (is-float/none dir))
+                  (let ([y* (max (ez.level ez width pl pr y-normal) y-normal)])
+                    (let ([x* (ez.x ez y* dir pl pr)])
+                      (=> (and ; (x, y) a valid place to put the box
+                           (>= y y-normal)
+                           (ez.out-inclusive? ez x y)
+                           (<= pl x pr)
+                           (=> (>= width 0)
+                               (let ([xo (ite (is-float/left dir) (+ x width) (- x width))])
+                                 (and (ez.out-inclusive? ez xo y)
+                                      (<= pl xo pr)))))
+                          (or (> y y*) ; below
+                              (and (= y y*) ; or at least further from the side
+                                   (ite (is-float/left dir)
+                                        (>= x x*)
+                                        (<= x x*)))))))))
   )
