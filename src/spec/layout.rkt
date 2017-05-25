@@ -546,10 +546,14 @@
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [v (vflow b)] [l (lflow b)])
        (= (type b) box/inline)
-       ,@(map extract-field '(bt br bb bl))
-       ,@(map extract-field '(pt pr pb pl))
+       ,@(map extract-field '(bt bb pt pb mt mb))
+       (ite (first-box? b)
+            (and ,@(map extract-field '(pl bl ml)))
+            (and (= (pl b) (bl b) (ml b) 0.0)))
+       (ite (last-box? b)
+            (and ,@(map extract-field '(pr br mr)))
+            (and (= (pr b) (br b) (mr b) 0.0)))
 
-       ,@(map extract-field '(mt mr mb ml))
        ,@(zero-auto-margins '(left right top bottom))
        (margins-dont-collapse b)
 

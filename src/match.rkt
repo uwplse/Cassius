@@ -16,11 +16,23 @@
 (define (link-matched-elts-boxes sheet elts boxes)
   (define num->elt (make-hasheq))
   (define box->elt (make-hasheq))
+  (define first-box (make-hasheq))
+  (define last-box (make-hasheq))
   (for ([elt (in-tree elts)] #:when (node-get elt ':num))
     (dict-set! num->elt (node-get elt ':num) elt))
   (for ([box (in-tree boxes)] #:when (node-get box ':elt))
-    (dict-set! box->elt box (dict-ref num->elt (node-get box ':elt))))
-  (λ (x) (dict-ref box->elt x #f)))
+    (define elt (dict-ref num->elt (node-get box ':elt)))
+    (dict-set! box->elt box elt)
+    (unless (dict-has-key? first-box elt)
+      (dict-set! first-box elt box))
+    (dict-set! last-box elt box))
+
+  (λ (x)
+    (let ([elt (dict-ref box->elt x #f)])
+      (and elt
+           (list elt
+                 (equal? x (dict-ref first-box elt #f))
+                 (equal? x (dict-ref last-box elt #f)))))))
 
 (define (link-elts-boxes sheet elts boxes)
   (define box->elt (make-hasheq))
@@ -34,7 +46,9 @@
     (when (dict-has-key? box->elt x)
       (eprintf " ~~ ~a (~a)" (dict-ref box->elt x) (display (dict-ref box->elt x))))
     (eprintf "\n"))
-  (λ (x) (dict-ref box->elt x #f)))
+  (λ (x)
+    (let ([elt (dict-ref box->elt x #f)])
+      (and elt (list elt #f #f)))))
 
 (define (collect-possible-elements . boxes)
   (reap [sow]

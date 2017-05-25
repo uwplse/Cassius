@@ -64,7 +64,7 @@
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
          &nflow &vflow &ppflow ez.in ez.out
-         textalign &elt)
+         textalign &elt first? last?)
    box)
   (define box-width (+ bl pl w pr br))
   (define box-height (+ bt pt h pb bb))
@@ -167,13 +167,14 @@
 
 (define (box-element-constraints matchers doms)
   (reap [emit]
-    (for ([dom doms] [matcher matchers] #:when true [box (in-boxes dom)])
+    (for ([dom doms] [matcher matchers]
+          #:when true [box (in-boxes dom)])
       (match (matcher box)
         [#f
          (emit `(assert (! (match-anon-box ,(name 'box box))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]
-        [elt
-         (emit `(assert (! (match-element-box ,(name 'elt elt) ,(name 'box box))
+        [(list elt first? last?)
+         (emit `(assert (! (match-element-box ,(name 'elt elt) ,(name 'box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]))))
 
 (define (dom-define-get/elt doms emit)

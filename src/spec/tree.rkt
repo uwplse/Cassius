@@ -24,7 +24,7 @@
                 (&ppflow BoxName) ; parent positioned pointers
                 (ez.in EZone) (ez.out EZone)
                 (textalign Text-Align) ; to handle inheritance; TODO: handle better
-                (&elt ElementName)))
+                (&elt ElementName) (first-box? Bool) (last-box? Bool)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
@@ -133,9 +133,12 @@
   ;; `match-element-box` matchs elements and boxes together.
   ;; `match-anon-element` and `match-anon-box` do the same for
   ;; elements and boxes without links on the other side.
-  (define-fun match-element-box ((&e ElementName) (&b BoxName)) Bool
+  (define-fun match-element-box ((&e ElementName) (&b BoxName)
+                                 (first? Bool) (last? Bool)) Bool
     (and
      (= (&elt (get/box &b)) &e)
+     (= (first-box? (get/box &b)) first?)
+     (= (last-box? (get/box &b)) last?)
      (= (textalign (get/box &b))
         (style.text-align (computed-style (get/elt &e))))))
 
