@@ -116,7 +116,10 @@
        ;; top margin-edge of the topmost block-level child box and the
        ;; bottom margin-edge of the bottommost block-level child box.
        (min-max-height
-        (- (max (ez.max (ez.out (lbox b))) (bottom-outer (lflow b)))
+        (- (max (ez.max (ez.out (lbox b)))
+                (ite (box-collapsed-through (lflow b))
+                     (bottom-border (lflow b))
+                     (bottom-outer (lflow b))))
            (top-content b))
         b)]))
 
@@ -138,7 +141,9 @@
          (min-max-height 
           (- ;; CSS 2.1 § 10.6.3, item 2
            (ite (bottom-margin-collapses-with-children b)
-                (bottom-border lb)
+                (ite (box-collapsed-through lb)
+                     (- (top-border lb) (+ (mbp lb) (mbn lb))) ; Confusing but correct
+                     (bottom-border lb))
                 (ite (box-collapsed-through lb)
                      ;; CSS § 10.6.3, item 3
                      (bottom-border lb)
@@ -182,13 +187,13 @@
            (max (ite (> (mt b) 0.0) (mt b) 0.0)
                 (max (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtp f) 0.0)
                      (ite (box-collapsed-through b)
-                          (max (ite (> (mb b) 0.0) (mb b) 0.0) (mtp n))
+                          (max-if (ite (> (mb b) 0.0) (mb b) 0.0) (is-box n) (mtp n))
                           0.0))))
         (= (mtn b)
            (min (ite (< (mt b) 0.0) (mt b) 0.0)
                 (min (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtn f) 0.0)
                      (ite (box-collapsed-through b)
-                          (min (ite (< (mb b) 0.0) (mb b) 0.0) (mtn n))
+                          (min-if (ite (< (mb b) 0.0) (mb b) 0.0) (is-box n) (mtn n))
                           0.0))))))
      (let ([l (lflow b)] [v (vflow b)])
        (and
@@ -196,13 +201,13 @@
            (max (ite (> (mb b) 0.0) (mb b) 0.0)
                 (max (ite (and (bottom-margin-collapses-with-children b) (is-box l)) (mbp l) 0.0)
                      (ite (box-collapsed-through b)
-                          (max (ite (> (mt b) 0.0) (mt b) 0.0) (mbp v))
+                          (max-if (ite (> (mt b) 0.0) (mt b) 0.0) (is-box v) (mbp v))
                           0.0))))
         (= (mbn b)
            (min (ite (< (mb b) 0.0) (mb b) 0.0)
                 (min (ite (and (bottom-margin-collapses-with-children b) (is-box l)) (mbn l) 0.0)
                      (ite (box-collapsed-through b)
-                          (min (ite (< (mt b) 0.0) (mt b) 0.0) (mbn v))
+                          (min-if (ite (< (mt b) 0.0) (mt b) 0.0) (is-box v) (mbn v))
                           0.0))))))))
 
   (define-fun margins-dont-collapse ((b Box)) Bool
