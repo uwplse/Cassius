@@ -1036,8 +1036,8 @@ function page2cassius(name) {
         text += dump_stylesheet(document.styleSheets[sid], features);
     }
 
-    var doc = dump_document();
     var out = get_boxes(features);
+    var doc = dump_document();
     var page = out.view;
     annotate_box_elt(page);
     
