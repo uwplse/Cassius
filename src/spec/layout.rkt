@@ -372,7 +372,7 @@
     ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
                [temp-top ,(get-px-or-% 'top 'h 'b)]
                [temp-bottom ,(get-px-or-% 'bottom 'h 'b)]
-               [temp-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height 'h 'b))]
+               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height 'h 'b)) b)]
                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
                [height?
@@ -410,7 +410,7 @@
      ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)] [p (pflow b)]
                 [temp-left ,(get-px-or-% 'left 'w 'b)]
                 [temp-right ,(get-px-or-% 'right 'w 'b)]
-                [temp-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width 'w 'b))]
+                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width 'w 'b)) b)]
                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
                 [width? (not (or (is-replaced (box-elt b)) (is-width/auto (style.width (computed-style (box-elt b))))))])
@@ -456,7 +456,7 @@
        (ite (is-height/auto (style.height r))
             (= (h b) (auto-height-for-flow-blocks b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-               ,(get-px-or-% 'height 'h 'b)))
+               (min-max-height ,(get-px-or-% 'height 'h 'b) b)))
 
        ,@(map extract-field '(mt mb))
        ,@(zero-auto-margins '(top bottom))
@@ -488,14 +488,14 @@
                  (= (w b) (usable-stfwidth b)))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               ,(get-px-or-% 'width 'w 'b)))
+               (min-max-width ,(get-px-or-% 'width 'w 'b) b)))
 
        (ite (is-height/auto (style.height r))
             (ite (is-replaced e)
                  (= (h b) (intrinsic-height e))
                  (=> (width-set b) (= (h b) (auto-height-for-flow-roots b))))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-               ,(get-px-or-% 'height 'h 'b)))
+               (min-max-height ,(get-px-or-% 'height 'h 'b) b)))
 
        ;; level -> x -> advance -> can-add -> add
        (let* ([ez (ez.in b)]
