@@ -511,7 +511,7 @@
                     (top-content p)
                     (ite (is-box/block (type vb))
                          (bottom-outer vb)
-                         (top-outer vb)))]
+                         (top-content p)))]
               [y* (ez.level ez w (left-content p) (right-content p) y-normal)]
               [y (max y-normal y*)]
               [x* (ez.x ez y (style.float r) (left-content p) (right-content p))]

@@ -40,13 +40,13 @@
    ;z3-simplif
    z3-assert-and
    ;(apply z3-resolve-fns to-resolve)
-   (z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
+   ;(z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
    ;(z3-expand to-expand-2 #:clear true)
    ;z3-simplif
    ;z3-assert-and
-   ;(apply z3-lift-arguments to-resolve)
+   (apply z3-lift-arguments to-resolve)
    ;(apply z3-resolve-fns to-resolve)
-   ;(z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
+   (z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
    ;(apply z3-resolve-fns to-resolve)
    ;;; It's important to lift and expand earlier up to make these passes fast.
    ;z3-if-and
