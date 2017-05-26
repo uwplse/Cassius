@@ -32,7 +32,7 @@
         (eprintf "Failed ~a on ~a\n  " act target)
         (pretty-print diff)))))
 
-(define (wrapped-solve sheets documents #:debug debug)
+(define (wrapped-solve sheets documents #:debug debug #:test [test #f])
   (with-handlers
       ([exn:break? (λ (e) 'break)]
        [exn:fail? (λ (e) (list 'error e))])
@@ -126,7 +126,9 @@
       (displayln out)))
 
 (define (do-verify problem #:debug debug)
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
+  (define documents (map dom-strip-positions (dict-ref problem ':documents)))
+  (match (wrapped-solve (dict-ref problem ':sheets) documents #:debug debug
+                        #:test (dict-ref problem ':test))
     [(success stylesheet trees)
      (eprintf "Counterexample found!\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex))))]
