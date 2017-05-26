@@ -801,8 +801,8 @@ function dump_stylesheet(ss, features) {
 ELTS = []
 
 function get_inherent_size(e) {
-    if (e.naturalWidth && e.naturalHeight) {
-        return {w: e.naturalWidth, h: e.naturalHeight};
+    if (e.width && e.height) {
+        return {w: e.width, h: e.height};
     } else {
         return {w: e.getBoundingClientRect().width
                 - val2px(cs(e).paddingLeft) - val2px(cs(e).paddingRight)

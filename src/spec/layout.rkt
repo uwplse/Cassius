@@ -8,7 +8,7 @@
   `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
         (ite (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) ,r))
-             (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) (,wrt (pflow ,b)))
+             (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)
              (%of (* 100 (,(sformat "~a.em" type) (,(sformat "style.~a" prop) ,r))) (font-size ,b)))))
 
 (define fields
@@ -42,16 +42,16 @@
          (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
-    (max ,(get-px-or-% 'min-width 'w 'b)
+    (max ,(get-px-or-% 'min-width '(w (pflow b)) 'b)
          (ite (is-max-width/none (style.max-width (computed-style (box-elt b))))
               val
-              (min val ,(get-px-or-% 'max-width 'w 'b)))))
+              (min val ,(get-px-or-% 'max-width '(w (pflow b)) 'b)))))
 
   (define-fun min-max-height ((val Real) (b Box)) Real
-    (max ,(get-px-or-% 'min-height 'h 'b)
+    (max ,(get-px-or-% 'min-height '(h (pflow b)) 'b)
          (ite (is-max-height/none (style.max-height (computed-style (box-elt b))))
               val
-              (min val ,(get-px-or-% 'max-height 'h 'b)))))
+              (min val ,(get-px-or-% 'max-height '(h (pflow b)) 'b)))))
 
   (define-fun margin-min-px ((m Margin) (b Box)) Real
     ,(smt-cond
@@ -65,7 +65,7 @@
          (ite (is-replaced (box-elt b))
               (intrinsic-width (box-elt b))
               0.0)
-         ,(get-px-or-% 'width 'w 'b)))
+         ,(get-px-or-% 'width '(w (pflow b)) 'b)))
 
   (define-fun min-ml ((b Box)) Real
     (ite (is-elt (box-elt b))
@@ -284,9 +284,9 @@
            [(and (is-width/auto (style.width r)) (not (is-replaced e)))
             (ite (and (not (is-max-width/none (style.max-width r)))
                       (> (- (w p) ml* (bl b) (pl b) (pr b) (br b) mr*)
-                         ,(get-px-or-% 'max-width 'w 'b)))
+                         ,(get-px-or-% 'max-width '(w p) 'b)))
                  (and
-                  (= (w b) ,(get-px-or-% 'max-width 'w 'b))
+                  (= (w b) ,(get-px-or-% 'max-width '(w p) 'b))
                   ,(smt-cond
                     [(not (is-margin/auto (style.margin-left r)))
                      (= (ml b) ml*)]
@@ -375,9 +375,9 @@
   (define-fun positioned-vertical-layout ((b Box)) Bool
     ;; CSS 2.1 § 10.6.4
     ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
-               [temp-top ,(get-px-or-% 'top 'h 'b)]
-               [temp-bottom ,(get-px-or-% 'bottom 'h 'b)]
-               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height 'h 'b)) b)]
+               [temp-top ,(get-px-or-% 'top '(h (ppflow b)) 'b)]
+               [temp-bottom ,(get-px-or-% 'bottom '(h (ppflow b)) 'b)]
+               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(h (ppflow b)) 'b)) b)]
                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
                [height?
@@ -413,9 +413,9 @@
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
      ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)] [p (pflow b)]
-                [temp-left ,(get-px-or-% 'left 'w 'b)]
-                [temp-right ,(get-px-or-% 'right 'w 'b)]
-                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width 'w 'b)) b)]
+                [temp-left ,(get-px-or-% 'left '(w (ppflow b)) 'b)]
+                [temp-right ,(get-px-or-% 'right '(w (ppflow b)) 'b)]
+                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(w (ppflow b)) 'b)) b)]
                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
                 [width? (not (or (is-replaced (box-elt b)) (is-width/auto (style.width (computed-style (box-elt b))))))])
@@ -461,7 +461,7 @@
        (ite (is-height/auto (style.height r))
             (= (h b) (auto-height-for-flow-blocks b))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-               (min-max-height ,(get-px-or-% 'height 'h 'b) b)))
+               (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
        ,@(map extract-field '(mt mb))
        ,@(zero-auto-margins '(top bottom))
@@ -493,14 +493,14 @@
                  (= (w b) (usable-stfwidth b)))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-               (min-max-width ,(get-px-or-% 'width 'w 'b) b)))
+               (min-max-width ,(get-px-or-% 'width '(w p) 'b) b)))
 
        (ite (is-height/auto (style.height r))
             (ite (is-replaced e)
                  (= (h b) (intrinsic-height e))
                  (=> (width-set b) (= (h b) (auto-height-for-flow-roots b))))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-               (min-max-height ,(get-px-or-% 'height 'h 'b) b)))
+               (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
        ;; level -> x -> advance -> can-add -> add
        (let* ([ez (ez.in b)]
@@ -574,7 +574,7 @@
           (= (h b) (intrinsic-height e))]
          [(not (is-height/auto (style.height r)))
           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-             (min-max-height ,(get-px-or-% 'height 'h 'b) b))]
+             (min-max-height ,(get-px-or-% 'height '(h p) 'b) b))]
          [(is-display/inline-block (style.display r))
           (= (h b) (auto-height-for-flow-roots b))]
          [else
@@ -585,7 +585,7 @@
           (= (w b) (intrinsic-width e))]
          [(not (is-width/auto (style.width r)))
           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-             (min-max-width ,(get-px-or-% 'width 'w 'b) b))]
+             (min-max-width ,(get-px-or-% 'width '(w p) 'b) b))]
          [(is-display/inline-block (style.display r))
           (= (w b) (usable-stfwidth b))]
          [(is-box (fflow b))
@@ -630,7 +630,7 @@
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) 0.0)
 
-       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent 'w 'p) 0.0))
+       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent '(w p) 'p) 0.0))
 
        (let ([y-normal
               (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
