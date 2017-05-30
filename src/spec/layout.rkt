@@ -594,11 +594,18 @@
          [else
           (= (w b) 0.0)])
 
-       (<= (top-content p) (top-outer b) (+ (top-content p) (h p) (- (h b))))
+       (<= (top-content p) (top-outer b))
+       (<= (bottom-outer b) (bottom-content p))
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
        (= (ez.out b)
-          (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
+          ,(smt-cond
+            [(is-display/inline-block (style.display r))
+             (ez.in b)]
+            [(is-box (lbox b))
+             (ez.out (lbox b))]
+            [else
+             (ez.in b)]))))
 
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)])
