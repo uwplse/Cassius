@@ -498,15 +498,14 @@
                          (bottom-outer vb)
                          (top-outer vb)))]
               [y* (ez.level ez w (left-content p) (right-content p) y-normal)]
-              [y (max y-normal y*)]
-              [x* (ez.x ez y (style.float r) (left-content p) (right-content p))]
+              [x* (ez.x ez y* (style.float r) (left-content p) (right-content p))]
               [x (ite (is-float/left (style.float r)) x* (- x* w))]
-              [ez* (ez.advance ez y)])
+              [ez* (ez.advance ez y*)])
          (and
           (= (top-outer b) y)
           (= (left-outer b) x)
-          (ez.can-add ez* (+ y h)) ;; This is the key restriction
-          (= (ez.out b) (ez.add ez* (style.float r) y (+ w x) (+ h y) x))))))
+          (ez.can-add ez* (+ y* h)) ;; This is the key restriction
+          (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x))))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     (and
@@ -619,7 +618,7 @@
          (and
           (ez.test (ez.in b) y-normal) ;; Key float restriction
           (= (y b)
-             (max y-normal (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal)))
+             (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal))
           (= (left-outer b) (ez.x ez y-normal float/left (left-content p) (right-content p)))
           (= (right-outer b) (ez.x ez y-normal float/right (left-content p) (right-content p)))))
 
