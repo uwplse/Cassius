@@ -141,25 +141,24 @@
     ;; y is the normal-flow y-position of the box
     ;; pl and pr are the parent's content left and right
     ;; The returned value is a y* such that the box should be placed at (max y y*)
-    (max
-     (ite (ez.mark? ez)
-          ,(let loop
-              ([conditions (for/list ([i (in-range (*exclusion-zone-registers*))])
-                             `(or
-                               (and (not (,(sformat "ez.l~a?" i) ez)) (not (,(sformat "ez.r~a?" i) ez)))
-                               (and
-                                (< y (,(sformat "ez.y~a" i) ez))
-                                (<= width
-                                    (- (ite (,(sformat "ez.r~a?" i) ez) (min (,(sformat "ez.r~a" i) ez) pr) pr)
-                                       (ite (,(sformat "ez.l~a?" i) ez) (max (,(sformat "ez.l~a" i) ez) pl) pl))))))]
-               [results (cons '(ez.mark ez) (for/list ([i (in-range (*exclusion-zone-registers*))])
-                                              `(,(sformat "ez.y~a" i) ez)))])
-              (match* (conditions results)
-                [('() (list else-branch)) else-branch]
-                [((cons test conditions) (cons result results))
-                 `(ite ,test ,result ,(loop conditions results))]))
-          y)
-     y))
+    (max-if
+     y
+     (ez.mark? ez)
+     ,(let loop
+        ([conditions (for/list ([i (in-range (*exclusion-zone-registers*))])
+                       `(or
+                         (and (not (,(sformat "ez.l~a?" i) ez)) (not (,(sformat "ez.r~a?" i) ez)))
+                         (and
+                          (< y (,(sformat "ez.y~a" i) ez))
+                          (<= width
+                              (- (ite (,(sformat "ez.r~a?" i) ez) (min (,(sformat "ez.r~a" i) ez) pr) pr)
+                                 (ite (,(sformat "ez.l~a?" i) ez) (max (,(sformat "ez.l~a" i) ez) pl) pl))))))]
+         [results (cons '(ez.mark ez) (for/list ([i (in-range (*exclusion-zone-registers*))])
+                                        `(,(sformat "ez.y~a" i) ez)))])
+        (match* (conditions results)
+          [('() (list else-branch)) else-branch]
+          [((cons test conditions) (cons result results))
+           `(ite ,test ,result ,(loop conditions results))]))))
 
   (define-fun ez.left-max ((ez EZone)) Real
     ,(for/fold ([expr `(ez.mark ez)]) ([i (in-range (*exclusion-zone-registers*))])

@@ -502,7 +502,7 @@
               [x (ite (is-float/left (style.float r)) x* (- x* w))]
               [ez* (ez.advance ez y*)])
          (and
-          (= (top-outer b) y)
+          (= (top-outer b) y*)
           (= (left-outer b) x)
           (ez.can-add ez* (+ y* h)) ;; This is the key restriction
           (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x))))))
