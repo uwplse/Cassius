@@ -813,7 +813,7 @@ function get_inherent_size(e) {
     }
 }
 
-function dump_document() {
+function dump_document(features) {
     var elt = document.documentElement;
     
     function recurse(elt) {
@@ -849,6 +849,11 @@ function dump_document() {
 
             if (elt.tagName.toUpperCase() === "INPUT") {
                 rec.props["type"] = elt.type;
+            }
+            
+            if (elt.dir) {
+                rec.props["dir"] = elt.dir;
+                features["attr:dir"] = true;
             }
 
             for (var i = 0; i < elt.childNodes.length; i++) {
@@ -1037,7 +1042,7 @@ function page2cassius(name) {
     }
 
     var out = get_boxes(features);
-    var doc = dump_document();
+    var doc = dump_document(features);
     var page = out.view;
     annotate_box_elt(page);
     
