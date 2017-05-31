@@ -636,7 +636,7 @@
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) 0.0)
 
-       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent '(w p) 'p) 0.0))
+       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent '(w p) '(ite (is-box p) p (pflow p))) 0.0))
 
        (let ([y-normal
               (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
