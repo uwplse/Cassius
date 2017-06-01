@@ -314,7 +314,7 @@
     (- (w (pbox b)) (ml b) (bl b) (pl b) (pr b) (br b) (mr b)))
 
   (define-fun usable-stfwidth ((b Box)) Real
-    (let ([l (lbox b)] [v (vbox b)])
+    (let ([l (lbox b)])
       (min-max-width
        (ite (is-box l)
             (min (max (stfwidth l) (available-width b)) (stfmax l))
@@ -512,12 +512,12 @@
                     (ite (is-box/block (type vb))
                          (bottom-outer vb)
                          (top-content p)))]
-              [y* (ez.level ez w (left-content p) (right-content p) y-normal)]
-              [x* (ez.x ez y* (style.float r) (left-content p) (right-content p))]
+              [y* (ez.level ez w (left-content (pbflow b)) (right-content (pbflow b)) y-normal)]
+              [x* (ez.x ez y* (style.float r) (left-content (pbflow b)) (right-content (pbflow b)))]
               [x (ite (is-float/left (style.float r)) x* (- x* w))]
               [ez* (ez.advance ez y*)])
          (and
-          (= (top-outer b) y)
+          (= (top-outer b) y*)
           (= (left-outer b) x)
           (ez.can-add ez* (+ y* h)) ;; This is the key restriction
           (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x))))))
@@ -636,17 +636,15 @@
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) 0.0)
 
-       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent '(w p) '(ite (is-box p) p (pflow p))) 0.0))
+       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent '(w p) '(ite (is-elt (box-elt p)) p (pflow p))) 0.0))
 
-       (let ([y-normal
-              (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
+       (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
              [ez (ez.in b)])
          (and
           (ez.test (ez.in b) y-normal) ;; Key float restriction
-          (= (y b)
-             (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal))
-          (= (left-outer b) (ez.x ez y-normal float/left (left-content p) (right-content p)))
-          (= (right-outer b) (ez.x ez y-normal float/right (left-content p) (right-content p)))))
+          (= (y b) (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal))
+          (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
+          (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p)))))
 
        (= (stfwidth b) (compute-stfwidth b))
        (= (stfmax b) (+ (ite (is-box v) (stfmax v) 0.0) (+ (stfmax (lbox b)) (pl b))))
@@ -680,8 +678,8 @@
        (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b)
-       (= (stfmax b) (stfmax l))
-       (= (stfwidth b) (stfwidth l))
+       (= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
+       (= (stfwidth b) (max-if (stfwidth l) (is-box v) (stfwidth v)))
        (= (w b) (w p))
        (= (font-size b) (font-size p))
        (not (w-from-stfwidth b))
