@@ -167,7 +167,7 @@
   (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
-     (= (&pbflow b) (ite (is-box/block (type (pbox b))) (&pbox b) (&pbflow (pbox b))))
+     (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
      (= (ez.in b) (ite (is-no-box (vbox b))
@@ -179,7 +179,7 @@
   (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pbox b))))
-     (= (&pbflow b) (ite (is-box/block (type (pbox b))) (&pbox b) (&pbflow (pbox b))))
+     (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
      (= (&vflow b)
         ,(smt-cond
           [(is-no-box (vbox b)) nil-box]
