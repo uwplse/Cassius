@@ -61,8 +61,8 @@
             link-matched-elts-boxes
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
-  (define query (all-constraints matchers doms))
-  (set! query (append query (sheet-constraints doms (car sheets))))
+  (define query (all-constraints sheets matchers doms))
+  ;(set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))
 
   (log-phase "Produced ~a constraints of ~a terms"
@@ -111,8 +111,8 @@
             link-matched-elts-boxes
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
-  (define query (all-constraints matchers doms))
-  (set! query (append query (sheet-constraints doms (car sheets))))
+  (define query (all-constraints (cons browser-style sheets) matchers doms))
+  ;(set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))
 
   (log-phase "Produced ~a constraints of ~a terms"

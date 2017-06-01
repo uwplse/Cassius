@@ -280,12 +280,13 @@
     (emit `(assert (! (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))
                    :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
 
-(define (all-constraints matcher doms)
+(define (all-constraints sheets matcher doms)
   (define (global f) (reap [sow] (f doms sow)))
   (define (per-element f)
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
+
 
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
@@ -323,6 +324,7 @@
     ,@link-definitions
     ,@style-computation
     ,@layout-definitions
+    ,@(sheet*-constraints doms (apply append sheets))
     ,@(per-element tree-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-box box-constraints)
