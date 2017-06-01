@@ -22,6 +22,7 @@
                 (font-size Real)
                 (&nflow BoxName) (&vflow BoxName) ; flow tree pointers
                 (&ppflow BoxName) ; parent positioned pointers
+                (&pbflow BoxName)
                 (ez.in EZone) (ez.out EZone)
                 (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt ElementName) (first-box? Bool) (last-box? Bool)))
@@ -34,7 +35,7 @@
 
   ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
       `(assert (= (,field no-elt) nil-elt)))
-  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow)])
+  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
       `(assert (= (,field no-box) nil-box)))
 
   (assert (= (&elt no-box) nil-elt)))
@@ -57,6 +58,7 @@
   ;; Three additional pointers: to the previous floating box, the
   ;; parent block box, and the parent positioned box.
   (define-fun ppflow ((box Box)) Box (get/box (&ppflow box)))
+  (define-fun pbflow ((box Box)) Box (get/box (&pbflow box)))
 
   ;; From elements to boxes and back
   (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
@@ -157,6 +159,7 @@
   (define-fun link-flow-root ((b Box) (&b BoxName)) Bool
     (and
      (= (&ppflow b) &b)
+     (= (&pbflow b) nil-box)
      (= (&vflow b) nil-box)
      (= (&nflow b) nil-box)
      (= (ez.in b) ez.init)))
@@ -164,6 +167,7 @@
   (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
+     (= (&pbflow b) (ite (is-box/block (type (pbox b))) (&pbox b) (&pbflow (pbox b))))
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
      (= (ez.in b) (ite (is-no-box (vbox b))
@@ -175,6 +179,7 @@
   (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pbox b))))
+     (= (&pbflow b) (ite (is-box/block (type (pbox b))) (&pbox b) (&pbflow (pbox b))))
      (= (&vflow b)
         ,(smt-cond
           [(is-no-box (vbox b)) nil-box]

@@ -157,11 +157,11 @@
             ;; These parts don't check (hash-clearance) because they're
             ;; computed "as if" there were no clearance
             (+ (bottom-border v)
-               (ite (box-collapsed-through v)
+               (ite (and (box-collapsed-through v) (not (is-flow-root b)))
                     0.0
                     (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))))
             (+ (top-content p)
-               (ite (top-margin-collapses-with-children p)
+               (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
                     0.0
                     (+ (mtp b) (mtn b)))))))
 

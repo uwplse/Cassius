@@ -63,7 +63,7 @@
          pt pr pb pl bt br bb bl stfwidth stfmax w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
-         &nflow &vflow &ppflow ez.in ez.out
+         &nflow &vflow &ppflow &pbflow ez.in ez.out
          textalign &elt first? last?)
    box)
   (define box-width (+ bl pl w pr br))
