@@ -159,7 +159,7 @@
      (= (&ppflow b) &b)
      (= (&vflow b) nil-box)
      (= (&nflow b) nil-box)
-     (= (ez.in b) (ez.init 0.0))))
+     (= (ez.in b) ez.init)))
 
   (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
     (and
@@ -168,7 +168,7 @@
      (= (&nflow b) (&nbox b))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
-                            (ez.init (top-content (pbox b)))
+                            ez.init
                             (ez.in (pbox b)))
                        (ez.out (vbox b))))))
 
@@ -187,7 +187,7 @@
           [else (&nflow (nbox b))]))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
-                            (ez.init (top-content (pbox b)))
+                            ez.init
                             (ez.in (pbox b)))
                        (ez.out (vbox b)))))))
 
