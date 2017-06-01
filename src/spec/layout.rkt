@@ -469,8 +469,14 @@
 
        (ite (is-flow-root b)
             (and
-             ;; TODO: layout of overflow box---it avoids floats in some complicated & stupid way
-             true)
+             (= (y b) (ez.level (ez.in b) (min-w b) (left-content p) (right-content p)
+                                (resolve-clear b (vertical-position-for-flow-boxes b))))
+             (= (left-outer b) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)))
+
+             ;; TODO: incorrect
+             #;(ite (is-width/auto (style.width r))
+                  (= (right-outer b) (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p)))
+                  (= (w b) (min-max-width ,(get-px-or-% 'width '(w p) 'b) b))))
             (and
              (flow-horizontal-layout b)
              (= (x b) (+ (left-content p) (ml b)))
