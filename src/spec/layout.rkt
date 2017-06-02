@@ -512,11 +512,12 @@
               [w (- (right-outer b) (left-outer b))]
               [h (- (bottom-outer b) (top-outer b))]
               [y-normal
-               (ite (is-no-box vb)
-                    (top-content p)
-                    (ite (is-box/block (type vb))
-                         (bottom-outer vb)
-                         (top-content p)))]
+               (resolve-clear b
+                              (ite (is-no-box vb)
+                                   (top-content p)
+                                   (ite (is-box/block (type vb))
+                                        (bottom-outer vb)
+                                        (top-content p))))]
               [y* (ez.level ez w (left-content (pbflow b)) (right-content (pbflow b)) y-normal)]
               [x* (ez.x ez y* (style.float r) (left-content (pbflow b)) (right-content (pbflow b)))]
               [x (ite (is-float/left (style.float r)) x* (- x* w))]
@@ -599,8 +600,14 @@
          [else
           (= (w b) 0.0)])
 
-       (<= (top-content p) (top-outer b))
-       (<= (bottom-outer b) (bottom-content p))
+       (<= (top-content p)
+           (ite (is-display/inline-block (style.display r))
+                (top-outer b)
+                (top-border b)))
+       (<= (ite (is-display/inline-block (style.display r))
+                (bottom-outer b)
+                (bottom-border b))
+           (bottom-content p))
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
        (= (ez.out b)
