@@ -123,9 +123,8 @@
 
 (define (do-smt2 problem output)
   (define out
-    (append
-     (smt->string (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents)))
-     (list cassius-check-sat)))
+    (smt->string (append (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents))
+                         (list cassius-check-sat))))
   (if output
       (call-with-output-file output #:exists 'replace (curry displayln out))
       (displayln out)))
