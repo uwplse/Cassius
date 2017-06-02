@@ -2,7 +2,7 @@
 
 (require racket/cmdline (only-in xml write-xexpr)
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
-         "frontend.rkt" "actions.rkt"
+         "frontend.rkt" "actions.rkt" "solver.rkt"
          "print/tree.rkt" "print/css.rkt" "print/html.rkt" "print/smt.rkt")
 
 (define (dom-strip-positions d)
@@ -122,7 +122,10 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-smt2 problem output)
-  (define out (smt->string (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents))))
+  (define out
+    (append
+     (smt->string (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents)))
+     (list cassius-check-sat)))
   (if output
       (call-with-output-file output #:exists 'replace (curry displayln out))
       (displayln out)))

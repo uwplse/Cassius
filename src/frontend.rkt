@@ -61,56 +61,6 @@
             link-matched-elts-boxes
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
-  (define query (all-constraints sheets matchers doms))
-  ;(set! query (append query (sheet-constraints doms (car sheets))))
-  (when test (set! query (add-test query test)))
-
-  (log-phase "Produced ~a constraints of ~a terms"
-             (length query) (tree-size query))
-
-  (if (memq 'z3o (flags))
-      (set! query (z3-prepare query))
-      (set! query (z3-clean query)))
-  (when (memq 'debug (flags)) (set! query (z3-namelines query)))
-
-  (log-phase "Prepared ~a constraints of ~a terms"
-           (length query) (tree-size query))
-
-  (append query (list cassius-check-sat)))
-
-(define (solve sheets docs [test #f])
-  (define log-phase (make-log))
-  (define doms (map parse-dom docs))
-
-  (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
-             (length doms)
-             (length (append-map (compose sequence->list in-tree dom-elements) doms))
-             (length (append-map (compose sequence->list in-tree dom-boxes) doms))
-             (length (car sheets)))
-
-  (define browser-styles (map (curryr dom-context ':browser) doms))
-  (unless (= (length (remove-duplicates browser-styles)) 1)
-    (error "Multiple documents with different browsers not supported"))
-  (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
-
-  (define %s
-    (reap [sow]
-          (for* ([sheet (cons browser-style sheets)] [rule sheet])
-            (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
-            (for ([(prop value) (in-dict props)])
-              (match (car value)
-                [(list 'em v) (sow (* 100 (z3->number v)))]
-                [(list '% v) (sow (z3->number v))]
-                [_ (void)])))))
-  (*%* (set-union (*%*) %s))
-
-  (define matchers
-    (for/list ([dom doms])
-      (define linker
-        (if (dom-context dom ':matched)
-            link-matched-elts-boxes
-            link-elts-boxes))
-      (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
   (define query (all-constraints (cons browser-style sheets) matchers doms))
   ;(set! query (append query (sheet-constraints doms (car sheets))))
   (when test (set! query (add-test query test)))
@@ -125,6 +75,13 @@
 
   (log-phase "Prepared ~a constraints of ~a terms"
            (length query) (tree-size query))
+  
+  query)
+
+(define (solve sheets docs [test #f])
+  (define log-phase (make-log))
+
+  (define query (constraints sheets docs test))
 
   (define out
     (let ([z3 (z3-process)])
@@ -133,6 +90,7 @@
         (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
           (z3-kill z3)))))
 
+  (define doms (map parse-dom docs))
   (define trees (map dom-boxes doms))
   (define res
     (match out
