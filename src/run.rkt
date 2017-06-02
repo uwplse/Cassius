@@ -125,9 +125,7 @@
   (define out
     (smt->string (append (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents))
                          (list cassius-check-sat))))
-  (if output
-      (call-with-output-file output #:exists 'replace (curry displayln out))
-      (displayln out)))
+  (call-with-output-file output #:exists 'replace (curry displayln out)))
 
 (define (do-verify problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
