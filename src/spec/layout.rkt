@@ -539,7 +539,7 @@
        (= (type b) box/block)
        ,@(map extract-field '(pt pr pb pl bt br bb bl))
        (= (stfwidth b) (compute-stfwidth b))
-       (= (stfmax b) (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))))
+       ;(= (stfmax b) (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))))
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
 
@@ -571,7 +571,7 @@
             (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
        (= (stfwidth b) (compute-stfwidth b))
-       (= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)))
+       ;(= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)))
 
        ,(smt-cond
          [(is-replaced e)
@@ -683,7 +683,7 @@
        (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b)
-       (= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
+       ;(= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
        (= (stfwidth b) (max-if (stfwidth l) (is-box v) (stfwidth v)))
        (= (w b) (w p))
        (= (font-size b) (font-size p))
