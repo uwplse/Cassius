@@ -8,9 +8,6 @@
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          css-values-solver)
 
-
-(define *fuzz* '(/ 10 60))
-
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
     (if (andmap (curry dict-has-key? body) parts)
@@ -208,7 +205,7 @@
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg
-        [(? number*?) (if *fuzz* `(< (- ,arg ,*fuzz*) ,expr (+ ,arg ,*fuzz*)) `(= ,expr ,arg))]
+        [(? number*?) (if (*fuzz*) `(< (- ,arg ,(*fuzz*)) ,expr (+ ,arg ,(*fuzz*))) `(= ,expr ,arg))]
         [`(not ,(? number*? value)) `(not (= ,expr ,value))]
         [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min ,expr ,max)]))
 

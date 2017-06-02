@@ -74,7 +74,7 @@
 (define (section<? s1 s2)
   (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
-(define (run-problem prob #:debug debug)
+(define (run-problem prob)
   (define custodian (make-custodian))
   (define eng
     (engine (λ (_)
@@ -85,7 +85,7 @@
                 (with-handlers
                     ([exn:break? (λ (e) 'break)]
                      [exn:fail? (λ (e) (list 'error e))])
-                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) #:debug debug))))))
+                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents)))))))
 
   (define t (current-inexact-milliseconds))
   (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout)) ; 1m max
@@ -96,9 +96,9 @@
 
 (struct result (file problem test section status description features time url) #:prefab)
 
-(define (test-regression file pname prob #:debug [debug '()] #:index [index (hash)])
+(define (test-regression file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t" file pname)
-  (define-values (res runtime) (run-problem prob #:debug debug))
+  (define-values (res runtime) (run-problem prob))
   (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
 
   (define status
@@ -115,10 +115,10 @@
           status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
           (car (dict-ref prob ':url '("/tmp")))))
 
-(define (test-mutations file pname prob #:debug [debug '()] #:index [index (hash)])
+(define (test-mutations file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t" file pname)
   (define prob* (dict-update prob ':documents (curry map dom-not-something)))
-  (define-values (res runtime) (run-problem prob* #:debug debug))
+  (define-values (res runtime) (run-problem prob*))
   (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
 
   (define status
@@ -135,11 +135,11 @@
           status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
           (car (dict-ref prob ':url '("/tmp")))))
 
-(define (run-regression-tests probs #:debug [debug '()] #:valid [valid? (const true)] #:index [index (hash)]
+(define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
   (define inputs
     (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x)))
-      (list file (car x) (cdr x) debug index)))
+      (list file (car x) (cdr x) index)))
 
   (if threads
       (let ([workers
@@ -148,8 +148,8 @@
               (λ (i)
                 (place ch
                        (let loop ()
-                         (match-define (list self file pname prob debug index) (place-channel-get ch))
-                         (define result (test-regression file pname prob #:debug debug #:index index))
+                         (match-define (list self file pname prob index) (place-channel-get ch))
+                         (define result (test-regression file pname prob #:index index))
                          (place-channel-put ch (cons self result))
                          (loop)))))])
         (define to-send inputs)
@@ -167,13 +167,13 @@
               out*
               (loop out*))))
       (for/list ([rec inputs])
-        (match-define (list file pname prob debug index) rec)
-        (test-regression file pname prob #:debug debug #:index index))))
+        (match-define (list file pname prob index) rec)
+        (test-regression file pname prob #:index index))))
 
-(define (run-mutation-tests probs #:debug [debug '()] #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
+(define (run-mutation-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
   (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
              [_ (in-range repeat)])
-    (test-mutations file (car x) (cdr x) #:debug debug #:index index)))
+    (test-mutations file (car x) (cdr x) #:index index)))
 
 (define (file-name-stem fn)
   (define-values (_1 uname _2) (split-path fn))
@@ -316,7 +316,6 @@
   (λ (p) (set-member? failed-tests (~a (file-name-stem (car (dict-ref p ':url '("/tmp"))))))))
 
 (module+ main
-  (define debug '())
   (define out-file #f)
   (define index (hash))
   (define valid? (const true))
@@ -327,8 +326,8 @@
    #:program "report"
 
    #:multi
-   [("-d" "--debug") type "Turn on debug information"
-    (set! debug (cons (string->symbol type) debug))]
+   [("-d" "--debug") "Turn on debug mode"
+    (*debug* true)]
    [("+x") name "Set an option" (flags (cons (string->symbol name) (flags)))]
    [("-x") name "Unset an option" (flags (cons (string->symbol name) (flags)))]
 
@@ -358,7 +357,7 @@
      (let ([probs (for/append ([file fnames])
                               (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                               (map (curry cons file) x))])
-       (run-regression-tests probs #:debug debug #:valid valid? #:index index #:threads threads)))]
+       (run-regression-tests probs #:valid valid? #:index index #:threads threads)))]
 
    ["mutation"
     #:once-each
@@ -370,7 +369,7 @@
      (let ([probs (for/append ([file fnames])
                               (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                               (map (curry cons file) x))])
-       (run-mutation-tests probs #:debug debug #:valid valid? #:index index #:repeat repeat)))]
+       (run-mutation-tests probs #:valid valid? #:index index #:repeat repeat)))]
 
    ["features"
     #:args fnames

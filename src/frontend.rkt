@@ -28,7 +28,7 @@
        (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
        `(not (= (,prop ,(by-name 'elt elt1)) ,value))])))
 
-(define (constraints sheets docs [test #f] #:debug [debug? #f])
+(define (constraints sheets docs [test #f])
   (define log-phase (make-log))
   (define doms (map parse-dom docs))
 
@@ -78,7 +78,7 @@
 
   (append query (list cassius-check-sat)))
 
-(define (solve sheets docs [test #f] #:debug [debug? #f])
+(define (solve sheets docs [test #f])
   (define log-phase (make-log))
   (define doms (map parse-dom docs))
 
@@ -149,7 +149,7 @@
 
   res)
 
-(define (synthesize docs [test #f] #:debug [debug? #f])
+(define (synthesize docs [test #f])
   (define log-phase (make-log))
   (define doms (map parse-dom docs))
 

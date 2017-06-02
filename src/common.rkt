@@ -11,7 +11,7 @@
  assert make-log
  boolean<? lex<? output<?
  define-by-match
- list-intersect multi-command-line)
+ list-intersect multi-command-line *debug* *fuzz*)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -41,6 +41,11 @@
 
 (unless z3-path
   (error "Cannot find `z3` binary; please put a `z3` binary into your PATH."))
+
+(define *debug* (make-parameter false))
+
+(define (*fuzz*)
+  (if (*debug*) #f '(/ 10 60)))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])

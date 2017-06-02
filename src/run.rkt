@@ -32,15 +32,17 @@
         (eprintf "Failed ~a on ~a\n  " act target)
         (pretty-print diff)))))
 
-(define (wrapped-solve sheets documents #:debug debug #:test [test #f])
+(define (wrapped-solve sheets documents #:test [test #f])
   (with-handlers
       ([exn:break? (λ (e) 'break)]
        [exn:fail? (λ (e) (list 'error e))])
-    (solve sheets documents #:debug debug)))
+    (solve sheets documents)))
 
-(define (do-accept problem #:debug [debug '()])
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
+(define (do-accept problem)
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
     [(success stylesheet trees)
+     (when (*debug*)
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h)))))
      (eprintf "Accepted!\n")]
     [(failure stylesheet trees)
      (displayln (stylesheet->string stylesheet))
@@ -51,8 +53,8 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-debug problem #:debug [debug '()])
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
+(define (do-debug problem)
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
     [(success stylesheet trees)
      (eprintf "Different renderings possible.\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
@@ -95,9 +97,9 @@
     #:scripts (dict-ref problem ':scripts '())
     #:title (dict-ref problem ':title #f))))
 
-(define (do-render problem #:debug [debug '()])
+(define (do-render problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
-  (match (wrapped-solve (dict-ref problem ':sheets) documents #:debug debug)
+  (match (wrapped-solve (dict-ref problem ':sheets) documents)
     [(success stylesheet trees)
      (eprintf "Rendered the following layout:\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
@@ -108,8 +110,8 @@
     ['break
      (eprintf "Rendering terminated.\n")]))
 
-(define (do-sketch problem #:debug [debug '()])
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) #:debug debug)
+(define (do-sketch problem)
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
     [(success stylesheet trees)
      (displayln (stylesheet->string stylesheet))]
     [(failure stylesheet trees)
@@ -125,9 +127,9 @@
       (call-with-output-file output #:exists 'replace (curry displayln out))
       (displayln out)))
 
-(define (do-verify problem #:debug debug)
+(define (do-verify problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
-  (match (wrapped-solve (dict-ref problem ':sheets) documents #:debug debug
+  (match (wrapped-solve (dict-ref problem ':sheets) documents
                         #:test (dict-ref problem ':test))
     [(success stylesheet trees)
      (eprintf "Counterexample found!\n")
@@ -150,37 +152,37 @@
    #:program "cassius"
 
    #:multi
-   [("-d" "--debug") type "Turn on debug information"
-    (set! debug (cons (string->symbol type) debug))]
+   [("-d" "--debug") "Turn on debug mode"
+    (*debug* true)]
    [("+x") name "Set an option" (flags (set-add (flags) (string->symbol name)))]
    [("-x") name "Unset an option" (flags (set-remove (flags) (string->symbol name)))]
 
    #:subcommands
    ["accept"
     #:args (fname problem)
-    (do-accept (get-problem fname problem) #:debug debug)]
+    (do-accept (get-problem fname problem))]
    ["debug"
     #:args (fname problem)
-    (do-debug (get-problem fname problem) #:debug debug)]
+    (do-debug (get-problem fname problem))]
    ["dump"
     #:once-each
     [("--screenshot") sname "File with a web page screenshot"
      (set! screenshot sname)]
     #:args (fname problem)
-    (do-debug (get-problem fname problem) #:debug debug)]
+    (do-debug (get-problem fname problem))]
    ["export"
     #:args (fname problem)
     (do-export (get-problem fname problem))]
    ["render"
     #:args (fname problem)
-    (do-render (get-problem fname problem) #:debug debug)]
+    (do-render (get-problem fname problem))]
    ["sketch"
     #:args (fname problem)
-    (do-sketch (get-problem fname problem) #:debug debug)]
+    (do-sketch (get-problem fname problem))]
    ["smt2"
     #:once-each
     #:args (fname problem output)
     (do-smt2 (get-problem fname problem) output)]
    ["verify"
     #:args (fname problem)
-    (do-verify (get-problem fname problem) #:debug debug)]))
+    (do-verify (get-problem fname problem))]))
