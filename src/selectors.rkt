@@ -22,7 +22,11 @@
   `(child ,(? selector?) ...)
   `(pseudo-class ,(or 'first-child 'last-child 'hover))
   `(type ,(? symbol?))
+  `(media ,(? media-query?) ,(? selector?))
   `(fake ,(? string?) ,(? selector?) ...))
+
+(define-by-match media-query?
+  `(fake ,(? string?) ,(or 'true 'false)))
 
 (define-by-match rule?
   (list (? selector?) (? attribute?) ... (list (? property?) _ (? attribute?) ...) ...))
@@ -55,6 +59,8 @@
     [`(pseudo-class hover) false] ; We're never modeling hovering
     [`(type ,type)
      (and (node-get elt ':type) (equal? (slower (node-get elt ':type)) type))]
+    [`(media ,query ,sel)
+     (and (media-matches? query) (selector-matches? sel elt))]
     [(list 'and sels ...) (andmap (curryr selector-matches? elt) sels)]
     [(list 'desc sels ...)
      (match-define (cons sel rsels) (reverse sels))
@@ -75,6 +81,13 @@
         [(selector-matches? (car rsels) elt)
          (loop (cdr rsels) (node-parent elt))]
         [else false]))]))
+
+(define (media-matches? query)
+  (match query
+    [`(fake ,_ true)
+     true]
+    [`(fake ,_ false)
+     false]))
 
 (module+ test
   (define tree

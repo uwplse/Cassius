@@ -675,7 +675,7 @@ function dump_length(val, features) {
     return val;
 }
 
-function dump_rule(sel, style, features, is_from_style) {
+function dump_rule(sel, style, features, is_from_style, media) {
     var nodes;
     try {
         nodes = document.querySelectorAll(sel);
@@ -734,9 +734,17 @@ function dump_rule(sel, style, features, is_from_style) {
             features["unknown-selector"] = true;
             sel_text = rescue_selector(sels[i]);
         }
+        if (media) {
+            sel_text = "(media " + dump_media_query(media.mediaText) + " " + sel_text + ")";
+        }
         out += "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
     }
     return out;
+}
+
+function dump_media_query(media) {
+    var matches = window.matchMedia(media).matches;
+    return "(fake " + dump_string(media.mediaText) + " " + (matches ? "true" : "false") + ")";
 }
 
 function dump_features(features) {
@@ -769,7 +777,7 @@ function dump_tree(page) {
     return text;
 }
 
-function dump_stylesheet(ss, features) {
+function dump_stylesheet(ss, features, media) {
     var text = "";
     for (var rid in ss.cssRules) {
         if (!ss.cssRules.hasOwnProperty(rid)) continue;
@@ -779,11 +787,9 @@ function dump_stylesheet(ss, features) {
                 console.warn("Skipping non-style rule", r);
                 continue;
             } else if (r.type === CSSRule.MEDIA_RULE) {
-                if (window.matchMedia(r.media).matches) {
-                    text += dump_stylesheet(r, features);
-                }
+                text += dump_stylesheet(r, features, r.media);
             } else if (r.type === CSSRule.STYLE_RULE) {
-                text += dump_rule(r.selectorText, r.style, features);
+                text += dump_rule(r.selectorText, r.style, features, false, media);
             } else if (  r.type === CSSRule.MOZ_KEYFRAMES_RULE
                      || r.type === CSSRule.MOZ_KEYFRAME_RULE
                      || r.type === CSSRule.FONT_FACE_RULE) {
