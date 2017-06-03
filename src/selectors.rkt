@@ -26,7 +26,13 @@
   `(fake ,(? string?) ,(? selector?) ...))
 
 (define-by-match media-query?
-  `(fake ,(? string?) ,(or 'true 'false)))
+  `(or ,(? media-query?) ...)
+  `(and ,(? media-query?) ...)
+  `(only ,(? media-query?))
+  `(not ,(? media-query?))
+  `(min-width (px ,(? number?)))
+  `(max-width (px ,(? number?)))
+  (or 'screen))
 
 (define-by-match rule?
   (list (? selector?) (? attribute?) ... (list (? property?) _ (? attribute?) ...) ...))
@@ -84,9 +90,19 @@
 
 (define (media-matches? query)
   (match query
-    [`(fake ,_ true)
-     true]
-    [`(fake ,_ false)
+    [`(or ,qs ...)
+     (ormap media-matches? qs)]
+    [`(and ,qs ...)
+     (andmap media-matches? qs)]
+    [`(only ,q)
+     (media-matches? q)]
+    [`(not ,q)
+     (not (media-matches? q))]
+    ['screen true]
+    ['print false]
+    [`(max-width (px ,mw))
+     false]
+    [`(min-width (px ,mw))
      false]))
 
 (module+ test

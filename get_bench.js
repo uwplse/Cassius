@@ -734,7 +734,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
             features["unknown-selector"] = true;
             sel_text = rescue_selector(sels[i]);
         }
-        if (media) {
+        if (media && media.mediaText) {
             sel_text = "(media " + dump_media_query(media) + " " + sel_text + ")";
         }
         out += "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
@@ -743,8 +743,58 @@ function dump_rule(sel, style, features, is_from_style, media) {
 }
 
 function dump_media_query(media) {
-    var matches = window.matchMedia(media).matches;
-    return "(fake " + dump_string(media.mediaText) + " " + (matches ? "true" : "false") + ")";
+    window.MEDIA = media;
+    var ors = media.mediaText.split(/\b,\b/);
+    for (var i = 0; i < ors.length; i++) {
+        var query = ors[i].trim();
+        var words = query.split(/\s/, 2);
+        if (words[0] == "only" || words[0] == "not") {
+            query = query.substring(words[0].length).trim();
+        }
+
+        var ands = query.split(/\band\b/);
+        for (var j = 0; j < ands.length; j++) {
+            var part = ands[j].trim();
+            var match;
+            if (match = part.match(/^\(\s*([a-zA-Z0-9\-]+)\s*:\s*(.*)\)$/)) {
+                ands[j] = "(" + match[1] + " " + dump_length(match[2]) + ")";
+            } else if (match = part.match(/^\(\s*([a-zA-Z0-9\-]+)\s*\)$/)) {
+                ands[j] = "(" + match[1] + ")";
+            } else if (match = part.match(/^([a-zA-Z0-9\-]+)$/)) {
+                ands[j] = match[1];
+            } else {
+                console.warn("Unknown media query component", part);
+            }
+        }
+
+        if (words[0] == "only") {
+            ands.prefix = "only";
+        } else if (words[0] == "not") {
+            ands.prefix = "not";
+        } else {
+            ands.prefix = false;
+        }
+
+        ors[i] = ands;
+    }
+
+    var text = "";
+    if (ors.length > 1) text += "(or ";
+    for (var i = 0; i < ors.length; i++) {
+        var ands = ors[i];
+        if (i > 0) text += " ";
+        if (ands.prefix) text += "(" + ands.prefix + " ";
+        if (ands.length > 1) text += "(and ";
+        for (var j = 0; j < ands.length; j++) {
+            if (j > 0) text += " ";
+            text += ands[j];
+        }
+        if (ands.length > 1) text += ")";
+        if (ands.prefix) text += ")";
+    }
+    if (ors.length > 1) text += ")";
+    return text;
+    
 }
 
 function dump_features(features) {
@@ -1044,7 +1094,7 @@ function page2cassius(name) {
     var text = "";
     text += "(define-stylesheet " + name;
     for (var sid in document.styleSheets) {
-        text += dump_stylesheet(document.styleSheets[sid], features);
+        text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
     }
 
     var out = get_boxes(features);
