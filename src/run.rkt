@@ -5,6 +5,8 @@
          "frontend.rkt" "actions.rkt" "solver.rkt"
          "print/tree.rkt" "print/css.rkt" "print/html.rkt" "print/smt.rkt")
 
+(provide dom-strip-positions)
+
 (define (dom-strip-positions d)
   (match-define (dom name ctx elts boxes) d)
   (define boxes*

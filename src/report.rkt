@@ -2,7 +2,7 @@
 
 (require racket/path racket/set racket/engine racket/cmdline math/base)
 (require json (only-in xml write-xexpr))
-(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt")
+(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "run.rkt")
 
 (define timeout (make-parameter 60))
 
@@ -135,6 +135,26 @@
           status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
           (car (dict-ref prob ':url '("/tmp")))))
 
+(define (test-assertions file pname prob #:index [index (hash)])
+  (eprintf "~a\t~a\t" file pname)
+  (define prob* (dict-update prob ':documents (curry map dom-strip-positions)))
+  (define-values (res runtime) (run-problem prob*))
+  (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
+
+  (define status
+    (match res
+      ['timeout 'timeout]
+      [(list 'error e) 'error]
+      ['break 'break]
+      [(success stylesheet trees) (if supported? 'fail 'unsupported)]
+      [(failure stylesheet trees) 'success]))
+  (eprintf "~a\n" status)
+
+  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
+  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+          (car (dict-ref prob ':url '("/tmp")))))
+
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
   (define inputs
@@ -174,6 +194,11 @@
   (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
              [_ (in-range repeat)])
     (test-mutations file (car x) (cdr x) #:index index)))
+
+(define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
+  (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
+             [_ (in-range repeat)])
+    (test-assertions file (car x) (cdr x) #:index index)))
 
 (define (file-name-stem fn)
   (define-values (_1 uname _2) (split-path fn))
@@ -380,4 +405,18 @@
     #:args fnames
     (for* ([file fnames] [(name prob) (in-dict (call-with-input-file file parse-file))]
            #:when (subset? (dict-ref prob ':features '()) (supported-features)))
-      (printf "~a ~a\n" file name))]))
+      (printf "~a ~a\n" file name))]
+
+   ["assertions"
+    #:args (assertions . fnames)
+    (define prob1
+      (for/append ([file fnames])
+                  (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
+                  (map (curry cons file) x)))
+    (call-with-input-file assertions
+      (λ (p)
+        (define probs
+          (for*/list ([assertion (in-port read p)] [prob prob1])
+            (match-define (cons a (cons b c)) prob)
+            (list* a b (dict-set c ':test (list assertion)))))
+        (run-assertion-tests probs #:valid valid? #:index index)))]))
