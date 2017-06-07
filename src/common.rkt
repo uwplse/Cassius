@@ -37,7 +37,7 @@
                     [(symbol? feats) (sow feats)]
                     [else (loop (car feats)) (loop (cdr feats))]))))))
 
-(define z3-path (find-executable-path "z3"))
+(define z3-path (find-executable-path (match (system-type 'os) ['windows "z3.exe"] [_ "z3"])))
 
 (unless z3-path
   (error "Cannot find `z3` binary; please put a `z3` binary into your PATH."))
