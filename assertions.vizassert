@@ -1,0 +1,1 @@
+(forall (b) (=> (is-box/text (type b)) (>= (w b) 0) (>= (h b) 14)))
