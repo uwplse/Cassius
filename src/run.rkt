@@ -185,4 +185,14 @@
     (do-smt2 (get-problem fname problem) output)]
    ["verify"
     #:args (fname problem)
-    (do-verify (get-problem fname problem))]))
+    (do-verify (get-problem fname problem))]
+   ["assertions"
+    #:args (assertions fname problem)
+    (define prob (get-problem fname problem))
+    (call-with-input-file assertions
+      (λ (p)
+        (define probs
+          (for*/list ([assertion (in-port read p)])
+            (match-define (cons a (cons b c)) prob)
+            (list* a b (dict-set c ':test (list assertion)))))
+        (for-each do-verify probs)))]))
