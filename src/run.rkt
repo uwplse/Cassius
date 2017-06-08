@@ -38,7 +38,7 @@
   (with-handlers
       ([exn:break? (λ (e) 'break)]
        [exn:fail? (λ (e) (list 'error e))])
-    (solve sheets documents)))
+    (solve sheets documents test)))
 
 (define (do-accept problem)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
@@ -124,9 +124,7 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-smt2 problem output)
-  (define out
-    (smt->string (append (constraints (dict-ref problem ':sheets) (dict-ref problem ':documents))
-                         (list cassius-check-sat))))
+  (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents))))
   (call-with-output-file output #:exists 'replace (curry displayln out)))
 
 (define (do-verify problem)

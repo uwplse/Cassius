@@ -86,9 +86,10 @@
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)])
     (when (equal? (car (split-symbol name)) 'counterexample)
-      (define elt (by-name 'elt (string->symbol (car (string-split (~a value) "-")))))
+      (define ptr (string->symbol (car (string-split (~a value) "-"))))
+      (define node (by-name (if (string-prefix? (~a ptr) "elt") 'elt 'box) ptr))
       (define var (string-join (cdr (string-split (~a name) "/")) "/"))
-      (node-add! elt ':cex `(bad ,var)))))
+      (node-add! node ':cex `(bad ,var)))))
 
 (define (tree-constraints dom emit elt)
   (emit

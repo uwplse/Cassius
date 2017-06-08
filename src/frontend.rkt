@@ -2,7 +2,7 @@
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt" "match.rkt"
          "spec/percentages.rkt")
-(provide constraints solve synthesize (struct-out success) (struct-out failure))
+(provide query solve (struct-out success) (struct-out failure))
 
 (struct success (stylesheet elements))
 (struct failure (stylesheet trees))
@@ -28,8 +28,7 @@
        (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
        `(not (= (,prop ,(by-name 'elt elt1)) ,value))])))
 
-(define (constraints sheets docs [test #f])
-  (define log-phase (make-log))
+(define (constraints log-phase sheets docs [tests #f])
   (define doms (map parse-dom docs))
 
   (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
@@ -63,7 +62,7 @@
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
   (define query (all-constraints (cons browser-style sheets) matchers doms))
   ;(set! query (append query (sheet-constraints doms (car sheets))))
-  (when test (set! query (add-test query test)))
+  (for ([test (or tests '())]) (set! query (add-test query test)))
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))
@@ -76,12 +75,15 @@
   (log-phase "Prepared ~a constraints of ~a terms"
            (length query) (tree-size query))
   
-  query)
+  (values doms query))
 
-(define (solve sheets docs [test #f])
+(define (query sheets docs [tests #f])
+  (define-values (doms query) (constraints (make-log) sheets docs tests))
+  (append query (list cassius-check-sat)))
+
+(define (solve sheets docs [tests #f])
   (define log-phase (make-log))
-
-  (define query (constraints sheets docs test))
+  (define-values (doms query) (constraints log-phase sheets docs tests))
 
   (define out
     (let ([z3 (z3-process)])
@@ -90,7 +92,6 @@
         (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
           (z3-kill z3)))))
 
-  (define doms (map parse-dom docs))
   (define trees (map dom-boxes doms))
   (define res
     (match out

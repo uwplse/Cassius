@@ -32,7 +32,7 @@
   `(not ,(? media-query?))
   `(min-width (px ,(? number?)))
   `(max-width (px ,(? number?)))
-  (or 'screen))
+  (or 'screen 'print))
 
 (define-by-match rule?
   (list (? selector?) (? attribute?) ... (list (? property?) _ (? attribute?) ...) ...))
@@ -161,6 +161,7 @@
     [(list 'tag tag) '(0 0 1)]
     [(list 'pseudo-class _) '(0 1 0)]
     [(list 'type _) '(0 0 0)]
+    [(list 'media _ sel) (compute-score sel)]
     ['* '(0 0 0)]
     [(list 'fake _ ...) '(100 0 0)] ; TODO: Should it be 0 0 0 ?
     [(list (or 'and 'desc 'child) sels ...)
