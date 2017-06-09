@@ -472,7 +472,7 @@
              (= (y b)
                 (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
                           (left-content p) (right-content p)
-                          (resolve-clear b (vertical-position-for-flow-boxes b))))
+                          (resolve-clear b (vertical-position-for-flow-boxes b)) float/left))
              (= (left-border b)
                 (max (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))
                      (+ (left-content p) (ml b))))
@@ -523,7 +523,7 @@
                                    (ite (is-box/block (type vb))
                                         (bottom-outer vb)
                                         (top-content p))))]
-              [y* (ez.level ez w (left-content (pbflow b)) (right-content (pbflow b)) y-normal)]
+              [y* (ez.level ez w (left-content (pbflow b)) (right-content (pbflow b)) y-normal (style.float r))]
               [x* (ez.x ez y* (style.float r) (left-content (pbflow b)) (right-content (pbflow b)))]
               [x (ite (is-float/left (style.float r)) x* (- x* w))]
               [ez* (ez.advance ez y*)])
@@ -659,7 +659,7 @@
              [ez (ez.in b)])
          (and
           (ez.test (ez.in b) y-normal) ;; Key float restriction
-          (= (y b) (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal))
+          (= (y b) (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal float/left))
           (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
           (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p)))))
 

@@ -113,7 +113,6 @@
            (sow (transfer i "ez.l~a?" 'false))
            (sow (transfer i "ez.r~a?" 'false))))))
 
-  
   (define-fun ez.left-at ((ez EZone) (y Real) (pl Real)) Real
     ,(for/fold ([expr `pl]) ([i (in-range (- (*exclusion-zone-registers*) 1) -1 -1)])
        `(ite (< y (,(sformat "ez.y~a" i) ez))
@@ -136,31 +135,6 @@
     ;; pl and pr are the parent's content left and right
     (ite (is-float/left dir) (ez.left-at ez y pl) (ez.right-at ez y pr)))
 
-  (define-fun ez.level ((ez EZone) (width Real) (pl Real) (pr Real) (y Real)) Real
-    ;; width is the dimensions of the box
-    ;; y is the normal-flow y-position of the box
-    ;; pl and pr are the parent's content left and right
-    ;; The returned value is a y* such that the box should be placed at (max y y*)
-    (max
-     (ite (ez.mark? ez)
-          ,(let loop
-              ([conditions (for/list ([i (in-range (*exclusion-zone-registers*))])
-                             `(or
-                               (and (not (,(sformat "ez.l~a?" i) ez)) (not (,(sformat "ez.r~a?" i) ez)))
-                               (and
-                                (< y (,(sformat "ez.y~a" i) ez))
-                                (<= width
-                                    (- (ite (,(sformat "ez.r~a?" i) ez) (min (,(sformat "ez.r~a" i) ez) pr) pr)
-                                       (ite (,(sformat "ez.l~a?" i) ez) (max (,(sformat "ez.l~a" i) ez) pl) pl))))))]
-               [results (cons '(ez.mark ez) (for/list ([i (in-range (*exclusion-zone-registers*))])
-                                              `(,(sformat "ez.y~a" i) ez)))])
-              (match* (conditions results)
-                [('() (list else-branch)) else-branch]
-                [((cons test conditions) (cons result results))
-                 `(ite ,test ,result ,(loop conditions results))]))
-          y)
-     y))
-
   (define-fun ez.left-max ((ez EZone)) Real
     ,(for/fold ([expr `(ez.mark ez)]) ([i (in-range (*exclusion-zone-registers*))])
        `(ite (,(sformat "ez.l~a?" i) ez)
@@ -172,6 +146,39 @@
        `(ite (,(sformat "ez.r~a?" i) ez)
              (,(sformat "ez.y~a" i) ez)
              ,expr)))
+
+  (define-fun ez.level ((ez EZone) (width Real) (pl Real) (pr Real) (y Real) (dir Float)) Real
+    ;; width is the dimensions of the box
+    ;; y is the normal-flow y-position of the box
+    ;; pl and pr are the parent's content left and right
+    ;; The returned value is a y* such that the box should be placed at (max y y*)
+    (max-if y
+            (ez.mark? ez)
+            ,(let loop
+               ([conditions (for/list ([i (in-range (*exclusion-zone-registers*))])
+                              `(or
+                                (and (not (,(sformat "ez.l~a?" i) ez)) (not (,(sformat "ez.r~a?" i) ez)))
+                                (and
+                                 (< y (,(sformat "ez.y~a" i) ez))
+                                 (ite (< (- pr pl) width)
+                                      (ite (is-float/left dir)
+                                           (and
+                                            (=> (,(sformat "ez.r~a?" i) ez)
+                                                (<= (max (+ pl width) pl) (,(sformat "ez.r~a" i) ez)))
+                                            (not (,(sformat "ez.l~a?" i) ez)))
+                                           (and
+                                            (=> (,(sformat "ez.l~a?" i) ez)
+                                                (>= (min (- pr width) pr) (,(sformat "ez.l~a" i) ez)))
+                                            (not (,(sformat "ez.r~a?" i) ez))))
+                                      (<= (max width 0)
+                                               (- (ite (,(sformat "ez.r~a?" i) ez) (min (,(sformat "ez.r~a" i) ez) pr) pr)
+                                                  (ite (,(sformat "ez.l~a?" i) ez) (max (,(sformat "ez.l~a" i) ez) pl) pl)))))))]
+                [results (cons '(ez.mark ez) (for/list ([i (in-range (*exclusion-zone-registers*))])
+                                               `(,(sformat "ez.y~a" i) ez)))])
+               (match* (conditions results)
+                 [('() (list else-branch)) else-branch]
+                 [((cons test conditions) (cons result results))
+                  `(ite ,test ,result ,(loop conditions results))]))))
 
   ;; Checks if the given point is outside the exclusion zone
   (define-fun ez.out? ((ez EZone) (x Real) (y Real)) Bool
@@ -276,7 +283,7 @@
 
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (dir . Float) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez)  (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
-                  (let ([y* (ez.level ez width pl pr y)])
+                  (let ([y* (ez.level ez width pl pr y dir)])
                     (<= width (- (ez.right-at ez y* pr) (ez.left-at ez y* pl))))))
 
   ;; End to end standards tests
@@ -284,7 +291,7 @@
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
                                (dir . Float) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
-                  (let ([y* (ez.level ez width pl pr y)])
+                  (let ([y* (ez.level ez width pl pr y dir)])
                     (let ([x* (ez.x ez y* dir pl pr)])
                      (ite (is-float/left dir)
                           (>= x* pl)
@@ -293,7 +300,7 @@
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
                                (dir . Float) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
-                  (let ([y* (ez.level ez width pl pr y)])
+                  (let ([y* (ez.level ez width pl pr y dir)])
                     (let ([x* (ez.x ez y* dir pl pr)])
                       (=> (>= width 0) (ez.out-inclusive? ez x* y*))))))
 
@@ -301,7 +308,7 @@
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
                                (dir . Float) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
-                  (let ([y* (ez.level ez width pl pr y)])
+                  (let ([y* (ez.level ez width pl pr y dir)])
                     (let ([x* (ez.x ez y* dir pl pr)])
                       (=> (>= width 0)
                           (ite (is-float/left dir)
@@ -312,7 +319,7 @@
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
                                (dir . Float) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (<= pl pr) (< (- pr pl) width) (not (is-float/none dir))
-                  (let ([y* (ez.level ez width pl pr y)])
+                  (let ([y* (ez.level ez width pl pr y dir)])
                     (let ([x* (ez.x ez y* dir pl pr)])
                       (ite (is-float/left dir)
                            (=> (> (+ x* width) pr) (= x* pl))
@@ -355,7 +362,7 @@
   ;; Rule 8 & 9 together
   (check-sat #hash((pl . Real) (pr . Real) (y-normal . Real) (width . Real) (y . Real) (x . Real) (ez . EZone) (dir . Float))
              `(=> (<= pl pr) (ez.valid? ez) (not (is-float/none dir))
-                  (let ([y* (ez.level ez width pl pr y-normal)])
+                  (let ([y* (ez.level ez width pl pr y-normal dir)])
                     (let ([x* (ez.x ez y* dir pl pr)])
                       (=> (and ; (x, y) a valid place to put the box
                            (>= y y-normal)
@@ -364,7 +371,10 @@
                            (=> (>= width 0)
                                (let ([xo (ite (is-float/left dir) (+ x width) (- x width))])
                                  (and (ez.out-inclusive? ez xo y)
-                                      (<= pl xo pr)))))
+                                      (ite (> (+ width pl) pr)
+                                           (and (>= y (ite (is-float/left dir) (ez.left-max ez) (ez.right-max ez)))
+                                                (= x (ite (is-float/left dir) pl pr)))
+                                           (<= pl xo pr))))))
                           (or (> y y*) ; below
                               (and (= y y*) ; or at least further from the side
                                    (ite (is-float/left dir)
@@ -380,4 +390,27 @@
   (check-sat #hash((pr . Real) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (>= y (ez.right-max ez))
                   (= (ez.right-at ez y pr) pr)))
+
+  ;; Pavel's test
+  (check-sat #hash((pl . Real) (pr . Real) (y-normal . Real) (width . Real) (ez . EZone) (dir . Float))
+             `(=> (<= pl pr) (ez.valid? ez) (not (is-float/none dir))
+                  (let ([y (ez.level ez width pl pr y-normal dir)])
+                    (let ([x (ez.x ez y dir pl pr)])
+                      (and ; (x, y) a valid place to put the box
+                       (>= y y-normal)
+                       (ez.out-inclusive? ez x y)
+                       (<= pl x pr)
+                       (=> (>= width 0)
+                           (let ([xo (ite (is-float/left dir) (+ x width) (- x width))])
+                             (and (ez.out-inclusive? ez xo y)
+                                  (ite (> (+ width pl) pr)
+                                       (and (=> (ez.mark? ez)
+                                             (>= y (ite (is-float/left dir) (ez.left-max ez) (ez.right-max ez))))
+                                            (= x (ite (is-float/left dir) pl pr)))
+                                       (<= pl xo pr))))))))))
+
+  ;; Regression test for floats-rule3-outside-left-001
+  (check-sat #hash((y . Real))
+             `(=> (= y (ez.level (ez.add (ez.init-at 8.0) float/right 8.0 508.0 308.0 458.0) 425.0 8.0 408.0 8.0 float/left))
+                  (= y 8.0)))
   )
