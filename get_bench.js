@@ -675,6 +675,14 @@ function dump_length(val, features) {
     return val;
 }
 
+function dump_color(val, features) {
+    if (match = val.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/)) {
+        return "(rgb " + match[1] + " " + match[2] + " " + match[3] + ")";
+    } else {
+        features["color:" + val.split("(", 1)[0]] = true;
+    }
+}
+
 function dump_rule(sel, style, features, is_from_style, media) {
     var nodes;
     try {
@@ -705,6 +713,9 @@ function dump_rule(sel, style, features, is_from_style, media) {
         }
 
         val = dump_length(val, features);
+        if (val.startsWith("rgb")) {
+            val = dump_color(val, features);
+        }
 
         if (BadProps.indexOf(sname) !== -1) {
             features["css:" + sname] = true;
