@@ -62,7 +62,7 @@
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
   (define query (all-constraints (cons browser-style sheets) matchers doms))
   ;(set! query (append query (sheet-constraints doms (car sheets))))
-  (for ([test (or tests '())]) (set! query (add-test query test)))
+  (for ([test (or tests '())]) (set! query (add-test doms query test)))
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))

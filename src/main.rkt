@@ -356,14 +356,33 @@
     ,@(per-box layout-constraints)
     ))
 
-(define (add-test constraints test)
+(define (add-test doms constraints test)
   (match-define `(forall (,vars ...) ,body) test)
+
+  (define (expand-match e sel)
+    (define &e
+      (match e
+        [`(box-elt ,b) `(&elt ,b)]
+        [`(get/elt ,&e) &e]))
+    (apply smt-or
+           (for*/list ([dom doms] [elt (in-elts dom)]
+                       #:when (selector-matches? sel elt))
+             `(= ,(name 'elt elt) ,&e))))
+  
+  (define body*
+    (smt-replace body
+      [`(matches ,e ,sel) (expand-match e sel)]
+      [`(is-interactive ,e)
+       `(or ,(expand-match e '(tag a))
+            ,(expand-match e '(tag input))
+            ,(expand-match e '(tag button)))]))
+
   (define &vars (map (curry sformat "counterexample/~a") vars))
   `(,@constraints
     ,@(for/list ([&var &vars])
         `(declare-const ,&var BoxName))
     (assert (! (and ,@(for/list ([&var &vars]) `(is-box (get/box ,&var)))
-                    (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body)))
+                    (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body*)))
                :named test))))
 
 (define z3-process-cache (make-parameter (make-hash)))

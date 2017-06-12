@@ -2,6 +2,7 @@
 (forall (b) (=> (is-box/text (type b)) (>= (w b) 0) (>= (h b) 14)))
 
 ;;; 2
+; TODO: fg-color, bg-color, and lum
 (forall (b)
   (=> (is-box/text (type b)) (>= (w b) 0)
       (let ([fg (fg-color (pbflow b))] [bg (bg-color (pbflow b))] [threshold 3])
@@ -32,7 +33,7 @@
 
 ;;; 7
 (forall (b)
-  (=> (is-selected (box-elt b))
+  (=> (matches (box-elt b) (class selected))
       (not (overlaps b box0-box))))
 
 ;;; 8
@@ -47,16 +48,10 @@
   (=> (is-interactive (box-elt b1)) (and (>= (box-width b) 30) (>= (box-height b) 30))))
 
 ;;; 10
-; TODO: active color
+; TODO: active color, lab-distance
 (forall (b)
   (=> (matches (box-elt b) (tag a))
       (>= (lab-distance (fg-color b) (fg-color (pbflow b))) .5)))
-
-;;; 11
-; TODO: Not clear how to formalize...
-
-;;; 12
-; TODO: Not clear how to formalize
 
 ;;; 13
 (forall (b)
