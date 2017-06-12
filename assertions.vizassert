@@ -1,1 +1,47 @@
+;;; 1
 (forall (b) (=> (is-box/text (type b)) (>= (w b) 0) (>= (h b) 14)))
+
+;;; 2
+true
+#;;;(forall (b)
+  (=> (is-box/text (type b)) (>= (w b) 0)
+      (let ([fg (fgcolor (pbflow b))] [bg (bgcolor (pbflow b))] [threshold 3])
+        (let ([lum-fg (+ (* 0.3 (color.r fg)) (* 0.59 (color.g fg)) (* 0.11 (color.b fg)))]
+              [lum-bg (+ (* 0.3 (color.r bg)) (* 0.59 (color.g bg)) (* 0.11 (color.b bg)))])
+          (or (>= lum-fg (* (+ threshold 1) lum-bg)) (>= lum-bg (* (+ threshold 1) lum-fg)))))))
+;;; 3
+true
+; TODO: In progress
+
+;;; 4
+(forall (b) (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (h b)))))
+
+;;; 5
+(forall (b)
+  (and
+    (=> (is-box/line (type b))
+        (>= (h b) (* 1.5 (font-size b))))
+    (=> (matches (box-elt b) (tag p))
+        (>= (+ (mtp b) (mbp b) (mtn b) (mbn b))
+            (* 1.5 (h (fflow b)))))))
+
+;;; 6
+true
+
+;;; 7
+(forall (b)
+  (=> (is-selected (box-elt b))
+      (not (overlaps b box0-box))))
+
+;;; 8
+(forall (b1 b2)
+  (=> (is-interactive (box-elt b1)) (is-interactive (box-elt b2))
+      (elt-< (box-elt b1) (box-elt b2))
+      (or (< (bottom-border b1) (top-border b2))
+          (and (horizontally-adjacent b1 b2) (< (right-border b1) (left-border b2))))))
+
+;;; 9
+(forall (b1)
+  (=> (is-interactive (box-elt b1)) (and (>= (box-width b) 30) (>= (box-height b) 30))))
+
+;;; 10
