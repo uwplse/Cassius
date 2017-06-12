@@ -21,12 +21,12 @@
 
 ;;; 5
 (forall (b)
-  (and
-    (=> (is-box/line (type b))
-        (>= (h b) (* 1.5 (font-size b))))
-    (=> (matches (box-elt b) (tag p))
-        (>= (+ (mtp b) (mbp b) (mtn b) (mbn b))
-            (* 1.5 (h (fflow b)))))))
+  (=> (is-box/line (type b))
+      (>= (h b) (* 1.5 (font-size b)))))
+(forall (b)
+  (=> (matches (box-elt b) (tag p))
+      (>= (+ (mtp b) (mbp b) (mtn b) (mbn b))
+          (* 1.5 (h (fflow b))))))
 
 ;;; 6
 ; TODO: needs "no-styles"
@@ -68,3 +68,6 @@
   (=> (is-interactive (box-elt b1))
       (not (is-interactive (box-elt b2)))
       (>= (lab-distance (fg-color b1) (fg-color b2)) 0.1)))
+
+;; Skipped: 11, 12, 14, 19, 20, 21
+;; Duplicates: 17 & 18
