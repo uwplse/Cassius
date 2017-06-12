@@ -2,16 +2,18 @@
 (forall (b) (=> (is-box/text (type b)) (>= (w b) 0) (>= (h b) 14)))
 
 ;;; 2
-true
-#;;;(forall (b)
+(forall (b)
   (=> (is-box/text (type b)) (>= (w b) 0)
-      (let ([fg (fgcolor (pbflow b))] [bg (bgcolor (pbflow b))] [threshold 3])
-        (let ([lum-fg (+ (* 0.3 (color.r fg)) (* 0.59 (color.g fg)) (* 0.11 (color.b fg)))]
-              [lum-bg (+ (* 0.3 (color.r bg)) (* 0.59 (color.g bg)) (* 0.11 (color.b bg)))])
-          (or (>= lum-fg (* (+ threshold 1) lum-bg)) (>= lum-bg (* (+ threshold 1) lum-fg)))))))
+      (let ([fg (fg-color (pbflow b))] [bg (bg-color (pbflow b))] [threshold 3])
+        (or (>= (lum fg) (* (+ threshold 1) (lum bg))) (>= (lum bg) (* (+ threshold 1) (lum fg)))))))
+
 ;;; 3
-true
-; TODO: In progress
+(forall (b)
+  (=> (is-interactive (box-elt b))
+      (within b box0-box)))
+(forall (b1 b2)
+  (=> (is-box/text (type b1)) (is-box/text (type b2))
+      (not (overlaps b1 b2))))
 
 ;;; 4
 (forall (b) (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (h b)))))
@@ -26,7 +28,7 @@ true
             (* 1.5 (h (fflow b)))))))
 
 ;;; 6
-true
+; TODO: needs "no-styles"
 
 ;;; 7
 (forall (b)
@@ -45,3 +47,29 @@ true
   (=> (is-interactive (box-elt b1)) (and (>= (box-width b) 30) (>= (box-height b) 30))))
 
 ;;; 10
+; TODO: active color
+(forall (b)
+  (=> (matches (box-elt b) (tag a))
+      (>= (lab-distance (fg-color b) (fg-color (pbflow b))) .5)))
+
+;;; 11
+; TODO: Not clear how to formalize...
+
+;;; 12
+; TODO: Not clear how to formalize
+
+;;; 13
+(forall (b)
+  (< (right-border b) (left-content box0-box)))
+
+;;; 14
+; TODO: How do we measure that?
+
+;;; 15
+; TODO: Needs some sort of global measure
+
+;;; 16
+(forall (b1 b2)
+  (=> (is-interactive (box-elt b1))
+      (not (is-interactive (box-elt b2)))
+      (>= (lab-distance (fg-color b1) (fg-color b2)) 0.1)))
