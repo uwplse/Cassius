@@ -12,7 +12,7 @@ Installing
 ------------
 
 You'll need to install Racket (6.3 or later) <http://racket-lang.org>
-and Z3 <https://github.com/Z3Prover/z3> (4.3 or later). Once Racket
+and Z3 <https://github.com/Z3Prover/z3> (4.4.0 exactly). Once Racket
 and Z3 are set up, edit the `z3.sh` script, to call your installation
 of Z3. (Make sure to pass through all arguments.)
 
@@ -46,6 +46,18 @@ For example, to run the the `smt2` tool, run:
 
 This puts a file with all the generated constraints into
 `/tmp/out.z3`.
+
+Testing Assertions
+------------------
+
+To test some assertions on a web page, write the assertion into a
+file, such as the `assertions.vizassert` that ships with Cassius. Then
+run:
+
+    racket src/run.rkt assertions assertions.vizassert [file] [instance]
+
+If the assertion quantified over any boxes, those boxes will be tagged
+`:cex` in the output.
 
 Collecting Examples
 -----------------------
