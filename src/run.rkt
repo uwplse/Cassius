@@ -14,7 +14,7 @@
       (match-define (list (list type cmds ...) children ...) tree)
       (cons
        (match type
-         [(or 'BLOCK 'INLINE)
+         [(or 'BLOCK 'INLINE 'VIEW 'LINE 'ANON)
              (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y :w :h)) car) (attributes->dict cmds))))]
          ['TEXT
           (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y)) car) (attributes->dict cmds))))]

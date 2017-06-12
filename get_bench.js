@@ -1112,7 +1112,14 @@ function page2cassius(name) {
         text += dump_rule("#" + eid, style[eid], features, true);
     }
     text += ")\n\n";
-    text += "(define-layout (" + name + " :browser firefox :matched true)\n ([VIEW :w " + page.props.w + "]";
+    text += "(define-layout (" + name
+    var props = {browser: "firefox", matched: "true", w: page.props.w, h: page.props.h, fs: 16 };
+    for (var prop in props) {
+        if (typeof props[prop] !== "undefined") {
+            text += " :" + prop + " " + props[prop];
+        }
+    }
+    text += ")\n ([VIEW :w " + page.props.w + "]";
     text += dump_tree(page.children[0]);
     text += "))\n\n";
     text += "(define-document " + name;

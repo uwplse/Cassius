@@ -193,6 +193,26 @@
       `(ite (,(sformat "is-~a" (name 'box box)) &box) ,(dump-box box) ,body)))
   (emit `(define-fun get/box ((&box BoxName)) Box ,body)))
 
+(define (configuration-constraints doms emit)
+  (for ([dom doms])
+    (define w (car (dom-context dom ':w #:default '(?))))
+    (define h (car (dom-context dom ':h #:default '(?))))
+    (define fs (car (dom-context dom ':fs #:default '(?))))
+
+    (define (param var) (sformat "config/~a/~a" (name 'dom dom) var))
+    (define (emit-const name type value)
+      (if (equal? value '?)
+          (emit `(declare-const ,name ,type))
+          (emit `(define-const ,name ,type ,(exact->inexact value)))))
+
+    (emit-const (param 'w) 'Real w)
+    (emit-const (param 'h) 'Real h)
+    (emit-const (param 'font-size) 'Real fs)
+
+    (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
+    (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'w))))
+    (emit `(assert (= (font-size ,(dump-box (dom-boxes dom))) ,(param 'font-size))))))
+
 (define (number*? x)
   (match x
     [(? number?) #t]
@@ -318,6 +338,7 @@
     ,@utility-definitions
     ,@(global dom-define-get/elt)
     ,@(global dom-define-get/box)
+    ,@(global configuration-constraints)
     ;,@css-functions
     ,@link-definitions
     ,@style-computation
