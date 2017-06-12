@@ -3,7 +3,7 @@
          "selectors.rkt" "match.rkt" "solver.rkt")
 (require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
          "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
-         "spec/utils.rkt" "spec/float.rkt")
+         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          css-values-solver)
@@ -310,6 +310,7 @@
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
     ,(make-%of)
+    ,@colors
     (declare-datatypes
      ()
      ((ElementName nil-elt ,@(per-element (λ (_ sow elt) (sow (name 'elt elt)))))

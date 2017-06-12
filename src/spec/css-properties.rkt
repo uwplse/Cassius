@@ -101,7 +101,11 @@
 (define-css-type (Clear none left right both)
   [clear none])
 
-(define inheritable-properties '(text-align))
+(define-css-type (Color transparent (rgb RGBColor))
+  [color (rgb 0 0 0)]
+  [background-color transparent])
+
+(define inheritable-properties '(text-align color background-color))
 
 (define (css-inheritable? x) (set-member? inheritable-properties x))
 
