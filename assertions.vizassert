@@ -11,7 +11,7 @@
 ;;; 3
 (forall (b)
   (=> (is-interactive (box-elt b))
-      (within b box0-box)))
+      (within b root-box)))
 (forall (b1 b2)
   (=> (is-box/text (type b1)) (is-box/text (type b2))
       (not (overlaps b1 b2))))
@@ -34,7 +34,7 @@
 ;;; 7
 (forall (b)
   (=> (matches (box-elt b) (class selected))
-      (not (overlaps b box0-box))))
+      (not (overlaps b root-box))))
 
 ;;; 8
 ; TODO: needs elt ordering
@@ -45,8 +45,8 @@
           (and (horizontally-adjacent b1 b2) (< (right-border b1) (left-border b2))))))
 
 ;;; 9
-(forall (b1)
-  (=> (is-interactive (box-elt b1)) (and (>= (box-width b) 30) (>= (box-height b) 30))))
+(forall (b)
+  (=> (is-interactive (box-elt b)) (and (>= (box-width b) 30) (>= (box-height b) 30))))
 
 ;;; 10
 ; TODO: active color, lab-distance
@@ -56,7 +56,7 @@
 
 ;;; 13
 (forall (b)
-  (< (right-border b) (left-content box0-box)))
+  (< (right-border b) (left-content root-box)))
 
 ;;; 14
 ; TODO: How do we measure that?

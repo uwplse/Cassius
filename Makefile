@@ -25,6 +25,9 @@ bench/fwt/%.rkt: get_bench.py get_bench.js bench/fwt/%.zip
 bench/fwt/%.zip:
 	curl -L -s https://freewebsitetemplates.com/download/$*/ > $@
 
+bench/fwt/valid.txt:
+	python3 valid_fwt.py reports/fwt.json > $@
+
 /tmp/%/: bench/fwt/%.zip
 	unzip -q $< -d /tmp/
 
@@ -39,6 +42,9 @@ reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
 
 reports/fwt.html reports/fwt.json: $(wildcard bench/fwt/*.rkt)
 	@ racket src/report.rkt regression $(FLAGS) --timeout 300 -o reports/fwt $^
+
+reports/vizassert.html reports/vizassert.json: bench/fwt/valid.txt $(shell cat bench/fwt/valid.txt)
+	@ racket src/report.rkt assertions $(FLAGS) --timeout 600 -o reports/vizassert assertions.vizassert `cat bench/fwt/valid.txt`
 
 rerun-tests:
 	@ racket src/report.rkt regression $(FLAGS) --supported --failed reports/csswg.json --index bench/css/index.json -o reports/csswg $(wildcard bench/css/*.rkt)

@@ -377,7 +377,13 @@
       [`(is-interactive ,e)
        `(or ,(expand-match e '(tag a))
             ,(expand-match e '(tag input))
-            ,(expand-match e '(tag button)))]))
+            ,(expand-match e '(tag button)))]
+      ['root-box
+       (match-define (list dom) doms)
+       (dump-box (dom-boxes dom))]
+      ['root-elt
+       (match-define (list dom) doms)
+       (dump-box (dom-elements dom))]))
 
   (define &vars (map (curry sformat "counterexample/~a") vars))
   `(,@constraints
