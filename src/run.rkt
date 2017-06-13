@@ -20,7 +20,14 @@
           (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y)) car) (attributes->dict cmds))))]
          [_ (cons type cmds)])
        (map loop children))))
-  (dom name ctx elts boxes*))
+
+  (define ctx*
+    (for/fold ([ctx ctx]) ([(field value)
+                            #hash([:w . ((between 800 1920))]
+                                  [:h . ((between 600 1080))]
+                                  [:fs . ((between 16 32))])])
+      (dict-set ctx field value)))
+  (dom name ctx* elts boxes*))
 
 ;; TODO: Not currently used
 (define (test-actions problem)

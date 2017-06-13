@@ -203,9 +203,14 @@
 
     (define (param var) (sformat "config/~a/~a" (name 'dom dom) var))
     (define (emit-const name type value)
-      (if (equal? value '?)
+      (match value
+        [(? number*?)
+         (emit `(define-const ,name ,type ,value))]
+        ['?
+         (emit `(declare-const ,name ,type))]
+        [`(between ,(? number*? min) ,(? number*? max))
           (emit `(declare-const ,name ,type))
-          (emit `(define-const ,name ,type ,(exact->inexact value)))))
+          (emit `(assert (<= ,min ,name ,max)))]))
 
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
