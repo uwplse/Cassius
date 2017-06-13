@@ -36,4 +36,6 @@
             "; "))]
   [(_ (list `(bad ,value))) (format "\33[1;31m~a ~a\33[0m" cmd value)]
   [(_ (list `(fixed ,value))) (format "\33[1;32m~a ~a\33[0m" cmd value)]
-  [(_ value) (format "~a ~a" cmd (string-join (map ~a value) " "))])
+  [(_ (list value)) (format "~a ~a" cmd value)]
+  [(_ (list vals ..2)) (string-join (map (compose (curry measure->string cmd) list) vals) " ")]
+  )
