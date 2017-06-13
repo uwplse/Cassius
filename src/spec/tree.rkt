@@ -25,7 +25,8 @@
                 (&pbflow BoxName)
                 (ez.in EZone) (ez.out EZone)
                 (textalign Text-Align) ; to handle inheritance; TODO: handle better
-                (&elt ElementName) (first-box? Bool) (last-box? Bool)))
+                (&elt ElementName) (first-box? Bool) (last-box? Bool)
+                (fg-color Color) (bg-color Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt

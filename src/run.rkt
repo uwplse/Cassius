@@ -44,7 +44,7 @@
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
     [(success stylesheet trees)
      (when (*debug*)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h)))))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fg :bg)))))
      (eprintf "Accepted!\n")]
     [(failure stylesheet trees)
      (displayln (stylesheet->string stylesheet))

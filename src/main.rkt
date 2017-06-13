@@ -53,7 +53,7 @@
       [_ (void)]))
   (values (hash-values stylesheet*) trees))
 
-(define (extract-box! box elt)
+(define (extract-box! z3-box box)
   (match-define
    (list 'box
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
@@ -61,16 +61,18 @@
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
          &nflow &vflow &ppflow &pbflow ez.in ez.out
-         textalign &elt first? last?)
-   box)
+         textalign &elt first? last? color background-color)
+   z3-box)
   (define box-width (+ bl pl w pr br))
   (define box-height (+ bt pt h pb bb))
   (define box-x (+ x xo))
   (define box-y (+ y yo))
-  (node-set! elt ':x box-x)
-  (node-set! elt ':y box-y)
-  (node-set! elt ':w box-width)
-  (node-set! elt ':h box-height))
+  (node-set! box ':x box-x)
+  (node-set! box ':y box-y)
+  (node-set! box ':w box-width)
+  (node-set! box ':h box-height)
+  (node-set! box ':fg (extract-value color))
+  (node-set! box ':bg (extract-value background-color)))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)
