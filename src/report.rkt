@@ -417,6 +417,7 @@
       (λ (p)
         (define probs
           (for*/list ([assertion (in-port read p)] [prob prob1])
+            (match-define `(define-test (,name ,args ...) ,body) assertion)
             (match-define (cons a (cons b c)) prob)
-            (list* a b (dict-set c ':test (list assertion)))))
+            (list* a b (dict-set c ':test (list `(forall ,args ,body))))))
         (run-assertion-tests probs #:valid valid? #:index index)))]))

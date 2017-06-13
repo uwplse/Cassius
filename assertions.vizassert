@@ -1,29 +1,32 @@
 ;;; 1
-(forall (b) (=> (is-box/text (type b)) (>= (w b) 0) (>= (h b) 14)))
+(define-test (text-size b)
+  (=> (is-box/text (type b)) (>= (w b) 0) (>= (h b) 14)))
 
 ;;; 2
 ; TODO: fg-color, bg-color, and lum
-(forall (b)
+(define-test (contrast b)
   (=> (is-box/text (type b)) (>= (w b) 0)
       (let ([fg (fg-color (pbflow b))] [bg (bg-color (pbflow b))] [threshold 3])
         (or (>= (lum fg) (* (+ threshold 1) (lum bg))) (>= (lum bg) (* (+ threshold 1) (lum fg)))))))
 
 ;;; 3
-(forall (b)
+(define-test (interactive-onscreen b)
   (=> (is-interactive (box-elt b))
       (within b root-box)))
-(forall (b1 b2)
+(define-test (overlapping-text b1 b2)
   (=> (is-box/text (type b1)) (is-box/text (type b2))
       (not (overlaps b1 b2))))
 
 ;;; 4
-(forall (b) (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (h b)))))
+(define-test (text-width b)
+  (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (h b)))))
 
 ;;; 5
-(forall (b)
+(define-test (line-spacing b)
   (=> (is-box/line (type b))
       (>= (h b) (* 1.5 (font-size b)))))
-(forall (b)
+
+(define-test (paragraph-spacing b)
   (=> (matches (box-elt b) (tag p))
       (>= (+ (mtp b) (mbp b) (mtn b) (mbn b))
           (* 1.5 (h (fflow b))))))
@@ -32,30 +35,30 @@
 ; TODO: needs "no-styles"
 
 ;;; 7
-(forall (b)
+(define-test (selected-onscreen b)
   (=> (matches (box-elt b) (class selected))
       (not (overlaps b root-box))))
 
 ;;; 8
-; TODO: needs elt ordering
-(forall (b1 b2)
+(define-test (tab-ordering b1 b2)
   (=> (is-interactive (box-elt b1)) (is-interactive (box-elt b2))
       (elt-< (box-elt b1) (box-elt b2))
       (or (< (bottom-border b1) (top-border b2))
           (and (horizontally-adjacent b1 b2) (< (right-border b1) (left-border b2))))))
 
 ;;; 9
-(forall (b)
+(define-test (button-size b)
   (=> (is-interactive (box-elt b)) (and (>= (box-width b) 30) (>= (box-height b) 30))))
 
 ;;; 10
-; TODO: active color, lab-distance
-(forall (b)
+; TODO: lab-distance
+(define-test (link-distinctive b)
   (=> (matches (box-elt b) (tag a))
       (>= (lab-distance (fg-color b) (fg-color (pbflow b))) .5)))
+; TODO: active color
 
 ;;; 13
-(forall (b)
+(define-test (no-horizontal-scroll b)
   (< (right-border b) (left-content root-box)))
 
 ;;; 14
@@ -65,7 +68,7 @@
 ; TODO: Needs some sort of global measure
 
 ;;; 16
-(forall (b1 b2)
+(define-test (interactive-distinctive b1 b2)
   (=> (is-interactive (box-elt b1))
       (not (is-interactive (box-elt b2)))
       (>= (lab-distance (fg-color b1) (fg-color b2)) 0.1)))

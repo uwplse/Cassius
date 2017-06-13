@@ -194,12 +194,13 @@
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
    ["assertions"
-    #:args (assertions fname problem)
+    #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))
-    (call-with-input-file assertions
-      (λ (p)
-        (define probs
-          (for*/list ([assertion (in-port read p)])
-            (match-define (cons a (cons b c)) prob)
-            (list* a b (dict-set c ':test (list assertion)))))
-        (for-each do-verify probs)))]))
+    (define assertions
+      (call-with-input-file aname
+        (λ (p)
+          (for/hash ([assertion (in-port read p)])
+            (match-define `(define-test (,name ,vars ...) ,body) assertion)
+            (values name `(forall ,vars ,body))))))
+    (define documents (map dom-strip-positions (dict-ref prob ':documents)))
+    (do-verify (dict-set prob ':test (list (dict-ref assertions (string->symbol assertion)))))]))

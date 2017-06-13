@@ -205,12 +205,12 @@
     (define (emit-const name type value)
       (match value
         [(? number*?)
-         (emit `(define-const ,name ,type ,value))]
+         (emit `(define-const ,name ,type ,(number->z3 value)))]
         ['?
          (emit `(declare-const ,name ,type))]
         [`(between ,(? number*? min) ,(? number*? max))
           (emit `(declare-const ,name ,type))
-          (emit `(assert (<= ,min ,name ,max)))]))
+          (emit `(assert (<= ,(number->z3 min) ,name ,(number->z3 max))))]))
 
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
@@ -233,9 +233,12 @@
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg
-        [(? number*?) (if (*fuzz*) `(< (- ,arg ,(*fuzz*)) ,expr (+ ,arg ,(*fuzz*))) `(= ,expr ,arg))]
-        [`(not ,(? number*? value)) `(not (= ,expr ,value))]
-        [`(between ,(? number*? min) ,(? number*? max)) `(<= ,min ,expr ,max)]))
+        [(? number*?) (if (*fuzz*) `(< (- ,(number->z3 arg) ,(number->z3 (*fuzz*)))
+                                       ,expr
+                                       (+ ,(number->z3 arg) ,(number->z3 (*fuzz*))))
+                          `(= ,expr ,(number->z3 arg)))]
+        [`(not ,(? number*? value)) `(not (= ,expr ,(number->z3 value)))]
+        [`(between ,(? number*? min) ,(? number*? max)) `(<= ,(number->z3 min) ,expr ,(number->z3 max))]))
 
     (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (name 'box elt)))))))
 

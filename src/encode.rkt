@@ -4,7 +4,7 @@
 (provide dump-tag extract-tag dump-id extract-id
          dump-elt dump-box extract-style
          dump-value extract-value dump-selector extract-selector
-         z3->number)
+         z3->number number->z3)
 
 (define (dump-tag tag)
   (if tag
