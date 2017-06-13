@@ -335,6 +335,7 @@
     (define-const font-size/xx-large Font-Size (font-size/px 32))
     (define-const font-size/smaller Font-Size (font-size/em (/ 2.0 3.0)))
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
+    (define-const color/undefined Color color/transparent)
     ,@common-definitions
     ,@exclusion-zones
     ,@tree-types

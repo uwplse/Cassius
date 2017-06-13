@@ -869,7 +869,6 @@
         (zaffre . (rgb 0 20 168))
         (zinnwaldite_brown . (rgb 44 22 8))))
 
-
 (define-constraints colors
   (declare-datatypes () ((RGBColor (color (color.r Real) (color.g Real) (color.b Real)))))
 
