@@ -143,7 +143,11 @@
      (= (first-box? (get/box &b)) first?)
      (= (last-box? (get/box &b)) last?)
      (= (textalign (get/box &b))
-        (style.text-align (computed-style (get/elt &e))))))
+        (style.text-align (computed-style (get/elt &e))))
+     (= (fg-color (get/box &b))
+        (style.color (computed-style (get/elt &e))))
+     (= (bg-color (get/box &b))
+        (style.background-color (computed-style (get/elt &e))))))
 
   (define-fun match-anon-box ((&b BoxName)) Bool
     (and
@@ -151,7 +155,12 @@
      (= (textalign (get/box &b))
         (ite (is-no-box (pflow (get/box &b)))
              text-align/left
-             (textalign (pflow (get/box &b)))))))
+             (textalign (pflow (get/box &b)))))
+     (= (fg-color (get/box &b))
+        (ite (is-no-box (pflow (get/box &b)))
+             color/black
+             (fg-color (pflow (get/box &b)))))
+     (= (bg-color (get/box &b)) color/transparent)))
 
   ;; `link-flow-simple`, `link-flow-root`, and `link-flow-block` link
   ;; boxes together in their flow trees. The "block" version is much

@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "../encode.rkt")
-(provide colors)
+(provide colors color-table)
 
 (define color-table
   #hash((air_force_blue_raf . (rgb 93 138 168))
@@ -870,7 +870,4 @@
         (zinnwaldite_brown . (rgb 44 22 8))))
 
 (define-constraints colors
-  (declare-datatypes () ((RGBColor (color (color.r Real) (color.g Real) (color.b Real)))))
-
-  ,@(for/list ([(name value) color-table])
-      `(define-const ,(sformat "color/~a" name) RGBColor ,(match value [`(rgb ,r ,g ,b) `(color ,r ,g ,b)]))))
+  (declare-datatypes () ((RGBColor (color (color.r Real) (color.g Real) (color.b Real))))))
