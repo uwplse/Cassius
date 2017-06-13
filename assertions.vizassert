@@ -37,6 +37,7 @@
       (not (overlaps b box0-box))))
 
 ;;; 8
+; TODO: needs elt ordering
 (forall (b1 b2)
   (=> (is-interactive (box-elt b1)) (is-interactive (box-elt b2))
       (elt-< (box-elt b1) (box-elt b2))

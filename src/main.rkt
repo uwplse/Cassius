@@ -365,7 +365,7 @@
         [`(box-elt ,b) `(&elt ,b)]
         [`(get/elt ,&e) &e]))
     (apply smt-or
-           (for*/list ([dom doms] [elt (in-elts dom)]
+           (for*/list ([dom doms] [elt (in-elements dom)]
                        #:when (selector-matches? sel elt))
              `(= ,(name 'elt elt) ,&e))))
   
