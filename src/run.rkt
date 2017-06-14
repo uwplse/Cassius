@@ -49,7 +49,7 @@
 
 (define (do-accept problem)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
-    [(success stylesheet trees)
+    [(success stylesheet trees doms)
      (when (*debug*)
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fg :bg)))))
      (eprintf "Accepted!\n")]
@@ -64,7 +64,7 @@
 
 (define (do-debug problem)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
-    [(success stylesheet trees)
+    [(success stylesheet trees doms)
      (eprintf "Different renderings possible.\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
     [(failure stylesheet trees)
@@ -109,7 +109,7 @@
 (define (do-render problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
   (match (wrapped-solve (dict-ref problem ':sheets) documents)
-    [(success stylesheet trees)
+    [(success stylesheet trees doms)
      (eprintf "Rendered the following layout:\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
     [(failure stylesheet trees)
@@ -121,7 +121,7 @@
 
 (define (do-sketch problem)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
-    [(success stylesheet trees)
+    [(success stylesheet trees doms)
      (displayln (stylesheet->string stylesheet))]
     [(failure stylesheet trees)
      (eprintf "Rejected.\n")]
@@ -138,9 +138,12 @@
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
   (match (wrapped-solve (dict-ref problem ':sheets) documents
                         #:test (dict-ref problem ':test))
-    [(success stylesheet trees)
+    [(success stylesheet trees doms)
      (eprintf "Counterexample found!\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex))))]
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex))))
+     (printf "\n\nConfiguration:\n")
+     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+       (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
     [(failure stylesheet trees)
      (eprintf "Verified.\n")]
     [(list 'error e)

@@ -6,7 +6,7 @@
          "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
-         css-values-solver)
+         css-values-solver extract-ctx!)
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -77,6 +77,15 @@
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)
   (node-set! elt ':style (extract-style spec-style)))
+
+(define (extract-ctx! model d)
+  (define ctx*
+    (for/fold ([ctx (dom-properties d)]) ([(attr varname) #hash((:w . w) (:h . h) (:fs . font-size))])
+      (define var (sformat "config/~a/~a" (name 'dom d) varname))
+      (if (dict-has-key? model var)
+          (dict-set ctx attr (list (dict-ref model var)))
+          ctx)))
+  (struct-copy dom d [properties ctx*]))
 
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])

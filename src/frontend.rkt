@@ -4,7 +4,7 @@
          "spec/percentages.rkt")
 (provide query solve (struct-out success) (struct-out failure))
 
-(struct success (stylesheet elements))
+(struct success (stylesheet elements doms))
 (struct failure (stylesheet trees))
 
 (define (sheet-constraints doms sheet)
@@ -98,8 +98,9 @@
       [(list 'model m)
        (for-each (curryr extract-tree! m) trees)
        (extract-counterexample! m)
+       (define doms* (map (curry extract-ctx! m) doms))
        (define sheet* (car sheets)) ; (extract-rules (car sheets) trees m)
-       (success sheet* (map unparse-tree trees))]
+       (success sheet* (map unparse-tree trees) doms*)]
       [(list 'core c)
        (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
        (failure stylesheet* (map unparse-tree trees*))]))
@@ -164,7 +165,7 @@
                        [(list _) (cons prop value)])))))
        (log-phase "Synthesized stylesheet!")
        ;; TODO - return (success _ _)
-       (success (drop sheet* (length browser-style)) (map (compose unparse-tree dom-elements) doms))]
+       (success (drop sheet* (length browser-style)) (map (compose unparse-tree dom-elements) doms) doms)]
       [(list 'core c)
        (define new-ineqs (extract-ineqs eqcls c))
        (set-box! core-ids

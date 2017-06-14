@@ -106,7 +106,7 @@
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees) 'success]
+      [(success stylesheet trees doms) 'success]
       [(failure stylesheet trees) (if supported? 'fail 'unsupported)]))
   (eprintf "~a\n" status)
 
@@ -126,7 +126,7 @@
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees) (if supported? 'fail 'unsupported)]
+      [(success stylesheet trees doms) (if supported? 'fail 'unsupported)]
       [(failure stylesheet trees) 'success]))
   (eprintf "~a\n" status)
 
@@ -146,7 +146,7 @@
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees) (if supported? 'fail 'unsupported)]
+      [(success stylesheet trees doms) (if supported? 'fail 'unsupported)]
       [(failure stylesheet trees) 'success]))
   (eprintf "~a\n" status)
 

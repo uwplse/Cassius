@@ -54,10 +54,29 @@ To test some assertions on a web page, write the assertion into a
 file, such as the `assertions.vizassert` that ships with Cassius. Then
 run:
 
-    racket src/run.rkt assertions assertions.vizassert [file] [instance]
+    racket src/run.rkt assertions [assertion-file] [assertion-name] [file] [instance]
 
-If the assertion quantified over any boxes, those boxes will be tagged
-`:cex` in the output.
+An assertion file is formatted like `assertions.vizassert`, which
+ships with several assertions drawn from common accessibility and
+usability guidelines, including:
+
+- `text-size`: text should be at least 14px tall
+- `contrast`: text should have good contrast with background
+- `interactive-onscreen`: links, buttons, and inputs should be onscreen
+- `overlapping-text`: text should not overlap other text
+- `text-width`: text should not be wider than 80 characters
+- `line-spacing`: line spacing should be at least 1.5
+- `paragraph-spacing`: paragraph spacing should be at least 1.5 line spacing
+- `selected-onscreen`: `.selected` items should be onscreen
+- `tab-ordering`: tab order should be top down and left to right
+- `button-size`: buttons should be at least 30×30px
+- `link-distinctive`: links should be a distinct color from normal text
+- `no-horizontal-scroll`: no elements should scroll horizontally
+- `interactive-distinct`: interactive elements should be a different
+  color from non-interactive ones
+
+The chosen assertion will be run on the chosen instance, both the
+render tree and browser configuration of any counterexamples will be printed.
 
 Collecting Examples
 -----------------------
@@ -75,11 +94,9 @@ Current Status
 
 Cassius currently supports a fragment of CSS 2.1:
 + Widths, padding, and margins, including `auto` margins
-+ Margin collapsing
-+ Floats
-+ Percentage margins, widths, or padding
-+ Borders
-+ Positioning
++ Percentage and em measurements
++ Borders and Margin collapsing
++ Floats and Positioning
 + A few miscellaneous properties, like `box-sizing`.
 
 Cassius development is tracked
