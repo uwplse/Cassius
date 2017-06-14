@@ -73,6 +73,7 @@
     [(list 'desc sels ...)
      (match-define (cons sel rsels) (reverse sels))
      (and (selector-matches? sel elt)
+          (or (node-parent elt) (null? rsels))
           (let loop ([rsels rsels] [elt (node-parent elt)])
             (cond
              [(null? rsels) true]
