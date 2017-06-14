@@ -85,7 +85,7 @@
                 (with-handlers
                     ([exn:break? (λ (e) 'break)]
                      [exn:fail? (λ (e) (list 'error e))])
-                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents)))))))
+                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)))))))
 
   (define t (current-inexact-milliseconds))
   (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout)) ; 1m max
@@ -135,11 +135,11 @@
           status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
           (car (dict-ref prob ':url '("/tmp")))))
 
-(define (test-assertions file pname prob #:index [index (hash)])
-  (eprintf "~a\t~a\t" file pname)
+(define (test-assertions assertion file pname prob #:index [index (hash)])
+  (eprintf "~a\t~a\t~a\t" assertion file pname)
   (define prob* (dict-update prob ':documents (curry map dom-strip-positions)))
   (define-values (res runtime) (run-problem prob*))
-  (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
+  (define supported? (null? (set-subtract (dict-ref prob* ':features '()) (supported-features))))
 
   (define status
     (match res
@@ -151,7 +151,7 @@
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+  (result (format "~a ~a" file assertion) pname uname (hash-ref index (normalize-uname uname) "unknown")
           status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
           (car (dict-ref prob ':url '("/tmp")))))
 
@@ -196,9 +196,9 @@
     (test-mutations file (car x) (cdr x) #:index index)))
 
 (define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
-  (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
+  (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x))
              [_ (in-range repeat)])
-    (test-assertions file (car x) (cdr x) #:index index)))
+    (test-assertions assertion (first x) (second x) (cddr x) #:index index)))
 
 (define (file-name-stem fn)
   (define-values (_1 uname _2) (split-path fn))
@@ -413,11 +413,13 @@
       (for/append ([file fnames])
                   (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                   (map (curry cons file) x)))
-    (call-with-input-file assertions
-      (λ (p)
-        (define probs
+    (define probs
+      (call-with-input-file assertions
+        (λ (p)
           (for*/list ([assertion (in-port read p)] [prob prob1])
             (match-define `(define-test (,name ,args ...) ,body) assertion)
             (match-define (cons a (cons b c)) prob)
-            (list* a b (dict-set c ':test (list `(forall ,args ,body))))))
-        (run-assertion-tests probs #:valid valid? #:index index)))]))
+            (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))))
+    (write-report
+     #:output out-file
+     (run-assertion-tests probs #:valid valid? #:index index))]))

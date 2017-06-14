@@ -203,4 +203,6 @@
             (match-define `(define-test (,name ,vars ...) ,body) assertion)
             (values name `(forall ,vars ,body))))))
     (define documents (map dom-strip-positions (dict-ref prob ':documents)))
-    (do-verify (dict-set prob ':test (list (dict-ref assertions (string->symbol assertion)))))]))
+    (do-verify
+     (dict-set (dict-update prob ':documents (curry map dom-strip-positions))
+               ':test (list (dict-ref assertions (string->symbol assertion)))))]))
