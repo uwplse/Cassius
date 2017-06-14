@@ -34,7 +34,7 @@
   `(max-width (px ,(? number?)))
   `(orientation landscape)
   `(orientation portrait)
-  (or 'screen 'print))
+  (or 'all 'screen 'print))
 
 (define-by-match rule?
   (list (? selector?) (? attribute?) ... (list (? property?) _ (? attribute?) ...) ...))
@@ -101,6 +101,7 @@
     [`(not ,q)
      (not (media-matches? q))]
     ['screen true]
+    ['all true]
     ['print false]
     ['(orientation landscape) true] ; TODO: Actually check viewport width and height
     ['(orientation portrait) false]
