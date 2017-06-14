@@ -21,6 +21,9 @@
 (define-test (text-width b)
   (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (h b)))))
 
+(define-test (line-width b)
+  (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (font-size b)))))
+
 ;;; 5
 (define-test (line-spacing b)
   (=> (is-box/line (type b))
@@ -59,7 +62,7 @@
 
 ;;; 13
 (define-test (no-horizontal-scroll b)
-  (< (right-border b) (left-content root-box)))
+  (<= (right-border b) (right-content root-box)))
 
 ;;; 14
 ; TODO: How do we measure that?

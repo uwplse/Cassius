@@ -476,6 +476,8 @@
              (= (left-border b)
                 (max (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))
                      (+ (left-content p) (ml b))))
+             (= (ml b) (min-ml b))
+             (= (mr b) (min-mr b))
              (ite (is-width/auto (style.width r))
                   (= (right-border b)
                      (min (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
