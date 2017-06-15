@@ -268,22 +268,22 @@
            (is-clear/both (style.clear (computed-style (box-elt b))))))
      (ez.right-max (ez.in b))))
 
-  (define-fun flow-horizontal-layout ((b Box)) Bool
+  (define-fun flow-horizontal-layout ((b Box) (available-width Real)) Bool
     ;; CSS § 10.3.3: Block-level, non-replaced elements in normal flow
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))] [p (pflow b)] )
-       (= (w p) (+ (ml b) (box-width b) (mr b)))
+       (= available-width (+ (ml b) (box-width b) (mr b)))
        (not (w-from-stfwidth b))
        (let ([w* (min-max-width (min-w b) b)]
              [ml* (min-ml b)]
              [mr* (min-mr b)])
          ,(smt-cond
-           [(> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) (w p))
+           [(> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) available-width)
             (= (w b) w*)
             (= (ml b) ml*)
             (width-set b)]
            [(and (is-width/auto (style.width r)) (not (is-replaced e)))
             (ite (and (not (is-max-width/none (style.max-width r)))
-                      (> (- (w p) ml* (bl b) (pl b) (pr b) (br b) mr*)
+                      (> (- available-width ml* (bl b) (pl b) (pr b) (br b) mr*)
                          ,(get-px-or-% 'max-width '(w p) 'b)))
                  (and
                   (= (w b) ,(get-px-or-% 'max-width '(w p) 'b))
@@ -468,25 +468,17 @@
        (margins-collapse b)
 
        (ite (is-flow-root b)
-            (and
-             (= (y b)
-                (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
-                          (left-content p) (right-content p)
-                          (resolve-clear b (vertical-position-for-flow-boxes b)) float/left))
-             (= (left-border b)
-                (max (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))
-                     (+ (left-content p) (ml b))))
-             (= (ml b) (min-ml b))
-             (= (mr b) (min-mr b))
-             (ite (is-width/auto (style.width r))
-                  (= (right-border b)
-                     (min (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
-                          (- (right-content p) (mr b))))
-                  (= (w b) (min-max-width ,(get-px-or-% 'width '(w p) 'b) b))))
-            (and
-             (flow-horizontal-layout b)
-             (= (x b) (+ (left-content p) (ml b)))
-             (= (y b) (resolve-clear b (vertical-position-for-flow-boxes b)))))
+            (= (y b)
+               (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
+                         (left-content p) (right-content p)
+                         (resolve-clear b (vertical-position-for-flow-boxes b)) float/left))
+            (= (y b) (resolve-clear b (vertical-position-for-flow-boxes b))))
+
+       (if (is-flow-root b)
+           (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
+                                        (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))))
+           (flow-horizontal-layout b (w p)))
+       (= (x b) (+ (left-content p) (ml b)))
        (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
   (define-fun a-block-float-box ((b Box)) Bool
@@ -696,7 +688,7 @@
        (no-relative-offset b)
        (zero-box-model-except-collapse b)
        (margins-collapse b)
-       (flow-horizontal-layout b)
+       (flow-horizontal-layout b (w p))
        (= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
        (= (stfwidth b) (max-if (stfwidth l) (is-box v) (stfwidth v)))
        (= (w b) (w p))
