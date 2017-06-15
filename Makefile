@@ -25,8 +25,8 @@ bench/fwt/%.rkt: get_bench.py get_bench.js bench/fwt/%.zip
 bench/fwt/%.zip:
 	curl -L -s https://freewebsitetemplates.com/download/$*/ > $@
 
-bench/fwt/valid.txt:
-	python3 valid_fwt.py reports/fwt.json > $@
+bench/fwt/valid.txt: reports/fwt.json
+	python3 valid_fwt.py $^ > $@
 
 /tmp/%/: bench/fwt/%.zip
 	unzip -q $< -d /tmp/

@@ -22,7 +22,7 @@
   (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (h b)))))
 
 (define-test (line-width b)
-  (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (font-size b)))))
+  (=> (is-box/line (type b)) (<= (w b) (* 80 (/ 10 19) (font-size b)))))
 
 ;;; 5
 (define-test (line-spacing b)

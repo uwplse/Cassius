@@ -5,6 +5,7 @@
 (require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "run.rkt")
 
 (define timeout (make-parameter 60))
+(define show-success (make-parameter false))
 
 (define (dom-not-something d)
   (match-define (dom name ctx elts boxes) d)
@@ -146,12 +147,12 @@
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees doms) (if supported? 'fail 'unsupported)]
+      [(success stylesheet trees doms) 'fail]
       [(failure stylesheet trees) 'success]))
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result (format "~a ~a" file assertion) pname uname (hash-ref index (normalize-uname uname) "unknown")
+  (result file (format "~a ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
           status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
           (car (dict-ref prob ':url '("/tmp")))))
 
@@ -269,13 +270,13 @@
                  ,@(for/list ([r sresults] #:when (member (result-status r) '(error fail)))
                      `(a ((href ,(result-url r)))
                          ,(format "~a:~a" (file-name-stem (result-file r)) (result-problem r)))))))))))
-      ,@(if (ormap (λ (r) (equal? (result-status r) 'status)) results)
-            `(section ()
-              (h2 () "Feature totals")
-              (table ()
-               (thead () ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
-               (tbody () ,@(for/list ([data (sort-features (map feature-row unsupported-features))])
-                             (apply row (map ~a data))))))
+      ,@(if (ormap (λ (r) (set-member? '(fail unsupported) (result-status r))) results)
+            `((section ()
+               (h2 () "Feature totals")
+               (table ()
+                (thead () ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
+                (tbody () ,@(for/list ([data (sort-features (map feature-row unsupported-features))])
+                              (apply row (map ~a data)))))))
             '())
       (section ()
        (h2 () "Failing tests")
@@ -283,7 +284,9 @@
        ,@(for/list ([group-results (group-by result-file results)])
            `(tbody
              (tr () (th ((colspan "4")) ,(result-file (car group-results))))
-             ,@(for/list ([res group-results] #:when (not (member (result-status res) '(success unsupported))))
+             ,@(for/list ([res group-results]
+                          #:when (not (set-member? (if (show-success) '(unsupported) '(success unsupported))
+                                                   (result-status res))))
                  (match-define (result file problem test section status description features time url) res)
                  (row #:class (~a status) (~a problem) `(a ((href ,url)) ,(~a test)) description
                       (match status
@@ -363,6 +366,8 @@
     (timeout (string->number s))]
    [("--index") index-file "File name with section information for tests"
     (set! index (read-index index-file))]
+   [("--show-success") "Output report rows for successful tests"
+    (show-success true)]
    [("--supported") "Skip tests with unsupported features"
     (and! valid? (λ (p) (subset? (dict-ref p ':features '()) (supported-features))))]
    [("--failed") json-file "Run only tests that failed in given JSON file"
@@ -416,7 +421,7 @@
     (define probs
       (call-with-input-file assertions
         (λ (p)
-          (for*/list ([assertion (in-port read p)] [prob prob1])
+          (for*/list ([prob prob1] [assertion (in-port read p)])
             (match-define `(define-test (,name ,args ...) ,body) assertion)
             (match-define (cons a (cons b c)) prob)
             (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))))
