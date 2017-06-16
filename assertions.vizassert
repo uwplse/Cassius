@@ -6,8 +6,8 @@
 ; TODO: fg-color, bg-color, and lum
 (define-test (contrast b)
   (=> (is-box/text (type b)) (>= (w b) 0)
-      (let ([fg (fg-color (pbflow b))] [bg (bg-color (pbflow b))] [threshold 3])
-        (or (>= (lum fg) (* (+ threshold 1) (lum bg))) (>= (lum bg) (* (+ threshold 1) (lum fg)))))))
+      (let ([fg (fg-lum (pbflow b))] [bg (bg-lum (pbflow b))] [threshold 3])
+        (or (>= fg (* (+ threshold 1) bg) (>= bg (* (+ threshold 1) fg)))))))
 
 ;;; 3
 (define-test (interactive-onscreen b)

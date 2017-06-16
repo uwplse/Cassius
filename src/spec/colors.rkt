@@ -154,4 +154,11 @@
         ))
 
 (define-constraints colors
-  (declare-datatypes () ((RGBColor (color (color.r Real) (color.g Real) (color.b Real))))))
+  (declare-datatypes () ((RGBColor (color (color.r Real) (color.g Real) (color.b Real)))))
+
+
+  (define-fun lum ((c RGBColor)) Real
+    (+
+     (* 0.2126 (/ (color.r c) 255.0))
+     (* 0.7152 (/ (color.g c) 255.0))
+     (* 0.0722 (/ (color.b c) 255.0)))))

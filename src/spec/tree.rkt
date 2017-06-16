@@ -39,7 +39,13 @@
   ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
       `(assert (= (,field no-box) nil-box)))
 
-  (assert (= (&elt no-box) nil-elt)))
+  (assert (= (&elt no-box) nil-elt))
+
+  (define-fun fg-lum ((b Box)) Real
+    (ite (is-color/transparent (fg-color b)) 0.0 (lum (color.rgb (fg-color b)))))
+
+  (define-fun bg-lum ((b Box)) Real
+    (ite (is-color/transparent (bg-color b)) 0.0 (lum (color.rgb (bg-color b))))))
 
 (define-constraints link-definitions
   ;; The elements in each direction in the element tree
