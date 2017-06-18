@@ -57,7 +57,7 @@
 ; TODO: lab-distance
 (define-test (link-distinctive b)
   (=> (matches (box-elt b) (tag a))
-      (>= (lab-distance (fg-color b) (fg-color (pbflow b))) .5)))
+      (>= (color-distance (fg-color b) (fg-color (pbflow b))) 32)))
 ; TODO: active color
 
 ;;; 13
