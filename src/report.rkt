@@ -215,6 +215,13 @@
   `(tr (,@(if class `((class ,class)) '()))
        ,@(for/list ([arg args]) `(,cell () ,(if (equal? arg hide) "" arg)))))
 
+(define (load-results file)
+  (define data (call-with-input-file file read-json))
+  (for/list ([rec data])
+    (define (get field [convert identity]) (convert (dict-ref rec field)))
+    (result (get 'file) 'doc-1 (get 'test string->symbol) (get 'section) (get 'status string->symbol)
+            "no description" (get 'features (curry map string->symbol)) (get 'time) "")))
+
 (define (write-report results #:output [outname #f])
   (define (count-type set t)
     (count (λ (x) (equal? (result-status x) t)) set))
@@ -226,7 +233,16 @@
    write-json
    (for/list ([res results])
      (match-define (result file problem test section status description features time url) res)
-     (make-hash `((file . ,(~a file)) (test . ,(~a test)) (section . ,section) (status . ,(~a status)) (features . ,(map ~a features)) (time . ,time)))))
+     (make-hash
+      `((file . ,(~a file))
+        (problem . (~a problem))
+        (test . ,(~a test))
+        (section . ,section)
+        (status . ,(~a status))
+        (description . ,description)
+        (features . ,(map ~a features))
+        (time . ,time)
+        (url . ,url)))))
   
   (define unsupported-features
     (set-subtract (remove-duplicates (append-map result-features results)) (supported-features)))
@@ -429,4 +445,8 @@
         (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))
     (write-report
      #:output out-file
-     (run-assertion-tests probs #:valid valid? #:index index))]))
+     (run-assertion-tests probs #:valid valid? #:index index))]
+
+   ["rerender"
+    #:args (json-file)
+    (write-report #:output out-file (load-results json-file))]))
