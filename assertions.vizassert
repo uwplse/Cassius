@@ -54,7 +54,6 @@
   (=> (is-interactive (box-elt b)) (and (>= (box-width b) 30) (>= (box-height b) 30))))
 
 ;;; 10
-; TODO: lab-distance
 (define-test (link-distinctive b)
   (=> (matches (box-elt b) (tag a))
       (>= (color-distance (fg-color b) (fg-color (pbflow b))) 32)))
@@ -74,7 +73,7 @@
 (define-test (interactive-distinctive b1 b2)
   (=> (is-interactive (box-elt b1))
       (not (is-interactive (box-elt b2)))
-      (>= (lab-distance (fg-color b1) (fg-color b2)) 0.1)))
+      (>= (color-distance (fg-color b1) (fg-color b2)) 0.1)))
 
 ;; Skipped: 11, 12, 14, 19, 20, 21
 ;; Duplicates: 17 & 18
