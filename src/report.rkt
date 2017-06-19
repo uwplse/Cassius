@@ -418,13 +418,15 @@
       (for/append ([file fnames])
                   (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                   (map (curry cons file) x)))
-    (define probs
+    (define assertions*
       (call-with-input-file assertions
-        (λ (p)
-          (for*/list ([prob prob1] [assertion (in-port read p)])
-            (match-define `(define-test (,name ,args ...) ,body) assertion)
-            (match-define (cons a (cons b c)) prob)
-            (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))))
+        (λ (p) (sequence->list (in-port read p)))))
+
+    (define probs
+      (for*/list ([prob prob1] [assertion assertions*])
+        (match-define `(define-test (,name ,args ...) ,body) assertion)
+        (match-define (cons a (cons b c)) prob)
+        (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))
     (write-report
      #:output out-file
      (run-assertion-tests probs #:valid valid? #:index index))]))
