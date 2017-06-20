@@ -61,7 +61,7 @@
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
          &nflow &vflow &ppflow &pbflow ez.in ez.out
-         textalign &elt first? last? color background-color)
+         textalign &elt first? last? color background-color ancestor)
    z3-box)
   (define box-width (+ bl pl w pr br))
   (define box-height (+ bt pt h pb bb))

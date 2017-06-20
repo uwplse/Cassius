@@ -26,7 +26,7 @@
                 (ez.in EZone) (ez.out EZone)
                 (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt ElementName) (first-box? Bool) (last-box? Bool)
-                (fg-color Color) (bg-color Color)))
+                (fg-color Color) (bg-color Color) (ancestor-bg Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
@@ -47,7 +47,7 @@
     (ite (is-color/transparent (fg-color b)) 0.0 (lum (color.rgb (fg-color b)))))
 
   (define-fun bg-lum ((b Box)) Real
-    (ite (is-color/transparent (bg-color b)) 0.0 (lum (color.rgb (bg-color b)))))
+    (lum (color.rgb (ancestor-bg b))))
 
   ;; TODO: is this a good place to put this?
   (define-fun color-distance ((c1 Color) (c2 Color)) Real
@@ -161,7 +161,11 @@
      (= (fg-color (get/box &b))
         (style.color (computed-style (get/elt &e))))
      (= (bg-color (get/box &b))
-        (style.background-color (computed-style (get/elt &e))))))
+        (style.background-color (computed-style (get/elt &e))))
+     (= (ancestor-bg (get/box &b))
+        (ite (is-color/transparent (bg-color (get/box &b)))
+             (ancestor-bg (pbox (get/box &b)))
+             (bg-color (get/box &b))))))
 
   (define-fun match-anon-box ((&b BoxName)) Bool
     (and
@@ -174,7 +178,8 @@
         (ite (is-no-box (pflow (get/box &b)))
              color/black
              (fg-color (pflow (get/box &b)))))
-     (= (bg-color (get/box &b)) color/transparent)))
+     (= (bg-color (get/box &b)) color/transparent)
+     (= (ancestor-bg (get/box &b)) (ancestor-bg (pbox (get/box &b))))))
 
   ;; `link-flow-simple`, `link-flow-root`, and `link-flow-block` link
   ;; boxes together in their flow trees. The "block" version is much
@@ -186,6 +191,7 @@
      (= (&pbflow b) nil-box)
      (= (&vflow b) nil-box)
      (= (&nflow b) nil-box)
+     (= (ancestor-bg b) (color/rgb (color 255 255 255))) ;; TODO: Browser dependent? User-configurable?
      (= (ez.in b) ez.init)))
 
   (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
