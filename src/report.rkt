@@ -6,6 +6,7 @@
 
 (define timeout (make-parameter 60))
 (define show-success (make-parameter false))
+(define aggregate (make-parameter false))
 
 (define (dom-not-something d)
   (match-define (dom name ctx elts boxes) d)
@@ -152,7 +153,7 @@
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result file (format "~a ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
+  (result file (format "~a on ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
           status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
           (car (dict-ref prob ':url '("/tmp")))))
 
@@ -235,7 +236,7 @@
      (match-define (result file problem test section status description features time url) res)
      (make-hash
       `((file . ,(~a file))
-        (problem . (~a problem))
+        (problem . ,(~a problem))
         (test . ,(~a test))
         (section . ,section)
         (status . ,(~a status))
@@ -298,19 +299,31 @@
        (h2 () "Failing tests")
        (table ()
        ,@(for/list ([group-results (group-by result-file results)])
-           `(tbody
-             (tr () (th ((colspan "4")) ,(result-file (car group-results))))
-             ,@(for/list ([res group-results]
-                          #:when (not (set-member? (if (show-success) '(unsupported) '(success unsupported))
-                                                   (result-status res))))
-                 (match-define (result file problem test section status description features time url) res)
-                 (row #:class (~a status) (~a problem) `(a ((href ,url)) ,(~a test)) description
-                      (match status
-                        ['success "✔"] ['fail "✘"] ['timeout "🕡"]
-                        ['unsupported
-                         (define probfeats (set-subtract features (supported-features)))
-                         `(span ((title ,(string-join (map ~a probfeats) ", "))) "☹")]
-                        ['error "!"])))))))))))
+           (if (aggregate)
+               (match-let ([(result file problem test section status description features time url)
+                            (car group-results)])
+                 (apply row (~a file) `(a ((href ,url)) ,(~a test)) description
+                        (for/list ([res group-results])
+                          (define status (result-status res))
+                          `(span ((class ,(~a status)) (title ,(~a problem)))
+                                 ,(match status
+                                    ['success "✔"] ['fail "✘"] ['timeout "🕡"]
+                                    ['unsupported "☹"] ['error "!"])))))
+               `(tbody
+                 (tr () (th ((colspan "4")) ,(result-file (car group-results))))
+                 ,@(for/list ([res group-results]
+                              #:when (not (set-member? (if (show-success) '(unsupported) '(success unsupported))
+                                                       (result-status res))))
+                     (match-define (result file problem test section status description features time url) res)
+                     (row (~a problem) description
+                          (match status
+                            ['success `(span ((class "success")) "✔")]
+                            ['fail `(span ((class "fail")) "✘")]
+                            ['timeout `(span ((class "timeout")) "🕡")]
+                            ['unsupported
+                             (define probfeats (set-subtract features (supported-features)))
+                             `(span ((class "unsupported") (title ,(string-join (map ~a probfeats) ", "))) "☹")]
+                            ['error `(span ((class "error")) "!")]))))))))))))
 
 (define (print-feature-table problems)
   (define all-features (remove-duplicates (append-map (λ (x) (dict-ref x ':features '())) problems)))
@@ -384,6 +397,8 @@
     (set! index (read-index index-file))]
    [("--show-success") "Output report rows for successful tests"
     (show-success true)]
+   [("--aggregate") "Aggregate tests from one file together"
+    (aggregate true)]
    [("--supported") "Skip tests with unsupported features"
     (and! valid? (λ (p) (subset? (dict-ref p ':features '()) (supported-features))))]
    [("--failed") json-file "Run only tests that failed in given JSON file"
