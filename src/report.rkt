@@ -220,8 +220,11 @@
   (define data (call-with-input-file file read-json))
   (for/list ([rec data])
     (define (get field [convert identity]) (convert (dict-ref rec field)))
-    (result (get 'file) 'doc-1 (get 'test string->symbol) (get 'section) (get 'status string->symbol)
-            "no description" (get 'features (curry map string->symbol)) (get 'time) "")))
+    (result (get 'file) (get 'problem) (get 'test string->symbol) (get 'section) (get 'status string->symbol)
+            (get 'description) (get 'features (curry map string->symbol)) (get 'time) (get 'url))))
+
+(define (shorten-filename name)
+  (string-join (drop-right (string-split (~a (file-name-from-path name)) ".") 1) "."))
 
 (define (write-report results #:output [outname #f])
   (define (count-type set t)
@@ -298,14 +301,23 @@
       (section ()
        (h2 () "Failing tests")
        (table ()
-       ,@(for/list ([group-results (group-by result-file results)])
+       ,@(for/list ([group-results (group-by result-file results)]
+                    #:unless (and
+                              (not (aggregate))
+                              (andmap (λ (res) (set-member? (if (show-success) '(unsupported) '(success unsupported))
+                                                            (result-status res))) group-results)))
            (if (aggregate)
                (match-let ([(result file problem test section status description features time url)
                             (car group-results)])
-                 (apply row (~a file) `(a ((href ,url)) ,(~a test)) description
+                 (apply row `(a ((href ,url) (title ,(~a file))) ,(~a (shorten-filename file))) description
                         (for/list ([res group-results])
+                          (define title
+                            (if (equal? (result-status res) 'unsupported)
+                                (let ([probfeats (set-subtract features (supported-features))])
+                                  (format "~a\n~a" (result-problem res) (string-join (map ~a probfeats) ", ")))
+                                (~a (result-problem res))))
                           (define status (result-status res))
-                          `(span ((class ,(~a status)) (title ,(~a problem)))
+                          `(span ((class ,(~a status)) (title ,title))
                                  ,(match status
                                     ['success "✔"] ['fail "✘"] ['timeout "🕡"]
                                     ['unsupported "☹"] ['error "!"])))))
@@ -315,7 +327,7 @@
                               #:when (not (set-member? (if (show-success) '(unsupported) '(success unsupported))
                                                        (result-status res))))
                      (match-define (result file problem test section status description features time url) res)
-                     (row (~a problem) description
+                     (row (~a problem) `(a ((href ,url)) ,(~a test)) description
                           (match status
                             ['success `(span ((class "success")) "✔")]
                             ['fail `(span ((class "fail")) "✘")]
