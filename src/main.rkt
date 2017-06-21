@@ -97,7 +97,7 @@
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)])
     (when (equal? (car (split-symbol name)) 'counterexample)
-      (define ptr (string->symbol (car (string-split (~a value) "-"))))
+      (define ptr (string->number (car (string-split (~a value) "-"))))
       (define node (by-name (if (string-prefix? (~a ptr) "elt") 'elt 'box) ptr))
       (define var (string-join (cdr (string-split (~a name) "/")) "/"))
       (node-add! node ':cex `(bad ,var)))))
@@ -107,11 +107,11 @@
    `(assert
      (!
       (link-element ,(dump-elt elt)
-                    ,(name 'elt (node-parent elt) 'nil-elt)
-                    ,(name 'elt (node-prev   elt) 'nil-elt)
-                    ,(name 'elt (node-next   elt) 'nil-elt)
-                    ,(name 'elt (node-fchild elt) 'nil-elt)
-                    ,(name 'elt (node-lchild elt) 'nil-elt))
+                    ,(name 'elt (node-parent elt) -1)
+                    ,(name 'elt (node-prev   elt) -1)
+                    ,(name 'elt (node-next   elt) -1)
+                    ,(name 'elt (node-fchild elt) -1)
+                    ,(name 'elt (node-lchild elt) -1))
       :named ,(sformat "tree/~a" (dump-elt elt))))))
 
 (define (rule-allows-property? rule prop)
@@ -164,13 +164,13 @@
       (when (eq? value '?)
         ;; Generates N^2 constraints, so only done when value unknown
         ;; When value known, these constraints would be trivial anyway, and never used
-        (for* ([elt1 elts] [elt2 elts] #:when (symbol<? (name 'elt elt1) (name 'elt elt2)))
-          (define assertname (sformat "~a^~a^~a" const (name 'elt elt1) (name 'elt elt2)))
+        (for* ([elt1 elts] [elt2 elts] #:when (< (name 'elt elt1) (name 'elt elt2)))
+          (define assertname (sformat "~a^elt~a^elt~a" const (name 'elt elt1) (name 'elt elt2)))
           (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt1)))
                                (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt2))))
                             :named ,assertname)))))
       (for ([elt elts])
-        (define assertname (sformat "~a^~a" const (name 'elt elt)))
+        (define assertname (sformat "~a^elt~a" const (name 'elt elt)))
         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
                           :named ,assertname)))))))
 
@@ -191,18 +191,18 @@
     (emit `(declare-const ,(dump-elt elt) Element))
     (emit `(assert (is-elt ,(dump-elt elt)))))
   (define body
-    (for*/fold ([body 'no-elt]) ([dom doms] [elt (in-elements dom)])
-      `(ite (,(sformat "is-~a" (name 'elt elt)) &elt) ,(dump-elt elt) ,body)))
-  (emit `(define-fun get/elt ((&elt ElementName)) Element ,body)))
+    (for*/fold ([body '(ite (= &elt -1) no-elt no-elt)]) ([dom doms] [elt (in-elements dom)])
+      `(ite (= &elt ,(name 'elt elt)) ,(dump-elt elt) ,body)))
+  (emit `(define-fun get/elt ((&elt Int)) Element ,body)))
 
 (define (dom-define-get/box doms emit)
   (for* ([dom doms] [box (in-boxes dom)])
     (emit `(declare-const ,(dump-box box) Box))
     (emit `(assert (is-box ,(dump-box box)))))
   (define body
-    (for*/fold ([body 'no-box]) ([dom doms] [box (in-boxes dom)])
-      `(ite (,(sformat "is-~a" (name 'box box)) &box) ,(dump-box box) ,body)))
-  (emit `(define-fun get/box ((&box BoxName)) Box ,body)))
+    (for*/fold ([body '(ite (= &box -1) no-box no-box)]) ([dom doms] [box (in-boxes dom)])
+      `(ite (= &box ,(name 'box box)) ,(dump-box box) ,body)))
+  (emit `(define-fun get/box ((&box Int)) Box ,body)))
 
 (define (configuration-constraints doms emit)
   (for ([dom doms])
@@ -269,11 +269,11 @@
 (define (box-link-constraints dom emit elt)
   (emit `(assert (! (link-box
                      ,(dump-box elt)
-                     ,(name 'box (node-parent elt) 'nil-box)
-                     ,(name 'box (node-prev elt) 'nil-box)
-                     ,(name 'box (node-next elt) 'nil-box)
-                     ,(name 'box (node-fchild elt) 'nil-box)
-                     ,(name 'box (node-lchild elt) 'nil-box))
+                     ,(name 'box (node-parent elt) -1)
+                     ,(name 'box (node-prev elt) -1)
+                     ,(name 'box (node-next elt) -1)
+                     ,(name 'box (node-fchild elt) -1)
+                     ,(name 'box (node-lchild elt) -1))
                     :named ,(sformat "link-box/~a" (name 'box elt))))))
 
 (define (box-flow-constraints dom emit elt)
@@ -332,9 +332,7 @@
     ,@colors
     (declare-datatypes
      ()
-     ((ElementName nil-elt ,@(per-element (λ (_ sow elt) (sow (name 'elt elt)))))
-      (BoxName nil-box ,@(per-box (λ (_ sow box) (sow (name 'box box)))))
-      ,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
+     (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
       (Style (style ,@(for/list ([(prop type default) (in-css-properties)])
                         `(,(sformat "style.~a" prop) ,type))))))
     (define-const border/thin Border (border/px 1))
@@ -389,7 +387,7 @@
     (apply smt-or
            (for*/list ([dom doms] [elt (in-elements dom)]
                        #:when (selector-matches? sel elt))
-             `(= ,(name 'elt elt) ,&e))))
+             `(= ,&e ,(name 'elt elt)))))
   
   (define body*
     (smt-replace body

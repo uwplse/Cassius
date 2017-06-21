@@ -25,12 +25,12 @@
 
 (define (dump-elt elt)
   (if elt
-      (sformat "~a-elt" (name 'elt elt))
+      (sformat "elt~a" (name 'elt elt))
       'no-elt))
 
 (define (dump-box box)
   (if box
-      (sformat "~a-box" (name 'box box))
+      (sformat "box~a" (name 'box box))
       'no-box))
 
 (define (extract-style style-expr)

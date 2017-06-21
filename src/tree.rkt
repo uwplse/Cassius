@@ -1,5 +1,5 @@
 #lang racket
-(require "registry.rkt" "common.rkt")
+(require "common.rkt")
 (provide parse-tree unparse-tree tree-copy tree=?
          node? node-type node-parent node-children* node-children node-attrs
          node-get node-get* node-set! node-set*! node-add! node-remove!

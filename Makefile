@@ -41,7 +41,7 @@ reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
 	@ racket src/report.rkt regression $(FLAGS) --index bench/css/index.json -o reports/csswg $^
 
 reports/fwt.html reports/fwt.json: $(wildcard bench/fwt/*.rkt)
-	@ racket src/report.rkt regression $(FLAGS) --timeout 300 -o reports/fwt $^
+	@ racket src/report.rkt regression $(FLAGS) --aggregate --timeout 300 -o reports/fwt $^
 
 reports/vizassert.html reports/vizassert.json: bench/fwt/valid.txt $(shell cat bench/fwt/valid.txt)
 	@ racket src/report.rkt assertions $(FLAGS) --aggregate --timeout 600 -o reports/vizassert assertions.vizassert `cat bench/fwt/valid.txt`

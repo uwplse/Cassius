@@ -17,29 +17,28 @@
                 (pt Real) (pr Real) (pb Real) (pl Real) ; padding
                 (bt Real) (br Real) (bb Real) (bl Real) ; border
                 (stfwidth Real) (stfmax Real) (w-from-stfwidth Bool)
-                (&pbox BoxName) (&vbox BoxName) (&nbox BoxName) (&fbox BoxName) (&lbox BoxName) ; box tree pointers
+                (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (font-size Real)
-                (&nflow BoxName) (&vflow BoxName) ; flow tree pointers
-                (&ppflow BoxName) ; parent positioned pointers
-                (&pbflow BoxName)
+                (&nflow Int) (&vflow Int) ; flow tree pointers
+                (&ppflow Int) ; parent positioned pointers
+                (&pbflow Int)
                 (ez.in EZone) (ez.out EZone)
                 (textalign Text-Align) ; to handle inheritance; TODO: handle better
-                (&elt ElementName) (first-box? Bool) (last-box? Bool)
+                (&elt Int) (first-box? Bool) (last-box? Bool)
                 (fg-color Color) (bg-color Color) (ancestor-bg Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
-                (&pelt ElementName) (&velt ElementName) (&nelt ElementName)
-                (&felt ElementName) (&lelt ElementName)))))
+                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int)))))
 
   ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
-      `(assert (= (,field no-elt) nil-elt)))
+      `(assert (= (,field no-elt) -1)))
   ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
-      `(assert (= (,field no-box) nil-box)))
+      `(assert (= (,field no-box) -1)))
 
-  (assert (= (&elt no-box) nil-elt))
+  (assert (= (&elt no-box) -1))
 
   ;; TODO: for all three below functions, compute background color for transparent
   ;; backgrounds. Currently stubbed out.
@@ -95,7 +94,7 @@
         (is-position/relative (position box))))
 
   (define-fun is-root-elt ((e Element)) Bool
-    (is-nil-elt (&pelt e)))
+    (= (&pelt e) -1))
 
   (define-fun box-in-flow ((box Box)) Bool
     (and (is-box box) (is-float/none (float box))
@@ -123,9 +122,7 @@
          (lbox b) (vflow (lbox b))))
 
   ;; `link-element` and `link-box` set the element and box tree pointers
-  (define-fun link-element
-    ((elt Element) (&p ElementName) (&v ElementName) (&n ElementName)
-     (&f ElementName) (&l ElementName)) Bool
+  (define-fun link-element ((elt Element) (&p Int) (&v Int) (&n Int) (&f Int) (&l Int)) Bool
     (and (is-elt elt)
          (= (&pelt elt) &p)
          (= (&velt elt) &v)
@@ -133,9 +130,7 @@
          (= (&felt elt) &f)
          (= (&lelt elt) &l)))
 
-  (define-fun link-box
-    ((box Box) (&p BoxName) (&v BoxName) (&n BoxName)
-     (&f BoxName) (&l BoxName)) Bool
+  (define-fun link-box ((box Box) (&p Int) (&v Int) (&n Int) (&f Int) (&l Int)) Bool
     (and (is-box box)
          (= (&pbox box) &p)
          (= (&vbox box) &v)
@@ -150,8 +145,7 @@
   ;; `match-element-box` matchs elements and boxes together.
   ;; `match-anon-element` and `match-anon-box` do the same for
   ;; elements and boxes without links on the other side.
-  (define-fun match-element-box ((&e ElementName) (&b BoxName)
-                                 (first? Bool) (last? Bool)) Bool
+  (define-fun match-element-box ((&e Int) (&b Int) (first? Bool) (last? Bool)) Bool
     (and
      (= (&elt (get/box &b)) &e)
      (= (first-box? (get/box &b)) first?)
@@ -167,9 +161,9 @@
              (ancestor-bg (pbox (get/box &b)))
              (bg-color (get/box &b))))))
 
-  (define-fun match-anon-box ((&b BoxName)) Bool
+  (define-fun match-anon-box ((&b Int)) Bool
     (and
-     (= (&elt (get/box &b)) nil-elt)
+     (= (&elt (get/box &b)) -1)
      (= (textalign (get/box &b))
         (ite (is-no-box (pflow (get/box &b)))
              text-align/left
@@ -185,16 +179,16 @@
   ;; boxes together in their flow trees. The "block" version is much
   ;; more complex than the non-block version, because so many things
   ;; can only be true of block boxes.
-  (define-fun link-flow-root ((b Box) (&b BoxName)) Bool
+  (define-fun link-flow-root ((b Box) (&b Int)) Bool
     (and
      (= (&ppflow b) &b)
-     (= (&pbflow b) nil-box)
-     (= (&vflow b) nil-box)
-     (= (&nflow b) nil-box)
+     (= (&pbflow b) -1)
+     (= (&vflow b) -1)
+     (= (&nflow b) -1)
      (= (ancestor-bg b) (color/rgb (color 255 255 255))) ;; TODO: Browser dependent? User-configurable?
      (= (ez.in b) ez.init)))
 
-  (define-fun link-flow-simple ((b Box) (&b BoxName)) Bool
+  (define-fun link-flow-simple ((b Box) (&b Int)) Bool
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
      (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
@@ -206,18 +200,18 @@
                             (ez.in (pbox b)))
                        (ez.out (vbox b))))))
 
-  (define-fun link-flow-block ((b Box) (&b BoxName)) Bool
+  (define-fun link-flow-block ((b Box) (&b Int)) Bool
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pbox b))))
      (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
      (= (&vflow b)
         ,(smt-cond
-          [(is-no-box (vbox b)) nil-box]
+          [(is-no-box (vbox b)) -1]
           [(box-in-flow (vbox b)) (&vbox b)]
           [else (&vflow (vbox b))]))
      (= (&nflow b)
         ,(smt-cond
-          [(is-no-box (nbox b)) nil-box]
+          [(is-no-box (nbox b)) -1]
           [(box-in-flow (nbox b)) (&nbox b)]
           [else (&nflow (nbox b))]))
      (= (ez.in b) (ite (is-no-box (vbox b))

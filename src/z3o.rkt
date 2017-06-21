@@ -49,12 +49,6 @@
 
 (define ((z3-resolve-fns . fns) cmds)
   (define resolutions (make-hash))
-  (define finite-types (make-hash))
-  
-  (define finite-type? (curry hash-has-key? finite-types))
-  (define ((constructor-tester? type) tester)
-    (let ([name (constructor-tester-name tester)])
-      (and name (member name (hash-ref finite-types type)))))
 
   (define (save input output)
     (when (and (hash-has-key? resolutions input) (not (equal? output (hash-ref resolutions input))))
@@ -74,24 +68,13 @@
 
   (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
-      [`(declare-datatypes () (,decls ...))
-       (for ([decl decls])
-         (match decl
-           [`(,name ,(? symbol? constructors) ...)
-            (hash-set! finite-types name constructors)]
-           [_ (void)]))
-       cmd]
-      [`(define-fun ,name ((,var ,(? finite-type? type))) ,rtype ,body)
-       (let loop ([body body] [values-set '()])
+      [`(define-fun ,name ((,var ,type)) ,rtype ,body)
+       (let loop ([body body])
          (match body
-           [`(ite (,(? (constructor-tester? type) tester) ,(== var)) ,value ,body*)
-            (hash-set! resolutions `(,name ,(constructor-tester-name tester)) value)
-            (loop body* (cons (constructor-tester-name tester) values-set))]
-           [_
-            (match (set-subtract (hash-ref finite-types type) values-set)
-              [(list default-name)
-               (hash-set! resolutions `(,name ,default-name) body)]
-              [_ (void)])]))
+           [`(ite (= ,(== var) ,testval) ,outvalue ,body*)
+            (hash-set! resolutions `(,name ,testval) outvalue)
+            (loop body*)]
+           [_ (void)]))
        cmd]
       [`(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
        (define input (cons fn (map resolve args)))
@@ -546,9 +529,13 @@
       [`(not true) 'false]
       [`(and) `true]
       ;; DOMAIN SPECIFIC
-      [`(is-no-box (get/box nil-box)) 'true]
+      [`(is-no-box (get/box -1)) 'true]
+      [`(is-box (get/box -1)) 'false]
+      [`(is-no-box (get/box ,(? number?))) 'false]
       [`(is-box ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) 'true]
-      [`(is-no-elt (get/elt nil-elt)) 'true]
+      [`(is-no-elt (get/elt -1)) 'true]
+      [`(is-elt (get/elt -1)) 'false]
+      [`(is-no-elt (get/elt ,(? number?))) 'false]
       [`(is-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'true]
       ;; END DOMAIN SPECIFIC
       [(list 'and rest ...)

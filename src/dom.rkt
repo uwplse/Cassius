@@ -1,5 +1,5 @@
 #lang racket
-(require "common.rkt" "registry.rkt" "tree.rkt")
+(require "common.rkt" "tree.rkt")
 
 (provide (struct-out dom) dom-context in-elements in-boxes elements-difference parse-dom)
 

@@ -9,7 +9,7 @@
   (cond
    [thing
     (define registry (dict-ref! name-registry kind make-hash))
-    (dict-ref! registry thing (sformat "~a~a" kind (dict-count registry)))]
+    (dict-ref! registry thing (dict-count registry))]
    [else
     default]))
 

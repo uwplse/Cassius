@@ -1,32 +1,11 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
-         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "registry.rkt" "match.rkt"
+         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt"
          "spec/percentages.rkt")
 (provide query solve (struct-out success) (struct-out failure))
 
 (struct success (stylesheet elements doms))
 (struct failure (stylesheet trees))
-
-(define (sheet-constraints doms sheet)
-  (reap [emit]
-        (define browser-styles (map (curryr dom-context ':browser) doms))
-        (unless (= (length (remove-duplicates browser-styles)) 1)
-          (error "Multiple documents with different browsers not supported"))
-        (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
-        (define elts
-          (for*/list ([dom doms] [elt (in-elements dom)]) elt))
-        (define eqs (equivalence-classes (append browser-style sheet) elts))
-        (selector-constraints emit eqs)))
-
-(define (extract-ineqs eqcls core)
-  (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))
-    (match var
-      [`((value ,prop ,cls) (,elt1) (,elt2))
-       `(not (= (,prop ,(by-name 'elt elt1)) (,prop ,(by-name 'elt elt2))))]
-      [`((value ,prop ,cls) (,elt1))
-       (define cls* (if (equal? cls 'none) #f cls))
-       (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
-       `(not (= (,prop ,(by-name 'elt elt1)) ,value))])))
 
 (define (constraints log-phase sheets docs [tests #f])
   (define doms (map parse-dom docs))
@@ -61,7 +40,6 @@
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
   (define query (all-constraints (cons browser-style sheets) matchers doms))
-  ;(set! query (append query (sheet-constraints doms (car sheets))))
   (for ([test (or tests '())]) (set! query (add-test doms query test)))
 
   (log-phase "Produced ~a constraints of ~a terms"
@@ -108,92 +86,3 @@
   (log-phase "Solved constraints")
 
   res)
-
-(define (synthesize docs [test #f])
-  (define log-phase (make-log))
-  (define doms (map parse-dom docs))
-
-  ; TODO: There should be a better matcher available here
-  (define matchers (for/list ([dom doms]) (link-elts-boxes '() (dom-elements dom) (dom-boxes dom))))
-
-  (define query (all-constraints matchers doms))
-  (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
-
-  (when test (set! query (add-test query test)))
-  (if (memq 'z3o (flags))
-      (set! query (z3-prepare query))
-      (set! query (z3-clean query)))
-  (when (memq 'debug (flags)) (set! query (z3-namelines query)))
-
-  (log-phase "Prepared ~a constraints of ~a terms"
-           (length query) (tree-size query))
-
-  (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
-  (define selhash (all-selectors elts))
-  (define z3 (z3-process))
-  (z3-send z3 query)
-  (z3-send z3 '((push)))
-  (define browser-style (get-sheet (and (dom-context (car doms) ':browser) (car (dom-context  (car doms) ':browser)))))
-
-  (define ineq-ids (make-hash))
-  (define avoid-ids (box (list)))
-  (define core-ids (box (list)))
-
-  (let loop ([ineqs '()])
-    (define sheet (synthesize-css-sketch (map (curry cons 'or) ineqs) selhash))
-    (define eqcls (equivalence-classes (append browser-style sheet) elts))
-
-    (set-box! avoid-ids
-              (cons
-               (for/list ([(ineq id) ineq-ids] #:when (equivalence-classes-avoid? eqcls ineq)) id)
-               (unbox avoid-ids)))
-    (when (set-member? (flags) 'core-img)
-      (draw-cores (reverse (unbox core-ids)) (reverse (unbox avoid-ids)) #:to "/tmp/status.png"))
-
-    (log-phase "Chose new sketch ~a" sheet)
-    (z3-send z3 (append '((pop) (push)) (sheet-constraints doms sheet)))
-    (match (z3-check-sat z3 #:strategy cassius-check-sat)
-      [(list 'model m)
-       (define sheet*
-         (for/list ([rule (append browser-style sheet)] [idx (in-naturals)])
-           (append (list (car rule)) (filter symbol? (cdr rule))
-                   (for/list ([(prop value) (in-dict (filter list? (cdr rule)))]
-                              #:when (dict-has-key? m (sformat "value/~a/~a" prop idx)))
-                     (match value
-                       [(list '?)
-                        (list prop (extract-value (dict-ref m (sformat "value/~a/~a" prop idx))))]
-                       [(list _) (cons prop value)])))))
-       (log-phase "Synthesized stylesheet!")
-       ;; TODO - return (success _ _)
-       (success (drop sheet* (length browser-style)) (map (compose unparse-tree dom-elements) doms) doms)]
-      [(list 'core c)
-       (define new-ineqs (extract-ineqs eqcls c))
-       (set-box! core-ids
-                 (cons
-                  (for/list ([ineq new-ineqs])
-                    (unless (dict-has-key? ineq-ids ineq)
-                      (dict-set! ineq-ids ineq (dict-count ineq-ids)))
-                    (dict-ref ineq-ids ineq))
-                  (unbox core-ids)))
-
-       (when (set-member? (flags) 'core-img)
-         (draw-cores (reverse (unbox core-ids)) (reverse (unbox avoid-ids)) #:to "/tmp/status.png"))
-
-       (log-phase "Found new set of ~a inequalities (~a total sets)" (length new-ineqs) (+ 1 (length ineqs)))
-       (loop (cons new-ineqs ineqs))])))
-
-(define (draw-cores core-ids avoid-ids #:to file)
-  (define num-steps (max (length core-ids) (length avoid-ids)))
-  (define num-elts (if (null? core-ids) 0 (apply max (map (curry apply max) core-ids))))
-  (parameterize
-      ([plot-width (+ (* 5 num-steps) 5)] [plot-height (+ (* 5 num-elts) 10)]
-       [plot-x-axis? #f] [plot-y-axis? #f] [plot-x-far-axis? #f] [plot-y-far-axis? #f]
-       [plot-x-label #f] [plot-y-label #f])
-    (plot-file
-     #:x-min -1 #:x-max num-steps #:y-min -1 #:y-max (+ num-elts 1)
-     (list
-      (points (for/list ([i (in-naturals)] [core core-ids] #:when true [id core])
-                (vector i id)) #:sym 'bullet #:color "Gray")
-      (points (for/list ([i (in-naturals)] [avoids avoid-ids] #:when true [id avoids])
-                (vector i id)) #:sym 'bullet #:color "PowderBlue"))
-     file)))
