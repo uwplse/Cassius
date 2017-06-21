@@ -47,7 +47,7 @@
 ;;; 8
 (define-test (tab-ordering b1 b2)
   (=> (is-interactive (box-elt b1)) (is-interactive (box-elt b2))
-      (elt-< (box-elt b1) (box-elt b2))
+      (< (&elt b1) (&elt b2))
       (or (< (bottom-border b1) (top-border b2))
           (and (horizontally-adjacent b1 b2) (< (right-border b1) (left-border b2))))))
 
