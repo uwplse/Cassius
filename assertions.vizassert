@@ -12,9 +12,10 @@
 ;;; 3
 (define-test (interactive-onscreen b)
   (=> (is-interactive (box-elt b))
-      (within b root-box)))
+      (not (or (>= (left-border b) (left-content root-box))
+               (<= (bottom-border b) (top-content root-box))))))
 (define-test (overlapping-text b1 b2)
-  (=> (is-box/text (type b1)) (is-box/text (type b2))
+  (=> (is-box/text (type b1)) (is-box/text (type b2)) (not (= b1 b2))
       (not (overlaps b1 b2))))
 
 ;;; 4
@@ -40,7 +41,8 @@
 ;;; 7
 (define-test (selected-onscreen b)
   (=> (matches (box-elt b) (class selected))
-      (not (overlaps b root-box))))
+      (not (or (>= (left-border b) (left-content root-box))
+               (<= (bottom-border b) (top-content root-box))))))
 
 ;;; 8
 (define-test (tab-ordering b1 b2)
