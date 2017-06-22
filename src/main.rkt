@@ -400,10 +400,10 @@
        `(or ,(expand-match e '(tag a))
             ,(expand-match e '(tag input))
             ,(expand-match e '(tag button)))]
-      [`(ancestor ,thing ,var ,test)
+      [`(ancestor ,thing ,test)
        (define idx
          (for/first ([(name p) (in-dict (extra-pointers))] [i (in-naturals)]
-                     #:when (equal? name (cons var test)))
+                     #:when (equal? name test))
            i))
        `(get/box (,(sformat "&~a" idx) ,thing))]
       ['root-box

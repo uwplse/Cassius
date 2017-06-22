@@ -1,13 +1,23 @@
+;; -*- mode: scheme -*-
+
 ;;; 1
 (define-test (text-size b)
   (=> (is-box/text (type b)) (>= (w b) 0) (>= (h b) 14)))
 
 ;;; 2
-; TODO: fg-color, bg-color, and lum
 (define-test (contrast b)
   (=> (is-box/text (type b)) (>= (w b) 0)
-      (let ([fg (+ (fg-lum (pbflow b)) 0.05)] [bg (+ (bg-lum (pbflow b)) 0.05)] [threshold 3])
-        (or (>= fg (* threshold bg)) (>= bg (* threshold fg))))))
+      (and
+       (not (is-color/transparent (fg-color b)))
+       (let ([fg (color.rgb (fg-color b))]
+             [bg
+              (let ([ab (ancestor b (not (is-color/transparent (bg-color ?))))])
+                (ite (is-box ab)
+                     (color.rgb (bg-color ab))
+                     (color 255 255 255)))]
+             [threshold 3])
+         (or (>= (+ (lum fg) .05) (* threshold (+ (lum bg) .05)))
+             (>= (+ (lum bg) .05) (* threshold (+ (lum fg) .05))))))))
 
 ;;; 3
 (define-test (interactive-onscreen b)
@@ -24,7 +34,7 @@
 
 (define-test (line-width b)
   (=> (is-box/text (type b))
-      (let ([line (ancestor b x (is-box/line (type x)))])
+      (let ([line (ancestor b (is-box/line (type ?)))])
         (<= (w line) (* 80 (/ 10 19) (font-size b))))))
 
 ;;; 5
@@ -60,7 +70,7 @@
 ;;; 10
 (define-test (link-distinctive b)
   (=> (matches (box-elt b) (tag a))
-      (>= (color-distance (fg-color b) (fg-color (pbflow b))) 32)))
+      (>= (color-distance (fg-color b) (fg-color (ancestor b (is-box/line ?)))) 32)))
 ; TODO: active color
 
 ;;; 13

@@ -45,10 +45,10 @@
       [`(forall (,vars ...) ,body) (find-extra-pointers body)]
       [`(let ([,vars ,vals] ...) ,body)
        (append (append-map find-extra-pointers vals) (find-extra-pointers body))]
-      [`(ancestor ,thing ,var ,test)
-       (cons (cons (cons var test)
+      [`(ancestor ,thing ,test)
+       (cons (cons test
                    (λ (&b id)
-                     `(ite ,(smt-replace-terms test (list (cons var `(get/box ,&b))))
+                     `(ite ,(smt-replace-terms test (list (cons '? `(get/box ,&b))))
                            ,&b
                            (,id (pbox (get/box ,&b))))))
              (find-extra-pointers thing))]
