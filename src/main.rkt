@@ -75,6 +75,7 @@
   (node-set! box ':y box-y)
   (node-set! box ':w box-width)
   (node-set! box ':h box-height)
+  (node-set! box ':fs font-size)
   (node-set! box ':fg (extract-value color))
   (node-set! box ':bg (extract-value background-color)))
 
@@ -400,6 +401,10 @@
        `(or ,(expand-match e '(tag a))
             ,(expand-match e '(tag input))
             ,(expand-match e '(tag button)))]
+      [`(viewable ,b)
+       (match-define (list dom) doms)
+       `(not (or (<= (right-border ,b) (left-content ,(dump-box (dom-boxes dom))))
+                 (<= (bottom-border ,b) (top-content ,(dump-box (dom-boxes dom))))))]
       [`(ancestor ,thing ,test)
        (define idx
          (for/first ([(name p) (in-dict (extra-pointers))] [i (in-naturals)]

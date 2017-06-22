@@ -21,11 +21,10 @@
 
 ;;; 3
 (define-test (interactive-onscreen b)
-  (=> (is-interactive (box-elt b))
-      (not (or (>= (left-border b) (left-content root-box))
-               (<= (bottom-border b) (top-content root-box))))))
+  (=> (is-interactive (box-elt b)) (viewable b)))
 (define-test (overlapping-text b1 b2)
   (=> (is-box/text (type b1)) (is-box/text (type b2)) (not (= b1 b2))
+      (viewable b1) (viewable b2)
       (not (overlaps b1 b2))))
 
 ;;; 4
@@ -34,6 +33,7 @@
 
 (define-test (line-width b)
   (=> (is-box/text (type b))
+      (viewable b)
       (let ([line (ancestor b (is-box/line (type ?)))])
         (<= (w line) (* 80 (/ 10 19) (font-size b))))))
 
