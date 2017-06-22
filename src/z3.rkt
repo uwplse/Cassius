@@ -8,6 +8,11 @@
 (define (z3-process #:flags [flags '("-st")])
   (define-values (process z3-out z3-in z3-err)
     (apply subprocess #f #f #f z3-path "-smt2" "-in" flags))
+  
+  (define side-channel
+    (if (directory-exists? "/tmp")
+        (open-output-file "/tmp/out.z3" #:exists 'replace)
+        #f))
 
   (define soft? false)
 
@@ -19,6 +24,8 @@
 
   (define (ffprintf port fmt . vs)
     (apply fprintf port fmt vs)
+    (when (and (*debug*) side-channel)
+      (apply fprintf side-channel fmt vs))
     (flush-output port))
   
   (define (send cmd)
