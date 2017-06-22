@@ -1,6 +1,8 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt")
-(provide tree-types link-definitions)
+(provide tree-types link-definitions extra-pointers)
+
+(define extra-pointers (make-parameter '()))
 
 ;; This file defines the tree structures used in Cassius's SMT
 ;; encoding of CSS. It defines the Element and Box classes, and
@@ -26,6 +28,8 @@
                 (ez.in EZone) (ez.out EZone)
                 (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt Int) (first-box? Bool) (last-box? Bool)
+                ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
+                    `(,(sformat "&~a" i) Int))
                 (fg-color Color) (bg-color Color) (ancestor-bg Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
@@ -150,6 +154,8 @@
      (= (&elt (get/box &b)) &e)
      (= (first-box? (get/box &b)) first?)
      (= (last-box? (get/box &b)) last?)
+     ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
+         `(= (,(sformat "&~a" i) (get/box &b)) ,(p '&b (sformat "&~a" i))))
      (= (textalign (get/box &b))
         (style.text-align (computed-style (get/elt &e))))
      (= (fg-color (get/box &b))
@@ -164,6 +170,10 @@
   (define-fun match-anon-box ((&b Int)) Bool
     (and
      (= (&elt (get/box &b)) -1)
+     (= (first-box? (get/box &b)) true)
+     (= (last-box? (get/box &b)) true)
+     ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
+         `(= (,(sformat "&~a" i) (get/box &b)) ,(p '&b (sformat "&~a" i))))
      (= (textalign (get/box &b))
         (ite (is-no-box (pflow (get/box &b)))
              text-align/left

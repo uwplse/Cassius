@@ -61,8 +61,12 @@
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
          &nflow &vflow &ppflow &pbflow ez.in ez.out
-         textalign &elt first? last? color background-color ancestor)
+         textalign &elt first? last?
+         extra ...
+         color background-color ancestor)
    z3-box)
+  (unless (= (length extra) (length (extra-pointers)))
+    (error "You forgot to add your new Box field to L65 in src/main.rkt"))
   (define box-width (+ bl pl w pr br))
   (define box-height (+ bt pt h pb bb))
   (define box-x (+ x xo))
@@ -329,7 +333,7 @@
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
     ,(make-%of)
-    ,@colors
+    ,@(colors)
     (declare-datatypes
      ()
      (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
@@ -353,17 +357,17 @@
     (define-const color/undefined Color color/transparent)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))
-    ,@common-definitions
-    ,@exclusion-zones
-    ,@tree-types
-    ,@utility-definitions
+    ,@(common-definitions)
+    ,@(exclusion-zones)
+    ,@(tree-types)
+    ,@(utility-definitions)
     ,@(global dom-define-get/elt)
     ,@(global dom-define-get/box)
     ,@(global configuration-constraints)
     ;,@css-functions
-    ,@link-definitions
-    ,@style-computation
-    ,@layout-definitions
+    ,@(link-definitions)
+    ,@(style-computation)
+    ,@(layout-definitions)
     ,@(sheet*-constraints doms (apply append sheets))
     ,@(per-element tree-constraints)
     ,@(per-box box-link-constraints)
@@ -396,6 +400,12 @@
        `(or ,(expand-match e '(tag a))
             ,(expand-match e '(tag input))
             ,(expand-match e '(tag button)))]
+      [`(ancestor ,thing ,var ,test)
+       (define idx
+         (for/first ([(name p) (in-dict (extra-pointers))] [i (in-naturals)]
+                     #:when (equal? name (cons var test)))
+           i))
+       `(get/box (,(sformat "&~a" idx) ,thing))]
       ['root-box
        (match-define (list dom) doms)
        (dump-box (dom-boxes dom))]
@@ -406,10 +416,10 @@
   (define &vars (map (curry sformat "counterexample/~a") vars))
   `(,@constraints
     ,@(for/list ([&var &vars])
-        `(declare-const ,&var BoxName))
-    (assert (! (and ,@(for/list ([&var &vars]) `(is-box (get/box ,&var)))
-                    (not (let (,@(map list vars (map (curry list 'get/box) &vars))) ,body*)))
-               :named test))))
+        `(declare-const ,&var Int))
+    ,@(for/list ([&var &vars])
+        `(assert (is-box (get/box ,&var))))
+    (assert (let (,@(map list vars (map (curry list 'get/box) &vars))) (not ,body*)))))
 
 (define z3-process-cache (make-parameter (make-hash)))
 

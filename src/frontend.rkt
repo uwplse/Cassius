@@ -1,6 +1,6 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
-         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt"
+         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt")
 (provide query solve (struct-out success) (struct-out failure))
 
@@ -39,6 +39,24 @@
             link-matched-elts-boxes
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
+
+  (define (find-extra-pointers expr)
+    (match expr
+      [`(forall (,vars ...) ,body) (find-extra-pointers body)]
+      [`(let ([,vars ,vals] ...) ,body)
+       (append (append-map find-extra-pointers vals) (find-extra-pointers body))]
+      [`(ancestor ,thing ,var ,test)
+       (cons (cons (cons var test)
+                   (λ (&b id)
+                     `(ite ,(smt-replace-terms test (list (cons var `(get/box ,&b))))
+                           ,&b
+                           (,id (pbox (get/box ,&b))))))
+             (find-extra-pointers thing))]
+      [(? list?) (append-map find-extra-pointers (cdr expr))]
+      [_ '()]))
+
+  (extra-pointers (append (extra-pointers) (append-map find-extra-pointers (or tests '()))))
+
   (define query (all-constraints (cons browser-style sheets) matchers doms))
   (for ([test (or tests '())]) (set! query (add-test doms query test)))
 

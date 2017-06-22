@@ -1,12 +1,14 @@
 #lang racket
-(require "z3o.rkt" "common.rkt")
+(require "z3o.rkt" "common.rkt" "spec/tree.rkt")
 (provide z3-prepare z3-clean z3-namelines cassius-check-sat)
 
 (define to-resolve
   (append
    '(get/elt &box &pelt &velt &nelt &felt &lelt)
    '(get/box &elt &pbox &vbox &nbox &fbox &lbox)
-   '(&pbflow &ppflow &vflow &nflow &flt &flt-up)))
+   '(&pbflow &ppflow &vflow &nflow &flt &flt-up)
+   (for/list ([(name p) (in-dict (extra-pointers))] [i (in-naturals)])
+     (sformat "&~a" i))))
 
 (define to-expand
   (append

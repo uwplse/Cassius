@@ -248,8 +248,8 @@
   (require "test.rkt")
 
   (add-header! `((declare-datatypes () ((Float float/left float/right float/none)))))
-  (add-header! common-definitions)
-  (add-header! exclusion-zones)
+  (add-header! (common-definitions))
+  (add-header! (exclusion-zones))
 
   ;; ez.add spec tests
   (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)

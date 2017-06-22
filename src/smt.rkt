@@ -15,7 +15,7 @@
      `(ite test (and body ...) ,(smt-cond rest ...))]))
 
 (define-syntax-rule (define-constraints name body ...)
-  (define name `(body ...)))
+  (define (name) `(body ...)))
 
 (define-syntax-rule (smt-let bindings constraints ...)
   `(let bindings (and constraints ...)))
@@ -50,6 +50,9 @@
 (define-syntax-rule (smt-replace expr [pattern body ...] ...)
   (let loop ([e expr])
     (match e
+      [(list 'let bindings body2)
+       (define bindings* (for/list ([b bindings]) (list (car b) (loop (cadr b)))))
+       (list 'let bindings* (loop body2))]
       [pattern body ...] ...
       [x
        (if (list? x)
