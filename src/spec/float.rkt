@@ -307,7 +307,7 @@
   ;; Rule 3
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
                                (dir . Float) (y . Real) (ez . EZone))
-             `(=> (ez.valid? ez) (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
+             `(=> (ez.valid? ez) (<= pl pr) (not (is-float/none dir))
                   (let ([y* (ez.level ez width pl pr y dir)])
                     (let ([x* (ez.x ez y* dir pl pr)])
                       (=> (>= width 0)
