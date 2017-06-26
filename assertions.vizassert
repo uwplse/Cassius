@@ -69,8 +69,10 @@
 
 ;;; 10
 (define-test (link-distinctive b)
-  (=> (matches (box-elt b) (tag a))
-      (>= (color-distance (fg-color b) (fg-color (ancestor b (is-box/line ?)))) 32)))
+  (=> (is-box/text (type b))
+      (let ([eb (ancestor b (is-elt (box-elt ?)))])
+        (matches (box-elt eb) (tag a)))
+      (>= (color-distance (fg-color b) (fg-color (ancestor b (is-box/line (type ?))))) 32)))
 ; TODO: active color
 
 ;;; 13
