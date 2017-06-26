@@ -2,8 +2,9 @@ body { width: 900px; margin: 3em 0; padding: 0 10px; }
 table { width: 100%; vertical-align: top; }
 td, th { padding: 0; }
 .results tr td:nth-child(3) { font-size: 80%; max-width: 400px; height: 2em; }
-.fail, .error, .success, .timeout, .unsupported {text-align: center; display: block; width: 1.2em; }
+.fail, .error, .success, .timeout, .unsupported, .expected {text-align: center; display: block; width: 1.2em; }
 .fail {background-color: #ff5e3a; color: #f7f7f7;}
+.expected {background-color: #f7f7f7; color: #f7f7f7; border: 1px soldi 0bd318; }
 .error {background-color: #2e3436; color: #f7f7f7; font-weight: bold; }
 .success {background-color: #0bd318;}
 .timeout {background-color: #ff9500;}

@@ -7,6 +7,7 @@
 (define timeout (make-parameter 60))
 (define show-success (make-parameter false))
 (define aggregate (make-parameter false))
+(define expected? (make-parameter (const false)))
 
 (define (dom-not-something d)
   (match-define (dom name ctx elts boxes) d)
@@ -113,9 +114,13 @@
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-          (car (dict-ref prob ':url '("/tmp")))))
+  (define out
+    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+            (car (dict-ref prob ':url '("/tmp")))))
+  (if (and (equal? status 'fail) ((expected?) out))
+      (struct-copy result out [status 'expected])
+      out))
 
 (define (test-mutations file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t" file pname)
@@ -133,9 +138,13 @@
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-          (car (dict-ref prob ':url '("/tmp")))))
+  (define out
+    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+            (car (dict-ref prob ':url '("/tmp")))))
+  (if (and (equal? status 'fail) ((expected?) out))
+      (struct-copy result out [status 'expected])
+      out))
 
 (define (test-assertions assertion file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t~a\t" assertion file pname)
@@ -148,14 +157,19 @@
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees doms) 'fail]
+      [(success stylesheet trees doms)
+       'fail]
       [(failure stylesheet trees) 'success]))
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result file (format "~a on ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
-          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-          (car (dict-ref prob ':url '("/tmp")))))
+  (define out
+    (result file (format "~a on ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
+            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+            (car (dict-ref prob ':url '("/tmp")))))
+  (if (and (equal? status 'fail) ((expected?) out))
+      (struct-copy result out [status 'expected])
+      out))
 
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
@@ -320,7 +334,7 @@
                           `(span ((class ,(~a status)) (title ,title))
                                  ,(match status
                                     ['success "✔"] ['fail "✘"] ['timeout "🕡"]
-                                    ['unsupported "☹"] ['error "!"])))))
+                                    ['unsupported "☹"] ['error "!"] ['expected "-"])))))
                `(tbody
                  (tr () (th ((colspan "4")) ,(result-file (car group-results))))
                  ,@(for/list ([res group-results]
@@ -331,6 +345,7 @@
                           (match status
                             ['success `(span ((class "success")) "✔")]
                             ['fail `(span ((class "fail")) "✘")]
+                            ['expected `(span ((class "expected")) "-")]
                             ['timeout `(span ((class "timeout")) "🕡")]
                             ['unsupported
                              (define probfeats (set-subtract features (supported-features)))
@@ -417,6 +432,20 @@
     (and! valid? (read-failed-tests json-file))]
    [("--feature") feature "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
+   [("--expected") efile "Expect failures named in this file"
+    (define expected-failures
+      (call-with-input-file
+          efile
+          (λ (p)
+            (for/list ([l (in-port read p)])
+              l))))
+    (define f (expected?))
+    (pretty-print expected-failures)
+    (expected?
+     (λ (result)
+       (or (f result)
+           (begin
+             (set-member? expected-failures (list (result-file result) (result-problem result)))))))]
 
    #:subcommands
 
