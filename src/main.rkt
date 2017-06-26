@@ -393,7 +393,7 @@
            (for*/list ([dom doms] [elt (in-elements dom)]
                        #:when (selector-matches? sel elt))
              `(= ,&e ,(name 'elt elt)))))
-  
+
   (define body*
     (smt-replace body
       [`(matches ,e ,sel) (expand-match e sel)]
