@@ -2,7 +2,11 @@
 
 ;;; 1
 (define-test (text-size b)
-  (=> (is-box/text (type b)) (>= (w b) 0) (>= (h b) 14)))
+  (=> (is-box/text (type b)) (>= (w b) 0)
+      (let ([eb (ancestor b (is-elt (box-elt ?)))])
+        (not (or (matches (box-elt eb) (desc (class footer) *))
+                 (matches (box-elt eb) (desc (id footer) *)))))
+      (>= (h b) 14)))
 
 ;;; 2
 (define-test (contrast b)
