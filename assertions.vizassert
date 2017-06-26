@@ -6,7 +6,7 @@
 
 ;;; 2
 (define-test (contrast b)
-  (=> (is-box/text (type b)) (>= (w b) 0)
+  (=> (is-box/text (type b)) (>= (w b) 5) (viewable b)
       (and
        (not (is-color/transparent (fg-color b)))
        (let ([fg (color.rgb (fg-color b))]
@@ -14,7 +14,7 @@
               (let ([ab (ancestor b (not (is-color/transparent (bg-color ?))))])
                 (ite (is-box ab)
                      (color.rgb (bg-color ab))
-                     (color 255 255 255)))]
+                     (color.rgb color/white)))]
              [threshold 3])
          (or (>= (+ (lum fg) .05) (* threshold (+ (lum bg) .05)))
              (>= (+ (lum bg) .05) (* threshold (+ (lum fg) .05))))))))
@@ -85,7 +85,7 @@
 
 ;;; 16
 (define-test (interactive-distinctive b1 b2)
-  (=> (is-interactive (box-elt b1))
+  (=> (is-interactive (box-elt b1)) (viewable b1) (viewable b2)
       (not (is-interactive (box-elt b2)))
       (>= (color-distance (fg-color b1) (fg-color b2)) 0.1)))
 

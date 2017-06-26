@@ -47,7 +47,7 @@
   ;; TODO: for all three below functions, compute background color for transparent
   ;; backgrounds. Currently stubbed out.
   (define-fun fg-lum ((b Box)) Real
-    (ite (is-color/transparent (fg-color b)) 0.0 (lum (color.rgb (fg-color b)))))
+    (lum (color.rgb (fg-color b))))
 
   (define-fun bg-lum ((b Box)) Real
     (lum (color.rgb (ancestor-bg b))))
@@ -195,7 +195,7 @@
      (= (&pbflow b) -1)
      (= (&vflow b) -1)
      (= (&nflow b) -1)
-     (= (ancestor-bg b) (color/rgb (color 255 255 255))) ;; TODO: Browser dependent? User-configurable?
+     (= (ancestor-bg b) (color/rgb (color 255 255 255 1 1 1))) ;; TODO: Browser dependent? User-configurable?
      (= (ez.in b) ez.init)))
 
   (define-fun link-flow-simple ((b Box) (&b Int)) Bool

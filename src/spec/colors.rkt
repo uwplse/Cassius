@@ -154,13 +154,14 @@
         ))
 
 (define-constraints colors
-  (declare-datatypes () ((RGBColor (color (color.r Real) (color.g Real) (color.b Real)))))
+  (declare-datatypes () ((RGBColor (color (color.r Real) (color.g Real) (color.b Real)
+                                          (color.r-corr Real) (color.g-corr Real) (color.b-corr Real)))))
 
   (define-fun lum ((c RGBColor)) Real
     (+
-     (* 0.2126 (/ (color.r c) 255.0))
-     (* 0.7152 (/ (color.g c) 255.0))
-     (* 0.0722 (/ (color.b c) 255.0))))
+     (* 0.2126 (color.r-corr c))
+     (* 0.7152 (color.g-corr c))
+     (* 0.0722 (color.b-corr c))))
 
   (define-fun color.diff ((c1 RGBColor) (c2 RGBColor)) Real
     (let ([r (- (color.r c1) (color.r c2))]

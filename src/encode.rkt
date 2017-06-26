@@ -44,6 +44,12 @@
     [(? number?) (exact->inexact v)]
     [`(/ ,n ,d) `(/ ,(exact->inexact n) ,(exact->inexact d))]))
 
+(define (gamma-correction x)
+  (let ([corrected (expt (/ x 255) 2.2)])
+    (if (> corrected 0.0001)
+        corrected
+        0)))
+
 (define (dump-value type value)
   (define prefix (slower type))
   (match value
@@ -51,12 +57,12 @@
     [(list 'em n) (list (sformat "~a/em" prefix) (number->z3 n))]
     [(list 'px n) (list (sformat "~a/px" prefix) (number->z3 n))]
     [(list '% n) (list (sformat "~a/%" prefix) (number->z3 n))]
-    [(list 'rgb r g b) `(color/rgb (color ,r ,g ,b))]
+    [(list 'rgb r g b) `(color/rgb (color ,r ,g ,b ,(gamma-correction r) ,(gamma-correction g) ,(gamma-correction b)))]
     [0 (dump-value type '(px 0))]))
 
 (define (extract-value value)
   (match value
-    [`(color/rgb (color ,r ,g ,b)) `(rgb ,r ,g ,b)]
+    [`(color/rgb (color ,r ,g ,b ,rc ,gc, bc)) `(rgb ,r ,g ,b)]
     [(list (app split-symbol (list _ ... 'px)) x) (list 'px x)]
     [(list (app split-symbol (list _ ... '%)) x)
      (if (ormap (curry = x) (*%*)) ; Percentages that aren't in the list are its first element
