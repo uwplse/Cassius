@@ -445,6 +445,7 @@ function extract_text(elt) {
         if (r.length < 1) continue;
         r = r[0];
         var box = Text(elt, {x: r.x, y: r.y, w: r.width, h: r.height,});
+        box.props.text = dump_string(ranges[i].toString().replace(/\s+/g, " "));
         outs.push(box);
     }
     return outs;
@@ -678,6 +679,14 @@ function dump_length(val, features) {
 function dump_color(val, features) {
     if (match = val.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/)) {
         return "(rgb " + match[1] + " " + match[2] + " " + match[3] + ")";
+    } else if (match = val.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/)) {
+        if (match[4] == "1" || match[4] == "1.0") {
+            return "(rgb " + match[1] + " " + match[2] + " " + match[3] + ")";
+        } else if (match[4] == "0" || match[4] == "0.0") {
+            return "transparent";
+        } else {
+            features["color:rgba"] = true;
+        }
     } else {
         features["color:" + val.split("(", 1)[0]] = true;
     }
@@ -892,7 +901,7 @@ function dump_document(features) {
             if (r.getClientRects().length == 0) {
                 return false;
             } else {
-                return elt.textContent.replace(/\s+/, " ");
+                return elt.textContent.replace(/\s+/g, " ");
             }
         } else if (elt.tagName.toUpperCase() === "HEAD" || elt.tagName.toUpperCase() === "SCRIPT") {
             return false;
