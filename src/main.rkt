@@ -411,6 +411,10 @@
        (match-define (list dom) doms)
        `(not (or (<= (right-border ,b) (left-content ,(dump-box (dom-boxes dom))))
                  (<= (bottom-border ,b) (top-content ,(dump-box (dom-boxes dom))))))]
+      [`(onscreen ,b)
+       (match-define (list dom) doms)
+       `(and (>= (left-border ,b) (left-content ,(dump-box (dom-boxes dom))))
+             (>= (top-border ,b) (top-content ,(dump-box (dom-boxes dom)))))]
       [`(ancestor ,thing ,test)
        (define idx
          (for/first ([(name p) (in-dict (extra-pointers))] [i (in-naturals)]

@@ -25,7 +25,7 @@
 
 ;;; 3
 (define-test (interactive-onscreen b)
-  (=> (is-interactive (box-elt b)) (viewable b)))
+  (=> (is-interactive (box-elt b)) (onscreen b)))
 (define-test (overlapping-text b1 b2)
   (=> (is-box/text (type b1)) (is-box/text (type b2)) (not (= b1 b2))
       (viewable b1) (viewable b2)
