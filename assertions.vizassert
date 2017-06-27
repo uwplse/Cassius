@@ -2,7 +2,7 @@
 
 ;;; 1
 (define-test (text-size b)
-  (=> (is-box/text (type b)) (>= (w b) 0)
+  (=> (is-box/text (type b)) (has-contents b)
       (let ([eb (ancestor b (is-elt (box-elt ?)))])
         (not (or (matches (box-elt eb) (desc (class footer) *))
                  (matches (box-elt eb) (desc (id footer) *)))))
@@ -10,7 +10,7 @@
 
 ;;; 2
 (define-test (contrast b)
-  (=> (is-box/text (type b)) (>= (w b) 5) (viewable b)
+  (=> (is-box/text (type b)) (has-contents b) (viewable b)
       (and
        (not (is-color/transparent (fg-color b)))
        (let ([fg (color.rgb (fg-color b))]
@@ -43,8 +43,9 @@
 
 ;;; 5
 (define-test (line-spacing b)
-  (=> (is-box/line (type b))
-      (>= (h b) (* 1.5 (font-size b)))))
+  (=> (is-box/text (type b)) (viewable b) (has-contents b)
+      (let ([line (ancestor b (is-box/line (type ?)))])
+        (>= (h line) (* 1.5 (font-size b))))))
 
 (define-test (paragraph-spacing b)
   (=> (matches (box-elt b) (tag p))
@@ -57,8 +58,7 @@
 ;;; 7
 (define-test (selected-onscreen b)
   (=> (matches (box-elt b) (class selected))
-      (not (or (>= (left-border b) (left-content root-box))
-               (<= (bottom-border b) (top-content root-box))))))
+      (not (viewable b))))
 
 ;;; 8
 (define-test (tab-ordering b1 b2)
