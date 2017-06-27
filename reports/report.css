@@ -1,6 +1,6 @@
 body { width: 900px; margin: 3em 0; padding: 0 10px; }
 table { width: 100%; vertical-align: top; }
-td, th { padding: 0; }
+td, th { padding: 0; overflow: hidden; white-space: nowrap; }
 .results tr td:nth-child(3) { font-size: 80%; max-width: 400px; height: 2em; }
 .fail, .error, .success, .timeout, .unsupported, .expected {text-align: center; display: block; width: 1.2em; }
 .fail {background-color: #ff5e3a; color: #f7f7f7;}
