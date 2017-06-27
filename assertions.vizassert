@@ -59,7 +59,7 @@
 ;;; 7
 (define-test (selected-onscreen b)
   (=> (matches (box-elt b) (class selected))
-      (not (viewable b))))
+      (not (onscreen b))))
 
 ;;; 8
 (define-test (tab-ordering b1 b2)
