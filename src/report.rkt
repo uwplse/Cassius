@@ -440,7 +440,6 @@
             (for/list ([l (in-port read p)])
               l))))
     (define f (expected?))
-    (pretty-print expected-failures)
     (expected?
      (λ (result)
        (or (f result)
