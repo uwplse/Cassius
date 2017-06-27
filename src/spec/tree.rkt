@@ -26,7 +26,7 @@
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
                 (ez.in EZone) (ez.out EZone)
-                (textalign Text-Align) ; to handle inheritance; TODO: handle better
+                (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
                     `(,(sformat "&~a" i) Int))

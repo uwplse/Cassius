@@ -61,7 +61,7 @@
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
          &nflow &vflow &ppflow &pbflow ez.in ez.out
-         textalign &elt first? last?
+         has-contents? textalign &elt first? last?
          extra ...
          color background-color ancestor)
    z3-box)
@@ -309,6 +309,11 @@
   (emit `(assert (! (compute-style ,(dump-elt elt))
                     :named ,(sformat "compute-style/~a" (name 'elt elt))))))
 
+(define (contents-constraints dom emit box)
+  (if (set-member? '(#f " " "") (node-get box ':text))
+      (emit `(assert (not (has-contents ,(dump-box box)))))
+      (emit `(assert (has-contents ,(dump-box box))))))
+
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input) (node-type elt)))
 
@@ -378,6 +383,7 @@
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)
+    ,@(per-box contents-constraints)
     ,@(per-box layout-constraints)
     ))
 
