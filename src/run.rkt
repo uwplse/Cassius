@@ -51,7 +51,7 @@
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
     [(success stylesheet trees doms)
      (when (*debug*)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fg :bg :fs)))))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fg :bg :fs :elt)))))
      (eprintf "Accepted!\n")]
     [(failure stylesheet trees)
      (displayln (stylesheet->string stylesheet))
@@ -140,7 +140,7 @@
                         #:test (dict-ref problem ':test))
     [(success stylesheet trees doms)
      (eprintf "Counterexample found!\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fg :bg :fs))))
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fg :bg :fs :elt))))
      (printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]

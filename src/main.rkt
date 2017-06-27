@@ -77,7 +77,8 @@
   (node-set! box ':h box-height)
   (node-set! box ':fs font-size)
   (node-set! box ':fg (extract-value color))
-  (node-set! box ':bg (extract-value background-color)))
+  (node-set! box ':bg (extract-value background-color))
+  (when (>= &elt 0) (node-set! box ':elt &elt)))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)
