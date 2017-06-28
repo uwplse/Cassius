@@ -57,7 +57,7 @@
 ; TODO: needs "no-styles"
 
 ;;; 7
-(define-test (selected-onscreen b)
+(define-test (selected-offscreen b)
   (=> (matches (box-elt b) (class selected))
       (not (onscreen b))))
 

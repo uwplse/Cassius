@@ -15,3 +15,5 @@
 ("bench/fwt/makeupwebsitetemplate.rkt" "text-width on doc-1")
 ("bench/fwt/businesssolutionwebtemplate.rkt" "text-width on doc-1")
 ("bench/fwt/beachresort.rkt" "text-width on doc-1")
+("bench/fwt/carracingwebtemplate.rkt" "text-size on doc-1")
+("bench/fwt/puppy.rkt" "text-size on doc-1")
