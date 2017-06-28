@@ -37,8 +37,7 @@
   (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (h b)))))
 
 (define-test (line-width b)
-  (=> (is-box/text (type b))
-      (viewable b)
+  (=> (is-box/text (type b)) (viewable b) (has-contents b)
       (let ([line (ancestor b (is-box/line (type ?)))])
         (=> (is-box (fflow line))
             (<= (- (right-border (lflow line)) (left-border (fflow line)))
