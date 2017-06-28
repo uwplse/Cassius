@@ -40,7 +40,9 @@
   (=> (is-box/text (type b))
       (viewable b)
       (let ([line (ancestor b (is-box/line (type ?)))])
-        (<= (w line) (* 80 (/ 10 19) (h b))))))
+        (=> (is-box (fflow line))
+            (<= (- (right-border (lflow line)) (left-border (fflow line)))
+                (* 80 (/ 10 19) (h b)))))))
 
 ;;; 5
 (define-test (line-spacing b)
