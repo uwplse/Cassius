@@ -33,9 +33,6 @@
       (not (overlaps b1 b2))))
 
 ;;; 4
-(define-test (text-width b)
-  (=> (is-box/text (type b)) (<= (w b) (* 80 (/ 10 19) (h b)))))
-
 (define-test (line-width b)
   (=> (is-box/text (type b)) (viewable b) (has-contents b)
       (let ([line (ancestor b (is-box/line (type ?)))])
