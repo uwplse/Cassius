@@ -1,0 +1,23 @@
+; -*- mode: scheme -*-
+
+;; For gardenwalkthrough
+(define-test (dropdown-offscreen b)
+  (=>
+   (matches (box-elt b) (child (id header) (tag ul) (tag li) (tag ul)))
+   (not (onscreen b))))
+
+; For rehabilitation-yoga
+(define-test (contrast b)
+  (=> (is-box/text (type b)) (has-contents b) (viewable b)
+      (and
+       (not (is-color/transparent (fg-color b)))
+       (let ([fg (color.rgb (fg-color b))]
+             [bg
+              (let ([ab (ancestor b (not (is-color/transparent (bg-color ?))))])
+                (ite (is-box ab)
+                     (color.rgb (bg-color ab))
+                     (color.rgb color/white)))]
+             [threshold 3])
+         (or (>= (+ (lum fg) .05) (* threshold (+ (lum bg) .05)))
+             (>= (+ (lum bg) .05) (* threshold (+ (lum fg) .05))))))))
+

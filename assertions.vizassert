@@ -6,26 +6,12 @@
       (let ([eb (ancestor b (is-elt (box-elt ?)))])
         (not (or (matches (box-elt eb) (desc (class footer) *))
                  (matches (box-elt eb) (desc (id footer) *)))))
-      (>= (h b) 13.5)))
-
-;;; 2
-(define-test (contrast b)
-  (=> (is-box/text (type b)) (has-contents b) (viewable b)
-      (and
-       (not (is-color/transparent (fg-color b)))
-       (let ([fg (color.rgb (fg-color b))]
-             [bg
-              (let ([ab (ancestor b (not (is-color/transparent (bg-color ?))))])
-                (ite (is-box ab)
-                     (color.rgb (bg-color ab))
-                     (color.rgb color/white)))]
-             [threshold 3])
-         (or (>= (+ (lum fg) .05) (* threshold (+ (lum bg) .05)))
-             (>= (+ (lum bg) .05) (* threshold (+ (lum fg) .05))))))))
+      (> (h b) 13.5)))
 
 ;;; 3
 (define-test (interactive-onscreen b)
   (=> (is-interactive (box-elt b)) (onscreen b)))
+
 (define-test (overlapping-text b1 b2)
   (=> (is-box/text (type b1)) (is-box/text (type b2)) (not (= b1 b2))
       (has-contents b1) (has-contents b2)
@@ -55,9 +41,20 @@
 ; TODO: needs "no-styles"
 
 ;;; 7
-(define-test (selected-offscreen b)
-  (=> (matches (box-elt b) (class selected))
-      (not (onscreen b))))
+(define-test (accessible-offscreen b)
+  (=>
+   (is-box/text (type b))
+   (let ([e (ancestor b (is-elt (box-elt ?)))])
+     (or (matches (box-elt e) (id twitter))
+         (matches (box-elt e) (id facebook))
+         (matches (box-elt e) (id youtube))
+         (matches (box-elt e) (id vimeo))
+         (matches (box-elt e) (id flickr))
+         (matches (box-elt e) (id linkedin))
+         (matches (box-elt e) (id pinterest))
+         (matches (box-elt e) (id rss))
+         (matches (box-elt e) (id googleplus))))
+   (not (onscreen b))))
 
 ;;; 8
 (define-test (tab-ordering b1 b2)
