@@ -1,7 +1,7 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
-         "spec/percentages.rkt")
+         "spec/percentages.rkt" "spec/float.rkt")
 (provide query solve (struct-out success) (struct-out failure))
 
 (struct success (stylesheet elements doms))
@@ -58,7 +58,10 @@
   (extra-pointers (append (extra-pointers) (append-map find-extra-pointers (or tests '()))))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms))
-  (for ([test (or tests '())]) (set! query (add-test doms query test)))
+  (set! query
+        (if tests
+            (add-test doms query (cons `(forall (zzXX) (ez.sufficient zzXX)) tests))
+            (append query (list `(assert (! ,(model-sufficiency doms) :named model-sufficient))))))
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))
@@ -89,18 +92,22 @@
           (z3-kill z3)))))
 
   (define trees (map dom-boxes doms))
-  (define res
-    (match out
-      [(list 'model m)
+  (match out
+    [(list 'model m)
+     (cond
+      [(extract-model-sufficiency m trees)
        (for-each (curryr extract-tree! m) trees)
        (extract-counterexample! m)
        (define doms* (map (curry extract-ctx! m) doms))
        (define sheet* (car sheets)) ; (extract-rules (car sheets) trees m)
+       (log-phase "Solved constraints")
        (success sheet* (map unparse-tree trees) doms*)]
-      [(list 'core c)
-       (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
-       (failure stylesheet* (map unparse-tree trees*))]))
-
-  (log-phase "Solved constraints")
-
-  res)
+      [else
+       (log-phase "Insufficient float registers, trying again with ~a"
+                  (+ 1 (*exclusion-zone-registers*)))
+       (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
+         (solve sheets docs tests))])]
+    [(list 'core c)
+     (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
+     (log-phase "Solved constraints")
+     (failure stylesheet* (map unparse-tree trees*))]))

@@ -3,10 +3,10 @@
          "selectors.rkt" "match.rkt" "solver.rkt")
 (require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
          "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
-         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt")
+         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "assertions.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
-         css-values-solver extract-ctx!)
+         css-values-solver extract-ctx! model-sufficiency extract-model-sufficiency)
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -24,12 +24,6 @@
         (for/fold ([body (dict-remove body prop)]) ([part parts] [value (dict-ref body prop)])
            (dict-set body part (list value)))
         body)))
-
-(define (css-ex? x)
-  (string-suffix? (~a (last (split-symbol x))) "ex"))
-
-(define (css-em? x)
-  (string-suffix? (~a (last (split-symbol x))) "em"))
 
 ;; Does tagging of bad
 (define (extract-core stylesheet trees vars)
@@ -53,6 +47,25 @@
       [_ (void)]))
   (values (hash-values stylesheet*) trees))
 
+(define (extract-model-sufficiency smt-out trees)
+  (for*/and ([tree trees] [elt (in-tree tree)])
+    (define box-model (dict-ref smt-out (dump-box elt) #f))
+
+    (match-define
+     (list 'box
+           type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
+           pt pr pb pl bt br bb bl stfwidth stfmax w-from-stfwidth
+           &pbox &vbox &nbox &fbox &lbox
+           width-set font-size
+           &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
+           has-contents? textalign &elt first? last?
+           extra ...
+           color background-color ancestor)
+     box-model)
+    (unless (= (length extra) (length (extra-pointers)))
+      (error "You forgot to add your new Box field to L65 in src/main.rkt"))
+    ez.sufficient))
+
 (define (extract-box! z3-box box)
   (match-define
    (list 'box
@@ -60,7 +73,7 @@
          pt pr pb pl bt br bb bl stfwidth stfmax w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
-         &nflow &vflow &ppflow &pbflow ez.in ez.out
+         &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
          has-contents? textalign &elt first? last?
          extra ...
          color background-color ancestor)
@@ -191,6 +204,12 @@
         [(list elt first? last?)
          (emit `(assert (! (match-element-box ,(name 'elt elt) ,(name 'box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]))))
+
+(define (model-sufficiency doms)
+  `(and
+    true
+    ,@(for*/list ([dom doms] [box (in-boxes dom)])
+        `(ez.sufficient ,(dump-box box)))))
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
@@ -388,54 +407,22 @@
     ,@(per-box layout-constraints)
     ))
 
-(define (add-test doms constraints test)
-  (match-define `(forall (,vars ...) ,body) test)
-
-  (define (expand-match e sel)
-    (define &e
-      (match e
-        [`(box-elt ,b) `(&elt ,b)]
-        [`(get/elt ,&e) &e]))
-    (apply smt-or
-           (for*/list ([dom doms] [elt (in-elements dom)]
-                       #:when (selector-matches? sel elt))
-             `(= ,&e ,(name 'elt elt)))))
-
-  (define body*
-    (smt-replace body
-      [`(matches ,e ,sel) (expand-match e sel)]
-      [`(is-interactive ,e)
-       `(or ,(expand-match e '(tag a))
-            ,(expand-match e '(tag input))
-            ,(expand-match e '(tag button)))]
-      [`(viewable ,b)
-       (match-define (list dom) doms)
-       `(not (or (<= (right-border ,b) (left-content ,(dump-box (dom-boxes dom))))
-                 (<= (bottom-border ,b) (top-content ,(dump-box (dom-boxes dom))))))]
-      [`(onscreen ,b)
-       (match-define (list dom) doms)
-       `(and (>= (left-border ,b) (left-content ,(dump-box (dom-boxes dom))))
-             (>= (top-border ,b) (top-content ,(dump-box (dom-boxes dom)))))]
-      [`(ancestor ,thing ,test)
-       (define idx
-         (for/first ([(name p) (in-dict (extra-pointers))] [i (in-naturals)]
-                     #:when (equal? name test))
-           i))
-       `(get/box (,(sformat "&~a" idx) ,thing))]
-      ['root-box
-       (match-define (list dom) doms)
-       (dump-box (dom-boxes dom))]
-      ['root-elt
-       (match-define (list dom) doms)
-       (dump-box (dom-elements dom))]))
-
+(define (add-test doms constraints tests)
+  (define vars (append-map cadr tests))
+  (when (check-duplicates vars)
+    (error "Duplicate variable names in assertions!"))
   (define &vars (map (curry sformat "counterexample/~a") vars))
+
+  (define bodies (map caddr tests))
+  (define bodies* (map (curry compile-assertion doms) bodies))
+
   `(,@constraints
     ,@(for/list ([&var &vars])
         `(declare-const ,&var Int))
     ,@(for/list ([&var &vars])
         `(assert (is-box (get/box ,&var))))
-    (assert (let (,@(map list vars (map (curry list 'get/box) &vars))) (not ,body*)))))
+    (assert (let (,@(map list vars (map (curry list 'get/box) &vars)))
+              (or false ,@(map (curry list 'not) bodies*))))))
 
 (define z3-process-cache (make-parameter (make-hash)))
 

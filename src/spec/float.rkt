@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "utils.rkt")
-(provide exclusion-zones)
+(provide exclusion-zones *exclusion-zone-registers*)
 
 (define *exclusion-zone-registers* (make-parameter 5))
 

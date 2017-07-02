@@ -25,7 +25,7 @@
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
-                (ez.in EZone) (ez.out EZone)
+                (ez.in EZone) (ez.out EZone) (ez.sufficient Bool)
                 (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])

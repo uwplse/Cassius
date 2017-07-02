@@ -479,6 +479,7 @@
                                         (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (left-content p) (ml b)))
+       (= (ez.sufficient b) true)
        (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
   (define-fun a-block-float-box ((b Box)) Bool
@@ -524,7 +525,7 @@
          (and
           (= (top-outer b) y*)
           (= (left-outer b) x)
-          (ez.can-add ez* (+ y* h)) ;; This is the key restriction
+          (= (ez.sufficient b) (ez.can-add ez* (+ y* h)))
           (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x))))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
@@ -532,6 +533,7 @@
       (margins-dont-collapse b)
       (positioned-vertical-layout b)
       (positioned-horizontal-layout b)
+      (= (ez.sufficient b) true)
       (= (ez.out b) (ez.in b))))
 
   (define-fun a-block-box ((b Box)) Bool
@@ -609,6 +611,7 @@
            (bottom-content p))
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
+       (= (ez.sufficient b) true)
        (= (ez.out b)
           ,(smt-cond
             [(is-display/inline-block (style.display r))
@@ -633,6 +636,7 @@
        (no-relative-offset b)
        (zero-box-model b)
        (=> (is-box v) (= (x b) (right-outer v)))
+       (= (ez.sufficient b) true)
        (= (ez.out b) (ez.in b))))
 
   (define-fun a-line-box ((b Box)) Bool
@@ -668,6 +672,7 @@
        (=> (and (is-text-align/right (textalign b)) (is-box f)) (= (right-outer l) (right-content b)))
        (=> (and (is-text-align/center (textalign b)) (is-box f))
            (= (- (right-content b) (right-outer l)) (- (left-outer f) (left-content b))))
+       (= (ez.sufficient b) true)
        (= (ez.out b) (ez.out (lbox b)))))
 
   (define-fun a-view-box ((b Box)) Bool
@@ -677,6 +682,7 @@
      (= (font-size b) 16.0)
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
+     (= (ez.sufficient b) true)
      (= (ez.out b) (ez.out (lbox b)))))
 
   (define-fun a-magic-box ((b Box)) Bool
@@ -697,4 +703,5 @@
        (= (bottom-content b) (bottom-border l))
        (= (y b) (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
+       (= (ez.sufficient b) true)
        (= (ez.out b) (ez.out (lbox b))))))
