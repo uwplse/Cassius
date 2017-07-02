@@ -6,7 +6,7 @@
       (let ([eb (ancestor b (is-elt (box-elt ?)))])
         (not (or (matches (box-elt eb) (desc (class footer) *))
                  (matches (box-elt eb) (desc (id footer) *)))))
-      (> (h b) 13.5)))
+      (>= (h b) 14)))
 
 ;;; 3
 (define-test (interactive-onscreen b)

@@ -77,14 +77,15 @@
 (define (section<? s1 s2)
   (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
-(define (run-problem prob)
+(define (run-problem prob #:fuzz [fuzz? '(/ 10 60)])
   (define custodian (make-custodian))
   (define eng
     (engine (λ (_)
               (parameterize ([current-error-port (open-output-nowhere)]
                              [current-output-port (open-output-nowhere)]
                              [current-subprocess-custodian-mode 'kill]
-                             [current-custodian custodian])
+                             [current-custodian custodian]
+                             [*fuzz* fuzz?])
                 (with-handlers
                     ([exn:break? (λ (e) 'break)]
                      [exn:fail? (λ (e) (list 'error e))])
@@ -149,7 +150,7 @@
 (define (test-assertions assertion file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t~a\t" assertion file pname)
   (define prob* (dict-update prob ':documents (curry map dom-strip-positions)))
-  (define-values (res runtime) (run-problem prob*))
+  (define-values (res runtime) (run-problem prob* #:fuzz #f))
   (define supported? (null? (set-subtract (dict-ref prob* ':features '()) (supported-features))))
 
   (define status
@@ -411,7 +412,7 @@
 
    #:multi
    [("-d" "--debug") "Turn on debug mode"
-    (*debug* true)]
+    (debug-mode!)]
    [("+x") name "Set an option" (flags (cons (string->symbol name) (flags)))]
    [("-x") name "Unset an option" (flags (cons (string->symbol name) (flags)))]
 

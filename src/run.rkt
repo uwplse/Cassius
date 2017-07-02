@@ -136,8 +136,10 @@
 
 (define (do-verify problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
-  (match (wrapped-solve (dict-ref problem ':sheets) documents
-                        #:test (dict-ref problem ':test))
+  (match
+      (parameterize ([*fuzz* #f])
+        (wrapped-solve (dict-ref problem ':sheets) documents
+                       #:test (dict-ref problem ':test)))
     [(success stylesheet trees doms)
      (eprintf "Counterexample found!\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fg :bg :fs :elt))))
