@@ -61,7 +61,7 @@
   (set! query
         (if tests
             (add-test doms query (cons `(forall (zzXX) (ez.sufficient zzXX)) tests))
-            (append query (list `(assert (! ,(model-sufficiency doms) :named model-sufficient))))))
+            (append query (list `(assert (! ,(model-sufficiency doms) :named ensure-model-sufficient))))))
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))
@@ -91,6 +91,8 @@
         (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
           (z3-kill z3)))))
 
+  (log-phase "Solved constraints")
+
   (define trees (map dom-boxes doms))
   (match out
     [(list 'model m)
@@ -100,7 +102,6 @@
        (extract-counterexample! m)
        (define doms* (map (curry extract-ctx! m) doms))
        (define sheet* (car sheets)) ; (extract-rules (car sheets) trees m)
-       (log-phase "Solved constraints")
        (success sheet* (map unparse-tree trees) doms*)]
       [else
        (log-phase "Insufficient float registers, trying again with ~a"
@@ -108,6 +109,12 @@
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
          (solve sheets docs tests))])]
     [(list 'core c)
-     (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
-     (log-phase "Solved constraints")
-     (failure stylesheet* (map unparse-tree trees*))]))
+     (cond
+      [(ormap (λ (x) (string-prefix? (~a x) "ensure-model-sufficient")) c)
+       (log-phase "Insufficient float registers, trying again with ~a"
+                  (+ 1 (*exclusion-zone-registers*)))
+       (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
+         (solve sheets docs tests))]
+      [else
+       (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
+       (failure stylesheet* (map unparse-tree trees*))])]))
