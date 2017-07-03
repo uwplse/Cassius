@@ -93,3 +93,11 @@
 
 ;; Skipped: 11, 12, 14, 19, 20, 21
 ;; Duplicates: 17 & 18
+
+(define-test (heading-size b1 b2)
+  (=> (or (and (matches (box-elt b1) (tag h1)) (matches (box-elt b2) (tag h2)))
+          (and (matches (box-elt b1) (tag h2)) (matches (box-elt b2) (tag h3)))
+          (and (matches (box-elt b1) (tag h3)) (matches (box-elt b2) (tag h4)))
+          (and (matches (box-elt b1) (tag h4)) (matches (box-elt b2) (tag h5)))
+          (and (matches (box-elt b1) (tag h5)) (matches (box-elt b2) (tag h6))))
+      (> (font-size b1) (font-size b2))))
