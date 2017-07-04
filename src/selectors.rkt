@@ -32,6 +32,8 @@
   `(not ,(? media-query?))
   `(min-width (px ,(? number?)))
   `(max-width (px ,(? number?)))
+  `(min-height (px ,(? number?)))
+  `(max-height (px ,(? number?)))
   `(orientation landscape)
   `(orientation portrait)
   (or 'all 'screen 'print))
@@ -106,10 +108,10 @@
     ['print false]
     ['(orientation landscape) true] ; TODO: Actually check viewport width and height
     ['(orientation portrait) false]
-    [`(max-width (px ,mw))
-     false]
-    [`(min-width (px ,mw))
-     false]))
+    [`(max-width (px ,mw)) false]
+    [`(min-width (px ,mw)) false]
+    [`(max-height (px ,mh)) false]
+    [`(min-height (px ,mh)) false]))
 
 (module+ test
   (define tree

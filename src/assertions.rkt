@@ -16,6 +16,9 @@
 (define (compile-assertion doms body)
   (smt-replace body
     [`(matches ,e ,sel) (expand-match doms e sel)]
+    [`(descends ,e ,sel)
+     `(or ,(expand-match doms e sel)
+          ,(expand-match doms e `(desc ,sel *)))]
     [`(is-interactive ,e)
      `(or ,(expand-match doms e '(tag a))
           ,(expand-match doms e '(tag input))
