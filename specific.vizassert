@@ -1,4 +1,4 @@
-; -*- mode: scheme -*-
+;; -*- mode: scheme -*-
 
 ;; For gardenwalkthrough
 (define-test (dropdown-offscreen b)

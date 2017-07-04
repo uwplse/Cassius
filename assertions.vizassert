@@ -1,6 +1,5 @@
 ;; -*- mode: scheme -*-
 
-;;; 1
 (define-test (text-size b)
   (=> (is-box/text (type b)) (has-contents b)
       (let ([eb (ancestor b (is-elt (box-elt ?)))])
@@ -8,17 +7,9 @@
                  (descends (box-elt eb) (id footer)))))
       (>= (h b) 14)))
 
-;;; 3
 (define-test (interactive-onscreen b)
   (=> (is-interactive (box-elt b)) (onscreen b)))
 
-(define-test (overlapping-text b1 b2)
-  (=> (is-box/text (type b1)) (is-box/text (type b2)) (not (= b1 b2))
-      (has-contents b1) (has-contents b2)
-      (viewable b1) (viewable b2)
-      (not (overlaps b1 b2))))
-
-;;; 4
 (define-test (line-width b)
   (=> (is-box/text (type b)) (viewable b) (has-contents b)
       (let ([line (ancestor b (is-box/line (type ?)))])
@@ -26,21 +17,6 @@
             (<= (- (right-border (lflow line)) (left-border (fflow line)))
                 (* 80 (/ 10 19) (h b)))))))
 
-;;; 5
-(define-test (line-spacing b)
-  (=> (is-box/text (type b)) (viewable b) (has-contents b)
-      (let ([line (ancestor b (is-box/line (type ?)))])
-        (>= (h line) (* 1.5 (font-size b))))))
-
-(define-test (paragraph-spacing b)
-  (=> (matches (box-elt b) (tag p))
-      (>= (+ (mtp b) (mbp b) (mtn b) (mbn b))
-          (* 1.5 (h (fflow b))))))
-
-;;; 6
-; TODO: needs "no-styles"
-
-;;; 7
 (define-test (accessible-offscreen b)
   (=>
    (is-box/text (type b))
@@ -56,43 +32,8 @@
          (matches (box-elt e) (id googleplus))))
    (not (onscreen b))))
 
-;;; 8
-(define-test (tab-ordering b1 b2)
-  (=> (is-interactive (box-elt b1)) (is-interactive (box-elt b2))
-      (< (&elt b1) (&elt b2))
-      (or (< (bottom-border b1) (top-border b2))
-          (and (horizontally-adjacent b1 b2) (< (right-border b1) (left-border b2))))))
-
-;;; 9
-(define-test (button-size b)
-  (=> (is-interactive (box-elt b)) (and (>= (box-width b) 30) (>= (box-height b) 30))))
-
-;;; 10
-(define-test (link-distinctive b)
-  (=> (is-box/text (type b))
-      (let ([eb (ancestor b (is-elt (box-elt ?)))])
-        (matches (box-elt eb) (tag a)))
-      (>= (color-distance (fg-color b) (fg-color (ancestor b (is-box/line (type ?))))) 32)))
-; TODO: active color
-
-;;; 13
 (define-test (no-horizontal-scroll b)
   (<= (right-border b) (right-content root-box)))
-
-;;; 14
-; TODO: How do we measure that?
-
-;;; 15
-; TODO: Needs some sort of global measure
-
-;;; 16
-(define-test (interactive-distinctive b1 b2)
-  (=> (is-interactive (box-elt b1)) (viewable b1) (viewable b2)
-      (not (is-interactive (box-elt b2)))
-      (>= (color-distance (fg-color b1) (fg-color b2)) 0.1)))
-
-;; Skipped: 11, 12, 14, 19, 20, 21
-;; Duplicates: 17 & 18
 
 (define-test (heading-size b1 b2)
   (let ([e1 (ancestor b1 (is-elt (box-elt ?)))]
