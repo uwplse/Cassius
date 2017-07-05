@@ -15,6 +15,7 @@
 ("bench/fwt/makeupwebsitetemplate.rkt" "line-width on doc-1")
 ("bench/fwt/businesssolutionwebtemplate.rkt" "line-width on doc-1")
 ("bench/fwt/beachresort.rkt" "line-width on doc-1")
+("bench/fwt/firefighterwebsitetemplate.rkt" "text-size on doc-1")
 ("bench/fwt/carracingwebtemplate.rkt" "text-size on doc-1")
 ("bench/fwt/puppy.rkt" "text-size on doc-1")
 ("bench/fwt/themargaritafragrancewebtemplate.rkt" "text-size on doc-1")
