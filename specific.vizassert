@@ -1,11 +1,5 @@
 ;; -*- mode: scheme -*-
 
-;; For gardenwalkthrough
-(define-test (dropdown-offscreen b)
-  (=>
-   (matches (box-elt b) (child (id header) (tag ul) (tag li) (tag ul)))
-   (not (onscreen b))))
-
 ; For rehabilitation-yoga
 (define-test (contrast b)
   (=> (is-box/text (type b)) (has-contents b) (viewable b)
@@ -20,6 +14,19 @@
              [threshold 3])
          (or (>= (+ (lum fg) .05) (* threshold (+ (lum bg) .05)))
              (>= (+ (lum bg) .05) (* threshold (+ (lum fg) .05))))))))
+
+;; For puppy
+(define-test (no-text-on-picture b1 b2)
+  (=> (matches (box-elt b1) (id background))
+      (is-box/text (type b2))
+      (descends (box-elt b2) (id background))
+      (<= (right-border b2) (- (right-content b1) 300))))
+
+;; For gardenwalkthrough
+(define-test (dropdown-offscreen b)
+  (=>
+   (matches (box-elt b) (child (id header) (tag ul) (tag li) (tag ul)))
+   (not (onscreen b))))
 
 ;; For tailorshopwebsitetemplate
 (define-test (three-column b1 b2)
@@ -45,11 +52,3 @@
        (< (&elt b1) (&elt b2))
        (and (= (top-outer b1) (top-outer b2))
             (<= (right-outer b1) (left-outer b2))))))
-
-;; For puppy
-(define-test (no-text-on-picture b1 b2)
-  (=> (matches (box-elt b1) (id background))
-      (let ([e (ancestor b2 (is-elt (box-elt ?)))])
-        (matches (box-elt e) (desc (id background) *)))
-      (is-box/text (type b2))
-      (<= (right-border b2) (- (right-content b1) 300))))
