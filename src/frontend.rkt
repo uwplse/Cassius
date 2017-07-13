@@ -96,6 +96,7 @@
   (define trees (map dom-boxes doms))
   (match out
     [(list 'model m)
+     (log-phase "Found model with ~a variables" (dict-count m))
      (cond
       [(extract-model-sufficiency m trees)
        (for-each (curryr extract-tree! m) trees)
@@ -109,6 +110,7 @@
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
          (solve sheets docs tests))])]
     [(list 'core c)
+     (log-phase "Found core with ~a constraints" (length c))
      (cond
       [(ormap (λ (x) (string-prefix? (~a x) "ensure-model-sufficient")) c)
        (log-phase "Insufficient float registers, trying again with ~a"
