@@ -763,8 +763,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
 }
 
 function dump_media_query(media) {
-    window.MEDIA = media;
-    var ors = media.mediaText.split(/\b,\b/);
+    var ors = media.mediaText.split(/\b,\s*\b/);
     for (var i = 0; i < ors.length; i++) {
         var query = ors[i].trim();
         var words = query.split(/\s/, 2);
