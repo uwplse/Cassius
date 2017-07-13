@@ -917,7 +917,7 @@ function dump_document(features) {
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
-            if (["IMG", "INPUT", "IFRAME"].indexOf(elt.tagName.toUpperCase()) !== -1) {
+            if (["IMG", "OBJECT", "INPUT", "IFRAME"].indexOf(elt.tagName.toUpperCase()) !== -1) {
                 var v = get_inherent_size(elt);
                 rec.props["w"] = v.w;
                 rec.props["h"] = v.h;
