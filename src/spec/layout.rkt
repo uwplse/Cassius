@@ -496,10 +496,7 @@
 
        (= (w-from-stfwidth b) (is-width/auto (style.width r)))
        (= (stfmax b) (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0))
-       (= (float-stfmax b) (+ (max (ite (is-float/left (style.float r))
-                                        (- (right-outer b) (left-content b))
-                                        (- (right-content b) (left-outer b)))
-                                   0.0)
+       (= (float-stfmax b) (+ (max (- (right-outer b) (left-outer b)) 0.0)
                               (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
        (width-set b)
        (ite (is-width/auto (style.width r))
