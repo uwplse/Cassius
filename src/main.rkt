@@ -54,7 +54,7 @@
     (match-define
      (list 'box
            type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
-           pt pr pb pl bt br bb bl stfwidth stfmax w-from-stfwidth
+           pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
            &pbox &vbox &nbox &fbox &lbox
            width-set font-size
            &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
@@ -70,7 +70,7 @@
   (match-define
    (list 'box
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
-         pt pr pb pl bt br bb bl stfwidth stfmax w-from-stfwidth
+         pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
          &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
