@@ -209,16 +209,34 @@
 (define (rulematch-important? rm prop)
   (set-member? (dict-ref (rulematch-props rm) prop '()) ':important))
 
+(define (split-rule rule)
+  (match-define (list (? selector? selector) (? attribute? attrs) ...
+                      (list (? property? properties) values (? attribute? propattrs) ...) ...) rule)
+  (list
+   `(,selector ,@attrs ,@(for/list ([prop properties] [val values] [attrs propattrs]
+                                    #:when (set-member? attrs ':important))
+                           (list* prop val attrs)))
+   `(,selector ,@attrs ,@(for/list ([prop properties] [val values] [attrs propattrs]
+                                    #:unless (set-member? attrs ':important))
+                           (list* prop val attrs)))))
+
+(define (split-rm rm)
+  (for/list ([r* (split-rule (rulematch-rule rm))])
+    (struct-copy rulematch rm [rule r*])))
+
 (define/contract (rule-matchlist rules elts)
   (-> (listof partial-rule?) (listof node?) (listof rulematch?))
   (define scores (rule-scores rules))
   (define matches (for/list ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
-  (map cdr
-       (reverse ; Reverse so that HIGHEST score comes first
-        (sort
-         (for/list ([s scores] [r rules] [m matches] [i (in-naturals)])
-           (cons s (rulematch r m i)))
-         score<? #:key car))))
+  (define presort
+    (map cdr
+         (reverse ; Reverse so that HIGHEST score comes first
+          (sort
+           (for/list ([s scores] [r rules] [m matches] [i (in-naturals)])
+             (cons s (rulematch r m i)))
+           score<? #:key car))))
+  (define split (map split-rm presort))
+  (append (map first split) (map second split)))
 
 (define/contract (matchlist-find matchlist elt prop)
   (-> (listof rulematch?) node? property? (or/c rulematch? #f))
@@ -228,11 +246,8 @@
        (and (set-member? (rulematch-elts rm) elt)
             (dict-has-key? (rulematch-props rm) prop)))
      matchlist))
-  (or
-   (for/first ([rm valid-rms] #:when (rulematch-important? rm prop))
-     rm)
-   (for/first ([rm valid-rms])
-     rm)))
+  (for/first ([rm valid-rms])
+    rm))
 
 (define equivalence-classes?
   (hash/c property? (cons/c (hash/c node? (or/c integer? #f)) (hash/c (or/c integer? #f) any/c))))
