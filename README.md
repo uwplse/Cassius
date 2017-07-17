@@ -3,18 +3,15 @@
 Cassius
 =======
 
-Cassius synthesizes CSS from examples of how a website should look.
-Unlike WYSIWYG tools like Dreamweaver or Photoshop,
-  Cassius can generate responsive designs
-  that work well even when the content or screen size change.
+Cassius is a formalization of CSS, making it possible to build tools
+that reason about the appearance of web pages.
 
 Installing
 ------------
 
 You'll need to install Racket (6.3 or later) <http://racket-lang.org>
-and Z3 <https://github.com/Z3Prover/z3> (4.4.0 exactly). Once Racket
-and Z3 are set up, edit the `z3.sh` script, to call your installation
-of Z3. (Make sure to pass through all arguments.)
+and Z3 <https://github.com/Z3Prover/z3> (latest git; not version
+4.4.1). Make sure Z3 is in your path.
 
 Test out your Cassius installation by running, from the top-level directory,
 
