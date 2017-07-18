@@ -482,7 +482,8 @@
            (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
                                         (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))))
            (flow-horizontal-layout b (w p)))
-       (= (x b) (+ (left-content p) (ml b)))
+       (= (x b) (+ (ml b)
+                   (ite (is-flow-root b) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
        (= (ez.sufficient b) true)
        (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
