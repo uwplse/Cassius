@@ -21,12 +21,13 @@
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
-                (font-size Real)
+                (font-size Real) (leading Real) (ascendor-top Real) (descendor-bottom Real)
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
+                (&anc-w-elt Int) ; pointer to nearest ancestor with an element
                 (ez.in EZone) (ez.out EZone) (ez.sufficient Bool)
-                (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
+                (has-contents Bool) (lineheight Line-Height) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
                     `(,(sformat "&~a" i) Int))
@@ -158,10 +159,13 @@
          `(= (,(sformat "&~a" i) (get/box &b)) ,(p '&b (sformat "&~a" i))))
      (= (textalign (get/box &b))
         (style.text-align (computed-style (get/elt &e))))
+     (= (lineheight (get/box &b))
+        (style.line-height (computed-style (get/elt &e))))
      (= (fg-color (get/box &b))
         (style.color (computed-style (get/elt &e))))
      (= (bg-color (get/box &b))
         (style.background-color (computed-style (get/elt &e))))
+     (= (&anc-w-elt (get/box &b)) &b)
      (= (ancestor-bg (get/box &b))
         (ite (is-color/transparent (bg-color (get/box &b)))
              (ancestor-bg (pbox (get/box &b)))
@@ -178,11 +182,16 @@
         (ite (is-no-box (pflow (get/box &b)))
              text-align/left
              (textalign (pflow (get/box &b)))))
+     (= (lineheight (get/box &b))
+        (ite (is-no-box (pflow (get/box &b)))
+             line-height/normal
+             (lineheight (pflow (get/box &b)))))
      (= (fg-color (get/box &b))
         (ite (is-no-box (pflow (get/box &b)))
              color/black
              (fg-color (pflow (get/box &b)))))
      (= (bg-color (get/box &b)) color/transparent)
+     (= (&anc-w-elt (get/box &b)) (&anc-w-elt (pflow (get/box &b))))
      (= (ancestor-bg (get/box &b)) (ancestor-bg (pbox (get/box &b))))))
 
   ;; `link-flow-simple`, `link-flow-root`, and `link-flow-block` link

@@ -56,14 +56,14 @@
            type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
            pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
            &pbox &vbox &nbox &fbox &lbox
-           width-set font-size
-           &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
-           has-contents? textalign &elt first? last?
+           width-set font-sizev leading min-top max-bottom
+           &nflow &vflow &ppflow &pbflow &anc-elt ez.in ez.out ez.sufficient
+           has-contents? lh textalign &elt first? last?
            extra ...
            color background-color ancestor)
      box-model)
     (unless (= (length extra) (length (extra-pointers)))
-      (error "You forgot to add your new Box field to L65 in src/main.rkt"))
+      (error "You forgot to add your new Box field to L55 in src/main.rkt"))
     ez.sufficient))
 
 (define (extract-box! z3-box box)
@@ -72,14 +72,14 @@
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
          pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
-         width-set font-size
-         &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
-         has-contents? textalign &elt first? last?
+         width-set font-size leading min-top max-bottom
+         &nflow &vflow &ppflow &pbflow &anc-elt ez.in ez.out ez.sufficient
+         has-contents? lh textalign &elt first? last?
          extra ...
          color background-color ancestor)
    z3-box)
   (unless (= (length extra) (length (extra-pointers)))
-    (error "You forgot to add your new Box field to L65 in src/main.rkt"))
+    (error "You forgot to add your new Box field to L72 in src/main.rkt"))
   (define box-width (+ bl pl w pr br))
   (define box-height (+ bt pt h pb bb))
   (define box-x (+ x xo))

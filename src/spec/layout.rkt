@@ -590,6 +590,8 @@
        (= (float-stfmax b)
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
+       (= (ascendor-top b) (ite (is-box (lbox b)) (ascendor-top (lbox b)) 0.0))
+       (= (descendor-bottom b) (ite (is-box (lbox b)) (descendor-bottom (lbox b)) 0.0))
 
        ,(smt-cond
          [(is-replaced e)
@@ -649,7 +651,23 @@
        ;; This is super-weak, but for now it really is our formalization of line layout
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
+       
+       (=> (is-line-height/normal (lineheight b))
+           (= (leading b) (- (* 1.17 (font-size b)) (font-size b))))
+       (=> (is-line-height/px (lineheight b))
+           (= (leading b) (line-height.px (lineheight b))))
+       (=> (is-line-height/em (lineheight b))
+           (= (leading b) (- (* (line-height.em (lineheight b)) (font-size b)) (font-size b))))
+       (=> (is-line-height/% (lineheight b))
+           (= (leading b) (- (* (line-height.% (lineheight b)) (font-size b)) (font-size b))))
 
+       #;(= (leading b) (ite (is-line-height/normal (lineheight (get/box (&anc-w-elt b))))
+                           (- (* 1.17 (font-size b)) (font-size b))
+                           (- ,(get-px-or-% 'line-height '(font-size b) '(get/box (&anc-w-elt b))) (font-size b))))
+       
+       (= (ascendor-top b) (min-if (- (y b) (* .5 (leading b))) (is-box v) (ascendor-top v)))
+       (= (descendor-bottom b) (max-if (+ (y b) (font-size b) (* .5 (leading b))) (is-box v) (descendor-bottom v)))
+       
        (no-relative-offset b)
        (zero-box-model b)
        (=> (is-box v) (= (x b) (right-outer v)))
@@ -684,6 +702,7 @@
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
        (= (font-size b) (font-size p))
+       (= (h b) (- (descendor-bottom (lbox b)) (ascendor-top (lbox b))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
