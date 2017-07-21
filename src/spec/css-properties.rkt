@@ -108,7 +108,7 @@
 (define-css-type (Line-Height (px Real) (% Real) (em Real) normal)
   [line-height (em 1.17)])
 
-(define inheritable-properties '(text-align color background-color))
+(define inheritable-properties '(text-align color background-color line-height))
 
 (define (css-inheritable? x) (set-member? inheritable-properties x))
 

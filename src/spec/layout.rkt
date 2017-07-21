@@ -657,9 +657,9 @@
        (=> (is-line-height/px (lineheight b))
            (= (leading b) (line-height.px (lineheight b))))
        (=> (is-line-height/em (lineheight b))
-           (= (leading b) (- (* (line-height.em (lineheight b)) (font-size b)) (font-size b))))
+           (= (leading b) (- (%of (* 100.0 (line-height.em (lineheight b))) (font-size b)) (font-size b))))
        (=> (is-line-height/% (lineheight b))
-           (= (leading b) (- (* (line-height.% (lineheight b)) (font-size b)) (font-size b))))
+           (= (leading b) (- (%of (line-height.% (lineheight b)) (font-size b)) (font-size b))))
 
        #;(= (leading b) (ite (is-line-height/normal (lineheight (get/box (&anc-w-elt b))))
                            (- (* 1.17 (font-size b)) (font-size b))
