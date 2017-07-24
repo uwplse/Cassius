@@ -51,11 +51,11 @@
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
     [(success stylesheet trees doms)
      (when (*debug*)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fg :bg :fs :elt)))))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l :elt)))))
      (eprintf "Accepted!\n")]
     [(failure stylesheet trees)
      (displayln (stylesheet->string stylesheet))
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :style))))
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l :style))))
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
@@ -66,7 +66,7 @@
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
     [(success stylesheet trees doms)
      (eprintf "Different renderings possible.\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fg :bg))))]
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l))))]
     [(failure stylesheet trees)
      (displayln (stylesheet->string stylesheet))]
     [(list 'error e)
@@ -111,7 +111,7 @@
   (match (wrapped-solve (dict-ref problem ':sheets) documents)
     [(success stylesheet trees doms)
      (eprintf "Rendered the following layout:\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fg :bg))))]
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :l :fs :elt))))]
     [(failure stylesheet trees)
      (eprintf "Unable to render.\n")]
     [(list 'error e)

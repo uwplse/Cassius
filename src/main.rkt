@@ -91,6 +91,8 @@
   (node-set! box ':fs font-size)
   (node-set! box ':fg (extract-value color))
   (node-set! box ':bg (extract-value background-color))
+  (node-set! box ':l leading)
+  (node-set! box ':fs font-size)
   (when (>= &elt 0) (node-set! box ':elt &elt)))
 
 (define (extract-elt! result elt)

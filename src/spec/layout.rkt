@@ -664,10 +664,10 @@
        #;(= (leading b) (ite (is-line-height/normal (lineheight (get/box (&anc-w-elt b))))
                            (- (* 1.17 (font-size b)) (font-size b))
                            (- ,(get-px-or-% 'line-height '(font-size b) '(get/box (&anc-w-elt b))) (font-size b))))
-       
+
        (= (ascendor-top b) (min-if (- (y b) (* .5 (leading b))) (is-box v) (ascendor-top v)))
        (= (descendor-bottom b) (max-if (+ (y b) (font-size b) (* .5 (leading b))) (is-box v) (descendor-bottom v)))
-       
+
        (no-relative-offset b)
        (zero-box-model b)
        (=> (is-box v) (= (x b) (right-outer v)))
