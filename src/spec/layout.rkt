@@ -653,7 +653,7 @@
        (= (font-size b) (font-size p))
        
        (=> (is-line-height/normal (lineheight b))
-           (= (leading b) (- (* 1.17 (font-size b)) (font-size b))))
+           (<= (* 0.1 (font-size b)) (leading b) (* 0.25 (font-size b))))
        (=> (is-line-height/px (lineheight b))
            (= (leading b) (line-height.px (lineheight b))))
        (=> (is-line-height/em (lineheight b))
