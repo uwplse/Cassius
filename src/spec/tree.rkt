@@ -22,6 +22,7 @@
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (font-size Real) (leading Real) (ascendor-top Real) (descendor-bottom Real)
+                (text-top Real) ; TODO: how do we compute this? Can we compute this?
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
