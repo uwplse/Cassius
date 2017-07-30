@@ -124,6 +124,12 @@
   (define-fun lflow ((b Box)) Box
     (ite (=> (is-box (lbox b)) (box-in-flow (lbox b)))
          (lbox b) (vflow (lbox b))))
+  (define-fun &fflow ((b Box)) Box
+    (ite (=> (is-box (fbox b)) (box-in-flow (fbox b)))
+         (&fbox b) (&nflow (fbox b))))
+  (define-fun &lflow ((b Box)) Box
+    (ite (=> (is-box (lbox b)) (box-in-flow (lbox b)))
+         (&lbox b) (&vflow (lbox b))))
 
   ;; `link-element` and `link-box` set the element and box tree pointers
   (define-fun link-element ((elt Element) (&p Int) (&v Int) (&n Int) (&f Int) (&l Int)) Bool
