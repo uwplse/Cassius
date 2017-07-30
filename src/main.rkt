@@ -3,7 +3,7 @@
          "selectors.rkt" "match.rkt" "solver.rkt")
 (require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
          "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
-         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "assertions.rkt")
+         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          css-values-solver extract-ctx! model-sufficiency extract-model-sufficiency)
@@ -205,11 +205,16 @@
          (emit `(assert (! (match-element-box ,(name 'elt elt) ,(name 'box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]))))
 
-(define (model-sufficiency doms)
-  `(and
-    true
-    ,@(for*/list ([dom doms] [box (in-boxes dom)])
-        `(ez.sufficient ,(dump-box box)))))
+(define (model-sufficiency doms #:positive? [positive? #t])
+  (define parts
+    (for*/list ([dom doms] [box (in-boxes dom)])
+      `(ez.sufficient ,(dump-box box))))
+  (define parts*
+    (if positive?
+        (apply smt-and parts)
+        (apply smt-or (map (curry list 'not) parts))))
+
+  `(assert (! ,parts* :named model-sufficiency)))
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
@@ -414,7 +419,6 @@
   (define &vars (map (curry sformat "counterexample/~a") vars))
 
   (define bodies (map caddr tests))
-  (define bodies* (map (curry compile-assertion doms) bodies))
 
   `(,@constraints
     ,@(for/list ([&var &vars])
@@ -422,7 +426,7 @@
     ,@(for/list ([&var &vars])
         `(assert (is-box (get/box ,&var))))
     (assert (let (,@(map list vars (map (curry list 'get/box) &vars)))
-              (or false ,@(map (curry list 'not) bodies*))))))
+              ,(apply smt-or (map (curry list 'not) bodies))))))
 
 (define z3-process-cache (make-parameter (make-hash)))
 

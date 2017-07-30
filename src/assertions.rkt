@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "spec/tree.rkt" "encode.rkt" "smt.rkt")
+(require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "spec/tree.rkt" "encode.rkt" "smt.rkt" "spec/tree.rkt")
 (provide compile-assertion)
 
 (define (expand-match doms e sel)
@@ -13,7 +13,26 @@
                      #:when (selector-matches? sel elt))
            `(= ,&e ,(name 'elt elt)))))
 
-(define (compile-assertion doms body)
+(define (find-extra-pointers expr)
+  (match expr
+    [`(forall (,vars ...) ,body) (find-extra-pointers body)]
+    [`(let ([,vars ,vals] ...) ,body)
+     (append (append-map find-extra-pointers vals) (find-extra-pointers body))]
+    [`(ancestor ,thing ,test)
+     (cons (cons test
+                 (λ (&b id)
+                   `(ite ,(smt-replace-terms test (list (cons '? `(get/box ,&b))))
+                         ,&b
+                         (,id (pbox (get/box ,&b))))))
+           (find-extra-pointers thing))]
+    [(? list?) (append-map find-extra-pointers (cdr expr))]
+    [_ '()]))
+
+(define (compile-assertion doms test)
+  (extra-pointers (append (extra-pointers) (find-extra-pointers test)))
+  (compile-assertion-expr doms test))
+
+(define (compile-assertion-expr doms body)
   (smt-replace body
     [`(matches ,e ,sel) (expand-match doms e sel)]
     [`(descends ,e ,sel)

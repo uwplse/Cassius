@@ -1,7 +1,7 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
-         "spec/percentages.rkt" "spec/float.rkt")
+         "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt")
 (provide query solve (struct-out success) (struct-out failure))
 
 (struct success (stylesheet elements doms))
@@ -40,28 +40,16 @@
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
 
-  (define (find-extra-pointers expr)
-    (match expr
-      [`(forall (,vars ...) ,body) (find-extra-pointers body)]
-      [`(let ([,vars ,vals] ...) ,body)
-       (append (append-map find-extra-pointers vals) (find-extra-pointers body))]
-      [`(ancestor ,thing ,test)
-       (cons (cons test
-                   (λ (&b id)
-                     `(ite ,(smt-replace-terms test (list (cons '? `(get/box ,&b))))
-                           ,&b
-                           (,id (pbox (get/box ,&b))))))
-             (find-extra-pointers thing))]
-      [(? list?) (append-map find-extra-pointers (cdr expr))]
-      [_ '()]))
-
-  (extra-pointers (append (extra-pointers) (append-map find-extra-pointers (or tests '()))))
+  (define tests*
+    (for/list ([test (or tests '())])
+      (compile-assertion doms test)))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms))
-  (set! query
-        (if tests
-            (add-test doms query (cons `(forall (zzXX) (ez.sufficient zzXX)) tests))
-            (append query (list `(assert (! ,(model-sufficiency doms) :named ensure-model-sufficient))))))
+
+  (set! query (append query (list (model-sufficiency doms #:positive? (not tests)))))
+
+  (when tests
+    (set! query (add-test doms query tests*)))
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))
