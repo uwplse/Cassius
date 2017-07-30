@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt")
-(provide name by-name)
+(provide name by-name all-by-name)
 
 (define name-registry (make-hash))
 
@@ -17,3 +17,6 @@
   (for/first ([(thing name*) (dict-ref name-registry kind)]
               #:when (equal? name name*))
     thing))
+
+(define (all-by-name kind)
+  (dict-ref name-registry kind))

@@ -413,20 +413,16 @@
     ))
 
 (define (add-test doms constraints tests)
-  (define vars (append-map cadr tests))
-  (when (check-duplicates vars)
+  (match-define (list (list 'forall varss bodies) ...) tests)
+  (when (check-duplicates (apply append varss))
     (error "Duplicate variable names in assertions!"))
-  (define &vars (map (curry sformat "counterexample/~a") vars))
-
-  (define bodies (map caddr tests))
 
   `(,@constraints
-    ,@(for/list ([&var &vars])
-        `(declare-const ,&var Int))
-    ,@(for/list ([&var &vars])
-        `(assert (is-box (get/box ,&var))))
-    (assert (let (,@(map list vars (map (curry list 'get/box) &vars)))
-              ,(apply smt-or (map (curry list 'not) bodies))))))
+    ,@(for/reap [sow] ([(id value) (all-by-name 'cex)])
+        (define var (sformat "cex~a" id))
+        (sow `(declare-const ,var Int))
+        (sow `(assert (>= ,var 0))))
+    (assert ,(apply smt-or (map (curry list 'not) bodies)))))
 
 (define z3-process-cache (make-parameter (make-hash)))
 

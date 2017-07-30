@@ -1,7 +1,7 @@
 #lang racket
 (require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
-         "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt")
+         "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
 (provide query solve (struct-out success) (struct-out failure))
 
 (struct success (stylesheet elements doms))
@@ -42,7 +42,10 @@
 
   (define tests*
     (for/list ([test (or tests '())])
-      (compile-assertion doms test)))
+      (define ctx
+        (for/hash ([var (cadr test)])
+          (values var (name 'cex (cons var test)))))
+      (compile-assertion doms (caddr test) ctx)))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms))
 

@@ -1,11 +1,10 @@
 ;; -*- mode: scheme -*-
 
 (define-test (text-size b)
-  (=> (is-box/text (type b)) (has-contents b)
-      (let ([eb (ancestor b (is-elt (box-elt ?)))])
-        (not (or (descends (box-elt eb) (class footer))
-                 (descends (box-elt eb) (id footer)))))
-      (>= (h b) 14)))
+  (=> (has-type b text) (has-contents b)
+      (let ([eb (ancestor b (not (anonymous? ?)))])
+        (not (or (descends eb (class footer)) (descends eb (id footer)))))
+      (>= (height b) 14)))
 
 (define-test (interactive-onscreen b)
   (=> (is-interactive (box-elt b)) (onscreen b)))
