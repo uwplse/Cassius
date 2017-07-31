@@ -118,18 +118,14 @@
   (define-fun pflow ((box Box)) Box (pbox box))
   (define-fun nflow ((box Box)) Box (get/box (&nflow box)))
   (define-fun vflow ((box Box)) Box (get/box (&vflow box)))
-  (define-fun fflow ((b Box)) Box
-    (ite (=> (is-box (fbox b)) (box-in-flow (fbox b)))
-         (fbox b) (nflow (fbox b))))
-  (define-fun lflow ((b Box)) Box
-    (ite (=> (is-box (lbox b)) (box-in-flow (lbox b)))
-         (lbox b) (vflow (lbox b))))
-  (define-fun &fflow ((b Box)) Box
+  (define-fun &fflow ((b Box)) Int
     (ite (=> (is-box (fbox b)) (box-in-flow (fbox b)))
          (&fbox b) (&nflow (fbox b))))
-  (define-fun &lflow ((b Box)) Box
+  (define-fun &lflow ((b Box)) Int
     (ite (=> (is-box (lbox b)) (box-in-flow (lbox b)))
          (&lbox b) (&vflow (lbox b))))
+  (define-fun fflow ((box Box)) Box (get/box (&fflow box)))
+  (define-fun lflow ((box Box)) Box (get/box (&lflow box)))
 
   ;; `link-element` and `link-box` set the element and box tree pointers
   (define-fun link-element ((elt Element) (&p Int) (&v Int) (&n Int) (&f Int) (&l Int)) Bool

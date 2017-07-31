@@ -418,8 +418,8 @@
     (error "Duplicate variable names in assertions!"))
 
   `(,@constraints
-    ,@(for/reap [sow] ([(id value) (all-by-name 'cex)])
-        (define var (sformat "cex~a" id))
+    ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
+        (define var (sformat "cex~a" value))
         (sow `(declare-const ,var Int))
         (sow `(assert (>= ,var 0))))
     (assert ,(apply smt-or (map (curry list 'not) bodies)))))

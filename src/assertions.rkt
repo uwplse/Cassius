@@ -40,8 +40,8 @@
        (cons op (map (curryr loop wrapped? ctx) parts))]
       ;; Boxes
       [(? symbol?)
-       (define true-name (sformat "cex~a" (dict-ref ctx expr)))
-       (if wrapped? `(get/box ,true-name) true-name)]
+       (define name (dict-ref ctx expr))
+       (if wrapped? `(get/box ,name) name)]
       ['null (if wrapped? 'no-box '-1)]
       ['root (if wrapped? (dump-box dom) (name 'box box))]
       [(list (and (or 'parent 'next 'prev 'first 'last) field) box)
@@ -54,9 +54,9 @@
            ['last  (if wrapped? 'lflow '&lflow)]))
        `(,function ,(loop box #t ctx))]
       [`(ancestor ,box ,cond*)
-       (define cond (loop cond* #f '((? . (get/box &b)))))
+       (define cond (loop cond* #f #hash((? . &b))))
        (define (cond-fn &b id)
-         `(ite (let ([&b ,&b]) cond)
+         `(ite (let ([&b ,&b]) ,cond)
                ,&b
                (,id (pflow (get/box ,&b)))))
        (define idx (length (extra-pointers)))

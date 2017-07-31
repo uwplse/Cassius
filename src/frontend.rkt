@@ -44,8 +44,8 @@
     (for/list ([test (or tests '())])
       (define ctx
         (for/hash ([var (cadr test)])
-          (values var (name 'cex (cons var test)))))
-      (compile-assertion doms (caddr test) ctx)))
+          (values var (sformat "cex~a" (name 'cex (cons var test))))))
+      `(forall ,(cadr test) ,(compile-assertion doms (caddr test) ctx))))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms))
 
