@@ -2,53 +2,44 @@
 
 ; For rehabilitation-yoga
 (define-test (contrast b)
-  (=> (is-box/text (type b)) (has-contents b) (viewable b)
+  (=> (has-type b text) (has-contents b) (viewable b)
       (and
-       (not (is-color/transparent (fg-color b)))
-       (let ([fg (color.rgb (fg-color b))]
-             [bg
-              (let ([ab (ancestor b (not (is-color/transparent (bg-color ?))))])
-                (ite (is-box ab)
-                     (color.rgb (bg-color ab))
-                     (color.rgb color/white)))]
-             [threshold 3])
-         (or (>= (+ (lum fg) .05) (* threshold (+ (lum bg) .05)))
-             (>= (+ (lum bg) .05) (* threshold (+ (lum fg) .05))))))))
+       (!= (fg b) transparent)
+       (let ([fg (fg b)]
+             [bg* (let ([ab (ancestor b (!= (bg ?) transparent))])
+                    (if (!= ab null) (bg ab) (color white)))])
+         (or (>= (+ (luminance fg) .05) (* 3 (+ (luminance bg*) .05)))
+             (>= (+ (luminance bg*) .05) (* 3 (+ (luminance fg) .05))))))))
 
 ;; For puppy
 (define-test (no-text-on-picture b1 b2)
-  (=> (matches (box-elt b1) (id background))
-      (is-box/text (type b2))
-      (descends (box-elt b2) (id background))
-      (<= (right-border b2) (- (right-content b1) 300))))
+  (=> (matches b1 (id background))
+      (has-type b2 text)
+      (descends b2 (id background))
+      (<= (right b2) (- (right b1 content) 300))))
 
 ;; For gardenwalkthrough
 (define-test (dropdown-offscreen b)
   (=>
-   (matches (box-elt b) (child (id header) (tag ul) (tag li) (tag ul)))
+   (matches b (child (id header) (tag ul) (tag li) (tag ul)))
    (not (onscreen b))))
 
 ;; For tailorshopwebsitetemplate
 (define-test (three-column b1 b2)
   (and
-   (=> (matches (box-elt b1) (child (id featured) (class first) (tag div)))
-       (matches (box-elt b2) (child (id featured) (class first) (tag span)))
-       (and (= (top-outer b1) (top-outer b2))
-            (<= (right-outer b1) (left-outer b2))))
-   (=> (matches (box-elt b1) (child (id featured) (class first) (tag span)))
-       (matches (box-elt b2) (child (id featured) (class last)))
-       (and (= (top-outer b1) (top-outer b2))
-            (<= (right-outer b1) (left-outer b2))))
-   (=> (matches (box-elt b1) (child (id home) (class section)))
-       (matches (box-elt b2) (child (id home) (class sidebar)))
-       (and (= (top-outer b1) (top-outer b2))
-            (<= (right-outer b1) (left-outer b2))))
-   (=> (matches (box-elt b1) (desc (id footer) (class first)))
-       (matches (box-elt b2) (desc (id footer) (class last)))
-       (and (= (top-outer b1) (top-outer b2))
-            (<= (right-outer b1) (left-outer b2))))
-   (=> (matches (box-elt b1) (child (id home) (class section) (tag ul) (tag li)))
-       (matches (box-elt b2) (child (id home) (class section) (tag ul) (tag li)))
-       (< (&elt b1) (&elt b2))
-       (and (= (top-outer b1) (top-outer b2))
-            (<= (right-outer b1) (left-outer b2))))))
+   (=> (matches b1 (child (id featured) (class first) (tag div)))
+       (matches b2 (child (id featured) (class first) (tag span)))
+       (and (= (top b1 outer) (top b2 outer))
+            (<= (right b1 outer) (left b2 outer))))
+   (=> (matches b1 (child (id featured) (class first) (tag span)))
+       (matches b2 (child (id featured) (class last)))
+       (and (= (top b1 outer) (top b2 outer))
+            (<= (right b1 outer) (left b2 outer))))
+   (=> (matches b1 (child (id home) (class section)))
+       (matches b2 (child (id home) (class sidebar)))
+       (and (= (top b1 outer) (top b2 outer))
+            (<= (right b1 outer) (left b2 outer))))
+   (=> (matches b1 (desc (id footer) (class first)))
+       (matches b2 (desc (id footer) (class last)))
+       (and (= (top b1 outer) (top b2 outer))
+            (<= (right b1 outer) (left b2 outer))))))

@@ -32,18 +32,17 @@
       [`(=> ,as ... ,b)
        `(=> ,@(map (curryr loop wrapped? ctx) as) ,(loop b wrapped? ctx))]
       [`(not ,part) `(not ,(loop part wrapped? ctx))]
+
       ;; Real numbers
       [(? number?) expr]
       [(list (and (or '= '< '> '<= '>=) op) parts ...)
        (cons op (map (curryr loop #f ctx) parts))]
       [(list (and (or '+ '- '* '/) op) parts ...)
        (cons op (map (curryr loop wrapped? ctx) parts))]
+
       ;; Boxes
-      [(? symbol?)
-       (define name (dict-ref ctx expr))
-       (if wrapped? `(get/box ,name) name)]
-      ['null (if wrapped? 'no-box '-1)]
-      ['root (if wrapped? (dump-box dom) (name 'box box))]
+      ['null (if wrapped? 'no-box -1)]
+      ['root (if wrapped? (dump-box (dom-boxes dom)) (name 'box (dom-boxes dom)))]
       [(list (and (or 'parent 'next 'prev 'first 'last) field) box)
        (define function
          (match field
@@ -77,6 +76,7 @@
       [`(fg ,box) `(fg-color ,(loop box #t ctx))]
       [`(bg ,box) `(bg-color ,(loop box #t ctx))]
       ['transparent 'color/transparent]
+      [`(color ,name) (sformat "color/~a" name)]
       [`(rgb ,(? number? r) ,(? number? g) ,(? number? b))
        (dump-value (list 'rgb r g b))]
       [(list (and (or 'r 'g 'b) component) `(gamma ,color))
@@ -111,4 +111,11 @@
 
       ;; Expandable
       [(list (? (curry dict-has-key? helpers) fname) args ...)
-       (loop (apply (dict-ref helpers fname) args) wrapped? ctx)])))
+       (loop (apply (dict-ref helpers fname) args) wrapped? ctx)]
+      [`(luminance ,color)
+       `(lum (color.rgb ,(loop color wrapped? ctx)))]
+
+      ;; Variables
+      [(? symbol?)
+       (define name (dict-ref ctx expr))
+       (if wrapped? `(get/box ,name) name)])))
