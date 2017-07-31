@@ -593,7 +593,7 @@
 
        (= (ascendor-top b)
           (min-if
-           (ite (or (is-replaced e) (is-flow-root b))
+           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
                 (top-border b)
                 (ite (is-box l)
                      (ascendor-top l)
@@ -680,9 +680,11 @@
 
        (<= (top-outer b) (text-top b) (bottom-outer b))
 
-       (= (ascendor-top b) (min-if (- (text-top b) (* .5 (leading b))) (is-box v) (ascendor-top v)))
        ;; TODO: (y b) and (+ (y b) (font-size b)) not correct, should use baseline.
-       (= (descendor-bottom b) (max-if (+ (text-top b) (font-size b) (* .5 (leading b))) (is-box v) (descendor-bottom v)))
+       (=> (> (w b) 0.0)
+           (and
+            (= (ascendor-top b) (min-if (- (text-top b) (* .5 (leading b))) (is-box v) (ascendor-top v)))
+            (= (descendor-bottom b) (max-if (+ (text-top b) (font-size b) (* .5 (leading b))) (is-box v) (descendor-bottom v)))))
 
        (no-relative-offset b)
        (zero-box-model b)
