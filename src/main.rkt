@@ -205,16 +205,11 @@
          (emit `(assert (! (match-element-box ,(name 'elt elt) ,(name 'box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]))))
 
-(define (model-sufficiency doms #:positive? [positive? #t])
-  (define parts
-    (for*/list ([dom doms] [box (in-boxes dom)])
-      `(ez.sufficient ,(dump-box box))))
-  (define parts*
-    (if positive?
-        (apply smt-and parts)
-        (apply smt-or (map (curry list 'not) parts))))
-
-  `(assert (! ,parts* :named model-sufficiency)))
+(define (model-sufficiency doms)
+  (apply
+   smt-and
+   (for*/list ([dom doms] [box (in-boxes dom)])
+     `(ez.sufficient ,(dump-box box)))))
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
