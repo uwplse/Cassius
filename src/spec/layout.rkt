@@ -591,24 +591,25 @@
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
-       (= (ascendor-top b)
+       (=> (and (or (is-box l) (is-box v) (and (is-elt e) (is-replaced e))) (not (is-flow-root b)))
+        (and (= (ascendor-top b)
           (min-if
-           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
+           (ite (and (is-elt e) (is-replaced e))
                 (top-border b)
-                (ite (is-box l)
+                (ite (or (is-box l) (is-flow-root b))
                      (ascendor-top l)
                      1000000.0)) ; TODO: should be +inf
            (is-box v)
            (ascendor-top v)))
-       (= (descendor-bottom b)
+        (= (descendor-bottom b)
           (max-if
-           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
+           (ite (and (is-elt e) (is-replaced e))
                 (bottom-border b)
-                (ite (is-box l)
+                (ite (or (is-box l) (is-flow-root b))
                      (descendor-bottom l)
                      -1000000.0)) ; TODO: should be -inf
            (is-box v)
-           (descendor-bottom v)))
+           (descendor-bottom v)))))
 
        ,(smt-cond
          [(is-replaced e)
@@ -679,12 +680,13 @@
            (= (leading b) (- (%of (line-height.% (lineheight b)) (font-size b)) (font-size b))))
 
        (<= (top-outer b) (text-top b) (bottom-outer b))
+       (<= (text-top b) (text-bottom b) (bottom-outer b))
 
        ;; TODO: (y b) and (+ (y b) (font-size b)) not correct, should use baseline.
        (=> (> (w b) 0.0)
-           (and
-            (= (ascendor-top b) (min-if (- (text-top b) (* .5 (leading b))) (is-box v) (ascendor-top v)))
-            (= (descendor-bottom b) (max-if (+ (text-top b) (font-size b) (* .5 (leading b))) (is-box v) (descendor-bottom v)))))
+            (and
+             (= (ascendor-top b) (min-if (- (text-top b) (* .5 (leading b))) (is-box v) (ascendor-top v)))
+             (= (descendor-bottom b) (max-if (+ (text-bottom b) (* .5 (leading b))) (is-box v) (descendor-bottom v)))))
 
        (no-relative-offset b)
        (zero-box-model b)
