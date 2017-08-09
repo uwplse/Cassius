@@ -591,7 +591,7 @@
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
-       (=> (and (or (is-box l) (is-box v) (and (is-elt e) (is-replaced e))) (not (is-flow-root b)))
+       (=> (or (is-box l) (is-box v) (and (is-elt e) (is-replaced e)) (is-flow-root b))
         (and (= (ascendor-top b)
           (min-if
            (ite (and (is-elt e) (is-replaced e))
