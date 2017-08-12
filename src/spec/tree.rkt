@@ -1,5 +1,5 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt")
+(require "../common.rkt" "../smt.rkt" "../encode.rkt")
 (provide tree-types link-definitions extra-pointers)
 
 (define extra-pointers (make-parameter '()))
@@ -9,6 +9,26 @@
 ;; functions to properly establish the pointers each holds.
 
 (define-constraints tree-types
+  (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
+
+  (define-fun ropt-max-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
+         (ite (realopt.is-some? x)
+              (ite (and y? (realopt.is-some? y))
+                   (ite (> (realopt.value x) (realopt.value y))
+                        x
+                        y)
+                   x)
+              y))
+
+  (define-fun ropt-min-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
+         (ite (realopt.is-some? x)
+              (ite (and y? (realopt.is-some? y))
+                   (ite (< (realopt.value x) (realopt.value y))
+                        x
+                        y)
+                   x)
+              y))
+
   (declare-datatypes ()
      ((Box no-box
            (box (type BoxType)
@@ -21,7 +41,7 @@
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
-                (font-size Real) (leading Real) (ascendor-top Real) (descendor-bottom Real)
+                (font-size Real) (leading Real) (ascendor-top RealOpt) (descendor-bottom RealOpt)
                 (text-top Real) (text-bottom Real) ; TODO: how do we compute this? Can we compute this?
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
