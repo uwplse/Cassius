@@ -63,7 +63,7 @@
            color background-color ancestor)
      box-model)
     (unless (= (length extra) (length (extra-pointers)))
-      (error "You forgot to add your new Box field to L65 in src/main.rkt"))
+      (error "You forgot to add your new Box field to L66 in src/main.rkt"))
     ez.sufficient))
 
 (define (extract-box! z3-box box)
@@ -79,7 +79,7 @@
          color background-color ancestor)
    z3-box)
   (unless (= (length extra) (length (extra-pointers)))
-    (error "You forgot to add your new Box field to L65 in src/main.rkt"))
+    (error "You forgot to add your new Box field to L82 in src/main.rkt"))
   (define box-width (+ bl pl w pr br))
   (define box-height (+ bt pt h pb bb))
   (define box-x (+ x xo))
@@ -114,12 +114,10 @@
     (when (and elt-model (list? elt-model)) (extract-elt! elt-model elt))))
 
 (define (extract-counterexample! smt-out)
-  (for ([(name value) (in-hash smt-out)])
-    (when (equal? (car (split-symbol name)) 'counterexample)
-      (define ptr (string->number (car (string-split (~a value) "-"))))
-      (define node (by-name (if (string-prefix? (~a ptr) "elt") 'elt 'box) ptr))
-      (define var (string-join (cdr (string-split (~a name) "/")) "/"))
-      (node-add! node ':cex `(bad ,var)))))
+  (for ([(name value) (in-hash smt-out)] #:when (string-prefix? (~a name) "cex"))
+    (define node (by-name 'box value))
+    (define var (car (by-name 'cex (string->number (substring (~a name) 3)))))
+    (node-add! node ':cex `(bad ,var))))
 
 (define (tree-constraints dom emit elt)
   (emit
@@ -411,12 +409,13 @@
   (match-define (list (list 'forall varss bodies) ...) tests)
   (when (check-duplicates (apply append varss))
     (error "Duplicate variable names in assertions!"))
+  (define max (apply max (dict-values (all-by-name 'box))))
 
   `(,@constraints
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
         (sow `(declare-const ,var Int))
-        (sow `(assert (>= ,var 0))))
+        (sow `(assert (<= 0 ,var ,max))))
     (assert ,(apply smt-or (map (curry list 'not) bodies)))))
 
 (define z3-process-cache (make-parameter (make-hash)))
