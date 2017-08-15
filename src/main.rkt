@@ -409,13 +409,13 @@
   (match-define (list (list 'forall varss bodies) ...) tests)
   (when (check-duplicates (apply append varss))
     (error "Duplicate variable names in assertions!"))
-  (define max (apply max (dict-values (all-by-name 'box))))
+  (define max-ptr (apply max (dict-values (all-by-name 'box))))
 
   `(,@constraints
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
         (sow `(declare-const ,var Int))
-        (sow `(assert (<= 0 ,var ,max))))
+        (sow `(assert (<= 0 ,var ,max-ptr))))
     (assert ,(apply smt-or (map (curry list 'not) bodies)))))
 
 (define z3-process-cache (make-parameter (make-hash)))
