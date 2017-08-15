@@ -27,7 +27,7 @@
    '(border-top-style border-right-style border-bottom-style border-left-style)
    '(text-align overflow-x overflow-y position top bottom left right)
    '(font-size box-sizing display text-indent clear)
-   '(color background-color)))
+   '(color background-color line-height)))
 
 (define (prop-is-simple prop elt)
   `(= (,(sformat "style.~a" prop) (computed-style ,elt))

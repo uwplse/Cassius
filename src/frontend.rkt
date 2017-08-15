@@ -29,6 +29,7 @@
               (match (car value)
                 [(list 'em v) (sow (* 100 (z3->number v)))]
                 [(list '% v) (sow (z3->number v))]
+                [(? number? v) (sow (* v 100))]
                 [_ (void)])))))
   (*%* (set-union (*%*) %s))
 

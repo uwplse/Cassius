@@ -591,6 +591,26 @@
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
+       (=> (or (is-box l) (is-box v) (and (is-elt e) (is-replaced e)) (is-flow-root b))
+        (and (= (ascendor-top b)
+          (ropt-min-if
+           (ite (and (is-elt e) (is-replaced e))
+                (realopt (top-border b) true)
+                (ite (or (is-box l) (is-flow-root b))
+                     (ascendor-top l)
+                     (realopt 0.0 false))) ; TODO: should be +inf
+           (is-box v)
+           (ascendor-top v)))
+        (= (descendor-bottom b)
+          (ropt-max-if
+           (ite (and (is-elt e) (is-replaced e))
+                (realopt (bottom-border b) true)
+                (ite (or (is-box l) (is-flow-root b))
+                     (descendor-bottom l)
+                     (realopt 0.0 false))) ; TODO: should be -inf
+           (is-box v)
+           (descendor-bottom v)))))
+
        ,(smt-cond
          [(is-replaced e)
           (= (h b) (intrinsic-height e))]
@@ -650,6 +670,27 @@
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
 
+       (=> (is-line-height/normal (lineheight b))
+           (<= (* 0.1 (font-size b)) (leading b) (* 0.25 (font-size b))))
+       (=> (is-line-height/px (lineheight b))
+           (= (leading b) (line-height.px (lineheight b))))
+       (=> (is-line-height/em (lineheight b))
+           (= (leading b) (- (%of (* 100.0 (line-height.em (lineheight b))) (font-size b)) (font-size b))))
+       (=> (is-line-height/% (lineheight b))
+           (= (leading b) (- (%of (line-height.% (lineheight b)) (font-size b)) (font-size b))))
+
+       (<= (top-outer b) (text-top b) (bottom-outer b))
+       (<= (text-top b) (text-bottom b) (bottom-outer b))
+
+       ;; TODO: (y b) and (+ (y b) (font-size b)) not correct, should use baseline.
+       (ite (> (w b) 0.0)
+            (and
+             (= (ascendor-top b) (ropt-min-if (realopt (- (text-top b) (* .5 (leading b))) true) (is-box v) (ascendor-top v)))
+             (= (descendor-bottom b) (ropt-max-if (realopt (+ (text-bottom b) (* .5 (leading b))) true) (is-box v) (descendor-bottom v))))
+            (and
+             (= (ascendor-top b) (realopt 0.0 false))
+             (= (descendor-bottom b) (realopt 0.0 false))))
+
        (no-relative-offset b)
        (zero-box-model b)
        (=> (is-box v) (= (x b) (right-outer v)))
@@ -684,6 +725,9 @@
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
        (= (font-size b) (font-size p))
+       (=> (realopt.is-some? (descendor-bottom (lbox b))) (realopt.is-some? (ascendor-top (lbox b)))
+           (= (h b) (- (realopt.value (descendor-bottom (lbox b)))
+                       (realopt.value (ascendor-top (lbox b))))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))

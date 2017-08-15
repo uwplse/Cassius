@@ -105,7 +105,10 @@
   [color (rgb 0 0 0)]
   [background-color transparent])
 
-(define inheritable-properties '(text-align color background-color))
+(define-css-type (Line-Height (px Real) (% Real) (em Real) normal)
+  [line-height normal])
+
+(define inheritable-properties '(text-align color background-color line-height))
 
 (define (css-inheritable? x) (set-member? inheritable-properties x))
 

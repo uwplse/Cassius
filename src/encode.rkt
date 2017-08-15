@@ -54,6 +54,7 @@
   (define prefix (slower type))
   (match value
     [(? symbol?) (sformat "~a/~a" prefix value)]
+    [(? number?) (list (sformat "~a/em" prefix) (number->z3 value))]
     [(list 'em n) (list (sformat "~a/em" prefix) (number->z3 n))]
     [(list 'px n) (list (sformat "~a/px" prefix) (number->z3 n))]
     [(list '% n) (list (sformat "~a/%" prefix) (number->z3 n))]

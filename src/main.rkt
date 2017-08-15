@@ -56,9 +56,9 @@
            type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
            pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
            &pbox &vbox &nbox &fbox &lbox
-           width-set font-size
-           &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
-           has-contents? textalign &elt first? last?
+           width-set font-sizev leading min-top max-bottom text-top text-bottom
+           &nflow &vflow &ppflow &pbflow &anc-elt ez.in ez.out ez.sufficient
+           has-contents? lh textalign &elt first? last?
            extra ...
            color background-color ancestor)
      box-model)
@@ -72,9 +72,9 @@
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
          pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
-         width-set font-size
-         &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
-         has-contents? textalign &elt first? last?
+         width-set font-size leading min-top max-bottom text-top text-bottom
+         &nflow &vflow &ppflow &pbflow &anc-elt ez.in ez.out ez.sufficient
+         has-contents? lh textalign &elt first? last?
          extra ...
          color background-color ancestor)
    z3-box)
@@ -91,6 +91,8 @@
   (node-set! box ':fs font-size)
   (node-set! box ':fg (extract-value color))
   (node-set! box ':bg (extract-value background-color))
+  (node-set! box ':l leading)
+  (node-set! box ':fs font-size)
   (when (>= &elt 0) (node-set! box ':elt &elt)))
 
 (define (extract-elt! result elt)
