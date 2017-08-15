@@ -1,22 +1,54 @@
 #lang racket
+(require (for-syntax syntax/parse))
 
 (provide
- reap for/reap for*/reap
- sformat slower
- flags all-flags supported-features
- tree-size sdiff in-groups sequence-cons cartesian-product trieify
+ reap for/reap for*/reap for/append
+ sformat slower indent tree-size snoc dict-remove*
+ flags all-flags supported-features support-features!
  xor ->number z3-path value=?
- attribute?)
+ attribute? attributes->dict dict->attributes
+ split-symbol split-line-name
+ assert make-log
+ boolean<? lex<? output<?
+ define-by-match
+ list-intersect multi-command-line debug-mode!
+ *debug* *fuzz*)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
 
-(define supported-features '(float % unknown-selector box-sizing min-width max-width position))
+(define supported-features
+  (make-parameter
+   '(css:float css:box-sizing
+     css:min-width css:max-width css:max-height css:min-height
+     css:position css:font-size css:overflow-x css:overflow-y 
+     css:text-indent display:inline-block css:inherit css:clear
+     unit:% unit:em
+     empty-text text-align
+     unknown-selector tag:img tag:input priority:important
+     TEXT INLINE LINE BLOCK PAGE MAGIC ANON)))
 
-(define z3-path (find-executable-path "z3"))
+(define (support-features! . feats)
+  (supported-features
+   (append (supported-features)
+           (reap [sow]
+                 (let loop ([feats feats])
+                   (cond
+                    [(null? feats) (void)]
+                    [(symbol? feats) (sow feats)]
+                    [else (loop (car feats)) (loop (cdr feats))]))))))
+
+(define z3-path (find-executable-path (match (system-type 'os) ['windows "z3.exe"] [_ "z3"])))
 
 (unless z3-path
   (error "Cannot find `z3` binary; please put a `z3` binary into your PATH."))
+
+(define *debug* (make-parameter false))
+(define (debug-mode!)
+  (*debug* true)
+  (*fuzz* #f))
+
+(define *fuzz* (make-parameter '(/ 10 60)))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
@@ -33,6 +65,9 @@
 (define-syntax-rule (for*/reap [sows ...] (iters ...) body ...)
   (reap [sows ...] (for* (iters ...) body ...)))
 
+(define-syntax-rule (for/append (iters ...) body ...)
+  (apply append (for/list (iters ...) body ...)))
+
 (define (sformat templ . args)
   (string->symbol (apply format templ args)))
 
@@ -43,53 +78,6 @@
   (if (list? l)
       (apply + (map tree-size l))
       1))
-
-(define (sdiff a b sow)
-  (cond
-   [(and (not (list? a)) (not (list? b)))
-    (when (not (equal? a b)) (sow a b))]
-   [(and (list? a) (list? b))
-    (if (not (equal? (car a) (car b)))
-        (sow a b)
-        (map (curryr sdiff sow) a b))]
-   [else
-    (sow a b)]))
-
-(define (in-groups n s)
-  (if (null? s)
-      (in-list empty)
-      (let-values ([(hd tail) (split-at s n)])
-        (in-sequences
-         (apply in-parallel (map in-value hd))
-         (in-groups n tail)))))
-
-(define (sequence-cons v s)
-  (sequence-append (in-value v) s))
-
-(define (cartesian-product ls)
-  (if (null? ls)
-      (list (list))
-      (for*/list ([head (car ls)] [tail (cartesian-product (cdr ls))])
-        (cons head tail))))
-
-(define (trieify ls)
-  (define/match (single-symbol-list? l)
-    [((list (? symbol?))) #t]
-    [(_) #f])
-  (cond
-   [(null? ls)
-    (hash)]
-   [(andmap single-symbol-list? ls)
-    (map car ls)]
-   [else
-    (for/hash
-        ([(key ls*)
-          (in-hash
-           (let ([h (make-hash)])
-             (for ([(head tail) (in-dict ls)])
-               (hash-set! h head (cons tail (hash-ref h head '()))))
-             h))])
-      (values key (trieify ls*)))]))
 
 (define (xor a b) (not (equal? (not a) (not b))))
 
@@ -115,3 +103,108 @@
 
 (define (attribute? s)
   (and (symbol? s) (string-prefix? (symbol->string s) ":")))
+
+(define (attributes->dict attrs)
+  (match attrs
+    [(list (? attribute? k) (? (compose not attribute?) v) ... rest ...)
+     (cons (cons k v) (attributes->dict rest))]
+    [(list)
+     (list)]))
+
+(define (dict->attributes dict)
+  (apply append (dict->list dict)))
+
+(define (split-symbol s)
+  (for/list ([part (string-split (~a s) "/")])
+    (or (string->number part) (string->symbol part))))
+
+(define (split-line-name var)
+  (map split-symbol (string-split (~a var) "^")))
+
+(define-syntax-rule (assert x msg args ...)
+  (unless x
+    (error msg args ...)))
+
+(define (snoc lst x)
+  (append lst (list x)))
+
+(define (indent s [prefix "  "])
+  (string-trim (string-replace (string-append prefix s) "\n" (string-append "\n" prefix)) prefix #:left? #f))
+
+(define (dict-remove* dict keys)
+  (for/fold ([dict dict]) ([key keys])
+    (dict-remove dict key)))
+
+(define (make-log)
+  (define time-start (current-inexact-milliseconds))
+  (lambda (fmt . args)
+    (let* ([now (current-inexact-milliseconds)]
+           [delta (- now time-start)])
+      (set! time-start now)
+      (apply eprintf (string-append "[~as] " fmt "\n")
+             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
+             args))))
+
+(define (boolean<? b1 b2)
+  (and (not b1) b2))
+
+(define ((lex<? . <s) l1 l2)
+  (when (not (= (length <s) (length l1) (length l2)))
+    (raise
+     (make-exn:fail:contract
+      (format "(lex<? ~a): arguments must have length ~a; arguments were: ~a ~a"
+              (~v <s) (length <s) (~v l1) (~v l2))
+      (current-continuation-marks))))
+
+  (let loop ([<s <s] [l1 l1] [l2 l2])
+    (cond
+     [(and (null? <s) (null? l1) (null? l2)) false] ; equal
+     [((car <s) (car l1) (car l2)) true]
+     [((car <s) (car l2) (car l1)) false]
+     [else (loop (cdr <s) (cdr l1) (cdr l2))])))
+
+(define ((output<? f <?) a b)
+  (<? (f a) (f b)))
+
+(define-syntax-rule (define-by-match name patterns ...)
+  (define name
+    (flat-named-contract
+     'name
+     (λ (var)
+       (let name ([var var])
+         (match var
+           [patterns true] ...
+           [_ false]))))))
+
+(define/contract (list-intersect l1 l2)
+  (-> (list/c any/c) (list/c any/c) (list/c any/c))
+  "Intersect two lists, maintaining the order of the first list."
+  (filter (curry set-member? (apply set l1)) l2))
+
+(define-syntax (multi-command-line stx)
+  (syntax-parse stx
+   [(_ #:program big-name args ... #:subcommands [name:str subargs ...] ...)
+    #'(let ([true-name big-name])
+        (command-line
+         #:program true-name
+         args ...
+         #:args (type . rest)
+         (match type
+           [name
+            (multi-command-line
+             #:program (format "~a ~a" true-name name)
+             #:argv rest
+             args ...
+             subargs ...)] ...)))]
+   [(_ args ... #:subcommands [name:str subargs ...] ...)
+    #'(command-line
+       args ...
+       #:args (type . rest)
+       (match type
+         [name
+          (multi-command-line
+           #:argv rest
+           args ...
+           subargs ...)] ...))]
+   [(_ args ...)
+    #'(command-line args ...)]))

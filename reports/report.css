@@ -1,11 +1,16 @@
 body { width: 900px; margin: 3em 0; padding: 0 10px; }
-table.results { width: 100%; vertical-align: top; }
+table { width: 100%; vertical-align: top; }
+td, th { padding: 0; overflow: hidden; white-space: nowrap; }
 .results tr td:nth-child(3) { font-size: 80%; max-width: 400px; height: 2em; }
-.fail, .success, .timeout, .unsupported {text-align: center;}
-.fail    {background-color: #ff5e3a; color: #f7f7f7;}
+.fail, .error, .success, .timeout, .unsupported, .expected {text-align: center; display: block; width: 1.2em; }
+.fail {background-color: #ff5e3a; color: #f7f7f7;}
+.expected {background-color: #f7f7f7; color: #f7f7f7; border: 1px soldi 0bd318; }
+.error {background-color: #2e3436; color: #f7f7f7; font-weight: bold; }
 .success {background-color: #0bd318;}
 .timeout {background-color: #ff9500;}
 .unsupported {background-color: #8e8e93;}
-#sections td { padding: .25em .5em; }
-#sections td:nth-child(3) { font-weight: bold; }
+#sections td, #sections th { padding: .25em; min-width: 3em; text-align: right; }
+#sections td:first-child, #sections td:last-child { text-align: left; }
+#sections td:last-child { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 600px;}
+#sections td:last-child a { margin: .5ex; }
 th { text-align: left; }

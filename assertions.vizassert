@@ -1,0 +1,50 @@
+;; -*- mode: scheme -*-
+
+(define-test (text-size b)
+  (=> (is-box/text (type b)) (has-contents b)
+      (let ([eb (ancestor b (is-elt (box-elt ?)))])
+        (not (or (descends (box-elt eb) (class footer))
+                 (descends (box-elt eb) (id footer)))))
+      (>= (h b) 14)))
+
+(define-test (interactive-onscreen b)
+  (=> (is-interactive (box-elt b)) (onscreen b)))
+
+(define-test (line-width b)
+  (=> (is-box/text (type b)) (viewable b) (has-contents b)
+      (let ([line (ancestor b (is-box/line (type ?)))])
+        (=> (is-box (fflow line))
+            (<= (- (right-border (lflow line)) (left-border (fflow line)))
+                (* 80 (/ 10 19) (h b)))))))
+
+(define-test (accessible-offscreen b)
+  (=>
+   (is-box/text (type b))
+   (let ([e (ancestor b (is-elt (box-elt ?)))])
+     (or (matches (box-elt e) (id twitter))
+         (matches (box-elt e) (id facebook))
+         (matches (box-elt e) (id youtube))
+         (matches (box-elt e) (id vimeo))
+         (matches (box-elt e) (id flickr))
+         (matches (box-elt e) (id linkedin))
+         (matches (box-elt e) (id pinterest))
+         (matches (box-elt e) (id rss))
+         (matches (box-elt e) (id googleplus))))
+   (not (onscreen b))))
+
+(define-test (no-horizontal-scroll b)
+  (<= (right-border b) (right-content root-box)))
+
+(define-test (heading-size b1 b2)
+  (let ([e1 (ancestor b1 (is-elt (box-elt ?)))]
+        [e2 (ancestor b2 (is-elt (box-elt ?)))])
+    (=>
+     (is-box/text (type b1)) (is-box/text (type b2))
+     (viewable b1) (viewable b2)
+     (has-contents b1) (has-contents b2)
+     (or (and (descends (box-elt e1) (tag h1)) (descends (box-elt e2) (tag h2)))
+         (and (descends (box-elt e1) (tag h2)) (descends (box-elt e2) (tag h3)))
+         (and (descends (box-elt e1) (tag h3)) (descends (box-elt e2) (tag h4)))
+         (and (descends (box-elt e1) (tag h4)) (descends (box-elt e2) (tag h5)))
+         (and (descends (box-elt e1) (tag h5)) (descends (box-elt e2) (tag h6))))
+     (> (h b1) (h b2)))))

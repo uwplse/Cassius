@@ -8,118 +8,65 @@ Opens a page in Firefox, causes it to execute get_bench.js, and saves the result
 """
 
 from selenium import webdriver
-import SimpleHTTPServer, SocketServer, socket
+import os, sys
 import warnings
-import threading
-import os, sys, shutil
-import urlparse, urllib
+import urlparse
 import collections
 import argparse
 
-PORT=8000
-PATH="."
-SCREENSHOT=False
-
-class ScriptServer(threading.Thread):
-    def __init__(self):
-        global PORT
-        threading.Thread.__init__(self)
-        os.chdir(PATH)
-        handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-        while True:
-            try:
-                self.httpd = SocketServer.TCPServer(("", PORT), handler)
-            except socket.error:
-                PORT += 1
-            else:
-                break
-
-    def run(self):
-        self.httpd.serve_forever()
-
-    def quit(self):
-        self.httpd.shutdown()
-
-def make_server():
-    server = ScriptServer()
-    server.start()
-    return server
+SCRIPT=open("get_bench.js").read()
 
 def make_browser():
-    return webdriver.Firefox()
+    profile = webdriver.FirefoxProfile()
+    profile.set_preference("security.mixed_content.block_active_content", False)
+    profile.set_preference("security.mixed_content.block_display_content", False)
+    return webdriver.Firefox(firefox_profile=profile, log_path=os.devnull)
 
-class CassiusInput():
-    def __init__(self, fd, urls, name):
-        self.fd = fd
-        self.fd.write(""";; python get_bench.py --name {} {}
-
-(define-header header
-"")
-
-""".format(name, " ".join("'{}'".format(url) for url in urls)))
-        self.fd.flush()
-        self.ids = []
-
-    def write(self, id, text):
-        self.fd.write(text + "\n\n")
-        self.fd.flush()
-        self.ids.append(id)
-
-    def close(self):
-        self.fd.flush()
-
-def get_bench_output(browser, letter, url, file):
-    js = """window.LETTER = arguments[0]; (function(x){x.src = "http://localhost:""" + str(PORT) + """/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script"));"""
-
-    browser.execute_script(js, letter)
-    elt = browser.find_element_by_id("-x-cassius-output-block");
-    text = elt.text.encode("utf8")
-    file.write("doc-" + letter, ";; From {}\n\n{}".format(url, text))
-
-def main(urls, name=None):
-    server = make_server()
+def main(urls, name=None, screenshot=False):
     browser = make_browser()
 
-    for url in urls:
-        scheme, _, _, _, _, _ = urlparse.urlparse(url)
-        if scheme not in ["http", "file"]:
-            warnings.warn("Only http and file scheme supported (not {})".format(url))
+    try:
+        urls = ["file://" + url if url.startswith("/") else url for url in urls]
 
-    if name:
-        site_to_pages = {name:urls}
-    else:
-        site_to_pages = collections.defaultdict(list)
         for url in urls:
-            _, netloc, _, _, _, _ = urlparse.urlparse(url)
-            site_to_pages[netloc].append(url)
-
-    for (netloc, urls) in sorted(site_to_pages.items()):
-        fname = "bench/{}.rkt".format(netloc)
-        with open(fname, "wb") as f:
-            fi = CassiusInput(f, urls, netloc)
-            for i, url in enumerate(urls):
-                letter = str(i+1).rjust(len(str(len(urls))), "0")
-                iname = "bench/{}-{}.png".format(netloc, letter)
-                try:
-                    browser.get(url)
-                    if SCREENSHOT:
-                        print "Saving screenshot to", iname
-                        browser.save_screenshot(iname)
-                    print "Saving layout to {}".format(fname)
-                    get_bench_output(browser, letter, url, fi)
-                except:
-                    continue
-                scheme, _, _, _, _, _ = urlparse.urlparse(url)
-                #if scheme == "http":
-                #    src = urllib.urlopen(url)
-                #    fname2 = "bench/{}-{}.html".format(netloc, letter)
-                #    print "Saving source to {}".format(fname2)
-                #    with open(fname2, "wb") as f2:
-                #        shutil.copyfileobj(src, f2)
-            fi.close()
-
-    browser.quit()
-    server.quit()
+            scheme, _, _, _, _, _ = urlparse.urlparse(url)
+            if scheme not in ["http", "file"]:
+                warnings.warn("Only http and file scheme supported (not {})".format(scheme))
+    
+        if name:
+            site_to_pages = {name:urls}
+        else:
+            site_to_pages = collections.defaultdict(list)
+            for url in urls:
+                _, netloc, _, _, _, _ = urlparse.urlparse(url)
+                site_to_pages[netloc].append(url)
+    
+        for (netloc, urls) in sorted(site_to_pages.items()):
+            fname = "bench/{}.rkt".format(netloc)
+            with open(fname, "wb") as fi:
+                print "Saving layout to {}:".format(fname),
+                sys.stdout.flush()
+                for i, url in enumerate(urls):
+                    id = str(i+1).rjust(len(str(len(urls))), "0")
+                    try:
+                        browser.get(url)
+                        if screenshot:
+                            iname = "bench/{}-{}.png".format(netloc, id)
+                            print "Saving screenshot to", iname
+                            browser.save_screenshot(iname)
+                        browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
+                        browser.execute_script(SCRIPT + "; cassius(LETTER)")
+                        elt = browser.find_element_by_id("-x-cassius-output-block");
+                        text = elt.text.encode("utf8")
+                        fi.write(";; From {}\n\n{}\n\n".format(url, text))
+                        print "{}".format(id),
+                        sys.stdout.flush()
+                    except:
+                        import traceback
+                        traceback.print_exc()
+                        continue
+    finally:
+        browser.quit()
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
@@ -128,6 +75,4 @@ if __name__ == "__main__":
     p.add_argument("--screenshot", dest="screenshot", default=False, action="store_true", help="File name under bench/.")
     args = p.parse_args()
     
-    SCREENSHOT = args.screenshot
-
-    main(args.urls, name=args.name)
+    main(args.urls, name=args.name, screenshot=args.screenshot)

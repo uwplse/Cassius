@@ -3,22 +3,19 @@
 Cassius
 =======
 
-Cassius synthesizes CSS from examples of how a website should look.
-Unlike WYSIWYG tools like Dreamweaver or Photoshop,
-  Cassius can generate responsive designs
-  that work well even when the content or screen size change.
+Cassius is a formalization of CSS, making it possible to build tools
+that reason about the appearance of web pages.
 
 Installing
 ------------
 
 You'll need to install Racket (6.3 or later) <http://racket-lang.org>
-and Z3 <https://github.com/Z3Prover/z3> (4.3 or later). Once Racket
-and Z3 are set up, edit the `z3.sh` script, to call your installation
-of Z3. (Make sure to pass through all arguments.)
+and Z3 <https://github.com/Z3Prover/z3> (latest git; not version
+4.4.1). Make sure Z3 is in your path.
 
 Test out your Cassius installation by running, from the top-level directory,
 
-    ./cassius accept bench/introex.rkt verify
+    racket src/run.rkt accept bench/introex.rkt main
 
 This should churn for a few seconds and say, "Accepted".
 
@@ -27,7 +24,7 @@ Using Cassius
 
 Run Cassius with
 
-    ./cassius [tool] [file] [instance]
+    racket src/run.rkt [tool] [file] [instance]
 
 The `./cassius` script runs Cassius. It takes four arguments: the tool
 to run, the file to run on, and the example in that file. 
@@ -42,10 +39,41 @@ The currently-supported tools are:
 
 For example, to run the the `smt2` tool, run:
 
-    ./cassius smt2 bench/introex.rkt sketch > /tmp/out.z3
+    racket src/run.rkt smt2 bench/introex.rkt sketch /tmp/out.z3
 
 This puts a file with all the generated constraints into
 `/tmp/out.z3`.
+
+Testing Assertions
+------------------
+
+To test some assertions on a web page, write the assertion into a
+file, such as the `assertions.vizassert` that ships with Cassius. Then
+run:
+
+    racket src/run.rkt assertions [assertion-file] [assertion-name] [file] [instance]
+
+An assertion file is formatted like `assertions.vizassert`, which
+ships with several assertions drawn from common accessibility and
+usability guidelines, including:
+
+- `text-size`: text should be at least 14px tall
+- `contrast`: text should have good contrast with background
+- `interactive-onscreen`: links, buttons, and inputs should be onscreen
+- `overlapping-text`: text should not overlap other text
+- `text-width`: text should not be wider than 80 characters
+- `line-spacing`: line spacing should be at least 1.5
+- `paragraph-spacing`: paragraph spacing should be at least 1.5 line spacing
+- `selected-onscreen`: `.selected` items should be onscreen
+- `tab-ordering`: tab order should be top down and left to right
+- `button-size`: buttons should be at least 30×30px
+- `link-distinctive`: links should be a distinct color from normal text
+- `no-horizontal-scroll`: no elements should scroll horizontally
+- `interactive-distinct`: interactive elements should be a different
+  color from non-interactive ones
+
+The chosen assertion will be run on the chosen instance, both the
+render tree and browser configuration of any counterexamples will be printed.
 
 Collecting Examples
 -----------------------
@@ -63,11 +91,9 @@ Current Status
 
 Cassius currently supports a fragment of CSS 2.1:
 + Widths, padding, and margins, including `auto` margins
-+ Margin collapsing
-+ Floats
-+ Percentage margins, widths, or padding
-+ Borders
-+ Some positioning
++ Percentage and em measurements
++ Borders and Margin collapsing
++ Floats and Positioning
 + A few miscellaneous properties, like `box-sizing`.
 
 Cassius development is tracked

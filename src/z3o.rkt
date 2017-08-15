@@ -1,11 +1,9 @@
 #lang racket
-(require srfi/13)
-(require racket/set)
 (require "common.rkt")
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
          z3-check-let z3-check-fields z3-print-all z3-ground-quantifiers
-         z3-clean-no-opt z3-strip-inner-names)
+         z3-clean-no-opt z3-strip-inner-names z3-fix-rational)
 
 (define (z3-dco cmds)
   (let ([store (make-hash)])
@@ -23,13 +21,16 @@
 
     (for ([cmd cmds])
       (match cmd
-        [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type ...)
+        [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type _ ...)
          (hash-set! store name #f)]
         [_ 'ok]))
 
+    (for ([name '(border/medium border/thin border/thick text-align/start text-align/end)])
+      (hash-set! store name #t))
+
     (for ([cmd cmds])
       (match cmd
-        [`(assert ,expr)
+        [`(,(or 'assert 'assert-soft) ,expr)
          (find-used expr)]
         [(list 'define-fun name (list types ...) rtype body)
          (list 'define-fun name types rtype (find-used body))]
@@ -40,7 +41,7 @@
     (apply append
            (for/list ([cmd cmds])
              (match cmd
-               [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type ...)
+               [(list (or 'declare-fun 'declare-const 'define-fun 'define-const) name type _ ...)
                 (if (hash-ref store name #t)
                     (list cmd)
                     empty)]
@@ -48,12 +49,6 @@
 
 (define ((z3-resolve-fns . fns) cmds)
   (define resolutions (make-hash))
-  (define finite-types (make-hash))
-  
-  (define finite-type? (curry hash-has-key? finite-types))
-  (define ((constructor-tester? type) tester)
-    (let ([name (constructor-tester-name tester)])
-      (and name (member name (hash-ref finite-types type)))))
 
   (define (save input output)
     (when (and (hash-has-key? resolutions input) (not (equal? output (hash-ref resolutions input))))
@@ -73,24 +68,13 @@
 
   (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
-      [`(declare-datatypes () (,decls ...))
-       (for ([decl decls])
-         (match decl
-           [`(,name ,(? symbol? constructors) ...)
-            (hash-set! finite-types name constructors)]
-           [_ (void)]))
-       cmd]
-      [`(define-fun ,name ((,var ,(? finite-type? type))) ,rtype ,body)
-       (let loop ([body body] [values-set '()])
+      [`(define-fun ,name ((,var ,type)) ,rtype ,body)
+       (let loop ([body body])
          (match body
-           [`(ite (,(? (constructor-tester? type) tester) ,(== var)) ,value ,body*)
-            (hash-set! resolutions `(,name ,(constructor-tester-name tester)) value)
-            (loop body* (cons (constructor-tester-name tester) values-set))]
-           [_
-            (match (set-subtract (hash-ref finite-types type) values-set)
-              [(list default-name)
-               (hash-set! resolutions `(,name ,default-name) body)]
-              [_ (void)])]))
+           [`(ite (= ,(== var) ,testval) ,outvalue ,body*)
+            (hash-set! resolutions `(,name ,testval) outvalue)
+            (loop body*)]
+           [_ (void)]))
        cmd]
       [`(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
        (define input (cons fn (map resolve args)))
@@ -183,38 +167,34 @@
         [_ (void)])))
   cmds)
 
-(define ((z3-sink-functions . fns) cmds)
+(define (sink-functions expr fields)
   "Turn (fn (ite c x y)) into (ite c (fn x) (fn y))."
-  (define (field? x) (member x fns))
-  (define (sink-field expr)
-    (match expr
-      [`(,(? field? fld) (ite ,c ,x ,y))
-       `(ite ,(sink-field c) ,(sink-field (list fld x)) ,(sink-field (list fld y)))]
-      [`(,(? field? fld) ,arg)
-       (define arg* (sink-field arg))
-       (match arg*
-         [`(ite ,c ,x ,y) (sink-field `(,fld ,arg*))]
-         [_ (list fld arg*)])]
-      [(? list?) (cons (car expr) (map sink-field (cdr expr)))]
-      [_ expr]))
-  (for/list ([cmd cmds] [i (in-naturals 1)])
-    (match cmd
-      [`(assert ,expr) `(assert ,(sink-field expr))]
-      [_ cmd])))
+
+  (match expr
+    [`(,(? (curry set-member? fields) fld) (ite ,c ,x ,y))
+     `(ite ,(sink-functions c fields) ,(sink-functions (list fld x) fields) ,(sink-functions (list fld y) fields))]
+    [`(,(? (curry set-member? fields) fld) ,arg)
+     (define arg* (sink-functions arg fields))
+     (match arg*
+       [`(ite ,c ,x ,y) (sink-functions `(,fld ,arg*) fields)]
+       [_ (list fld arg*)])]
+    [(? list?) (cons (car expr) (map (curryr sink-functions fields) (cdr expr)))]
+    [_ expr]))
 
 (define ((z3-sink-fields-and . fns) cmds)
   "Turn (fld (ite c x y)) into (ite c (fld x) (fld y))."
-  (define all-names (make-hash))
-  (for ([cmd cmds])
+  (define to-sink fns)
+  (for/list ([cmd cmds])
     (match cmd
       [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
-       (for ([name names] [vars varss] #:when #t [var vars])
+       (for ([name names] [vars varss] #:when true [var vars])
          (match var
            [(? symbol?) (void)]
            [(list _ (list fields _) ...)
-            (for ([field fields]) (hash-set! all-names field #t))]))]
-      [_ (void)]))
-  ((apply z3-sink-functions (append fns (hash-keys all-names))) cmds))
+            (for ([field fields]) (set! to-sink (cons field to-sink)))]))
+       cmd]
+      [`(assert ,expr) `(assert ,(sink-functions expr to-sink))]
+      [_ cmd])))
 
 (define (z3-movedefs cmds)
   "Move each definition to be right before first use."
@@ -235,67 +215,88 @@
       (append head (cons def tail)))))
 
 (define ctr 1)
-(define (gensym name)
+(define/contract (gensym name)
+  (-> symbol? symbol?)
   (begin0 (sformat "~a$~a" name ctr)
     (set! ctr (+ ctr 1))))
 
+(define-by-match smt-expr?
+  (? symbol?)
+  (? number?)
+  (? list?))
+
 (define (capture-avoiding-substitute body bindings)
+  (capture-avoiding-substitute*
+   body
+   (if (list? bindings) (make-immutable-hash bindings) bindings)))
+
+(define (capture-avoiding-substitute* body bindings)
   (match body
-    [(? symbol?) (cdr (or (assoc body bindings) (cons body body)))]
+    [(? symbol?) (dict-ref bindings body body)]
     [`(! ,expr :named ,name)
      (define (rename head)
        (match bindings
          [`((,names . ,(? symbol? vals)) ...) (sformat "~a/~a" head (string-join (map ~a vals) "/"))]
          [_ head]))
-     `(! ,(capture-avoiding-substitute expr bindings) :named ,(rename name))]
+     `(! ,(capture-avoiding-substitute* expr bindings) :named ,(rename name))]
     [`(let ((,names ,vals) ...) ,body)
      (define body*
-       (capture-avoiding-substitute body (filter (lambda (v) (not (member (car v) names))) bindings)))
+       (capture-avoiding-substitute* body (dict-remove* bindings names)))
      `(let (,@(for/list ([name names] [val vals])
-                `(,name ,(capture-avoiding-substitute val bindings)))) ,body*)]
+                `(,name ,(capture-avoiding-substitute* val bindings)))) ,body*)]
     [(? list?)
-     (map (curryr capture-avoiding-substitute bindings) body)]
+     (map (curryr capture-avoiding-substitute* bindings) body)]
     [_ body]))
 
-(define ((z3-expand . fn-names) cmds)
-  (define fns (make-hash))
+(define/contract (expand-function expr fns)
+  (-> smt-expr? (hash/c symbol? (list/c (listof symbol?) smt-expr?)) smt-expr?)
+  (match expr
+    [`(let ((,vars ,vals) ...) ,body)
+     `(let (,@(for/list ([var vars] [val vals]) `(,var ,(expand-function val fns)))) ,(expand-function body fns))]
+    [(list (and (? symbol?) (? (curry hash-has-key? fns)) name) args ...)
+     (match-define (list names body) (hash-ref fns name))
+     (expand-function (capture-avoiding-substitute body (map cons names args)) fns)]
+    [(? list?)
+     (map (curryr expand-function fns) expr)]
+    [_ expr]))
 
-  (define (expand-term expr)
-    (match expr
-      [`(let ((,vars ,vals) ...) ,body)
-       `(let (,@(for/list ([var vars] [val vals]) `(,var ,(expand-term val)))) ,(expand-term body))]
-      [(list (? (curry hash-has-key? fns) name) args ...)
-       (match-define (list names body) (hash-ref fns name))
-       (expand-term (capture-avoiding-substitute body (map cons names args)))]
-      [(? list?)
-       (map expand-term expr)]
-      [_ expr]))
+(define ((z3-expand fn-names #:clear [clear? false]) cmds)
+  (define fns (make-hash))
 
   (for/list ([cmd cmds])
     (match cmd
-      [`(define-fun ,(? (curryr memq fn-names) name) ((,names ,types) ...) ,rtype ,body)
-       (hash-set! fns name (list names (expand-term body)))
-       `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-term body))]
+      [`(define-fun ,(? (curry set-member? fn-names) name) ((,names ,types) ...) ,rtype ,body)
+       (hash-set! fns name (list names (expand-function body fns)))
+       (if clear?
+           `(echo ,(format "(define-fun ~a ...)" name))
+           `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-function body fns)))]
       [`(define-fun ,name ((,names ,types) ...) ,rtype ,body)
-       `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-term body))]
+       `(define-fun ,name (,@(map list names types)) ,rtype ,(expand-function body fns))]
       [(list 'assert expr)
-       (list 'assert (expand-term expr))]
+       (list 'assert (expand-function expr fns))]
       [_ cmd])))
 
-(define (z3-unlet cmds)
-  (define (de-let expr)
-    (match expr
-      [`(let ([,vars ,vals] ...) ,body)
-       (de-let (capture-avoiding-substitute body (map cons vars vals)))]
-      [(? list?) (cons (car expr) (map de-let (cdr expr)))]
-      [_ expr]))
+(define (expand-let expr)
+  (match expr
+    [`(let* () ,body)
+     body]
+    [`(let* ([,var ,val] ,rest ...) ,body)
+     (expand-let
+      (capture-avoiding-substitute
+       `(let* (,@rest) ,body)
+       (list (cons var val))))]
+    [`(let ([,vars ,vals] ...) ,body)
+     (expand-let (capture-avoiding-substitute body (map cons vars vals)))]
+    [(? list?) (cons (car expr) (map expand-let (cdr expr)))]
+    [_ expr]))
 
+(define (z3-unlet cmds)
   (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
       [`(define-fun ,name (,signature) ,rtype ,body)
-       `(define-fun ,name (,signature) ,rtype ,(de-let body))]
+       `(define-fun ,name (,signature) ,rtype ,(expand-let body))]
       [(list 'assert expr)
-       (list 'assert (de-let expr))]
+       (list 'assert (expand-let expr))]
       [_ cmd])))
 
 (define (z3-check-let cmds)
@@ -477,24 +478,42 @@
 
   (define (simpl expr)
     (match expr
+      [`(ite ,a ,b ,c)
+       (match (simpl a)
+         ['true (simpl b)]
+         ['false (simpl c)]
+         [expr (simpl1 `(ite ,expr ,(simpl b) ,(simpl c)))])]
+      [`(=> ,a ,b)
+       (match (simpl a)
+         ['false 'true]
+         [expr (simpl1 `(=> ,expr ,(simpl b)))])]
+      [`(and ,exprs ...)
+       (let loop ([exprs exprs] [rest '()])
+         (if (null? exprs)
+             (match rest
+               ['() 'true]
+               [(list x) x]
+               [_ (cons 'and rest)])
+             (match (simpl (car exprs))
+               ['true (loop (cdr exprs) rest)]
+               ['false 'false]
+               [expr (loop (cdr exprs) (cons expr rest))])))]
+      [`(or ,exprs ...)
+       (let loop ([exprs exprs] [rest '()])
+         (if (null? exprs)
+             (match rest
+               ['() 'false]
+               [(list x) x]
+               [_ (cons 'or rest)])
+             (match (simpl (car exprs))
+               ['true 'true]
+               ['false (loop (cdr exprs) rest)]
+               [expr (loop (cdr exprs) (cons expr rest))])))]
       [(? list?) (simpl1 (map simpl expr))]
       [_ expr]))
 
   (define (simpl1 expr)
     (match expr
-      [`(,(? constructor-tester? tester)
-         ,(or (list (? constructor? constructor) _ ...) (? constructor? constructor)))
-       (define test-variant (string->symbol (string-join (rest (string-split (~a tester) "-")) "-")))
-       (unless (member test-variant (hash-ref constructors (hash-ref types constructor)))
-         (error "Invalid tester/constructor combination" tester constructor))
-       (if (equal? test-variant constructor) 'true 'false)]
-      [`(,(? constructor-tester? tester) ,(? (curry hash-has-key? known-constructors) var))
-       (if (equal? tester (hash-ref known-constructors var)) 'true 'false)]
-      [(? (curry hash-has-key? known-constructors) var)
-       (match (hash-ref known-constructors var)
-         ['is-true 'true]
-         ['is-false 'false]
-         [_ var])]
       [`(ite false ,a ,b) b]
       [`(ite true ,a ,b) a]
       [`(ite ,c ,a ,a) a]
@@ -509,6 +528,16 @@
       [`(not false) 'true]
       [`(not true) 'false]
       [`(and) `true]
+      ;; DOMAIN SPECIFIC
+      [`(is-no-box (get/box -1)) 'true]
+      [`(is-box (get/box -1)) 'false]
+      [`(is-no-box (get/box ,(? number?))) 'false]
+      [`(is-box ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) 'true]
+      [`(is-no-elt (get/elt -1)) 'true]
+      [`(is-elt (get/elt -1)) 'false]
+      [`(is-no-elt (get/elt ,(? number?))) 'false]
+      [`(is-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'true]
+      ;; END DOMAIN SPECIFIC
       [(list 'and rest ...)
        (if (member 'false rest)
            'false
@@ -521,6 +550,19 @@
              (match rest* [`() 'false] [`(,x) x] [`(,x ...) `(or ,@x)])))]
       [`(or) `false]
       [(list '= a a) 'true]
+      [`(,(? constructor-tester? tester)
+         ,(or (list (? constructor? constructor) _ ...) (? constructor? constructor)))
+       (define test-variant (string->symbol (string-join (rest (string-split (~a tester) "-")) "-")))
+       (unless (member test-variant (hash-ref constructors (hash-ref types constructor)))
+         (error "Invalid tester/constructor combination" tester constructor))
+       (if (equal? test-variant constructor) 'true 'false)]
+      [`(,(? constructor-tester? tester) ,(? (curry hash-has-key? known-constructors) var))
+       (if (equal? tester (hash-ref known-constructors var)) 'true 'false)]
+      [(? (curry hash-has-key? known-constructors) var)
+       (match (hash-ref known-constructors var)
+         ['is-true 'true]
+         ['is-false 'false]
+         [_ var])]
       [_ expr]))
 
   (for/reap [sow] ([i (in-naturals)] [cmd cmds])
@@ -603,19 +645,40 @@
 (define (z3-clean-no-opt cmds)
   (for/list ([cmd cmds])
     (match cmd
-      [`(assert (! ,term :opt ,_))
-       `(assert term)]
+      [`(assert (=> ,c (! ,terms ... :opt ,_)))
+       `(assert (=> ,c (! ,@terms)))]
+      [`(assert (! (! ,terms ...  :opt ,_) ,rest ...))
+       `(assert (! ,@terms ,@rest))]
       [`(assert (! ,terms ... :opt ,_))
        `(assert (! ,@terms))]
       [_ cmd])))
 
+(define (fix-rational expr)
+  (match expr
+    [`(! ,term :named ,n)
+     `(! ,(fix-rational term) :named ,n)]
+    [(? list?) (map fix-rational expr)]
+    [(? (and/c rational? exact? (not/c integer?)))
+     `(/ ,(exact->inexact (numerator expr)) ,(exact->inexact (denominator expr)))]
+    [_ expr]))
+
+(define (z3-fix-rational cmds)
+  (for/list ([cmd cmds])
+    (match cmd
+      [`(define-fun ,name (,vars ...) ,rtype ,body)
+       `(define-fun ,name (,@vars) ,rtype ,(fix-rational body))]
+      [`(assert ,body)
+       `(assert ,(fix-rational body))]
+      [_ cmd])))
+
+(define (strip-names expr)
+  (match expr
+    [`(! ,term :named ,_)
+     (strip-names term)]
+    [(? list?) (map strip-names expr)]
+    [_ expr]))
+
 (define (z3-strip-inner-names cmds)
-  (define (strip-names expr)
-    (match expr
-      [`(! ,term :named ,_)
-       (strip-names term)]
-      [(? list?) (map strip-names expr)]
-      [_ expr]))
   (for/list ([cmd cmds])
     (match cmd
       [`(define-fun ,name (,vars ...) ,rtype ,body)

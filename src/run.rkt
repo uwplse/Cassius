@@ -1,124 +1,218 @@
 #lang racket
 
-(require racket/runtime-path racket/path)
-(require racket/cmdline)
-(require "common.rkt")
-(require "dom.rkt")
-(require "main.rkt")
-(require "frontend.rkt")
-(require "input.rkt")
-(require "modify-dom.rkt")
-(require "model-check.rkt")
-(require "print/core.rkt")
-(require "print/css.rkt")
-(require "print/smt.rkt")
-(require math/base)
+(require racket/cmdline (only-in xml write-xexpr)
+         "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
+         "frontend.rkt" "actions.rkt" "solver.rkt"
+         "print/tree.rkt" "print/css.rkt" "print/html.rkt" "print/smt.rkt")
 
-(provide run-file)
+(provide dom-strip-positions)
 
-(define num-holes 5)
+(define (dom-strip-positions d)
+  (define boxes*
+    (let loop ([tree (dom-boxes d)])
+      (match-define (list (list type cmds ...) children ...) tree)
+      (cons
+       (match type
+         [(or 'BLOCK 'INLINE 'VIEW 'LINE 'ANON)
+             (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y :w :h)) car) (attributes->dict cmds))))]
+         ['TEXT
+          (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y)) car) (attributes->dict cmds))))]
+         [_ (cons type cmds)])
+       (map loop children))))
+  (struct-copy dom d [boxes boxes*]))
 
-(define (run-file fname pname #:debug [debug '()] #:output [outname #f] #:solve [solve? #t] #:truncate truncate)
-  (define out (if outname (open-output-file outname #:exists 'replace) (current-output-port)))
-  (define res
-    (match (hash-ref (call-with-input-file fname parse-file) (string->symbol pname))
-      [(problem desc url header sheet documents features #f)
-       (define documents*
-         (if truncate
-             (map (curry dom-limit-depth truncate) documents)
-             documents))
-       (parameterize ([current-output-port out])
-         (if solve?
-             (solve-problem header sheet documents* out debug #f)
-             (print-problem sheet documents* out debug #f)))
-       #;(for ([i (in-range 10)])
-         (define sheet*
-           (for/fold ([sheet sheet]) ([j (in-range num-holes)])
-             (let ([k (random-integer 0 (length sheet))])
-               (list-update sheet k (λ (r) (cons (car r) '(?)))))))
-         (solve-problem header sheet* documents out solve debug #f))]
-      [(problem desc url header sheet (list document) features test)
-       (match-define (dom name ctx tree) document)
-       (let/ec stop
-         (define port (if (member 'solver debug) out (open-output-string)))
-         (match (parameterize ([current-output-port port] [current-error-port port])
-                  (solve-problem "" sheet (list (dom name ctx tree)) port solve? debug test))
-           [#t (printf ". ")]
-           [#f
-            (when (not (member 'solver debug))
-              (printf "~a\n" (get-output-string port)))
-            (pretty-print tree)])
-         (when (not solve?) (stop #t)))
-         #;(for* ([i (in-naturals)] [concrete (generate-from-template tree i)])
-           (define port (if (member 'solver debug) out (open-output-string)))
-           (parameterize ([current-output-port port] [current-error-port port])
-             (match (solve-problem "" sheet (list (dom name ctx concrete)) port solve debug test)
-               [#t (printf ". ")]
-               [#f
-                (newline)
-                (when (not (member 'solver debug))
-                  (write (get-output-string port)))
-                (pretty-print concrete)]))
-           (when (not solve) (stop #t)))]))
-  (when outname (close-output-port out))
-  res)
+(define (dom-set-range d)
+  (define ctx*
+    (for/fold ([ctx (dom-properties d)])
+        ([(field value)
+          #hash([:w . ((between 1024 1920))]
+                [:h . ((between 800 1080))]
+                [:fs . ((between 16 32))])])
+      (dict-set ctx field value)))
+  (struct-copy dom d [properties ctx*]))
 
-(define (print-problem sheet documents out debug test)
-  (display (smt->string (constraints (list sheet) documents test)))
-  #t)
+;; TODO: Not currently used
+(define (test-actions problem)
+  (for ([action (dict-ref problem ':actions '())])
+    (match-define (list target act (cons froms tos) ...) action)
+    (for ([from froms] [to tos])
+      (define from* (parse-tree from))
+      (interpret-action target act (apply append (dict-ref problem ':scripts '())) from*)
+      (define diff (elements-difference (parse-tree to) from*))
+      (when diff
+        (eprintf "Failed ~a on ~a\n  " act target)
+        (pretty-print diff)))))
 
-(define (solve-problem header sheet documents out debug test)
-  (define res
-    (with-handlers
-        ([exn:break? (λ (e) 'break)]
-         [exn:fail? (λ (e) (list 'error e))])
-      (solve (list sheet) documents test #:debug debug)))
+(define (wrapped-solve sheets documents #:test [test #f])
+  (with-handlers
+      ([exn:break? (λ (e) 'break)]
+       [exn:fail? (λ (e) (list 'error e))])
+    (solve sheets documents test)))
 
-  (match* (test res)
-    [(#f (success stylesheet tree))
-     #;(printf "~a~a" (header->string header) (stylesheet->string model))
-     (eprintf "Synthesized a stylesheet. Success!\n")]
-    [(#f (failure stylesheet trees))
-     (eprintf "Unsatisfiable, core of ~a constraints\n" (length core))]
-    [(`(forall (,vars ...) ,query) (success stylesheet tree))
-     #;(print-counterexample model documents sheet)
-     #;(for ([var vars])
-     (define boxname (hash-ref model (sformat "counterexample/~a" var)))
-     (printf "~a ~a\n" var (print-type 'Box (hash-ref model (sformat "~a-box" boxname)))))
-     (eprintf "Counterexample found! Failure.\n")]
-    [(`(forall (,vars ...) ,query) (failure core))
-     (eprintf "No counterexamples found. Success!\n")]
-    [(_ (list 'error e))
+(define (do-accept problem)
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
+    [(success stylesheet trees doms)
+     (when (*debug*)
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fg :bg :fs :elt)))))
+     (eprintf "Accepted!\n")]
+    [(failure stylesheet trees)
+     (displayln (stylesheet->string stylesheet))
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :style))))
+     (eprintf "Rejected.\n")]
+    [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
-    [(_ 'break)
-     (eprintf "Query terminated. Failure.\n")])
+    ['break
+     (eprintf "Terminated.\n")]))
 
-  (and (or (success? res) (failure? res)) (xor test (success? res))))
+(define (do-debug problem)
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
+    [(success stylesheet trees doms)
+     (eprintf "Different renderings possible.\n")
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
+    [(failure stylesheet trees)
+     (displayln (stylesheet->string stylesheet))]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
+(define (do-dump problem #:screenshot [screenshot #f])
+  (match-define (list (dom _ _ _ tree)) (dict-ref problem ':documents))
+  (define w (node-get tree ':w))
+  (write-xexpr
+   `(html ()
+     (body ()
+      ,@(if screenshot
+            `((img ((src ,screenshot) (w ,w) (style "opacity:.4;position:absolute;top:0;left:0;"))))
+            '())
+      ,@
+      (let loop ([tree tree])
+        (match (car tree)
+          [(list (or 'LINE 'VIEW 'ANON) _ ...) (append-map loop (cdr tree))]
+          [(list (or 'BLOCK 'INLINE 'MAGIC) attrs ...)
+           (define box-style "display: block; box-sizing: border-box; position: absolute; border: 2px solid black;")
+           (cons
+            `(div ((style ,box-style)
+                   ,@
+                   (for/list ([attr '(:w :h :x :y)] #:when (member attr attrs))
+                     (define property (match attr [':w 'width] [':h 'height] [':x 'left] [':y 'top]))
+                     `(,property ,(format "~avw" (real->double-flonum
+                                                  (/ (* (->number (cadr (member attr attrs))) w) 100)))))))
+            (append-map loop (cdr tree)))]))))))
+
+(define (do-export problem)
+  (display
+   (elements->string
+    (parse-tree (dom-elements (car (dict-ref problem ':documents))))
+    #:sheets (dict-ref problem ':sheets '())
+    #:scripts (dict-ref problem ':scripts '())
+    #:title (dict-ref problem ':title #f))))
+
+(define (do-render problem)
+  (define documents (map dom-strip-positions (dict-ref problem ':documents)))
+  (match (wrapped-solve (dict-ref problem ':sheets) documents)
+    [(success stylesheet trees doms)
+     (eprintf "Rendered the following layout:\n")
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h))))]
+    [(failure stylesheet trees)
+     (eprintf "Unable to render.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Rendering terminated.\n")]))
+
+(define (do-sketch problem)
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
+    [(success stylesheet trees doms)
+     (displayln (stylesheet->string stylesheet))]
+    [(failure stylesheet trees)
+     (eprintf "Rejected.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
+(define (do-smt2 problem output)
+  (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents))))
+  (call-with-output-file output #:exists 'replace (curry displayln out)))
+
+(define (do-verify problem)
+  (define documents (map dom-strip-positions (dict-ref problem ':documents)))
+  (match
+      (parameterize ([*fuzz* #f])
+        (wrapped-solve (dict-ref problem ':sheets) documents
+                       #:test (dict-ref problem ':test)))
+    [(success stylesheet trees doms)
+     (eprintf "Counterexample found!\n")
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fg :bg :fs :elt))))
+     (printf "\n\nConfiguration:\n")
+     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+       (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
+    [(failure stylesheet trees)
+     (eprintf "Verified.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
+(define (get-problem fname pname)
+  (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
 (module+ main
-  (define solve? #t)
   (define debug '())
-  (define out-file #f)
-  (define truncate #f)
+  (define screenshot #f)
 
-  (command-line
+  (multi-command-line
    #:program "cassius"
+
    #:multi
-   [("--truncate") level "Truncate the tree to this level"
-    (set! truncate (string->number level))]
-   [("-d" "--debug") type "Turn on debug information"
-    (set! debug (cons (string->symbol type) debug))]
-   [("-c" "--constraints") "Don't solve the constraints, just output them"
-    (set! solve? #f)]
-   [("-f" "--feature") name "Toggle a feature; use -name and +name to unset or set"
-    (cond
-      [(equal? (substring name 0 1) "+") (flags (cons (string->symbol (substring name 1)) (flags)))]
-      [(equal? (substring name 0 1) "-") (flags (remove (string->symbol (substring name 1)) (flags)))]
-      [else
-       (define name* (string->symbol name))
-       (flags (if (memq name* (flags)) (remove name* (flags)) (cons name* (flags))))])]
-   #:once-each
-   [("-o" "--output") fname "File name for final CSS file"
-    (set! out-file fname)]
-   #:args (fname problem)
-   (exit (if (run-file fname problem #:output out-file #:debug debug #:solve solve? #:truncate truncate) 0 1))))
+   [("-d" "--debug") "Turn on debug mode"
+    (*debug* true)]
+   [("+x") name "Set an option" (flags (set-add (flags) (string->symbol name)))]
+   [("-x") name "Unset an option" (flags (set-remove (flags) (string->symbol name)))]
+
+   #:subcommands
+   ["accept"
+    #:args (fname problem)
+    (do-accept (get-problem fname problem))]
+   ["debug"
+    #:args (fname problem)
+    (do-debug (get-problem fname problem))]
+   ["dump"
+    #:once-each
+    [("--screenshot") sname "File with a web page screenshot"
+     (set! screenshot sname)]
+    #:args (fname problem)
+    (do-debug (get-problem fname problem))]
+   ["export"
+    #:args (fname problem)
+    (do-export (get-problem fname problem))]
+   ["render"
+    #:args (fname problem)
+    (do-render (get-problem fname problem))]
+   ["sketch"
+    #:args (fname problem)
+    (do-sketch (get-problem fname problem))]
+   ["smt2"
+    #:once-each
+    #:args (fname problem output)
+    (do-smt2 (get-problem fname problem) output)]
+   ["verify"
+    #:args (fname problem)
+    (do-verify (get-problem fname problem))]
+   ["assertions"
+    #:args (aname assertion fname problem)
+    (define prob (get-problem fname problem))
+    (define assertions
+      (call-with-input-file aname
+        (λ (p)
+          (for/hash ([assertion (in-port read p)])
+            (match-define `(define-test (,name ,vars ...) ,body) assertion)
+            (values name `(forall ,vars ,body))))))
+    (define documents
+      (map (compose dom-set-range dom-strip-positions)
+           (dict-ref prob ':documents)))
+    (do-verify
+     (dict-set
+      (dict-set prob ':documents documents)
+      ':test (list (dict-ref assertions (string->symbol assertion)))))]))

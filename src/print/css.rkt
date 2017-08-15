@@ -1,39 +1,38 @@
 #lang racket
 (require "../common.rkt")
-(provide stylesheet->string header->string value->string selector->string rule->string)
+(provide stylesheet->string value->string selector->string rule->string)
 
 (define (stylesheet->string sheet)
-  (format "/* Generated code below */\n\n~a\n"
-          (string-join (map rule->string sheet) "\n\n")))
-
-(define (header->string header)
-  (format "/* Hand-written header */\n\n~a\n\n" header))
+  (string-join (map rule->string sheet) "\n\n"))
 
 (define (rule->string rule)
   (define selector (car rule))
   (match-define (list (list properties valuess ...) ...) (filter list? (cdr rule)))
   (with-output-to-string
     (λ ()
-      (when (member ':style rule) (printf "[inline style] "))
+      (when (member ':style rule) (printf "[inline] "))
+      (when (member ':browser rule) (printf "[browser] "))
+      (when (member ':user rule) (printf "[user] "))
       (printf "~a {\n" (selector->string selector))
       (for ([property properties] [values valuess])
-        (printf "  ~a:" property)
-        (for ([value values])
-          (match value
-            [`(,(or 'px '% 'em 'ex) 0)
-             (printf " 0")]
-            [`(bad ,val)
-             (printf " \33[1;31m~a\33[0m" (value->string val))]
-            [_
-             (printf " ~a" (value->string value))]))
-        (printf ";\n"))
+        (if (equal? values '((bad)))
+            (printf "  \33[9;31m~a\33[0m;\n" property)
+            (printf "  ~a: ~a;\n" property 
+                    (string-join
+                     (for/list ([value values])
+                       (match value
+                         [`(bad ,val)
+                          (format "\33[1;31m~a\33[0m" (value->string val))]
+                         [val
+                          (format "~a" (value->string val))]))
+                     " "))))
       (printf "}"))))
 
 (define/match (value->string value)
   [(`(,_ 0.0)) "0"]
   [(`(px ,px)) (format "~apx" px)]
   [(`(% ,pct)) (format "~a%" pct)]
-  [((? symbol?)) (~a value)])
+  [(_) (~a value)])
 
 (define (selector->string selector)
   (match selector

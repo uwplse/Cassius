@@ -4,30 +4,38 @@
 (require "css.rkt")
 (provide tree->string)
 
-(define (tree->string tree #:indent [indent 0] #:attrs [attrs '(:tag :id :class)])
-  (format "~a([~a~a]~a~a)"
+(define (tree->string tree #:indent [indent 0] #:attrs [attrs '()])
+  (format "~a([~a]~a~a)"
           (build-string indent (const #\space))
-          (caar tree)
           (string-join
-           (for/list ([(cmd value) (in-groups 2 (cdar tree))] #:when (set-member? attrs cmd))
-             (string-append " " (measure->string cmd value)))
-           "")
+           (cons (~a (caar tree))
+                 (for/list ([(cmd value) (in-dict (attributes->dict (cdar tree)))]
+                            #:when (set-member? attrs cmd))
+                   (measure->string cmd value)))
+           " ")
           (if (null? (cdr tree)) "" "\n")
           (string-join (map (λ (t) (tree->string t #:indent (+ indent 1) #:attrs attrs)) (cdr tree)) "\n")))
 
 (define/match (measure->string cmd value)
-  [(':style val)
+  [(':style (list value))
    (format ":style \"~a\""
            (string-join
             (for/list ([(property value) (in-dict value)])
-              (match (car value)
-                [`(bad ,val)
-                 (format "\33[1;31m~a: ~a\33[0m" property (value->string val))]
-                [`(bad)
-                 (format "\33[9;31m~a\33[0m" property)]
-                [val
-                 (format "~a: ~a" property (value->string val))]))
+              (if (equal? value '((bad)))
+                  (format "\33[9;31m~a\33[0m" property)
+                   (format "~a: ~a"
+                           property
+                           (string-join
+                            (for/list ([value values])
+                              (match value
+                                [`(bad ,val)
+                            (format "\33[1;31m~a\33[0m" (value->string val))]
+                                [val
+                                 (format "~a" (value->string val))]))
+                            " "))))
             "; "))]
-  [(_ `(bad ,value)) (format "\33[1;31m~a ~a\33[0m" cmd value)]
-  [(_ `(fixed ,value)) (format "\33[1;32m~a ~a\33[0m" cmd value)]
-  [(_ value) (format "~a ~a" cmd value)])
+  [(_ (list `(bad ,value))) (format "\33[1;31m~a ~a\33[0m" cmd value)]
+  [(_ (list `(fixed ,value))) (format "\33[1;32m~a ~a\33[0m" cmd value)]
+  [(_ (list value)) (format "~a ~a" cmd value)]
+  [(_ (list vals ..2)) (string-join (map (compose (curry measure->string cmd) list) vals) " ")]
+  )

@@ -1,54 +1,53 @@
 #lang racket
 
-(require "common.rkt")
-(require "dom.rkt")
-(require "modify-dom.rkt")
-
-(provide parse-file (struct-out problem))
-
-(struct problem (desc url header sheet documents features test))
+(require "common.rkt" "dom.rkt" "tree.rkt")
+(provide parse-file)
 
 (define (parse-file port)
   (define problems (make-hash))
-  (define headers (make-hash))
   (define sheets (make-hash))
   (define docs (make-hash))
-
-  (define (parse-document name)
-    (match name
-      [`(limit-depth ,n ,x) (dom-limit-depth n (parse-document x))]
-      [`(strip-positions ,x) (dom-strip-positions (parse-document x))]
-      [`(print-all ,x) (dom-print-all (parse-document x))]
-      [(? symbol?) (hash-ref docs name)]))
+  (define layouts (make-hash))
+  (define actions (make-hash))
+  (define scripts (make-hash))
 
   (for ([expr (in-port read port)])
     (match expr
       [`(define-stylesheet ,name ,rules ...)
-       (define rules*
-         (for/list ([rule rules])
-           (if (equal? rule '?) '(? ?) rule)))
-       (hash-set! sheets name rules*)]
-      [`(define-document (,name #:width ,width) ,tree)
-       (hash-set! docs name (dom name (rendering-context #f)  `([VIEW :w ,width] ,tree)))]
-      [`(define-document (,name #:width ,width #:browser ,browser) ,tree)
-       (hash-set! docs name (dom name (rendering-context browser)
-                                 `([VIEW :w ,width] ,tree)))]
-      [`(define-document (,name #:width ,width) ,tree)
-       (hash-set! docs name (dom name (rendering-context #f)  `([VIEW :w ,width] ,tree)))]
+       (dict-set! sheets name rules)]
+      [`(define-layout (,name ,rest ...) ,tree)
+       (define properties (attributes->dict rest))
+       (dict-set! layouts name (dom name properties tree tree))]
       [`(define-document ,name ,tree)
-       (hash-set! docs name (dom name (rendering-context #f) tree))]
-      [`(define-header ,name ,header)
-       (hash-set! headers name header)]
-      [`(define-problem ,name #:test ,test #:sheet ,sheet #:documents ,documents ...)
-       (hash-set! problems name
-                  (problem #f #f #f (hash-ref sheets sheet)
-                           (map parse-document documents) '() test))]
-      [`(define-problem ,name #:header ,header #:sheet ,sheet #:documents ,documents ...)
-       (hash-set! problems name
-                  (problem #f #f (hash-ref headers header) (hash-ref sheets sheet)
-                           (map parse-document documents) '() #f))]
-      [`(define-problem ,name ,desc #:url ,url #:header ,header #:sheet ,sheet #:documents ,documents ... #:features ,feats)
-       (hash-set! problems name
-                  (problem desc url (hash-ref headers header) (hash-ref sheets sheet)
-                           (map parse-document documents) feats #f))]))
+       (dict-set! docs name tree)]
+      [`(define-action ,name ,target ,evt (,froms ,tos) ...)
+       (define deref (curry map (curry dict-ref docs)))
+       (dict-set! actions name (list* target evt (map cons (deref froms) (deref tos))))]
+      [`(define-script ,name
+          (handle ,sel (,evt ,bindings ...) ,acts ...) ...)
+       (dict-set! scripts name (map list* sel evt bindings acts))]
+      [`(define-problem ,name ,rest ...)
+       (define properties (attributes->dict rest))
+       (define (get-from key hash)
+         (when (dict-has-key? properties key)
+           (define val*
+             (for/list ([name (dict-ref properties key)])
+               (dict-ref hash name)))
+           (set! properties (dict-set properties key val*))))
+
+       (get-from ':sheets sheets)
+       (get-from ':documents docs)
+       (get-from ':layouts layouts)
+       (get-from ':actions actions)
+       (get-from ':scripts scripts)
+
+       (when (and (dict-has-key? properties ':layouts) (dict-has-key? properties ':documents))
+         (define layouts*
+           (for/list ([doc (dict-ref properties ':documents)]
+                      [layout (dict-ref properties ':layouts)])
+             (dom (dom-name layout) (dom-properties layout) doc (dom-boxes layout))))
+         (set! properties (dict-set properties ':documents layouts*)))
+
+       (dict-set! problems name properties)]))
+
   problems)
