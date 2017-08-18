@@ -449,6 +449,21 @@
             (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
                 (= (right-outer b) (- (right-padding pp) temp-right))))))
 
+  ;; Helper method for computing the line height and leading of a box
+  (define-fun compute-line-height ((b Box)) Bool
+    (and
+     ,(smt-cond
+       [(is-line-height/normal (lineheight b))
+        (<= (* 1.1 (font-size b)) (clh b) (* 1.25 (font-size b)))]
+       [(is-line-height/px (lineheight b))
+        (= (clh b) (line-height.px (lineheight b)))]
+       [(is-line-height/em (lineheight b))
+        (= (clh b) (%of (* 100.0 (line-height.em (lineheight b))) (font-size b)))]
+       [(is-line-height/% (lineheight b))
+        (= (clh b) (%of (line-height.% (lineheight b)) (font-size b)))]
+       [else false])
+     (= (leading b) (- (max-if (clh b) (is-box (vbox b)) (clh (vbox b))) (font-size b)))))
+
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
   ;; and positioned layout. By and large, these functions refer to the
@@ -558,6 +573,8 @@
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
 
+       (compute-line-height b)
+
        ,(smt-cond
          [(or (is-position/absolute (position b)) (is-position/fixed (position b)))
           (a-block-positioned-box b)]
@@ -591,14 +608,15 @@
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
-       (=> (or (is-box l) (is-box v) (and (is-elt e) (is-replaced e)) (is-flow-root b))
-        (and (= (ascendor-top b)
+       (compute-line-height b)
+
+       (= (ascendor-top b)
           (ropt-min-if
            (ite (and (is-elt e) (is-replaced e))
                 (realopt (top-border b) true)
                 (ite (or (is-box l) (is-flow-root b))
                      (ascendor-top l)
-                     (realopt 0.0 false))) ; TODO: should be +inf
+                     (realopt 0.0 false)))
            (is-box v)
            (ascendor-top v)))
         (= (descendor-bottom b)
@@ -607,9 +625,9 @@
                 (realopt (bottom-border b) true)
                 (ite (or (is-box l) (is-flow-root b))
                      (descendor-bottom l)
-                     (realopt 0.0 false))) ; TODO: should be -inf
+                     (realopt 0.0 false)))
            (is-box v)
-           (descendor-bottom v)))))
+           (descendor-bottom v)))
 
        ,(smt-cond
          [(is-replaced e)
@@ -670,17 +688,8 @@
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
 
-       (=> (is-line-height/normal (lineheight b))
-           (<= (* 0.1 (font-size b)) (leading b) (* 0.25 (font-size b))))
-       (=> (is-line-height/px (lineheight b))
-           (= (leading b) (line-height.px (lineheight b))))
-       (=> (is-line-height/em (lineheight b))
-           (= (leading b) (- (%of (* 100.0 (line-height.em (lineheight b))) (font-size b)) (font-size b))))
-       (=> (is-line-height/% (lineheight b))
-           (= (leading b) (- (%of (line-height.% (lineheight b)) (font-size b)) (font-size b))))
-
-       (<= (top-outer b) (text-top b) (bottom-outer b))
-       (<= (text-top b) (text-bottom b) (bottom-outer b))
+       (compute-line-height b)
+       (<= (top-outer b) (text-top b) (text-bottom b) (bottom-outer b))
 
        ;; TODO: (y b) and (+ (y b) (font-size b)) not correct, should use baseline.
        (ite (> (w b) 0.0)

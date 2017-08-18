@@ -10,7 +10,6 @@
 
 (define-constraints tree-types
   (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
-
   (define-fun ropt-max-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
          (ite (realopt.is-some? x)
               (ite (and y? (realopt.is-some? y))
@@ -19,7 +18,6 @@
                         y)
                    x)
               y))
-
   (define-fun ropt-min-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
          (ite (realopt.is-some? x)
               (ite (and y? (realopt.is-some? y))
@@ -43,6 +41,7 @@
                 (width-set Bool) ; used for dependency creation only
                 (font-size Real) (leading Real) (ascendor-top RealOpt) (descendor-bottom RealOpt)
                 (text-top Real) (text-bottom Real) ; TODO: how do we compute this? Can we compute this?
+                (clh Real) ; computed line height
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
