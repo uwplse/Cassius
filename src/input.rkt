@@ -5,6 +5,7 @@
 
 (define (parse-file port)
   (define problems (make-hash))
+  (define fonts (make-hash))
   (define sheets (make-hash))
   (define docs (make-hash))
   (define layouts (make-hash))
@@ -15,6 +16,8 @@
     (match expr
       [`(define-stylesheet ,name ,rules ...)
        (dict-set! sheets name rules)]
+      [`(define-fonts ,name ,rules ...)
+       (dict-set! fonts name rules)]
       [`(define-layout (,name ,rest ...) ,tree)
        (define properties (attributes->dict rest))
        (dict-set! layouts name (dom name properties tree tree))]
@@ -36,6 +39,7 @@
            (set! properties (dict-set properties key val*))))
 
        (get-from ':sheets sheets)
+       (get-from ':fonts fonts)
        (get-from ':documents docs)
        (get-from ':layouts layouts)
        (get-from ':actions actions)

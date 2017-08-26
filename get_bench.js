@@ -1131,7 +1131,10 @@ function page2cassius(name) {
         text += dump_rule("#" + eid, style[eid], features, true);
     }
     text += ")\n\n";
-    text += "(define-layout (" + name
+
+	text += dump_fonts(name);
+
+    text += "\n\n(define-layout (" + name
     var props = {browser: "firefox", matched: "true", w: page.props.w, h: page.props.h, fs: 16 };
     for (var prop in props) {
         if (typeof props[prop] !== "undefined") {
@@ -1197,27 +1200,19 @@ function get_font_metrics(font, size, txt) {
 	context.textBaseline="alphabetic";
 	context.fillText(txt, 0, size);
 	var pixelmap = context.getImageData(0, 0, width, size * 2);
-
 	var ascender = size * 2;
 	var	descender = 0;
 
 	for (var i = 0; i < pixelmap.data.length; i += 4) {
 		var y = Math.floor(i / ((width) * 4));
-		
-		if (pixelmap.data[i] !== 255 && y > descender) {
-			descender = y;
-		}
+		if (pixelmap.data[i] !== 255 && y > descender) descender = y;
 	}
 	
 	for (var i = pixelmap.data.length - 4; i >=0; i -= 4) {
 		var y = Math.floor(i / ((width) * 4));
-		
-		if (pixelmap.data[i] !== 255 && y < ascender) {
-			ascender = y;
-		}
+		if (pixelmap.data[i] !== 255 && y < ascender) ascender = y;
 	}
 
-	document.querySelector("body").appendChild(canvas);
 	// size === baseline
 	return {above: size - ascender, below: descender - size};
 }
@@ -1227,52 +1222,48 @@ function get_font_line_height(font) {
 	div.style.font = font;
 	div.innerHTML = "Hxy<br>Hxy";
 	div.style.lineHeight = "normal";
-	document.querySelector("body").appendChild(div);
 	return div.getBoundingClientRect().height / 2;
 }
 
 function dump_fonts(name) {
 	var flist = [];
 	var elt = document.documentElement;
-	
+
 	function recurse(elt) {
         if (elt.nodeType === document.ELEMENT_NODE) {
 			var comstyle = cs(elt);
 			var fname = [comstyle.fontSize, comstyle.fontFamily].join(" ");
-			
-			if (flist.indexOf(fname) === -1)
-			{
-				flist.push(fname);
-			}
-			
+
+			if (flist.indexOf(fname) === -1) flist.push(fname);
+
             for (var i = 0; i < elt.childNodes.length; i++) {
                 if (is_comment(elt.childNodes[i])) continue;
                 recurse(elt.childNodes[i]);
             }
         }
     }
-	
+
 	recurse(elt);
-	
-	var text = "(define-fonts " + name;
-	
+
+	var text = "(define-fonts " + name + " (";
+
 	for (var font of flist) {
 		var idx = font.indexOf("px");
 		if (idx === -1) { continue; }
 		var size = parseFloat(font.substr(0, idx));
-		
+
 		var xh = get_font_metrics(font, size, "x").above;
 		var metrics = get_font_metrics(font, size, "Hxy");
-		
+
 		var ascent = metrics.above - xh;
 		var descent = metrics.below;
-		
+
 		var leading = get_font_line_height(font) - metrics.above - metrics.below;
-		
-		text += "\n  (" + [dump_string(font), ascent, xh - 1, descent, leading].join(" ") + ")";
+
+		text += "\n  [" + [dump_string(font), ":a", ascent, "x", xh - 1, ":d", descent, "l", leading].join(" ") + "]";
 	}
-	
-	text += ")";
-	
+
+	text += "))";
+
 	return text;
 }
