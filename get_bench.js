@@ -1185,15 +1185,21 @@ function draw_rect(rect) {
     document.querySelector("html").appendChild(d);
 }
 
-function get_font_metrics(font, size, txt) {	
+function get_font_metrics(font, size, weight, style, txt) {	
 	var canvas = document.createElement("canvas");
 	canvas.font = font;
+	canvas.fontWeight = weight;
+	canvas.fontStyle = style;
 	var context = canvas.getContext("2d");
 	context.font = font;
+	context.fontWeight = weight;
+	context.fontStyle = style;
 	var width = context.measureText(txt).width;
 	canvas.width = width + 1;
 	canvas.height = size * 2;
 	context.font = font;
+	context.fontWeight = weight;
+	context.fontStyle = style;
 	context.fillStyle = "white";
 	context.fillRect(0,0,width + 1,size * 2);
 	context.fillStyle = "black";
@@ -1214,27 +1220,34 @@ function get_font_metrics(font, size, txt) {
 	}
 
 	// size === baseline
+	document.querySelector("body").appendChild(canvas);
 	return {above: size - ascender, below: descender - size};
 }
 
-function get_font_line_height(font) {
+function get_font_line_height(font, weight, style) {
 	var div = document.createElement("div");
 	div.style.font = font;
+	div.style.weight = weight;
+	div.style.fontStyle = style;
 	div.innerHTML = "Hxy<br>Hxy";
 	div.style.lineHeight = "normal";
+	document.querySelector("body").appendChild(div);
 	return div.getBoundingClientRect().height / 2;
 }
 
 function dump_fonts(name) {
 	var flist = [];
+	var fonts = Object();
 	var elt = document.documentElement;
 
 	function recurse(elt) {
         if (elt.nodeType === document.ELEMENT_NODE) {
-			var comstyle = cs(elt);
-			var fname = [comstyle.fontSize, comstyle.fontFamily].join(" ");
-
-			if (flist.indexOf(fname) === -1) flist.push(fname);
+			var style = cs(elt);
+			var fname = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
+			var size = style.fontSize.substr(0, style.fontSize.indexOf("px"));
+			var font = {name: style.fontSize + " " + style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
+			
+			if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
 
             for (var i = 0; i < elt.childNodes.length; i++) {
                 if (is_comment(elt.childNodes[i])) continue;
@@ -1247,20 +1260,17 @@ function dump_fonts(name) {
 
 	var text = "(define-fonts " + name + " (";
 
-	for (var font of flist) {
-		var idx = font.indexOf("px");
-		if (idx === -1) { continue; }
-		var size = parseFloat(font.substr(0, idx));
-
-		var xh = get_font_metrics(font, size, "x").above;
-		var metrics = get_font_metrics(font, size, "Hxy");
+	for (var fname of flist) {
+		var font = fonts[fname];
+		var xh = get_font_metrics(font.name, font.size, font.weight, font.style, "x").above;
+		var metrics = get_font_metrics(font.name, font.size, font.weight, font.style, "Hxy");
 
 		var ascent = metrics.above - xh;
 		var descent = metrics.below;
 
-		var leading = get_font_line_height(font) - metrics.above - metrics.below;
+		var leading = get_font_line_height(font.name, font.weight, font.style) - metrics.above - metrics.below;
 
-		text += "\n  [" + [dump_string(font), ":a", ascent, "x", xh - 1, ":d", descent, "l", leading].join(" ") + "]";
+		text += "\n  [" + [dump_string(fname), ":a", ascent, ":x", xh - 1, ":d", descent, ":l", leading].join(" ") + "]";
 	}
 
 	text += "))";
