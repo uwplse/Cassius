@@ -1285,7 +1285,7 @@ function dump_fonts(name) {
 		var leading = get_font_line_height(font.name, font.weight, font.style) - metrics.above - metrics.below;
 		console.log(fname);
 
-		text += "\n  [" + [dump_string(fname), ":fid", FontIDMap[fname], ":a", ascent, ":x", xh - 1, ":d", descent, ":l", leading].join(" ") + "]";
+		text += "\n  [" + [FontIDMap[fname], ascent, xh - 1, descent, leading].join(" ") + "]";
 	}
 
 	text += "))";
