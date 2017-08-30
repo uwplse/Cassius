@@ -6,6 +6,20 @@ Props = "width height margin-top margin-right margin-bottom margin-left padding-
 BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent".split(" ");
 BadTags = "img iframe input svg:svg".split(" ");
 
+var FontIDMap = Object();
+var nextID = 0;
+
+function get_font_ID(style) {
+	var font = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
+	if (!FontIDMap.hasOwnProperty(font)) {
+		var id = nextID++;
+		FontIDMap[font] = id;
+		return id;
+	} else {
+		return FontIDMap[font];
+	}
+}
+
 Box = function(type, node, props) {
     this.children = [];
     this.type = type; this.props = props; this.node = node;
@@ -444,7 +458,7 @@ function extract_text(elt) {
         if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
         if (r.length < 1) continue;
         r = r[0];
-        var box = Text(elt, {x: r.x, y: r.y, w: r.width, h: r.height,});
+        var box = Text(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
         box.props.text = dump_string(ranges[i].toString().replace(/\s+/g, " "));
         outs.push(box);
     }
@@ -469,7 +483,7 @@ function extract_block(elt, children) {
         children = children[0].children;
     }
 
-    var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
+    var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height, fid: get_font_ID(s)});
     box.children = children;
     return box;
 }
@@ -478,9 +492,9 @@ function extract_inline(elt, children) {
     var r = elt.getClientRects();
     var box;
     if (r.length == 1 && false) {
-        box = Inline(elt, {tag: elt.tagName.toLowerCase(), x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
+        box = Inline(elt, {tag: elt.tagName.toLowerCase(), x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height, fid: get_font_ID(cs(elt))});
     } else {
-        box = Inline(elt, {});
+        box = Inline(elt, {fid: get_font_ID(cs(elt))});
     }
     if (elt.tagName.toLowerCase() == "br") box.props.br = true;
     box.children = children;
@@ -491,7 +505,7 @@ function extract_magic(elt, children) {
     var r = elt.getBoundingClientRect();
     var s = cs(elt);
     var box = Magic(elt, {
-        x: r.x, y: r.y, w: r.width, h: r.height,
+        x: r.x, y: r.y, w: r.width, h: r.height, fid: get_font_ID(s)
     });
 
     box.children = children;
@@ -1149,7 +1163,7 @@ function page2cassius(name) {
     text += ")\n\n";
 
     var title = dump_string(document.title);
-    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";
+    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :fonts " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";
     return text;
 }
 
@@ -1269,8 +1283,9 @@ function dump_fonts(name) {
 		var descent = metrics.below;
 
 		var leading = get_font_line_height(font.name, font.weight, font.style) - metrics.above - metrics.below;
+		console.log(fname);
 
-		text += "\n  [" + [dump_string(fname), ":a", ascent, ":x", xh - 1, ":d", descent, ":l", leading].join(" ") + "]";
+		text += "\n  [" + [dump_string(fname), ":fid", FontIDMap[fname], ":a", ascent, ":x", xh - 1, ":d", descent, ":l", leading].join(" ") + "]";
 	}
 
 	text += "))";
