@@ -383,7 +383,7 @@ function infer_lines(box, parent) {
 
     function new_line() {
         // The line-height idea was cute, but doesn't actually work.
-        var l = Line(null, {/*h: val2px(cs(parent.node)["line-height"])*/});
+        var l = Line(null, {fid: get_font_ID(box)/*h: val2px(cs(parent.node)["line-height"])*/});
         parent.children.push(l);
         return l;
     }
