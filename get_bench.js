@@ -383,7 +383,7 @@ function infer_lines(box, parent) {
 
     function new_line() {
         // The line-height idea was cute, but doesn't actually work.
-        var l = Line(null, {fid: get_font_ID(box)/*h: val2px(cs(parent.node)["line-height"])*/});
+        var l = Line(null, {/*h: val2px(cs(parent.node)["line-height"])*/});
         parent.children.push(l);
         return l;
     }
@@ -483,7 +483,7 @@ function extract_block(elt, children) {
         children = children[0].children;
     }
 
-    var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height, fid: get_font_ID(s)});
+    var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
     box.children = children;
     return box;
 }
@@ -492,9 +492,9 @@ function extract_inline(elt, children) {
     var r = elt.getClientRects();
     var box;
     if (r.length == 1 && false) {
-        box = Inline(elt, {tag: elt.tagName.toLowerCase(), x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height, fid: get_font_ID(cs(elt))});
+        box = Inline(elt, {tag: elt.tagName.toLowerCase(), x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
     } else {
-        box = Inline(elt, {fid: get_font_ID(cs(elt))});
+        box = Inline(elt, {});
     }
     if (elt.tagName.toLowerCase() == "br") box.props.br = true;
     box.children = children;
@@ -505,7 +505,7 @@ function extract_magic(elt, children) {
     var r = elt.getBoundingClientRect();
     var s = cs(elt);
     var box = Magic(elt, {
-        x: r.x, y: r.y, w: r.width, h: r.height, fid: get_font_ID(s)
+        x: r.x, y: r.y, w: r.width, h: r.height
     });
 
     box.children = children;
@@ -920,13 +920,13 @@ function dump_document(features) {
             return false;
         } else if (typeof(elt.dataset) === "undefined"){
             console.log("Weird element", elt);
-            var rec = new Box(elt.tagName.toLowerCase(), elt);
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {fid: get_font_ID(cs(elt))});
             return rec;
         } else {
             var num = ELTS.length;
             elt.dataset["num"] = num;
             ELTS.push(elt);
-            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num});
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num, fid: get_font_ID(cs(elt))});
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
@@ -1283,7 +1283,6 @@ function dump_fonts(name) {
 		var descent = metrics.below;
 
 		var leading = get_font_line_height(font.name, font.weight, font.style) - metrics.above - metrics.below;
-		console.log(fname);
 
 		text += "\n  [" + [FontIDMap[fname], ascent, xh - 1, descent, leading].join(" ") + "]";
 	}
