@@ -1239,14 +1239,14 @@ function get_font_metrics(font, size, weight, style, txt) {
 }
 
 function get_font_line_height(font, weight, style) {
-	var div = document.createElement("div");
-	div.style.font = font;
-	div.style.weight = weight;
-	div.style.fontStyle = style;
-	div.innerHTML = "Hxy<br>Hxy";
-	div.style.lineHeight = "normal";
-	document.querySelector("body").appendChild(div);
-	return div.getBoundingClientRect().height / 2;
+	var span = document.createElement("span");
+	span.style.font = font;
+	span.style.weight = weight;
+	span.style.fontStyle = style;
+	span.innerHTML = "Hxy";
+	span.style.lineHeight = "normal";
+	document.querySelector("body").appendChild(span);
+	return span.getBoundingClientRect().height;
 }
 
 function dump_fonts(name) {

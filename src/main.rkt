@@ -384,6 +384,8 @@
     (define-const font-size/smaller Font-Size (font-size/em (/ 2.0 3.0)))
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
     (define-const color/undefined Color color/transparent)
+    ,(make-font-datatype)
+    ,(make-font-table fonts)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))
     ,@(common-definitions)
@@ -409,8 +411,6 @@
     ,@(per-element font-constraints)
     ,@(per-box contents-constraints)
     ,@(per-box layout-constraints)
-    ,(make-font-datatype)
-    ,(make-font-table fonts)
     ))
 
 (define (add-test doms constraints tests)
