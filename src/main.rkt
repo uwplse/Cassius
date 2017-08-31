@@ -96,7 +96,7 @@
   (when (>= &elt 0) (node-set! box ':elt &elt)))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)
+  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt fid) result)
   (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-ctx! model d)
@@ -334,6 +334,10 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
+(define (font-constraints dom emit elt)
+  (when (node-get elt ':fid)
+    (emit `(assert (= ,(node-get elt ':fid) (fid ,(dump-elt elt)))))))
+
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input object) (node-type elt)))
 
@@ -353,8 +357,6 @@
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
-
-  (make-font-table fonts)
 
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
@@ -404,8 +406,11 @@
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)
+    ,@(per-element font-constraints)
     ,@(per-box contents-constraints)
     ,@(per-box layout-constraints)
+    ,(make-font-datatype)
+    ,(make-font-table fonts)
     ))
 
 (define (add-test doms constraints tests)

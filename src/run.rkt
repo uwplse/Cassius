@@ -133,7 +133,7 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-smt2 problem output)
-  (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents))))
+  (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))))
   (call-with-output-file output #:exists 'replace (curry displayln out)))
 
 (define (do-verify problem)

@@ -72,7 +72,7 @@
   (values doms query))
 
 (define (query sheets docs fonts [tests #f])
-  (define-values (doms query) (constraints (make-log) sheets docs tests fonts))
+  (define-values (doms query) (constraints (make-log) sheets docs fonts tests))
   (append query (list cassius-check-sat)))
 
 (define (solve sheets docs fonts [tests #f])
