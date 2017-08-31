@@ -693,7 +693,7 @@
        (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
          (and
           (= (text-top b) (+ (y b) (* .5 (font.leading metrics))))
-          (= (text-bottom b) (+ (text-top b) (font.xHeight metrics) (font.ascender metrics) (font.descender) 1))))
+          (= (text-bottom b) (+ (text-top b) (font.xHeight metrics) (font.ascender metrics) (font.descender metrics) 1))))
 
        ;; TODO: (y b) and (+ (y b) (font-size b)) not correct, should use baseline.
        (ite (> (w b) 0.0)
