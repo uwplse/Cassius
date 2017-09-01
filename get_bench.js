@@ -1272,7 +1272,7 @@ function dump_fonts(name) {
 
 	recurse(elt);
 
-	var text = "(define-fonts " + name + " (";
+	var text = "(define-fonts " + name;
 
 	for (var fname of flist) {
 		var font = fonts[fname];
@@ -1287,7 +1287,7 @@ function dump_fonts(name) {
 		text += "\n  [" + [FontIDMap[fname], ascent, xh - 1, descent, leading].join(" ") + "]";
 	}
 
-	text += "))";
+	text += ")";
 
 	return text;
 }

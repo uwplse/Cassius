@@ -336,7 +336,7 @@
 
 (define (font-constraints dom emit elt)
   (when (node-get elt ':fid)
-    (emit `(assert (= ,(node-get elt ':fid) (fid ,(dump-elt elt)))))))
+    (emit `(assert (= (fid ,(dump-elt elt)) ,(node-get elt ':fid))))))
 
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input object) (node-type elt)))
@@ -363,6 +363,7 @@
     (echo "Basic definitions")
     ,(make-%of)
     ,@(colors)
+    ,@(make-font-datatype)
     (declare-datatypes
      ()
      (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
@@ -384,7 +385,6 @@
     (define-const font-size/smaller Font-Size (font-size/em (/ 2.0 3.0)))
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
     (define-const color/undefined Color color/transparent)
-    ,(make-font-datatype)
     ,(make-font-table fonts)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))

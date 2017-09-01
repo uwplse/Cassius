@@ -39,11 +39,13 @@
            (set! properties (dict-set properties key val*))))
 
        (get-from ':sheets sheets)
-       (get-from ':fonts fonts)
        (get-from ':documents docs)
        (get-from ':layouts layouts)
        (get-from ':actions actions)
        (get-from ':scripts scripts)
+       (set! properties
+             (dict-set properties ':fonts
+                       (append-map (curry dict-ref fonts) (dict-ref properties ':fonts))))
 
        (when (and (dict-has-key? properties ':layouts) (dict-has-key? properties ':documents))
          (define layouts*
