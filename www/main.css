@@ -46,3 +46,7 @@ header li { float: left; margin: 1em 2em 1em 0; }
 #news time:after { content: ":"; }
 
 .abstract { margin: .5em 1em; }
+
+.tool { clear: both; }
+.tool img { height: 2em; float: left; margin-right: 1em; }
+.tool h3 { clear: right; }
