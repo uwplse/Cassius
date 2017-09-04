@@ -7,7 +7,7 @@ env:
 before_install:
   - git clone https://github.com/greghendershott/travis-racket.git ../travis-racket
   - cat ../travis-racket/install-racket.sh | bash
-  - git clone https://github.com/Z3Prover/z3.git ../z3
+  - git clone https://github.com/Z3Prover/z3.git "${Z3_DIR}"
   - (cd "${Z3_DIR}" && python scripts/mk_make.py)
   - (cd "${Z3_DIR}"/build && make)
   - export PATH="${RACKET_DIR}/bin:${Z3_DIR}/build:${PATH}"
