@@ -623,10 +623,10 @@
        (<= (top-content p)
            (ite (is-display/inline-block (style.display r))
                 (top-outer b)
-                (top-border b)))
+                (top-content b)))
        (<= (ite (is-display/inline-block (style.display r))
                 (bottom-outer b)
-                (bottom-border b))
+                (bottom-content b))
            (bottom-content p))
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
