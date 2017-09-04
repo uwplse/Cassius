@@ -42,13 +42,23 @@
          (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
-    (max ,(get-px-or-% 'min-width '(w (pflow b)) 'b)
+    (max (+
+          (ite (and (is-elt (box-elt b))
+                    (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
+               (+ (bl b) (pl b) (pr b) (br b))
+               0.0)
+          ,(get-px-or-% 'min-width '(w (pflow b)) 'b))
          (ite (is-max-width/none (style.max-width (computed-style (box-elt b))))
               val
               (min val ,(get-px-or-% 'max-width '(w (pflow b)) 'b)))))
 
   (define-fun min-max-height ((val Real) (b Box)) Real
-    (max ,(get-px-or-% 'min-height '(h (pflow b)) 'b)
+    (max (+
+          (ite (and (is-elt (box-elt b))
+                    (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
+               (+ (bt b) (pt b) (pb b) (bb b))
+               0.0)
+          ,(get-px-or-% 'min-height '(h (pflow b)) 'b))
          (ite (is-max-height/none (style.max-height (computed-style (box-elt b))))
               val
               (min val ,(get-px-or-% 'max-height '(h (pflow b)) 'b)))))

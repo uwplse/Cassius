@@ -97,10 +97,15 @@
      :browser
      [margin-left auto]
      [margin-right auto]
+     [box-sizing border-box] ; Weird Firefox choice!
      [border-top-width (px 1)]
+     [border-top-style solid]
      [border-right-width (px 1)]
+     [border-right-style solid]
      [border-bottom-width (px 1)]
-     [border-left-width (px 1)])
+     [border-bottom-style solid]
+     [border-left-width (px 1)]
+     [border-left-style solid])
     ((tag menu)
      :browser
      [margin-top (em 1)]
