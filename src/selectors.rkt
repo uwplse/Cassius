@@ -118,7 +118,7 @@
     '([html] ; 0
       ([body] ; 1
        ([div :id content] ; 2
-        ([H1 :class (title)]) ; 3
+        ([h1 :class (title)]) ; 3
         ([div :class (abstract)] ; 4
          ([blockquote] ; 5
           ([p]))) ; 6
