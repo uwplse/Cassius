@@ -1,21 +1,17 @@
-test.css
-test.html
-z3.sh
+# Convention
 papers/
-*.aux
-*.d
-*.vo
-*.glob
-*/.coq-native/
-coq/compiled
-coq/CoqMakefile
-*~
-cassius/compiled
+
+# Reports and benchmarks
 reports/*.html
 reports/*.json
-bench/css/*.rkt
-.DS_Store
-src/compiled/
+bench/*.rkt
 geckodriver.log
-*.bak
+
+# Racket junk
+src/compiled/
 compiled/
+
+# Platform junk
+*.bak
+*~
+.DS_Store
