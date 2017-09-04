@@ -6,7 +6,7 @@
          "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
-         css-values-solver extract-ctx! model-sufficiency extract-model-sufficiency)
+         extract-ctx! model-sufficiency extract-model-sufficiency)
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -345,6 +345,27 @@
     (emit `(assert (! (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))
                    :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
 
+(define (add-test doms constraints tests)
+  (match-define (list (list 'forall varss bodies) ...) tests)
+  (when (check-duplicates (apply append varss))
+    (error "Duplicate variable names in assertions!"))
+
+  `(,@constraints
+    ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
+        (define var (sformat "cex~a" value))
+        (sow `(declare-const ,var Int))
+        (sow `(assert ,(apply smt-or
+                              (for*/list ([dom doms] [box (in-boxes dom)])
+                                `(= ,var ,(name 'box box)))))))
+    (assert ,(apply smt-or (map (curry list 'not) bodies)))))
+
+(define (sheet-constraints doms eqcls)
+  (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
+  (reap [emit] (selector-constraints emit eqcls)))
+
+(define (sheet*-constraints doms rules)
+  (reap [emit] (for ([dom doms]) (selector*-constraints emit (sequence->list (in-tree (dom-elements dom))) rules))))
+
 (define (all-constraints sheets matcher doms)
   (define (global f) (reap [sow] (f doms sow)))
   (define (per-element f)
@@ -404,111 +425,3 @@
     ,@(per-box contents-constraints)
     ,@(per-box layout-constraints)
     ))
-
-(define (add-test doms constraints tests)
-  (match-define (list (list 'forall varss bodies) ...) tests)
-  (when (check-duplicates (apply append varss))
-    (error "Duplicate variable names in assertions!"))
-
-  `(,@constraints
-    ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
-        (define var (sformat "cex~a" value))
-        (sow `(declare-const ,var Int))
-        (sow `(assert ,(apply smt-or
-                              (for*/list ([dom doms] [box (in-boxes dom)])
-                                `(= ,var ,(name 'box box)))))))
-    (assert ,(apply smt-or (map (curry list 'not) bodies)))))
-
-(define z3-process-cache (make-parameter (make-hash)))
-
-(define (css-values-solver inputs constraints)
-  (match-define (list doms matchings sketch) inputs)
-  ;; constraints is empty, all that is contained in boxes
-
-  ;; TODO Print progress & phases
-  (define z3 (hash-ref! (z3-process-cache) (list doms matchings)
-                        (λ () (let* ([query ((if (set-member? (flags) 'z3o) z3-prepare z3-clean)
-                                             (all-constraints matchings doms))]
-                                     [z3p (z3-process)])
-                                (z3-send z3p query)
-                                (z3-send z3p '((push)))
-                                z3p))))
-
-  (define browser-style (get-sheet (and (dom-context (car doms) ':browser) (car (dom-context  (car doms) ':browser)))))
-
-  ;(define elts (append-map (compose sequence->list in-tree dom-elements) doms))
-  ;(define eqcls (equivalence-classes (append browser-style sketch) elts))
-  (z3-send z3 (append '((pop) (push)) (sheet*-constraints doms (append browser-style sketch))))
-
-  (match (z3-check-sat z3 #:strategy cassius-check-sat)
-    [(list 'model m)
-     (list 'fwd doms matchings (drop (extract-sheet (append browser-style sketch) m) (length browser-style)))]
-    [(list 'core c)
-     (pretty-print c)
-     (list 'bwd #;(extract-ineqs eqcls c)
-           )]))
-
-(define (sheet-constraints doms eqcls)
-  (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
-  (reap [emit] (selector-constraints emit eqcls)))
-
-(define (sheet*-constraints doms rules)
-  (reap [emit] (for ([dom doms]) (selector*-constraints emit (sequence->list (in-tree (dom-elements dom))) rules))))
-
-(define (extract-sheet sheet m)
-  (for/list ([rule sheet] [idx (in-naturals)])
-    (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
-    `(,selector
-      ,@attrs
-      ,@
-      (filter (λ (x) (and (list? x) (= (length x) 2) (not (equal? (second x) '?))))
-              (for/fold ([props props])
-                  ([(prop type default) (in-css-properties)]
-                   #:when (dict-ref m (sformat "value/~a/~a?" idx prop) #f))
-                (define value (extract-value (dict-ref m (sformat "value/~a/~a" idx prop))))
-                (let loop ([props props])
-                  (cond
-                   [(equal? '(?) props)
-                    (cons (list prop value) props)]
-                   [(equal? (caar props) prop)
-                    (cons (list prop value) (cdr props))]
-                   [else
-                    (cons (car props) (loop (cdr props)))])))))))
-
-(define (extract-ineqs eqcls core)
-  (for/list ([var (map split-line-name core)] #:when (equal? (caar var) 'value))
-    (match var
-      [`((value ,prop ,cls) (,elt1) (,elt2))
-       `(not (= (,prop ,(by-name 'elt elt1)) (,prop ,(by-name 'elt elt2))))]
-      [`((value ,prop ,cls) (,elt1))
-       (define cls* (if (equal? cls 'none) #f cls))
-       (define value (dict-ref (cdr (dict-ref eqcls prop)) cls*))
-       `(not (= (,prop ,(by-name 'elt elt1)) ,value))])))
-
-(module+ test
-  (require "match.rkt")
-
-  (define elts
-    '([html] ; 0
-      ([body] ; 1
-       ([div])))) ; 2
-
-  (define boxes
-    '([VIEW :w 400 :h 400]
-      ([BLOCK :w 400 :h 105 :x 0 :y 0]
-       ([BLOCK :w 400 :h 100 :x 0 :y 5]
-        ([BLOCK :w 200 :h 100 :x 100 :y 5])))))
-
-  (define css-sketch
-    '(((tag div) [width ?] [margin-left ?] [height ?])
-      ((tag body) [margin-top ?])))
-
-  (define dom* (dom 'test '() (parse-tree elts) (parse-tree boxes)))
-  (define matching (link-elts-boxes css-sketch (dom-elements dom*) (dom-boxes dom*)))
-
-  (define input (list (list dom*) (list matching) css-sketch))
-
-  (check-match (css-values-solver input #f)
-               (list 'fwd (list (== dom*)) (list (== matching))
-                     `(((tag div) [width (px ,(== 200 =))] [margin-left (px ,(== 100 =))] [height (px ,(== 100 =))])
-                       ((tag body) [margin-top (px ,(== 5 =))])))))

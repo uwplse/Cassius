@@ -106,8 +106,10 @@
     ['screen true]
     ['all true]
     [(or 'print 'handheld 'projection 'tty 'tv) false]
-    ['(orientation landscape) true] ; TODO: Actually check viewport width and height
+    ;; TODO: Actually check viewport width and height
+    ['(orientation landscape) true]
     ['(orientation portrait) false]
+    ;; TODO: Actually check viewport width and height
     [`(max-width (px ,mw)) false]
     [`(min-width (px ,mw)) false]
     [`(max-height (px ,mh)) false]
