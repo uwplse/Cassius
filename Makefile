@@ -44,7 +44,7 @@ bench/fwt/valid.txt: reports/fwt.json
 # on every linked page, collecting the resulting JSON objects into a JSON array.
 
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
-	@ racket src/report.rkt regression $(FLAGS) --index bench/css/index.json -o reports/csswg $^
+	@ racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg $^
 
 reports/fwt.html reports/fwt.json: $(wildcard bench/fwt/*.rkt)
 	@ racket src/report.rkt regression $(FLAGS) --aggregate --timeout 300 -o reports/fwt $^
