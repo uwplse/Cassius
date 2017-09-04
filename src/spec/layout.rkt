@@ -374,7 +374,8 @@
 
   (define-fun positioned-vertical-layout ((b Box)) Bool
     ;; CSS 2.1 § 10.6.4
-    ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
+    ,(smt-let ([r (computed-style (box-elt b))]
+               [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
                [temp-top ,(get-px-or-% 'top '(h (ppflow b)) 'b)]
                [temp-bottom ,(get-px-or-% 'bottom '(h (ppflow b)) 'b)]
                [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(h (ppflow b)) 'b)) b)]
@@ -412,7 +413,9 @@
 
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
-     ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)] [p (pflow b)]
+     ,(smt-let ([r (computed-style (box-elt b))]
+                [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
+                [p (pflow b)]
                 [temp-left ,(get-px-or-% 'left '(w (ppflow b)) 'b)]
                 [temp-right ,(get-px-or-% 'right '(w (ppflow b)) 'b)]
                 [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(w (ppflow b)) 'b)) b)]

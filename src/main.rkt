@@ -57,7 +57,7 @@
            pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
            &pbox &vbox &nbox &fbox &lbox
            width-set font-size
-           &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
+           &nflow &vflow &ppflow &pbflow &root ez.in ez.out ez.sufficient
            has-contents? textalign &elt first? last?
            extra ...
            color background-color ancestor)
@@ -73,7 +73,7 @@
          pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
          width-set font-size
-         &nflow &vflow &ppflow &pbflow ez.in ez.out ez.sufficient
+         &nflow &vflow &ppflow &pbflow &root ez.in ez.out ez.sufficient
          has-contents? textalign &elt first? last?
          extra ...
          color background-color ancestor)

@@ -25,6 +25,7 @@
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
+                (&root Int) ; Root box
                 (ez.in EZone) (ez.out EZone) (ez.sufficient Bool)
                 (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt Int) (first-box? Bool) (last-box? Bool)
@@ -77,6 +78,7 @@
   ;; parent block box, and the parent positioned box.
   (define-fun ppflow ((box Box)) Box (get/box (&ppflow box)))
   (define-fun pbflow ((box Box)) Box (get/box (&pbflow box)))
+  (define-fun rootbox ((box Box)) Box (get/box (&root box)))
 
   ;; From elements to boxes and back
   (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
@@ -197,6 +199,7 @@
      (= (&pbflow b) -1)
      (= (&vflow b) -1)
      (= (&nflow b) -1)
+     (= (&root b) &b)
      (= (ancestor-bg b) (color/rgb (color 255 255 255 1 1 1))) ;; TODO: Browser dependent? User-configurable?
      (= (ez.in b) ez.init)))
 
@@ -206,6 +209,7 @@
      (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
+     (= (&root b) (&root (pbox b)))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
                             ez.init
@@ -226,6 +230,7 @@
           [(is-no-box (nbox b)) -1]
           [(box-in-flow (nbox b)) (&nbox b)]
           [else (&nflow (nbox b))]))
+     (= (&root b) (&root (pbox b)))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
                             ez.init
