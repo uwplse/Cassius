@@ -10,6 +10,9 @@ FLAGS=
 deploy:
 	rsync -r www/ $(shell ~/uwplse/getdir)
 
+test:
+	raco test src
+
 publish:
 	rsync -rv reports/ uwplse.org:/var/www/cassius/reports/$(TIME)/
 	ssh uwplse.org chmod a+x /var/www/cassius/reports/$(TIME)/
