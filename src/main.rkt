@@ -249,7 +249,7 @@
     (emit-const (param 'font-size) 'Real fs)
 
     (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
-    (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'w))))
+    (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'h))))
     (emit `(assert (= (font-size ,(dump-box (dom-boxes dom))) ,(param 'font-size))))))
 
 (define (number*? x)
