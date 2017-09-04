@@ -559,6 +559,7 @@ function make_boxes(elt, styles, features) {
 }
 
 function get_boxes(features) {
+    window.scrollTo(0, 0);
     var has_scrollbar = window.scrollMaxY !== 0;
     var view = Page(document, {w: window.innerWidth - (has_scrollbar ? 13 : 0), h: window.innerHeight});
     var style = {};
