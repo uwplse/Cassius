@@ -63,7 +63,10 @@
               [h* (style.height (computed-style (pelt elt)))])
           (ite (is-height/inherit h)
                (ite (is-elt (pelt elt)) h* height/auto)
-               (ite (and (is-height/% h) (is-elt (pelt elt)) (is-height/auto h*))
+               (ite (and (is-height/% h)
+                         (is-elt (pelt elt)) (is-height/auto h*)
+                         (not (is-position/absolute (style.position (computed-style elt))))
+                         (not (is-position/fixed (style.position (computed-style elt)))))
                     height/auto
                     h))))
 
