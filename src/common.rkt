@@ -208,3 +208,17 @@
            subargs ...)] ...))]
    [(_ args ...)
     #'(command-line args ...)]))
+
+(define (git-command #:default [default ""] gitcmd . args)
+  (if (directory-exists? ".git")
+      (let ([cmd (format "git ~a ~a" gitcmd (string-join args " "))])
+        (or (string-trim (with-output-to-string (λ () (system cmd)))) default))
+      default))
+
+(define *version* "2.0")
+
+(define *commit*
+  (git-command "rev-parse" "HEAD" #:default *version*))
+
+(define *branch*
+  (git-command "rev-parse" "--abbrev-ref" "HEAD" #:default "release"))
