@@ -50,24 +50,18 @@
     [`(fake ,true ,subsels ...)
      (ormap (curryr selector-matches? elt) subsels)]
     [`* true]
-    [`(id ,id)
-     (define eid (and (node-get elt ':id) (slower (node-get elt ':id))))
-     (when (equal? eid '?)
-       (raise (make-exn:fail:unsupported "Holes in identifiers are not supported" (current-continuation-marks))))
-     (equal? eid id)]
-    [`(class ,cls)
+    [`(id ,id) ; IDs are case-sensitive
+     (equal? (node-get elt ':id) id)]
+    [`(class ,cls) ; CLASSes are case-insensitive
      (define ecls (map slower (node-get elt ':class #:default '())))
-     (set-member? ecls cls)]
+     (set-member? ecls (slower cls))]
     [`(tag ,tag)
-     (define etag (node-type elt))
-     (when (equal? etag '?)
-       (raise (make-exn:fail:unsupported "Holes in tag names are not supported" (current-continuation-marks))))
-     (equal? etag tag)]
+     (equal? (slower (node-type elt)) (slower tag))]
     [`(pseudo-class first-child) (not (node-prev elt))]
     [`(pseudo-class last-child) (not (node-next elt))]
-    [`(pseudo-class hover) false] ; We're never modeling hovering
+    [`(pseudo-class hover) false] ; We assume not hovering
     [`(type ,type)
-     (and (node-get elt ':type) (equal? (slower (node-get elt ':type)) type))]
+     (and (node-get elt ':type) (equal? (node-get elt ':type) type))]
     [`(media ,query ,sel)
      (and (media-matches? query) (selector-matches? sel elt))]
     [(list 'and sels ...) (andmap (curryr selector-matches? elt) sels)]
