@@ -115,21 +115,20 @@
 
 (module+ test
   (define tree
-    '([html] ; 0
-      ([body] ; 1
-       ([div :id content] ; 2
-        ([h1 :class (title)]) ; 3
-        ([div :class (abstract)] ; 4
-         ([blockquote] ; 5
-          ([p]))) ; 6
-        ([p]) ; 7
-        ([div :class (aside)] ; 8
-         ([p])))))) ; 9
-  (define ptree (parse-tree tree))
-  (define elts (sequence->list (in-tree ptree)))
+    (parse-tree
+     '([html] ; 0
+       ([body] ; 1
+        ([div :id content] ; 2
+         ([h1 :class (title)]) ; 3
+         ([div :class (abstract)] ; 4
+          ([blockquote] ; 5
+           ([p]))) ; 6
+         ([p]) ; 7
+         ([div :class (aside)] ; 8
+          ([p]))))))) ; 9
 
   (define (check-selector sel ns)
-    (for ([n (in-naturals)] [elt (in-list elts)])
+    (for ([n (in-naturals)] [elt (in-tree tree)])
       ((if (set-member? ns n) check-true check-false)
        (selector-matches? sel elt))))
 
