@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/path racket/set racket/engine racket/cmdline math/base)
+(require racket/path racket/set racket/engine racket/cmdline)
 (require json (only-in xml write-xexpr))
 (require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "run.rkt")
 
@@ -19,7 +19,7 @@
       (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree)))))
     (for-each loop (cdr tree)))
   
-  (define idx (random-integer 0 constraints))
+  (define idx (random 0 constraints))
   (set! constraints 0)
 
   ;; Not my fault
@@ -318,7 +318,7 @@
                               (apply row (map ~a data)))))))
             '())
       (section ()
-       (h2 () "Failing tests")
+       (h2 () ,(if (show-success) "Tests" "Failing tests"))
        (table ()
        ,@(for/list ([group-results (group-by result-file results)]
                     #:unless (and

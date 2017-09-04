@@ -126,33 +126,24 @@
         ([div :class (aside)] ; 8
          ([p])))))) ; 9
   (define ptree (parse-tree tree))
-  (define (get-element elt n)
-    "Gets the nth element, or returns the total number of elements seen"
-    (if (= n 0)
-        elt
-        (let loop ([child (node-fchild elt)] [i 1])
-          (if (not child)
-              i
-              (let ([out (get-element child (- n i))])
-                (if (number? out)
-                    (loop (node-next child) (+ i out))
-                    out))))))
-  (define (check-selector sel ns)
-    (for ([n (in-range 1 11)])
-      ((if (set-member? ns n) check-true check-false)
-       (selector-matches? sel (get-element ptree n)))))
+  (define elts (sequence->list (in-tree ptree)))
 
-  (check-selector '* '(1 2 3 4 5 6 7 8 9 10))
-  (check-selector '(id content) '(3))
-  (check-selector '(tag html) '(1))
-  (check-selector '(tag p) '(7 8 10))
-  (check-selector '(class title) '(4))
-  (check-selector '(class aside) '(9))
-  (check-selector '(and (tag div) (class aside)) '(9))
+  (define (check-selector sel ns)
+    (for ([n (in-naturals)] [elt (in-list elts)])
+      ((if (set-member? ns n) check-true check-false)
+       (selector-matches? sel elt))))
+
+  (check-selector '* (range 10))
+  (check-selector '(id content) '(2))
+  (check-selector '(tag html) '(0))
+  (check-selector '(tag p) '(6 7 9))
+  (check-selector '(class title) '(3))
+  (check-selector '(class aside) '(8))
+  (check-selector '(and (tag div) (class aside)) '(8))
   (check-selector '(and (tag p) (class aside)) '())
-  (check-selector '(desc (tag div) (tag p)) '(7 8 10))
-  (check-selector '(child (tag div) (tag p)) '(8 10))
-  (check-selector '(child (and (tag div) (id content)) (tag p)) '(8)))
+  (check-selector '(desc (tag div) (tag p)) '(6 7 9))
+  (check-selector '(child (tag div) (tag p)) '(7 9))
+  (check-selector '(child (and (tag div) (id content)) (tag p)) '(7)))
 
 (define-by-match partial-selector-score?
   (list (? number?) (? number?) (? number?)))

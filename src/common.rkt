@@ -12,7 +12,8 @@
  boolean<? lex<? output<?
  define-by-match
  list-intersect multi-command-line debug-mode!
- *debug* *fuzz*)
+ *debug* *fuzz*
+ *version* *commit* *branch*)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
