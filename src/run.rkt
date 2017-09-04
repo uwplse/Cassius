@@ -2,8 +2,8 @@
 
 (require racket/cmdline (only-in xml write-xexpr)
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
-         "frontend.rkt" "actions.rkt" "solver.rkt"
-         "print/tree.rkt" "print/css.rkt" "print/html.rkt" "print/smt.rkt")
+         "frontend.rkt" "solver.rkt"
+         "print/tree.rkt" "print/css.rkt" "print/smt.rkt")
 
 (provide dom-strip-positions)
 
@@ -30,18 +30,6 @@
                 [:fs . ((between 16 32))])])
       (dict-set ctx field value)))
   (struct-copy dom d [properties ctx*]))
-
-;; TODO: Not currently used
-(define (test-actions problem)
-  (for ([action (dict-ref problem ':actions '())])
-    (match-define (list target act (cons froms tos) ...) action)
-    (for ([from froms] [to tos])
-      (define from* (parse-tree from))
-      (interpret-action target act (apply append (dict-ref problem ':scripts '())) from*)
-      (define diff (elements-difference (parse-tree to) from*))
-      (when diff
-        (eprintf "Failed ~a on ~a\n  " act target)
-        (pretty-print diff)))))
 
 (define (wrapped-solve sheets documents #:test [test #f])
   (with-handlers
@@ -99,14 +87,6 @@
                      `(,property ,(format "~avw" (real->double-flonum
                                                   (/ (* (->number (cadr (member attr attrs))) w) 100)))))))
             (append-map loop (cdr tree)))]))))))
-
-(define (do-export problem)
-  (display
-   (elements->string
-    (parse-tree (dom-elements (car (dict-ref problem ':documents))))
-    #:sheets (dict-ref problem ':sheets '())
-    #:scripts (dict-ref problem ':scripts '())
-    #:title (dict-ref problem ':title #f))))
 
 (define (do-render problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
@@ -184,9 +164,6 @@
      (set! screenshot sname)]
     #:args (fname problem)
     (do-debug (get-problem fname problem))]
-   ["export"
-    #:args (fname problem)
-    (do-export (get-problem fname problem))]
    ["render"
     #:args (fname problem)
     (do-render (get-problem fname problem))]

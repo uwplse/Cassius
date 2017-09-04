@@ -1,10 +1,9 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "z3.rkt" "smt.rkt" "dom.rkt")
+(require "common.rkt" "tree.rkt" "spec/css-properties.rkt")
 (module+ test (require rackunit))
-(provide equivalence-classes equivalence-classes-avoid?
-         selector-matches? all-selectors synthesize-css-sketch
-         css-sketch-solver rule-matchlist (struct-out rulematch))
+(provide equivalence-classes selector-matches?
+         rule-matchlist (struct-out rulematch))
 
 
 
