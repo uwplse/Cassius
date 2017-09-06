@@ -208,10 +208,9 @@
                            :named ,(sformat "box-element/~a" (dump-box box)))))]))))
 
 (define (model-sufficiency doms)
-  `(and
-    true
-    ,@(for*/list ([dom doms] [box (in-boxes dom)])
-        `(ez.sufficient ,(dump-box box)))))
+  (apply smt-and
+         (for*/list ([dom doms] [box (in-boxes dom)])
+           `(ez.sufficient ,(dump-box box)))))
 
 (define (dom-define-get/elt doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
