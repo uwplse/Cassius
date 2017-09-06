@@ -563,12 +563,24 @@ function make_boxes(elt, styles, features) {
     }
 }
 
+// Inspired by https://stackoverflow.com/questions/13382516/getting-scroll-bar-width-using-javascript
+function compute_scrollbar_width() {
+    var outer = document.createElement("div");
+    var inner = document.createElement("div");
+    outer.style.overflow = "scroll";
+    outer.appendChild(inner);
+    document.body.appendChild(outer);
+    var out = outer.offsetWidth - inner.offsetWidth;
+    document.body.removeChild(outer)
+    return out;
+}
+
 function get_boxes(features) {
     window.scrollTo(0, 0);
-    var has_scrollbar = window.scrollMaxY !== 0;
-    var view = Page(document, {w: window.innerWidth - (has_scrollbar ? 12 : 0), h: window.innerHeight});
+    var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
     view.children = make_boxes(document.querySelector("html"), style, features);
+    if (window.scrollMaxY !== 0) view.props.w -= compute_scrollbar_width();
     return {view: view, style: style};
 }
 
@@ -882,16 +894,14 @@ function dump_stylesheet(ss, features, media) {
 ELTS = []
 
 function get_inherent_size(e) {
-    if (e.width && e.height) {
-        return {w: e.width, h: e.height};
-    } else {
-        return {w: e.getBoundingClientRect().width
-                - val2px(cs(e).paddingLeft) - val2px(cs(e).paddingRight)
-                - val2px(cs(e).borderLeftWidth) - val2px(cs(e).borderRightWidth),
-                h: e.getBoundingClientRect().height
-                - val2px(cs(e).paddingTop) - val2px(cs(e).paddingBottom)
-                - val2px(cs(e).borderTopWidth) - val2px(cs(e).borderBottomWidth)}
-    }
+    return {
+        w: e.getBoundingClientRect().width
+            - val2px(cs(e).paddingLeft) - val2px(cs(e).paddingRight)
+            - val2px(cs(e).borderLeftWidth) - val2px(cs(e).borderRightWidth),
+        h: e.getBoundingClientRect().height
+            - val2px(cs(e).paddingTop) - val2px(cs(e).paddingBottom)
+            - val2px(cs(e).borderTopWidth) - val2px(cs(e).borderBottomWidth)
+    };
 }
 
 function dump_document(features) {
@@ -937,9 +947,9 @@ function dump_document(features) {
                 features["attr:dir"] = true;
             }
             
-            if (elt.size) {
+            if (elt.tagName.toUpperCase() === "HR" && elt.size) {
                 rec.props["size"] = elt.size;
-                features["attr:size"] = true;
+                features["hr:size"] = true;
             }
 
             for (var i = 0; i < elt.childNodes.length; i++) {
