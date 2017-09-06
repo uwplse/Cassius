@@ -3,6 +3,23 @@
 (provide common-definitions utility-definitions)
 
 (define-constraints common-definitions
+  (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
+  (define-fun ropt-max-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
+         (ite (realopt.is-some? x)
+              (ite (and y? (realopt.is-some? y))
+                   (ite (> (realopt.value x) (realopt.value y))
+                        x
+                        y)
+                   x)
+              y))
+  (define-fun ropt-min-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
+         (ite (realopt.is-some? x)
+              (ite (and y? (realopt.is-some? y))
+                   (ite (< (realopt.value x) (realopt.value y))
+                        x
+                        y)
+                   x)
+              y))
   (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
   (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
   (define-fun max-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< x y)) y x))
