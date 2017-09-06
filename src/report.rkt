@@ -111,17 +111,20 @@
       [(list 'error e) 'error]
       ['break 'break]
       [(success stylesheet trees doms) 'success]
-      [(failure stylesheet trees) (if supported? 'fail 'unsupported)]))
+      [(failure stylesheet trees)
+       (cond
+        [((expected?) file pname)
+         'expected]
+        [(not (subset? (dict-ref prob ':features '()) (supported-features)))
+         'unsupported]
+        [else
+         'fail])]))
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (define out
-    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-            (car (dict-ref prob ':url '("/tmp")))))
-  (if (and (equal? status 'fail) ((expected?) out))
-      (struct-copy result out [status 'expected])
-      out))
+  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+          (car (dict-ref prob ':url '("/tmp")))))
 
 (define (test-mutations file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t" file pname)
@@ -134,18 +137,21 @@
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees doms) (if supported? 'fail 'unsupported)]
+      [(success stylesheet trees doms)
+       (cond
+        [((expected?) file pname)
+         'expected]
+        [(not (subset? (dict-ref prob ':features '()) (supported-features)))
+         'unsupported]
+        [else
+         'fail])]
       [(failure stylesheet trees) 'success]))
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (define out
-    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-            (car (dict-ref prob ':url '("/tmp")))))
-  (if (and (equal? status 'fail) ((expected?) out))
-      (struct-copy result out [status 'expected])
-      out))
+  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
+          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+          (car (dict-ref prob ':url '("/tmp")))))
 
 (define (test-assertions assertion file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t~a\t" assertion file pname)
@@ -159,18 +165,18 @@
       [(list 'error e) 'error]
       ['break 'break]
       [(success stylesheet trees doms)
-       'fail]
+       (cond
+        [((expected?) file pname)
+         'expected]
+        [else
+         'fail])]
       [(failure stylesheet trees) 'success]))
   (eprintf "~a\n" status)
 
   (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (define out
-    (result file (format "~a on ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-            (car (dict-ref prob ':url '("/tmp")))))
-  (if (and (equal? status 'fail) ((expected?) out))
-      (struct-copy result out [status 'expected])
-      out))
+  (result file (format "~a on ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
+          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
+          (car (dict-ref prob ':url '("/tmp")))))
 
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
@@ -439,17 +445,9 @@
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
    [("--expected") efile "Expect failures named in this file"
     (define expected-failures
-      (call-with-input-file
-          efile
-          (λ (p)
-            (for/list ([l (in-port read p)])
-              l))))
+      (call-with-input-file efile (λ (p) (sequence->list (in-port read p)))))
     (define f (expected?))
-    (expected?
-     (λ (result)
-       (or (f result)
-           (begin
-             (set-member? expected-failures (list (result-file result) (result-problem result)))))))]
+    (expected? (λ (file problem) (or (f result) (set-member? expected-failures (list file (~a problem))))))]
 
    #:subcommands
 
