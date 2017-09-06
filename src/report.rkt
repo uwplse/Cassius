@@ -456,7 +456,7 @@
     #:args fnames
     (write-report
      #:output out-file
-     (let ([probs (for/append ([file fnames])
+     (let ([probs (for/append ([file (sort fnames string<?)])
                               (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                               (map (curry cons file) x))])
        (run-regression-tests probs #:valid valid? #:index index #:threads threads)))]
@@ -468,7 +468,7 @@
     #:args fnames
     (write-report
      #:output out-file
-     (let ([probs (for/append ([file fnames])
+     (let ([probs (for/append ([file (sort fnames string<?)])
                               (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                               (map (curry cons file) x))])
        (run-mutation-tests probs #:valid valid? #:index index #:repeat repeat)))]
@@ -487,7 +487,7 @@
    ["assertions"
     #:args (assertions . fnames)
     (define prob1
-      (for/append ([file fnames])
+      (for/append ([file (sort fnames string<?)])
                   (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                   (map (curry cons file) x)))
     (define assertions*

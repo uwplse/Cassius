@@ -15,7 +15,7 @@ and Z3 <https://github.com/Z3Prover/z3> (latest git; not version
 
 Test out your Cassius installation by running, from the top-level directory,
 
-    racket src/run.rkt accept bench/introex.rkt verify
+    racket src/run.rkt accept bench/introex.rkt main
 
 This should churn for a few seconds and say, "Accepted".
 
@@ -39,7 +39,7 @@ The currently-supported tools are:
 
 For example, to run the the `smt2` tool, run:
 
-    racket src/run.rkt smt2 bench/introex.rkt sketch > /tmp/out.z3
+    racket src/run.rkt smt2 bench/introex.rkt sketch /tmp/out.z3
 
 This puts a file with all the generated constraints into
 `/tmp/out.z3`.

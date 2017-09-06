@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "dom.rkt" "tree.rkt")
+(require "common.rkt" "dom.rkt" "tree.rkt" "spec/css-properties.rkt")
 (provide parse-file)
 
 (define (parse-file port)
@@ -14,7 +14,11 @@
   (for ([expr (in-port read port)])
     (match expr
       [`(define-stylesheet ,name ,rules ...)
-       (dict-set! sheets name rules)]
+       (dict-set! sheets name
+                  (for/list ([rule rules])
+                    (cons
+                     (car rule)
+                     (filter (λ (thing) (or (not (list? thing)) (set-member? (css-properties) (first thing)))) (cdr rule)))))]
       [`(define-layout (,name ,rest ...) ,tree)
        (define properties (attributes->dict rest))
        (dict-set! layouts name (dom name properties tree tree))]

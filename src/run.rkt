@@ -8,9 +8,8 @@
 (provide dom-strip-positions)
 
 (define (dom-strip-positions d)
-  (match-define (dom name ctx elts boxes) d)
   (define boxes*
-    (let loop ([tree boxes])
+    (let loop ([tree (dom-boxes d)])
       (match-define (list (list type cmds ...) children ...) tree)
       (cons
        (match type
@@ -20,14 +19,17 @@
           (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y)) car) (attributes->dict cmds))))]
          [_ (cons type cmds)])
        (map loop children))))
+  (struct-copy dom d [boxes boxes*]))
 
+(define (dom-set-range d)
   (define ctx*
-    (for/fold ([ctx ctx]) ([(field value)
-                            #hash([:w . ((between 1024 1920))]
-                                  [:h . ((between 800 1080))]
-                                  [:fs . ((between 16 32))])])
+    (for/fold ([ctx (dom-properties d)])
+        ([(field value)
+          #hash([:w . ((between 1024 1920))]
+                [:h . ((between 800 1080))]
+                [:fs . ((between 16 32))])])
       (dict-set ctx field value)))
-  (dom name ctx* elts boxes*))
+  (struct-copy dom d [properties ctx*]))
 
 ;; TODO: Not currently used
 (define (test-actions problem)
@@ -207,7 +209,10 @@
           (for/hash ([assertion (in-port read p)])
             (match-define `(define-test (,name ,vars ...) ,body) assertion)
             (values name `(forall ,vars ,body))))))
-    (define documents (map dom-strip-positions (dict-ref prob ':documents)))
+    (define documents
+      (map (compose dom-set-range dom-strip-positions)
+           (dict-ref prob ':documents)))
     (do-verify
-     (dict-set (dict-update prob ':documents (curry map dom-strip-positions))
-               ':test (list (dict-ref assertions (string->symbol assertion)))))]))
+     (dict-set
+      (dict-set prob ':documents documents)
+      ':test (list (dict-ref assertions (string->symbol assertion)))))]))

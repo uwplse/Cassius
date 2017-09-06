@@ -22,6 +22,9 @@ bench/css/%.rkt: get_bench.py get_bench.js
 bench/fwt/%.rkt: get_bench.py get_bench.js bench/fwt/%.zip
 	sh bench/fwt/get.sh $*
 
+bench/fwt.rkt: get_bench.py get_bench.js $(wildcard bench/fwt/*.zip)
+	sh bench/fwt/get-all.sh `for f in bench/fwt/*.zip; do basename $${f%.zip}; done`
+
 bench/fwt/%.zip:
 	curl -L -s https://freewebsitetemplates.com/download/$*/ > $@
 
