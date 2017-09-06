@@ -1,0 +1,59 @@
+;; -*- mode: scheme -*-
+
+(define-test (overlapping-text b1 b2)
+  (=> (has-type b1 text) (has-type b2 text) (!= b1 b2)
+      (has-contents b1) (has-contents b2)
+      (viewable b1) (viewable b2)
+      (and (or (<= (right b1) (left b2)) (>= (left b1) (right b2)))
+           (or (>= (top b1) (bottom b2)) (<= (bottom b1) (top b2))))))
+
+(define-test (line-spacing b l)
+  (=> (has-type b text) (has-contents b) (viewable b)
+      (let ([line (ancestor b (has-type ? line))])
+        (>= (height line) (* 1.5 (height b))))))
+	
+(define-test (paragraph-spacing b)
+  (=> (matches b (tag p))
+      (>= (- (height b outer) (height b border))
+          (* 1.5 (height (first b))))))
+
+;;; 6
+; TODO: needs "no-styles"
+
+;; TODO: needs support for &elt or similar
+#;
+(define-test (tab-ordering b1 b2)
+  (=> (is-interactive b1) (is-interactive b2)
+      (< (&elt b1) (&elt b2))
+      (or (< (bottom b1) (top b2))
+          (and (<= (top b1) (bottom b2))
+               (< (right b1) (left b2))))))
+
+(define-test (button-size b)
+  (=> (is-interactive b) (and (>= (width b) 30) (>= (height b) 30))))
+
+;; TODO: needs color-distance
+#;
+(define-test (link-distinctive b)
+  (=> (has-type b text)
+      (let ([eb (ancestor b (not (anonymous? ?)))])
+        (matches eb (tag a)))
+      (>= (color-distance (fg b) (fg (ancestor b (has-type ? line)))) 32)))
+; TODO: active color
+
+;; TODO: needs color-distance
+#;
+(define-test (interactive-distinctive b1 b2)
+  (=> (is-interactive b1) (viewable b1) (viewable b2)
+      (not (is-interactive b2))
+      (>= (color-distance (fg b1) (fg b2)) 0.1)))
+
+
+;;; 14
+; TODO: How do we measure that?
+
+;;; 15
+; TODO: Needs some sort of global measure
+
+;; Skipped: 11, 12, 14, 19, 20, 21
+;; Duplicates: 17 & 18

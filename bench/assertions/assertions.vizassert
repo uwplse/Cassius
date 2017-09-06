@@ -41,20 +41,3 @@
          (and (descends e1 (tag h4)) (descends e2 (tag h5)))
          (and (descends e1 (tag h5)) (descends e2 (tag h6))))
      (> (height b1) (height b2)))))
- 
-(define-test (overlapping-text b1 b2)
-  (=> (has-type b1 text) (has-type b2 text) (!= b1 b2)
-      (has-contents b1) (has-contents b2)
-      (viewable b1) (viewable b2)
-      (and (or (< (right b1) (left b2)) (> (left b1) (right b2)))
-           (or (> (top b1) (bottom b2)) (< (bottom b1) (top b2))))))
-		   
-(define-test (line-spacing b l)
-  (=> (has-type b text) (has-contents b) (viewable b)
-      (let ([line (ancestor b (has-type ? line))])
-        (>= (height line) (* 1.5 (height b))))))
-		
-(define-test (paragraph-spacing b)
-  (=> (matches b (tag p))
-      (>= (- (height b outer) (height b border))
-          (* 1.5 (height (first b))))))
