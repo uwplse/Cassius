@@ -471,6 +471,11 @@ function extract_block(elt, children) {
 
     var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
     box.children = children;
+
+    if (cs(elt).display == "list-item" && children.length == 0) {
+        children.push(Line(null, {}));
+    }
+
     return box;
 }
 
@@ -561,7 +566,7 @@ function make_boxes(elt, styles, features) {
 function get_boxes(features) {
     window.scrollTo(0, 0);
     var has_scrollbar = window.scrollMaxY !== 0;
-    var view = Page(document, {w: window.innerWidth - (has_scrollbar ? 13 : 0), h: window.innerHeight});
+    var view = Page(document, {w: window.innerWidth - (has_scrollbar ? 12 : 0), h: window.innerHeight});
     var style = {};
     view.children = make_boxes(document.querySelector("html"), style, features);
     return {view: view, style: style};
@@ -930,6 +935,11 @@ function dump_document(features) {
             if (elt.dir) {
                 rec.props["dir"] = elt.dir;
                 features["attr:dir"] = true;
+            }
+            
+            if (elt.size) {
+                rec.props["size"] = elt.size;
+                features["attr:size"] = true;
             }
 
             for (var i = 0; i < elt.childNodes.length; i++) {
