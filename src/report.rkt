@@ -142,50 +142,66 @@
   (eprintf "~a\n" status)
   (struct-copy result res [status status] [time runtime]))
 
+(define-syntax-rule (for/threads num-threads ([input all-inputs]) body ...)
+  (let ([threads num-threads] [inputs all-inputs])
+    (if threads
+        (let ([workers
+               (build-list
+                threads
+                (λ (i)
+                  (place ch
+                         (let loop ()
+                           (match-define (cons self (cons id thing)) (place-channel-get ch))
+                           (define result
+                             (let ([input thing])
+                               body ...))
+                           (place-channel-put ch (cons self (cons id result)))
+                           (loop)))))])
+          (define to-send (map cons (range 0 (length inputs)) inputs))
+          (for ([worker workers])
+            (unless (null? to-send)
+              (place-channel-put worker (cons worker (car to-send)))
+              (set! to-send (cdr to-send))))
+          (let loop ([out '()])
+            (match-define (cons worker result) (apply sync workers))
+            (unless (null? to-send)
+              (place-channel-put worker (cons worker (car to-send)))
+              (set! to-send (cdr to-send)))
+            (define out* (cons result out))
+            (if (= (length out*) (length inputs))
+                (map cdr (sort out* < #:key car))
+                (loop out*))))
+        (for/list ([input all-inputs]) body ...))))
+
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
   (define inputs
     (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x)))
       (list file (car x) (cdr x) index)))
 
-  (if threads
-      (let ([workers
-             (build-list
-              threads
-              (λ (i)
-                (place ch
-                       (let loop ()
-                         (match-define (list self file pname prob index) (place-channel-get ch))
-                         (define result (test-regression file pname prob #:index index))
-                         (place-channel-put ch (cons self result))
-                         (loop)))))])
-        (define to-send inputs)
-        (for ([worker workers])
-          (unless (null? to-send)
-            (place-channel-put worker (cons worker (car to-send)))
-            (set! to-send (cdr to-send))))
-        (let loop ([out '()])
-          (match-define (cons worker result) (apply sync workers))
-          (unless (null? to-send)
-            (place-channel-put worker (cons worker (car to-send)))
-            (set! to-send (cdr to-send)))
-          (define out* (cons result out))
-          (if (= (length out*) (length inputs))
-              out*
-              (loop out*))))
-      (for/list ([rec inputs])
-        (match-define (list file pname prob index) rec)
-        (test-regression file pname prob #:index index))))
+  (for/threads threads ([rec inputs])
+    (match-define (list file pname prob index) rec)
+    (test-regression file pname prob #:index index)))
 
-(define (run-mutation-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
-  (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
-             [_ (in-range repeat)])
-    (test-mutations file (car x) (cdr x) #:index index)))
+(define (run-mutation-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)]
+                            #:threads [threads #f])
+  (define inputs
+    (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
+               [_ (in-range repeat)])
+      (list file (car x) (cdr x) index)))
+  (for/threads threads ([rec inputs])
+    (match-define (list file pname prob index) rec)
+    (test-mutations file pname prob #:index index)))
 
-(define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
-  (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x))
-             [_ (in-range repeat)])
-    (test-assertions assertion (first x) (second x) (cddr x) #:index index)))
+(define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)]
+                             #:threads [threads #f])
+  (define inputs
+    (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x))
+               [_ (in-range repeat)])
+      (list assertion (first x) (second x) (cddr x) index)))
+  (for/threads threads ([rec inputs])
+    (match-define (list assertion file pname prob index) rec)
+    (test-assertions assertion file pname prob #:index index)))
 
 (define (file-name-stem fn)
   (define-values (_1 uname _2) (split-path fn))
@@ -437,7 +453,7 @@
      (let ([probs (for/append ([file (sort fnames string<?)])
                               (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                               (map (curry cons file) x))])
-       (run-mutation-tests probs #:valid valid? #:index index #:repeat repeat)))]
+       (run-mutation-tests probs #:valid valid? #:index index #:repeat repeat #:threads threads)))]
 
    ["features"
     #:args fnames
@@ -467,7 +483,7 @@
         (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))
     (write-report
      #:output out-file
-     (run-assertion-tests probs #:valid valid? #:index index))]
+     (run-assertion-tests probs #:valid valid? #:index index #:threads threads))]
 
    ["rerender"
     #:args (json-file)
