@@ -411,7 +411,7 @@
     (define expected-failures
       (call-with-input-file efile (λ (p) (sequence->list (in-port read p)))))
     (define f (expected?))
-    (expected? (λ (file problem) (or (f result) (set-member? expected-failures (list file (~a problem))))))]
+    (expected? (λ res (or (apply f res) (set-member? expected-failures res))))]
 
    #:subcommands
 
