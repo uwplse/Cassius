@@ -6,7 +6,6 @@
 
 (define timeout (make-parameter 60))
 (define show-success (make-parameter false))
-(define aggregate (make-parameter false))
 (define expected? (make-parameter (const false)))
 
 (define (dom-not-something d)
@@ -41,17 +40,6 @@
                            (list* (car props) (cadr props) (loop2 n (cddr props)))])))
                  (map loop (cdr tree)))]
           [else (cons (car tree) (map loop (cdr tree)))]))))
-
-(define (normalize-index name section)
-  (if (string=? (last (string-split (~a name) "-")) (substring section 1))
-      (string-join (drop-right (string-split (~a name) "-") 1) "-")
-      name))
-
-(define (normalize-uname uname)
-  (define base (first (string-split (~a uname) ".")))
-  (if (string=? (last (string-split base "-")) "ref")
-      (string-join (drop-right (string-split base "-") 1) "-")
-      base))
 
 (define (section->tuple s)
   (if (string=? (substring s 0 1) "s")
@@ -98,85 +86,58 @@
   (custodian-shutdown-all custodian)
   (values res runtime))
 
-(struct result (file problem test section status description features time url) #:prefab)
+(struct result (file problem subproblem test section status description features time url) #:prefab)
 
-(define (test-regression file pname prob #:index [index (hash)])
-  (eprintf "~a\t~a\t" file pname)
-  (define-values (res runtime) (run-problem prob))
-  (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
+(define (make-result file pname prob #:subproblem [subproblem #f] #:index [index (hash)])
+  (define url (car (dict-ref prob ':url '("/tmp"))))
+  (result file pname subproblem
+          (file-name-stem url) (get-index index (file-name-stem url))
+          'ready (car (dict-ref prob ':title))
+          (dict-ref prob ':features '()) #f url))
 
-  (define status
+(define (get-status info prob res #:invert [invert? #f] #:unsupported [unsupported? #t])
+  (define out
     (match res
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees doms) 'success]
-      [(failure stylesheet trees)
-       (cond
-        [((expected?) file pname)
-         'expected]
-        [(not (subset? (dict-ref prob ':features '()) (supported-features)))
-         'unsupported]
-        [else
-         'fail])]))
-  (eprintf "~a\n" status)
+      [(success stylesheet trees doms) (if invert? 'fail 'success)]
+      [(failure stylesheet trees) (if invert? 'success 'fail)]))
+  (cond
+   [(not (equal? out 'fail))
+    out]
+   [(apply (expected?) info)
+    'expected]
+   [(and
+     (not (subset? (dict-ref prob ':features '()) (supported-features)))
+     unsupported?)
+    'unsupported]
+   [else
+    'fail]))
 
-  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-          (car (dict-ref prob ':url '("/tmp")))))
+(define (test-regression file pname prob #:index [index (hash)])
+  (eprintf "~a\t~a\t" file pname)
+  (define-values (res runtime) (run-problem prob))
+  (define status (get-status (list file pname) prob res #:invert false #:unsupported true))
+  (eprintf "~a\n" status)
+  (struct-copy result (make-result file pname prob #:index index) [status status] [time runtime]))
 
 (define (test-mutations file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t" file pname)
   (define prob* (dict-update prob ':documents (curry map dom-not-something)))
   (define-values (res runtime) (run-problem prob*))
-  (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
-
-  (define status
-    (match res
-      ['timeout 'timeout]
-      [(list 'error e) 'error]
-      ['break 'break]
-      [(success stylesheet trees doms)
-       (cond
-        [((expected?) file pname)
-         'expected]
-        [(not (subset? (dict-ref prob ':features '()) (supported-features)))
-         'unsupported]
-        [else
-         'fail])]
-      [(failure stylesheet trees) 'success]))
+  (define status (get-status (list file pname) prob res #:invert true #:unsupported true))
   (eprintf "~a\n" status)
-
-  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-          (car (dict-ref prob ':url '("/tmp")))))
+  (struct-copy result (make-result file pname prob #:index index) [status status] [time runtime]))
 
 (define (test-assertions assertion file pname prob #:index [index (hash)])
-  (eprintf "~a\t~a\t~a\t" assertion file pname)
+  (eprintf "~a\t~a\t~a\t" file pname assertion)
   (define prob* (dict-update prob ':documents (curry map dom-strip-positions)))
   (define-values (res runtime) (run-problem prob* #:fuzz #f))
-  (define supported? (null? (set-subtract (dict-ref prob* ':features '()) (supported-features))))
+  (define status (get-status (list file pname assertion) prob res #:invert true #:unsupported false))
 
-  (define status
-    (match res
-      ['timeout 'timeout]
-      [(list 'error e) 'error]
-      ['break 'break]
-      [(success stylesheet trees doms)
-       (cond
-        [((expected?) file pname)
-         'expected]
-        [else
-         'fail])]
-      [(failure stylesheet trees) 'success]))
   (eprintf "~a\n" status)
-
-  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (result file (format "~a on ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
-          status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-          (car (dict-ref prob ':url '("/tmp")))))
+  (struct-copy result (make-result file pname prob #:subproblem assertion #:index index) [status status] [time runtime]))
 
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
@@ -241,37 +202,46 @@
   (define data (call-with-input-file file read-json))
   (for/list ([rec data])
     (define (get field [convert identity]) (convert (dict-ref rec field)))
-    (result (get 'file) (get 'problem) (get 'test string->symbol) (get 'section) (get 'status string->symbol)
+    (result (get 'file) (get 'problem) (get 'subproblem) (get 'test string->symbol) (get 'section) (get 'status string->symbol)
             (get 'description) (get 'features (curry map string->symbol)) (get 'time) (get 'url))))
 
 (define (shorten-filename name)
   (string-join (drop-right (string-split (~a (file-name-from-path name)) ".") 1) "."))
 
-(define (write-report results #:output [outname #f])
-  (define (count-type set t)
-    (count (λ (x) (equal? (result-status x) t)) set))
-  (define (set->results set)
-    (map (compose number->string (curry count-type set)) '(success fail error timeout unsupported)))
-
+(define (write-json* results #:output [outname #f])
   (call-with-output-to
    outname #:extension "json" #:exists 'replace
    write-json
    (for/list ([res results])
-     (match-define (result file problem test section status description features time url) res)
+     (match-define (result file problem subproblem test section status description features time url) res)
      (make-hash
       `((file . ,(~a file))
         (problem . ,(~a problem))
+        (subproblem . ,(~a subproblem))
         (test . ,(~a test))
         (section . ,section)
         (status . ,(~a status))
         (description . ,description)
         (features . ,(map ~a features))
         (time . ,time)
-        (url . ,url)))))
-  
+        (url . ,url))))))
+
+(define (status-symbol status)
+  (match status
+    ['success "✔"] ['fail "✘"] ['timeout "🕡"]
+    ['unsupported "☹"] ['error "!"] ['expected "-"]
+    ['ready "0"]))
+
+(define (write-report results #:output [outname #f])
+  (write-json* results #:output outname)
+
+  (define (count-type set t)
+    (count (λ (x) (equal? (result-status x) t)) set))
+  (define (set->results set)
+    (map (compose number->string (curry count-type set)) '(success fail error timeout unsupported)))
+
   (define unsupported-features
     (set-subtract (remove-duplicates (append-map result-features results)) (supported-features)))
-
 
   (define (feature-row feature)
     (list feature
@@ -286,6 +256,11 @@
 
   (define (sort-features data)
     (sort (sort data > #:key third) > #:key second))
+
+  (define (show-res res)
+    (not (set-member?
+          (if (show-success) '(unsupported) '(success unsupported))
+          (result-status res))))
 
   (call-with-output-to
    outname #:extension "html" #:exists 'replace
@@ -315,7 +290,7 @@
                  ,@(for/list ([r sresults] #:when (member (result-status r) '(error fail)))
                      `(a ((href ,(result-url r)))
                          ,(format "~a:~a" (file-name-stem (result-file r)) (result-problem r)))))))))))
-      ,@(if (ormap (λ (r) (set-member? '(fail unsupported) (result-status r))) results)
+      ,@(if (ormap (λ (r) (set-member? '(unsupported) (result-status r))) results)
             `((section ()
                (h2 () "Feature totals")
                (table ()
@@ -326,42 +301,17 @@
       (section ()
        (h2 () ,(if (show-success) "Tests" "Failing tests"))
        (table ()
-       ,@(for/list ([group-results (group-by result-file results)]
-                    #:unless (and
-                              (not (aggregate))
-                              (andmap (λ (res) (set-member? (if (show-success) '(unsupported) '(success unsupported))
-                                                            (result-status res))) group-results)))
-           (if (aggregate)
-               (match-let ([(result file problem test section status description features time url)
-                            (car group-results)])
-                 (apply row `(a ((href ,url) (title ,(~a file))) ,(~a (shorten-filename file))) description
-                        (for/list ([res group-results])
-                          (define title
-                            (if (equal? (result-status res) 'unsupported)
-                                (let ([probfeats (set-subtract features (supported-features))])
-                                  (format "~a\n~a" (result-problem res) (string-join (map ~a probfeats) ", ")))
-                                (~a (result-problem res))))
-                          (define status (result-status res))
-                          `(span ((class ,(~a status)) (title ,title))
-                                 ,(match status
-                                    ['success "✔"] ['fail "✘"] ['timeout "🕡"]
-                                    ['unsupported "☹"] ['error "!"] ['expected "-"])))))
-               `(tbody
-                 (tr () (th ((colspan "4")) ,(result-file (car group-results))))
-                 ,@(for/list ([res group-results]
-                              #:when (not (set-member? (if (show-success) '(unsupported) '(success unsupported))
-                                                       (result-status res))))
-                     (match-define (result file problem test section status description features time url) res)
-                     (row (~a problem) `(a ((href ,url)) ,(~a test)) description
-                          (match status
-                            ['success `(span ((class "success")) "✔")]
-                            ['fail `(span ((class "fail")) "✘")]
-                            ['expected `(span ((class "expected")) "-")]
-                            ['timeout `(span ((class "timeout")) "🕡")]
-                            ['unsupported
-                             (define probfeats (set-subtract features (supported-features)))
-                             `(span ((class "unsupported") (title ,(string-join (map ~a probfeats) ", "))) "☹")]
-                            ['error `(span ((class "error")) "!")]))))))))))))
+       ,@(for/list ([results-group (group-by result-file results)]
+                    #:unless (not (ormap show-res results-group)))
+           `(tbody
+             (tr () (th ((colspan "4")) ,(result-file (car results-group))))
+             ,@(for/list ([ress (group-by result-problem results-group)]
+                          #:unless (not (ormap show-res ress)))
+                 (match-define (result file problem _ test section _ description features _ url) (car ress))
+                 (apply row (~a problem) `(a ([href ,url]) ,(~a test)) description
+                        (for/list ([res ress])
+                          `(span ([class ,(~a (result-status res))] [title ,(~a (result-subproblem res))])
+                                 ,(status-symbol (result-status res))))))))))))))
 
 (define (print-feature-table problems)
   (define all-features (remove-duplicates (append-map (λ (x) (dict-ref x ':features '())) problems)))
@@ -399,8 +349,21 @@
   (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
 
 (define (read-index iname)
-  (for*/hash ([sec (call-with-input-file iname read-json)] [(k v) (in-hash sec)])
-    (values (normalize-index k v) v)))
+  (for*/hash ([sec (call-with-input-file iname read-json)]
+              [(k v) (in-hash sec)])
+    (define name
+      (if (string=? (last (string-split (~a k) "-")) (substring v 1))
+          (string-join (drop-right (string-split (~a k) "-") 1) "-")
+          k))
+    (values name v)))
+
+(define (get-index index uname)
+  (define base (first (string-split (~a uname) ".")))
+  (hash-ref index
+            (if (string=? (last (string-split base "-")) "ref")
+                (string-join (drop-right (string-split base "-") 1) "-")
+                base)
+            "(unknown)"))
 
 (define (read-failed-tests jname)
   (define failed-tests
@@ -435,8 +398,6 @@
     (set! index (read-index index-file))]
    [("--show-success") "Output report rows for successful tests"
     (show-success true)]
-   [("--aggregate") "Aggregate tests from one file together"
-    (aggregate true)]
    [("--supported") "Skip tests with unsupported features"
     (and! valid? (λ (p) (subset? (dict-ref p ':features '()) (supported-features))))]
    [("--failed") json-file "Run only tests that failed in given JSON file"
