@@ -428,13 +428,12 @@
       (call-with-input-file efile (λ (p) (sequence->list (in-port read p)))))
     (define f (expected?))
     (expected? (λ res (or (apply f res) (set-member? expected-failures res))))]
+   [("--threads") t "How many threads to use"
+    (set! threads (string->number t))]
 
    #:subcommands
 
    ["regression"
-    #:once-each
-    [("--threads") t "How many threads to use"
-     (set! threads (string->number t))]
     #:args fnames
     (write-report
      #:output out-file
