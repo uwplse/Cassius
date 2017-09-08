@@ -221,7 +221,20 @@
   (define data (call-with-input-file file read-json))
   (for/list ([rec data])
     (define (get field [convert identity]) (convert (dict-ref rec field)))
-    (result (get 'file) (get 'problem) (get 'subproblem) (get 'test string->symbol) (get 'section) (get 'status string->symbol)
+    (result (get 'file) (get 'problem string->symbol) (get 'subproblem string->symbol)
+            (get 'test string->symbol) (get 'section)
+            (match (get 'status string->symbol)
+              [(or 'fail 'unsupported 'expected)
+               (cond
+                [(apply (expected?) (get 'file) (get 'problem string->symbol)
+                        (if (get 'subproblem)
+                            (list (get 'subproblem string->symbol))
+                            (list)))
+                 'expected]
+                [(not (subset? (get 'features (curry map string->symbol)) (supported-features)))
+                 'unsupported]
+                [else 'fail])]
+              [s s])
             (get 'description) (get 'features (curry map string->symbol)) (get 'time) (get 'url))))
 
 (define (shorten-filename name)
