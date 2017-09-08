@@ -23,7 +23,7 @@
      (matches b
        (id twitter) (id facebook) (id youtube) (id vimeo)
        (id flickr) (id linkedin) (id pinterest) (id rss) (id googleplus)))
-   (not (onscreen b))))
+   (not (viewable b))))
 
 (define-test (no-horizontal-scroll b)
   (<= (right b) (right root)))
