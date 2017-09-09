@@ -29,6 +29,7 @@
               (match (car value)
                 [(list 'em v) (sow (* 100 (z3->number v)))]
                 [(list '% v) (sow (z3->number v))]
+                [(? number? v) (sow (* v 100))]
                 [_ (void)])))))
   (*%* (set-union (*%*) %s))
 
@@ -106,7 +107,7 @@
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
      (cond
-      [(ormap (λ (x) (string-prefix? (~a x) "ensure-model-sufficient")) c)
+      [#;(ormap (λ (x) (string-prefix? (~a x) "ensure-model-sufficient")) c) false
        (log-phase "Insufficient float registers, trying again with ~a"
                   (+ 1 (*exclusion-zone-registers*)))
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
