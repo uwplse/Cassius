@@ -291,7 +291,7 @@
 
   (define (show-res res)
     (not (set-member?
-          (if (show-success) '(unsupported) '(success unsupported))
+          (if (show-success) '() '(success unsupported))
           (result-status res))))
 
   (call-with-output-to
