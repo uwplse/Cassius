@@ -342,7 +342,8 @@
                  (match-define (result file problem _ test section _ description features _ url) (car ress))
                  (apply row (~a problem) `(a ([href ,url]) ,(~a test)) description
                         (for/list ([res ress])
-                          `(span ([class ,(~a (result-status res))] [title ,(~a (result-subproblem res))])
+                          `(span ([class ,(~a (result-status res))]
+                                  [title ,(~a (or (result-subproblem res) ""))])
                                  ,(status-symbol (result-status res))))))))))))))
 
 (define (print-feature-table problems)
