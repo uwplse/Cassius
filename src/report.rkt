@@ -249,7 +249,7 @@
      (make-hash
       `((file . ,(~a file))
         (problem . ,(~a problem))
-        (subproblem . ,(~a subproblem))
+        (subproblem . ,(and subproblem (~a subproblem)))
         (test . ,(~a test))
         (section . ,section)
         (status . ,(~a status))
@@ -291,7 +291,7 @@
 
   (define (show-res res)
     (not (set-member?
-          (if (show-success) '() '(success unsupported))
+          (if (show-success) '() '(success unsupported expected))
           (result-status res))))
 
   (call-with-output-to
