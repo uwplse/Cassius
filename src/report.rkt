@@ -429,7 +429,7 @@
     (timeout (string->number s))]
    [("--index") index-file "File name with section information for tests"
     (set! index (read-index index-file))]
-   [("--show-success") "Output report rows for successful tests"
+   [("--show-all") "Do not hide successful or unsupported tests"
     (show-success true)]
    [("--supported") "Skip tests with unsupported features"
     (and! valid? (λ (p) (subset? (dict-ref p ':features '()) (supported-features))))]

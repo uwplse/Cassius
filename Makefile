@@ -51,7 +51,7 @@ bench/fwt.working.rkt: bench/fwt.rkt reports/fwt.json
 	unzip -q $< -d /tmp/
 
 reports/fwt.html reports/fwt.json: bench/fwt.rkt
-	@ racket src/report.rkt regression $(FLAGS) --show-success --timeout 300 -o reports/fwt $^
+	@ racket src/report.rkt regression $(FLAGS) --show-all --timeout 300 -o reports/fwt $^
 
 reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
-	@ racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-success --timeout 600 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
+	@ racket src/report.rkt assertions $(FLAGS) --show-all --expected bench/fwt/expected.sexp --timeout 600 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
