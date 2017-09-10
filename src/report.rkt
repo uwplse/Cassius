@@ -221,7 +221,7 @@
   (define data (call-with-input-file file read-json))
   (for/list ([rec data])
     (define (get field [convert identity]) (convert (dict-ref rec field)))
-    (result (get 'file) (get 'problem string->symbol) (get 'subproblem string->symbol)
+    (result (get 'file) (get 'problem string->symbol) (and (get 'subproblem) (get 'subproblem string->symbol))
             (get 'test string->symbol) (get 'section)
             (match (get 'status string->symbol)
               [(or 'fail 'unsupported 'expected)
