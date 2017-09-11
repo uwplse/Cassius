@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e -o pipefail
+trap exit ERR
+
+CMD="$1"
+shift
+
+if [ "x$CMD" = "xget" ]; then
+    scp -r 'warfa:cassius/reports/*' reports/
+elif [ "x$CMD" = "xput" ]; then
+    if [ "$#" -ne "0" ]; then
+        rsync -r --include '$1' --exclude '*' ./ warfa:cassius/
+    else
+        rsync -r --exclude src/solver.rkt --exclude reports --exclude .git --exclude papers --exclude "*.zip" ./ warfa:cassius/
+    fi
+else
+    echo "USAGE: warfa [get|put]"
+    exit 1
+fi
