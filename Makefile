@@ -17,10 +17,10 @@ publish:
 
 # CSSWG test suite
 
-CSSWG_PATH=$(HOME)/src/csswg-test
+CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2
 
 bench/css/%.rkt: get_bench.py get_bench.js
-	@ sh bench/css/get.sh $* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/css21/$*/*.xht))
+	@ sh bench/css/get.sh $* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/$*/*.xht))
 
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
 	@ racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg $^
@@ -33,15 +33,14 @@ bench/css/index.json:
 
 # FWT test suite
 
-bench/fwt/%.zip:
-	curl -L -s https://freewebsitetemplates.com/download/$*/ > $@
+FWT_PATH=$(HOME)/src/fwt
 
 # Not recommended
-bench/fwt/%.rkt: get_bench.py get_bench.js bench/fwt/%.zip
-	sh bench/fwt/get.sh $*
+bench/fwt/%.rkt: get_bench.py get_bench.js $(FWT_PATH)/%.zip
+	sh bench/fwt/get.sh $(FWT_PATH)/$*.zip
 
-bench/fwt.rkt: get_bench.py get_bench.js $(wildcard bench/fwt/*.zip)
-	sh bench/fwt/get-all.sh `for f in bench/fwt/*.zip; do basename $${f%.zip}; done`
+bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*.zip)
+	sh bench/fwt/get-all.sh $(wildcard $(FWT_PATH)/*.zip)
 
 bench/fwt.working.rkt: bench/fwt.rkt reports/fwt.json
 	racket src/filter-working.rkt reports/fwt.json <bench/fwt.rkt >bench/fwt.working.rkt
@@ -51,7 +50,7 @@ bench/fwt.working.rkt: bench/fwt.rkt reports/fwt.json
 	unzip -q $< -d /tmp/
 
 reports/fwt.html reports/fwt.json: bench/fwt.rkt
-	@ racket src/report.rkt regression $(FLAGS) --show-all --timeout 300 -o reports/fwt $^
+	@ racket src/report.rkt regression $(FLAGS) --show-success --timeout 300 -o reports/fwt $^
 
 reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
-	@ racket src/report.rkt assertions $(FLAGS) --show-all --expected bench/fwt/expected.sexp --timeout 600 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
+	@ racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-success --timeout 600 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
