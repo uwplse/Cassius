@@ -25,7 +25,7 @@ for FILE in "$@"; do
     loc="$loc $(find "$tmpdir" -name 'index.html' | head -n1)"
 done
 
-xvfb-run -s '-screen 0 1920x1080x24' python2 get_bench.py --name fwt $loc
+xvfb-run -a -s '-screen 0 1920x1080x24' python2 get_bench.py --name fwt $loc
 
 for FILE in "$@"; do
     NAME=`basename "$FILE" .zip`

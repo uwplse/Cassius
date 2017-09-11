@@ -18,5 +18,5 @@ fi
 tmpdir=$(mktemp -d /tmp/cassius-get-bench.XXXXXX.zip)
 unzip -q "$FILE" -d $tmpdir
 loc=$(find "$tmpdir" -name 'index.html' | head -n1)
-xvfb-run -s '-screen 0 1920x10800x24' python2 get_bench.py "file://$loc" --name fwt/"$NAME" "$@"
+xvfb-run -a -s '-screen 0 1920x10800x24' python2 get_bench.py "file://$loc" --name fwt/"$NAME" "$@"
 rm -r $tmpdir
