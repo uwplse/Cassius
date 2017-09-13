@@ -22,7 +22,7 @@ for FILE in "$@"; do
     mkdir $tmpdir/$NAME
 
     fuse-zip -r "$FILE" $tmpdir/$NAME
-    loc="$loc $(find "$tmpdir" -name 'index.html' | head -n1)"
+    loc="$loc $(find "$tmpdir/$NAME" -name 'index.html' | head -n1)"
 done
 
 xvfb-run -a -s '-screen 0 1920x1080x24' python2 get_bench.py --name fwt $loc

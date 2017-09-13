@@ -51,11 +51,6 @@ for CSSWG in \
     floats linebox margin-padding-clear normal-flow positioning text;
 do
     echo bench/css/$CSSWG.rkt
-done | xargs make -j$THREADS
+done | xargs make -j$THREADS bench/fwt.rkt
 
-make -j$THREADS \
-     bench/css/abspos.rkt bench/css/borders.rkt bench/css/box-display.rkt bench/css/box.rkt \
-     bench/css/cascade.rkt bench/css/floats-clear.rkt bench/css/floats.rkt bench/css/linebox.rkt \
-     bench/css/margin-padding-clear.rkt bench/css/normal-flow.rkt bench/css/positioning.rkt bench/css/text.rkt \
-     bench/fwt.rkt \
-     reports/fwt.html reports/vizassert.html reports/csswg.html
+make FLAGS="--threads=$THREADS" reports/fwt.html reports/vizassert.html reports/csswg.html
