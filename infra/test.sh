@@ -53,4 +53,4 @@ do
     echo bench/css/$CSSWG.rkt
 done | xargs make -j$THREADS bench/fwt.rkt
 
-make FLAGS="--threads=$THREADS" reports/fwt.html reports/vizassert.html reports/csswg.html
+make FLAGS="--threads $THREADS" reports/fwt.html reports/vizassert.html reports/csswg.html
