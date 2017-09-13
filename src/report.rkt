@@ -9,7 +9,7 @@
 (define expected-failures (make-parameter '()))
 
 (define (expected? . info)
-  (set-member? expected-failures info))
+  (set-member? (expected-failures) info))
 
 (define (dom-not-something d)
   (match-define (dom name ctx elts boxes) d)
