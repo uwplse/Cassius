@@ -6,7 +6,10 @@
 
 (define timeout (make-parameter 60))
 (define show-success (make-parameter false))
-(define expected? (make-parameter (const false)))
+(define expected-failures (make-parameter '()))
+
+(define (expected? . info)
+  (set-member? expected-failures info))
 
 (define (dom-not-something d)
   (match-define (dom name ctx elts boxes) d)
@@ -80,7 +83,7 @@
                   (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)))))))
 
   (define t (current-inexact-milliseconds))
-  (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout)) ; 1m max
+  (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout))
   (define runtime (- (current-inexact-milliseconds) t))
   (engine-kill eng)
   (custodian-shutdown-all custodian)
@@ -106,7 +109,7 @@
   (cond
    [(not (equal? out 'fail))
     out]
-   [(apply (expected?) info)
+   [(apply expected? info)
     'expected]
    [(and
      (not (subset? (dict-ref prob ':features '()) (supported-features)))
@@ -150,6 +153,9 @@
                 threads
                 (λ (i)
                   (place ch
+                         (match-define (cons timeout* expected-failures*) (place-channel-get ch))
+                         (timeout timeout*)
+                         (expected-failures expected-failures*)
                          (let loop ()
                            (match-define (cons self (cons id thing)) (place-channel-get ch))
                            (define result
@@ -157,6 +163,8 @@
                                body ...))
                            (place-channel-put ch (cons self (cons id result)))
                            (loop)))))])
+          (for ([worker workers])
+            (place-channel-put worker (cons (timeout) (expected-failures))))
           (define to-send (map cons (range 0 (length inputs)) inputs))
           (for ([worker workers])
             (unless (null? to-send)
@@ -226,7 +234,7 @@
             (match (get 'status string->symbol)
               [(or 'fail 'unsupported 'expected)
                (cond
-                [(apply (expected?) (get 'file) (get 'problem string->symbol)
+                [(apply expected? (get 'file) (get 'problem string->symbol)
                         (if (get 'subproblem)
                             (list (get 'subproblem string->symbol))
                             (list)))
@@ -438,10 +446,7 @@
    [("--feature") feature "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
    [("--expected") efile "Expect failures named in this file"
-    (define expected-failures
-      (call-with-input-file efile (λ (p) (sequence->list (in-port read p)))))
-    (define f (expected?))
-    (expected? (λ res (or (apply f res) (set-member? expected-failures res))))]
+    (expected-failures (call-with-input-file efile (λ (p) (sequence->list (in-port read p)))))]
    [("--threads") t "How many threads to use"
     (set! threads (string->number t))]
 
