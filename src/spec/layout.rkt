@@ -466,9 +466,13 @@
   (define-fun compute-line-height ((b Box)) Bool
     (and
      (ite (is-line-height/normal (lineheight b))
-        (<= (max-if (* 1.1 (font-size b)) (is-box (pflow b)) (clh (pflow b)))
+        (<= (max-if (* 1.1 (font-size b))
+                    (and (not (is-box/block (type b))) (is-box (pflow b)))
+                    (clh (pflow b)))
             (clh b)
-            (max-if (* 1.25 (font-size b)) (is-box (pflow b)) (clh (pflow b))))
+            (max-if (* 1.25 (font-size b))
+                    (and (not (is-box/block (type b))) (is-box (pflow b)))
+                    (clh (pflow b))))
         (= (clh b)
            (max-if
             ,(smt-cond
@@ -742,7 +746,8 @@
              [ez (ez.in b)])
          (and
           (ez.test (ez.in b) y-normal) ;; Key float restriction
-          (= (y b) (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal float/left))
+          ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
+          (= (y b) (ez.level ez (stfmax (lbox b)) (left-content p) (right-content p) y-normal float/left))
           (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
           (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p)))))
 
