@@ -8,7 +8,7 @@
 <body>
   <header>
     <img src="logo.png" alt="Cassius" />
-    <h1>Cassius</h1>
+    <h1>The Cassius Project</h1>
     <p>Automated Reasoning for Web Page Layout</p>
     <ul>
       <li><a href="#news">News</a></li>
@@ -19,78 +19,63 @@
   </header>
 
   <p>
-    Cassius <em>automatically reasons about web pages</em>. It
-    formalizes a substantial fragment of CSS in an SMT-friendly way.
-    Cassius can automatically verify, synthesize, and debug web pages.
+    The Cassius Project develops <em>tools that understand how web
+    pages render</em>. Leveraging modern equation solvers, the Cassius
+    Project hopes to develop a new class of verification, synthesis
+    and debugging tools for web pages.
   </p>
 
-  <h2>Tools</h2>
   
-  <p>Cassius supports the development of powerful web development tools:</p>
-
   <section class="tool">
     <img src="vizassert.png">
-    <h3>VizAssert</h3>
-    <p>Formally check that your website satisfies accessibility, usability, or design assertions.</p>
+    <h2>VizAssert</h2>
+    <p>VizAssert checks that your website satisfies accessibility,
+    usability, and design properties, no matter the user's device
+    size, font size preferences, or browser.</p>
+    
+    <figure>
+      <pre class="example">(define-test (interactive-onscreen b)
+  (=&gt; (is-interactive b) (onscreen b))</pre>
+      <figcaption>This assertion checks that interactive elements,
+      like links, buttons, and form elements, are
+      onscreen.</figcaption>
+    </figure>
+    
+    <p>VizAssert provides mathematical guarantees that, if your
+      assertion passes, no possible set of device size or user
+      preferences could violate the assertion. When that can't be
+      done, VizAssert provides a counterexample and points out the
+      element that violates the assertion. VizAssert is works on most
+      small web pages 50&ndash;200 elements in size.</p>
   </section>
   
-  <h2>Status</h2>
+  <h2>The Cassius Framework</h2>
   
   <p>
-    Cassius supports the block, inline, floating, and positioned
-    layout modes in CSS. It matches the behavior of existing web
+    The Cassius Framework is a mathematical formalization of web page
+    layout, mostly implementing CSS&nbsp;2.1. CSS is huge, so Cassius
+    supports only a subset:
+  </p>
+
+  <ul>
+    <li>The full CSS&nbsp;2.1 box model: margins, padding, borders,
+    and min/max sizes</li>
+    <li><code>float</code> and <code>clear</code></li>
+    <li><code>position</code> and positioning properties</li>
+    <li>The <code>inline</code>, <code>block</code>,
+      and <code>inline-block</code> display modes</li>
+    <li>Colors, foreground and background</li>
+    <li>Percentage and <code>em</code> measurements</li>
+  </ul>
+
+  <p>
+    The Cassius Framework matches the behavior of existing web
     browsers and passes
     the <a href="http://www.w3.org/Style/CSS/Test/">official
-    conformance tests</a>.
-  </p>
-  
-  <figure>
-    <div class="three-pre">
-      <pre>(document A
- ([html]
-  ([body]
-   ([p] "Products:")
-   ([main]
-     ([div] "A")
-     ([div] "B")
-     ([div] "C")
-     ([div] "D"))
-   ([p] "Buy!"))))</pre>
-      <pre>(stylesheet B
- ((tag main)
-  [width (% 100)]
-  [float left])
- ((tag div)
-  [width <b>?</b>]
-  [height (px 200)]
-  [float left]))</pre>
-      <pre>(layout C
- ([ROOT :w 400]
-  ([BLOCK]
-   ([BLOCK]
-    ([BLOCK]
-     ([LINE]
-      ([TEXT :w 112 :h 19])))
-    ([BLOCK <b>:w 400 :h 400</b>]
-     ([BLOCK] ([LINE] ([TEXT])))
-     ([BLOCK] ([LINE] ([TEXT])))
-     ([BLOCK] ([LINE] ([TEXT])))
-     ([BLOCK] ([LINE] ([TEXT]))))
-    ([BLOCK]
-     ([LINE]
-      ([TEXT :w 76 :h 10]))))))))</pre>
-    </div>
-    <figcaption>Cassius formalizes the relationship between HTML documents, CSS stylesheets, and rendered layouts, and can solve for unknowns.</figcaption>
-  </figure>
-  
-  <p>
-    Cassius can reason about all of these features quickly,
-    frequently completing within minutes on small web pages.
-  </p>
-  
-  <p>
-    The techniques that make Cassius possible are described in
-    our <a href="oopsla16.html">OOPSLA'16 paper</a>.
+    conformance tests</a>. It is the core of the tools developed by
+    the Cassius Project. The theoretical foundations of the Cassius
+    Framework are described in our <a href="oopsla16.html">OOPSLA'16
+    paper</a>.
   </p>
   
   <h2>Cassius Project News</h2>
@@ -102,12 +87,17 @@
   <h2>The Cassius Developers</h2>
 
   <p>
-    Cassius is developed by
+    The Cassius Project comes from the 
+    <a href="https://uwplse.org">Programming Languages and Software Engineering</a> group at
     the <a href="https://cs.washington.edu">University of
-    Washington</a> Programming Languages and Software Engineering
-    group, by <a href="https://pavpanchekha.com">Pavel Panchekha</a>
-    and <a href="https://homes.cs.washington.edu/~emina/">Emina
-    Torlak</a>.
+    Washington</a>.
+    It is developed by
+    <a href="https://pavpanchekha.com">Pavel Panchekha</a>,
+    Adam Timothy Geller,
+    <a href="https://research.adobe.com/person/shoaib-kamil/">Shoaib Kamil</a>,
+    <a href="https://homes.cs.washington.edu/~mernst/">Michael Ernst</a>,
+    <a href="https://homes.cs.washington.edu/~ztatlock/">Zachary Tatlock</a>,
+    <a href="https://homes.cs.washington.edu/~emina/">Emina Torlak</a>.
   </p>
 
 </body>
