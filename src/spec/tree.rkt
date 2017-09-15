@@ -99,11 +99,7 @@
         (style.color (computed-style (get/elt &e))))
      (= (bg-color (get/box &b))
         (style.background-color (computed-style (get/elt &e))))
-     (= (&anc-w-elt (get/box &b)) &b)
-     (= (ancestor-bg (get/box &b))
-        (ite (is-color/transparent (bg-color (get/box &b)))
-             (ancestor-bg (pbox (get/box &b)))
-             (bg-color (get/box &b))))))
+     (= (&anc-w-elt (get/box &b)) &b)))
 
   (define-fun match-anon-box ((&b Int)) Bool
     (and
@@ -125,8 +121,7 @@
              color/black
              (fg-color (pflow (get/box &b)))))
      (= (bg-color (get/box &b)) color/transparent)
-     (= (&anc-w-elt (get/box &b)) (&anc-w-elt (pflow (get/box &b))))
-     (= (ancestor-bg (get/box &b)) (ancestor-bg (pbox (get/box &b))))))
+     (= (&anc-w-elt (get/box &b)) (&anc-w-elt (pflow (get/box &b))))))
 
   ;; `link-flow-simple`, `link-flow-root`, and `link-flow-block` link
   ;; boxes together in their flow trees. The "block" version is much
@@ -139,7 +134,6 @@
      (= (&vflow b) -1)
      (= (&nflow b) -1)
      (= (&root b) &b)
-     (= (ancestor-bg b) (color/rgb (color 255 255 255 1 1 1))) ;; TODO: Browser dependent? User-configurable?
      (= (ez.in b) ez.init)))
 
   (define-fun link-flow-simple ((b Box) (&b Int)) Bool

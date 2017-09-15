@@ -57,7 +57,7 @@
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
                     `(,(sformat "&~a" i) Int))
-                (fg-color Color) (bg-color Color) (ancestor-bg Color)))
+                (fg-color Color) (bg-color Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
