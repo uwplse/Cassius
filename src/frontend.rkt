@@ -106,12 +106,5 @@
          (solve sheets docs tests))])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
-     (cond
-      [#;(ormap (λ (x) (string-prefix? (~a x) "ensure-model-sufficient")) c) false
-       (log-phase "Insufficient float registers, trying again with ~a"
-                  (+ 1 (*exclusion-zone-registers*)))
-       (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
-         (solve sheets docs tests))]
-      [else
-       (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
-       (failure stylesheet* (map unparse-tree trees*))])]))
+     (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
+     (failure stylesheet* (map unparse-tree trees*))]))

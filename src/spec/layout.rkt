@@ -571,8 +571,14 @@
          (and
           (= (top-outer b) y*)
           (= (left-outer b) x)
-          (= (ez.sufficient b) true #;(ez.can-add ez* (+ y* h)))
-          (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x))))))
+          ;; The idea here is that if there are not enough registers,
+          ;; so that you can *not* add, then we want to provide
+          ;; maximum freedom to ez.out, to try to ensure SAT, so we
+          ;; can look inside the model, see that it's not sufficient,
+          ;; and then restart with more registers.
+          (= (ez.sufficient b) (ez.can-add ez* (+ y* h)))
+          (=> (ez.sufficient b)
+              (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x)))))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     (and
