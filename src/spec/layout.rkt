@@ -596,6 +596,9 @@
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
 
+       (= (text-indent b)
+          (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
+
        (compute-line-height b)
 
        ,(smt-cond
@@ -632,6 +635,9 @@
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
        (compute-line-height b)
+
+       (= (text-indent b)
+          (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
        (= (ascender-top b)
           (ropt-min-if
@@ -710,6 +716,7 @@
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
 
+       (= (text-indent b) 0.0)
        (compute-line-height b)
        (<= (top-outer b) (text-top b) (text-bottom b) (bottom-outer b))
 
@@ -740,7 +747,8 @@
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) 0.0)
 
-       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent '(w p) '(ite (is-elt (box-elt p)) p (pflow p))) 0.0))
+       (= (text-indent b) (text-indent p))
+       (= (pl b) (ite (is-no-box v) (text-indent b) 0.0))
 
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
              [ez (ez.in b)])
@@ -781,7 +789,8 @@
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
      (= (ez.sufficient b) true)
-     (= (ez.out b) (ez.out (lbox b)))))
+     (= (ez.out b) (ez.out (lbox b)))
+     (= (text-indent b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
     (or (is-box/block (type b)) (is-box/inline (type b))))
@@ -793,6 +802,7 @@
        (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b (w p))
+       (= (text-indent b) (text-indent p))
        (= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
        (= (stfwidth b) (max-if (stfwidth l) (is-box v) (stfwidth v)))
        (= (float-stfmax b)

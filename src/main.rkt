@@ -56,7 +56,7 @@
            type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
            pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
            &pbox &vbox &nbox &fbox &lbox
-           width-set font-size leading min-top max-bottom text-top text-bottom clh
+           width-set text-indent font-size leading min-top max-bottom text-top text-bottom clh
            &nflow &vflow &ppflow &pbflow &root &anc-elt ez.in ez.out ez.sufficient
            has-contents? lh textalign &elt first? last?
            extra ...
@@ -72,7 +72,7 @@
          type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
          pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
          &pbox &vbox &nbox &fbox &lbox
-         width-set font-size leading min-top max-bottom text-top text-bottom clh
+         width-set font-size text-indent leading min-top max-bottom text-top text-bottom clh
          &nflow &vflow &ppflow &pbflow &root &anc-elt ez.in ez.out ez.sufficient
          has-contents? lh textalign &elt first? last?
          extra ...
