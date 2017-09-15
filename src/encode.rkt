@@ -1,8 +1,8 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "spec/css-properties.rkt" "registry.rkt" "spec/percentages.rkt")
+(require "common.rkt" "dom.rkt" "spec/css-properties.rkt" "registry.rkt" "spec/percentages.rkt" "spec/utils.rkt")
 
 (provide dump-tag extract-tag dump-id extract-id
-         dump-elt dump-box extract-style
+         dump-elt dump-box extract-box extract-style
          dump-value extract-value dump-selector extract-selector
          z3->number number->z3)
 
@@ -65,6 +65,7 @@
   (match value
     [`(color/rgb (color ,r ,g ,b ,rc ,gc, bc)) `(rgb ,r ,g ,b)]
     [(list (app split-symbol (list _ ... 'px)) x) (list 'px x)]
+    [(list (app split-symbol (list _ ... 'em)) x) (list 'em x)]
     [(list (app split-symbol (list _ ... '%)) x)
      (if (ormap (curry = x) (*%*)) ; Percentages that aren't in the list are its first element
          (list '% x)
@@ -88,3 +89,32 @@
   (match v
     [`(/ ,a ,b) (/ a b)]
     [_ v]))
+
+(define (extract-box box)
+  (define box-def
+    (match (tree-types)
+      [(list
+        _ ...
+        `(declare-datatypes ()
+          (,_ ...
+             (Box ,_ ...
+                  (box (,names ,types) ...))
+             ,_ ...))
+        _ ...)
+       (map cons names types)]))
+  (match box
+    ['no-box #f]
+    [(list 'box fields ...)
+     (for/hash ([field fields] [(name type) (in-dict box-def)])
+       (values name
+               (match type
+                 [(or 'Color 'Line-Height 'Text-Align) (extract-value field)]
+                 ['BoxType (second (split-symbol field))]
+                 ['RealOpt (extract-realopt field)]
+                 [(or 'Real 'Int 'Bool) field]
+                 ['EZone field])))])) ; TODO
+
+(define (extract-realopt val)
+  (match val
+    [`(realopt ,x #t) x]
+    [`(realopt ,_ #f) #f]))

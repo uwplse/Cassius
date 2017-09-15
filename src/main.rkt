@@ -49,51 +49,19 @@
 
 (define (extract-model-sufficiency smt-out trees)
   (for*/and ([tree trees] [elt (in-tree tree)])
-    (define box-model (dict-ref smt-out (dump-box elt) #f))
-
-    (match-define
-     (list 'box
-           type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
-           pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
-           &pbox &vbox &nbox &fbox &lbox
-           width-set text-indent font-size leading min-top max-bottom text-top text-bottom clh
-           &nflow &vflow &ppflow &pbflow &root &anc-elt ez.in ez.out ez.sufficient
-           has-contents? lh textalign &elt first? last?
-           extra ...
-           color background-color ancestor)
-     box-model)
-    (unless (= (length extra) (length (extra-pointers)))
-      (error "You forgot to add your new Box field to L66 in src/main.rkt"))
-    ez.sufficient))
+    (dict-ref (extract-box (dict-ref smt-out (dump-box elt) #f)) 'ez.sufficient)))
 
 (define (extract-box! z3-box box)
-  (match-define
-   (list 'box
-         type x y w h xo yo mt mr mb ml mtp mtn mbp mbn
-         pt pr pb pl bt br bb bl stfwidth stfmax fstfmax w-from-stfwidth
-         &pbox &vbox &nbox &fbox &lbox
-         width-set font-size text-indent leading min-top max-bottom text-top text-bottom clh
-         &nflow &vflow &ppflow &pbflow &root &anc-elt ez.in ez.out ez.sufficient
-         has-contents? lh textalign &elt first? last?
-         extra ...
-         color background-color ancestor)
-   z3-box)
-  (unless (= (length extra) (length (extra-pointers)))
-    (error "You forgot to add your new Box field to L82 in src/main.rkt"))
-  (define box-width (+ bl pl w pr br))
-  (define box-height (+ bt pt h pb bb))
-  (define box-x (+ x xo))
-  (define box-y (+ y yo))
-  (node-set! box ':x box-x)
-  (node-set! box ':y box-y)
-  (node-set! box ':w box-width)
-  (node-set! box ':h box-height)
-  (node-set! box ':fs font-size)
-  (node-set! box ':fg (extract-value color))
-  (node-set! box ':bg (extract-value background-color))
-  (node-set! box ':l leading)
-  (node-set! box ':fs font-size)
-  (when (>= &elt 0) (node-set! box ':elt &elt)))
+  (define data (curry dict-ref (extract-box z3-box)))
+  (node-set! box ':x (+ (data 'y) (data 'yo)))
+  (node-set! box ':y (+ (data 'x) (data 'xo)))
+  (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'br)))
+  (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'bb)))
+  (node-set! box ':fs (data 'font-size))
+  (node-set! box ':fg (data 'fg-color))
+  (node-set! box ':bg (data 'bg-color))
+  (node-set! box ':l (data 'leading))
+  (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)
