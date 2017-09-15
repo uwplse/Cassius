@@ -406,11 +406,10 @@
     ,@(common-definitions)
     ,@(exclusion-zones)
     ,@(tree-types)
-    ,@(utility-definitions)
     ,@(global dom-define-get/elt)
     ,@(global dom-define-get/box)
     ,@(global configuration-constraints)
-    ;,@css-functions
+    ,@(utility-definitions)
     ,@(link-definitions)
     ,@(style-computation)
     ,@(layout-definitions)

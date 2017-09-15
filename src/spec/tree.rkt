@@ -1,91 +1,18 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt" "../encode.rkt")
-(provide tree-types link-definitions extra-pointers)
-
-(define extra-pointers (make-parameter '()))
+(require "../common.rkt" "../smt.rkt" "../encode.rkt" "utils.rkt")
+(provide link-definitions)
 
 ;; This file defines the tree structures used in Cassius's SMT
 ;; encoding of CSS. It defines the Element and Box classes, and
 ;; functions to properly establish the pointers each holds.
 
-(define-constraints tree-types
-  (declare-datatypes ()
-     ((Box no-box
-           (box (type BoxType)
-                (x Real) (y Real) (w Real) (h Real) ; X, Y and width/height
-                (xo Real) (yo Real) ; X and Y offset
-                (mt Real) (mr Real) (mb Real) (ml Real) ; margins
-                (mtp Real) (mtn Real) (mbp Real) (mbn Real) ; top/bottom positive/negative margins for collapsing
-                (pt Real) (pr Real) (pb Real) (pl Real) ; padding
-                (bt Real) (br Real) (bb Real) (bl Real) ; border
-                (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
-                (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
-                (width-set Bool) ; used for dependency creation only
-                (text-indent Real)
-                (font-size Real) (leading Real) (ascender-top RealOpt) (descender-bottom RealOpt)
-                (text-top Real) (text-bottom Real) ; TODO: how do we compute this? Can we compute this?
-                (clh Real) ; computed line height
-                (&nflow Int) (&vflow Int) ; flow tree pointers
-                (&ppflow Int) ; parent positioned pointers
-                (&pbflow Int)
-                (&root Int) ; Root box
-                (&anc-w-elt Int) ; pointer to nearest ancestor with an element
-                (ez.in EZone) (ez.out EZone) (ez.sufficient Bool)
-                (has-contents Bool) (lineheight Line-Height) (textalign Text-Align) ; to handle inheritance; TODO: handle better
-                (&elt Int) (first-box? Bool) (last-box? Bool)
-                ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
-                    `(,(sformat "&~a" i) Int))
-                (fg-color Color) (bg-color Color) (ancestor-bg Color)))
-      (BoxType box/root box/text box/inline box/block box/line)
-      (Element no-elt
-           (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
-                (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
-                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int)))))
-
-  ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
-      `(assert (= (,field no-elt) -1)))
-  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
-      `(assert (= (,field no-box) -1)))
-
-  (assert (= (&elt no-box) -1))
-
-  ;; TODO: for all three below functions, compute background color for transparent
-  ;; backgrounds. Currently stubbed out.
-  (define-fun fg-lum ((b Box)) Real
-    (lum (color.rgb (fg-color b))))
-
-  (define-fun bg-lum ((b Box)) Real
-    (lum (color.rgb (ancestor-bg b))))
-
-  ;; TODO: is this a good place to put this?
-  (define-fun color-distance ((c1 Color) (c2 Color)) Real
-    (ite (or (is-color/transparent c1) (is-color/transparent c2))
-         32.0
-         (color.diff (color.rgb c1) (color.rgb c2)))))
-
 (define-constraints link-definitions
-  ;; The elements in each direction in the element tree
-  (define-fun velt ((elt Element)) Element (get/elt (&velt elt)))
-  (define-fun nelt ((elt Element)) Element (get/elt (&nelt elt)))
-  (define-fun pelt ((elt Element)) Element (get/elt (&pelt elt)))
-  (define-fun felt ((elt Element)) Element (get/elt (&felt elt)))
-  (define-fun lelt ((elt Element)) Element (get/elt (&lelt elt)))
-
-  ;; The boxes in each direction in the box tree
-  (define-fun pbox ((box Box)) Box (get/box (&pbox box)))
-  (define-fun fbox ((box Box)) Box (get/box (&fbox box)))
-  (define-fun lbox ((box Box)) Box (get/box (&lbox box)))
-  (define-fun vbox ((box Box)) Box (get/box (&vbox box)))
-  (define-fun nbox ((box Box)) Box (get/box (&nbox box)))
 
   ;; Three additional pointers: to the previous floating box, the
   ;; parent block box, and the parent positioned box.
   (define-fun ppflow ((box Box)) Box (get/box (&ppflow box)))
   (define-fun pbflow ((box Box)) Box (get/box (&pbflow box)))
   (define-fun rootbox ((box Box)) Box (get/box (&root box)))
-
-  ;; From elements to boxes and back
-  (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
 
   ;; Helper functions for some basic primitives
   (define-fun float ((b Box)) Float

@@ -1,5 +1,5 @@
 #lang racket
-(require "z3o.rkt" "common.rkt" "spec/tree.rkt")
+(require "z3o.rkt" "common.rkt" "spec/utils.rkt")
 (provide z3-prepare z3-clean z3-namelines cassius-check-sat)
 
 (define to-resolve
@@ -97,10 +97,13 @@
 
 (module+ main
   (command-line
-   #:args (fname)
+   #:args (fname oname)
    (define cmds
      (z3-prepare
       (call-with-input-file fname
         (λ (p) (sequence->list (in-port read p))))))
-   (for ([cmd cmds])
-     (printf "~a\n" cmd))))
+   (call-with-output-file
+       oname #:exists 'replace
+       (λ (p)
+         (for ([cmd cmds])
+           (fprintf p "~a\n" cmd))))))

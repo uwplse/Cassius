@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "spec/tree.rkt" "encode.rkt" "smt.rkt" "spec/tree.rkt")
+(require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt")
 (provide compile-assertion)
 
 (define helpers

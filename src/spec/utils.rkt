@@ -1,6 +1,8 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt")
-(provide common-definitions utility-definitions)
+(provide extra-pointers common-definitions tree-types utility-definitions)
+
+(define extra-pointers (make-parameter '()))
 
 (define-constraints common-definitions
   (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
@@ -27,7 +29,67 @@
   (define-fun between ((x Real) (y Real) (z Real)) Bool
     (or (<= x y z) (>= x y z))))
 
+
+(define-constraints tree-types
+  (declare-datatypes ()
+     ((Box no-box
+           (box (type BoxType)
+                (x Real) (y Real) (w Real) (h Real) ; X, Y and width/height
+                (xo Real) (yo Real) ; X and Y offset
+                (mt Real) (mr Real) (mb Real) (ml Real) ; margins
+                (mtp Real) (mtn Real) (mbp Real) (mbn Real) ; top/bottom positive/negative margins for collapsing
+                (pt Real) (pr Real) (pb Real) (pl Real) ; padding
+                (bt Real) (br Real) (bb Real) (bl Real) ; border
+                (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
+                (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
+                (width-set Bool) ; used for dependency creation only
+                (text-indent Real)
+                (font-size Real) (leading Real) (ascender-top RealOpt) (descender-bottom RealOpt)
+                (text-top Real) (text-bottom Real) ; TODO: how do we compute this? Can we compute this?
+                (clh Real) ; computed line height
+                (&nflow Int) (&vflow Int) ; flow tree pointers
+                (&ppflow Int) ; parent positioned pointers
+                (&pbflow Int)
+                (&root Int) ; Root box
+                (&anc-w-elt Int) ; pointer to nearest ancestor with an element
+                (ez.in EZone) (ez.out EZone) (ez.sufficient Bool)
+                (has-contents Bool) (lineheight Line-Height) (textalign Text-Align) ; to handle inheritance; TODO: handle better
+                (&elt Int) (first-box? Bool) (last-box? Bool)
+                ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
+                    `(,(sformat "&~a" i) Int))
+                (fg-color Color) (bg-color Color) (ancestor-bg Color)))
+      (BoxType box/root box/text box/inline box/block box/line)
+      (Element no-elt
+           (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
+                (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
+                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int)))))
+
+  ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
+      `(assert (= (,field no-elt) -1)))
+  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
+      `(assert (= (,field no-box) -1)))
+
+  (assert (= (&elt no-box) -1)))
+
 (define-constraints utility-definitions
+  ;; The elements in each direction in the element tree
+  (define-fun velt ((elt Element)) Element (get/elt (&velt elt)))
+  (define-fun nelt ((elt Element)) Element (get/elt (&nelt elt)))
+  (define-fun pelt ((elt Element)) Element (get/elt (&pelt elt)))
+  (define-fun felt ((elt Element)) Element (get/elt (&felt elt)))
+  (define-fun lelt ((elt Element)) Element (get/elt (&lelt elt)))
+
+  ;; The boxes in each direction in the box tree
+  (define-fun pbox ((box Box)) Box (get/box (&pbox box)))
+  (define-fun fbox ((box Box)) Box (get/box (&fbox box)))
+  (define-fun lbox ((box Box)) Box (get/box (&lbox box)))
+  (define-fun vbox ((box Box)) Box (get/box (&vbox box)))
+  (define-fun nbox ((box Box)) Box (get/box (&nbox box)))
+
+  ;; From boxes to elements
+  (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
+
+  ;; Box model helpers
   (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
   (define-fun left-border ((box Box)) Real (x box))
   (define-fun box-left ((box Box)) Real (+ (x box) (bl box)))
@@ -52,11 +114,13 @@
   (define-fun bottom-border ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box)))
   (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
 
+  ;; Box position and size helpers
   (define-fun box-x ((box Box)) Real (+ (x box) (xo box)))
   (define-fun box-y ((box Box)) Real (+ (y box) (yo box)))
   (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
 
+  ;; Box predicate helpers
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
     (and (or (between (bottom-outer box1) (top-outer box2) (top-outer box1))
              (between (bottom-outer box2) (top-outer box1) (top-outer box2)))
