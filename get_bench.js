@@ -568,9 +568,11 @@ function compute_scrollbar_width() {
     var outer = document.createElement("div");
     var inner = document.createElement("div");
     outer.style.overflow = "scroll";
+    outer.style.borderLeftStyle = "none";
+    outer.style.borderRightStyle = "none";
     outer.appendChild(inner);
     document.body.appendChild(outer);
-    var out = outer.offsetWidth - inner.offsetWidth;
+    var out = outer.offsetWidth - outer.clientWidth;
     document.body.removeChild(outer)
     return out;
 }
