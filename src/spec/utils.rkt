@@ -119,6 +119,9 @@
   (define-fun box-y ((box Box)) Real (+ (y box) (yo box)))
   (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
+  
+  (define-fun width-padding ((box Box)) Real (+ (pl box) (w box) (pr box)))
+  (define-fun height-padding ((box Box)) Real (+ (pt box) (h box) (pb box)))
 
   ;; Box predicate helpers
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool

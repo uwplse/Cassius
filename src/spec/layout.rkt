@@ -386,9 +386,9 @@
     ;; CSS 2.1 § 10.6.4
     ,(smt-let ([r (computed-style (box-elt b))]
                [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
-               [temp-top ,(get-px-or-% 'top '(h (ppflow b)) 'b)]
-               [temp-bottom ,(get-px-or-% 'bottom '(h (ppflow b)) 'b)]
-               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(h (ppflow b)) 'b)) b)]
+               [temp-top ,(get-px-or-% 'top '(height-padding (ppflow b)) 'b)]
+               [temp-bottom ,(get-px-or-% 'bottom '(height-padding (ppflow b)) 'b)]
+               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(height-padding (ppflow b)) 'b)) b)]
                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
                [height?
@@ -426,9 +426,9 @@
      ,(smt-let ([r (computed-style (box-elt b))]
                 [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
                 [p (pflow b)]
-                [temp-left ,(get-px-or-% 'left '(w (ppflow b)) 'b)]
-                [temp-right ,(get-px-or-% 'right '(w (ppflow b)) 'b)]
-                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(w (ppflow b)) 'b)) b)]
+                [temp-left ,(get-px-or-% 'left '(width-padding (ppflow b)) 'b)]
+                [temp-right ,(get-px-or-% 'right '(width-padding (ppflow b)) 'b)]
+                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(width-padding (ppflow b)) 'b)) b)]
                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
                 [width? (not (or (is-replaced (box-elt b)) (is-width/auto (style.width (computed-style (box-elt b))))))])

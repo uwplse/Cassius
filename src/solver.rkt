@@ -27,7 +27,7 @@
   (append
    '(an-inline-box a-text-box a-line-box a-block-box)
    '(a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box a-view-box)
-   '(float-rules float-restrictions)))
+   '(positioned-horizontal-layout positioned-vertical-layout)))
 
 (define ((unless-debug f) cmds)
   (if (*debug*)
