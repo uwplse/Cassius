@@ -53,8 +53,8 @@
 
 (define (extract-box! z3-box box)
   (define data (curry dict-ref (extract-box z3-box)))
-  (node-set! box ':x (+ (data 'y) (data 'yo)))
-  (node-set! box ':y (+ (data 'x) (data 'xo)))
+  (node-set! box ':x (+ (data 'x) (data 'xo)))
+  (node-set! box ':y (+ (data 'y) (data 'yo)))
   (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'br)))
   (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'bb)))
   (node-set! box ':fs (data 'font-size))
