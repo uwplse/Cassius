@@ -250,7 +250,7 @@
        (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
            (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
        (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
-           (= (yo b) (- (yo p) (%of (offset.% (style.bottom r)) (w p)))))
+           (= (yo b) (- (yo p) (%of (offset.% (style.bottom r)) (h p)))))
        (=> (and (is-offset/auto (style.top r)) (is-offset/em (style.bottom r)))
            (= (yo b) (- (yo p) (%of (* 100 (offset.em (style.bottom r))) (font-size b)))))
        (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
