@@ -302,7 +302,7 @@
       (emit `(assert (has-contents ,(dump-box box))))))
 
 (define (replaced-constraints dom emit elt)
-  (define replaced? (set-member? '(img input object) (node-type elt)))
+  (define replaced? (set-member? '(img input iframe object textarea) (node-type elt)))
 
   (if replaced?
       (emit `(assert (! (is-replaced ,(dump-elt elt)) :named ,(sformat "replaced/~a" (name 'elt elt)))))
