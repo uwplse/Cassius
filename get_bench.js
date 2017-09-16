@@ -913,6 +913,7 @@ function dump_document(features) {
         if (is_comment(elt)) {
             return false;
         } else if (is_text(elt)) {
+            if (!/^[\x00-\x7F]*$/.test(elt.textContent)) features["non-ascii"] = true;
             var r = new Range();
             r.selectNode(elt);
             if (r.getClientRects().length == 0) {
