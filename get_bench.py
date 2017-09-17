@@ -20,13 +20,13 @@ def make_browser():
     profile = webdriver.FirefoxProfile()
     profile.set_preference("security.mixed_content.block_active_content", False)
     profile.set_preference("security.mixed_content.block_display_content", False)
-    return webdriver.Firefox(firefox_profile=profile, log_path=os.devnull)
+    return webdriver.Firefox(firefox_profile=profile)
 
 def main(urls, name=None, screenshot=False):
     browser = make_browser()
 
     try:
-        urls = ["file://" + url if url.startswith("/") else url for url in urls]
+        urls = sorted(["file://" + url if url.startswith("/") else url for url in urls])
 
         for url in urls:
             scheme, _, _, _, _, _ = urlparse.urlparse(url)

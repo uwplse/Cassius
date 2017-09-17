@@ -11,7 +11,7 @@
        ,@(for/list ([(var type) (in-dict vars)])
            `(declare-const ,var ,type))
        (assert (not ,expr))))
-  (with-output-to-file
+  #;(with-output-to-file
       "test.z3"
     #:exists 'replace
       (lambda ()
@@ -20,11 +20,8 @@
             (display constraint)
             (newline))
           (display "(check-sat)"))))
-  (define out
-    (z3-solve constraints))
-  (match out
-    [(list 'core _)
-     (void)]
+  (match (z3-solve constraints)
+    [(list 'core _) (void)]
     [(list 'model m)
      (with-check-info*
       (for/list ([(k v) (in-dict m)])

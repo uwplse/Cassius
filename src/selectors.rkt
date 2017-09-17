@@ -1,10 +1,9 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "z3.rkt" "smt.rkt" "modular-synthesis.rkt" "dom.rkt")
+(require "common.rkt" "tree.rkt" "spec/css-properties.rkt")
 (module+ test (require rackunit))
-(provide equivalence-classes equivalence-classes-avoid?
-         selector-matches? all-selectors synthesize-css-sketch
-         css-sketch-solver rule-matchlist (struct-out rulematch))
+(provide equivalence-classes selector-matches?
+         rule-matchlist (struct-out rulematch))
 
 
 
@@ -51,24 +50,18 @@
     [`(fake ,true ,subsels ...)
      (ormap (curryr selector-matches? elt) subsels)]
     [`* true]
-    [`(id ,id)
-     (define eid (and (node-get elt ':id) (slower (node-get elt ':id))))
-     (when (equal? eid '?)
-       (raise (make-exn:fail:unsupported "Holes in identifiers are not supported" (current-continuation-marks))))
-     (equal? eid id)]
-    [`(class ,cls)
+    [`(id ,id) ; IDs are case-sensitive
+     (equal? (node-get elt ':id) id)]
+    [`(class ,cls) ; CLASSes are case-insensitive
      (define ecls (map slower (node-get elt ':class #:default '())))
-     (set-member? ecls cls)]
+     (set-member? ecls (slower cls))]
     [`(tag ,tag)
-     (define etag (node-type elt))
-     (when (equal? etag '?)
-       (raise (make-exn:fail:unsupported "Holes in tag names are not supported" (current-continuation-marks))))
-     (equal? etag tag)]
+     (equal? (slower (node-type elt)) (slower tag))]
     [`(pseudo-class first-child) (not (node-prev elt))]
     [`(pseudo-class last-child) (not (node-next elt))]
-    [`(pseudo-class hover) false] ; We're never modeling hovering
+    [`(pseudo-class hover) false] ; We assume not hovering
     [`(type ,type)
-     (and (node-get elt ':type) (equal? (slower (node-get elt ':type)) type))]
+     (and (node-get elt ':type) (equal? (node-get elt ':type) type))]
     [`(media ,query ,sel)
      (and (media-matches? query) (selector-matches? sel elt))]
     [(list 'and sels ...) (andmap (curryr selector-matches? elt) sels)]
@@ -106,8 +99,10 @@
     ['screen true]
     ['all true]
     [(or 'print 'handheld 'projection 'tty 'tv) false]
-    ['(orientation landscape) true] ; TODO: Actually check viewport width and height
+    ;; TODO: Actually check viewport width and height
+    ['(orientation landscape) true]
     ['(orientation portrait) false]
+    ;; TODO: Actually check viewport width and height
     [`(max-width (px ,mw)) false]
     [`(min-width (px ,mw)) false]
     [`(max-height (px ,mh)) false]
@@ -115,44 +110,34 @@
 
 (module+ test
   (define tree
-    '([html] ; 0
-      ([body] ; 1
-       ([div :id content] ; 2
-        ([H1 :class (title)]) ; 3
-        ([div :class (abstract)] ; 4
-         ([blockquote] ; 5
-          ([p]))) ; 6
-        ([p]) ; 7
-        ([div :class (aside)] ; 8
-         ([p])))))) ; 9
-  (define ptree (parse-tree tree))
-  (define (get-element elt n)
-    "Gets the nth element, or returns the total number of elements seen"
-    (if (= n 0)
-        elt
-        (let loop ([child (node-fchild elt)] [i 1])
-          (if (not child)
-              i
-              (let ([out (get-element child (- n i))])
-                (if (number? out)
-                    (loop (node-next child) (+ i out))
-                    out))))))
-  (define (check-selector sel ns)
-    (for ([n (in-range 1 11)])
-      ((if (set-member? ns n) check-true check-false)
-       (selector-matches? sel (get-element ptree n)))))
+    (parse-tree
+     '([html] ; 0
+       ([body] ; 1
+        ([div :id content] ; 2
+         ([h1 :class (title)]) ; 3
+         ([div :class (abstract)] ; 4
+          ([blockquote] ; 5
+           ([p]))) ; 6
+         ([p]) ; 7
+         ([div :class (aside)] ; 8
+          ([p]))))))) ; 9
 
-  (check-selector '* '(1 2 3 4 5 6 7 8 9 10))
-  (check-selector '(id content) '(3))
-  (check-selector '(tag html) '(1))
-  (check-selector '(tag p) '(7 8 10))
-  (check-selector '(class title) '(4))
-  (check-selector '(class aside) '(9))
-  (check-selector '(and (tag div) (class aside)) '(9))
+  (define (check-selector sel ns)
+    (for ([n (in-naturals)] [elt (in-tree tree)])
+      ((if (set-member? ns n) check-true check-false)
+       (selector-matches? sel elt))))
+
+  (check-selector '* (range 10))
+  (check-selector '(id content) '(2))
+  (check-selector '(tag html) '(0))
+  (check-selector '(tag p) '(6 7 9))
+  (check-selector '(class title) '(3))
+  (check-selector '(class aside) '(8))
+  (check-selector '(and (tag div) (class aside)) '(8))
   (check-selector '(and (tag p) (class aside)) '())
-  (check-selector '(desc (tag div) (tag p)) '(7 8 10))
-  (check-selector '(child (tag div) (tag p)) '(8 10))
-  (check-selector '(child (and (tag div) (id content)) (tag p)) '(8)))
+  (check-selector '(desc (tag div) (tag p)) '(6 7 9))
+  (check-selector '(child (tag div) (tag p)) '(7 9))
+  (check-selector '(child (and (tag div) (id content)) (tag p)) '(7)))
 
 (define-by-match partial-selector-score?
   (list (? number?) (? number?) (? number?)))
@@ -274,185 +259,3 @@
   (-> (listof rule?) (listof node?) equivalence-classes?)
   (define ml (rule-matchlist rules elts))
   (matchlist-equivalence-classes ml elts))
-
-(define-by-match inequality?
-  `(not (= (,(? property?) ,(? node?)) (,(? property?) ,(? node?))))
-  `(not (= (,(? property?) ,(? node?)) ,_)))
-
-(define/contract (equivalence-classes-avoid? classes ineq)
-  (-> equivalence-classes? inequality? boolean?)
-  "Whether a set of equivalence classes satisfies a particular inequality"
-  (match ineq
-    [`(not (= (,prop ,(? node? elt1)) (,prop ,(? node? elt2))))
-     (define hash (car (dict-ref classes prop)))
-     (not (equal? (dict-ref hash elt1) (dict-ref hash elt2)))]
-    [`(not (= (,prop ,(? node? elt1)) ,val))
-     (match-define (cons class-hash value-hash) (dict-ref classes prop))
-     (not (equal? (dict-ref value-hash (dict-ref class-hash elt1)) val))]))
-
-(define (get-tcis elts)
-  (define-values (tags classes ids)
-    (for/reap [tag! class! id!] ([elt elts])
-      (tag! (slower (node-type elt)))
-      (for-each (compose class! slower) (node-get elt ':class #:default '()))
-      (when (node-get elt ':id)
-        (id! (slower (node-get elt ':id))))))
-  (values (remove-duplicates tags) (remove-duplicates classes) (remove-duplicates ids)))
-
-(define/contract (atomic-values elts)
-  (-> (listof node?) (listof selector?))
-  "Constructs all atomic selectors allowed for a set of elements."
-  (define-values (tags classes ids) (get-tcis elts))
-  (append (map (curry list 'tag) tags) (map (curry list 'class) classes) (map (curry list 'id) ids)))
-
-(define selhash? (hash/c (listof node?) selector?))
-
-(define/contract (all-selectors elts)
-  (-> (listof node?) selhash?)
-  "Constructs, from a set of nodes, the set of all distinct selectors.
-Selectors with the same specificity and elements are not considered distinct."
-
-  (define atoms
-    (for/hash ([a (atomic-values elts)])
-      (values (filter (curry selector-matches? a) elts) a)))
-
-  (define ands (make-hash (list (cons elts '*))))
-
-  (let loop ([changes (hash-keys ands)])
-    (unless (null? changes)
-      (define new-changes
-        (reap [sow]
-              (for* ([elts changes] [(elts* a) atoms])
-                (define new-elts (list-intersect elts elts*))
-                (unless (or (dict-has-key? ands new-elts) (null? new-elts))
-                  (define old-sel (dict-ref ands elts))
-                  (define new-sel
-                    (match old-sel
-                      ['* a]
-                      [(list 'and rest ...) `(and ,@rest ,a)]
-                      [_ `(and ,old-sel ,a)]))
-                  (dict-set! ands new-elts new-sel)
-                  (sow new-elts)))))
-      (loop new-changes)))
-
-  (define descs (hash-copy ands))
-
-  (let loop ([changes (hash-keys descs)])
-    (unless (null? changes)
-      (define new-changes
-        (reap [sow]
-              (for* ([elts changes] [(elts* tail) ands] [head '(child desc)])
-                (define old-sel (dict-ref descs elts))
-                (define new-sel (list head tail old-sel))
-                ;; The sort is because set-intersect doesn't keep sorted lists sorted
-                (define new-elts (filter (curry selector-matches? new-sel) elts))
-                (unless (or (dict-has-key? descs new-elts) (null? new-elts))
-                  (dict-set! descs new-elts new-sel)
-                  (sow new-elts)))))
-      (loop new-changes)))
-
-  descs)
-
-(define/contract (ineq-selectors ineq selhash)
-  (-> inequality? selhash? (listof selector?))
-  "Finds all selectors that match one side of an inequality"
-  (match-define (list prop elt1 val) ineq)
-  (define (elts-good? elts)
-    (if (node? val)
-        (xor (set-member? elts elt1) (set-member? elts val))
-        (set-member? elts elt1)))
-  (for/list ([(elts sel) (in-hash selhash)] #:when (elts-good? elts))
-    sel))
-
-;; Interpreted as an AND of ORs of inequalities
-
-(define constraints? (listof (listof inequality?)))
-
-(define/contract (synthesize-selectors constraints selhash)
-  (-> constraints? selhash? (listof selector?))
-
-  (define selectors (make-hash))
-  (define constraints*
-    (for/list ([constraint constraints])
-      (smt-replace constraint
-        [`(not (= (,prop ,(? node? elt1)) (,prop ,(? node? elt2))))
-         (apply smt-or
-                (for/list ([(elts sel) (in-hash selhash)]
-                           #:when (xor (set-member? elts elt1) (set-member? elts elt2)))
-                  (dict-ref! selectors sel (λ () (sformat "sel/~a" (dict-count selectors))))))]
-        [`(not (= (,prop ,(? node? elt)) ,value))
-         (apply smt-or
-                (for/list ([(elts sel) (in-hash selhash)]
-                           #:when (set-member? elts elt))
-                  (dict-ref! selectors sel (λ () (sformat "sel/~a" (dict-count selectors))))))])))
-
-  (define query
-    `(,@(for/list ([(sel name) selectors])
-          `(declare-const ,name Bool))
-      ,@(map (curry list 'assert) constraints*)
-      ,@(for/list ([constraint constraints*])
-          `(assert-soft
-            ,(smt-replace constraint
-               [`(or ,a ,b ,c ...)
-                `(< 1 (+ ,@(for/list ([x (list* a b c)]) `(ite ,x 1 0))))])))))
-
-  (match-define (list 'model out) (z3-solve query))
-  (for/list ([(sel name) selectors] #:when (dict-ref out name #f))
-    sel))
-
-(define/contract (synthesize-properties constraints rules)
-  (-> constraints? selhash? (listof selector?))
-
-  (define props (for/list ([(prop _t _d) (in-css-properties)]) prop))
-  (define scores (rule-scores (map list rules)))
-  (define sorted-rules
-    (sort (map cons (range (length rules)) scores) score<? #:key cdr))
-
-  (define constraints*
-    (for/list ([constraint constraints])
-      (smt-replace constraint
-        [`(not (= (,prop ,(? node? elt1)) (,prop ,(? node? elt2))))
-         (for/fold ([expr 'false])
-             ([(i score) (in-dict sorted-rules)]
-              #:when (or (selector-matches? (list-ref rules i) elt1)
-                         (selector-matches? (list-ref rules i) elt2)))
-           (define sel (list-ref rules i))
-           (if (and (selector-matches? sel elt1) (selector-matches? sel elt2))
-               (smt-and `(not ,(sformat "property/~a/~a" prop i)) expr)
-               (smt-or (sformat "property/~a/~a" prop i) expr)))]
-        [`(not (= (,prop ,(? node? elt1)) ,value))
-         (apply
-          smt-or
-          (for/list ([rule rules] [i (in-naturals)]
-                     #:when (selector-matches? rule elt1))
-            (sformat "property/~a/~a" prop i)))])))
-
-  (define query
-    (append
-     (for/list ([prop props] #:when true [rule rules] [i (in-naturals)])
-       `(declare-const ,(sformat "property/~a/~a" prop i) Bool))
-     (map (curry list 'assert) constraints*)
-     (for/list ([constraint constraints*])
-       `(assert-soft
-         ,(smt-replace constraint
-            [`(or ,a ,b ,c ...)
-             `(< 1 (+ ,@(for/list ([x (list* a b c)]) `(ite ,x 1 0))))])))))
-    
-  (match-define (list 'model out) (z3-solve query))
-  (for/list ([selector rules] [i (in-naturals)])
-    (cons selector
-          (for/list ([(prop _t _d) (in-css-properties)]
-                     #:when (dict-ref out (sformat "property/~a/~a" prop i) #f))
-            `[,prop ?]))))
-
-(define (synthesize-css-sketch constraints selhash)
-  (define rules (synthesize-selectors constraints selhash))
-  (synthesize-properties constraints rules))
-
-(define selhash-cache (make-parameter (make-hash)))
-
-(define (css-sketch-solver inputs constraints)
-  (match-define (list doms matchings) inputs)
-  (define selhash (hash-ref! (selhash-cache) doms (λ () (map all-selectors (dom-elements doms)))))
-  (define rules (synthesize-selectors constraints selhash))
-  (list 'fwd doms matchings (synthesize-properties constraints rules)))

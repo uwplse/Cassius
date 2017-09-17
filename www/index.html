@@ -7,67 +7,97 @@
 </head>
 <body>
   <header>
-    <h1>Cassius</h1>
+    <img src="logo.png" alt="Cassius" />
+    <h1>The Cassius Project</h1>
     <p>Automated Reasoning for Web Page Layout</p>
+    <ul>
+      <li><a href="#news">News</a></li>
+      <li><a href="papers.html">Papers</a></li>
+      <li><a href="https://github.com/uwplse/cassius/issues">Report a Bug</a></li>
+      <li><a href="https://github.com/uwplse/cassius/">Source Code</a></li>
+    </ul>
   </header>
 
   <p>
-    Cassius is a new tool to <em>automatically reason about web page
-    layout</em>. It includes a formal specification for a fragment of
-    CSS 3.0 and a translation of that specification to SMT (using
-    quantifier-free linear real arithmetic).
+    The Cassius Project develops <em>tools that understand how web
+    pages render</em>. Leveraging modern equation solvers, the Cassius
+    Project hopes to develop a new class of verification, synthesis
+    and debugging tools for web pages.
   </p>
 
+  
+  <section class="tool">
+    <img src="vizassert.png">
+    <h2>VizAssert</h2>
+    <p>VizAssert checks that your website satisfies accessibility,
+    usability, and design properties, no matter the user's device
+    size, font size preferences, or browser.</p>
+    
+    <figure>
+      <pre class="example">(define-test (interactive-onscreen b)
+  (=&gt; (is-interactive b) (onscreen b))</pre>
+      <figcaption>This assertion checks that interactive elements,
+      like links, buttons, and form elements, are
+      onscreen.</figcaption>
+    </figure>
+    
+    <p>VizAssert provides mathematical guarantees that, if your
+      assertion passes, no possible set of device size or user
+      preferences could violate the assertion. When that can't be
+      done, VizAssert provides a counterexample and points out the
+      element that violates the assertion. VizAssert is works on most
+      small web pages 50&ndash;200 elements in size.</p>
+  </section>
+  
+  <h2>The Cassius Framework</h2>
+  
   <p>
-    Cassius can be used to verify, debug, and synthesize stylesheets,
-    all without user intervention.
+    The Cassius Framework is a mathematical formalization of web page
+    layout, mostly implementing CSS&nbsp;2.1. CSS is huge, so Cassius
+    supports only a subset:
   </p>
-  
-  <h2>Status</h2>
-  
-  <p>
-    Cassius supports the properties that define the following CSS concepts:
-  </p>
-  
-  <ul style="column-count: 3; -moz-column-count: 3; -webkit-column-count: 3">
-    <li>width</li>
-    <li>height</li>
-    <li>padding</li>
-    <li>border</li>
-    <li>margin</li>
-    <li>position</li>
-    <li>float</li>
-    <li>text-align</li>
-    <li>box-sizing</li>
+
+  <ul>
+    <li>The full CSS&nbsp;2.1 box model: margins, padding, borders,
+    and min/max sizes</li>
+    <li><code>float</code> and <code>clear</code></li>
+    <li><code>position</code> and positioning properties</li>
+    <li>The <code>inline</code>, <code>block</code>,
+      and <code>inline-block</code> display modes</li>
+    <li>Colors, foreground and background</li>
+    <li>Percentage and <code>em</code> measurements</li>
   </ul>
+
+  <p>
+    The Cassius Framework matches the behavior of existing web
+    browsers and passes
+    the <a href="http://www.w3.org/Style/CSS/Test/">official
+    conformance tests</a>. It is the core of the tools developed by
+    the Cassius Project. The theoretical foundations of the Cassius
+    Framework are described in our <a href="oopsla16.html">OOPSLA'16
+    paper</a>.
+  </p>
   
-  <p>
-    Cassius can reason about all of these features quickly,
-    frequently completing within minutes on small web pages:
-  </p>
-
-  <figure>
-    <img id="graph" width="525" src="synthesis.png" />
-    <figcaption>Time to regenerate CSS rules from the coarse layout of
-    Amazon, Baidu, Google, Wikipedia, and Yahoo, versus number of
-    rules to regenerate.</figcaption>
-  </figure>
-
-  <p>
-    Cassius passes many sections of
-    the <a href="http://www.w3.org/Style/CSS/Test/">CSS WG conformance
-    tests</a>.
-  </p>
+  <h2>Cassius Project News</h2>
+  <ol id="news">
+    <li><time>3 Aug</time>Cassius has been accepted to <a href="http://2016.splashcon.org/track/splash-2016-oopsla#event-overview">OOPSLA'16</a>. Read <a href="oopsla16.html">our paper</a> to find out how Cassius works.</li>
+    <li><time>21 Dec</time><a href="https://pavpanchekha.com">Pavel Panchekha</a>, the main author of Cassius, won the <a href="http://adoberesearch.com/fellowship.html">Adobe Research Fellowship</a> for his work on Cassius.</li>
+  </ol>
 
   <h2>The Cassius Developers</h2>
 
   <p>
-    Cassius is developed by
+    The Cassius Project comes from the 
+    <a href="https://uwplse.org">Programming Languages and Software Engineering</a> group at
     the <a href="https://cs.washington.edu">University of
-    Washington</a> Programming Languages and Software Engineering
-    group, by <a href="https://pavpanchekha.com">Pavel Panchekha</a>
-    and <a href="https://homes.cs.washington.edu/~emina/">Emina
-    Torlak</a>.
+    Washington</a>.
+    It is developed by
+    <a href="https://pavpanchekha.com">Pavel Panchekha</a>,
+    Adam Timothy Geller,
+    <a href="https://research.adobe.com/person/shoaib-kamil/">Shoaib Kamil</a>,
+    <a href="https://homes.cs.washington.edu/~mernst/">Michael Ernst</a>,
+    <a href="https://homes.cs.washington.edu/~ztatlock/">Zachary Tatlock</a>,
+    <a href="https://homes.cs.washington.edu/~emina/">Emina Torlak</a>.
   </p>
 
 </body>

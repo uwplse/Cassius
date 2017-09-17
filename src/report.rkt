@@ -1,13 +1,15 @@
 #lang racket
 
-(require racket/path racket/set racket/engine racket/cmdline math/base)
+(require racket/path racket/set racket/engine racket/cmdline)
 (require json (only-in xml write-xexpr))
 (require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "run.rkt")
 
 (define timeout (make-parameter 60))
 (define show-success (make-parameter false))
-(define aggregate (make-parameter false))
-(define expected? (make-parameter (const false)))
+(define expected-failures (make-parameter '()))
+
+(define (expected? . info)
+  (set-member? (expected-failures) info))
 
 (define (dom-not-something d)
   (match-define (dom name ctx elts boxes) d)
@@ -19,7 +21,7 @@
       (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree)))))
     (for-each loop (cdr tree)))
   
-  (define idx (random-integer 0 constraints))
+  (define idx (random 0 constraints))
   (set! constraints 0)
 
   ;; Not my fault
@@ -41,17 +43,6 @@
                            (list* (car props) (cadr props) (loop2 n (cddr props)))])))
                  (map loop (cdr tree)))]
           [else (cons (car tree) (map loop (cdr tree)))]))))
-
-(define (normalize-index name section)
-  (if (string=? (last (string-split (~a name) "-")) (substring section 1))
-      (string-join (drop-right (string-split (~a name) "-") 1) "-")
-      name))
-
-(define (normalize-uname uname)
-  (define base (first (string-split (~a uname) ".")))
-  (if (string=? (last (string-split base "-")) "ref")
-      (string-join (drop-right (string-split base "-") 1) "-")
-      base))
 
 (define (section->tuple s)
   (if (string=? (substring s 0 1) "s")
@@ -92,85 +83,103 @@
                   (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)))))))
 
   (define t (current-inexact-milliseconds))
-  (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout)) ; 1m max
+  (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout))
   (define runtime (- (current-inexact-milliseconds) t))
   (engine-kill eng)
   (custodian-shutdown-all custodian)
   (values res runtime))
 
-(struct result (file problem test section status description features time url) #:prefab)
+(struct result (file problem subproblem test section status description features time url) #:prefab)
 
-(define (test-regression file pname prob #:index [index (hash)])
-  (eprintf "~a\t~a\t" file pname)
-  (define-values (res runtime) (run-problem prob))
-  (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
+(define (make-result file pname prob #:subproblem [subproblem #f] #:index [index (hash)])
+  (define url (car (dict-ref prob ':url '("/tmp"))))
+  (result file pname subproblem
+          (file-name-stem url) (get-index index (file-name-stem url))
+          'ready (car (dict-ref prob ':title))
+          (dict-ref prob ':features '()) #f url))
 
-  (define status
+(define (get-status info prob res #:invert [invert? #f] #:unsupported [unsupported? #t])
+  (define out
     (match res
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees doms) 'success]
-      [(failure stylesheet trees) (if supported? 'fail 'unsupported)]))
-  (eprintf "~a\n" status)
+      [(success stylesheet trees doms) (if invert? 'fail 'success)]
+      [(failure stylesheet trees) (if invert? 'success 'fail)]))
+  (cond
+   [(not (equal? out 'fail))
+    out]
+   [(apply expected? info)
+    'expected]
+   [(and
+     (not (subset? (dict-ref prob ':features '()) (supported-features)))
+     unsupported?)
+    'unsupported]
+   [else
+    'fail]))
 
-  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (define out
-    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-            (car (dict-ref prob ':url '("/tmp")))))
-  (if (and (equal? status 'fail) ((expected?) out))
-      (struct-copy result out [status 'expected])
-      out))
+(define (test-regression file pname prob #:index [index (hash)])
+  (eprintf "~a\t~a\t" file pname)
+  (define res (make-result file pname prob #:index index))
+  (define-values (out runtime) (run-problem prob))
+  (define status (get-status (list file pname) prob out #:invert false #:unsupported true))
+  (eprintf "~a\n" status)
+  (struct-copy result res [status status] [time runtime]))
 
 (define (test-mutations file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t" file pname)
   (define prob* (dict-update prob ':documents (curry map dom-not-something)))
-  (define-values (res runtime) (run-problem prob*))
-  (define supported? (null? (set-subtract (dict-ref prob ':features '()) (supported-features))))
-
-  (define status
-    (match res
-      ['timeout 'timeout]
-      [(list 'error e) 'error]
-      ['break 'break]
-      [(success stylesheet trees doms) (if supported? 'fail 'unsupported)]
-      [(failure stylesheet trees) 'success]))
+  (define res (make-result file pname prob #:index index))
+  (define-values (out runtime) (run-problem prob*))
+  (define status (get-status (list file pname) prob out #:invert true #:unsupported true))
   (eprintf "~a\n" status)
-
-  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (define out
-    (result file pname uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-            (car (dict-ref prob ':url '("/tmp")))))
-  (if (and (equal? status 'fail) ((expected?) out))
-      (struct-copy result out [status 'expected])
-      out))
+  (struct-copy result res [status status] [time runtime]))
 
 (define (test-assertions assertion file pname prob #:index [index (hash)])
-  (eprintf "~a\t~a\t~a\t" assertion file pname)
+  (eprintf "~a\t~a\t~a\t" file pname assertion)
   (define prob* (dict-update prob ':documents (curry map dom-strip-positions)))
-  (define-values (res runtime) (run-problem prob* #:fuzz #f))
-  (define supported? (null? (set-subtract (dict-ref prob* ':features '()) (supported-features))))
+  (define res (make-result file pname prob #:subproblem assertion #:index index))
+  (define-values (out runtime) (run-problem prob* #:fuzz #f))
+  (define status (get-status (list file pname assertion) prob out #:invert true #:unsupported false))
 
-  (define status
-    (match res
-      ['timeout 'timeout]
-      [(list 'error e) 'error]
-      ['break 'break]
-      [(success stylesheet trees doms)
-       'fail]
-      [(failure stylesheet trees) 'success]))
   (eprintf "~a\n" status)
+  (struct-copy result res [status status] [time runtime]))
 
-  (define uname (file-name-stem (car (dict-ref prob ':url '("/tmp")))))
-  (define out
-    (result file (format "~a on ~a" assertion pname) uname (hash-ref index (normalize-uname uname) "unknown")
-            status (car (dict-ref prob ':title)) (dict-ref prob ':features '()) runtime
-            (car (dict-ref prob ':url '("/tmp")))))
-  (if (and (equal? status 'fail) ((expected?) out))
-      (struct-copy result out [status 'expected])
-      out))
+(define-syntax-rule (for/threads num-threads ([input all-inputs]) body ...)
+  (let ([threads num-threads] [inputs all-inputs])
+    (if threads
+        (let ([workers
+               (build-list
+                threads
+                (λ (i)
+                  (place ch
+                         (match-define (cons timeout* expected-failures*) (place-channel-get ch))
+                         (timeout timeout*)
+                         (expected-failures expected-failures*)
+                         (let loop ()
+                           (match-define (cons self (cons id thing)) (place-channel-get ch))
+                           (define result
+                             (let ([input thing])
+                               body ...))
+                           (place-channel-put ch (cons self (cons id result)))
+                           (loop)))))])
+          (for ([worker workers])
+            (place-channel-put worker (cons (timeout) (expected-failures))))
+          (define to-send (map cons (range 0 (length inputs)) inputs))
+          (for ([worker workers])
+            (unless (null? to-send)
+              (place-channel-put worker (cons worker (car to-send)))
+              (set! to-send (cdr to-send))))
+          (let loop ([out '()])
+            (match-define (cons worker result) (apply sync workers))
+            (unless (null? to-send)
+              (place-channel-put worker (cons worker (car to-send)))
+              (set! to-send (cdr to-send)))
+            (define out* (cons result out))
+            (if (= (length out*) (length inputs))
+                (map cdr (sort out* < #:key car))
+                (loop out*))))
+        (for/list ([input all-inputs]) body ...))))
 
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
@@ -178,44 +187,29 @@
     (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x)))
       (list file (car x) (cdr x) index)))
 
-  (if threads
-      (let ([workers
-             (build-list
-              threads
-              (λ (i)
-                (place ch
-                       (let loop ()
-                         (match-define (list self file pname prob index) (place-channel-get ch))
-                         (define result (test-regression file pname prob #:index index))
-                         (place-channel-put ch (cons self result))
-                         (loop)))))])
-        (define to-send inputs)
-        (for ([worker workers])
-          (unless (null? to-send)
-            (place-channel-put worker (cons worker (car to-send)))
-            (set! to-send (cdr to-send))))
-        (let loop ([out '()])
-          (match-define (cons worker result) (apply sync workers))
-          (unless (null? to-send)
-            (place-channel-put worker (cons worker (car to-send)))
-            (set! to-send (cdr to-send)))
-          (define out* (cons result out))
-          (if (= (length out*) (length inputs))
-              out*
-              (loop out*))))
-      (for/list ([rec inputs])
-        (match-define (list file pname prob index) rec)
-        (test-regression file pname prob #:index index))))
+  (for/threads threads ([rec inputs])
+    (match-define (list file pname prob index) rec)
+    (test-regression file pname prob #:index index)))
 
-(define (run-mutation-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
-  (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
-             [_ (in-range repeat)])
-    (test-mutations file (car x) (cdr x) #:index index)))
+(define (run-mutation-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)]
+                            #:threads [threads #f])
+  (define inputs
+    (for/list ([(file x) (in-dict probs)] #:when (valid? (cdr x))
+               [_ (in-range repeat)])
+      (list file (car x) (cdr x) index)))
+  (for/threads threads ([rec inputs])
+    (match-define (list file pname prob index) rec)
+    (test-mutations file pname prob #:index index)))
 
-(define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)])
-  (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x))
-             [_ (in-range repeat)])
-    (test-assertions assertion (first x) (second x) (cddr x) #:index index)))
+(define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)]
+                             #:threads [threads #f])
+  (define inputs
+    (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x))
+               [_ (in-range repeat)])
+      (list assertion (first x) (second x) (cddr x) index)))
+  (for/threads threads ([rec inputs])
+    (match-define (list assertion file pname prob index) rec)
+    (test-assertions assertion file pname prob #:index index)))
 
 (define (file-name-stem fn)
   (define-values (_1 uname _2) (split-path fn))
@@ -235,37 +229,59 @@
   (define data (call-with-input-file file read-json))
   (for/list ([rec data])
     (define (get field [convert identity]) (convert (dict-ref rec field)))
-    (result (get 'file) (get 'problem) (get 'test string->symbol) (get 'section) (get 'status string->symbol)
+    (result (get 'file) (get 'problem string->symbol) (and (get 'subproblem) (get 'subproblem string->symbol))
+            (get 'test string->symbol) (get 'section)
+            (match (get 'status string->symbol)
+              [(or 'fail 'unsupported 'expected)
+               (cond
+                [(apply expected? (get 'file) (get 'problem string->symbol)
+                        (if (get 'subproblem)
+                            (list (get 'subproblem string->symbol))
+                            (list)))
+                 'expected]
+                [(not (subset? (get 'features (curry map string->symbol)) (supported-features)))
+                 'unsupported]
+                [else 'fail])]
+              [s s])
             (get 'description) (get 'features (curry map string->symbol)) (get 'time) (get 'url))))
 
 (define (shorten-filename name)
   (string-join (drop-right (string-split (~a (file-name-from-path name)) ".") 1) "."))
 
-(define (write-report results #:output [outname #f])
-  (define (count-type set t)
-    (count (λ (x) (equal? (result-status x) t)) set))
-  (define (set->results set)
-    (map (compose number->string (curry count-type set)) '(success fail error timeout unsupported)))
-
+(define (write-json* results #:output [outname #f])
   (call-with-output-to
    outname #:extension "json" #:exists 'replace
    write-json
    (for/list ([res results])
-     (match-define (result file problem test section status description features time url) res)
+     (match-define (result file problem subproblem test section status description features time url) res)
      (make-hash
       `((file . ,(~a file))
         (problem . ,(~a problem))
+        (subproblem . ,(and subproblem (~a subproblem)))
         (test . ,(~a test))
         (section . ,section)
         (status . ,(~a status))
         (description . ,description)
         (features . ,(map ~a features))
         (time . ,time)
-        (url . ,url)))))
-  
+        (url . ,url))))))
+
+(define (status-symbol status)
+  (match status
+    ['success "✔"] ['fail "✘"] ['timeout "🕡"]
+    ['unsupported "☹"] ['error "!"] ['expected "-"]
+    ['ready "0"]))
+
+(define (write-report results #:output [outname #f])
+  (write-json* results #:output outname)
+
+  (define (count-type set t)
+    (count (λ (x) (equal? (result-status x) t)) set))
+  (define (set->results set)
+    (map (compose number->string (curry count-type set)) '(success fail error timeout unsupported)))
+
   (define unsupported-features
     (set-subtract (remove-duplicates (append-map result-features results)) (supported-features)))
-
 
   (define (feature-row feature)
     (list feature
@@ -281,6 +297,11 @@
   (define (sort-features data)
     (sort (sort data > #:key third) > #:key second))
 
+  (define (show-res res)
+    (not (set-member?
+          (if (show-success) '() '(success unsupported expected))
+          (result-status res))))
+
   (call-with-output-to
    outname #:extension "html" #:exists 'replace
    write-xexpr
@@ -289,6 +310,10 @@
      (link ((rel "stylesheet") (href "report.css")))
      (title ,(format "Cassius results for ~a" (string-join (remove-duplicates (map result-file results)) ", ")))
      (body ()
+      (p (b "Cassius")
+         " version " (kbd ,(~a *version*))
+         " branch " (kbd ,(~a *branch*))
+         " commit " (kbd ,(~a *commit*)))
       (table ((id "sections") (rules "groups"))
        (thead ()
         ,(row #:cell 'th "" "Pass" "Fail" "Error" "Time" "Skip" "")
@@ -305,7 +330,7 @@
                  ,@(for/list ([r sresults] #:when (member (result-status r) '(error fail)))
                      `(a ((href ,(result-url r)))
                          ,(format "~a:~a" (file-name-stem (result-file r)) (result-problem r)))))))))))
-      ,@(if (ormap (λ (r) (set-member? '(fail unsupported) (result-status r))) results)
+      ,@(if (ormap (λ (r) (set-member? '(unsupported) (result-status r))) results)
             `((section ()
                (h2 () "Feature totals")
                (table ()
@@ -314,44 +339,20 @@
                               (apply row (map ~a data)))))))
             '())
       (section ()
-       (h2 () "Failing tests")
+       (h2 () ,(if (show-success) "Tests" "Failing tests"))
        (table ()
-       ,@(for/list ([group-results (group-by result-file results)]
-                    #:unless (and
-                              (not (aggregate))
-                              (andmap (λ (res) (set-member? (if (show-success) '(unsupported) '(success unsupported))
-                                                            (result-status res))) group-results)))
-           (if (aggregate)
-               (match-let ([(result file problem test section status description features time url)
-                            (car group-results)])
-                 (apply row `(a ((href ,url) (title ,(~a file))) ,(~a (shorten-filename file))) description
-                        (for/list ([res group-results])
-                          (define title
-                            (if (equal? (result-status res) 'unsupported)
-                                (let ([probfeats (set-subtract features (supported-features))])
-                                  (format "~a\n~a" (result-problem res) (string-join (map ~a probfeats) ", ")))
-                                (~a (result-problem res))))
-                          (define status (result-status res))
-                          `(span ((class ,(~a status)) (title ,title))
-                                 ,(match status
-                                    ['success "✔"] ['fail "✘"] ['timeout "🕡"]
-                                    ['unsupported "☹"] ['error "!"] ['expected "-"])))))
-               `(tbody
-                 (tr () (th ((colspan "4")) ,(result-file (car group-results))))
-                 ,@(for/list ([res group-results]
-                              #:when (not (set-member? (if (show-success) '(unsupported) '(success unsupported))
-                                                       (result-status res))))
-                     (match-define (result file problem test section status description features time url) res)
-                     (row (~a problem) `(a ((href ,url)) ,(~a test)) description
-                          (match status
-                            ['success `(span ((class "success")) "✔")]
-                            ['fail `(span ((class "fail")) "✘")]
-                            ['expected `(span ((class "expected")) "-")]
-                            ['timeout `(span ((class "timeout")) "🕡")]
-                            ['unsupported
-                             (define probfeats (set-subtract features (supported-features)))
-                             `(span ((class "unsupported") (title ,(string-join (map ~a probfeats) ", "))) "☹")]
-                            ['error `(span ((class "error")) "!")]))))))))))))
+       ,@(for/list ([results-group (group-by result-file results)]
+                    #:unless (not (ormap show-res results-group)))
+           `(tbody
+             (tr () (th ((colspan "4")) ,(result-file (car results-group))))
+             ,@(for/list ([ress (group-by result-problem results-group)]
+                          #:unless (not (ormap show-res ress)))
+                 (match-define (result file problem _ test section _ description features _ url) (car ress))
+                 (apply row (~a problem) `(a ([href ,url]) ,(~a test)) description
+                        (for/list ([res ress])
+                          `(span ([class ,(~a (result-status res))]
+                                  [title ,(~a (or (result-subproblem res) ""))])
+                                 ,(status-symbol (result-status res))))))))))))))
 
 (define (print-feature-table problems)
   (define all-features (remove-duplicates (append-map (λ (x) (dict-ref x ':features '())) problems)))
@@ -389,8 +390,21 @@
   (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
 
 (define (read-index iname)
-  (for*/hash ([sec (call-with-input-file iname read-json)] [(k v) (in-hash sec)])
-    (values (normalize-index k v) v)))
+  (for*/hash ([sec (call-with-input-file iname read-json)]
+              [(k v) (in-hash sec)])
+    (define name
+      (if (string=? (last (string-split (~a k) "-")) (substring v 1))
+          (string-join (drop-right (string-split (~a k) "-") 1) "-")
+          k))
+    (values name v)))
+
+(define (get-index index uname)
+  (define base (first (string-split (~a uname) ".")))
+  (hash-ref index
+            (if (string=? (last (string-split base "-")) "ref")
+                (string-join (drop-right (string-split base "-") 1) "-")
+                base)
+            "(unknown)"))
 
 (define (read-failed-tests jname)
   (define failed-tests
@@ -423,10 +437,8 @@
     (timeout (string->number s))]
    [("--index") index-file "File name with section information for tests"
     (set! index (read-index index-file))]
-   [("--show-success") "Output report rows for successful tests"
+   [("--show-all") "Do not hide successful or unsupported tests"
     (show-success true)]
-   [("--aggregate") "Aggregate tests from one file together"
-    (aggregate true)]
    [("--supported") "Skip tests with unsupported features"
     (and! valid? (λ (p) (subset? (dict-ref p ':features '()) (supported-features))))]
    [("--failed") json-file "Run only tests that failed in given JSON file"
@@ -434,25 +446,13 @@
    [("--feature") feature "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
    [("--expected") efile "Expect failures named in this file"
-    (define expected-failures
-      (call-with-input-file
-          efile
-          (λ (p)
-            (for/list ([l (in-port read p)])
-              l))))
-    (define f (expected?))
-    (expected?
-     (λ (result)
-       (or (f result)
-           (begin
-             (set-member? expected-failures (list (result-file result) (result-problem result)))))))]
+    (expected-failures (call-with-input-file efile (λ (p) (sequence->list (in-port read p)))))]
+   [("--threads") t "How many threads to use"
+    (set! threads (string->number t))]
 
    #:subcommands
 
    ["regression"
-    #:once-each
-    [("--threads") t "How many threads to use"
-     (set! threads (string->number t))]
     #:args fnames
     (write-report
      #:output out-file
@@ -471,7 +471,7 @@
      (let ([probs (for/append ([file (sort fnames string<?)])
                               (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
                               (map (curry cons file) x))])
-       (run-mutation-tests probs #:valid valid? #:index index #:repeat repeat)))]
+       (run-mutation-tests probs #:valid valid? #:index index #:repeat repeat #:threads threads)))]
 
    ["features"
     #:args fnames
@@ -501,7 +501,7 @@
         (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))
     (write-report
      #:output out-file
-     (run-assertion-tests probs #:valid valid? #:index index))]
+     (run-assertion-tests probs #:valid valid? #:index index #:threads threads))]
 
    ["rerender"
     #:args (json-file)

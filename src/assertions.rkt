@@ -12,7 +12,7 @@
    'viewable
    (λ (b) `(and (> (right ,b) (left root)) (> (bottom ,b) (top root))))
    'onscreen
-   (λ (b) `(and (> (left ,b) (left root)) (> (top ,b) (top root))))
+   (λ (b) `(and (>= (left ,b) (left root)) (>= (top ,b) (top root))))
    '!=
    (λ (a b) `(not (= ,a ,b)))
    'width

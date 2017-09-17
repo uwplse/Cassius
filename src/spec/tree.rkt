@@ -9,24 +9,6 @@
 ;; functions to properly establish the pointers each holds.
 
 (define-constraints tree-types
-  (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
-  (define-fun ropt-max-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
-         (ite (realopt.is-some? x)
-              (ite (and y? (realopt.is-some? y))
-                   (ite (> (realopt.value x) (realopt.value y))
-                        x
-                        y)
-                   x)
-              y))
-  (define-fun ropt-min-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
-         (ite (realopt.is-some? x)
-              (ite (and y? (realopt.is-some? y))
-                   (ite (< (realopt.value x) (realopt.value y))
-                        x
-                        y)
-                   x)
-              y))
-
   (declare-datatypes ()
      ((Box no-box
            (box (type BoxType)
@@ -39,12 +21,13 @@
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
-                (font-size Real) (leading Real) (ascendor-top RealOpt) (descendor-bottom RealOpt)
+                (font-size Real) (leading Real) (ascender-top RealOpt) (descender-bottom RealOpt)
                 (text-top Real) (text-bottom Real) ; TODO: how do we compute this? Can we compute this?
                 (clh Real) ; computed line height
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
+                (&root Int) ; Root box
                 (&anc-w-elt Int) ; pointer to nearest ancestor with an element
                 (ez.in EZone) (ez.out EZone) (ez.sufficient Bool)
                 (has-contents Bool) (lineheight Line-Height) (textalign Text-Align) ; to handle inheritance; TODO: handle better
@@ -98,6 +81,7 @@
   ;; parent block box, and the parent positioned box.
   (define-fun ppflow ((box Box)) Box (get/box (&ppflow box)))
   (define-fun pbflow ((box Box)) Box (get/box (&pbflow box)))
+  (define-fun rootbox ((box Box)) Box (get/box (&root box)))
 
   ;; From elements to boxes and back
   (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
@@ -226,6 +210,7 @@
      (= (&pbflow b) -1)
      (= (&vflow b) -1)
      (= (&nflow b) -1)
+     (= (&root b) &b)
      (= (ancestor-bg b) (color/rgb (color 255 255 255 1 1 1))) ;; TODO: Browser dependent? User-configurable?
      (= (ez.in b) ez.init)))
 
@@ -235,6 +220,7 @@
      (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
      (= (&vflow b) (&vbox b))
      (= (&nflow b) (&nbox b))
+     (= (&root b) (&root (pbox b)))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
                             ez.init
@@ -255,6 +241,7 @@
           [(is-no-box (nbox b)) -1]
           [(box-in-flow (nbox b)) (&nbox b)]
           [else (&nflow (nbox b))]))
+     (= (&root b) (&root (pbox b)))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
                             ez.init

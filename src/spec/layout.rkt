@@ -42,13 +42,23 @@
          (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
-    (max ,(get-px-or-% 'min-width '(w (pflow b)) 'b)
+    (max (+
+          (ite (and (is-elt (box-elt b))
+                    (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
+               (+ (bl b) (pl b) (pr b) (br b))
+               0.0)
+          ,(get-px-or-% 'min-width '(w (pflow b)) 'b))
          (ite (is-max-width/none (style.max-width (computed-style (box-elt b))))
               val
               (min val ,(get-px-or-% 'max-width '(w (pflow b)) 'b)))))
 
   (define-fun min-max-height ((val Real) (b Box)) Real
-    (max ,(get-px-or-% 'min-height '(h (pflow b)) 'b)
+    (max (+
+          (ite (and (is-elt (box-elt b))
+                    (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
+               (+ (bt b) (pt b) (pb b) (bb b))
+               0.0)
+          ,(get-px-or-% 'min-height '(h (pflow b)) 'b))
          (ite (is-max-height/none (style.max-height (computed-style (box-elt b))))
               val
               (min val ,(get-px-or-% 'max-height '(h (pflow b)) 'b)))))
@@ -374,7 +384,8 @@
 
   (define-fun positioned-vertical-layout ((b Box)) Bool
     ;; CSS 2.1 § 10.6.4
-    ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)]
+    ,(smt-let ([r (computed-style (box-elt b))]
+               [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
                [temp-top ,(get-px-or-% 'top '(h (ppflow b)) 'b)]
                [temp-bottom ,(get-px-or-% 'bottom '(h (ppflow b)) 'b)]
                [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(h (ppflow b)) 'b)) b)]
@@ -412,7 +423,9 @@
 
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
-     ,(smt-let ([r (computed-style (box-elt b))] [pp (ppflow b)] [p (pflow b)]
+     ,(smt-let ([r (computed-style (box-elt b))]
+                [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
+                [p (pflow b)]
                 [temp-left ,(get-px-or-% 'left '(w (ppflow b)) 'b)]
                 [temp-right ,(get-px-or-% 'right '(w (ppflow b)) 'b)]
                 [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(w (ppflow b)) 'b)) b)]
@@ -452,17 +465,27 @@
   ;; Helper method for computing the line height and leading of a box
   (define-fun compute-line-height ((b Box)) Bool
     (and
-     ,(smt-cond
-       [(is-line-height/normal (lineheight b))
-        (<= (* 1.1 (font-size b)) (clh b) (* 1.25 (font-size b)))]
-       [(is-line-height/px (lineheight b))
-        (= (clh b) (line-height.px (lineheight b)))]
-       [(is-line-height/em (lineheight b))
-        (= (clh b) (%of (* 100.0 (line-height.em (lineheight b))) (font-size b)))]
-       [(is-line-height/% (lineheight b))
-        (= (clh b) (%of (line-height.% (lineheight b)) (font-size b)))]
-       [else false])
-     (= (leading b) (- (max-if (clh b) (is-box (vbox b)) (clh (vbox b))) (font-size b)))))
+     (ite (is-line-height/normal (lineheight b))
+        (<= (max-if (* 1.1 (font-size b))
+                    (and (not (is-box/block (type b))) (is-box (pflow b)))
+                    (clh (pflow b)))
+            (clh b)
+            (max-if (* 1.25 (font-size b))
+                    (and (not (is-box/block (type b))) (is-box (pflow b)))
+                    (clh (pflow b))))
+        (= (clh b)
+           (max-if
+            ,(smt-cond
+              [(is-line-height/px (lineheight b))
+               (line-height.px (lineheight b))]
+              [(is-line-height/em (lineheight b))
+               (%of (* 100.0 (line-height.em (lineheight b))) (font-size b))]
+              [(is-line-height/% (lineheight b))
+               (%of (line-height.% (lineheight b)) (font-size b))]
+              [else 0]) ; Can't happen
+            (is-box (pflow b))
+            (clh (pflow b)))))
+     (= (leading b) (- (clh b) (font-size b)))))
 
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
@@ -548,7 +571,7 @@
          (and
           (= (top-outer b) y*)
           (= (left-outer b) x)
-          (= (ez.sufficient b) (ez.can-add ez* (+ y* h)))
+          (= (ez.sufficient b) true #;(ez.can-add ez* (+ y* h)))
           (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x))))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
@@ -610,24 +633,23 @@
 
        (compute-line-height b)
 
-       (= (ascendor-top b)
+       (= (ascender-top b)
           (ropt-min-if
-           (ite (and (is-elt e) (is-replaced e))
+           (ite (and (is-elt e) (is-replaced e) (is-flow-root b))
                 (realopt (top-border b) true)
-                (ite (or (is-box l) (is-flow-root b))
-                     (ascendor-top l)
+                (ite (or (is-box l))
+                     (ascender-top l)
                      (realopt 0.0 false)))
            (is-box v)
-           (ascendor-top v)))
-        (= (descendor-bottom b)
-          (ropt-max-if
-           (ite (and (is-elt e) (is-replaced e))
-                (realopt (bottom-border b) true)
-                (ite (or (is-box l) (is-flow-root b))
-                     (descendor-bottom l)
-                     (realopt 0.0 false)))
-           (is-box v)
-           (descendor-bottom v)))
+           (ascender-top v)))
+        (=> (not (or (and (is-elt e) (is-replaced e)) (is-flow-root b)))
+            (= (descender-bottom b)
+                (ropt-max-if
+                 (ite (or (is-box l) (is-flow-root b))
+                      (descender-bottom l)
+                      (realopt 0.0 false))
+                 (is-box v)
+                 (descender-bottom v))))
 
        ,(smt-cond
          [(is-replaced e)
@@ -658,10 +680,10 @@
        (<= (top-content p)
            (ite (is-display/inline-block (style.display r))
                 (top-outer b)
-                (top-border b)))
+                (top-content b)))
        (<= (ite (is-display/inline-block (style.display r))
                 (bottom-outer b)
-                (bottom-border b))
+                (bottom-content b))
            (bottom-content p))
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
@@ -689,7 +711,7 @@
        (= (font-size b) (font-size p))
 
        (compute-line-height b)
-
+       
        (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
          (and
           (= (text-top b) (+ (y b) (* .5 (font.leading metrics))))
@@ -698,11 +720,11 @@
        ;; TODO: (y b) and (+ (y b) (font-size b)) not correct, should use baseline.
        (ite (> (w b) 0.0)
             (and
-             (= (ascendor-top b) (ropt-min-if (realopt (- (text-top b) (* .5 (leading b))) true) (is-box v) (ascendor-top v)))
-             (= (descendor-bottom b) (ropt-max-if (realopt (+ (text-bottom b) (* .5 (leading b))) true) (is-box v) (descendor-bottom v))))
+             (= (ascender-top b) (ropt-min-if (realopt (- (text-top b) (* .5 (leading b))) true) (is-box v) (ascender-top v)))
+             (= (descender-bottom b) (ropt-max-if (realopt (+ (text-bottom b) (* .5 (leading b))) true) (is-box v) (descender-bottom v))))
             (and
-             (= (ascendor-top b) (realopt 0.0 false))
-             (= (descendor-bottom b) (realopt 0.0 false))))
+             (= (ascender-top b) (realopt 0.0 false))
+             (= (descender-bottom b) (realopt 0.0 false))))
 
        (no-relative-offset b)
        (zero-box-model b)
@@ -728,7 +750,8 @@
              [ez (ez.in b)])
          (and
           (ez.test (ez.in b) y-normal) ;; Key float restriction
-          (= (y b) (ez.level ez (stfwidth b) (left-content p) (right-content p) y-normal float/left))
+          ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
+          (= (y b) (ez.level ez (stfmax (lbox b)) (left-content p) (right-content p) y-normal float/left))
           (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
           (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p)))))
 
@@ -738,9 +761,11 @@
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
        (= (font-size b) (font-size p))
-       (=> (realopt.is-some? (descendor-bottom (lbox b))) (realopt.is-some? (ascendor-top (lbox b)))
-           (= (h b) (- (realopt.value (descendor-bottom (lbox b)))
-                       (realopt.value (ascendor-top (lbox b))))))
+
+       (compute-line-height b)
+       (=> (realopt.is-some? (descender-bottom (lbox b))) (realopt.is-some? (ascender-top (lbox b)))
+           (= (h b) (- (realopt.value (descender-bottom (lbox b)))
+                       (realopt.value (ascender-top (lbox b))))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
