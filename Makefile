@@ -15,6 +15,9 @@ publish:
 	ssh uwplse.org chmod -R a+r /var/www/cassius/reports/$(TIME)/
 	@ echo "Uploaded to http://cassius.uwplse.org/reports/$(TIME)/"
 
+clean:
+	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
+
 # CSSWG test suite
 
 CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2
