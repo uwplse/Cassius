@@ -46,6 +46,8 @@ do
     fi
 done
 
+make clean
+
 for CSSWG in \
     abspos borders box-display box cascade floats-clear \
     floats linebox margin-padding-clear normal-flow positioning text;
