@@ -906,6 +906,8 @@ function get_inherent_size(e) {
     };
 }
 
+RTL_CHARS = "\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC";
+
 function dump_document(features) {
     var elt = document.documentElement;
     
@@ -913,7 +915,9 @@ function dump_document(features) {
         if (is_comment(elt)) {
             return false;
         } else if (is_text(elt)) {
-            if (!/^[\x00-\x7F]*$/.test(elt.textContent)) features["non-ascii"] = true;
+            if (/[\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC]/.test(elt.textContent)) {
+                features["unicode:rtl"] = true;
+            }
             var r = new Range();
             r.selectNode(elt);
             if (r.getClientRects().length == 0) {
