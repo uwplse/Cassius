@@ -171,7 +171,7 @@
         (style.color (computed-style (get/elt &e))))
      (= (bg-color (get/box &b))
         (style.background-color (computed-style (get/elt &e))))
-     (= (&anc-w-elt (get/box &b)) &b)
+     (= (&anc-w-elt (get/box &b)) &e)
      (= (ancestor-bg (get/box &b))
         (ite (is-color/transparent (bg-color (get/box &b)))
              (ancestor-bg (pbox (get/box &b)))
