@@ -5,6 +5,7 @@
 
 (define (parse-file port)
   (define problems (make-hash))
+  (define fonts (make-hash))
   (define sheets (make-hash))
   (define docs (make-hash))
   (define layouts (make-hash))
@@ -19,6 +20,8 @@
                     (cons
                      (car rule)
                      (filter (λ (thing) (or (not (list? thing)) (set-member? (css-properties) (first thing)))) (cdr rule)))))]
+      [`(define-fonts ,name ,rules ...)
+       (dict-set! fonts name rules)]
       [`(define-layout (,name ,rest ...) ,tree)
        (define properties (attributes->dict rest))
        (dict-set! layouts name (dom name properties tree tree))]
@@ -44,6 +47,9 @@
        (get-from ':layouts layouts)
        (get-from ':actions actions)
        (get-from ':scripts scripts)
+       (set! properties
+             (dict-set properties ':fonts
+                       (append-map (curry dict-ref fonts) (dict-ref properties ':fonts))))
 
        (when (and (dict-has-key? properties ':layouts) (dict-has-key? properties ':documents))
          (define layouts*

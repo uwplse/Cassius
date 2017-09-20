@@ -7,7 +7,7 @@
 (struct success (stylesheet elements doms))
 (struct failure (stylesheet trees))
 
-(define (constraints log-phase sheets docs [tests #f])
+(define (constraints log-phase sheets docs fonts [tests #f])
   (define doms (map parse-dom docs))
 
   (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
@@ -48,7 +48,7 @@
           (values var (sformat "cex~a" (name 'cex (cons var test))))))
       `(forall ,(cadr test) ,(compile-assertion doms (caddr test) ctx))))
 
-  (define query (all-constraints (cons browser-style sheets) matchers doms))
+  (define query (all-constraints (cons browser-style sheets) matchers doms fonts))
 
   (define ms (model-sufficiency doms))
   (set! query
@@ -71,13 +71,13 @@
   
   (values doms query))
 
-(define (query sheets docs [tests #f])
-  (define-values (doms query) (constraints (make-log) sheets docs tests))
+(define (query sheets docs fonts [tests #f])
+  (define-values (doms query) (constraints (make-log) sheets docs fonts tests))
   (append query (list cassius-check-sat)))
 
-(define (solve sheets docs [tests #f])
+(define (solve sheets docs fonts [tests #f])
   (define log-phase (make-log))
-  (define-values (doms query) (constraints log-phase sheets docs tests))
+  (define-values (doms query) (constraints log-phase sheets docs tests fonts))
 
   (define out
     (let ([z3 (z3-process)])

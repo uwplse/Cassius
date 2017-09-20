@@ -485,7 +485,8 @@
               [else 0]) ; Can't happen
             (is-box (pflow b))
             (clh (pflow b)))))
-     (= (leading b) (- (clh b) (font-size b)))))
+     (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
+       (= (leading b) (- (clh b) (+ (font.xHeight metrics) (font.ascender metrics) (font.descender metrics)))))))
 
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
@@ -724,7 +725,12 @@
 
        (= (text-indent b) 0.0)
        (compute-line-height b)
-       (<= (top-outer b) (text-top b) (text-bottom b) (bottom-outer b))
+       
+       (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
+         (and
+          (<= (box-top b) (text-top b) (text-bottom b) (box-bottom b))
+          #;(= (text-top b) (+ (y b) (* .5 (font.leading metrics))))
+          (= (text-bottom b) (+ (text-top b) (font.xHeight metrics) (font.ascender metrics) (font.descender metrics)))))
 
        ;; TODO: (y b) and (+ (y b) (font-size b)) not correct, should use baseline.
        (ite (> (w b) 0.0)
