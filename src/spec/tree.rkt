@@ -1,8 +1,6 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt" "../encode.rkt")
-(provide tree-types link-definitions extra-pointers)
-
-(define extra-pointers (make-parameter '()))
+(require "../common.rkt" "../smt.rkt" "../encode.rkt" "utils.rkt")
+(provide link-definitions)
 
 ;; This file defines the tree structures used in Cassius's SMT
 ;; encoding of CSS. It defines the Element and Box classes, and

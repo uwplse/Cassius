@@ -636,7 +636,7 @@
 
        (= (ascender-top b)
           (ropt-min-if
-           (ite (and (is-elt e) (is-replaced e) (is-flow-root b))
+           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
                 (realopt (top-border b) true)
                 (ite (or (is-box l))
                      (ascender-top l)

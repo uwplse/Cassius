@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt")
-(provide common-definitions utility-definitions)
+(provide common-definitions utility-definitions extra-pointers tree-types)
 
 (define-constraints common-definitions
   (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
@@ -26,6 +26,8 @@
   (define-fun min-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< y x)) y x))
   (define-fun between ((x Real) (y Real) (z Real)) Bool
     (or (<= x y z) (>= x y z))))
+
+(define extra-pointers (make-parameter '()))
 
 (define-constraints tree-types
   (declare-datatypes ()

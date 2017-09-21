@@ -1,5 +1,5 @@
 #lang racket
-(require "z3o.rkt" "common.rkt" "spec/tree.rkt")
+(require "z3o.rkt" "common.rkt" "spec/tree.rkt" "spec/utils.rkt")
 (provide z3-prepare z3-clean z3-namelines cassius-check-sat)
 
 (define to-resolve
