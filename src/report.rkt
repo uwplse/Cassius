@@ -79,8 +79,12 @@
                              [*fuzz* fuzz?])
                 (with-handlers
                     ([exn:break? (λ (e) 'break)]
-                     [exn:fail? (λ (e) (list 'error e))])
-                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)))))))
+                     [exn:fail? (λ (e)
+                                  (display (exn->string e))
+                                  (newline)
+                                  (list 'error e))])
+                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)
+                         (dict-ref prob ':fonts)))))))
 
   (define t (current-inexact-milliseconds))
   (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout))
