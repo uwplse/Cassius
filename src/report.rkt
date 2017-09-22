@@ -84,8 +84,7 @@
                                    (exn-message e)
                                    e)
                                   (list 'error e))])
-                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)
-                         (dict-ref prob ':fonts)))))))
+                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)))))))
 
   (define t (current-inexact-milliseconds))
   (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout))
