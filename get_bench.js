@@ -582,9 +582,11 @@ function compute_scrollbar_width() {
     var outer = document.createElement("div");
     var inner = document.createElement("div");
     outer.style.overflow = "scroll";
+    outer.style.borderLeftStyle = "none";
+    outer.style.borderRightStyle = "none";
     outer.appendChild(inner);
     document.body.appendChild(outer);
-    var out = outer.offsetWidth - inner.offsetWidth;
+    var out = outer.offsetWidth - outer.clientWidth;
     document.body.removeChild(outer)
     return out;
 }
@@ -918,6 +920,8 @@ function get_inherent_size(e) {
     };
 }
 
+RTL_CHARS = "\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC";
+
 function dump_document(features) {
     var elt = document.documentElement;
     
@@ -925,6 +929,9 @@ function dump_document(features) {
         if (is_comment(elt)) {
             return false;
         } else if (is_text(elt)) {
+            if (/[\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC]/.test(elt.textContent)) {
+                features["unicode:rtl"] = true;
+            }
             var r = new Range();
             r.selectNode(elt);
             if (r.getClientRects().length == 0) {
@@ -946,7 +953,7 @@ function dump_document(features) {
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
-            if (["IMG", "OBJECT", "INPUT", "IFRAME"].indexOf(elt.tagName.toUpperCase()) !== -1) {
+            if (["IMG", "OBJECT", "INPUT", "IFRAME", "TEXTAREA"].indexOf(elt.tagName.toUpperCase()) !== -1) {
                 var v = get_inherent_size(elt);
                 rec.props["w"] = v.w;
                 rec.props["h"] = v.h;

@@ -250,7 +250,7 @@
        (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
            (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
        (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
-           (= (yo b) (- (yo p) (%of (offset.% (style.bottom r)) (w p)))))
+           (= (yo b) (- (yo p) (%of (offset.% (style.bottom r)) (h p)))))
        (=> (and (is-offset/auto (style.top r)) (is-offset/em (style.bottom r)))
            (= (yo b) (- (yo p) (%of (* 100 (offset.em (style.bottom r))) (font-size b)))))
        (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
@@ -386,9 +386,9 @@
     ;; CSS 2.1 § 10.6.4
     ,(smt-let ([r (computed-style (box-elt b))]
                [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
-               [temp-top ,(get-px-or-% 'top '(h (ppflow b)) 'b)]
-               [temp-bottom ,(get-px-or-% 'bottom '(h (ppflow b)) 'b)]
-               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(h (ppflow b)) 'b)) b)]
+               [temp-top ,(get-px-or-% 'top '(height-padding (ppflow b)) 'b)]
+               [temp-bottom ,(get-px-or-% 'bottom '(height-padding (ppflow b)) 'b)]
+               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(height-padding (ppflow b)) 'b)) b)]
                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
                [height?
@@ -426,9 +426,9 @@
      ,(smt-let ([r (computed-style (box-elt b))]
                 [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
                 [p (pflow b)]
-                [temp-left ,(get-px-or-% 'left '(w (ppflow b)) 'b)]
-                [temp-right ,(get-px-or-% 'right '(w (ppflow b)) 'b)]
-                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(w (ppflow b)) 'b)) b)]
+                [temp-left ,(get-px-or-% 'left '(width-padding (ppflow b)) 'b)]
+                [temp-right ,(get-px-or-% 'right '(width-padding (ppflow b)) 'b)]
+                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(width-padding (ppflow b)) 'b)) b)]
                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
                 [width? (not (or (is-replaced (box-elt b)) (is-width/auto (style.width (computed-style (box-elt b))))))])
@@ -572,8 +572,14 @@
          (and
           (= (top-outer b) y*)
           (= (left-outer b) x)
-          (= (ez.sufficient b) true #;(ez.can-add ez* (+ y* h)))
-          (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x))))))
+          ;; The idea here is that if there are not enough registers,
+          ;; so that you can *not* add, then we want to provide
+          ;; maximum freedom to ez.out, to try to ensure SAT, so we
+          ;; can look inside the model, see that it's not sufficient,
+          ;; and then restart with more registers.
+          (= (ez.sufficient b) (ez.can-add ez* (+ y* h)))
+          (=> (ez.sufficient b)
+              (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x)))))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     (and
@@ -596,6 +602,9 @@
        ;;(= (float-stfmax b) (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
+
+       (= (text-indent b)
+          (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
        (compute-line-height b)
 
@@ -633,6 +642,9 @@
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
        (compute-line-height b)
+
+       (= (text-indent b)
+          (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
        (= (ascender-top b)
           (ropt-min-if
@@ -711,6 +723,7 @@
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
 
+       (= (text-indent b) 0.0)
        (compute-line-height b)
        
        (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
@@ -746,7 +759,8 @@
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) 0.0)
 
-       (= (pl b) (ite (is-no-box v) ,(get-px-or-% 'text-indent '(w p) '(ite (is-elt (box-elt p)) p (pflow p))) 0.0))
+       (= (text-indent b) (text-indent p))
+       (= (pl b) (ite (is-no-box v) (text-indent b) 0.0))
 
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
              [ez (ez.in b)])
@@ -787,7 +801,8 @@
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
      (= (ez.sufficient b) true)
-     (= (ez.out b) (ez.out (lbox b)))))
+     (= (ez.out b) (ez.out (lbox b)))
+     (= (text-indent b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
     (or (is-box/block (type b)) (is-box/inline (type b))))
@@ -799,6 +814,7 @@
        (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b (w p))
+       (= (text-indent b) (text-indent p))
        (= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
        (= (stfwidth b) (max-if (stfwidth l) (is-box v) (stfwidth v)))
        (= (float-stfmax b)

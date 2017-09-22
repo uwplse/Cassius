@@ -7,28 +7,12 @@
 ;; functions to properly establish the pointers each holds.
 
 (define-constraints link-definitions
-  ;; The elements in each direction in the element tree
-  (define-fun velt ((elt Element)) Element (get/elt (&velt elt)))
-  (define-fun nelt ((elt Element)) Element (get/elt (&nelt elt)))
-  (define-fun pelt ((elt Element)) Element (get/elt (&pelt elt)))
-  (define-fun felt ((elt Element)) Element (get/elt (&felt elt)))
-  (define-fun lelt ((elt Element)) Element (get/elt (&lelt elt)))
-
-  ;; The boxes in each direction in the box tree
-  (define-fun pbox ((box Box)) Box (get/box (&pbox box)))
-  (define-fun fbox ((box Box)) Box (get/box (&fbox box)))
-  (define-fun lbox ((box Box)) Box (get/box (&lbox box)))
-  (define-fun vbox ((box Box)) Box (get/box (&vbox box)))
-  (define-fun nbox ((box Box)) Box (get/box (&nbox box)))
 
   ;; Three additional pointers: to the previous floating box, the
   ;; parent block box, and the parent positioned box.
   (define-fun ppflow ((box Box)) Box (get/box (&ppflow box)))
   (define-fun pbflow ((box Box)) Box (get/box (&pbflow box)))
   (define-fun rootbox ((box Box)) Box (get/box (&root box)))
-
-  ;; From elements to boxes and back
-  (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
 
   ;; Helper functions for some basic primitives
   (define-fun float ((b Box)) Float
@@ -115,11 +99,7 @@
         (style.color (computed-style (get/elt &e))))
      (= (bg-color (get/box &b))
         (style.background-color (computed-style (get/elt &e))))
-     (= (&anc-w-elt (get/box &b)) &e)
-     (= (ancestor-bg (get/box &b))
-        (ite (is-color/transparent (bg-color (get/box &b)))
-             (ancestor-bg (pbox (get/box &b)))
-             (bg-color (get/box &b))))))
+     (= (&anc-w-elt (get/box &b)) &e)))
 
   (define-fun match-anon-box ((&b Int)) Bool
     (and
@@ -141,8 +121,7 @@
              color/black
              (fg-color (pflow (get/box &b)))))
      (= (bg-color (get/box &b)) color/transparent)
-     (= (&anc-w-elt (get/box &b)) (&anc-w-elt (pflow (get/box &b))))
-     (= (ancestor-bg (get/box &b)) (ancestor-bg (pbox (get/box &b))))))
+     (= (&anc-w-elt (get/box &b)) (&anc-w-elt (pflow (get/box &b))))))
 
   ;; `link-flow-simple`, `link-flow-root`, and `link-flow-block` link
   ;; boxes together in their flow trees. The "block" version is much
@@ -155,7 +134,6 @@
      (= (&vflow b) -1)
      (= (&nflow b) -1)
      (= (&root b) &b)
-     (= (ancestor-bg b) (color/rgb (color 255 255 255 1 1 1))) ;; TODO: Browser dependent? User-configurable?
      (= (ez.in b) ez.init)))
 
   (define-fun link-flow-simple ((b Box) (&b Int)) Bool

@@ -1,6 +1,8 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt")
-(provide common-definitions utility-definitions extra-pointers tree-types)
+(provide extra-pointers common-definitions tree-types utility-definitions)
+
+(define extra-pointers (make-parameter '()))
 
 (define-constraints common-definitions
   (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
@@ -27,8 +29,6 @@
   (define-fun between ((x Real) (y Real) (z Real)) Bool
     (or (<= x y z) (>= x y z))))
 
-(define extra-pointers (make-parameter '()))
-
 (define-constraints tree-types
   (declare-datatypes ()
      ((Box no-box
@@ -42,6 +42,10 @@
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
+<<<<<<< HEAD
+=======
+                (text-indent Real)
+>>>>>>> ca6d421418a892b7db460c7155638109d158dcbd
                 (font-size Real) (leading Real) (ascender-top RealOpt) (descender-bottom RealOpt)
                 (text-top Real) (text-bottom Real) ; TODO: how do we compute this? Can we compute this?
                 (clh Real) ; computed line height
@@ -55,7 +59,11 @@
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
                     `(,(sformat "&~a" i) Int))
+<<<<<<< HEAD
                 (fg-color Color) (bg-color Color) (ancestor-bg Color)))
+=======
+                (fg-color Color) (bg-color Color)))
+>>>>>>> ca6d421418a892b7db460c7155638109d158dcbd
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
@@ -70,6 +78,24 @@
   (assert (= (&elt no-box) -1)))
 
 (define-constraints utility-definitions
+  ;; The elements in each direction in the element tree
+  (define-fun velt ((elt Element)) Element (get/elt (&velt elt)))
+  (define-fun nelt ((elt Element)) Element (get/elt (&nelt elt)))
+  (define-fun pelt ((elt Element)) Element (get/elt (&pelt elt)))
+  (define-fun felt ((elt Element)) Element (get/elt (&felt elt)))
+  (define-fun lelt ((elt Element)) Element (get/elt (&lelt elt)))
+
+  ;; The boxes in each direction in the box tree
+  (define-fun pbox ((box Box)) Box (get/box (&pbox box)))
+  (define-fun fbox ((box Box)) Box (get/box (&fbox box)))
+  (define-fun lbox ((box Box)) Box (get/box (&lbox box)))
+  (define-fun vbox ((box Box)) Box (get/box (&vbox box)))
+  (define-fun nbox ((box Box)) Box (get/box (&nbox box)))
+
+  ;; From boxes to elements
+  (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
+
+  ;; Box model helpers
   (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
   (define-fun left-border ((box Box)) Real (x box))
   (define-fun box-left ((box Box)) Real (+ (x box) (bl box)))
@@ -94,11 +120,16 @@
   (define-fun bottom-border ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box)))
   (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
 
+  ;; Box position and size helpers
   (define-fun box-x ((box Box)) Real (+ (x box) (xo box)))
   (define-fun box-y ((box Box)) Real (+ (y box) (yo box)))
   (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
+  
+  (define-fun width-padding ((box Box)) Real (+ (pl box) (w box) (pr box)))
+  (define-fun height-padding ((box Box)) Real (+ (pt box) (h box) (pb box)))
 
+  ;; Box predicate helpers
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
     (and (or (between (bottom-outer box1) (top-outer box2) (top-outer box1))
              (between (bottom-outer box2) (top-outer box1) (top-outer box2)))

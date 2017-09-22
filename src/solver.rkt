@@ -1,5 +1,5 @@
 #lang racket
-(require "z3o.rkt" "common.rkt" "spec/tree.rkt" "spec/utils.rkt")
+(require "z3o.rkt" "common.rkt" "spec/utils.rkt")
 (provide z3-prepare z3-clean z3-namelines cassius-check-sat)
 
 (define to-resolve
@@ -27,7 +27,7 @@
   (append
    '(an-inline-box a-text-box a-line-box a-block-box)
    '(a-block-flow-box a-block-float-box a-block-positioned-box an-anon-block-box a-view-box)
-   '(float-rules float-restrictions)))
+   '(positioned-horizontal-layout positioned-vertical-layout)))
 
 (define ((unless-debug f) cmds)
   (if (*debug*)
@@ -97,10 +97,13 @@
 
 (module+ main
   (command-line
-   #:args (fname)
+   #:args (fname oname)
    (define cmds
      (z3-prepare
       (call-with-input-file fname
         (λ (p) (sequence->list (in-port read p))))))
-   (for ([cmd cmds])
-     (printf "~a\n" cmd))))
+   (call-with-output-file
+       oname #:exists 'replace
+       (λ (p)
+         (for ([cmd cmds])
+           (fprintf p "~a\n" cmd))))))
