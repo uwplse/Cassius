@@ -483,7 +483,7 @@
               [(is-line-height/% (lineheight b))
                (%of (line-height.% (lineheight b)) (font-size b))]
               [else 0]) ; Can't happen
-            (is-box (pflow b))
+            (and (is-box (pflow b)) (not (is-box/block (type b))))
             (clh (pflow b)))))
      (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
        (= (leading b) (- (clh b) (+ (font.xHeight metrics) (font.ascender metrics) (font.descender metrics)))))))
