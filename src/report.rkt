@@ -79,7 +79,11 @@
                              [*fuzz* fuzz?])
                 (with-handlers
                     ([exn:break? (λ (e) 'break)]
-                     [exn:fail? (λ (e) (list 'error e))])
+                     [exn:fail? (λ (e)
+                                  ((error-display-handler)
+                                   (exn-message e)
+                                   e)
+                                  (list 'error e))])
                   (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)
                          (dict-ref prob ':fonts)))))))
 

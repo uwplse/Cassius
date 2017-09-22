@@ -26,7 +26,7 @@ bench/css/%.rkt: get_bench.py get_bench.js
 	@ sh bench/css/get.sh $* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/$*/*.xht))
 
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
-	@ racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg $^
+	racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg $^
 
 bench/css/index.json:
 	xdg-open "http://test.csswg.org/suites/css2.1/20110323/html4/toc.html"
@@ -53,7 +53,7 @@ bench/fwt.working.rkt: bench/fwt.rkt reports/fwt.json
 	unzip -q $< -d /tmp/
 
 reports/fwt.html reports/fwt.json: bench/fwt.rkt
-	@ racket src/report.rkt regression $(FLAGS) --show-all --timeout 600 -o reports/fwt $^
+	racket src/report.rkt regression $(FLAGS) --show-all --timeout 600 -o reports/fwt $^
 
 reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
-	@ racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 900 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
+	racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 900 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
