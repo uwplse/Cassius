@@ -42,10 +42,7 @@
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
-<<<<<<< HEAD
-=======
                 (text-indent Real)
->>>>>>> ca6d421418a892b7db460c7155638109d158dcbd
                 (font-size Real) (leading Real) (ascender-top RealOpt) (descender-bottom RealOpt)
                 (text-top Real) (text-bottom Real) ; TODO: how do we compute this? Can we compute this?
                 (clh Real) ; computed line height
@@ -59,11 +56,7 @@
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
                     `(,(sformat "&~a" i) Int))
-<<<<<<< HEAD
-                (fg-color Color) (bg-color Color) (ancestor-bg Color)))
-=======
                 (fg-color Color) (bg-color Color)))
->>>>>>> ca6d421418a892b7db460c7155638109d158dcbd
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
