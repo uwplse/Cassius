@@ -72,18 +72,19 @@
   (define custodian (make-custodian))
   (define eng
     (engine (λ (_)
-              (parameterize ([current-error-port (open-output-nowhere)]
-                             [current-output-port (open-output-nowhere)]
-                             [current-subprocess-custodian-mode 'kill]
-                             [current-custodian custodian]
-                             [*fuzz* fuzz?])
-                (with-handlers
-                    ([exn:break? (λ (e) 'break)]
-                     [exn:fail? (λ (e)
-                                  ((error-display-handler)
-                                   (exn-message e)
-                                   e)
-                                  (list 'error e))])
+              (with-handlers
+                  ([exn:break? (λ (e) 'break)]
+                   [exn:fail? (λ (e)
+                                ((error-display-handler)
+                                 (exn-message e)
+                                 e)
+                                (list 'error e))])
+
+                (parameterize ([current-error-port (open-output-nowhere)]
+                               [current-output-port (open-output-nowhere)]
+                               [current-subprocess-custodian-mode 'kill]
+                               [current-custodian custodian]
+                               [*fuzz* fuzz?])
                   (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)))))))
 
   (define t (current-inexact-milliseconds))

@@ -164,7 +164,7 @@
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
        (ite (is-box v)
-            ;; These parts don't check (hash-clearance) because they're
+            ;; These parts don't check (has-clearance) because they're
             ;; computed "as if" there were no clearance
             (+ (bottom-border v)
                (ite (and (box-collapsed-through v) (not (is-flow-root b)))
