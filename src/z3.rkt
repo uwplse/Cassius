@@ -10,7 +10,7 @@
     (apply subprocess #f #f #f z3-path "-smt2" "-in" flags))
   
   (define side-channel
-    (if (directory-exists? "/tmp")
+    (if (and (*debug*) (directory-exists? "/tmp"))
         (open-output-file "/tmp/out.z3" #:exists 'replace)
         #f))
 
@@ -20,12 +20,12 @@
     (close-output-port z3-in)
     (close-input-port z3-out)
     (close-input-port z3-err)
+    (when side-channel (close-output-port side-channel))
     (subprocess-kill process true))
 
   (define (ffprintf port fmt . vs)
     (apply fprintf port fmt vs)
-    (when (and (*debug*) side-channel)
-      (apply fprintf side-channel fmt vs))
+    (when side-channel (apply fprintf side-channel fmt vs))
     (flush-output port))
   
   (define (send cmd)
