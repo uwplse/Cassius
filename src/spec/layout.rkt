@@ -109,6 +109,33 @@
      (= (bt b) (br b) (bb b) (bl b) 0.0)
      (= (pt b) (pr b) (pb b) (pl b) 0.0)))
 
+  (define-fun vertical-position-for-flow-boxes ((b Box)) Real
+    (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
+       (ite (is-box v)
+            ;; These parts don't check (has-clearance) because they're
+            ;; computed "as if" there were no clearance
+            (+ (bottom-border v)
+               (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))
+               (- (ite (and (box-collapsed-through v) (not (is-flow-root b))) (+ (mtp v) (mtn v)) 0.0)))
+            (+ (top-content p)
+               (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
+                    0.0
+                    (+ (mtp b) (mtn b)))))))
+
+  (define-fun has-clearance ((b Box)) Bool
+    (and (is-elt (box-elt b))
+         (or
+          (and
+           (is-clear/left (style.clear (computed-style (box-elt b))))
+           (< (vertical-position-for-flow-boxes b) (ez.left-max (ez.in b))))
+          (and
+           (is-clear/right (style.clear (computed-style (box-elt b))))
+           (< (vertical-position-for-flow-boxes b) (ez.right-max (ez.in b))))
+          (and
+           (is-clear/both (style.clear (computed-style (box-elt b))))
+           (< (vertical-position-for-flow-boxes b)
+              (max (ez.left-max (ez.in b)) (ez.right-max (ez.in b))))))))
+
   (define-fun auto-height-for-flow-roots ((b Box)) Real
     ;; CSS 2.1 § 10.6.7
     ,(smt-cond
@@ -151,7 +178,7 @@
          (min-max-height 
           (- ;; CSS 2.1 § 10.6.3, item 2
            (ite (bottom-margin-collapses-with-children b)
-                (ite (box-collapsed-through lb)
+                (ite (and (not (has-clearance lb)) (box-collapsed-through lb))
                      (- (top-border lb) (+ (mbp lb) (mbn lb))) ; Confusing but correct
                      (bottom-border lb))
                 (ite (box-collapsed-through lb)
@@ -161,33 +188,6 @@
            (top-content b))
           b)])))
 
-  (define-fun vertical-position-for-flow-boxes ((b Box)) Real
-    (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
-       (ite (is-box v)
-            ;; These parts don't check (has-clearance) because they're
-            ;; computed "as if" there were no clearance
-            (+ (bottom-border v)
-               (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))
-               (- (ite (and (box-collapsed-through v) (not (is-flow-root b))) (+ (mtp v) (mtn v)) 0.0)))
-            (+ (top-content p)
-               (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
-                    0.0
-                    (+ (mtp b) (mtn b)))))))
-
-  (define-fun has-clearance ((b Box)) Bool
-    (and (is-elt (box-elt b))
-         (or
-          (and
-           (is-clear/left (style.clear (computed-style (box-elt b))))
-           (< (vertical-position-for-flow-boxes b) (ez.left-max (ez.in b))))
-          (and
-           (is-clear/right (style.clear (computed-style (box-elt b))))
-           (< (vertical-position-for-flow-boxes b) (ez.right-max (ez.in b))))
-          (and
-           (is-clear/both (style.clear (computed-style (box-elt b))))
-           (< (vertical-position-for-flow-boxes b)
-              (max (ez.left-max (ez.in b)) (ez.right-max (ez.in b))))))))
-
   (define-fun margins-collapse ((b Box)) Bool
     (and
      (let ([f (fflow b)] [n (nflow b)])
@@ -195,11 +195,15 @@
         (= (mtp b)
            (max (ite (> (mt b) 0.0) (mt b) 0.0)
                 (max (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtp f) 0.0)
-                     0.0)))
+                     (ite (box-collapsed-through b)
+                          (ite (is-box n) (mtp n) 0.0)
+                          0.0))))
         (= (mtn b)
            (min (ite (< (mt b) 0.0) (mt b) 0.0)
                 (min (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtn f) 0.0)
-                     0.0)))))
+                     (ite (box-collapsed-through b)
+                          (ite (is-box n) (mtn n) 0.0)
+                          0.0))))))
      (let ([l (lflow b)] [v (vflow b)])
        (and
         (= (mbp b)
