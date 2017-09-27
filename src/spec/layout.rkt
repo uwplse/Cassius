@@ -167,9 +167,8 @@
             ;; These parts don't check (has-clearance) because they're
             ;; computed "as if" there were no clearance
             (+ (bottom-border v)
-               (ite (and (box-collapsed-through v) (not (is-flow-root b)))
-                    0.0
-                    (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))))
+               (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))
+               (- (ite (and (box-collapsed-through v) (not (is-flow-root b))) (+ (mtp v) (mtn v)) 0.0)))
             (+ (top-content p)
                (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
                     0.0
@@ -196,15 +195,11 @@
         (= (mtp b)
            (max (ite (> (mt b) 0.0) (mt b) 0.0)
                 (max (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtp f) 0.0)
-                     (ite (box-collapsed-through b)
-                          (max-if (ite (> (mb b) 0.0) (mb b) 0.0) (is-box n) (mtp n))
-                          0.0))))
+                     0.0)))
         (= (mtn b)
            (min (ite (< (mt b) 0.0) (mt b) 0.0)
                 (min (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtn f) 0.0)
-                     (ite (box-collapsed-through b)
-                          (min-if (ite (< (mb b) 0.0) (mb b) 0.0) (is-box n) (mtn n))
-                          0.0))))))
+                     0.0)))))
      (let ([l (lflow b)] [v (vflow b)])
        (and
         (= (mbp b)
