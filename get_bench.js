@@ -582,7 +582,7 @@ function get_boxes(features) {
     window.scrollTo(0, 0);
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
-    view.children = make_boxes(document.querySelector("html"), style, features);
+    view.children = make_boxes(document.documentElement, style, features);
     if (window.scrollMaxY !== 0) view.props.w -= compute_scrollbar_width();
     return {view: view, style: style};
 }
