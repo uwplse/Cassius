@@ -1058,55 +1058,6 @@ function compute_flt_pointer(box, prev, vbox) {
     }
 }
 
-function check_float_restrictions(box, parent, features) {
-    if (!features) { features = parent; parent = null };
-
-    if (parent && box.node && is_float(box.node)) {
-        var flt = box.flt.prev ? box.flt.prev : null;
-
-        // R1: No negative margins on floats; otherwise they can overlap
-        if (bottom_outer(box.node) <= top_outer(box.node)
-            && left_outer(box.node) != right_outer(box.node)) {
-            features["float:R1"] = true;
-            add_feature(box, "float:R1")
-        }
-
-        // R2: The bottom of a box is farther down than the bottom of the previous box
-        if (flt) {
-            if (bottom_outer(box.node) < bottom_outer(flt)) {
-                features["float:R2"] = true;
-                add_feature(box, "float:R2");
-            }
-        }
-
-        // R3: If a float wraps to the next line, the previous line must be full
-        if (flt && top_outer(box.node) == bottom_outer(flt)
-            && top_outer(box.node) !== (!box.vbox ? top_content(parent.node) : bottom_outer(box.vbox.node))) {
-            // TODO: Assumes no padding!
-            if ((cs(box.node).float == "left") ? 
-                (right_outer(flt) < right_content(parent.node)) : 
-                (left_outer(flt) > left_content(parent.node))
-                ) {
-                features["float:R3"] = true;
-                add_feature(box, "float:R3");
-            }
-        }
-
-        // R4: If this and the previous float float to different
-        // sides, they are not horizontally adjacent
-        if (flt && cs(box.node).float != cs(flt).float) {
-            if (horizontally_adjacent(flt, box.node)) {
-                features["float:R4"] = true;
-                add_feature(box, "float:R4");
-            }
-        }
-    }
-
-    for (var i = 0; i < box.children.length; i++) {
-        check_float_restrictions(box.children[i], box, features);
-    }
-}
-
 function check_float_registers(box, parent, features) {
     if (!features) { features = parent; parent = null };
 
