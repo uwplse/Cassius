@@ -94,6 +94,8 @@
      (log-phase "Found model with ~a variables" (dict-count m))
      (cond
       [(extract-model-sufficiency m trees)
+       (unless (extract-model-lookback m trees)
+         (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)
        (extract-counterexample! m)
        (define doms* (map (curry extract-ctx! m) doms))

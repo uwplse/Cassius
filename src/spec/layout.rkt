@@ -525,6 +525,7 @@
        (= (x b) (+ (ml b)
                    (ite (is-flow-root b) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
        (= (ez.sufficient b) true)
+       (= (ez.lookback b) true)
        (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
   (define-fun a-block-float-box ((b Box)) Bool
@@ -581,6 +582,7 @@
           ;; can look inside the model, see that it's not sufficient,
           ;; and then restart with more registers.
           (= (ez.sufficient b) (ez.can-add ez* (+ y* h)))
+          (= (ez.lookback b) true)
           (=> (ez.sufficient b)
               (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x)))))))
 
@@ -596,6 +598,7 @@
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
           b))
       (= (ez.sufficient b) true)
+      (= (ez.lookback b) true)
       (= (ez.out b) (ez.in b))))
 
   (define-fun a-block-box ((b Box)) Bool
@@ -708,6 +711,7 @@
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
        (= (ez.sufficient b) true)
+       (= (ez.lookback b) true)
        (= (ez.out b)
           ,(smt-cond
             [(is-display/inline-block (style.display r))
@@ -747,6 +751,7 @@
        (zero-box-model b)
        (=> (is-box v) (= (x b) (right-outer v)))
        (= (ez.sufficient b) true)
+       (= (ez.lookback b) true)
        (= (ez.out b) (ez.in b))))
 
   (define-fun a-line-box ((b Box)) Bool
@@ -767,7 +772,7 @@
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
              [ez (ez.in b)])
          (and
-          (ez.test (ez.in b) y-normal) ;; Key float restriction
+          (= (ez.lookback b) (ez.test (ez.in b) y-normal)) ;; Key float restriction
           ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
           (= (y b) (ez.level ez (stfmax (lbox b)) (left-content p) (right-content p) y-normal float/left))
           (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
@@ -803,6 +808,7 @@
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
      (= (ez.sufficient b) true)
+     (= (ez.lookback b) true)
      (= (ez.out b) (ez.out (lbox b)))
      (= (text-indent b) 0.0)))
 
@@ -829,4 +835,5 @@
        (= (y b) (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
        (= (ez.sufficient b) true)
+       (= (ez.lookback b) true)
        (= (ez.out b) (ez.out (lbox b))))))
