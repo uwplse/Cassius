@@ -559,6 +559,7 @@ function make_boxes(elt, styles, features) {
     } else if (is_inline(elt)) {
         return [extract_inline(elt, children)];
     } else {
+        features["unknown-layout"] = true;
         return [extract_magic(elt, children)];
     }
 }
@@ -1108,7 +1109,6 @@ function check_float_restrictions(box, parent, features) {
 
 function check_float_registers(box, parent, features) {
     if (!features) { features = parent; parent = null };
-    features[box.type] = true;
 
     if (box.type === "TEXT") {
         if (box.props.y < box.flt.mark) {
