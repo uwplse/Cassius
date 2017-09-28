@@ -1058,9 +1058,7 @@ function compute_flt_pointer(box, prev, vbox) {
     }
 }
 
-function check_float_registers(box, parent, features) {
-    if (!features) { features = parent; parent = null };
-
+function check_float_registers(box, features) {
     if (box.type === "TEXT") {
         if (box.props.y < box.flt.mark) {
             add_feature(box, "exclusion-zone");
@@ -1069,7 +1067,7 @@ function check_float_registers(box, parent, features) {
     }
 
     for (var i = 0; i < box.children.length; i++) {
-        check_float_registers(box.children[i], box, features);
+        check_float_registers(box.children[i], features);
     }
 }
 
