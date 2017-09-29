@@ -1227,7 +1227,7 @@ function draw_rect(rect) {
     document.querySelector("html").appendChild(d);
 }
 
-function get_font_metrics(font, size, weight, style, txt) {	
+function measure_font(font, size, weight, style, txt, baseline) {
 	var canvas = document.createElement("canvas");
 	canvas.font = font;
 	canvas.fontWeight = weight;
@@ -1245,7 +1245,7 @@ function get_font_metrics(font, size, weight, style, txt) {
 	context.fillStyle = "white";
 	context.fillRect(0,0,width + 1,size * 2);
 	context.fillStyle = "black";
-	context.textBaseline="alphabetic";
+	context.textBaseline = baseline;
 	context.fillText(txt, 0, size);
 	var pixelmap = context.getImageData(0, 0, width, size * 2);
 	var ascender = size * 2;
@@ -1277,6 +1277,24 @@ function get_font_line_height(font, weight, style) {
 	return span.getBoundingClientRect().height;
 }
 
+function get_font_metrics(font, fname) {
+	var b = measure_font(font.name, font.size, font.weight, font.style, "x", "bottom");
+	
+	var xh = measure_font(font.name, font.size, font.weight, font.style, "x", "alphabetic").above - 1;
+	var metrics = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
+	
+	var ascent = metrics.above - xh;
+	var descent = metrics.below;
+
+	var leading = get_font_line_height(font.name, font.weight, font.style) - metrics.above - metrics.below;
+	var bottomoffset = (-b.below) - descent - 1;
+	var topoffset = leading - bottomoffset;
+	console.log(bottomoffset);
+	console.log(topoffset);
+	
+	return [FontIDMap[fname], ascent, xh, descent, leading + b.below, -b.below].join(" ")
+}
+
 function dump_fonts(name) {
 	var flist = [];
 	var fonts = Object();
@@ -1304,15 +1322,8 @@ function dump_fonts(name) {
 
 	for (var fname of flist) {
 		var font = fonts[fname];
-		var xh = get_font_metrics(font.name, font.size, font.weight, font.style, "x").above;
-		var metrics = get_font_metrics(font.name, font.size, font.weight, font.style, "Hxy");
 
-		var ascent = metrics.above - xh;
-		var descent = metrics.below;
-
-		var leading = get_font_line_height(font.name, font.weight, font.style) - metrics.above - metrics.below;
-
-		text += "\n  [" + [FontIDMap[fname], ascent, xh - 1, descent, leading].join(" ") + "]";
+		text += "\n  [" + get_font_metrics(font, fname) + "]";
 	}
 
 	text += ")";
