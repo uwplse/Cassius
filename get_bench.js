@@ -415,9 +415,6 @@ function infer_lines(box, parent) {
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
         } else if (b.type == "INLINE") {
-            if (b.props.br) {
-                new_line();
-            }
             stack.push(b);
             for (var i = 0; i < b.children.length; i++) {
                 var child = b.children[i];
@@ -426,6 +423,9 @@ function infer_lines(box, parent) {
             stackup(last_line() || new_line(), stack, sstack);
             stack.pop(b);
             sstack = sstack.slice(0, stack.length);
+            if (b.node && b.node.tagName.toUpperCase() == "BR") {
+                new_line();
+            }
         } else {
             console.warn("Unknown box type", b);
         }
@@ -488,7 +488,6 @@ function extract_inline(elt, children) {
     } else {
         box = Inline(elt, {});
     }
-    if (elt.tagName.toLowerCase() == "br") box.props.br = true;
     box.children = children;
     return box;
 }
