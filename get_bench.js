@@ -728,18 +728,19 @@ function dump_rule(sel, style, features, is_from_style, media) {
         var sname = style[i];
         if (sname.startsWith("-")) continue; // Skip browser-specific styles for now.
 
-        var val = style[sname];
-
-        if (val == "inherit") {
-            features["css:inherit"] = true;
-        } else if (val.startsWith("rgb")) {
-            val = dump_color(val, features);
-        } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
-            val = dump_length(val, features);
-        }
-
         if (BadProps.indexOf(sname) !== -1) {
             features["css:" + sname] = true;
+        }
+
+        var val = style[sname];
+
+        var _features = Props.indexOf(sname) ? features : {};
+        if (val == "inherit") {
+            _features["css:inherit"] = true;
+        } else if (val.startsWith("rgb")) {
+            val = dump_color(val, _features);
+        } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
+            val = dump_length(val, _features);
         }
         
         if (Props.indexOf(sname) !== -1) {
