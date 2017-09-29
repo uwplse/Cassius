@@ -534,11 +534,6 @@ function make_boxes(elt, styles, features) {
         features["list:inside"] = true;
     }
 
-    if (elt.nodeType == document.ELEMENT_NODE && cs(elt).textAlign != "left" &&
-        elt.parentNode.nodeType == document.ELEMENT_NODE && cs(elt.parentNode).textAlign != "left") {
-        features["text-align"] = true;
-    }
-
     var children = [];
     for (var i = 0; i < elt.childNodes.length; i++) {
         children = children.concat(make_boxes(elt.childNodes[i], styles, features));
