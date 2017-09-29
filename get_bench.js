@@ -94,19 +94,20 @@ function val2px(val, features) {
         return 0;
     } else if (val.match(/^-?0[^0-9.]+/)) {
         return 0;
-    } else if (val.match(/^-?[-+0-9.e]+px$/)) {
+    } else if (val.match(/^[-+0-9.e]+px$/)) {
         return +val.substr(0, val.length - 2);
-    } else if (val.match(/^-?[-+0-9.e]+pt$/)) {
+    } else if (val.match(/^[-+0-9.e]+pt$/)) {
         return +val.substr(0, val.length - 2)*96/72;
-    } else if (val.match(/^-?[-+0-9.e]+pc$/)) {
+    } else if (val.match(/^[-+0-9.e]+pc$/)) {
         return +val.substr(0, val.length - 2)*12*96/72;
-    } else if (val.match(/^-?[-+0-9.e]+mm$/)) {
+    } else if (val.match(/^[-+0-9.e]+mm$/)) {
         return +val.substr(0, val.length - 2)*96/25.4;
-    } else if (val.match(/^-?[-+0-9.e]+cm$/)) {
+    } else if (val.match(/^[-+0-9.e]+cm$/)) {
         return +val.substr(0, val.length - 2)*96/2.54;
-    } else if (val.match(/^-?[-+0-9.e]+in$/)) {
+    } else if (val.match(/^[-+0-9.e]+in$/)) {
         return +val.substr(0, val.length - 2)*96;
-    } else if (match = val.match(/^([\d.]+)([^\d.]+)$/)) {
+    } else if (match = val.match(/^([-+0-9.e]+)([a-z]+)$/)) {
+        console.log(val)
         features["unit:" + match[2]] = true;
         throw "Error, " + val + " is not a known unit";
     } else {
@@ -116,7 +117,7 @@ function val2px(val, features) {
 
 function val2pct(val, features) {
     var match;
-    if (val.match(/^-?[-+0-9.e]+%$/)) {
+    if (val.match(/^[-+0-9.e]+%$/)) {
         return +val.substr(0, val.length - 1);
     } else {
         throw "Error, " + val + " is not a percentage quantity."
@@ -125,7 +126,7 @@ function val2pct(val, features) {
 
 function val2em(val, features) {
     var match;
-    if (val.match(/^-?[-+0-9.e]+em$/)) {
+    if (val.match(/^[-+0-9.e]+em$/)) {
         return +val.substr(0, val.length - 2);
     } else if (val.match(/^-?[-+0-9.e]+ex$/)) {
         return +val.substr(0, val.length - 2) / 16 * 9;
@@ -685,15 +686,13 @@ function rescue_selector(sel) {
 }
 
 function dump_length(val, features) {
-    try {
-        val = "(px " + val2px(val, features) + ")";
-    } catch (e) {}
-    try {
+    if (val.match(/%$/)) {
         val = "(% " + val2pct(val, features) + ")";
-    } catch (e) {}
-    try {
+    } else if (val.match(/e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
-    } catch (e) {}
+    } else {
+        val = "(px " + val2px(val, features) + ")";
+    }
     return val;
 }
 
@@ -733,18 +732,15 @@ function dump_rule(sel, style, features, is_from_style, media) {
     for (var i = 0; i < style.length; i++) {
         var sname = style[i];
         if (sname.startsWith("-")) continue; // Skip browser-specific styles for now.
+
         var val = style[sname];
-        var tname = sname;
+
         if (val == "inherit") {
             features["css:inherit"] = true;
-        }
-        if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
-            var tname = tname.split("-", 2)[0];
-        }
-
-        val = dump_length(val, features);
-        if (val.startsWith("rgb")) {
+        } else if (val.startsWith("rgb")) {
             val = dump_color(val, features);
+        } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
+            val = dump_length(val, features);
         }
 
         if (BadProps.indexOf(sname) !== -1) {
