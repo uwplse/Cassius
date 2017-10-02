@@ -129,6 +129,7 @@ function val2em(val, features) {
     if (val.match(/^[-+0-9.e]+em$/)) {
         return +val.substr(0, val.length - 2);
     } else if (val.match(/^-?[-+0-9.e]+ex$/)) {
+        features["unit:ex"] = true;
         return +val.substr(0, val.length - 2) / 16 * 9;
     } else {
         throw "Error, " + val + " is not a em quantity."
@@ -554,7 +555,6 @@ function make_boxes(elt, styles, features) {
     } else if (is_inline(elt)) {
         return [extract_inline(elt, children)];
     } else {
-        features["unknown-layout"] = true;
         return [extract_magic(elt, children)];
     }
 }
