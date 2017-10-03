@@ -2,16 +2,14 @@ language: c
 env:
   global:
     - RACKET_DIR=~/racket
-    - Z3_DIR=~/z3
     - RACKET_VERSION="6.10"
     - Z3_VERSION="4.5.0"
+    - Z3_DISTRIB="z3-4.5.0-x64-ubuntu-14.04"
 before_install:
   - git clone https://github.com/greghendershott/travis-racket.git ../travis-racket
   - cat ../travis-racket/install-racket.sh | bash
-  - git clone https://github.com/Z3Prover/z3.git "${Z3_DIR}"
-  - git -C "${Z3_DIR}" checkout "z3-${Z3_VERSION}"
-  - (cd "${Z3_DIR}" && python scripts/mk_make.py)
-  - (cd "${Z3_DIR}"/build && make)
-  - export PATH="${RACKET_DIR}/bin:${Z3_DIR}/build:${PATH}"
+  - curl -L -O https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_DISTRIB}.zip
+  - unzip ${Z3_DISTRIB}.zip
+  - export PATH="${RACKET_DIR}/bin:${PWD}/${Z3_DISTRIB}/bin:${PATH}"
 script:
   - make test
