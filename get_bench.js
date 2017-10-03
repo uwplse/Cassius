@@ -1292,7 +1292,7 @@ function get_font_metrics(font, fname) {
 	console.log(bottomoffset);
 	console.log(topoffset);
 	
-	return [FontIDMap[fname], ascent, xh, descent, leading + b.below, -b.below].join(" ")
+	return [FontIDMap[fname], ascent, xh, descent, topoffset, bottomoffset].join(" ");
 }
 
 function dump_fonts(name) {
