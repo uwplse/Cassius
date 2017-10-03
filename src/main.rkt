@@ -61,6 +61,9 @@
   (node-set! box ':fg (data 'fg-color))
   (node-set! box ':bg (data 'bg-color))
   (node-set! box ':l (data 'leading))
+  (node-set! box ':a (data 'ascent))
+  (node-set! box ':d (data 'descent))
+  (node-set! box ':clh (data 'clh))
   (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
 
 (define (extract-elt! result elt)
