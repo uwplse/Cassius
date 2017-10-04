@@ -695,14 +695,14 @@
          [else
           (= (w b) 0.0)])
 
-       #;(<= (top-content p)
-           (ite (is-display/inline-block (style.display r))
-                (top-outer b)
-                (top-content b)))
-       #;(<= (ite (is-display/inline-block (style.display r))
-                (bottom-outer b)
-                (bottom-content b))
-           (bottom-content p))
+       ;; TODO: Split out inline-blocks
+       (ite (is-display/inline-block (style.display r))
+            (and
+             (<= (top-content p)
+                 (top-outer b))
+             (<= (bottom-content p)
+                 (bottom-outer b))))
+
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
        (= (ez.sufficient b) true)
