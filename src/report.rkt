@@ -176,15 +176,16 @@
               (place-channel-put worker (cons worker (car to-send)))
               (set! to-send (cdr to-send))))
           (let loop ([out '()])
-            (match-define (cons worker result) (apply sync workers))
-            (unless (null? to-send)
-              (place-channel-put worker (cons worker (car to-send)))
-              (set! to-send (cdr to-send)))
-            (define out* (cons result out))
-            (if (= (length out*) (length inputs))
-                (map cdr (sort out* < #:key car))
-                (loop out*))))
-        (for/list ([input all-inputs]) body ...))))
+            (cond
+             [(= (length out) (length inputs))
+              (map cdr (sort out < #:key car))]
+             [else
+              (match-define (cons worker result) (apply sync workers))
+              (unless (null? to-send)
+                (place-channel-put worker (cons worker (car to-send)))
+                (set! to-send (cdr to-send)))
+              (loop (cons result out))])))
+        (for/list ([input inputs]) body ...))))
 
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
