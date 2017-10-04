@@ -38,11 +38,11 @@
   (list
    z3-fix-rational
    z3-ground-quantifiers
-   z3-unlet ; z3-expand handles LETs incorrectly, so we need to get rid of them first
+   z3-unlet ; LETs are weirdly slow for some reason
    (z3-resolve-fns)
    #;z3-dco
-   (z3-expand to-expand );#:clear true)
-   (z3-expand to-expand-2 );#:clear true)
+   (z3-expand to-expand)
+   (z3-expand to-expand-2)
    z3-unlet
    ;z3-simplif
    z3-assert-and

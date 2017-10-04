@@ -86,8 +86,6 @@
         (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
           (z3-kill z3)))))
 
-  (log-phase "Solved constraints")
-
   (define trees (map dom-boxes doms))
   (match out
     [(list 'model m)
