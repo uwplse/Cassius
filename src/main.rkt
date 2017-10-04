@@ -130,8 +130,8 @@
     (define nonecond
       (for/fold ([no-match-so-far 'true])
           ([rm ml]
-           #:when (selector-matches? (car (rulematch-rule rm)) elt)
-           #:when (rule-allows-property? (rulematch-rule rm) prop))
+           #:when (rule-allows-property? (rulematch-rule rm) prop)
+           #:when (selector-matches? (car (rulematch-rule rm)) elt))
         (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
         (define propname? (sformat "value/~a/~a?" (rulematch-idx rm) prop))
         (emit `(assert (! (=> (and ,no-match-so-far ,propname?)

@@ -107,7 +107,6 @@ function val2px(val, features) {
     } else if (val.match(/^[-+0-9.e]+in$/)) {
         return +val.substr(0, val.length - 2)*96;
     } else if (match = val.match(/^([-+0-9.e]+)([a-z]+)$/)) {
-        console.log(val)
         features["unit:" + match[2]] = true;
         throw "Error, " + val + " is not a known unit";
     } else {
@@ -738,6 +737,8 @@ function dump_rule(sel, style, features, is_from_style, media) {
             _features["css:inherit"] = true;
         } else if (val.startsWith("rgb")) {
             val = dump_color(val, _features);
+        } else if (val.match(/^[a-z]+$/)) {
+            // skip
         } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
             val = dump_length(val, _features);
         }
@@ -1096,7 +1097,7 @@ function page2cassius(name) {
     var style = out.style;
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
-        text += dump_rule("#" + eid, style[eid], features, true);
+        text += dump_rule("#" + eid, style[eid], features, true, false);
     }
     text += ")\n\n";
     text += "(define-layout (" + name
