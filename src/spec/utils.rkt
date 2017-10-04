@@ -51,7 +51,8 @@
                 (&pbflow Int)
                 (&root Int) ; Root box
                 (&anc-w-elt Int) ; pointer to nearest ancestor with an element
-                (ez.in EZone) (ez.out EZone) (ez.sufficient Bool)
+                (ez.in EZone) (ez.out EZone)
+                (ez.sufficient Bool) (ez.lookback Bool)
                 (has-contents Bool) (lineheight Line-Height) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])

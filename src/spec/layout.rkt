@@ -109,6 +109,33 @@
      (= (bt b) (br b) (bb b) (bl b) 0.0)
      (= (pt b) (pr b) (pb b) (pl b) 0.0)))
 
+  (define-fun vertical-position-for-flow-boxes ((b Box)) Real
+    (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
+       (ite (is-box v)
+            ;; These parts don't check (has-clearance) because they're
+            ;; computed "as if" there were no clearance
+            (+ (bottom-border v)
+               (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))
+               (- (ite (and (box-collapsed-through v) (not (is-flow-root b))) (+ (mtp v) (mtn v)) 0.0)))
+            (+ (top-content p)
+               (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
+                    0.0
+                    (+ (mtp b) (mtn b)))))))
+
+  (define-fun has-clearance ((b Box)) Bool
+    (and (is-elt (box-elt b))
+         (or
+          (and
+           (is-clear/left (style.clear (computed-style (box-elt b))))
+           (< (vertical-position-for-flow-boxes b) (ez.left-max (ez.in b))))
+          (and
+           (is-clear/right (style.clear (computed-style (box-elt b))))
+           (< (vertical-position-for-flow-boxes b) (ez.right-max (ez.in b))))
+          (and
+           (is-clear/both (style.clear (computed-style (box-elt b))))
+           (< (vertical-position-for-flow-boxes b)
+              (max (ez.left-max (ez.in b)) (ez.right-max (ez.in b))))))))
+
   (define-fun auto-height-for-flow-roots ((b Box)) Real
     ;; CSS 2.1 § 10.6.7
     ,(smt-cond
@@ -151,7 +178,7 @@
          (min-max-height 
           (- ;; CSS 2.1 § 10.6.3, item 2
            (ite (bottom-margin-collapses-with-children b)
-                (ite (box-collapsed-through lb)
+                (ite (and (not (has-clearance lb)) (box-collapsed-through lb))
                      (- (top-border lb) (+ (mbp lb) (mbn lb))) ; Confusing but correct
                      (bottom-border lb))
                 (ite (box-collapsed-through lb)
@@ -161,34 +188,6 @@
            (top-content b))
           b)])))
 
-  (define-fun vertical-position-for-flow-boxes ((b Box)) Real
-    (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
-       (ite (is-box v)
-            ;; These parts don't check (hash-clearance) because they're
-            ;; computed "as if" there were no clearance
-            (+ (bottom-border v)
-               (ite (and (box-collapsed-through v) (not (is-flow-root b)))
-                    0.0
-                    (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))))
-            (+ (top-content p)
-               (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
-                    0.0
-                    (+ (mtp b) (mtn b)))))))
-
-  (define-fun has-clearance ((b Box)) Bool
-    (and (is-elt (box-elt b))
-         (or
-          (and
-           (is-clear/left (style.clear (computed-style (box-elt b))))
-           (< (vertical-position-for-flow-boxes b) (ez.left-max (ez.in b))))
-          (and
-           (is-clear/right (style.clear (computed-style (box-elt b))))
-           (< (vertical-position-for-flow-boxes b) (ez.right-max (ez.in b))))
-          (and
-           (is-clear/both (style.clear (computed-style (box-elt b))))
-           (< (vertical-position-for-flow-boxes b)
-              (max (ez.left-max (ez.in b)) (ez.right-max (ez.in b))))))))
-
   (define-fun margins-collapse ((b Box)) Bool
     (and
      (let ([f (fflow b)] [n (nflow b)])
@@ -197,13 +196,13 @@
            (max (ite (> (mt b) 0.0) (mt b) 0.0)
                 (max (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtp f) 0.0)
                      (ite (box-collapsed-through b)
-                          (max-if (ite (> (mb b) 0.0) (mb b) 0.0) (is-box n) (mtp n))
+                          (ite (is-box n) (mtp n) 0.0)
                           0.0))))
         (= (mtn b)
            (min (ite (< (mt b) 0.0) (mt b) 0.0)
                 (min (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtn f) 0.0)
                      (ite (box-collapsed-through b)
-                          (min-if (ite (< (mb b) 0.0) (mb b) 0.0) (is-box n) (mtn n))
+                          (ite (is-box n) (mtn n) 0.0)
                           0.0))))))
      (let ([l (lflow b)] [v (vflow b)])
        (and
@@ -506,10 +505,12 @@
        ,@(map extract-field '(mt mb))
        ,@(zero-auto-margins '(top bottom))
        (margins-collapse b)
-       (= (stfmax b) (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))))
+       (= (stfmax b) (min-max-width (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))) b))
        (= (float-stfmax b)
-          (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
-             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
+          (min-max-width
+           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
+              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
+           b))
 
        (ite (is-flow-root b)
             (= (y b)
@@ -525,6 +526,7 @@
        (= (x b) (+ (ml b)
                    (ite (is-flow-root b) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
        (= (ez.sufficient b) true)
+       (= (ez.lookback b) true)
        (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
   (define-fun a-block-float-box ((b Box)) Bool
@@ -536,9 +538,11 @@
        (margins-dont-collapse b)
 
        (= (w-from-stfwidth b) (is-width/auto (style.width r)))
-       (= (stfmax b) (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0))
-       (= (float-stfmax b) (+ (max (- (right-outer b) (left-outer b)) 0.0)
-                              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
+       (= (stfmax b) (min-max-width (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) b))
+       (= (float-stfmax b) (min-max-width
+                            (+ (max (- (right-outer b) (left-outer b)) 0.0)
+                               (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
+                            b))
        (width-set b)
        (ite (is-width/auto (style.width r))
             (ite (is-replaced e)
@@ -579,6 +583,7 @@
           ;; can look inside the model, see that it's not sufficient,
           ;; and then restart with more registers.
           (= (ez.sufficient b) (ez.can-add ez* (+ y* h)))
+          (= (ez.lookback b) true)
           (=> (ez.sufficient b)
               (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x)))))))
 
@@ -587,18 +592,21 @@
       (margins-dont-collapse b)
       (positioned-vertical-layout b)
       (positioned-horizontal-layout b)
-      (= (stfmax b) (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0))
+      (= (stfmax b) (min-max-width (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) b))
       (= (float-stfmax b)
+         (min-max-width
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
-             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
+             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
+          b))
       (= (ez.sufficient b) true)
+      (= (ez.lookback b) true)
       (= (ez.out b) (ez.in b))))
 
   (define-fun a-block-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))] [p (pflow b)])
        (= (type b) box/block)
        ,@(map extract-field '(pt pr pb pl bt br bb bl))
-       (= (stfwidth b) (compute-stfwidth b))
+       (= (stfwidth b) (min-max-width (compute-stfwidth b) b))
        ;;(= (stfmax b) (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))))
        ;;(= (float-stfmax b) (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
@@ -636,11 +644,13 @@
             (relatively-positioned b)
             (no-relative-offset b))
        (= (font-size b) (resolve-font-size b))
-       (= (stfwidth b) (compute-stfwidth b))
-       (= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)))
+       (= (stfwidth b) (min-max-width (compute-stfwidth b) b))
+       (= (stfmax b) (min-max-width (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)) b))
        (= (float-stfmax b)
-          (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
-             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
+          (min-max-width
+           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
+              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
+           b))
 
        (compute-line-height b)
 
@@ -706,6 +716,7 @@
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
        (= (ez.sufficient b) true)
+       (= (ez.lookback b) true)
        (= (ez.out b)
           ,(smt-cond
             [(is-display/inline-block (style.display r))
@@ -757,6 +768,7 @@
        (zero-box-model b)
        (=> (is-box v) (= (x b) (right-outer v)))
        (= (ez.sufficient b) true)
+       (= (ez.lookback b) true)
        (= (ez.out b) (ez.in b))))
 
   (define-fun a-line-box ((b Box)) Bool
@@ -777,7 +789,7 @@
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
              [ez (ez.in b)])
          (and
-          (ez.test (ez.in b) y-normal) ;; Key float restriction
+          (= (ez.lookback b) (ez.test (ez.in b) y-normal)) ;; Key float restriction
           ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
           (= (y b) (ez.level ez (stfmax (lbox b)) (left-content p) (right-content p) y-normal float/left))
           (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
@@ -814,6 +826,7 @@
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
      (= (ez.sufficient b) true)
+     (= (ez.lookback b) true)
      (= (ez.out b) (ez.out (lbox b)))
      (= (text-indent b) 0.0)))
 
@@ -840,4 +853,5 @@
        (= (y b) (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
        (= (ez.sufficient b) true)
+       (= (ez.lookback b) true)
        (= (ez.out b) (ez.out (lbox b))))))

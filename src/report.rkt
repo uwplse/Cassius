@@ -72,18 +72,19 @@
   (define custodian (make-custodian))
   (define eng
     (engine (λ (_)
-              (parameterize ([current-error-port (open-output-nowhere)]
-                             [current-output-port (open-output-nowhere)]
-                             [current-subprocess-custodian-mode 'kill]
-                             [current-custodian custodian]
-                             [*fuzz* fuzz?])
-                (with-handlers
-                    ([exn:break? (λ (e) 'break)]
-                     [exn:fail? (λ (e)
-                                  ((error-display-handler)
-                                   (exn-message e)
-                                   e)
-                                  (list 'error e))])
+              (with-handlers
+                  ([exn:break? (λ (e) 'break)]
+                   [exn:fail? (λ (e)
+                                ((error-display-handler)
+                                 (exn-message e)
+                                 e)
+                                (list 'error e))])
+
+                (parameterize ([current-error-port (open-output-nowhere)]
+                               [current-output-port (open-output-nowhere)]
+                               [current-subprocess-custodian-mode 'kill]
+                               [current-custodian custodian]
+                               [*fuzz* fuzz?])
                   (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)
                          (dict-ref prob ':fonts)))))))
 
@@ -176,15 +177,16 @@
               (place-channel-put worker (cons worker (car to-send)))
               (set! to-send (cdr to-send))))
           (let loop ([out '()])
-            (match-define (cons worker result) (apply sync workers))
-            (unless (null? to-send)
-              (place-channel-put worker (cons worker (car to-send)))
-              (set! to-send (cdr to-send)))
-            (define out* (cons result out))
-            (if (= (length out*) (length inputs))
-                (map cdr (sort out* < #:key car))
-                (loop out*))))
-        (for/list ([input all-inputs]) body ...))))
+            (cond
+             [(= (length out) (length inputs))
+              (map cdr (sort out < #:key car))]
+             [else
+              (match-define (cons worker result) (apply sync workers))
+              (unless (null? to-send)
+                (place-channel-put worker (cons worker (car to-send)))
+                (set! to-send (cdr to-send)))
+              (loop (cons result out))])))
+        (for/list ([input inputs]) body ...))))
 
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])
