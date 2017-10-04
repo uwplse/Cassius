@@ -706,7 +706,7 @@
           (= (w b) 0.0)])
 
        ;; TODO: Split out inline-blocks
-       (ite (is-display/inline-block (style.display r))
+       (=> (is-display/inline-block (style.display r))
             (and
              (<= (top-content p)
                  (top-outer b))
