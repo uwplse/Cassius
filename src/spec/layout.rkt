@@ -118,11 +118,10 @@
        (ite (is-box v)
             ;; These parts don't check (has-clearance) because they're
             ;; computed "as if" there were no clearance
-            (+ (bottom-border v)
-               (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))
-               (- (ite (and (box-collapsed-through v) (not (is-flow-root b)))
-                       (+ (max (mtp v) (mbp v)) (min (mtn v) (mbn v)))
-                       0.0)))
+            (+ (ite (and (box-collapsed-through v) (not (is-flow-root b)))
+                    (top-outer v)
+                    (bottom-border v))
+               (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b))))
             (+ (top-content p)
                (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
                     0.0
@@ -195,35 +194,40 @@
           b)])))
 
   (define-fun margins-collapse ((b Box)) Bool
-    (and
-     (let ([f (fflow b)] [n (nflow b)])
-       (and
-        (= (mtp b)
-           (max (ite (> (mt b) 0.0) (mt b) 0.0)
-                (max (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtp f) 0.0)
-                     (ite (box-collapsed-through b)
-                          (ite (is-box n) (mtp n) 0.0)
-                          0.0))))
-        (= (mtn b)
-           (min (ite (< (mt b) 0.0) (mt b) 0.0)
-                (min (ite (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f))) (mtn f) 0.0)
-                     (ite (box-collapsed-through b)
-                          (ite (is-box n) (mtn n) 0.0)
-                          0.0))))))
-     (let ([l (lflow b)] [v (vflow b)])
-       (and
-        (= (mbp b)
-           (max (ite (> (mb b) 0.0) (mb b) 0.0)
-                (max (ite (and (bottom-margin-collapses-with-children b) (is-box l)) (mbp l) 0.0)
-                     (ite (box-collapsed-through b)
-                          (max-if (ite (> (mt b) 0.0) (mt b) 0.0) (is-box v) (mbp v))
-                          0.0))))
-        (= (mbn b)
-           (min (ite (< (mb b) 0.0) (mb b) 0.0)
-                (min (ite (and (bottom-margin-collapses-with-children b) (is-box l)) (mbn l) 0.0)
-                     (ite (box-collapsed-through b)
-                          (min-if (ite (< (mt b) 0.0) (mt b) 0.0) (is-box v) (mbn v))
-                          0.0))))))))
+    (let ([f (fflow b)] [l (lflow b)] [v (vflow b)])
+      (and
+       (= (mtp b)
+          (max-if
+           (max-if
+            (ite (> (mt b) 0.0) (mt b) 0.0)
+            (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
+            (mtp f))
+           (and (is-box v) (box-collapsed-through v) (not (has-clearance v)))
+           (mbp v)))
+       (= (mtn b)
+          (max-if
+           (max-if
+            (ite (< (mt b) 0.0) (mt b) 0.0)
+            (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
+            (mtn f))
+           (and (is-box v) (box-collapsed-through v) (not (has-clearance v)))
+           (mbn v)))
+       (= (mbp b)
+          (max-if
+           (max-if
+            (ite (> (mb b) 0.0) (mb b) 0.0)
+            (and (bottom-margin-collapses-with-children b) (is-box l))
+            (mbp l))
+           (and (box-collapsed-through b) (not (has-clearance b)))
+           (mtp b)))
+       (= (mbn b)
+          (max-if
+           (max-if
+            (ite (< (mb b) 0.0) (mb b) 0.0)
+            (and (bottom-margin-collapses-with-children b) (is-box l))
+            (mbn l))
+           (and (box-collapsed-through b) (not (has-clearance b)))
+           (mtn b))))))
 
   (define-fun margins-dont-collapse ((b Box)) Bool
     (and
