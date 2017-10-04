@@ -36,8 +36,8 @@
 
 (define *emitter-passes*
   (list
+   (z3-ground-quantifiers 'Box)
    z3-fix-rational
-   z3-ground-quantifiers
    z3-unlet ; LETs are weirdly slow for some reason
    (z3-resolve-fns)
    #;z3-dco

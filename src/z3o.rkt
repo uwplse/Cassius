@@ -610,37 +610,31 @@
        `(assert ,(if-and expr))]
       [_ cmd])))
 
-(define (z3-ground-quantifiers cmds)
-  (define finite-types (make-hash))
-  
-  (define finite-type? (curry hash-has-key? finite-types))
-  (define ((constructor-tester? type) tester)
-    (let ([name (constructor-tester-name tester)])
-      (and name (member name (hash-ref finite-types type)))))
+(define ((z3-ground-quantifiers . types) cmds)
+  (define type-values (make-hash (map (curryr cons '()) types)))
 
   (define (ground expr)
     (match expr
-      [`(forall ((,vars ,(? finite-type? types)) ...) ,body)
+      [`(forall ((,vars ,(? (curry dict-has-key? type-values) types)) ...) ,body)
        (cons 'and
-             (for/list ([vals (cartesian-product (map (curry hash-ref finite-types) types))])
+             (for/list ([vals (apply cartesian-product (map (curry dict-ref type-values) types))])
                (capture-avoiding-substitute body (map cons vars vals))))]
       [(? list?)
        (map ground expr)]
       [_ expr]))
 
+  (for ([cmd cmds])
+    (match cmd
+      [(or
+        `(define-const ,name ,(? (curry dict-has-key? type-values) type) ,_)
+        `(declare-const ,name ,(? (curry dict-has-key? type-values) type)))
+       (dict-set! type-values type (cons name (dict-ref type-values type)))]
+      [_ (void)]))
+
   (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
-      [`(declare-datatypes () (,decls ...))
-       (for ([decl decls])
-         (match decl
-           [`(,name ,(? symbol? constructors) ...)
-            (hash-set! finite-types name constructors)]
-           [_ (void)]))
-       cmd]
-      [`(assert ,expr)
-       `(assert ,(ground expr))]
-      [_
-       cmd])))
+      [`(assert ,expr) `(assert ,(ground expr))]
+      [_ cmd])))
 
 (define (z3-clean-no-opt cmds)
   (for/list ([cmd cmds])

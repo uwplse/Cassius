@@ -37,9 +37,13 @@
     `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0.0))))
 
 (define-constraints layout-definitions
-  (define-fun box-collapsed-through ((b Box)) Bool
-    (and (= (box-height b) 0.0)
-         (or (is-no-box (lflow b)) (= (box-height (lflow b)) 0.0))))
+  (declare-fun box-collapsed-through (Box) Bool)
+
+  (assert
+   (forall ((b Box))
+           (= (box-collapsed-through b)
+              (and (= (box-height b) 0.0)
+                   (=> (is-box (lflow b)) (box-collapsed-through (lflow b)))))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
     (max (+
@@ -116,7 +120,9 @@
             ;; computed "as if" there were no clearance
             (+ (bottom-border v)
                (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))
-               (- (ite (and (box-collapsed-through v) (not (is-flow-root b))) (+ (mtp v) (mtn v)) 0.0)))
+               (- (ite (and (box-collapsed-through v) (not (is-flow-root b)))
+                       (+ (max (mtp v) (mbp v)) (min (mtn v) (mbn v)))
+                       0.0)))
             (+ (top-content p)
                (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
                     0.0
