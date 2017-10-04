@@ -2,8 +2,8 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent clear color background-color line-height".split(" ");
-BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent".split(" ");
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent clear color background-color line-height vertical-align".split(" ");
+BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
 BadTags = "img iframe input svg:svg".split(" ");
 
 var FontIDMap = Object();
@@ -108,19 +108,20 @@ function val2px(val, features) {
         return 0;
     } else if (val.match(/^-?0[^0-9.]+/)) {
         return 0;
-    } else if (val.match(/^-?[-+0-9.e]+px$/)) {
+    } else if (val.match(/^[-+0-9.e]+px$/)) {
         return +val.substr(0, val.length - 2);
-    } else if (val.match(/^-?[-+0-9.e]+pt$/)) {
+    } else if (val.match(/^[-+0-9.e]+pt$/)) {
         return +val.substr(0, val.length - 2)*96/72;
-    } else if (val.match(/^-?[-+0-9.e]+pc$/)) {
+    } else if (val.match(/^[-+0-9.e]+pc$/)) {
         return +val.substr(0, val.length - 2)*12*96/72;
-    } else if (val.match(/^-?[-+0-9.e]+mm$/)) {
+    } else if (val.match(/^[-+0-9.e]+mm$/)) {
         return +val.substr(0, val.length - 2)*96/25.4;
-    } else if (val.match(/^-?[-+0-9.e]+cm$/)) {
+    } else if (val.match(/^[-+0-9.e]+cm$/)) {
         return +val.substr(0, val.length - 2)*96/2.54;
-    } else if (val.match(/^-?[-+0-9.e]+in$/)) {
+    } else if (val.match(/^[-+0-9.e]+in$/)) {
         return +val.substr(0, val.length - 2)*96;
-    } else if (match = val.match(/^([\d.]+)([^\d.]+)$/)) {
+    } else if (match = val.match(/^([-+0-9.e]+)([a-z]+)$/)) {
+        console.log(val)
         features["unit:" + match[2]] = true;
         throw "Error, " + val + " is not a known unit";
     } else {
@@ -130,7 +131,7 @@ function val2px(val, features) {
 
 function val2pct(val, features) {
     var match;
-    if (val.match(/^-?[-+0-9.e]+%$/)) {
+    if (val.match(/^[-+0-9.e]+%$/)) {
         return +val.substr(0, val.length - 1);
     } else {
         throw "Error, " + val + " is not a percentage quantity."
@@ -139,9 +140,10 @@ function val2pct(val, features) {
 
 function val2em(val, features) {
     var match;
-    if (val.match(/^-?[-+0-9.e]+em$/)) {
+    if (val.match(/^[-+0-9.e]+em$/)) {
         return +val.substr(0, val.length - 2);
     } else if (val.match(/^-?[-+0-9.e]+ex$/)) {
+        features["unit:ex"] = true;
         return +val.substr(0, val.length - 2) / 16 * 9;
     } else {
         throw "Error, " + val + " is not a em quantity."
@@ -428,9 +430,6 @@ function infer_lines(box, parent) {
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
         } else if (b.type == "INLINE") {
-            if (b.props.br) {
-                new_line();
-            }
             stack.push(b);
             for (var i = 0; i < b.children.length; i++) {
                 var child = b.children[i];
@@ -439,6 +438,9 @@ function infer_lines(box, parent) {
             stackup(last_line() || new_line(), stack, sstack);
             stack.pop(b);
             sstack = sstack.slice(0, stack.length);
+            if (b.node && b.node.tagName.toUpperCase() == "BR") {
+                new_line();
+            }
         } else {
             console.warn("Unknown box type", b);
         }
@@ -501,7 +503,6 @@ function extract_inline(elt, children) {
     } else {
         box = Inline(elt, {});
     }
-    if (elt.tagName.toLowerCase() == "br") box.props.br = true;
     box.children = children;
     return box;
 }
@@ -547,11 +548,6 @@ function make_boxes(elt, styles, features) {
         features["list:inside"] = true;
     }
 
-    if (elt.nodeType == document.ELEMENT_NODE && cs(elt).textAlign != "left" &&
-        elt.parentNode.nodeType == document.ELEMENT_NODE && cs(elt.parentNode).textAlign != "left") {
-        features["text-align"] = true;
-    }
-
     var children = [];
     for (var i = 0; i < elt.childNodes.length; i++) {
         children = children.concat(make_boxes(elt.childNodes[i], styles, features));
@@ -595,7 +591,7 @@ function get_boxes(features) {
     window.scrollTo(0, 0);
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
-    view.children = make_boxes(document.querySelector("html"), style, features);
+    view.children = make_boxes(document.documentElement, style, features);
     if (window.scrollMaxY !== 0) view.props.w -= compute_scrollbar_width();
     return {view: view, style: style};
 }
@@ -698,15 +694,13 @@ function rescue_selector(sel) {
 }
 
 function dump_length(val, features) {
-    try {
-        val = "(px " + val2px(val, features) + ")";
-    } catch (e) {}
-    try {
+    if (val.match(/%$/)) {
         val = "(% " + val2pct(val, features) + ")";
-    } catch (e) {}
-    try {
+    } else if (val.match(/e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
-    } catch (e) {}
+    } else {
+        val = "(px " + val2px(val, features) + ")";
+    }
     return val;
 }
 
@@ -746,22 +740,20 @@ function dump_rule(sel, style, features, is_from_style, media) {
     for (var i = 0; i < style.length; i++) {
         var sname = style[i];
         if (sname.startsWith("-")) continue; // Skip browser-specific styles for now.
-        var val = style[sname];
-        var tname = sname;
-        if (val == "inherit") {
-            features["css:inherit"] = true;
-        }
-        if (tname.startsWith("margin") || tname.startsWith("padding") || tname.startsWith("border")) {
-            var tname = tname.split("-", 2)[0];
-        }
-
-        val = dump_length(val, features);
-        if (val.startsWith("rgb")) {
-            val = dump_color(val, features);
-        }
 
         if (BadProps.indexOf(sname) !== -1) {
             features["css:" + sname] = true;
+        }
+
+        var val = style[sname];
+
+        var _features = Props.indexOf(sname) ? features : {};
+        if (val == "inherit") {
+            _features["css:inherit"] = true;
+        } else if (val.startsWith("rgb")) {
+            val = dump_color(val, _features);
+        } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
+            val = dump_length(val, _features);
         }
         
         if (Props.indexOf(sname) !== -1) {
@@ -1071,59 +1063,7 @@ function compute_flt_pointer(box, prev, vbox) {
     }
 }
 
-function check_float_restrictions(box, parent, features) {
-    if (!features) { features = parent; parent = null };
-
-    if (parent && box.node && is_float(box.node)) {
-        var flt = box.flt.prev ? box.flt.prev : null;
-
-        // R1: No negative margins on floats; otherwise they can overlap
-        if (bottom_outer(box.node) <= top_outer(box.node)
-            && left_outer(box.node) != right_outer(box.node)) {
-            features["float:R1"] = true;
-            add_feature(box, "float:R1")
-        }
-
-        // R2: The bottom of a box is farther down than the bottom of the previous box
-        if (flt) {
-            if (bottom_outer(box.node) < bottom_outer(flt)) {
-                features["float:R2"] = true;
-                add_feature(box, "float:R2");
-            }
-        }
-
-        // R3: If a float wraps to the next line, the previous line must be full
-        if (flt && top_outer(box.node) == bottom_outer(flt)
-            && top_outer(box.node) !== (!box.vbox ? top_content(parent.node) : bottom_outer(box.vbox.node))) {
-            // TODO: Assumes no padding!
-            if ((cs(box.node).float == "left") ? 
-                (right_outer(flt) < right_content(parent.node)) : 
-                (left_outer(flt) > left_content(parent.node))
-                ) {
-                features["float:R3"] = true;
-                add_feature(box, "float:R3");
-            }
-        }
-
-        // R4: If this and the previous float float to different
-        // sides, they are not horizontally adjacent
-        if (flt && cs(box.node).float != cs(flt).float) {
-            if (horizontally_adjacent(flt, box.node)) {
-                features["float:R4"] = true;
-                add_feature(box, "float:R4");
-            }
-        }
-    }
-
-    for (var i = 0; i < box.children.length; i++) {
-        check_float_restrictions(box.children[i], box, features);
-    }
-}
-
-function check_float_registers(box, parent, features) {
-    if (!features) { features = parent; parent = null };
-    features[box.type] = true;
-
+function check_float_registers(box, features) {
     if (box.type === "TEXT") {
         if (box.props.y < box.flt.mark) {
             add_feature(box, "exclusion-zone");
@@ -1132,7 +1072,7 @@ function check_float_registers(box, parent, features) {
     }
 
     for (var i = 0; i < box.children.length; i++) {
-        check_float_registers(box.children[i], box, features);
+        check_float_registers(box.children[i], features);
     }
 }
 

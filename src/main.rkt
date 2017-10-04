@@ -6,7 +6,7 @@
          "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
-         extract-ctx! model-sufficiency extract-model-sufficiency)
+         extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback)
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -50,6 +50,10 @@
 (define (extract-model-sufficiency smt-out trees)
   (for*/and ([tree trees] [elt (in-tree tree)])
     (dict-ref (extract-box (dict-ref smt-out (dump-box elt) #f)) 'ez.sufficient)))
+
+(define (extract-model-lookback smt-out trees)
+  (for*/and ([tree trees] [elt (in-tree tree)])
+    (dict-ref (extract-box (dict-ref smt-out (dump-box elt) #f)) 'ez.lookback)))
 
 (define (extract-box! z3-box box)
   (define data (curry dict-ref (extract-box z3-box)))
