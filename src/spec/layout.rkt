@@ -160,7 +160,7 @@
        (min-max-height
         (- (max (ez.max (ez.out (lbox b)))
                 (ite (box-collapsed-through (lflow b))
-                     (bottom-border (lflow b))
+                     (+ (top-outer (lflow b)) (mbp (lflow b)) (mbn (lflow b)))
                      (bottom-outer (lflow b))))
            (top-content b))
         b)]))
@@ -182,14 +182,12 @@
         [else ; (is-box/block (type lb)), because blocks only have block or line children
          (min-max-height 
           (- ;; CSS 2.1 § 10.6.3, item 2
-           (ite (bottom-margin-collapses-with-children b)
-                (ite (and (not (has-clearance lb)) (box-collapsed-through lb))
-                     (- (top-border lb) (+ (mbp lb) (mbn lb))) ; Confusing but correct
-                     (bottom-border lb))
-                (ite (box-collapsed-through lb)
-                     ;; CSS § 10.6.3, item 3
-                     (bottom-border lb)
-                     (bottom-outer lb)))
+           (+ (ite (box-collapsed-through lb)
+                   (top-outer lb)
+                   (bottom-border lb))
+              (ite (bottom-margin-collapses-with-children b)
+                   0.0
+                   (+ (mbp lb) (mbn lb))))
            (top-content b))
           b)])))
 
@@ -202,7 +200,7 @@
             (ite (> (mt b) 0.0) (mt b) 0.0)
             (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
             (mtp f))
-           (and (is-box v) (box-collapsed-through v) (not (has-clearance v)))
+           (and (is-box v) (box-collapsed-through b) (not (has-clearance b)))
            (mbp v)))
        (= (mtn b)
           (max-if
@@ -210,7 +208,7 @@
             (ite (< (mt b) 0.0) (mt b) 0.0)
             (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
             (mtn f))
-           (and (is-box v) (box-collapsed-through v) (not (has-clearance v)))
+           (and (is-box v) (box-collapsed-through b) (not (has-clearance b)))
            (mbn v)))
        (= (mbp b)
           (max-if
