@@ -108,7 +108,7 @@
 
   (define-fun zero-box-model ((b Box)) Bool
     (and
-     (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0)
+     (= (mtp b) (mtn b) (mbp b) (mbn b) (mtp-up b) (mtn-up b) 0.0)
      (= (mt b) (mr b) (mb b) (ml b) 0.0)
      (= (bt b) (br b) (bb b) (bl b) 0.0)
      (= (pt b) (pr b) (pb b) (pl b) 0.0)))
@@ -199,17 +199,25 @@
            (max-if
             (ite (> (mt b) 0.0) (mt b) 0.0)
             (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
-            (mtp f))
-           (and (is-box v) (box-collapsed-through b) (not (has-clearance b)))
-           (mbp v)))
+            (mtp-up f))
+           (and (box-collapsed-through b) (not (has-clearance b)))
+           (ite (is-box v) (mbp v) (mtp-up b))))
+       (= (mtp-up b)
+          (max-if (ite (is-box v) (mtp b) 0.0)
+                  (and (is-box (nflow b)) (box-collapsed-through b) (not (has-clearance (nflow b))))
+                  (mtp-up (nflow b))))
        (= (mtn b)
           (max-if
            (max-if
             (ite (< (mt b) 0.0) (mt b) 0.0)
             (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
-            (mtn f))
-           (and (is-box v) (box-collapsed-through b) (not (has-clearance b)))
-           (mbn v)))
+            (mtn-up f))
+           (and (box-collapsed-through b) (not (has-clearance b)))
+           (ite (is-box v) (mbn v) (mtn-up b))))
+       (= (mtn-up b)
+          (max-if (ite (is-box v) (mtn b) 0.0)
+                  (and (is-box (nflow b)) (box-collapsed-through b) (not (has-clearance (nflow b))))
+                  (mtn-up (nflow b))))
        (= (mbp b)
           (max-if
            (max-if
@@ -229,8 +237,8 @@
 
   (define-fun margins-dont-collapse ((b Box)) Bool
     (and
-     (= (mtp b) (max (mt b) 0.0))
-     (= (mtn b) (min (mt b) 0.0))
+     (= (mtp-up b) (mtp b) (max (mt b) 0.0))
+     (= (mtn-up b) (mtn b) (min (mt b) 0.0))
      (= (mbp b) (max (mb b) 0.0))
      (= (mbn b) (min (mb b) 0.0))))
 
@@ -768,7 +776,7 @@
        (no-relative-offset b)
 
        ;; Left-padding is not 0
-       (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0)
+       (= (mtp b) (mtn b) (mbp b) (mbn b) (mtp-up b) (mtn-up b) 0.0)
        (= (mt b) (mr b) (mb b) (ml b) 0.0)
        (= (bt b) (br b) (bb b) (bl b) 0.0)
        (= (pt b) (pr b) (pb b) 0.0)

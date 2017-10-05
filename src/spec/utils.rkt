@@ -37,7 +37,8 @@
                 (x Real) (y Real) (w Real) (h Real) ; X, Y and width/height
                 (xo Real) (yo Real) ; X and Y offset
                 (mt Real) (mr Real) (mb Real) (ml Real) ; margins
-                (mtp Real) (mtn Real) (mbp Real) (mbn Real) ; top/bottom positive/negative margins for collapsing
+                ; top/bottom positive/negative margins for collapsing
+                (mtp Real) (mtn Real) (mbp Real) (mbn Real) (mtp-up Real) (mtn-up Real)
                 (pt Real) (pr Real) (pb Real) (pl Real) ; padding
                 (bt Real) (br Real) (bb Real) (bl Real) ; border
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
