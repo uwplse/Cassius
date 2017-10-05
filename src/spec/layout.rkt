@@ -199,7 +199,7 @@
            (max-if
             (ite (> (mt b) 0.0) (mt b) 0.0)
             (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
-            (mtp-up f))
+            (max (mtp-up f) (mtp f)))
            (and (box-collapsed-through b) (not (has-clearance b)))
            (ite (is-box v) (mbp v) (mtp-up b))))
        (= (mtp-up b)
@@ -211,7 +211,7 @@
            (max-if
             (ite (< (mt b) 0.0) (mt b) 0.0)
             (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
-            (mtn-up f))
+            (max (mtn-up f) (mtn f)))
            (and (box-collapsed-through b) (not (has-clearance b)))
            (ite (is-box v) (mbn v) (mtn-up b))))
        (= (mtn-up b)
