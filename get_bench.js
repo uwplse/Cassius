@@ -407,8 +407,9 @@ function infer_lines(box, parent) {
     function go(b) {
         if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
             (b.type == "INLINE" && cs(b.node).display == "inline-block")) {
+            // TODO: does not handle case where previous elt is floating BLOCK
             var l = last_line();
-            if (!fits(b, l)) {
+            if (b.type !== "BLOCK" && !fits(b, l)) {
                 l = new_line();
                 sstack = [];
             }
