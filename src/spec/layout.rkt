@@ -785,7 +785,7 @@
        (= (pl b) (ite (is-no-box v) (text-indent b) 0.0))
 
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
-             [ez (ez.in b)])
+             [ez (ez.out b)])
          (and
           (= (ez.lookback b) (ez.test (ez.in b) y-normal)) ;; Key float restriction
           ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
