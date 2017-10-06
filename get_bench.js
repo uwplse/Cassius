@@ -35,6 +35,8 @@ Box.prototype.toString = function() {
     return s + "]";
 }
 
+ERROR = false;
+
 LETTER = window.LETTER || "";
 ID = 0;
 PADDING = "0000";
@@ -74,16 +76,6 @@ function f2q(x) {
         var div = DIVISORS[i];
         if (xm % div == 0) {
             return { num: xm / div, denom: APP_PIXEL_TO_PIXELS / div };
-        }
-    }
-}
-
-function test_f2q(a, b) {
-    for (var i = a * 60; i < b * 60; i++) {
-        var input = i / 60;
-        var output = f2q(input);
-        if (output.num / output.denom !== input) {
-            console.error("fq2(" + i + " / 60) == " + output.num + "/" + output.denom);
         }
     }
 }
@@ -408,7 +400,7 @@ function infer_lines(box, parent) {
         if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
             (b.type == "INLINE" && cs(b.node).display == "inline-block")) {
             // TODO: does not handle case where previous elt is floating BLOCK
-            var l = last_line();
+            var l = last_line() || new_line();
             if (b.type !== "BLOCK" && !fits(b, l)) {
                 l = new_line();
                 sstack = [];
@@ -429,6 +421,7 @@ function infer_lines(box, parent) {
             }
         } else {
             console.warn("Unknown box type", b);
+            window.ERROR = "Unknown box type: " + b;
         }
     }
 
@@ -712,6 +705,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
         nodes = document.querySelectorAll(sel);
     } catch (e) {
         console.warn("Invalid selector syntax, this shouldn't happen:", sel);
+        features["invalid-selector"] = true
         return "";
     }
 
@@ -769,14 +763,14 @@ function dump_rule(sel, style, features, is_from_style, media) {
             sel_text = rescue_selector(sels[i]);
         }
         if (media && media.mediaText) {
-            sel_text = "(media " + dump_media_query(media) + " " + sel_text + ")";
+            sel_text = "(media " + dump_media_query(media, features) + " " + sel_text + ")";
         }
         out += "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
     }
     return out;
 }
 
-function dump_media_query(media) {
+function dump_media_query(media, features) {
     var ors = media.mediaText.split(/\b,\s*\b/);
     for (var i = 0; i < ors.length; i++) {
         var query = ors[i].trim();
@@ -797,6 +791,7 @@ function dump_media_query(media) {
                 ands[j] = match[1];
             } else {
                 console.warn("Unknown media query component", part);
+                features["unknown-media"] = true
             }
         }
 
@@ -868,6 +863,7 @@ function dump_stylesheet(ss, features, media) {
         try {
             if (r.type === CSSRule.IMPORT_RULE) {
                 console.warn("Skipping non-style rule", r);
+                features["css:@import"] = true
                 continue;
             } else if (r.type === CSSRule.MEDIA_RULE) {
                 text += dump_stylesheet(r, features, r.media);
@@ -879,9 +875,11 @@ function dump_stylesheet(ss, features, media) {
                 // Don't need these...
             } else {
                 console.warn("Unknown rule type", r);
+                features["css:type-" + r.type + "-rule"] = true;
             }
         } catch (e) {
             console.warn(r, e);
+            window.ERROR = e;
         }
     }
     return text;
@@ -923,6 +921,7 @@ function dump_document(features) {
             return false;
         } else if (typeof(elt.dataset) === "undefined"){
             console.log("Weird element", elt);
+            features["weird-element"] = true;
             var rec = new Box(elt.tagName.toLowerCase(), elt);
             return rec;
         } else {
@@ -1116,7 +1115,17 @@ function page2cassius(name) {
     text += ")\n\n";
 
     var title = dump_string(document.title);
-    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";
+    text += "(define-problem " + name;
+    text += "\n  :title " + title;
+    text += "\n  :url \""  + location;
+    text += "\"\n  :sheets " + name;
+    text += "\n  :documents " + name;
+    text += "\n  :layouts " + name;
+    if (window.ERROR) {
+        text += "\n  :error " + dump_string(window.ERROR + "");
+        features["unknown-error"] = true;
+    }
+    text += "\n  :features " + dump_features(features) + ")";
     return text;
 }
 
