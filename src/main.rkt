@@ -126,21 +126,34 @@
         (emit `(define-const ,propname ,type ,(dump-value type (car (dict-ref (filter list? props) prop)))))
         (emit `(define-const ,(sformat "~a?" propname) Bool true))])))
 
-  (for* ([(prop type default) (in-css-properties)] [elt elts])
-    (define nonecond
-      (for/fold ([no-match-so-far 'true])
-          ([rm ml]
-           #:when (rule-allows-property? (rulematch-rule rm) prop)
-           #:when (selector-matches? (car (rulematch-rule rm)) elt))
-        (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
-        (define propname? (sformat "value/~a/~a?" (rulematch-idx rm) prop))
-        (emit `(assert (! (=> (and ,no-match-so-far ,propname?)
-                              (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,propname))
-                          :named ,(sformat "~a^~a" propname (dump-elt elt)))))
-        `(and ,no-match-so-far (not ,propname?))))
-    (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
-                                       ,(dump-value type (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default))))
-                      :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
+  (define elt-classes
+    (group-by (λ (elt)
+                ;; The `node-parent` here is for inheritable properties
+                (cons (not (node-parent elt))
+                      (for/list ([rm ml]) (set-member? (rulematch-elts rm) elt)))) elts))
+
+  (for ([cls elt-classes])
+    (define style (sformat "style/~a" (dump-elt (car cls))))
+    (emit `(declare-const ,style Style))
+    (for* ([(prop type default) (in-css-properties)])
+      (define nonecond
+        (for/fold ([no-match-so-far 'true])
+            ([rm ml]
+             #:when (rule-allows-property? (rulematch-rule rm) prop)
+             #:when (selector-matches? (car (rulematch-rule rm)) (car cls)))
+          (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
+          (define propname? (sformat "value/~a/~a?" (rulematch-idx rm) prop))
+          (emit `(assert (! (=> (and ,no-match-so-far ,propname?)
+                                (= (,(sformat "style.~a" prop) ,style) ,propname))
+                            :named ,(sformat "~a^~a" propname style))))
+          `(and ,no-match-so-far (not ,propname?))))
+
+      (define inheritable? (and (css-inheritable? prop) (node-parent (car cls))))
+      (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) ,style)
+                                         ,(dump-value type (if inheritable? 'inherit default))))
+                        :named ,(sformat "value/none/~a^~a" prop style)))))
+    (for ([elt cls])
+      (emit `(assert (= (specified-style ,(dump-elt elt)) ,style))))))
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
