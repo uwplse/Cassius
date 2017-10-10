@@ -364,10 +364,12 @@ function infer_lines(box, parent) {
         // The line-height idea was cute, but doesn't actually work.
         var l = Line(null, {/*h: val2px(cs(parent.node)["line-height"])*/});
         parent.children.push(l);
+        last = false;
         return l;
     }
 
-    function fits(txt, line) {
+    function fits(txt, prev) {
+        /*
         if (!line) return false;
         var prev = line;
         while (prev.children.length) {
@@ -376,6 +378,8 @@ function infer_lines(box, parent) {
 
         // HACK for the case of an empty INLINE or LINE element
         if (prev.type == "LINE" || prev.type == "INLINE") return true;
+        */
+        if (!prev) return true;
 
         var horiz_adj = (
             txt.props.y + txt.props.h >= prev.props.y && prev.props.y >= txt.props.y
@@ -396,17 +400,19 @@ function infer_lines(box, parent) {
 
     var stack = [];
     var sstack = [];
+    var last = false;
     function go(b) {
         if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
             (b.type == "INLINE" && cs(b.node).display == "inline-block")) {
             // TODO: does not handle case where previous elt is floating BLOCK
             var l = last_line() || new_line();
-            if (b.type !== "BLOCK" && !fits(b, l)) {
+            if (b.type !== "BLOCK" && !fits(b, last)) {
                 l = new_line();
                 sstack = [];
             }
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
+            if (b.type !== "BLOCK") last = b;
         } else if (b.type == "INLINE") {
             stack.push(b);
             for (var i = 0; i < b.children.length; i++) {
