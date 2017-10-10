@@ -506,6 +506,26 @@
             (clh (pflow b)))))
      (= (leading b) (- (clh b) (font-size b)))))
 
+  (declare-fun ancestor-line (Box) Box)
+  (assert
+   (forall ((b Box))
+     (= (ancestor-line b)
+        (ite (is-box/line (type b))
+             b
+             (ite (is-flow-root (pbox b))
+                  no-box
+                  (ancestor-line (pbox b)))))))
+
+  (declare-fun ez.line (Box) EZone)
+  (assert
+   (forall ((b Box))
+     (= (ez.line b)
+        (ite (is-no-box (ancestor-line b))
+             (ez.out b)
+             (ite (and (is-flow-root b) (horizontally-adjacent b (ancestor-line b)))
+                  (ez.out b)
+                  (ez.line (ite (is-box (vbox b)) (vbox b) (pbox b))))))))
+
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
   ;; and positioned layout. By and large, these functions refer to the
@@ -795,7 +815,7 @@
        (= (pl b) (ite (is-no-box v) (text-indent b) 0.0))
 
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
-             [ez (ez.out b)])
+             [ez (ez.line b)])
          (and
           (= (ez.lookback b) (ez.test (ez.in b) y-normal)) ;; Key float restriction
           (=> (ez.lookback b)
