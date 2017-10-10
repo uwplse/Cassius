@@ -517,14 +517,24 @@
                   (ancestor-line (pbox b)))))))
 
   (declare-fun ez.line (Box) EZone)
+  ; This is incorrect and I'm not sure how to fix it
+  #;
   (assert
    (forall ((b Box))
      (= (ez.line b)
         (ite (is-no-box (ancestor-line b))
              (ez.out b)
-             (ite (and (is-flow-root b) (horizontally-adjacent b (ancestor-line b)))
-                  (ez.out b)
-                  (ez.line (ite (is-box (vbox b)) (vbox b) (pbox b))))))))
+             (ite (is-flow-root b)
+                  (ite (horizontally-adjacent b (ancestor-line b))
+                       (ez.out b)
+                       (ite (is-box (vbox b))
+                            (ez.line (vbox b))
+                            (ez.in b)))
+                  (ite (is-box (lbox b))
+                       (ez.line (lbox b))
+                       (ite (is-box (vbox b))
+                            (ez.line (vbox b))
+                            (ez.in b))))))))
 
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
