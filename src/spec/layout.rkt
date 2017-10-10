@@ -530,21 +530,26 @@
               (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
            b))
 
-       (ite (is-flow-root b)
-            (= (y b)
-               (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
-                         (left-content p) (right-content p)
-                         (resolve-clear b (vertical-position-for-flow-boxes b)) float/left))
-            (= (y b) (resolve-clear b (vertical-position-for-flow-boxes b))))
+       (let ([y* (resolve-clear b (vertical-position-for-flow-boxes b))])
+         (ite (is-flow-root b)
+              (and
+               (= (ez.lookback b) (ez.test (ez.in b) y*))
+               (=> (ez.lookback b)
+                   (= (y b)
+                      (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
+                                (left-content p) (right-content p) y* float/left))))
+              (and
+               (= (ez.lookback b) true)
+               (= (y b) y*))))
 
        (if (is-flow-root b)
-           (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
-                                        (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))))
+           (=> (ez.lookback b)
+               (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
+                                            (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
                    (ite (is-flow-root b) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
        (= (ez.sufficient b) true)
-       (= (ez.lookback b) true)
        (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
   (define-fun a-block-float-box ((b Box)) Bool
@@ -793,10 +798,12 @@
              [ez (ez.out b)])
          (and
           (= (ez.lookback b) (ez.test (ez.in b) y-normal)) ;; Key float restriction
-          ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
-          (= (y b) (ez.level ez (stfmax (lbox b)) (left-content p) (right-content p) y-normal float/left))
-          (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
-          (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p)))))
+          (=> (ez.lookback b)
+              (and
+               ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
+               (= (y b) (ez.level ez (stfmax (lbox b)) (left-content p) (right-content p) y-normal float/left))
+               (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
+               (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p)))))))
 
        (= (stfwidth b) (compute-stfwidth b))
        (= (stfmax b) (+ (ite (is-box v) (stfmax v) 0.0) (+ (stfmax (lbox b)) (pl b))))
