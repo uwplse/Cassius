@@ -565,36 +565,42 @@
          [_ var])]
       [_ expr]))
 
+  (define on #t)
   (for/reap [sow] ([i (in-naturals)] [cmd cmds])
-    (match cmd
-      [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
-       (for ([name names] [vars varss])
-         (hash-set! constructors name
-                    (for/list ([var vars])
-                      (define constructor (match var [(? symbol?) var] [(list name _ ...) name]))
-                      (hash-set! types constructor name)
-                      constructor)))
-       (sow cmd)]
-      [`(define-fun ,names ((,args ,atypes)) ,rtype ,body)
-       (sow `(define-fun ,names ((,args ,atypes)) ,rtype ,(simpl body)))]
-      [(or
-        `(assert (! (,(? constructor-tester? tester) ,tested) :named ,_))
-        `(assert (,(? constructor-tester? tester) ,tested)))
-       (define s (simpl tested))
-       (hash-set! known-constructors (simpl tested) tester)
-       (sow cmd)]
-      [(or
-        `(assert (= ,(or (? constructor? name) (list (? constructor? name) _ ...)) ,tested))
-        `(assert (! (= ,(or (? constructor? name) (list (? constructor? name) _ ...)) ,tested) :named ,_))
-        `(assert (= ,tested ,(or (? constructor? name) (list (? constructor? name) _ ...))))
-        `(assert (! (= ,tested ,(or (? constructor? name) (list (? constructor? name) _ ...))) :named ,_)))
-       (hash-set! known-constructors (simpl tested) (sformat "is-~a" name))
-       (sow cmd)]
-      [`(assert ,expr)
-       (define s (simpl expr))
-       (unless (or (equal? s 'true) (and (list? s) (equal? (car s) '!) (equal? (cadr s) 'true)))
-         (sow `(assert ,s)))]
-      [_ (sow cmd)])))
+    (if on
+        (match cmd
+          [`(echo (simplify off)) (set! on #f)]
+          [`(declare-datatypes (,params ...) ((,names ,varss ...) ...))
+           (for ([name names] [vars varss])
+             (hash-set! constructors name
+                        (for/list ([var vars])
+                          (define constructor (match var [(? symbol?) var] [(list name _ ...) name]))
+                          (hash-set! types constructor name)
+                          constructor)))
+           (sow cmd)]
+          [`(define-fun ,names ((,args ,atypes)) ,rtype ,body)
+           (sow `(define-fun ,names ((,args ,atypes)) ,rtype ,(simpl body)))]
+          [(or
+            `(assert (! (,(? constructor-tester? tester) ,tested) :named ,_))
+            `(assert (,(? constructor-tester? tester) ,tested)))
+           (define s (simpl tested))
+           (hash-set! known-constructors (simpl tested) tester)
+           (sow cmd)]
+          [(or
+            `(assert (= ,(or (? constructor? name) (list (? constructor? name) _ ...)) ,tested))
+            `(assert (! (= ,(or (? constructor? name) (list (? constructor? name) _ ...)) ,tested) :named ,_))
+            `(assert (= ,tested ,(or (? constructor? name) (list (? constructor? name) _ ...))))
+            `(assert (! (= ,tested ,(or (? constructor? name) (list (? constructor? name) _ ...))) :named ,_)))
+           (hash-set! known-constructors (simpl tested) (sformat "is-~a" name))
+           (sow cmd)]
+          [`(assert ,expr)
+           (define s (simpl expr))
+           (unless (or (equal? s 'true) (and (list? s) (equal? (car s) '!) (equal? (cadr s) 'true)))
+             (sow `(assert ,s)))]
+          [_ (sow cmd)])
+        (match cmd
+          [`(echo (simplify on)) (set! on #t) (sow cmd)]
+          [_ (sow cmd)]))))
 
 (define (z3-if-and cmds)
   (define (if-and expr)

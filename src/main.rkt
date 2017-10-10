@@ -113,6 +113,7 @@
 
 (define (selector*-constraints emit elts rules)
   (define ml (rule-matchlist rules elts))
+  (emit `(echo (simplify stop)))
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
@@ -154,6 +155,8 @@
       (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) ,style)
                                          ,(dump-value type (if inheritable? 'inherit default))))
                         :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
+
+  (emit `(echo (simplify start))))
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
