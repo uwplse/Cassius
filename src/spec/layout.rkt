@@ -404,7 +404,7 @@
   (define-fun positioned-vertical-layout ((b Box)) Bool
     ;; CSS 2.1 § 10.6.4
     ,(smt-let ([r (computed-style (box-elt b))]
-               [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
+               [pp (ite (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
                [temp-top ,(get-px-or-% 'top '(height-padding (ppflow b)) 'b)]
                [temp-bottom ,(get-px-or-% 'bottom '(height-padding (ppflow b)) 'b)]
                [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(height-padding (ppflow b)) 'b)) b)]
@@ -443,7 +443,7 @@
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
      ,(smt-let ([r (computed-style (box-elt b))]
-                [pp (if (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
+                [pp (ite (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
                 [p (pflow b)]
                 [temp-left ,(get-px-or-% 'left '(width-padding (ppflow b)) 'b)]
                 [temp-right ,(get-px-or-% 'right '(width-padding (ppflow b)) 'b)]
@@ -666,7 +666,7 @@
        (= (font-size b) (resolve-font-size b))
 
        (= (text-indent b)
-          (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
+          (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
        (compute-line-height b)
 
@@ -708,7 +708,7 @@
        (compute-line-height b)
 
        (= (text-indent b)
-          (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
+          (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
        (= (ascender-top b)
           (ropt-min-if
