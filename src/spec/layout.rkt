@@ -561,7 +561,7 @@
            b))
 
        (let ([y* (resolve-clear b (vertical-position-for-flow-boxes b))])
-         (ite (is-flow-root b)
+         (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
               (and
                (= (ez.lookback b) (ez.test (ez.in b) y*))
                (=> (ez.lookback b)
@@ -572,13 +572,13 @@
                (= (ez.lookback b) true)
                (= (y b) y*))))
 
-       (if (is-flow-root b)
+       (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
            (=> (ez.lookback b)
                (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
                                             (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
-                   (ite (is-flow-root b) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
+                   (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
        (= (ez.sufficient b) true)
        (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
 
