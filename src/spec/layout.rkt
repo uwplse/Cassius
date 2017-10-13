@@ -657,7 +657,7 @@
        (= (text-indent b)
           (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
-       (=> (is-box p) (= (baseline b) (baseline p)))
+       (=> (is-box p) (= (baseline b) (baseline p)))#|
        (=> (realopt.is-some? (ascent b)) (not (is-display/inline-block (style.display r)))
            (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
                 (= (y b) (+ (baseline b) (h b) (bt b) (bb b)))
@@ -701,7 +701,7 @@
                                  (is-box v)
                                  (descender-bottom v))
                                 (is-box l)
-                                (descender-bottom v)))
+                                (descender-bottom l)))
        (= (max-ascent b) (ropt-max-if
                             (realopt (+ (realopt.value (ascent b)) (* 0.5 (leading b))) (realopt.is-some? (ascent b)))
                             (is-box v)
@@ -710,6 +710,10 @@
                                 (descent b)
                                 (is-box v)
                                 (max-descent v)))
+|#
+       (= (max-ascent b) (ropt-max-if (max-ascent l) (is-box v) (max-descent v)))
+       (= (ascender-top b) (ascender-top l))
+       (= (descender-bottom b) (descender-bottom l))
 
        ,(smt-cond
          [(is-replaced e)
@@ -781,6 +785,7 @@
           (= (descent b) (realopt (font.descender metrics) true))
           (= (text-top b) (+ (y b) (font.topoffset metrics)))
           (= (text-bottom b) (- (+ (y b) (h b)) (font.bottomoffset metrics)))
+          (= (h b) (+ (font.topoffset metrics) (font.ascender metrics) (font.xHeight metrics) (font.descender metrics) (font.bottomoffset metrics)))
           (ite (> (w b) 0.0)
                (and
                 (= (ascender-top b) (ropt-min-if (realopt (- (text-top b) (* .5 (leading b))) true) (is-box v) (ascender-top v)))
@@ -842,7 +847,7 @@
          (and
           (= (ascent b) (realopt (+ (font.xHeight metrics) (font.ascender metrics)) true))
           (= (descent b) (realopt (font.descender metrics) true))
-          (= (text-top b) (+ (baseline b) (realopt.value (ascent b))))
+          (= (text-top b) (- (baseline b) (realopt.value (ascent b))))
           (= (text-bottom b) (+ (baseline b) (realopt.value (descent b))))
           (and
            (= (ascender-top b) (ropt-min-if (realopt (- (text-top b) (* .5 (leading b))) true) (is-box l) (ascender-top l)))
