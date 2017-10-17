@@ -464,18 +464,19 @@
   ;; Helper method for computing the line height and leading of a box
 
   (define-fun compute-line-height ((b Box)) Bool
-    (and
-     (= (clh b)
-        ,(smt-cond
-          ;;; TODO: Normal case uses font leading from metrics
-          [(is-line-height/px (lineheight b))
-           (line-height.px (lineheight b))]
-          [(is-line-height/em (lineheight b))
-           (%of (* 100.0 (line-height.em (lineheight b))) (font-size b))]
-          [(is-line-height/% (lineheight b))
-           (%of (line-height.% (lineheight b)) (font-size b))]
-          [else 0])) ; Can't happen
-     (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
+    (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
+      (and
+       (= (clh b)
+          ,(smt-cond
+            [(is-line-height/normal (lineheight b))
+             (font.leading metrics)]
+            [(is-line-height/px (lineheight b))
+             (line-height.px (lineheight b))]
+            [(is-line-height/em (lineheight b))
+             (%of (* 100.0 (line-height.em (lineheight b))) (font-size b))]
+            [(is-line-height/% (lineheight b))
+             (%of (line-height.% (lineheight b)) (font-size b))]
+            [else 0])) ; Can't happen
        (=> (realopt.is-some? (ascent b)) (realopt.is-some? (descent b))
            (= (leading b) (- (clh b) (+ (realopt.value (ascent b)) (realopt.value (descent b)))))))))
 
@@ -648,11 +649,8 @@
        (= (text-indent b)
           (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
-       ;;; Looks good
        (=> (is-box p) (= (baseline b) (baseline p)))
 
-       ;;; TODO: Don't worry about inline-blocks until the base-case is working
-       ;;; TODO: replaced and flow-root is good, as is inline
        (= (ascent b)
           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
                (realopt (+ (h b) (pt b) (pb b) (bt b) (bb b)) true)
@@ -661,15 +659,15 @@
                     (realopt 0.0 false)))) ;;; TODO: Not when border exists or something
        (= (descent b) (realopt (font.descent (get-metrics (fid (get/elt (&anc-w-elt b))))) true))
 
-       (=> (is-box l) (not (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r))))
+       (ite (and (is-box l) (not (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))))
            (and
             (= (y b) (y l))
             (= (h b) (h l))
             (= (above-baseline b) (above-baseline l))
-            (= (below-baseline b) (below-baseline l))))
-
-       ;;; TODO: above-bl and below-bl
-       ;;; TODO: y,h from children in regular old inlines
+            (= (below-baseline b) (below-baseline l)))
+           (and ;;; TODO: Handle this case
+            (= (above-baseline b) (realopt 0.0 false))
+            (= (below-baseline b) (realopt 0.0 false))))
 
        ,(smt-cond
          [(is-replaced e)
