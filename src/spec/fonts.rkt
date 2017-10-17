@@ -3,7 +3,7 @@
 (provide make-font-datatype make-font-table)
 
 (define-constraints make-font-datatype
-  (declare-datatypes () ((Font-Metric (font (font.ascent Int) (font.descent Int) (font.topoffset Int) (font.bottomoffset Int) (font.leading Int))))))
+  (declare-datatypes () ((Font-Metric (font (font.ascent Real) (font.descent Real) (font.topoffset Real) (font.bottomoffset Real) (font.leading Real))))))
 
 (define-by-match font-info?
   (list fid a x d t b))

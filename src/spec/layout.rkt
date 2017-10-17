@@ -797,7 +797,7 @@
        (compute-line-height b)
        (=> (is-box l) (realopt.is-some? (above-baseline l))
            (= (baseline b) (+ (y b) (realopt.value (above-baseline l)))))
-       (=> (is-box l) (realopt.is-some? (above-baseline b)) (realopt.is-some? (below-baseline b))
+       (=> (is-box l) (realopt.is-some? (above-baseline l)) (realopt.is-some? (below-baseline l))
            (= (h b) (+ (realopt.value (above-baseline l)) (realopt.value (below-baseline l)))))
        
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
