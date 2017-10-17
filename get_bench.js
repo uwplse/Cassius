@@ -1188,51 +1188,88 @@ function measure_font(font, size, weight, style, txt, baseline) {
 	context.textBaseline = baseline;
 	context.fillText(txt, 0, size);
 	var pixelmap = context.getImageData(0, 0, width, size * 2);
-	var ascender = size * 2;
-	var	descender = 0;
 
 	for (var i = 0; i < pixelmap.data.length; i += 4) {
-		var y = Math.floor(i / ((width) * 4));
-		if (pixelmap.data[i] !== 255 && y > descender) descender = y;
+		var y = Math.floor(i / (width * 4));
+		if (pixelmap.data[i] !== 255) return y;
 	}
-	
-	for (var i = pixelmap.data.length - 4; i >=0; i -= 4) {
-		var y = Math.floor(i / ((width) * 4));
-		if (pixelmap.data[i] !== 255 && y < ascender) ascender = y;
-	}
-
-	// size === baseline
-	document.querySelector("body").appendChild(canvas);
-	return {above: size - ascender, below: descender - size};
+	throw "Could not find any text in image!";
 }
 
-function get_font_line_height(font, weight, style) {
+function get_font_leading(font, weight, style, A, D) {
+	var body = document.querySelector("body");
+	var div = document.createElement("div");
+	div.innerHTML = "Hxy";
+	body.appendChild(div);
+
+	// reset
+	div.style.borderTopStyle = "none";
+	div.style.borderBottomStyle = "none";
+	div.style.paddingTop = "0";
+	div.style.paddingBottom = "0";
+
+	div.style.font = font;
+	div.style.fontWeight = weight;
+	div.style.fontStyle = style;
+	div.style.lineHeight = "normal";
+
+	var div_rect = div.getBoundingClientRect();
+	var leading = div_rect.height - A - D;
+	body.removeChild(div);
+	return leading;
+}
+
+function get_font_offsets(font, weight, style, A, D) {
+	var body = document.querySelector("body");
+	var div = document.createElement("div");
 	var span = document.createElement("span");
-	span.style.font = font;
-	span.style.weight = weight;
-	span.style.fontStyle = style;
 	span.innerHTML = "Hxy";
-	span.style.lineHeight = "normal";
-	document.querySelector("body").appendChild(span);
-	return span.getBoundingClientRect().height;
+	div.appendChild(span);
+	body.appendChild(div);
+
+	// reset
+	div.style.borderTopStyle = "none";
+	div.style.borderBottomStyle = "none";
+	div.style.paddingTop = "0";
+	div.style.paddingBottom = "0";
+	span.style.borderTopStyle = "none";
+	span.style.borderBottomStyle = "none";
+	span.style.paddingTop = "0";
+	span.style.paddingBottom = "0";
+
+	div.style.font = font;
+	div.style.fontWeight = weight;
+	div.style.fontStyle = style;
+	div.style.lineHeight = "10px";
+	span.style.font = font;
+	span.style.fontWeight = weight;
+	span.style.fontStyle = style;
+	span.style.lineHeight = "10px";
+
+	var span_rect = span.getBoundingClientRect();
+	var div_rect = div.getBoundingClientRect();
+
+	var leading_top = (10 - (A + D))/2;
+	var baseline = div_rect.top + leading_top + A;
+	var top_offset = baseline - span_rect.top - A;
+	var bottom_offset = span_rect.height - (A + D) - top_offset;
+
+	body.removeChild(div);
+
+	return { top: top_offset, bottom: bottom_offset };
 }
 
 function get_font_metrics(font, fname) {
-	var b = measure_font(font.name, font.size, font.weight, font.style, "x", "bottom");
-	
-	var xh = measure_font(font.name, font.size, font.weight, font.style, "x", "alphabetic").above - 1;
-	var metrics = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
-	
-	var ascent = metrics.above - xh;
-	var descent = metrics.below;
+	if (font.size == 0) return [FontIDMap[fname], 0, 0, 0, 0, 0].join(" ");
+	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
+	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
+	var bb = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "bottom");
+	var descent = ba - bb;
+	var ascent = bt - ba;
+	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
+	var leading = get_font_leading(font.name, font.weight, font.style, ascent, descent);
 
-	var leading = get_font_line_height(font.name, font.weight, font.style) - metrics.above - metrics.below;
-	var bottomoffset = (-b.below) - descent - 1;
-	var topoffset = leading - bottomoffset;
-	console.log(bottomoffset);
-	console.log(topoffset);
-	
-	return [FontIDMap[fname], ascent, xh, descent, topoffset, bottomoffset].join(" ");
+	return [FontIDMap[fname], ascent, descent, offsets.top, offsets.bottom, leading].join(" ");
 }
 
 function dump_fonts(name) {
@@ -1244,9 +1281,9 @@ function dump_fonts(name) {
         if (elt.nodeType === document.ELEMENT_NODE) {
 			var style = cs(elt);
 			var fname = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
-			var size = style.fontSize.substr(0, style.fontSize.indexOf("px"));
+			var size = val2px(style.fontSize);
 			var font = {name: style.fontSize + " " + style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
-			
+
 			if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
 
             for (var i = 0; i < elt.childNodes.length; i++) {
