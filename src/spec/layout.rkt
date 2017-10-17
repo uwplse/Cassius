@@ -462,28 +462,19 @@
                 (= (right-outer b) (- (right-padding pp) temp-right))))))
 
   ;; Helper method for computing the line height and leading of a box
+
   (define-fun compute-line-height ((b Box)) Bool
     (and
-     (ite (is-line-height/normal (lineheight b))
-        (<= (max-if (* 1.1 (font-size b))
-                    (and (not (is-box/block (type b))) (is-box (pflow b)))
-                    (clh (pflow b)))
-            (clh b)
-            (max-if (* 1.25 (font-size b))
-                    (and (not (is-box/block (type b))) (is-box (pflow b)))
-                    (clh (pflow b))))
-        (= (clh b)
-           (max-if
-            ,(smt-cond
-              [(is-line-height/px (lineheight b))
-               (line-height.px (lineheight b))]
-              [(is-line-height/em (lineheight b))
-               (%of (* 100.0 (line-height.em (lineheight b))) (font-size b))]
-              [(is-line-height/% (lineheight b))
-               (%of (line-height.% (lineheight b)) (font-size b))]
-              [else 0]) ; Can't happen
-            (and (is-box (pflow b)) (not (is-box/block (type b))))
-            (clh (pflow b)))))
+     (= (clh b)
+        ,(smt-cond
+          ;;; TODO: Normal case uses font leading from metrics
+          [(is-line-height/px (lineheight b))
+           (line-height.px (lineheight b))]
+          [(is-line-height/em (lineheight b))
+           (%of (* 100.0 (line-height.em (lineheight b))) (font-size b))]
+          [(is-line-height/% (lineheight b))
+           (%of (line-height.% (lineheight b)) (font-size b))]
+          [else 0])) ; Can't happen
      (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
        (=> (realopt.is-some? (ascent b)) (realopt.is-some? (descent b))
            (= (leading b) (- (clh b) (+ (realopt.value (ascent b)) (realopt.value (descent b)))))))))
@@ -657,63 +648,28 @@
        (= (text-indent b)
           (if (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
-       (=> (is-box p) (= (baseline b) (baseline p)))#|
-       (=> (realopt.is-some? (ascent b)) (not (is-display/inline-block (style.display r)))
-           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
-                (= (y b) (+ (baseline b) (h b) (bt b) (bb b)))
-                (and
-                 (= (y b) (- (baseline b)
-                             (+ (realopt.value (ascent b)) (font.topoffset (get-metrics (fid (get/elt (&anc-w-elt b))))))))
-                 (= (h b) (+ (realopt.value (ascent b)) (realopt.value (descent b))
-                             (font.topoffset (get-metrics (fid (get/elt (&anc-w-elt b)))))
-                             (font.bottomoffset (get-metrics (fid (get/elt (&anc-w-elt b))))))))))
+       ;;; Looks good
+       (=> (is-box p) (= (baseline b) (baseline p)))
 
+       ;;; TODO: Don't worry about inline-blocks until the base-case is working
+       ;;; TODO: replaced and flow-root is good, as is inline
        (= (ascent b)
           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
                (realopt (+ (h b) (pt b) (pb b) (bt b) (bb b)) true)
                (ite (is-box l)
                     (ascent l)
-                    (realopt 0.0 false)))) ;; TODO: Not when border exists or something
-       (= (descent b)
-          (ropt-max-if
-           (realopt (font.descender (get-metrics (fid (get/elt (&anc-w-elt b))))) true)
-           (is-box l)
-           (descent l)))
+                    (realopt 0.0 false)))) ;;; TODO: Not when border exists or something
+       (= (descent b) (realopt (font.descent (get-metrics (fid (get/elt (&anc-w-elt b))))) true))
 
-       (= (ascender-top b) (ropt-min-if
-                            (ropt-min-if
-                             (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
-                                  (realopt (- (y b) (* 0.5 (leading b))) (realopt.is-some? (ascent b)))
-                                  (ite (is-box l)
-                                       (ascender-top l)
-                                       (realopt 0.0 false)))
-                             (is-box v)
-                             (ascender-top v))
-                            (is-box l)
-                            (ascender-top l)))
-       (= (descender-bottom b) (ropt-max-if
-                                (ropt-max-if
-                                 (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
-                                  (realopt (+ (y b) (realopt.value (ascent b)) (realopt.value (descent b)) (* 0.5 (leading b))) (realopt.is-some? (descent b)))
-                                  (ite (is-box l)
-                                       (ascender-top l)
-                                       (realopt 0.0 false)))
-                                 (is-box v)
-                                 (descender-bottom v))
-                                (is-box l)
-                                (descender-bottom l)))
-       (= (max-ascent b) (ropt-max-if
-                            (realopt (+ (realopt.value (ascent b)) (* 0.5 (leading b))) (realopt.is-some? (ascent b)))
-                            (is-box v)
-                            (max-ascent v)))
-       (= (max-descent b) (ropt-max-if
-                                (descent b)
-                                (is-box v)
-                                (max-descent v)))
-|#
-       (= (max-ascent b) (ropt-max-if (max-ascent l) (is-box v) (max-descent v)))
-       (= (ascender-top b) (ascender-top l))
-       (= (descender-bottom b) (descender-bottom l))
+       (=> (is-box l) (not (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r))))
+           (and
+            (= (y b) (y l))
+            (= (h b) (h l))
+            (= (above-baseline b) (above-baseline l))
+            (= (below-baseline b) (below-baseline l))))
+
+       ;;; TODO: above-bl and below-bl
+       ;;; TODO: y,h from children in regular old inlines
 
        ,(smt-cond
          [(is-replaced e)
@@ -741,7 +697,8 @@
          [else
           (= (w b) 0.0)])
 
-       ;; TODO: Split out inline-blocks
+       ;;; TODO: Split out inline-blocks
+       ;; Done, I think
        (=> (is-display/inline-block (style.display r))
             (and
              (<= (top-content p)
@@ -780,30 +737,23 @@
        
        (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
          (and
-          #;(<= (box-top b) (text-top b) (text-bottom b) (box-bottom b))
-          (= (ascent b) (realopt (+ (font.xHeight metrics) (font.ascender metrics)) true))
-          (= (descent b) (realopt (font.descender metrics) true))
-          (= (text-top b) (+ (y b) (font.topoffset metrics)))
-          (= (text-bottom b) (- (+ (y b) (h b)) (font.bottomoffset metrics)))
-          (= (h b) (+ (font.topoffset metrics) (font.ascender metrics) (font.xHeight metrics) (font.descender metrics) (font.bottomoffset metrics)))
+          (= (ascent b) (realopt (font.ascent metrics) true))
+          (= (descent b) (realopt (font.descent metrics) true))
+          (= (h b) (+ (font.topoffset metrics) (font.ascent metrics) (font.descent metrics) (font.bottomoffset metrics)))
           (ite (> (w b) 0.0)
                (and
-                (= (ascender-top b) (ropt-min-if (realopt (- (text-top b) (* .5 (leading b))) true) (is-box v) (ascender-top v)))
-                (= (descender-bottom b) (ropt-max-if (realopt (+ (text-bottom b) (* .5 (leading b))) true) (is-box v) (descender-bottom v)))
-                (= (max-ascent b) (ropt-max-if
-                                   (realopt (+ (realopt.value (ascent b)) (* .5 (leading b))) true)
-                                   (is-box v)
-                                   (max-ascent v)))
-                (= (max-descent b) (ropt-max-if
-                                    (realopt (realopt.value (descent b)) true)
-                                    (is-box v)
-                                    (max-descent v)))
+                (= (above-baseline b) (ropt-max-if
+                                       (realopt (+ (realopt.value (ascent b)) (* 0.5 (leading b))) true)
+                                       (is-box v)
+                                       (above-baseline v)))
+                (= (below-baseline b) (ropt-max-if
+                                       (realopt (+ (realopt.value (descent b)) (* 0.5 (leading b))) true)
+                                       (is-box v)
+                                       (below-baseline v)))
                 (=> (is-box p) (= (y b) (- (baseline p) (+ (realopt.value (ascent b)) (font.topoffset metrics))))))
                (and
-                (= (max-ascent b) (realopt 0.0 false))
-                (= (max-descent b) (realopt 0.0 false))
-                (= (ascender-top b) (realopt 0.0 false))
-                (= (descender-bottom b) (realopt 0.0 false))))))
+                (= (above-baseline b) (ite (is-box v) (above-baseline v) (realopt 0.0 false)))
+                (= (below-baseline b) (ite (is-box v) (below-baseline v) (realopt 0.0 false)))))))
 
        (no-relative-offset b)
        (zero-box-model b)
@@ -843,29 +793,14 @@
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
        (= (font-size b) (font-size p))
 
-       (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
-         (and
-          (= (ascent b) (realopt (+ (font.xHeight metrics) (font.ascender metrics)) true))
-          (= (descent b) (realopt (font.descender metrics) true))
-          (= (text-top b) (- (baseline b) (realopt.value (ascent b))))
-          (= (text-bottom b) (+ (baseline b) (realopt.value (descent b))))
-          (and
-           (= (ascender-top b) (ropt-min-if (realopt (- (text-top b) (* .5 (leading b))) true) (is-box l) (ascender-top l)))
-           (= (descender-bottom b) (ropt-max-if (realopt (+ (text-bottom b) (* .5 (leading b))) true) (is-box l) (descender-bottom l)))
-           (= (max-ascent b) (ropt-max-if
-                              (realopt (+ (realopt.value (ascent b)) (* .5 (leading b))) true)
-                              (is-box l)
-                              (max-ascent l)))
-           (= (max-descent b) (ropt-max-if
-                               (realopt (realopt.value (descent b)) true)
-                               (is-box l)
-                               (max-descent l))))))
+       ;;; TODO: special case for list-items
+       ;;; TODO: do we have to worry about the weird line-height=/=font-size thing?
 
        (compute-line-height b)
-       (=> (realopt.is-some? (max-ascent b))
-           (= (baseline b) (+ (y b) (realopt.value (max-ascent b)) 1)))
-       (=> (realopt.is-some? (descender-bottom b)) (realopt.is-some? (ascender-top b))
-           (= (h b) (- (realopt.value (descender-bottom b)) (realopt.value (ascender-top b)))))
+       (=> (is-box l) (realopt.is-some? (above-baseline l))
+           (= (baseline b) (+ (y b) (realopt.value (above-baseline l)))))
+       (=> (is-box l) (realopt.is-some? (above-baseline b)) (realopt.is-some? (below-baseline b))
+           (= (h b) (+ (realopt.value (above-baseline l)) (realopt.value (below-baseline l)))))
        
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))

@@ -46,6 +46,7 @@
                 (font-size Real) (leading Real) (max-ascent RealOpt) (max-descent RealOpt)
                 (text-top Real) (text-bottom Real) (baseline Real) (ascent RealOpt) (descent RealOpt)
                 (ascender-top RealOpt) (descender-bottom RealOpt) (clh Real) ; computed line height
+                (above-baseline RealOpt) (below-baseline RealOpt)
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
