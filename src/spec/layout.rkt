@@ -469,7 +469,7 @@
        (= (clh b)
           ,(smt-cond
             [(is-line-height/normal (lineheight b))
-             (font.leading metrics)]
+             (+ (realopt.value (ascent b)) (realopt.value (descent b)) (font.leading metrics))]
             [(is-line-height/px (lineheight b))
              (line-height.px (lineheight b))]
             [(is-line-height/em (lineheight b))
