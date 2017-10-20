@@ -119,12 +119,14 @@
        (ite (is-box v)
             ;; These parts don't check (has-clearance) because they're
             ;; computed "as if" there were no clearance
-            (+ (ite (and (box-collapsed-through v) (not (is-flow-root b)))
+            (+ (ite (box-collapsed-through v)
                     (top-outer v)
                     (bottom-border v))
                (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b))))
             (+ (top-content p)
-               (ite (and (top-margin-collapses-with-children p) (not (is-flow-root b)))
+               (ite (and (top-margin-collapses-with-children p)
+                         (not (and (is-elt (box-elt b)) (is-root-elt (box-elt b))))
+                         (not (is-box/root (type b))))
                     0.0
                     (+ (mtp b) (mtn b)))))))
 
