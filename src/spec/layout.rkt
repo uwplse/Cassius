@@ -208,15 +208,15 @@
                   (and (is-box (nflow b)) (box-collapsed-through b) (not (has-clearance (nflow b))))
                   (mtp-up (nflow b))))
        (= (mtn b)
-          (max-if
-           (max-if
+          (min-if
+           (min-if
             (ite (< (mt b) 0.0) (mt b) 0.0)
             (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
-            (max (mtn-up f) (mtn f)))
+            (min (mtn-up f) (mtn f)))
            (and (box-collapsed-through b) (not (has-clearance b)))
            (ite (is-box v) (mbn v) (mtn-up b))))
        (= (mtn-up b)
-          (max-if (ite (is-box v) (mtn b) 0.0)
+          (min-if (ite (is-box v) (mtn b) 0.0)
                   (and (is-box (nflow b)) (box-collapsed-through b) (not (has-clearance (nflow b))))
                   (mtn-up (nflow b))))
        (= (mb-clear b)
@@ -230,8 +230,8 @@
            (box-collapsed-through b)
            (mtp b)))
        (= (mbn b)
-          (max-if
-           (max-if
+          (min-if
+           (min-if
             (ite (< (mb b) 0.0) (mb b) 0.0)
             (and (bottom-margin-collapses-with-children b) (is-box l) (not (mb-clear l)))
             (mbn l))
