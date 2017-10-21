@@ -651,22 +651,28 @@
        (=> (is-box p) (= (baseline b) (baseline p)))
 
        (= (ascent b)
-          (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b))
-               (realopt (+ (h b) (pt b) (pb b) (bt b) (bb b)) true)
+          (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
+               (+ (h b) (pt b) (pb b) (bt b) (bb b))
                (ite (is-box l)
                     (ascent l)
-                    (realopt 0.0 false)))) ;;; TODO: Not when border exists or something
-       (= (descent b) (realopt (font.descent (get-metrics (fid (get/elt (&anc-w-elt b))))) true))
+                    0.0))) ;;; TODO: Not when border exists or something
+       (= (descent b) (font.descent (get-metrics (fid (get/elt (&anc-w-elt b))))))
 
-       (ite (and (is-box l) (not (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))))
-           (and
-            (= (y b) (y l))
-            (= (h b) (h l))
-            (= (above-baseline b) (above-baseline l))
-            (= (below-baseline b) (below-baseline l)))
+       (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
            (and ;;; TODO: Handle this case
-            (= (above-baseline b) (realopt 0.0 false))
-            (= (below-baseline b) (realopt 0.0 false))))
+            (= (above-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (ascent b)) false) (is-box v) (above-baseline b)))
+            (= (below-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (descent b)) false) (is-box v) (below-baseline b)))
+            (= (y b) (- (baseline p) (ascent b)))
+            (= (h b) (ascent b)))
+           (ite (is-box l)
+                (and
+                 (= (y b) (y l))
+                 (= (h b) (h l))
+                 (= (above-baseline b) (ropt-max-if (above-baseline l) (is-box v) (above-baseline v)))
+                 (= (below-baseline b) (ropt-max-if (below-baseline l) (is-box v) (below-baseline v))))
+                (and
+                 (= (above-baseline b) (realopt 0.0 false))
+                 (= (below-baseline b) (realopt 0.0 false)))))
 
        ,(smt-cond
          [(is-replaced e)
@@ -734,20 +740,20 @@
        
        (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
          (and
-          (= (ascent b) (realopt (font.ascent metrics) true))
-          (= (descent b) (realopt (font.descent metrics) true))
-          (= (h b) (+ (font.topoffset metrics) (font.ascent metrics) (font.descent metrics) (font.bottomoffset metrics)))
+          (= (ascent b) (font.ascent metrics))
+          (= (descent b) (font.descent metrics))
+          (= (h b) (+ (font.topoffset metrics) (ascent b) (descent b) (font.bottomoffset metrics)))
           (ite (> (w b) 0.0)
                (and
                 (= (above-baseline b) (ropt-max-if
-                                       (realopt (+ (realopt.value (ascent b)) (* 0.5 (leading b))) true)
+                                       (realopt (+ (ascent b) (* 0.5 (leading b))) true)
                                        (is-box v)
                                        (above-baseline v)))
                 (= (below-baseline b) (ropt-max-if
-                                       (realopt (+ (realopt.value (descent b)) (* 0.5 (leading b))) true)
+                                       (realopt (+ (descent b) (* 0.5 (leading b))) true)
                                        (is-box v)
                                        (below-baseline v)))
-                (=> (is-box p) (= (y b) (- (baseline p) (+ (realopt.value (ascent b)) (font.topoffset metrics))))))
+                (=> (is-box p) (= (y b) (- (baseline p) (+ (ascent b) (font.topoffset metrics))))))
                (and
                 (= (above-baseline b) (ite (is-box v) (above-baseline v) (realopt 0.0 false)))
                 (= (below-baseline b) (ite (is-box v) (below-baseline v) (realopt 0.0 false)))))))
