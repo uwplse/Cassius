@@ -518,25 +518,23 @@
                   no-box
                   (ancestor-line (pbox b)))))))
 
+  ;; ez.line is a specialized thing for floats inside lines
   (declare-fun ez.line (Box) EZone)
-  ; This is incorrect and I'm not sure how to fix it
-  #;
+  (declare-fun ez.line-up (Box) EZone)
+
+  (assert (forall ((b Box))
+                  (= (ez.line-up b)
+                     (ite (is-box (lbox b))
+                          (ez.line-up (lbox b))
+                          (ez.line b)))))
   (assert
    (forall ((b Box))
      (= (ez.line b)
-        (ite (is-no-box (ancestor-line b))
+        (ite (and (is-flow-root b) (is-box (ancestor-line b)) (horizontally-adjacent b (ancestor-line b)))
              (ez.out b)
-             (ite (is-flow-root b)
-                  (ite (horizontally-adjacent b (ancestor-line b))
-                       (ez.out b)
-                       (ite (is-box (vbox b))
-                            (ez.line (vbox b))
-                            (ez.in b)))
-                  (ite (is-box (lbox b))
-                       (ez.line (lbox b))
-                       (ite (is-box (vbox b))
-                            (ez.line (vbox b))
-                            (ez.in b))))))))
+             (ite (is-box (vbox b))
+                  (ez.line-up (vbox b))
+                  (ez.in b))))))
 
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
