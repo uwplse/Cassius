@@ -10,8 +10,12 @@
 
 (define/contract (make-font-table fonts)
   (-> (listof font-info?) any/c)
-
-  `(define-fun get-metrics ((ID Int)) Font-Metric
-     ,(for/fold ([expr `(font 0 0 0 0 0)]) ([font fonts])
-        (match-define (list fid a d t b l) font)
-        `(ite (= ID ,fid) (font ,a ,d ,t ,b ,l) ,expr))))
+  `(assert (and
+            ,@(for/list ([font fonts])
+               (match-define (list fid a d t b l) font)
+               `(and
+                 (< (- ,a 1.0) (font.ascent (get-metrics ,fid)) (+ ,a 1.0))
+                 (< (- ,d 1.0) (font.descent (get-metrics ,fid)) (+ ,d 1.0))
+                 (< (- ,t 0.5) (font.topoffset (get-metrics ,fid)) (+ ,t 0.5))
+                 (< (- ,b 0.5) (font.bottomoffset (get-metrics ,fid)) (+ ,b 0.5))
+                 (< (- ,l 1.0) (font.leading (get-metrics ,fid)) (+ ,l 1.0)))))))

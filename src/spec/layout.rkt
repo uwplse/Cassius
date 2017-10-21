@@ -469,7 +469,7 @@
        (= (clh b)
           ,(smt-cond
             [(is-line-height/normal (lineheight b))
-             (+ (realopt.value (ascent b)) (realopt.value (descent b)) (font.leading metrics))]
+             (+ (font.descent metrics) (font.ascent metrics) (font.leading metrics))]
             [(is-line-height/px (lineheight b))
              (line-height.px (lineheight b))]
             [(is-line-height/em (lineheight b))
@@ -477,8 +477,7 @@
             [(is-line-height/% (lineheight b))
              (%of (line-height.% (lineheight b)) (font-size b))]
             [else 0])) ; Can't happen
-       (=> (realopt.is-some? (ascent b)) (realopt.is-some? (descent b))
-           (= (leading b) (- (clh b) (+ (realopt.value (ascent b)) (realopt.value (descent b)))))))))
+       (= (leading b) (- (clh b) (+ (ascent b)) (descent b))))))
 
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
