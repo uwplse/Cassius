@@ -3,7 +3,7 @@
 (provide make-font-datatype make-font-table)
 
 (define-constraints make-font-datatype
-  (declare-datatypes () ((Font-Metric (font (font.ascent Real) (font.descent Real) (font.topoffset Real) (font.bottomoffset Real) (font.leading Real))))))
+  (declare-datatypes () ((Font-Metric (font (font.ascent Real) (font.descent Real) (font.topoffset Real) (font.bottomoffset Real) (font.line-height Real))))))
 
 (define-by-match font-info?
   (list fid a x d t b))
@@ -18,4 +18,4 @@
                  (< (- ,d 1.0) (font.descent (get-metrics ,fid)) (+ ,d 1.0))
                  (< (- ,t 0.5) (font.topoffset (get-metrics ,fid)) (+ ,t 0.5))
                  (< (- ,b 0.5) (font.bottomoffset (get-metrics ,fid)) (+ ,b 0.5))
-                 (< (- ,l 1.0) (font.leading (get-metrics ,fid)) (+ ,l 1.0)))))))
+                 (= (font.line-height (get-metrics ,fid)) ,l))))))
