@@ -828,7 +828,7 @@
        (= (pl b) (ite (is-no-box v) (text-indent b) 0.0))
 
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
-             [ez (ez.line b)])
+             [ez (ez.line-up (lbox b))])
          (and
           (= (ez.lookback b) (ez.test (ez.in b) y-normal)) ;; Key float restriction
           (=> (ez.lookback b)
