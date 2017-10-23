@@ -147,6 +147,8 @@
                     (bottom-border v))
                (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))))))
 
+  (declare-fun inline-float-next-line (Box) Bool)
+
   (define-fun vertical-position-for-flow-roots ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)])
       (ite (is-no-box v)
@@ -156,7 +158,9 @@
                         (top-outer v)
                         (bottom-border v))
                    (mbp v) (mbn v))
-                (top-content (ancestor-line b))))))
+                (ite (inline-float-next-line b)
+                     (bottom-border (ancestor-line b))
+                     (top-content (ancestor-line b)))))))
 
   (define-fun has-clearance ((b Box)) Bool
     (and (is-elt (box-elt b))
@@ -542,7 +546,8 @@
 
   (assert (forall ((b Box))
                   (= (ez.line-up b)
-                     (ite (and (is-flow-root b) (is-box (ancestor-line b)) (horizontally-adjacent b (ancestor-line b)))
+                     (ite (and (is-flow-root b) (is-box (ancestor-line b))
+                               (< (top-outer b) (bottom-outer (ancestor-line b))))
                           (ez.line b)
                           (ite (is-box (lbox b))
                                (ez.line-up (lbox b))
@@ -550,7 +555,8 @@
   (assert
    (forall ((b Box))
      (= (ez.line b)
-        (ite (and (is-flow-root b) (is-box (ancestor-line b)) (horizontally-adjacent b (ancestor-line b)))
+        (ite (and (is-flow-root b) (is-box (ancestor-line b))
+                  (< (top-outer b) (bottom-outer (ancestor-line b))))
              (ez.out b)
              (ite (is-box (vbox b))
                   (ez.line-up (vbox b))
@@ -858,9 +864,9 @@
        (= (font-size b) (font-size p))
 
        (compute-line-height b)
-       (=> (realopt.is-some? (descender-bottom (lbox b))) (realopt.is-some? (ascender-top (lbox b)))
-           (= (h b) (- (realopt.value (descender-bottom (lbox b)))
-                       (realopt.value (ascender-top (lbox b))))))
+       (=> (realopt.is-some? (descender-bottom l)) (realopt.is-some? (ascender-top l))
+           (= (h b) (- (realopt.value (descender-bottom l))
+                       (realopt.value (ascender-top l)))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))

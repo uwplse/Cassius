@@ -27,7 +27,7 @@
   (define-fun max-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< x y)) y x))
   (define-fun min-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< y x)) y x))
   (define-fun between ((x Real) (y Real) (z Real)) Bool
-    (or (<= x y z) (>= x y z))))
+    (or (< x y z) (> x y z))))
 
 
 (define-constraints tree-types
@@ -128,16 +128,12 @@
 
   ;; Box predicate helpers
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
-    (and (or (between (bottom-outer box1) (top-outer box2) (top-outer box1))
-             (between (bottom-outer box2) (top-outer box1) (top-outer box2)))
-         (=> (and (= (top-outer box1) (top-outer box2)) (= (bottom-outer box1) (bottom-outer box2)))
-             (not (= (top-outer box1) (bottom-outer box2))))))
+    (or (between (bottom-outer box1) (top-outer box2) (top-outer box1))
+        (between (bottom-outer box2) (top-outer box1) (top-outer box2))))
 
   (define-fun vertically-adjacent ((box1 Box) (box2 Box)) Bool
-    (and (or (between (right-outer box1) (left-outer box2) (left-outer box1))
-             (between (right-outer box2) (left-outer box1) (left-outer box2)))
-         (=> (and (= (left-outer box1) (left-outer box2)) (= (right-outer box1) (right-outer box2)))
-             (not (= (left-outer box1) (right-outer box2))))))
+    (or (between (right-outer box1) (left-outer box2) (left-outer box1))
+        (between (right-outer box2) (left-outer box1) (left-outer box2))))
 
   (define-fun overlaps ((b1 Box) (b2 Box)) Bool
     (and (horizontally-adjacent b1 b2) (vertically-adjacent b1 b2)))
