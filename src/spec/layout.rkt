@@ -128,9 +128,8 @@
   (assert (forall ((b Box))
                   (= (firstish-box b)
                      (let ([p (pflow b)] [v (vflow b)])
-                       (and (top-margin-collapses-with-children p)
-                            (or (not (is-box v))
-                                (and (box-collapsed-through v) (firstish-box v))))))))
+                       (or (not (is-box v))
+                           (and (box-collapsed-through v) (firstish-box v)))))))
 
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)])
