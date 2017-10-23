@@ -125,11 +125,6 @@
                   (ancestor-line (pbox b)))))))
 
   (declare-fun firstish-box (Box) Bool)
-  (assert (forall ((b Box))
-                  (= (firstish-box b)
-                     (let ([p (pflow b)] [v (vflow b)])
-                       (or (not (is-box v))
-                           (and (box-collapsed-through v) (firstish-box v)))))))
 
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)])
@@ -175,6 +170,12 @@
            (is-clear/both (style.clear (computed-style (box-elt b))))
            (< (vertical-position-for-flow-boxes b)
               (max (ez.left-max (ez.in b)) (ez.right-max (ez.in b))))))))
+
+  (assert (forall ((b Box))
+                  (= (firstish-box b)
+                     (let ([p (pflow b)] [v (vflow b)])
+                       (or (and (not (is-box v)) (not (has-clearance v)))
+                           (and (box-collapsed-through v) (not (has-clearance v)) (firstish-box v)))))))
 
   (define-fun auto-height-for-flow-roots ((b Box)) Real
     ;; CSS 2.1 § 10.6.7
