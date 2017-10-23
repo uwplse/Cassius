@@ -124,21 +124,29 @@
                   no-box
                   (ancestor-line (pbox b)))))))
 
+  (declare-fun firstish-box (Box) Bool)
+  (assert (forall ((b Box))
+                  (= (firstish-box b)
+                     (let ([p (pflow b)] [v (vflow b)])
+                       (and (top-margin-collapses-with-children p)
+                            (or (not (is-box v))
+                                (and (box-collapsed-through v) (firstish-box v))))))))
+
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
-    (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
-       (ite (is-box v)
-            ;; These parts don't check (has-clearance) because they're
-            ;; computed "as if" there were no clearance
-            (+ (ite (box-collapsed-through v)
-                    (top-outer v)
-                    (bottom-border v))
-               (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b))))
+    (let ([p (pflow b)] [v (vflow b)])
+      ;; These parts don't check (has-clearance) because they're
+      ;; computed "as if" there were no clearance
+       (ite (firstish-box b)
             (+ (top-content p)
                (ite (and (top-margin-collapses-with-children p)
                          (not (and (is-elt (box-elt b)) (is-root-elt (box-elt b))))
                          (not (is-box/root (type b))))
                     0.0
-                    (+ (mtp b) (mtn b)))))))
+                    (+ (mtp b) (mtn b))))
+            (+ (ite (box-collapsed-through v)
+                    (top-outer v)
+                    (bottom-border v))
+               (+ (max (mbp v) (mtp b)) (min (mbn v) (mtn b)))))))
 
   (define-fun vertical-position-for-flow-roots ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)])
