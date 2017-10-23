@@ -246,7 +246,7 @@
            (min-if
             (ite (< (mt b) 0.0) (mt b) 0.0)
             (and (top-margin-collapses-with-children b) (is-box f) (not (has-clearance f)))
-            (mtn f))
+            (mtn-up f))
            (and (box-collapsed-through b) (not (has-clearance b)) (is-box v))
            (mbn v)))
        (= (mtn-up b)
