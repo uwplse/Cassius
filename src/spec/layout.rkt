@@ -524,9 +524,11 @@
 
   (assert (forall ((b Box))
                   (= (ez.line-up b)
-                     (ite (is-box (lbox b))
-                          (ez.line-up (lbox b))
-                          (ez.line b)))))
+                     (ite (and (is-flow-root b) (is-box (ancestor-line b)) (horizontally-adjacent b (ancestor-line b)))
+                          (ez.line b)
+                          (ite (is-box (lbox b))
+                               (ez.line-up (lbox b))
+                               (ez.line b))))))
   (assert
    (forall ((b Box))
      (= (ez.line b)
