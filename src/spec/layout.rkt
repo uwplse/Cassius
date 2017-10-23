@@ -114,6 +114,16 @@
      (= (bt b) (br b) (bb b) (bl b) 0.0)
      (= (pt b) (pr b) (pb b) (pl b) 0.0)))
 
+  (declare-fun ancestor-line (Box) Box)
+  (assert
+   (forall ((b Box))
+     (= (ancestor-line b)
+        (ite (is-box/line (type b))
+             b
+             (ite (is-flow-root (pbox b))
+                  no-box
+                  (ancestor-line (pbox b)))))))
+
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
        (ite (is-box v)
@@ -129,6 +139,17 @@
                          (not (is-box/root (type b))))
                     0.0
                     (+ (mtp b) (mtn b)))))))
+
+  (define-fun vertical-position-for-flow-roots ((b Box)) Real
+    (let ([p (pflow b)] [v (vflow b)])
+      (ite (is-no-box v)
+           (top-content p)
+           (ite (is-box/block (type v))
+                (+ (ite (box-collapsed-through v)
+                        (top-outer v)
+                        (bottom-border v))
+                   (mbp v) (mbn v))
+                (top-content (ancestor-line b))))))
 
   (define-fun has-clearance ((b Box)) Bool
     (and (is-elt (box-elt b))
@@ -417,7 +438,7 @@
                          (is-height/auto (style.height (computed-style (box-elt b))))))])
        (=> top? (= (top-outer b) (+ (top-padding pp) temp-top)))
        (=> height? (= (h b) temp-height))
-       (=> (and (not top?) (not bottom?)) (= (y b) (vertical-position-for-flow-boxes b)))
+       (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-roots b)))
        (=> (and (not height?) (not (and top? bottom?)))
            (= (h b) (auto-height-for-flow-roots b)))
        (=> (and bottom? (not (and top? height?)))
@@ -507,16 +528,6 @@
             (is-box (pflow b))
             (clh (pflow b)))))
      (= (leading b) (- (clh b) (font-size b)))))
-
-  (declare-fun ancestor-line (Box) Box)
-  (assert
-   (forall ((b Box))
-     (= (ancestor-line b)
-        (ite (is-box/line (type b))
-             b
-             (ite (is-flow-root (pbox b))
-                  no-box
-                  (ancestor-line (pbox b)))))))
 
   ;; ez.line is a specialized thing for floats inside lines
   (declare-fun ez.line (Box) EZone)
@@ -619,15 +630,7 @@
               [w (- (right-outer b) (left-outer b))]
               [h (- (bottom-outer b) (top-outer b))]
               [y-normal
-               (resolve-clear b
-                              (ite (is-no-box vb)
-                                   (top-content p)
-                                   (ite (is-box/block (type vb))
-                                        (+ (ite (box-collapsed-through vb)
-                                                (top-outer vb)
-                                                (bottom-border vb))
-                                           (mbp vb) (mbn vb))
-                                        (top-content (ancestor-line b)))))]
+               (resolve-clear b (vertical-position-for-flow-roots b))]
               [y* (ez.level ez w (left-content (pbflow b)) (right-content (pbflow b)) y-normal (style.float r))]
               [x* (ez.x ez y* (style.float r) (left-content (pbflow b)) (right-content (pbflow b)))]
               [x (ite (is-float/left (style.float r)) x* (- x* w))]
