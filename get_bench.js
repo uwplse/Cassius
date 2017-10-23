@@ -380,11 +380,25 @@ function infer_lines(box, parent) {
         if (prev.type == "LINE" || prev.type == "INLINE") return true;
         */
         if (!prev) return true;
+        var ph = prev.props.h;
+        var py = prev.props.y;
+        if (prev.type == "INLINE" && cs(prev.node).display == "inline-block") {
+            var m = get_margins(prev.node);
+            ph += m.top + m.bottom;
+            py -= m.top;
+        }
 
-        var horiz_adj = (
-            txt.props.y + txt.props.h >= prev.props.y && prev.props.y >= txt.props.y
-            || prev.props.y + prev.props.h >= txt.props.y && txt.props.y >= prev.props.y)
+        var th = txt.props.h;
+        var ty = txt.props.y;
+        if (txt.type == "INLINE" && cs(txt.node).display == "inline-block") {
+            var m = get_margins(txt.node);
+            th += m.top + m.bottom;
+            ty -= m.top;
+        }
 
+        var horiz_adj = (ty + th >= py && py >= ty || py + ph >= ty && ty >= py)
+
+        // Note fuzziness
         return horiz_adj && txt.props.x >= prev.props.x + prev.props.w - 1/APP_PIXEL_TO_PIXELS;
     }
 
