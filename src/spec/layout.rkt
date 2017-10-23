@@ -184,10 +184,6 @@
       [(is-no-box (fbox b)) (min-max-height 0.0 b)]
       [(is-no-box (fflow b))
        (min-max-height (max (- (ez.max (ez.out (lbox b))) (top-content b)) 0.0) b)]
-      [(is-box/line (type (fflow b)))
-       ;; If it only has inline-level children, the height is the distance between
-       ;; the top of the topmost line box and the bottom of the bottommost line box.
-       (min-max-height (- (bottom-border (lflow b)) (top-border (fflow b))) b)]
       [else
        ;; If it has block-level children, the height is the distance between the
        ;; top margin-edge of the topmost block-level child box and the
