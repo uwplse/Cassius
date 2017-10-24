@@ -1152,13 +1152,11 @@ function page2cassius(name) {
     text += ")\n\n";
 
     var title = dump_string(document.title);
-<<<<<<< HEAD
-    text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :fonts " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";
-=======
     text += "(define-problem " + name;
     text += "\n  :title " + title;
     text += "\n  :url \""  + location;
     text += "\"\n  :sheets " + name;
+	text += "\n  :fonts " + name;
     text += "\n  :documents " + name;
     text += "\n  :layouts " + name;
     if (window.ERROR) {
