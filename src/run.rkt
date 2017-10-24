@@ -16,7 +16,7 @@
          [(or 'BLOCK 'INLINE 'VIEW 'LINE 'ANON)
              (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y :w :h)) car) (attributes->dict cmds))))]
          ['TEXT
-          (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y)) car) (attributes->dict cmds))))]
+          (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y :h)) car) (attributes->dict cmds))))]
          [_ (cons type cmds)])
        (map loop children))))
   (struct-copy dom d [boxes boxes*]))
