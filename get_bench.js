@@ -1211,6 +1211,7 @@ function get_font_lineheight(font, weight, style) {
 	div.style.height = "auto";
 	div.style.minHeight = "0";
 	div.style.maxHeight = "none";
+	div.style.display = "block";
 
 	div.style.font = font;
 	div.style.fontWeight = weight;
@@ -1239,6 +1240,7 @@ function get_font_offsets(font, weight, style, A, D) {
 	div.style.height = "auto";
 	div.style.minHeight = "0";
 	div.style.maxHeight = "none";
+	div.style.display = "block";
 	span.style.borderTopStyle = "none";
 	span.style.borderBottomStyle = "none";
 	span.style.paddingTop = "0";
@@ -1246,6 +1248,7 @@ function get_font_offsets(font, weight, style, A, D) {
 	span.style.height = "auto";
 	span.style.minHeight = "0";
 	span.style.maxHeight = "none";
+	span.style.display = "inline";
 
 	div.style.font = font;
 	div.style.fontWeight = weight;
