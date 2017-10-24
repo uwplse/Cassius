@@ -545,12 +545,14 @@ function make_boxes(elt, styles, features) {
 
     if (elt.nodeType !== document.ELEMENT_NODE) {
         // ok
-    } else if (["none", "list-item", "inline", "block", "inline-block"].indexOf(cs(elt).display) !== -1) {
+    } else if (["none", "inline", "block"].indexOf(cs(elt).display) !== -1) {
         // ok
     } else if (cs(elt).display.startsWith("table")) {
         features["display:table"] = true;
     } else if (cs(elt).display == "inline-block") {
         features["display:inline-block"] = true;
+    } else if (cs(elt).display == "list-item") {
+        features["display:list-item"] = true;
     } else {
         console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
         features["display:unknown"] = true;
