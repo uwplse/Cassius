@@ -733,8 +733,8 @@
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
            (and ;;; TODO: Handle this case
-            (= (above-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (ascent b)) true) (is-box v) (above-baseline v)))
-            (= (below-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (descent b)) true) (is-box v) (below-baseline v)))
+            (= (above-baseline b) (ropt-max-if (realopt (ascent b) true) (is-box v) (above-baseline v)))
+            (= (below-baseline b) (ropt-max-if (realopt 0.0 true) (is-box v) (below-baseline v)))
             (= (top-outer b) (- (baseline p) (ascent b))))
            (ite (is-box l)
                 (and
@@ -771,15 +771,6 @@
            (= (right-outer (lflow b)) (right-content b)))]
          [else
           (= (w b) 0.0)])
-
-       ;;; TODO: Split out inline-blocks
-       ;; Done, I think
-       (=> (is-display/inline-block (style.display r))
-            (and
-             (<= (top-content p)
-                 (top-outer b))
-             (<= (bottom-content p)
-                 (bottom-outer b))))
 
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
