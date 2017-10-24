@@ -652,7 +652,7 @@
 
        (= (ascent b)
           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
-               (+ (h b) (pt b) (pb b) (bt b) (bb b))
+               (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b))
                (ite (is-box l)
                     (ascent l)
                     0.0))) ;;; TODO: Not when border exists or something
@@ -662,8 +662,7 @@
            (and ;;; TODO: Handle this case
             (= (above-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (ascent b)) true) (is-box v) (above-baseline v)))
             (= (below-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (descent b)) true) (is-box v) (below-baseline v)))
-            (= (y b) (- (baseline p) (ascent b)))
-            (= (h b) (ascent b)))
+            (= (top-outer b) (- (baseline p) (ascent b))))
            (ite (is-box l)
                 (and
                  (= (y b) (y l))
