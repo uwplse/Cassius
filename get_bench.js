@@ -1164,7 +1164,6 @@ function page2cassius(name) {
         features["unknown-error"] = true;
     }
     text += "\n  :features " + dump_features(features) + ")";
->>>>>>> master
     return text;
 }
 
