@@ -477,7 +477,12 @@
             [(is-line-height/% (lineheight b))
              (%of (line-height.% (lineheight b)) (font-size b))]
             [else 0])) ; Can't happen
-       (= (leading b) (- (clh b) (+ (ascent b)) (descent b))))))
+       (ite (is-display/list-item (style.display (computed-style (box-elt (pflow b)))))
+            (= (clh-li b) (realopt (clh b) true))
+            (= (clh-li b) (clh-li (pflow b))))
+       (= (leading b) (-
+                       (ite (realopt.is-some? (clh-li b)) (realopt.value (clh-li b)) (clh b))
+                       (+ (ascent b) (descent b)))))))
 
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
@@ -660,8 +665,8 @@
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
            (and ;;; TODO: Handle this case
-            (= (above-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (ascent b)) false) (is-box v) (above-baseline b)))
-            (= (below-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (descent b)) false) (is-box v) (below-baseline b)))
+            (= (above-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (ascent b)) true) (is-box v) (above-baseline v)))
+            (= (below-baseline b) (ropt-max-if (realopt (+ (* 0.5 (leading b)) (descent b)) true) (is-box v) (below-baseline v)))
             (= (y b) (- (baseline p) (ascent b)))
             (= (h b) (ascent b)))
            (ite (is-box l)
