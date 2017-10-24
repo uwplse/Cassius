@@ -16,6 +16,6 @@
                `(and
                  (< (- ,a 1.0) (font.ascent (get-metrics ,fid)) (+ ,a 1.0))
                  (< (- ,d 1.0) (font.descent (get-metrics ,fid)) (+ ,d 1.0))
-                 (< (- ,t 0.5) (font.topoffset (get-metrics ,fid)) (+ ,t 0.5))
-                 (< (- ,b 0.5) (font.bottomoffset (get-metrics ,fid)) (+ ,b 0.5))
+                 (< (- ,t 1.0) (font.topoffset (get-metrics ,fid)) (+ ,t 1.0))
+                 (< (- ,b 1.0) (font.bottomoffset (get-metrics ,fid)) (+ ,b 1.0))
                  (= (font.line-height (get-metrics ,fid)) ,l))))))
