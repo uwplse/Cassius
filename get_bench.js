@@ -1187,6 +1187,7 @@ function measure_font(font, size, weight, style, txt, baseline) {
 	context.fillStyle = "black";
 	context.textBaseline = baseline;
 	context.fillText(txt, 0, size);
+
 	var pixelmap = context.getImageData(0, 0, width, size * 2);
 
 	for (var i = 0; i < pixelmap.data.length; i += 4) {
@@ -1207,6 +1208,9 @@ function get_font_lineheight(font, weight, style) {
 	div.style.borderBottomStyle = "none";
 	div.style.paddingTop = "0";
 	div.style.paddingBottom = "0";
+	div.style.height = "auto";
+	div.style.minHeight = "0";
+	div.style.maxHeight = "none";
 
 	div.style.font = font;
 	div.style.fontWeight = weight;
@@ -1232,10 +1236,16 @@ function get_font_offsets(font, weight, style, A, D) {
 	div.style.borderBottomStyle = "none";
 	div.style.paddingTop = "0";
 	div.style.paddingBottom = "0";
+	div.style.height = "auto";
+	div.style.minHeight = "0";
+	div.style.maxHeight = "none";
 	span.style.borderTopStyle = "none";
 	span.style.borderBottomStyle = "none";
 	span.style.paddingTop = "0";
 	span.style.paddingBottom = "0";
+	span.style.height = "auto";
+	span.style.minHeight = "0";
+	span.style.maxHeight = "none";
 
 	div.style.font = font;
 	div.style.fontWeight = weight;

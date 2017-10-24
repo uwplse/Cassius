@@ -477,12 +477,7 @@
             [(is-line-height/% (lineheight b))
              (%of (line-height.% (lineheight b)) (font-size b))]
             [else 0])) ; Can't happen
-       (ite (is-display/list-item (style.display (computed-style (box-elt (pflow b)))))
-            (= (clh-li b) (realopt (clh b) true))
-            (= (clh-li b) (clh-li (pflow b))))
-       (= (leading b) (-
-                       (ite (realopt.is-some? (clh-li b)) (realopt.value (clh-li b)) (clh b))
-                       (+ (ascent b) (descent b)))))))
+       (= (leading b) (- (clh b) (+ (ascent b) (descent b)))))))
 
   ;; These three functions define the three types of layouts Cassius
   ;; supports for block boxes: normal in-flow layout, floating layout,
@@ -803,13 +798,27 @@
 
        ;;; TODO: special case for list-items
        ;;; TODO: do we have to worry about the weird line-height=/=font-size thing?
+       (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
+         (and
+          (= (ascent b) (font.ascent metrics))
+          (= (descent b) (font.descent metrics))))
 
        (compute-line-height b)
        (=> (is-box l) (realopt.is-some? (above-baseline l))
-           (= (baseline b) (+ (y b) (realopt.value (above-baseline l)))))
+           (= (baseline b) (+ (y b) (max-if
+                                     (realopt.value (above-baseline l))
+                                     (is-display/list-item (style.display (computed-style (box-elt (pflow b)))))
+                                     (+ (ascent b) (* 0.5 (leading b)))))))
        (=> (is-box l) (realopt.is-some? (above-baseline l)) (realopt.is-some? (below-baseline l))
-           (= (h b) (+ (realopt.value (above-baseline l)) (realopt.value (below-baseline l)))))
-       
+           (= (h b) (+ (max-if
+                        (realopt.value (above-baseline l))
+                        (is-display/list-item (style.display (computed-style (box-elt (pflow b)))))
+                        (+ (ascent b) (* 0.5 (leading b))))
+                       (max-if
+                        (realopt.value (below-baseline l))
+                        (is-display/list-item (style.display (computed-style (box-elt (pflow b)))))
+                        (+ (descent b) (* 0.5 (leading b)))))))
+
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
            (and (= (left-outer f) (left-content b))
