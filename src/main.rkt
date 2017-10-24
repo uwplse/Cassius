@@ -116,6 +116,7 @@
 
 (define (selector*-constraints emit elts rules)
   (define ml (rule-matchlist rules elts))
+  (emit `(echo (simplify stop)))
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
@@ -129,21 +130,36 @@
         (emit `(define-const ,propname ,type ,(dump-value type (car (dict-ref (filter list? props) prop)))))
         (emit `(define-const ,(sformat "~a?" propname) Bool true))])))
 
-  (for* ([(prop type default) (in-css-properties)] [elt elts])
-    (define nonecond
-      (for/fold ([no-match-so-far 'true])
-          ([rm ml]
-           #:when (selector-matches? (car (rulematch-rule rm)) elt)
-           #:when (rule-allows-property? (rulematch-rule rm) prop))
-        (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
-        (define propname? (sformat "value/~a/~a?" (rulematch-idx rm) prop))
-        (emit `(assert (! (=> (and ,no-match-so-far ,propname?)
-                              (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,propname))
-                          :named ,(sformat "~a^~a" propname (dump-elt elt)))))
-        `(and ,no-match-so-far (not ,propname?))))
-    (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
-                                       ,(dump-value type (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default))))
-                      :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
+  (define elt-classes
+    (group-by (λ (elt)
+                ;; The `node-parent` here is for inheritable properties
+                (cons (not (node-parent elt))
+                      (for/list ([rm ml]) (set-member? (rulematch-elts rm) elt)))) elts))
+
+  (for ([cls (map list elts)])
+    (define elt (car cls))
+    (define style `(specified-style ,(dump-elt elt)))
+    (for ([elt (cdr cls)])
+      (emit `(assert (= (specified-style ,(dump-elt elt)) ,style))))
+    (for* ([(prop type default) (in-css-properties)])
+      (define nonecond
+        (for/fold ([no-match-so-far 'true])
+            ([rm ml]
+             #:when (rule-allows-property? (rulematch-rule rm) prop)
+             #:when (selector-matches? (car (rulematch-rule rm)) elt))
+          (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
+          (define propname? (sformat "value/~a/~a?" (rulematch-idx rm) prop))
+          (emit `(assert (! (=> (and ,no-match-so-far ,propname?)
+                                (= (,(sformat "style.~a" prop) ,style) ,propname))
+                            :named ,(sformat "~a^~a" propname (dump-elt elt)))))
+          `(and ,no-match-so-far (not ,propname?))))
+
+      (define inheritable? (and (css-inheritable? prop) (node-parent elt)))
+      (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) ,style)
+                                         ,(dump-value type (if inheritable? 'inherit default))))
+                        :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
+
+  (emit `(echo (simplify start))))
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
@@ -235,9 +251,9 @@
     [_ #f]))
 
 (define (box-constraints dom emit elt)
-  (for ([cmd '(:x :y :w :h)] #:when (node-get* elt cmd #:default #f))
+  (for ([cmd '(:x :y :w :h :mtp :mbp)] #:when (node-get* elt cmd #:default #f))
     (define arg (node-get elt cmd))
-    (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
+    (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width) (:mbp . mbp) (:mtp . mtp)) cmd))
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg

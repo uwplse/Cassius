@@ -147,7 +147,7 @@
 
    #:multi
    [("-d" "--debug") "Turn on debug mode"
-    (*debug* true)]
+    (debug-mode!)]
    [("+x") name "Set an option" (flags (set-add (flags) (string->symbol name)))]
    [("-x") name "Unset an option" (flags (set-remove (flags) (string->symbol name)))]
 

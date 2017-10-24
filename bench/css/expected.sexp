@@ -18,3 +18,6 @@
 ("bench/css/borders.rkt" doc-1404)
 ("bench/css/borders.rkt" doc-1418)
 ("bench/css/borders.rkt" doc-1425)
+
+; Firefox is flatly incorrect on this one as well
+("bench/css/margin-padding-clear.rkt" doc-157)

@@ -4,7 +4,7 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; docum
 
 Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent clear color background-color line-height vertical-align".split(" ");
 BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
-BadTags = "img iframe input svg:svg".split(" ");
+BadTags = "img iframe input svg:svg button".split(" ");
 
 var FontIDMap = Object();
 var nextID = 0;
@@ -49,6 +49,8 @@ Box.prototype.toString = function() {
     return s + "]";
 }
 
+ERROR = false;
+
 LETTER = window.LETTER || "";
 ID = 0;
 PADDING = "0000";
@@ -92,16 +94,6 @@ function f2q(x) {
     }
 }
 
-function test_f2q(a, b) {
-    for (var i = a * 60; i < b * 60; i++) {
-        var input = i / 60;
-        var output = f2q(input);
-        if (output.num / output.denom !== input) {
-            console.error("fq2(" + i + " / 60) == " + output.num + "/" + output.denom);
-        }
-    }
-}
-
 function val2px(val, features) {
     var match;
     if (val == "0") {
@@ -121,7 +113,6 @@ function val2px(val, features) {
     } else if (val.match(/^[-+0-9.e]+in$/)) {
         return +val.substr(0, val.length - 2)*96;
     } else if (match = val.match(/^([-+0-9.e]+)([a-z]+)$/)) {
-        console.log(val)
         features["unit:" + match[2]] = true;
         throw "Error, " + val + " is not a known unit";
     } else {
@@ -387,10 +378,12 @@ function infer_lines(box, parent) {
         // The line-height idea was cute, but doesn't actually work.
         var l = Line(null, {/*h: val2px(cs(parent.node)["line-height"])*/});
         parent.children.push(l);
+        last = false;
         return l;
     }
 
-    function fits(txt, line) {
+    function fits(txt, prev) {
+        /*
         if (!line) return false;
         var prev = line;
         while (prev.children.length) {
@@ -399,11 +392,27 @@ function infer_lines(box, parent) {
 
         // HACK for the case of an empty INLINE or LINE element
         if (prev.type == "LINE" || prev.type == "INLINE") return true;
+        */
+        if (!prev) return true;
+        var ph = prev.props.h;
+        var py = prev.props.y;
+        if (prev.type == "INLINE" && cs(prev.node).display == "inline-block") {
+            var m = get_margins(prev.node);
+            ph += m.top + m.bottom;
+            py -= m.top;
+        }
 
-        var horiz_adj = (
-            txt.props.y + txt.props.h >= prev.props.y && prev.props.y >= txt.props.y
-            || prev.props.y + prev.props.h >= txt.props.y && txt.props.y >= prev.props.y)
+        var th = txt.props.h;
+        var ty = txt.props.y;
+        if (txt.type == "INLINE" && cs(txt.node).display == "inline-block") {
+            var m = get_margins(txt.node);
+            th += m.top + m.bottom;
+            ty -= m.top;
+        }
 
+        var horiz_adj = (ty + th >= py && py >= ty || py + ph >= ty && ty >= py)
+
+        // Note fuzziness
         return horiz_adj && txt.props.x >= prev.props.x + prev.props.w - 1/APP_PIXEL_TO_PIXELS;
     }
 
@@ -419,16 +428,19 @@ function infer_lines(box, parent) {
 
     var stack = [];
     var sstack = [];
+    var last = false;
     function go(b) {
         if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
             (b.type == "INLINE" && cs(b.node).display == "inline-block")) {
-            var l = last_line();
-            if (!fits(b, l)) {
+            // TODO: does not handle case where previous elt is floating BLOCK
+            var l = last_line() || new_line();
+            if (b.type !== "BLOCK" && !fits(b, last)) {
                 l = new_line();
                 sstack = [];
             }
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
+            if (b.type !== "BLOCK") last = b;
         } else if (b.type == "INLINE") {
             stack.push(b);
             for (var i = 0; i < b.children.length; i++) {
@@ -443,6 +455,7 @@ function infer_lines(box, parent) {
             }
         } else {
             console.warn("Unknown box type", b);
+            window.ERROR = "Unknown box type: " + b;
         }
     }
 
@@ -726,6 +739,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
         nodes = document.querySelectorAll(sel);
     } catch (e) {
         console.warn("Invalid selector syntax, this shouldn't happen:", sel);
+        features["invalid-selector"] = true
         return "";
     }
 
@@ -752,6 +766,8 @@ function dump_rule(sel, style, features, is_from_style, media) {
             _features["css:inherit"] = true;
         } else if (val.startsWith("rgb")) {
             val = dump_color(val, _features);
+        } else if (val.match(/^[a-z]+$/)) {
+            // skip
         } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
             val = dump_length(val, _features);
         }
@@ -781,14 +797,14 @@ function dump_rule(sel, style, features, is_from_style, media) {
             sel_text = rescue_selector(sels[i]);
         }
         if (media && media.mediaText) {
-            sel_text = "(media " + dump_media_query(media) + " " + sel_text + ")";
+            sel_text = "(media " + dump_media_query(media, features) + " " + sel_text + ")";
         }
         out += "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
     }
     return out;
 }
 
-function dump_media_query(media) {
+function dump_media_query(media, features) {
     var ors = media.mediaText.split(/\b,\s*\b/);
     for (var i = 0; i < ors.length; i++) {
         var query = ors[i].trim();
@@ -809,6 +825,7 @@ function dump_media_query(media) {
                 ands[j] = match[1];
             } else {
                 console.warn("Unknown media query component", part);
+                features["unknown-media"] = true
             }
         }
 
@@ -880,6 +897,7 @@ function dump_stylesheet(ss, features, media) {
         try {
             if (r.type === CSSRule.IMPORT_RULE) {
                 console.warn("Skipping non-style rule", r);
+                features["css:@import"] = true
                 continue;
             } else if (r.type === CSSRule.MEDIA_RULE) {
                 text += dump_stylesheet(r, features, r.media);
@@ -891,9 +909,11 @@ function dump_stylesheet(ss, features, media) {
                 // Don't need these...
             } else {
                 console.warn("Unknown rule type", r);
+                features["css:type-" + r.type + "-rule"] = true;
             }
         } catch (e) {
             console.warn(r, e);
+            window.ERROR = e;
         }
     }
     return text;
@@ -936,6 +956,7 @@ function dump_document(features) {
         } else if (typeof(elt.dataset) === "undefined"){
             console.log("Weird element", elt);
             var rec = new Box(elt.tagName.toLowerCase(), elt, {fid: get_font_ID(cs(elt))});
+            features["weird-element"] = true;
             return rec;
         } else {
             var num = ELTS.length;
@@ -1110,7 +1131,7 @@ function page2cassius(name) {
     var style = out.style;
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
-        text += dump_rule("#" + eid, style[eid], features, true);
+        text += dump_rule("#" + eid, style[eid], features, true, false);
     }
     text += ")\n\n";
 
@@ -1131,7 +1152,21 @@ function page2cassius(name) {
     text += ")\n\n";
 
     var title = dump_string(document.title);
+<<<<<<< HEAD
     text += "(define-problem " + name + "\n  :title " + title + "\n  :url \"" + location + "\"\n  :sheets " + name  + "\n  :documents " + name + "\n  :fonts " + name + "\n  :layouts " + name + "\n  :features " + dump_features(features) + ")";
+=======
+    text += "(define-problem " + name;
+    text += "\n  :title " + title;
+    text += "\n  :url \""  + location;
+    text += "\"\n  :sheets " + name;
+    text += "\n  :documents " + name;
+    text += "\n  :layouts " + name;
+    if (window.ERROR) {
+        text += "\n  :error " + dump_string(window.ERROR + "");
+        features["unknown-error"] = true;
+    }
+    text += "\n  :features " + dump_features(features) + ")";
+>>>>>>> master
     return text;
 }
 

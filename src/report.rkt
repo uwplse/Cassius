@@ -290,7 +290,7 @@
   (define unsupported-features
     (set-subtract (remove-duplicates (append-map result-features results)) (supported-features)))
 
-  (define (feature-row feature)
+  (define (feature-row feature results)
     (list feature
           (count (λ (x) (equal? 
                          (set-subtract
@@ -302,7 +302,7 @@
           (count (λ (x) (member feature (result-features x))) results)))
 
   (define (sort-features data)
-    (sort (sort data > #:key third) > #:key second))
+    (filter (λ (r) (> (third r) 0)) (sort (sort data > #:key third) > #:key second)))
 
   (define (show-res res)
     (not (set-member?
@@ -316,16 +316,16 @@
      (meta ((charset "utf8")))
      (link ((rel "stylesheet") (href "report.css")))
      (title ,(format "Cassius results for ~a" (string-join (remove-duplicates (map result-file results)) ", ")))
-     (body ()
+     (body
       (p (b "Cassius")
          " version " (kbd ,(~a *version*))
          " branch " (kbd ,(~a *branch*))
          " commit " (kbd ,(~a *commit*)))
       (table ((id "sections") (rules "groups"))
-       (thead ()
+       (thead
         ,(row #:cell 'th "" "Pass" "Fail" "Error" "Time" "Skip" "")
         ,(apply row `(strong "Total") (append (set->results results) '(""))))
-       (tbody ()
+       (tbody
         ,@(for/list ([section (sort (remove-duplicates (map result-section results)) section<?)])
             (define sresults (filter (λ (x) (equal? (result-section x) section)) results))
             (keyword-apply
@@ -333,25 +333,29 @@
              (string-replace section "s" "§" #:all? #f)
              (append
               (set->results sresults)
-              `((span ()
+              `((span
                  ,@(for/list ([r sresults] #:when (member (result-status r) '(error fail)))
                      `(a ((href ,(result-url r)))
                          ,(format "~a:~a" (file-name-stem (result-file r)) (result-problem r)))))))))))
       ,@(if (ormap (λ (r) (set-member? '(unsupported) (result-status r))) results)
-            `((section ()
-               (h2 () "Feature totals")
-               (table ()
-                (thead () ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
-                (tbody () ,@(for/list ([data (sort-features (map feature-row unsupported-features))])
-                              (apply row (map ~a data)))))))
+            `((section
+               (h2 "Feature totals")
+               (table
+                (thead ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
+                (tbody
+                       ,@(let ([bad-results
+                                (for/list ([r results] #:when (not (set-member? '(success expected) (result-status r))))
+                                  r)])
+                           (for/list ([data (sort-features (map (curryr feature-row bad-results) unsupported-features))])
+                             (apply row (map ~a data))))))))
             '())
-      (section ()
-       (h2 () ,(if (show-success) "Tests" "Failing tests"))
-       (table ()
+      (section
+       (h2 ,(if (show-success) "Tests" "Failing tests"))
+       (table
        ,@(for/list ([results-group (group-by result-file results)]
                     #:unless (not (ormap show-res results-group)))
            `(tbody
-             (tr () (th ((colspan "4")) ,(result-file (car results-group))))
+             (tr (th ((colspan "4")) ,(result-file (car results-group))))
              ,@(for/list ([ress (group-by result-problem results-group)]
                           #:unless (not (ormap show-res ress)))
                  (match-define (result file problem _ test section _ description features _ url) (car ress))
