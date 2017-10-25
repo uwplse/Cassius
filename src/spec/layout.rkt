@@ -689,6 +689,8 @@
          [else
           (a-block-float-box b)])))
 
+  (declare-fun inline-block-offset (Box) Real)
+
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [v (vflow b)] [l (lflow b)])
@@ -735,9 +737,9 @@
            (and ;;; TODO: Handle this case
             ;; WHY ± 1? The "baseline" referred to here is the *top* of the baseline pixels;
             ;; images and inline blocks color those pixels
-            (= (above-baseline b) (ropt-max-if (realopt (- (ascent b) 1) true) (is-box v) (above-baseline v)))
+            (= (above-baseline b) (ropt-max-if (realopt (- (ascent b) (inline-block-offset b)) true) (is-box v) (above-baseline v)))
             ;; TODO: In quirks mode, instead of (descent b) you use 1.0
-            (= (below-baseline b) (ropt-max-if (realopt (descent b) true) (is-box v) (below-baseline v)))
+            (= (below-baseline b) (ropt-max-if (realopt (max (descent b) (inline-block-offset b)) true) (is-box v) (below-baseline v)))
             (= (bottom-outer b) (+ (baseline p) 1)))
            (ite (is-box l)
                 (and
