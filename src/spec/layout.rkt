@@ -721,7 +721,7 @@
        (= (text-indent b)
           (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
-       (=> (is-box p) (= (baseline b) (baseline p)))
+       (= (baseline b) (baseline p))
 
        (= (ascent b)
           (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
@@ -733,9 +733,11 @@
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
            (and ;;; TODO: Handle this case
-            (= (above-baseline b) (ropt-max-if (realopt (ascent b) true) (is-box v) (above-baseline v)))
-            (= (below-baseline b) (ropt-max-if (realopt 0.0 true) (is-box v) (below-baseline v)))
-            (= (top-outer b) (- (baseline p) (ascent b))))
+            ;; WHY ± 1? The "baseline" referred to here is the *top* of the baseline pixels;
+            ;; images and inline blocks color those pixels
+            (= (above-baseline b) (ropt-max-if (realopt (- (ascent b) 1) true) (is-box v) (above-baseline v)))
+            (= (below-baseline b) (ropt-max-if (realopt 1.0 true) (is-box v) (below-baseline v)))
+            (= (bottom-outer b) (+ (baseline p) 1)))
            (ite (is-box l)
                 (and
                  (= (y b) (y l))
