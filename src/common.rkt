@@ -23,10 +23,11 @@
    '(css:float css:box-sizing
      css:min-width css:max-width css:max-height css:min-height
      css:position css:font-size css:overflow-x css:overflow-y 
-     css:text-indent display:inline-block css:inherit css:clear
+     css:text-indent css:inherit css:clear
      unit:% unit:em
      empty-text
-     unknown-selector tag:img tag:input priority:important
+     display:inline-block tag:img tag:input display:list-item
+     unknown-selector priority:important
      TEXT INLINE LINE BLOCK PAGE MAGIC ANON)))
 
 (define (support-features! . feats)
