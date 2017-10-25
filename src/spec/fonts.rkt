@@ -8,14 +8,19 @@
 (define-by-match font-info?
   (list fid a x d t b))
 
+(define (fuzzy-=-constraint var val)
+  (if (*font-fuzz*)
+      `(< (- ,val ,(*font-fuzz*)) ,var (+ ,val ,(*font-fuzz*)))
+      `(= ,val ,var)))
+
 (define/contract (make-font-table fonts)
   (-> (listof font-info?) any/c)
   `(assert (and
             ,@(for/list ([font fonts])
                (match-define (list fid a d t b l) font)
                `(and
-                 (< (- ,a 1.0) (font.ascent (get-metrics ,fid)) (+ ,a 1.0))
-                 (< (- ,d 1.0) (font.descent (get-metrics ,fid)) (+ ,d 1.0))
-                 (< (- ,t 1.0) (font.topoffset (get-metrics ,fid)) (+ ,t 1.0))
-                 (< (- ,b 1.0) (font.bottomoffset (get-metrics ,fid)) (+ ,b 1.0))
+                 ,(fuzzy-=-constraint `(font.ascent (get-metrics ,fid)) a)
+                 ,(fuzzy-=-constraint `(font.descent (get-metrics ,fid)) d)
+                 ,(fuzzy-=-constraint `(font.topoffset (get-metrics ,fid)) t)
+                 ,(fuzzy-=-constraint `(font.bottomoffset (get-metrics ,fid)) b)
                  (= (font.line-height (get-metrics ,fid)) ,l))))))

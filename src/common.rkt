@@ -12,7 +12,7 @@
  boolean<? lex<? output<?
  define-by-match
  list-intersect multi-command-line debug-mode!
- *debug* *fuzz*
+ *debug* *fuzz* *font-fuzz*
  *version* *commit* *branch*)
 
 (define flags (make-parameter '(z3o rules selectors)))
@@ -48,9 +48,11 @@
 (define *debug* (make-parameter false))
 (define (debug-mode!)
   (*debug* true)
-  (*fuzz* #f))
+  (*fuzz* #f)
+  (*font-fuzz* #f))
 
 (define *fuzz* (make-parameter '(/ 10 60)))
+(define *font-fuzz* (make-parameter 1))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
