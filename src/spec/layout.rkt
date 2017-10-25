@@ -736,7 +736,8 @@
             ;; WHY ± 1? The "baseline" referred to here is the *top* of the baseline pixels;
             ;; images and inline blocks color those pixels
             (= (above-baseline b) (ropt-max-if (realopt (- (ascent b) 1) true) (is-box v) (above-baseline v)))
-            (= (below-baseline b) (ropt-max-if (realopt 1.0 true) (is-box v) (below-baseline v)))
+            ;; TODO: In quirks mode, instead of (descent b) you use 1.0
+            (= (below-baseline b) (ropt-max-if (realopt (descent b) true) (is-box v) (below-baseline v)))
             (= (bottom-outer b) (+ (baseline p) 1)))
            (ite (is-box l)
                 (and
