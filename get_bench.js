@@ -710,11 +710,11 @@ function rescue_selector(sel) {
 
 function dump_length(val, features) {
     if (val.match(/%$/)) {
-        val = "(% " + f2r(val2pct(val, features)) + ")";
+        val = "(% " + val2pct(val, features) + ")";
     } else if (val.match(/e[mx]$/)) {
-        val = "(em " + f2r(val2em(val, features)) + ")";
+        val = "(em " + val2em(val, features) + ")";
     } else {
-        val = "(px " + f2r(val2px(val, features)) + ")";
+        val = "(px " + val2px(val, features) + ")";
     }
     return val;
 }
