@@ -1357,5 +1357,3 @@ function dump_fonts(name) {
 
     return text;
 }
-
-cassius("go")
