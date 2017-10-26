@@ -1310,7 +1310,7 @@ function get_font_offsets(font, weight, style, A, D) {
 }
 
 function get_font_metrics(font, fname) {
-	if (font.size == 0) return [FontIDMap[fname], 0, 0, 0, 0, 0].join(" ");
+	if (font.size == 0) return [FontIDMap[fname], 0, 0, 0, 0, 0];
 	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
 	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
 	var bb = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "bottom");
@@ -1350,9 +1350,12 @@ function dump_fonts(name) {
 	var font = fonts[fname];
         var metrics = get_font_metrics(font, fname);
         for (var i = 1; i < metrics.length; i++) metrics[i] = f2r(metrics[i]);
+        console.log(metrics);
 	text += "\n  [" + metrics.join(" ") + "]";
     }
     text += ")";
 
     return text;
 }
+
+cassius("go")
