@@ -710,11 +710,11 @@ function rescue_selector(sel) {
 
 function dump_length(val, features) {
     if (val.match(/%$/)) {
-        val = "(% " + val2pct(val, features) + ")";
+        val = "(% " + f2r(val2pct(val, features)) + ")";
     } else if (val.match(/e[mx]$/)) {
-        val = "(em " + val2em(val, features) + ")";
+        val = "(em " + f2r(val2em(val, features)) + ")";
     } else {
-        val = "(px " + val2px(val, features) + ")";
+        val = "(px " + f2r(val2px(val, features)) + ")";
     }
     return val;
 }
@@ -1319,7 +1319,7 @@ function get_font_metrics(font, fname) {
 	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
 	var lineheight = get_font_lineheight(font.name, font.weight, font.style);
 
-	return [FontIDMap[fname], ascent, descent, offsets.top, offsets.bottom, lineheight].join(" ");
+	return [FontIDMap[fname], ascent, descent, offsets.top, offsets.bottom, lineheight];
 }
 
 function dump_fonts(name) {
@@ -1350,7 +1350,7 @@ function dump_fonts(name) {
 	for (var fname of flist) {
 		var font = fonts[fname];
 
-		text += "\n  [" + get_font_metrics(font, fname) + "]";
+		text += "\n  [" + get_font_metrics(font, fname).map(f2r).join(" ") + "]";
 	}
 
 	text += ")";
