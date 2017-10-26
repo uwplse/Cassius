@@ -725,19 +725,15 @@
 
        (= (baseline b) (baseline p))
 
-       (= (ascent b)
-          (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
-               (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b))
-               (ite (is-box l)
-                    (ascent l)
-                    0.0))) ;;; TODO: Not when border exists or something
+       (= (ascent b) (font.ascent (get-metrics (fid (get/elt (&anc-w-elt b))))))
        (= (descent b) (font.descent (get-metrics (fid (get/elt (&anc-w-elt b))))))
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
            (and ;;; TODO: Handle this case
             ;; WHY ± 1? The "baseline" referred to here is the *top* of the baseline pixels;
             ;; images and inline blocks color those pixels
-            (= (above-baseline b) (ropt-max-if (realopt (- (ascent b) (inline-block-offset b)) true) (is-box v) (above-baseline v)))
+               
+            (= (above-baseline b) (ropt-max-if (realopt (max (ascent b) (- (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)) (inline-block-offset b))) true) (is-box v) (above-baseline v)))
             ;; TODO: In quirks mode, instead of (descent b) you use 1.0
             (= (below-baseline b) (ropt-max-if (realopt (max (descent b) (inline-block-offset b)) true) (is-box v) (below-baseline v)))
             (= (bottom-outer b) (+ (baseline p) (inline-block-offset b))))
