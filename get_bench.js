@@ -1343,17 +1343,16 @@ function dump_fonts(name) {
         }
     }
 
-	recurse(elt);
+    recurse(elt);
 
-	var text = "(define-fonts " + name;
+    var text = "(define-fonts " + name;
+    for (var fname of flist) {
+	var font = fonts[fname];
+        var metrics = get_font_metrics(font, fname);
+        for (var i = 1; i < metrics.length; i++) metrics[i] = f2r(metrics[i]);
+	text += "\n  [" + metrics.join(" ") + "]";
+    }
+    text += ")";
 
-	for (var fname of flist) {
-		var font = fonts[fname];
-
-		text += "\n  [" + get_font_metrics(font, fname).map(f2r).join(" ") + "]";
-	}
-
-	text += ")";
-
-	return text;
+    return text;
 }
