@@ -1233,7 +1233,7 @@ function measure_font(font, size, weight, style, txt, baseline) {
 
 function get_font_lineheight(font, weight, style) {
 	var body = document.querySelector("body");
-	var div = document.createElement("div");
+	var div = document.createElement("CassiusBlock");
 	div.innerHTML = "Hxy";
 	body.appendChild(div);
 
@@ -1261,8 +1261,8 @@ function get_font_lineheight(font, weight, style) {
 
 function get_font_offsets(font, weight, style, A, D) {
 	var body = document.querySelector("body");
-	var div = document.createElement("div");
-	var span = document.createElement("span");
+	var div = document.createElement("CassiusBlock");
+	var span = document.createElement("CassiusInline");
 	span.innerHTML = "Hxy";
 	div.appendChild(span);
 	body.appendChild(div);

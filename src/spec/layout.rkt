@@ -740,7 +740,7 @@
             (= (above-baseline b) (ropt-max-if (realopt (- (ascent b) (inline-block-offset b)) true) (is-box v) (above-baseline v)))
             ;; TODO: In quirks mode, instead of (descent b) you use 1.0
             (= (below-baseline b) (ropt-max-if (realopt (max (descent b) (inline-block-offset b)) true) (is-box v) (below-baseline v)))
-            (= (bottom-outer b) (+ (baseline p) 1)))
+            (= (bottom-outer b) (+ (baseline p) (inline-block-offset b))))
            (ite (is-box l)
                 (and
                  (= (y b) (y l))
