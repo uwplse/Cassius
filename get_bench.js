@@ -365,6 +365,11 @@ function infer_anons(inputs) {
     return out;
 }
 
+function has_positions(b) {
+    return typeof b.props.w === "number" && typeof b.props.h === "number" &&
+        typeof b.props.x === "number" && typeof b.props.y === "number";
+}
+
 function infer_lines(box, parent) {
     function last_line() {
         if (parent.children.length === 0 || parent.children[parent.children.length - 1].type !== "LINE") {
@@ -431,7 +436,7 @@ function infer_lines(box, parent) {
     var last = false;
     function go(b) {
         if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
-            (b.type == "INLINE" && cs(b.node).display == "inline-block")) {
+            (b.type == "INLINE" && has_positions(b))) {
             // TODO: does not handle case where previous elt is floating BLOCK
             var l = last_line() || new_line();
             if (b.type !== "BLOCK" && !fits(b, last)) {
@@ -511,8 +516,8 @@ function extract_block(elt, children) {
 function extract_inline(elt, children) {
     var r = elt.getClientRects();
     var box;
-    if (r.length == 1 && false) {
-        box = Inline(elt, {tag: elt.tagName.toLowerCase(), x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
+    if (r.length == 1 && is_replaced(elt)) { // TODO: enable in all cases
+        box = Inline(elt, {x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
     } else {
         box = Inline(elt, {});
     }
@@ -936,6 +941,10 @@ function get_inherent_size(e) {
 
 RTL_CHARS = "\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC";
 
+function is_replaced(elt) {
+    return (["IMG", "OBJECT", "INPUT", "IFRAME", "TEXTAREA"].indexOf(elt.tagName.toUpperCase()) !== -1);
+}
+
 function dump_document(features) {
     var elt = document.documentElement;
     
@@ -968,7 +977,7 @@ function dump_document(features) {
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
-            if (["IMG", "OBJECT", "INPUT", "IFRAME", "TEXTAREA"].indexOf(elt.tagName.toUpperCase()) !== -1) {
+            if (is_replaced(elt)) {
                 var v = get_inherent_size(elt);
                 rec.props["w"] = v.w;
                 rec.props["h"] = v.h;
