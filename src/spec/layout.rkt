@@ -741,8 +741,7 @@
             (= (bottom-outer b) (+ (baseline p) (inline-block-offset b))))
            (ite (is-box l)
                 (and
-                 (= (y b) (y l))
-                 (= (h b) (h l))
+                 (= (top-content b) (- (baseline b) (ascent b) (font.topoffset (get-metrics (fid (get/elt (&anc-w-elt b)))))))
                  (= (above-baseline b) (ropt-max-if (above-baseline l) (is-box v) (above-baseline v)))
                  (= (below-baseline b) (ropt-max-if (below-baseline l) (is-box v) (below-baseline v))))
                 (and
@@ -752,22 +751,24 @@
        ,(smt-cond
          [(is-replaced e)
           (= (h b) (intrinsic-height e))]
-         [(not (is-height/auto (style.height r)))
-          (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-             (min-max-height ,(get-px-or-% 'height '(h p) 'b) b))]
          [(is-display/inline-block (style.display r))
-          (= (h b) (auto-height-for-flow-roots b))]
+          (ite (is-height/auto (style.height r))
+               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+                  (min-max-height ,(get-px-or-% 'height '(h p) 'b) b))
+               (= (h b) (auto-height-for-flow-roots b)))]
          [else
-          true])
+          (= (h b) (+ (font.topoffset (get-metrics (fid (get/elt (&anc-w-elt b)))))
+                      (ascent b) (descent b)
+                      (font.bottomoffset (get-metrics (fid (get/elt (&anc-w-elt b)))))))])
 
        ,(smt-cond
          [(is-replaced e)
           (= (w b) (intrinsic-width e))]
-         [(not (is-width/auto (style.width r)))
-          (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-             (min-max-width ,(get-px-or-% 'width '(w p) 'b) b))]
          [(is-display/inline-block (style.display r))
-          (= (w b) (usable-stfwidth b))]
+          (ite (is-width/auto (style.width r))
+               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                  (min-max-width ,(get-px-or-% 'width '(w p) 'b) b))
+               (= (w b) (usable-stfwidth b)))]
          [(is-box (fflow b))
           (and
            (= (left-outer (fflow b)) (left-content b))
