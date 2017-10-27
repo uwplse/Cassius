@@ -1,12 +1,14 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "css-properties.rkt" "../encode.rkt")
-(provide style-computation)
+(provide style-computation fs-name)
 
 ;; This file defines the translation from specified to computed
 ;; styles. The specified style happens after all the cascading and so
 ;; on occurs, but it differs from the specified style in three weird
 ;; cases where CSS wants "bad" but legal values not to participate in
 ;; inheritance.
+
+(define fs-name (make-parameter false))
 
 (define (prop-is-positive prop elt)
   (define type (slower (css-type prop)))
@@ -84,7 +86,7 @@
         (let ([fs (style.font-size (specified-style elt))]
               [pfs (ite (is-elt (pelt elt))
                         (font-size.px (style.font-size (computed-style (pelt elt))))
-                        (font-size (elt-box (rootbox elt))))])
+                        ,(fs-name))])
           ,(smt-cond
             [(is-font-size/inherit fs)
              (font-size/px pfs)]
