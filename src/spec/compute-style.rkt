@@ -97,6 +97,17 @@
             [else
              fs])))
 
+     (= (style.line-height (computed-style elt))
+        (ite (is-line-height/inherit (style.line-height (specified-style elt)))
+             (ite (is-elt (pelt elt))
+                  (style.line-height (computed-style (pelt elt)))
+                  line-height/normal)
+             (ite (is-line-height/% (style.line-height (specified-style elt)))
+                  (line-height/px
+                   (%of (line-height.% (style.line-height (specified-style elt)))
+                        (font-size.px (style.font-size (computed-style elt)))))
+                  ,(em-to-px 'line-height 'elt))))
+
      ;; CSS 2.1 § 10.5: height
      ;; TODO: Positioning case absent here
      ;; TODO: Also applies somewhat to max and min height, not implemented here

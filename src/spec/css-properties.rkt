@@ -105,7 +105,7 @@
   [color (rgb 0 0 0)]
   [background-color transparent])
 
-(define-css-type (Line-Height (px Real) (% Real) (em Real) normal)
+(define-css-type (Line-Height (px Real) (% Real) (em Real) (num Real) normal)
   [line-height normal])
 
 (define inheritable-properties '(text-align color background-color line-height))

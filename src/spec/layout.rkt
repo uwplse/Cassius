@@ -524,6 +524,8 @@
           ,(smt-cond
             [(is-line-height/normal (lineheight b))
              (font.line-height metrics)]
+            [(is-line-height/num (lineheight b))
+             (%of (* 100.0 (line-height.num (lineheight b))) (font-size b))]
             [(is-line-height/px (lineheight b))
              (line-height.px (lineheight b))]
             [(is-line-height/em (lineheight b))
