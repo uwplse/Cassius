@@ -753,9 +753,9 @@
           (= (h b) (intrinsic-height e))]
          [(is-display/inline-block (style.display r))
           (ite (is-height/auto (style.height r))
+               (= (h b) (auto-height-for-flow-roots b))
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-                  (min-max-height ,(get-px-or-% 'height '(h p) 'b) b))
-               (= (h b) (auto-height-for-flow-roots b)))]
+                  (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
          [else
           (= (h b) (+ (font.topoffset (get-metrics (fid (get/elt (&anc-w-elt b)))))
                       (ascent b) (descent b)
@@ -766,9 +766,9 @@
           (= (w b) (intrinsic-width e))]
          [(is-display/inline-block (style.display r))
           (ite (is-width/auto (style.width r))
+               (= (w b) (usable-stfwidth b))
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
-                  (min-max-width ,(get-px-or-% 'width '(w p) 'b) b))
-               (= (w b) (usable-stfwidth b)))]
+                  (min-max-width ,(get-px-or-% 'width '(w p) 'b) b)))]
          [(is-box (fflow b))
           (and
            (= (left-outer (fflow b)) (left-content b))
