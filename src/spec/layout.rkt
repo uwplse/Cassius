@@ -743,19 +743,11 @@
                 (and
                  (= (y b) (y l))
                  (= (h b) (h l))
-                 (= (above-baseline b)
-                    (ropt-max-if
-                     (ropt-max-if (above-baseline l) (is-box v) (above-baseline v))
-                     true
-                     (realopt (+ (ascent b) (/ (leading b) 2)) true)))
-                 (= (below-baseline b)
-                    (ropt-max-if
-                     (ropt-max-if (below-baseline l) (is-box v) (below-baseline v))
-                     true
-                     (realopt (+ (descent b) (/ (leading b) 2)) true))))
+                 (= (above-baseline b) (ropt-max-if (above-baseline l) (is-box v) (above-baseline v)))
+                 (= (below-baseline b) (ropt-max-if (below-baseline l) (is-box v) (below-baseline v))))
                 (and
-                 (= (above-baseline b) (realopt (+ (ascent b) (/ (leading b) 2)) true))
-                 (= (below-baseline b) (realopt (+ (descent b) (/ (leading b) 2)) true)))))
+                 (= (above-baseline b) (realopt 0.0 false))
+                 (= (below-baseline b) (realopt 0.0 false)))))
 
        ,(smt-cond
          [(is-replaced e)
