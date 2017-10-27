@@ -84,7 +84,7 @@
         (let ([fs (style.font-size (specified-style elt))]
               [pfs (ite (is-elt (pelt elt))
                         (font-size.px (style.font-size (computed-style (pelt elt))))
-                        (font-size box0))]) ; TODO: ugly to refer to box0 here
+                        (font-size (elt-box (rootbox elt))))])
           ,(smt-cond
             [(is-font-size/inherit fs)
              (font-size/px pfs)]
