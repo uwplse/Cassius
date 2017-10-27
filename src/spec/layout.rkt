@@ -39,6 +39,8 @@
 (define-constraints layout-definitions
   (declare-fun box-collapsed-through (Box) Bool)
 
+  (define-const quirks-mode Bool false)
+
   (assert
    (forall ((b Box))
            (= (box-collapsed-through b)
@@ -732,10 +734,10 @@
            (and ;;; TODO: Handle this case
             ;; WHY ± 1? The "baseline" referred to here is the *top* of the baseline pixels;
             ;; images and inline blocks color those pixels
-               
-            (= (above-baseline b) (ropt-max-if (realopt (max (ascent b) (- (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)) (inline-block-offset b))) true) (is-box v) (above-baseline v)))
+            (< 0 (inline-block-offset b) (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)))
+            (= (above-baseline b) (ropt-max-if (realopt (- (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)) (inline-block-offset b)) true) (is-box v) (above-baseline v)))
             ;; TODO: In quirks mode, instead of (descent b) you use 1.0
-            (= (below-baseline b) (ropt-max-if (realopt (max (descent b) (inline-block-offset b)) true) (is-box v) (below-baseline v)))
+            (= (below-baseline b) (ropt-max-if (realopt (inline-block-offset b) true) (is-box v) (below-baseline v)))
             (= (bottom-outer b) (+ (baseline p) (inline-block-offset b))))
            (ite (is-box l)
                 (and
@@ -887,11 +889,11 @@
        (=> (is-box l) (realopt.is-some? (above-baseline l)) (realopt.is-some? (below-baseline l))
            (= (h b) (+ (max-if
                         (realopt.value (above-baseline l))
-                        (is-display/list-item (style.display (computed-style (box-elt (pflow b)))))
+                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
                         (+ (ascent b) (* 0.5 (leading b))))
                        (max-if
                         (realopt.value (below-baseline l))
-                        (is-display/list-item (style.display (computed-style (box-elt (pflow b)))))
+                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
                         (+ (descent b) (* 0.5 (leading b)))))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
