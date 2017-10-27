@@ -812,7 +812,7 @@
          (and
           (= (ascent b) (font.ascent metrics))
           (= (descent b) (font.descent metrics))
-          (= (h b) (+ (font.topoffset metrics) (ascent b) (descent b) (font.bottomoffset metrics)))
+          (= (h b) (font.selection-height metrics))
           (ite (> (w b) 0.0)
                (and
                 (= (above-baseline b) (ropt-max-if
