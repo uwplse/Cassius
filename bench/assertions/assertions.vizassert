@@ -4,7 +4,7 @@
   (=> (has-type b text) (has-contents b)
       (let ([eb (ancestor b (not (anonymous? ?)))])
         (not (or (descends eb (class footer)) (descends eb (id footer)))))
-      (>= (height b) 14)))
+      (>= (height b) 13.5)))
 
 (define-test (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))

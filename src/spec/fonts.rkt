@@ -9,9 +9,9 @@
 (define-by-match font-info?
   (list fid a x d t b))
 
-(define (fuzzy-=-constraint var val)
-  (if (*font-fuzz*)
-      `(< (- ,val ,(*font-fuzz*)) ,var (+ ,val ,(*font-fuzz*)))
+(define (fuzzy-=-constraint var val [fuzz *font-fuzz*])
+  (if (fuzz)
+      `(< (- ,val ,(*font-fuzz*)) ,var (+ ,val ,(fuzz)))
       `(= ,val ,var)))
 
 (define/contract (make-font-table fonts)
@@ -24,5 +24,5 @@
                  ,(fuzzy-=-constraint `(font.descent (get-metrics ,fid)) d)
                  ,(fuzzy-=-constraint `(font.topoffset (get-metrics ,fid)) t)
                  ,(fuzzy-=-constraint `(font.bottomoffset (get-metrics ,fid)) b)
-                 (= (font.selection-height (get-metrics ,fid)) (+ ,a ,d ,t ,b))
-                 (= (font.line-height (get-metrics ,fid)) ,l))))))
+                 ,(fuzzy-=-constraint `(font.selection-height (get-metrics ,fid)) (+ a d t b) *fuzz*)
+                 ,(fuzzy-=-constraint `(font.line-height (get-metrics ,fid)) l *fuzz*))))))
