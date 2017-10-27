@@ -735,7 +735,7 @@
            (and ;;; TODO: Handle this case
             ;; WHY ± 1? The "baseline" referred to here is the *top* of the baseline pixels;
             ;; images and inline blocks color those pixels
-            (< 0 (inline-block-offset b) (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)))
+            (< 0 (inline-block-offset b) (max (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)) (descent b)))
             (= (above-baseline b) (ropt-max-if (realopt (- (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)) (inline-block-offset b)) true) (is-box v) (above-baseline v)))
             ;; TODO: In quirks mode, instead of (descent b) you use 1.0
             (= (below-baseline b) (ropt-max-if (realopt (inline-block-offset b) true) (is-box v) (below-baseline v)))
@@ -878,7 +878,7 @@
        (=> (is-box l) (realopt.is-some? (above-baseline l))
            (= (baseline b) (+ (y b) (max-if
                                      (realopt.value (above-baseline l))
-                                     (is-display/list-item (style.display (computed-style (box-elt (pflow b)))))
+                                     (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
                                      (+ (ascent b) (* 0.5 (leading b)))))))
        (=> (is-box l) (realopt.is-some? (above-baseline l)) (realopt.is-some? (below-baseline l))
            (= (h b) (+ (max-if
