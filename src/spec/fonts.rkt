@@ -16,13 +16,19 @@
 
 (define/contract (make-font-table fonts)
   (-> (listof font-info?) any/c)
-  `(assert (and
-            ,@(for/list ([font fonts])
-               (match-define (list fid a d t b l) font)
-               `(and
-                 ,(fuzzy-=-constraint `(font.ascent (get-metrics ,fid)) a)
-                 ,(fuzzy-=-constraint `(font.descent (get-metrics ,fid)) d)
-                 ,(fuzzy-=-constraint `(font.topoffset (get-metrics ,fid)) t)
-                 ,(fuzzy-=-constraint `(font.bottomoffset (get-metrics ,fid)) b)
-                 ,(fuzzy-=-constraint `(font.selection-height (get-metrics ,fid)) (+ a d t b) *fuzz*)
-                 ,(fuzzy-=-constraint `(font.line-height (get-metrics ,fid)) l *fuzz*))))))
+  `(,@(for/reap [sow] ([font fonts])
+        (match-define (list fid a d t b l) font)
+        (define name (sformat "font~a" fid))
+        (sow `(declare-const ,name Font-Metric))
+        (sow `(assert
+               (and
+                ,(fuzzy-=-constraint `(font.ascent ,name) a)
+                ,(fuzzy-=-constraint `(font.descent ,name) d)
+                ,(fuzzy-=-constraint `(font.topoffset ,name) t)
+                ,(fuzzy-=-constraint `(font.bottomoffset ,name) b)
+                ,(fuzzy-=-constraint `(font.selection-height ,name) (+ a d t b) *fuzz*)
+                ,(fuzzy-=-constraint `(font.line-height ,name) l *fuzz*)))))
+    (define-fun get-metrics ((n Int)) Font-Metric
+      ,(for/fold ([expr `(font 0 0 0 0 0 0)]) ([font fonts])
+         (match-define (list fid a d t b l) font)
+         `(ite (= n ,fid) ,(sformat "font~a" fid) ,expr)))))
