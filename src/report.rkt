@@ -130,6 +130,7 @@
   (define-values (out runtime) (run-problem prob))
   (define status (get-status (list file pname) prob out #:invert false #:unsupported true))
   (eprintf "~a\n" status)
+  (flush-output (current-error-port))
   (struct-copy result res [status status] [time runtime]))
 
 (define (test-mutations file pname prob #:index [index (hash)])
@@ -139,6 +140,7 @@
   (define-values (out runtime) (run-problem prob*))
   (define status (get-status (list file pname) prob out #:invert true #:unsupported true))
   (eprintf "~a\n" status)
+  (flush-output (current-error-port))
   (struct-copy result res [status status] [time runtime]))
 
 (define (test-assertions assertion file pname prob #:index [index (hash)])
@@ -149,6 +151,7 @@
   (define status (get-status (list file pname assertion) prob out #:invert true #:unsupported false))
 
   (eprintf "~a\n" status)
+  (flush-output (current-error-port))
   (struct-copy result res [status status] [time runtime]))
 
 (define-syntax-rule (for/threads num-threads ([input all-inputs]) body ...)
