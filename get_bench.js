@@ -401,7 +401,7 @@ function infer_lines(box, parent) {
         if (!prev) return true;
         var ph = prev.props.h;
         var py = prev.props.y;
-        if (prev.type == "INLINE" && cs(prev.node).display == "inline-block") {
+        if (prev.type == "INLINE" && has_positions(prev)) {
             var m = get_margins(prev.node);
             ph += m.top + m.bottom;
             py -= m.top;
@@ -409,7 +409,7 @@ function infer_lines(box, parent) {
 
         var th = txt.props.h;
         var ty = txt.props.y;
-        if (txt.type == "INLINE" && cs(txt.node).display == "inline-block") {
+        if (txt.type == "INLINE" && has_positions(prev)) {
             var m = get_margins(txt.node);
             th += m.top + m.bottom;
             ty -= m.top;
