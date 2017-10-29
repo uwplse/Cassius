@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "../encode.rkt")
-(provide make-font-datatype make-font-table)
+(provide make-font-datatype make-font-table font-computation)
 
 (define-constraints make-font-datatype
   (declare-datatypes () ((Font-Metric (font (font.ascent Real) (font.descent Real) (font.topoffset Real)
@@ -32,3 +32,13 @@
       ,(for/fold ([expr `(font 0 0 0 0 0 0)]) ([font fonts])
          (match-define (list fid a d t b l) font)
          `(ite (= n ,fid) ,(sformat "font~a" fid) ,expr)))))
+
+(define-constraints font-computation
+  (declare-fun font-info (Box) Font-Metric)
+  (assert (forall ((b Box))
+                  (= (font-info b)
+                     (ite (is-elt (box-elt b))
+                          (get-metrics (fid (box-elt b)))
+                          (ite (is-box (pbox b))
+                               (font-info (pbox b))
+                               (font 0 0 0 0 0 0)))))))

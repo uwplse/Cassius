@@ -518,7 +518,7 @@
   ;; Helper method for computing the line height and leading of a box
 
   (define-fun compute-line-height ((b Box)) Bool
-    (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
+    (let ([metrics (font-info b)])
       (and
        (= (clh b)
           ,(smt-cond
@@ -730,8 +730,8 @@
 
        (= (baseline b) (baseline p))
 
-       (= (ascent b) (font.ascent (get-metrics (fid (get/elt (&anc-w-elt b))))))
-       (= (descent b) (font.descent (get-metrics (fid (get/elt (&anc-w-elt b))))))
+       (= (ascent b) (font.ascent (font-info b)))
+       (= (descent b) (font.descent (font-info b)))
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
            (and ;;; TODO: Handle this case
@@ -744,7 +744,7 @@
             (= (bottom-outer b) (+ (baseline p) (inline-block-offset b))))
            (ite (is-box l)
                 (and
-                 (= (top-content b) (- (baseline b) (ascent b) (font.topoffset (get-metrics (fid (get/elt (&anc-w-elt b)))))))
+                 (= (top-content b) (- (baseline b) (ascent b) (font.topoffset (font-info b))))
                  (= (above-baseline b) (ropt-max-if (above-baseline l) (is-box v) (above-baseline v)))
                  (= (below-baseline b) (ropt-max-if (below-baseline l) (is-box v) (below-baseline v))))
                 (and
@@ -760,9 +760,9 @@
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                   (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
          [else
-          (= (h b) (+ (font.topoffset (get-metrics (fid (get/elt (&anc-w-elt b)))))
+          (= (h b) (+ (font.topoffset (font-info b))
                       (ascent b) (descent b)
-                      (font.bottomoffset (get-metrics (fid (get/elt (&anc-w-elt b)))))))])
+                      (font.bottomoffset (font-info b))))])
 
        ,(smt-cond
          [(is-replaced e)
@@ -808,7 +808,7 @@
        (= (text-indent b) 0.0)
        (compute-line-height b)
        
-       (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
+       (let ([metrics (font-info b)])
          (and
           (= (ascent b) (font.ascent metrics))
           (= (descent b) (font.descent metrics))
@@ -871,7 +871,7 @@
 
        ;;; TODO: special case for list-items
        ;;; TODO: do we have to worry about the weird line-height=/=font-size thing?
-       (let ([metrics (get-metrics (fid (get/elt (&anc-w-elt b))))])
+       (let ([metrics (font-info b)])
          (and
           (= (ascent b) (font.ascent metrics))
           (= (descent b) (font.descent metrics))))
