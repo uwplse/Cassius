@@ -113,6 +113,8 @@
        (loop (apply (dict-ref helpers fname) args) wrapped? ctx)]
       [`(luminance ,color)
        `(lum (color.rgb ,(loop color wrapped? ctx)))]
+      [`(overlaps ,b1 ,b2)
+       `(overlaps ,(loop b1 #t ctx) ,(loop b2 #t ctx))]
 
       ;; Variables
       [(? symbol?)

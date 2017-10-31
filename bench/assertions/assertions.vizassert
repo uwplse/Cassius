@@ -46,8 +46,7 @@
   (=> (has-type b1 text) (has-type b2 text) (!= b1 b2)
       (has-contents b1) (has-contents b2)
       (viewable b1) (viewable b2)
-      (and (or (<= (right b1) (left b2)) (>= (left b1) (right b2)))
-           (or (>= (top b1) (bottom b2)) (<= (bottom b1) (top b2))))))
+	  (not (overlaps b1 b2))))
 
 (define-test (line-spacing b l)
   (=> (has-type b text) (has-contents b) (viewable b)
