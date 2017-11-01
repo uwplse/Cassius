@@ -464,10 +464,11 @@
        (string=? (first parts) "is")
        (string->symbol (string-join (rest parts) "-"))))
 
-(define (z3-simplif cmds)
+(define ((z3-simplif . fns) cmds)
   (define constructors (make-hash '((Bool true false))))
   (define types (make-hash '((true . Bool) (false . Bool))))
   (define known-constructors (make-hash))
+  (define resolutions (make-hash))
 
   (define (constructor? name)
     (hash-has-key? types name))
@@ -509,7 +510,9 @@
                ['true 'true]
                ['false (loop (cdr exprs) rest)]
                [expr (loop (cdr exprs) (cons expr rest))])))]
-      [(? list?) (simpl1 (map simpl expr))]
+      [(? list?)
+       (define expr* (simpl1 (map simpl expr)))
+       (hash-ref resolutions expr* expr*)]
       [_ expr]))
 
   (define (simpl1 expr)
@@ -550,14 +553,14 @@
              (match rest* [`() 'false] [`(,x) x] [`(,x ...) `(or ,@x)])))]
       [`(or) `false]
       [(list '= a a) 'true]
+      [`(,(? constructor-tester? tester) ,(? (curry hash-has-key? known-constructors) var))
+       (if (equal? tester (hash-ref known-constructors var)) 'true 'false)]
       [`(,(? constructor-tester? tester)
          ,(or (list (? constructor? constructor) _ ...) (? constructor? constructor)))
        (define test-variant (string->symbol (string-join (rest (string-split (~a tester) "-")) "-")))
        (unless (member test-variant (hash-ref constructors (hash-ref types constructor)))
          (error "Invalid tester/constructor combination" tester constructor))
        (if (equal? test-variant constructor) 'true 'false)]
-      [`(,(? constructor-tester? tester) ,(? (curry hash-has-key? known-constructors) var))
-       (if (equal? tester (hash-ref known-constructors var)) 'true 'false)]
       [(? (curry hash-has-key? known-constructors) var)
        (match (hash-ref known-constructors var)
          ['is-true 'true]
@@ -574,12 +577,25 @@
            (for ([name names] [vars varss])
              (hash-set! constructors name
                         (for/list ([var vars])
-                          (define constructor (match var [(? symbol?) var] [(list name _ ...) name]))
+                          (define constructor
+                            (match var
+                              [(? symbol?)
+                               (hash-set! known-constructors var (sformat "is-~a" var))
+                               var]
+                              [(list name _ ...) name]))
                           (hash-set! types constructor name)
                           constructor)))
            (sow cmd)]
-          [`(define-fun ,names ((,args ,atypes)) ,rtype ,body)
-           (sow `(define-fun ,names ((,args ,atypes)) ,rtype ,(simpl body)))]
+          [`(define-fun ,name ((,var ,type)) ,rtype ,body)
+           (let loop ([body body])
+             (match body
+               [`(ite (= ,(== var) ,testval) ,outvalue ,body*)
+                (hash-set! resolutions `(,name ,testval) outvalue)
+                (loop body*)]
+               [_ (void)]))
+           (sow `(define-fun ,name ((,var ,type)) ,rtype ,(simpl body)))]
+          [`(define-fun ,names ((,args ,atypes) ...) ,rtype ,body)
+           (sow `(define-fun ,names (,@(map list args atypes)) ,rtype ,(simpl body)))]
           [(or
             `(assert (! (,(? constructor-tester? tester) ,tested) :named ,_))
             `(assert (,(? constructor-tester? tester) ,tested)))
@@ -593,6 +609,16 @@
             `(assert (! (= ,tested ,(or (? constructor? name) (list (? constructor? name) _ ...))) :named ,_)))
            (hash-set! known-constructors (simpl tested) (sformat "is-~a" name))
            (sow cmd)]
+          [`(assert (= (,(? (curryr member fns) fn) ,args ...) ,value))
+           (define input (cons fn (map simpl args)))
+           (define output (simpl value))
+           (hash-set! resolutions input output)
+           `(assert (= ,input ,output))]
+          [`(assert (! (= (,(? (curryr member fns) fn) ,args ...) ,value) :named ,name))
+           (define input (cons fn (map simpl args)))
+           (define output (simpl value))
+           (hash-set! resolutions input output)
+           `(assert (! (= ,input ,output) :named ,name))]
           [`(assert ,expr)
            (define s (simpl expr))
            (unless (or (equal? s 'true) (and (list? s) (equal? (car s) '!) (equal? (cadr s) 'true)))

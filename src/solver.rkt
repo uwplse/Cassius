@@ -6,7 +6,7 @@
   (append
    '(get/elt &box &pelt &velt &nelt &felt &lelt)
    '(get/box &elt &pbox &vbox &nbox &fbox &lbox)
-   '(&pbflow &ppflow &vflow &nflow &flt &flt-up)
+   '(&vflow &nflow &flt &flt-up)
    '(fid get-metrics)
    (for/list ([(name p) (in-dict (extra-pointers))] [i (in-naturals)])
      (sformat "&~a" i))))
@@ -40,30 +40,29 @@
    (z3-ground-quantifiers 'Box)
    z3-fix-rational
    z3-unlet ; LETs are weirdly slow for some reason
-   (z3-resolve-fns)
-   #;z3-dco
    (z3-expand to-expand)
    (z3-expand to-expand-2)
-   z3-unlet
-   ;z3-simplif
    z3-assert-and
+   (unless-debug (apply z3-lift-arguments to-resolve))
+   (z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
+   (apply z3-simplif to-resolve)
+   ;(apply z3-resolve-fns to-resolve)
+   #;z3-dco
+   ;z3-unlet
    ;(apply z3-resolve-fns to-resolve)
    ;(z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
    ;(z3-expand to-expand-2 #:clear true)
    ;z3-simplif
    ;z3-assert-and
-   (unless-debug (apply z3-lift-arguments to-resolve))
    ;(apply z3-resolve-fns to-resolve)
-   (z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
    ;(apply z3-resolve-fns to-resolve)
    ;;; It's important to lift and expand earlier up to make these passes fast.
    ;z3-if-and
-   (apply z3-resolve-fns to-resolve)
-   z3-simplif
+   ;(apply z3-resolve-fns to-resolve)
+   ;z3-simplif
    #;z3-dco
    #;(z3-check-trivial-calls 'get/box 'get/elt)
    ;z3-check-datatypes z3-check-functions z3-check-let #;z3-check-fields
-   z3-clean-no-opt
    ))
 
 (define (z3-prepare exprs)
