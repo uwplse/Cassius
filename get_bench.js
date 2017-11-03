@@ -516,7 +516,7 @@ function extract_block(elt, children) {
 function extract_inline(elt, children) {
     var r = elt.getClientRects();
     var box;
-    if (r.length == 1 && is_replaced(elt)) { // TODO: enable in all cases
+    if (r.length == 1 && false) { // TODO: enable in all cases
         box = Inline(elt, {x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
     } else {
         box = Inline(elt, {});
