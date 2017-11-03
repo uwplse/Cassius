@@ -70,6 +70,8 @@
          (match edge* [(list edge) edge] [(list) 'border]))
        (define function (sformat "~a-~a" dir edge))
        `(,function ,(loop box #t ctx))]
+      [`(text-height ,box)
+       `(let ([b ,(loop box #t ctx)]) (+ (ascent b) (descent b)))]
 
       ;; Colors
       [`(fg ,box) `(fg-color ,(loop box #t ctx))]

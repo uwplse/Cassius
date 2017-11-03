@@ -55,3 +55,6 @@
 ("bench/fwt.working.rkt" doc-088 heading-size)
 ("bench/fwt.working.rkt" doc-067 heading-size)
 ("bench/fwt.working.rkt" doc-010 heading-size)
+
+("bench/fwt.working.rkt" doc-080 line-spacing)
+("bench/fwt.working.rkt" doc-093 line-spacing)

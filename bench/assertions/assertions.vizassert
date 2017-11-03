@@ -48,10 +48,10 @@
       (viewable b1) (viewable b2)
 	  (not (overlaps b1 b2))))
 
-(define-test (line-spacing b l)
+(define-test (line-spacing b)
   (=> (has-type b text) (has-contents b) (viewable b)
       (let ([line (ancestor b (has-type ? line))])
-        (>= (height line) (* 1.5 (height b))))))
+        (>= (height line) (* 1.15 (- (text-height b) 2))))))
 
 (define-test (paragraph-spacing b)
   (=> (matches b (tag p))
