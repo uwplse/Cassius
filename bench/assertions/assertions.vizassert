@@ -51,7 +51,7 @@
 (define-test (line-spacing b)
   (=> (has-type b text) (has-contents b) (viewable b)
       (let ([line (ancestor b (has-type ? line))])
-        (>= (height line) (* 1.15 (- (text-height b) 2))))))
+        (>= (height line) (* 1.15 (text-height b))))))
 
 (define-test (paragraph-spacing b)
   (=> (matches b (tag p))
