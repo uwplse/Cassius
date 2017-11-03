@@ -333,10 +333,6 @@
                    :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
 
 (define (add-test doms constraints tests)
-  (match-define (list (list 'forall varss bodies) ...) tests)
-  (when (check-duplicates (apply append varss))
-    (error "Duplicate variable names in assertions!"))
-
   `(,@constraints
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
@@ -344,7 +340,7 @@
         (sow `(assert ,(apply smt-or
                               (for*/list ([dom doms] [box (in-boxes dom)])
                                 `(= ,var ,(name 'box box)))))))
-    (assert ,(apply smt-or (map (curry list 'not) bodies)))))
+    (assert ,(apply smt-or (map (curry list 'not) tests)))))
 
 (define (sheet-constraints doms eqcls)
   (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
