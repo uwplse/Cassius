@@ -154,9 +154,7 @@
       (define inheritable? (and (css-inheritable? prop) (node-parent elt)))
       (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) ,style)
                                          ,(dump-value type (if inheritable? 'inherit default))))
-                        :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
-
-  (emit `(echo (simplify start))))
+                        :named ,(sformat "value/none/~a^~a" prop (dump-elt elt))))))))
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
@@ -355,7 +353,7 @@
 (define (sheet*-constraints doms rules)
   (reap [emit] (for ([dom doms]) (selector*-constraints emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
-(define (all-constraints sheets matcher doms)
+(define (all-constraints sheets matcher doms fonts)
   (define (global f) (reap [sow] (f doms sow)))
   (define (per-element f)
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))

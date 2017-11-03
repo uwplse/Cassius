@@ -4,7 +4,21 @@ javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; docum
 
 Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent clear color background-color line-height vertical-align".split(" ");
 BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
-BadTags = "img iframe input svg:svg button".split(" ");
+BadTags = "img iframe input svg:svg button frame noframes".split(" ");
+
+var FontIDMap = Object();
+var nextID = 0;
+
+function get_font_ID(style) {
+	var font = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
+	if (!FontIDMap.hasOwnProperty(font)) {
+		var id = nextID++;
+		FontIDMap[font] = id;
+		return id;
+	} else {
+		return FontIDMap[font];
+	}
+}
 
 Box = function(type, node, props) {
     this.children = [];
@@ -351,6 +365,11 @@ function infer_anons(inputs) {
     return out;
 }
 
+function has_positions(b) {
+    return typeof b.props.w === "number" && typeof b.props.h === "number" &&
+        typeof b.props.x === "number" && typeof b.props.y === "number";
+}
+
 function infer_lines(box, parent) {
     function last_line() {
         if (parent.children.length === 0 || parent.children[parent.children.length - 1].type !== "LINE") {
@@ -382,7 +401,7 @@ function infer_lines(box, parent) {
         if (!prev) return true;
         var ph = prev.props.h;
         var py = prev.props.y;
-        if (prev.type == "INLINE" && cs(prev.node).display == "inline-block") {
+        if (prev.type == "INLINE" && has_positions(prev)) {
             var m = get_margins(prev.node);
             ph += m.top + m.bottom;
             py -= m.top;
@@ -390,7 +409,7 @@ function infer_lines(box, parent) {
 
         var th = txt.props.h;
         var ty = txt.props.y;
-        if (txt.type == "INLINE" && cs(txt.node).display == "inline-block") {
+        if (txt.type == "INLINE" && has_positions(prev)) {
             var m = get_margins(txt.node);
             th += m.top + m.bottom;
             ty -= m.top;
@@ -417,7 +436,7 @@ function infer_lines(box, parent) {
     var last = false;
     function go(b) {
         if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
-            (b.type == "INLINE" && cs(b.node).display == "inline-block")) {
+            (b.type == "INLINE" && has_positions(b))) {
             // TODO: does not handle case where previous elt is floating BLOCK
             var l = last_line() || new_line();
             if (b.type !== "BLOCK" && !fits(b, last)) {
@@ -459,7 +478,7 @@ function extract_text(elt) {
         if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
         if (r.length < 1) continue;
         r = r[0];
-        var box = Text(elt, {x: r.x, y: r.y, w: r.width, h: r.height,});
+        var box = Text(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
         box.props.text = dump_string(ranges[i].toString().replace(/\s+/g, " "));
         outs.push(box);
     }
@@ -497,8 +516,8 @@ function extract_block(elt, children) {
 function extract_inline(elt, children) {
     var r = elt.getClientRects();
     var box;
-    if (r.length == 1 && false) {
-        box = Inline(elt, {tag: elt.tagName.toLowerCase(), x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
+    if (r.length == 1 && is_replaced(elt)) { // TODO: enable in all cases
+        box = Inline(elt, {x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
     } else {
         box = Inline(elt, {});
     }
@@ -510,7 +529,7 @@ function extract_magic(elt, children) {
     var r = elt.getBoundingClientRect();
     var s = cs(elt);
     var box = Magic(elt, {
-        x: r.x, y: r.y, w: r.width, h: r.height,
+        x: r.x, y: r.y, w: r.width, h: r.height
     });
 
     box.children = children;
@@ -531,12 +550,14 @@ function make_boxes(elt, styles, features) {
 
     if (elt.nodeType !== document.ELEMENT_NODE) {
         // ok
-    } else if (["none", "list-item", "inline", "block", "inline-block"].indexOf(cs(elt).display) !== -1) {
+    } else if (["none", "inline", "block"].indexOf(cs(elt).display) !== -1) {
         // ok
     } else if (cs(elt).display.startsWith("table")) {
         features["display:table"] = true;
     } else if (cs(elt).display == "inline-block") {
         features["display:inline-block"] = true;
+    } else if (cs(elt).display == "list-item") {
+        features["display:list-item"] = true;
     } else {
         console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
         features["display:unknown"] = true;
@@ -920,6 +941,10 @@ function get_inherent_size(e) {
 
 RTL_CHARS = "\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC";
 
+function is_replaced(elt) {
+    return (["IMG", "OBJECT", "INPUT", "IFRAME", "TEXTAREA"].indexOf(elt.tagName.toUpperCase()) !== -1);
+}
+
 function dump_document(features) {
     var elt = document.documentElement;
     
@@ -941,18 +966,18 @@ function dump_document(features) {
             return false;
         } else if (typeof(elt.dataset) === "undefined"){
             console.log("Weird element", elt);
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {fid: get_font_ID(cs(elt))});
             features["weird-element"] = true;
-            var rec = new Box(elt.tagName.toLowerCase(), elt);
             return rec;
         } else {
             var num = ELTS.length;
             elt.dataset["num"] = num;
             ELTS.push(elt);
-            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num});
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num, fid: get_font_ID(cs(elt))});
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
-            if (["IMG", "OBJECT", "INPUT", "IFRAME", "TEXTAREA"].indexOf(elt.tagName.toUpperCase()) !== -1) {
+            if (is_replaced(elt)) {
                 var v = get_inherent_size(elt);
                 rec.props["w"] = v.w;
                 rec.props["h"] = v.h;
@@ -1120,7 +1145,10 @@ function page2cassius(name) {
         text += dump_rule("#" + eid, style[eid], features, true, false);
     }
     text += ")\n\n";
-    text += "(define-layout (" + name
+
+	text += dump_fonts(name);
+
+    text += "\n\n(define-layout (" + name
     var props = {browser: "firefox", matched: "true", w: page.props.w, h: page.props.h, fs: 16 };
     for (var prop in props) {
         if (typeof props[prop] !== "undefined") {
@@ -1139,6 +1167,7 @@ function page2cassius(name) {
     text += "\n  :title " + title;
     text += "\n  :url \""  + location;
     text += "\"\n  :sheets " + name;
+	text += "\n  :fonts " + name;
     text += "\n  :documents " + name;
     text += "\n  :layouts " + name;
     if (window.ERROR) {
@@ -1179,4 +1208,163 @@ function draw_rect(rect) {
     d.style.height = rect.height + "px";
     d.style.outline = "1px solid red";
     document.querySelector("html").appendChild(d);
+}
+
+function measure_font(font, size, weight, style, txt, baseline) {
+	var canvas = document.createElement("canvas");
+	canvas.font = font;
+	canvas.fontWeight = weight;
+	canvas.fontStyle = style;
+	var context = canvas.getContext("2d");
+	context.font = font;
+	context.fontWeight = weight;
+	context.fontStyle = style;
+	var width = context.measureText(txt).width;
+	canvas.width = width + 1;
+	canvas.height = size * 2;
+	context.font = font;
+	context.fontWeight = weight;
+	context.fontStyle = style;
+	context.fillStyle = "white";
+	context.fillRect(0,0,width + 1,size * 2);
+	context.fillStyle = "black";
+	context.textBaseline = baseline;
+	context.fillText(txt, 0, size);
+
+	var pixelmap = context.getImageData(0, 0, width, size * 2);
+
+	for (var i = 0; i < pixelmap.data.length; i += 4) {
+		var y = Math.floor(i / (width * 4));
+		if (pixelmap.data[i] !== 255) return y;
+	}
+	throw "Could not find any text in image!";
+}
+
+function get_font_lineheight(font, weight, style) {
+	var body = document.querySelector("body");
+	var div = document.createElement("CassiusBlock");
+	div.innerHTML = "Hxy";
+	body.appendChild(div);
+
+	// reset
+	div.style.borderTopStyle = "none";
+	div.style.borderBottomStyle = "none";
+	div.style.paddingTop = "0";
+	div.style.paddingBottom = "0";
+	div.style.height = "auto";
+	div.style.minHeight = "0";
+	div.style.maxHeight = "none";
+	div.style.display = "block";
+	div.style.overflow = "visible";
+        div.style.clear = "both";
+
+	div.style.font = font;
+	div.style.fontWeight = weight;
+	div.style.fontStyle = style;
+	div.style.lineHeight = "normal";
+
+	var div_rect = div.getBoundingClientRect();
+	var lineheight = div_rect.height;
+	body.removeChild(div);
+	return lineheight;
+}
+
+function get_font_offsets(font, weight, style, A, D) {
+	var body = document.querySelector("body");
+	var div = document.createElement("CassiusBlock");
+	var span = document.createElement("CassiusInline");
+	span.innerHTML = "Hxy";
+	div.appendChild(span);
+	body.appendChild(div);
+
+	// reset
+	div.style.borderTopStyle = "none";
+	div.style.borderBottomStyle = "none";
+	div.style.paddingTop = "0";
+	div.style.paddingBottom = "0";
+	div.style.height = "auto";
+	div.style.minHeight = "0";
+	div.style.maxHeight = "none";
+	div.style.display = "block";
+	div.style.overflow = "visible";
+        div.style.clear = "both";
+	span.style.borderTopStyle = "none";
+	span.style.borderBottomStyle = "none";
+	span.style.paddingTop = "0";
+	span.style.paddingBottom = "0";
+	span.style.height = "auto";
+	span.style.minHeight = "0";
+	span.style.maxHeight = "none";
+	span.style.display = "inline";
+	span.style.overflow = "visible";
+
+	div.style.font = font;
+	div.style.fontWeight = weight;
+	div.style.fontStyle = style;
+	div.style.lineHeight = "10px";
+	span.style.font = font;
+	span.style.fontWeight = weight;
+	span.style.fontStyle = style;
+	span.style.lineHeight = "10px";
+
+	var span_rect = span.getBoundingClientRect();
+	var div_rect = div.getBoundingClientRect();
+
+	var leading_top = (10 - (A + D))/2;
+	var baseline = div_rect.top + leading_top + A;
+	var top_offset = baseline - span_rect.top - A;
+	var bottom_offset = span_rect.height - (A + D) - top_offset;
+
+	body.removeChild(div);
+
+	return { top: top_offset, bottom: bottom_offset };
+}
+
+function get_font_metrics(font, fname) {
+	if (font.size == 0) return [FontIDMap[fname], 0, 0, 0, 0, 0];
+	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
+	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
+	var bb = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "bottom");
+	var descent = ba - bb;
+	var ascent = bt - ba;
+	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
+	var lineheight = get_font_lineheight(font.name, font.weight, font.style);
+
+	return [FontIDMap[fname], ascent, descent, offsets.top, offsets.bottom, lineheight];
+}
+
+function dump_fonts(name) {
+	var flist = [];
+	var fonts = Object();
+	var elt = document.documentElement;
+
+	function recurse(elt) {
+        if (elt.nodeType === document.ELEMENT_NODE) {
+			var style = cs(elt);
+			var fname = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
+			var size = val2px(style.fontSize);
+			var font = {name: style.fontSize + " " + style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
+
+			if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
+
+            for (var i = 0; i < elt.childNodes.length; i++) {
+                if (is_comment(elt.childNodes[i])) continue;
+                recurse(elt.childNodes[i]);
+            }
+        }
+    }
+
+    recurse(elt);
+
+    var text = "(define-fonts " + name;
+    for (var fname of flist) {
+	var font = fonts[fname];
+        var metrics = get_font_metrics(font, fname);
+        for (var i = 1; i < metrics.length; i++) metrics[i] = f2r(metrics[i]);
+        console.log(metrics);
+	text += "\n  [" + metrics.join(" ") + "]";
+    }
+    text += ")";
+
+    return text;
 }

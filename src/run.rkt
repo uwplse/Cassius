@@ -31,14 +31,14 @@
       (dict-set ctx field value)))
   (struct-copy dom d [properties ctx*]))
 
-(define (wrapped-solve sheets documents #:test [test #f])
+(define (wrapped-solve sheets documents fonts #:test [test #f])
   (with-handlers
       ([exn:break? (λ (e) 'break)]
        [exn:fail? (λ (e) (list 'error e))])
-    (solve sheets documents test)))
+    (solve sheets documents test fonts)))
 
 (define (do-accept problem)
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (when (*debug*)
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l :elt)))))
@@ -53,7 +53,7 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-debug problem)
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (eprintf "Different renderings possible.\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l))))]
@@ -90,7 +90,7 @@
 
 (define (do-render problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
-  (match (wrapped-solve (dict-ref problem ':sheets) documents)
+  (match (wrapped-solve (dict-ref problem ':sheets) documents (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (eprintf "Rendered the following layout:\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :l :fs :elt))))]
@@ -102,7 +102,7 @@
      (eprintf "Rendering terminated.\n")]))
 
 (define (do-sketch problem)
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents))
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (displayln (stylesheet->string stylesheet))]
     [(failure stylesheet trees)
@@ -113,14 +113,14 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-smt2 problem output)
-  (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents))))
+  (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))))
   (call-with-output-file output #:exists 'replace (curry displayln out)))
 
 (define (do-verify problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
   (match
       (parameterize ([*fuzz* #f])
-        (wrapped-solve (dict-ref problem ':sheets) documents
+        (wrapped-solve (dict-ref problem ':sheets) documents (dict-ref problem ':fonts)
                        #:test (dict-ref problem ':test)))
     [(success stylesheet trees doms)
      (eprintf "Counterexample found!\n")
