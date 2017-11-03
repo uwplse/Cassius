@@ -732,6 +732,7 @@
 
        (= (ascent b) (font.ascent (font-info b)))
        (= (descent b) (font.descent (font-info b)))
+       (=> (and (is-elt e) (is-replaced e)) (= (inline-block-offset b) 1))
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
            (and ;;; TODO: Handle this case
@@ -748,8 +749,9 @@
                  (= (above-baseline b) (ropt-max-if (above-baseline l) (is-box v) (above-baseline v)))
                  (= (below-baseline b) (ropt-max-if (below-baseline l) (is-box v) (below-baseline v))))
                 (and
-                 (= (above-baseline b) (realopt 0.0 false))
-                 (= (below-baseline b) (realopt 0.0 false)))))
+                 (= (top-content b) (- (baseline b) (ascent b) (font.topoffset (font-info b))))
+                 (= (above-baseline b) (ropt-max-if (realopt (ascent b) true) (is-box v) (above-baseline v)))
+                 (= (below-baseline b) (ropt-max-if (realopt (descent b) true) (is-box v) (below-baseline v))))))
 
        ,(smt-cond
          [(is-replaced e)
