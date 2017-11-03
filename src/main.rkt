@@ -116,7 +116,7 @@
 
 (define (selector*-constraints emit elts rules)
   (define ml (rule-matchlist rules elts))
-  (emit `(echo (simplify off)))
+  (emit `(echo (simplify stop)))
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
@@ -159,7 +159,7 @@
                                          ,(dump-value type (if inheritable? 'inherit default))))
                         :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
 
-  (emit `(echo (simplify on))))
+  (emit `(echo (simplify start))))
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
@@ -417,11 +417,11 @@
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
     ,@(per-element font-constraints)
+    ,@(font-computation)
+    ,@(layout-definitions)
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)
     ,@(per-box contents-constraints)
-    ,@(font-computation)
-    ,@(layout-definitions)
     ,@(per-box layout-constraints)
     ))
