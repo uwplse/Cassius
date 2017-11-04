@@ -112,7 +112,7 @@
      ;; TODO: Positioning case absent here
      ;; TODO: Also applies somewhat to max and min height, not implemented here
      (= (style.height (computed-style elt))
-        (let ([h (style.height (specified-style elt))]
+        (let ([h ,(em-to-px 'height 'elt)]
               [h* (style.height (computed-style (pelt elt)))])
           (ite (is-height/inherit h)
                (ite (is-elt (pelt elt)) h* height/auto)
@@ -143,7 +143,7 @@
                        (ite (is-elt (pelt elt))
                             (,(sformat "style.border-~a-width" dir) (computed-style (pelt elt)))
                             (border/px 0.0))
-                       (,(sformat "style.border-~a-width" dir) (specified-style elt)))))))))
+                       ,(em-to-px (sformat "border-~a-width" dir) 'elt))))))))
 
 (module+ test
   (require rackunit)
