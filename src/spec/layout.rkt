@@ -526,8 +526,8 @@
             ,(smt-cond
               [(is-line-height/px (lineheight b))
                (line-height.px (lineheight b))]
-              [(is-line-height/em (lineheight b))
-               (%of (* 100.0 (line-height.em (lineheight b))) (font-size b))]
+              [(is-line-height/num (lineheight b))
+               (%of (* 100.0 (line-height.num (lineheight b))) (font-size b))]
               [(is-line-height/% (lineheight b))
                (%of (line-height.% (lineheight b)) (font-size b))]
               [else 0]) ; Can't happen
