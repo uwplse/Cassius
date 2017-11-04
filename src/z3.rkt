@@ -29,27 +29,28 @@
     (flush-output port))
   
   (define (send cmd)
-    (with-handlers
-        ([exn:break? (λ (e) (kill) (raise e))]
-         [exn:fail:syntax? (λ (e) (raise-syntax-error 'Z3 (exn-message e) cmd))])
-      (define out
-        (match cmd
-          [(list 'kill)
-           (kill)
-           'success]
-          [(list 'echo s)
-           (ffprintf z3-in "; ~a\n" s)
-           'success]
-          [(list 'assert-soft _ ...)
-           (ffprintf z3-in "~a\n" cmd)
-           (set! soft? true)
-           'success]
-          [_
-           (ffprintf z3-in "~a\n" cmd)
-           (parse-output (read z3-out) cmd)]))
-      (if (and (equal? out 'sat) soft?)
-          (parse-output (read z3-out) cmd)
-          out)))
+    (parameterize ([read-decimal-as-inexact #f])
+      (with-handlers
+          ([exn:break? (λ (e) (kill) (raise e))]
+           [exn:fail:syntax? (λ (e) (raise-syntax-error 'Z3 (exn-message e) cmd))])
+        (define out
+          (match cmd
+            [(list 'kill)
+             (kill)
+             'success]
+            [(list 'echo s)
+             (ffprintf z3-in "; ~a\n" s)
+             'success]
+            [(list 'assert-soft _ ...)
+             (ffprintf z3-in "~a\n" cmd)
+             (set! soft? true)
+             'success]
+            [_
+             (ffprintf z3-in "~a\n" cmd)
+             (parse-output (read z3-out) cmd)]))
+        (if (and (equal? out 'sat) soft?)
+            (parse-output (read z3-out) cmd)
+            out))))
 
   (send '(set-option :print-success true))
   send)
@@ -109,7 +110,7 @@
     [(== 'true) #t]
     [(== 'false) #f]
     [`(- ,n) (- (deserialize n))]
-    [`(/ ,n ,d) (/ (deserialize n) (deserialize d))]
+    [`(/ ,n ,d) (exact->inexact (/ (deserialize n) (deserialize d)))]
     [`(let ((,names ,values) ...) ,body)
      (deserialize (smt-replace-terms body (map cons names values)))]
     [(list args ...) (map deserialize args)]
