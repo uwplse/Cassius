@@ -7,9 +7,7 @@
   (define type (slower (css-type prop)))
   `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
-        (ite (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) ,r))
-             (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)
-             (%of (* 100 (,(sformat "~a.em" type) (,(sformat "style.~a" prop) ,r))) (font-size ,b)))))
+        (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)))
 
 (define fields
   '((padding-left padding pl) (padding-right padding pr)

@@ -113,7 +113,6 @@
 
 (define (selector*-constraints emit elts rules)
   (define ml (rule-matchlist rules elts))
-  (emit `(echo (simplify stop)))
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
@@ -234,6 +233,7 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
+    (fs-name (param 'font-size))
 
     (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
     (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'h))))
