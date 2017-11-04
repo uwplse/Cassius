@@ -440,8 +440,8 @@
                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
                [height?
-                (not (or (is-replaced (box-elt b))
-                         (is-height/auto (style.height (computed-style (box-elt b))))))])
+                (or (is-replaced (box-elt b))
+                    (not (is-height/auto (style.height (computed-style (box-elt b))))))])
        (=> top? (= (top-outer b) (+ (top-padding pp) temp-top)))
        (=> height? (= (h b) temp-height))
        (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-roots b)))
@@ -458,16 +458,17 @@
 
        ;; Paragraph before the list, "If none of the three are 'auto'"
        (=> (and top? bottom? height?)
-           (and (=> (not (is-margin/auto (style.margin-top r)))
-                    (= (mt b) (margin-min-px (style.margin-top r) b)))
-                (=> (not (is-margin/auto (style.margin-bottom r)))
-                    (= (mb b) (margin-min-px (style.margin-bottom r) b)))
-                (=> (and (is-margin/auto (style.margin-top r))
-                         (is-margin/auto (style.margin-bottom r)))
-                    (= (mt b) (mb b)))
-                (=> (or (is-margin/auto (style.margin-top r))
-                        (is-margin/auto (style.margin-bottom r)))
-                    (= (bottom-outer b) (- (bottom-padding pp) temp-bottom)))))))
+           (and
+            (=> (not (is-margin/auto (style.margin-top r)))
+                (= (mt b) (margin-min-px (style.margin-top r) b)))
+            (=> (not (is-margin/auto (style.margin-bottom r)))
+                (= (mb b) (margin-min-px (style.margin-bottom r) b)))
+            (=> (and (is-margin/auto (style.margin-top r))
+                     (is-margin/auto (style.margin-bottom r)))
+                (= (mt b) (mb b)))
+            (=> (or (is-margin/auto (style.margin-top r))
+                    (is-margin/auto (style.margin-bottom r)))
+                (= (bottom-outer b) (- (bottom-padding pp) temp-bottom)))))))
 
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
@@ -479,7 +480,7 @@
                 [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(width-padding (ppflow b)) 'b)) b)]
                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
-                [width? (not (or (is-replaced (box-elt b)) (is-width/auto (style.width (computed-style (box-elt b))))))])
+                [width? (or (is-replaced (box-elt b)) (not (is-width/auto (style.width (computed-style (box-elt b))))))])
 
         (width-set b)
 
@@ -501,14 +502,15 @@
         (=> (and left? right?) (not (w-from-stfwidth b)))
 
         (=> (and left? width? right?)
-            (=> (not (is-margin/auto (style.margin-left r)))
-                (= (ml b) (margin-min-px (style.margin-left r) b)))
-            (=> (not (is-margin/auto (style.margin-right r)))
-                (= (mr b) (margin-min-px (style.margin-right r) b)))
-            (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
-                (= (ml b) (mr b)))
-            (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
-                (= (right-outer b) (- (right-padding pp) temp-right))))))
+            (and
+             (=> (not (is-margin/auto (style.margin-left r)))
+                 (= (ml b) (margin-min-px (style.margin-left r) b)))
+             (=> (not (is-margin/auto (style.margin-right r)))
+                 (= (mr b) (margin-min-px (style.margin-right r) b)))
+             (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                 (= (ml b) (mr b)))
+             (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                 (= (right-outer b) (- (right-padding pp) temp-right)))))))
 
   ;; Helper method for computing the line height and leading of a box
   (define-fun compute-line-height ((b Box)) Bool
