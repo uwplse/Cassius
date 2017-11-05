@@ -721,7 +721,9 @@
        (= (stfmax b) (min-max-width (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)) b))
        (= (float-stfmax b)
           (min-max-width
-           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
+           (+ (ite (and (not (is-display/inline-block (style.display r)))
+                        (is-box (lbox b)))
+                   (float-stfmax (lbox b)) 0.0)
               (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
            b))
 
@@ -851,7 +853,7 @@
           (ite (ez.lookback b)
                (and
                 ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
-                (= (y b) (ez.level ez (stfmax (lbox b)) (left-content p) (right-content p) y-normal float/left))
+                (= (y b) (ez.level ez (stfwidth (lbox b)) (left-content p) (right-content p) y-normal float/left))
                 (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
                 (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p))))
                (and
