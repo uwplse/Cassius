@@ -65,7 +65,7 @@
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
-                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int) (fid Int)))))
+                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int) (fid Font-Metric)))))
 
   ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
       `(assert (= (,field no-elt) -1)))

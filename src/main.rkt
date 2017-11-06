@@ -324,7 +324,7 @@
 
 (define (font-constraints dom emit elt)
   (when (node-get elt ':fid)
-    (emit `(assert (= (fid ,(dump-elt elt)) ,(node-get elt ':fid))))))
+    (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
 
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea) (node-type elt)))
