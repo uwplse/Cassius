@@ -116,7 +116,6 @@
 
 (define (selector*-constraints emit elts rules)
   (define ml (rule-matchlist rules elts))
-  (emit `(echo (simplify stop)))
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
@@ -157,9 +156,7 @@
       (define inheritable? (and (css-inheritable? prop) (node-parent elt)))
       (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) ,style)
                                          ,(dump-value type (if inheritable? 'inherit default))))
-                        :named ,(sformat "value/none/~a^~a" prop (dump-elt elt)))))))
-
-  (emit `(echo (simplify start))))
+                        :named ,(sformat "value/none/~a^~a" prop (dump-elt elt))))))))
 
 (define (selector-constraints emit eqs)
   (emit '(echo "Generating selector constraints"))
@@ -239,7 +236,6 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
-
     (fs-name (param 'font-size))
 
     (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
@@ -344,10 +340,6 @@
                    :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
 
 (define (add-test doms constraints tests)
-  (match-define (list (list 'forall varss bodies) ...) tests)
-  (when (check-duplicates (apply append varss))
-    (error "Duplicate variable names in assertions!"))
-
   `(,@constraints
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
@@ -355,7 +347,7 @@
         (sow `(assert ,(apply smt-or
                               (for*/list ([dom doms] [box (in-boxes dom)])
                                 `(= ,var ,(name 'box box)))))))
-    (assert ,(apply smt-or (map (curry list 'not) bodies)))))
+    (assert ,(apply smt-or (map (curry list 'not) tests)))))
 
 (define (sheet-constraints doms eqcls)
   (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))

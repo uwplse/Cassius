@@ -7,9 +7,7 @@
   (define type (slower (css-type prop)))
   `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
-        (ite (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) ,r))
-             (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)
-             (%of (* 100 (,(sformat "~a.em" type) (,(sformat "style.~a" prop) ,r))) (font-size ,b)))))
+        (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)))
 
 (define fields
   '((padding-left padding pl) (padding-right padding pr)
@@ -445,8 +443,8 @@
                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
                [height?
-                (not (or (is-replaced (box-elt b))
-                         (is-height/auto (style.height (computed-style (box-elt b))))))])
+                (or (is-replaced (box-elt b))
+                    (not (is-height/auto (style.height (computed-style (box-elt b))))))])
        (=> top? (= (top-outer b) (+ (top-padding pp) temp-top)))
        (=> height? (= (h b) temp-height))
        (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-roots b)))
@@ -463,16 +461,17 @@
 
        ;; Paragraph before the list, "If none of the three are 'auto'"
        (=> (and top? bottom? height?)
-           (and (=> (not (is-margin/auto (style.margin-top r)))
-                    (= (mt b) (margin-min-px (style.margin-top r) b)))
-                (=> (not (is-margin/auto (style.margin-bottom r)))
-                    (= (mb b) (margin-min-px (style.margin-bottom r) b)))
-                (=> (and (is-margin/auto (style.margin-top r))
-                         (is-margin/auto (style.margin-bottom r)))
-                    (= (mt b) (mb b)))
-                (=> (or (is-margin/auto (style.margin-top r))
-                        (is-margin/auto (style.margin-bottom r)))
-                    (= (bottom-outer b) (- (bottom-padding pp) temp-bottom)))))))
+           (and
+            (=> (not (is-margin/auto (style.margin-top r)))
+                (= (mt b) (margin-min-px (style.margin-top r) b)))
+            (=> (not (is-margin/auto (style.margin-bottom r)))
+                (= (mb b) (margin-min-px (style.margin-bottom r) b)))
+            (=> (and (is-margin/auto (style.margin-top r))
+                     (is-margin/auto (style.margin-bottom r)))
+                (= (mt b) (mb b)))
+            (=> (or (is-margin/auto (style.margin-top r))
+                    (is-margin/auto (style.margin-bottom r)))
+                (= (bottom-outer b) (- (bottom-padding pp) temp-bottom)))))))
 
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
@@ -484,7 +483,7 @@
                 [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(width-padding (ppflow b)) 'b)) b)]
                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
-                [width? (not (or (is-replaced (box-elt b)) (is-width/auto (style.width (computed-style (box-elt b))))))])
+                [width? (or (is-replaced (box-elt b)) (not (is-width/auto (style.width (computed-style (box-elt b))))))])
 
         (width-set b)
 
@@ -506,14 +505,15 @@
         (=> (and left? right?) (not (w-from-stfwidth b)))
 
         (=> (and left? width? right?)
-            (=> (not (is-margin/auto (style.margin-left r)))
-                (= (ml b) (margin-min-px (style.margin-left r) b)))
-            (=> (not (is-margin/auto (style.margin-right r)))
-                (= (mr b) (margin-min-px (style.margin-right r) b)))
-            (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
-                (= (ml b) (mr b)))
-            (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
-                (= (right-outer b) (- (right-padding pp) temp-right))))))
+            (and
+             (=> (not (is-margin/auto (style.margin-left r)))
+                 (= (ml b) (margin-min-px (style.margin-left r) b)))
+             (=> (not (is-margin/auto (style.margin-right r)))
+                 (= (mr b) (margin-min-px (style.margin-right r) b)))
+             (=> (and (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                 (= (ml b) (mr b)))
+             (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
+                 (= (right-outer b) (- (right-padding pp) temp-right)))))))
 
   ;; Helper method for computing the line height and leading of a box
 
@@ -585,18 +585,20 @@
          (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
               (and
                (= (ez.lookback b) (ez.test (ez.in b) y*))
-               (=> (ez.lookback b)
-                   (= (y b)
-                      (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
-                                (left-content p) (right-content p) y* float/left))))
+               (ite (ez.lookback b)
+                    (= (y b)
+                       (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
+                                 (left-content p) (right-content p) y* float/left))
+                    (>= (y b) y*)))
               (and
                (= (ez.lookback b) true)
                (= (y b) y*))))
 
        (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
-           (=> (ez.lookback b)
-               (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
-                                            (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)))))
+           (ite (ez.lookback b)
+                (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
+                                             (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))))
+                (and (>= (left-outer b) (left-content p)) (<= (right-outer b) (right-content p))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
                    (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
@@ -719,7 +721,9 @@
        (= (stfmax b) (min-max-width (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)) b))
        (= (float-stfmax b)
           (min-max-width
-           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
+           (+ (ite (and (not (is-display/inline-block (style.display r)))
+                        (is-box (lbox b)))
+                   (float-stfmax (lbox b)) 0.0)
               (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
            b))
 
@@ -857,12 +861,16 @@
              [ez (ez.line-up (lbox b))])
          (and
           (= (ez.lookback b) (ez.test (ez.in b) y-normal)) ;; Key float restriction
-          (=> (ez.lookback b)
-              (and
-               ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
-               (= (y b) (ez.level ez (stfmax (lbox b)) (left-content p) (right-content p) y-normal float/left))
-               (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
-               (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p)))))))
+          (ite (ez.lookback b)
+               (and
+                ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
+                (= (y b) (ez.level ez (stfwidth (lbox b)) (left-content p) (right-content p) y-normal float/left))
+                (= (left-outer b) (ez.x ez (y b) float/left (left-content p) (right-content p)))
+                (= (right-outer b) (ez.x ez (y b) float/right (left-content p) (right-content p))))
+               (and
+                (>= (y b) y-normal)
+                (>= (left-outer b) (left-content p))
+                (<= (right-outer b) (right-content p))))))
 
        (= (stfwidth b) (compute-stfwidth b))
        (= (stfmax b) (+ (ite (is-box v) (stfmax v) 0.0) (+ (stfmax (lbox b)) (pl b))))

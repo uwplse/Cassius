@@ -41,12 +41,15 @@
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
 
+  (when (check-duplicates (apply append (map cadr (or tests '()))))
+    (error "Duplicate variable names in assertions!"))
+
   (define tests*
     (for/list ([test (or tests '())])
       (define ctx
         (for/hash ([var (cadr test)])
           (values var (sformat "cex~a" (name 'cex (cons var test))))))
-      `(forall ,(cadr test) ,(compile-assertion doms (caddr test) ctx))))
+      (compile-assertion doms (caddr test) ctx)))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms fonts))
 
@@ -103,7 +106,7 @@
        (log-phase "Insufficient float registers, trying again with ~a"
                   (+ 1 (*exclusion-zone-registers*)))
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
-         (solve sheets docs tests))])]
+         (solve sheets docs fonts tests))])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
      (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
