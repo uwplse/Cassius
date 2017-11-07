@@ -29,7 +29,6 @@
   (define-fun between ((x Real) (y Real) (z Real)) Bool
     (or (<= x y z) (>= x y z))))
 
-
 (define-constraints tree-types
   (declare-datatypes ()
      ((Box no-box
@@ -46,9 +45,10 @@
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (text-indent Real)
-                (font-size Real) (leading Real) (ascender-top RealOpt) (descender-bottom RealOpt)
-                (text-top Real) (text-bottom Real) ; TODO: how do we compute this? Can we compute this?
-                (clh Real) ; computed line height
+                (font-size Real) (leading Real) (max-ascent RealOpt) (max-descent RealOpt)
+                (text-top Real) (text-bottom Real) (baseline Real) (ascent Real) (descent Real)
+                (ascender-top RealOpt) (descender-bottom RealOpt) (clh Real) ; computed line height
+                (above-baseline RealOpt) (below-baseline RealOpt)
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
@@ -65,7 +65,7 @@
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
-                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int)))))
+                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int) (fid Font-Metric)))))
 
   ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
       `(assert (= (,field no-elt) -1)))
@@ -142,8 +142,18 @@
      (=> (and (= (left-outer box1) (left-outer box2)) (= (right-outer box1) (right-outer box2)))
          (not (= (left-outer box1) (right-outer box2))))))
 
+  (define-fun horizontally-overlapping ((box1 Box) (box2 Box)) Bool
+    (or (> (- (bottom-outer box1) .25) (top-outer box2) (+ (top-outer box1) .25))
+        (> (- (bottom-outer box2) .25) (top-outer box1) (+ (top-outer box2) .25))
+        (< (- .25) (- (top-outer box1) (top-outer box2)) .25)))
+
+  (define-fun vertically-overlapping ((box1 Box) (box2 Box)) Bool
+    (or (> (- (right-outer box1) .25) (left-outer box2) (+ (left-outer box1) .25))
+        (> (- (right-outer box2) .25) (left-outer box1) (+ (left-outer box2) .25))
+        (< (- .25) (- (left-outer box1) (left-outer box2)) .25)))
+
   (define-fun overlaps ((b1 Box) (b2 Box)) Bool
-    (and (horizontally-adjacent b1 b2) (vertically-adjacent b1 b2)))
+    (and (horizontally-overlapping b1 b2) (vertically-overlapping b1 b2)))
 
   (define-fun within ((b1 Box) (b2 Box)) Bool
     (and (<= (box-left b2) (box-left b1))

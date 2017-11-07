@@ -99,7 +99,7 @@
         (style.color (computed-style (get/elt &e))))
      (= (bg-color (get/box &b))
         (style.background-color (computed-style (get/elt &e))))
-     (= (&anc-w-elt (get/box &b)) &b)))
+     (= (&anc-w-elt (get/box &b)) &e)))
 
   (define-fun match-anon-box ((&b Int)) Bool
     (and

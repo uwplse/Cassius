@@ -3,7 +3,7 @@
          "selectors.rkt" "match.rkt" "solver.rkt")
 (require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
          "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
-         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt")
+         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback)
@@ -68,7 +68,7 @@
   (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt) result)
+  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt fid) result)
   (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-ctx! model d)
@@ -319,6 +319,10 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
+(define (font-constraints dom emit elt)
+  (when (node-get elt ':fid)
+    (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
+
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea) (node-type elt)))
 
@@ -356,12 +360,12 @@
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
 
-
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
     ,(make-%of)
     ,@(colors)
+    ,@(make-font-datatype)
     (declare-datatypes
      ()
      (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
@@ -383,6 +387,7 @@
     (define-const font-size/smaller Font-Size (font-size/em (/ 2.0 3.0)))
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
     (define-const color/undefined Color color/transparent)
+    ,@(make-font-table fonts)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))
     ,@(common-definitions)
@@ -394,13 +399,15 @@
     ,@(utility-definitions)
     ,@(link-definitions)
     ,@(style-computation)
-    ,@(layout-definitions)
     ,@(sheet*-constraints doms (apply append sheets))
     ,@(per-element tree-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
+    ,@(per-element font-constraints)
+    ,@(font-computation)
+    ,@(layout-definitions)
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)

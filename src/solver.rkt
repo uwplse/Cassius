@@ -7,6 +7,7 @@
    '(get/elt &box &pelt &velt &nelt &felt &lelt)
    '(get/box &elt &pbox &vbox &nbox &fbox &lbox)
    '(&pbflow &ppflow &vflow &nflow &flt &flt-up)
+   '(fid)
    (for/list ([(name p) (in-dict (extra-pointers))] [i (in-naturals)])
      (sformat "&~a" i))))
 
