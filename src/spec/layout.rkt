@@ -35,12 +35,15 @@
     `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0.0))))
 
 (define-constraints layout-definitions
+  (define-const quirks-mode Bool false)
+
   (declare-fun box-collapsed-through (Box) Bool)
 
   (assert
    (forall ((b Box))
            (= (box-collapsed-through b)
               (and (= (box-height b) 0.0)
+                   (not (is-box/line (type b)))
                    (=> (is-box (lflow b)) (box-collapsed-through (lflow b)))))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
