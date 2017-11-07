@@ -623,7 +623,7 @@
     (match expr
       [`(forall ((,vars ,(? (curry dict-has-key? type-values) types)) ...) ,body)
        (cons 'and
-             (for/list ([vals (apply cartesian-product (map (compose reverse (curry dict-ref type-values)) types))])
+             (for/list ([vals (apply cartesian-product (map (curry dict-ref type-values) types))])
                (capture-avoiding-substitute body (map cons vars vals))))]
       [(? list?)
        (map ground expr)]

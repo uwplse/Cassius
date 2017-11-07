@@ -1,4 +1,5 @@
 #lang racket
+
 (require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt")
 (provide compile-assertion)
 
