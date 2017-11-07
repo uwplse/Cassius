@@ -80,6 +80,7 @@
 
 (define (solve sheets docs fonts [tests #f])
   (define log-phase (make-log))
+  (reset-names!)
   (define-values (doms query) (constraints log-phase sheets docs tests fonts))
 
   (define out

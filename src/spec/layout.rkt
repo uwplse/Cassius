@@ -35,6 +35,8 @@
     `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0.0))))
 
 (define-constraints layout-definitions
+  (define-const quirks-mode Bool false)
+
   (declare-fun box-collapsed-through (Box) Bool)
 
   (define-const quirks-mode Bool false)
@@ -43,8 +45,8 @@
    (forall ((b Box))
            (= (box-collapsed-through b)
               (and (= (box-height b) 0.0)
-                   (or (is-box/line (type b)) ;; Inlines do not influence this
-                       (=> (is-box (lflow b)) (box-collapsed-through (lflow b))))))))
+                   (not (is-box/line (type b)))
+                   (=> (is-box (lflow b)) (box-collapsed-through (lflow b)))))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
     (max (+
@@ -517,6 +519,7 @@
 
   ;; Helper method for computing the line height and leading of a box
   (define-fun compute-line-height ((b Box)) Bool
+<<<<<<< HEAD
     (let ([metrics (font-info b)])
       (and
        (= (clh b)
@@ -533,6 +536,21 @@
              (%of (line-height.% (lineheight b)) (font-size b))]
             [else 0])) ; Can't happen
        (= (leading b) (- (clh b) (+ (ascent b) (descent b)))))))
+=======
+    (and
+     (= (clh b) 
+        ,(smt-cond
+          [(is-line-height/normal (lineheight b))
+           (font.line-height (font-info b))]
+          [(is-line-height/num (lineheight b))
+           (%of (* 100.0 (line-height.num (lineheight b))) (font-size b))]
+          [(is-line-height/px (lineheight b))
+           (line-height.px (lineheight b))]
+          [(is-line-height/% (lineheight b))
+           (%of (line-height.% (lineheight b)) (font-size b))]
+          [else 0]))
+     (= (leading b) (- (clh b) (font-size b)))))
+>>>>>>> master
 
   ;; ez.line is a specialized thing for floats inside lines
   (declare-fun ez.line (Box) EZone)

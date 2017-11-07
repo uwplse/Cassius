@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt")
-(provide name by-name all-by-name)
+(provide name by-name all-by-name reset-names!)
 
 (define name-registry (make-hash))
 
@@ -20,3 +20,6 @@
 
 (define (all-by-name kind)
   (dict-ref name-registry kind))
+
+(define (reset-names!)
+  (dict-clear! name-registry))

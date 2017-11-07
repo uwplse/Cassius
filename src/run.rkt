@@ -45,7 +45,7 @@
      (eprintf "Accepted!\n")]
     [(failure stylesheet trees)
      (displayln (stylesheet->string stylesheet))
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l :style))))
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l :elt :style))))
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
