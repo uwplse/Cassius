@@ -516,7 +516,6 @@
                  (= (right-outer b) (- (right-padding pp) temp-right)))))))
 
   ;; Helper method for computing the line height and leading of a box
-
   (define-fun compute-line-height ((b Box)) Bool
     (let ([metrics (font-info b)])
       (and
