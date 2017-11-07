@@ -518,16 +518,17 @@
   ;; Helper method for computing the line height and leading of a box
   (define-fun compute-line-height ((b Box)) Bool
     (and
-     ,(smt-cond
-       [(is-line-height/normal (lineheight b))
-        (<= (* 1.1 (font-size b)) (clh b) (* 1.25 (font-size b)))]
-       [(is-line-height/num (lineheight b))
-        (= (clh b) (%of (* 100.0 (line-height.num (lineheight b))) (font-size b)))]
-       [(is-line-height/px (lineheight b))
-        (= (clh b) (line-height.px (lineheight b)))]
-       [(is-line-height/% (lineheight b))
-        (= (clh b) (%of (line-height.% (lineheight b)) (font-size b)))]
-       [else false])
+     (= (clh b) 
+        ,(smt-cond
+          [(is-line-height/normal (lineheight b))
+           (font.line-height (font-info b))]
+          [(is-line-height/num (lineheight b))
+           (%of (* 100.0 (line-height.num (lineheight b))) (font-size b))]
+          [(is-line-height/px (lineheight b))
+           (line-height.px (lineheight b))]
+          [(is-line-height/% (lineheight b))
+           (%of (line-height.% (lineheight b)) (font-size b))]
+          [else 0]))
      (= (leading b) (- (clh b) (font-size b)))))
 
   ;; ez.line is a specialized thing for floats inside lines
