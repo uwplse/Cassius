@@ -792,7 +792,7 @@
              (ez.in b)]))))
 
   (define-fun a-text-box ((b Box)) Bool
-    ,(smt-let ([p (pflow b)] [v (vflow b)])
+    ,(smt-let ([p (pflow b)] [v (vflow b)] [metrics (font-info b)])
        (= (type b) box/text)
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
@@ -803,10 +803,14 @@
        ;; This is super-weak, but for now it really is our formalization of line layout
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
-
+       (= (baseline b) (baseline p))
        (= (text-indent b) 0.0)
        (compute-line-height b)
-       (<= (top-outer b) (text-top b) (text-bottom b) (bottom-outer b))
+       (= (ascent b) (font.ascent metrics))
+       (= (descent b) (font.descent metrics))
+       (= (text-top b) (- (baseline b) (ascent b)))
+       (= (text-bottom b) (+ (baseline b) (descent b)))
+       (= (h b) (font.selection-height metrics))
 
        ;; TODO: (y b) and (+ (y b) (font-size b)) not correct, should use baseline.
        (ite (> (w b) 0.0)
@@ -865,7 +869,6 @@
        (compute-line-height b)
        (realopt.is-some? (ascender-top b))
        (realopt.is-some? (descender-bottom b))
-       (= (- (realopt.value (descender-bottom b)) (realopt.value (ascender-top b))) (clh b))
 
        (=> (and (is-box l) (realopt.is-some? (descender-bottom l)) (realopt.is-some? (ascender-top l)))
            (= (h b) (- (max (realopt.value (descender-bottom b)) (realopt.value (descender-bottom l)))
