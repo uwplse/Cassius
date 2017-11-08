@@ -39,8 +39,6 @@
 
   (declare-fun box-collapsed-through (Box) Bool)
 
-  (define-const quirks-mode Bool false)
-
   (assert
    (forall ((b Box))
            (= (box-collapsed-through b)
