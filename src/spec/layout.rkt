@@ -891,14 +891,17 @@
                                      (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
                                      (+ (ascent b) (* 0.5 (leading b)))))))
        (=> (is-box l) (realopt.is-some? (above-baseline l)) (realopt.is-some? (below-baseline l))
-           (= (h b) (+ (max-if
-                        (realopt.value (above-baseline l))
-                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                        (+ (ascent b) (* 0.5 (leading b))))
-                       (max-if
-                        (realopt.value (below-baseline l))
-                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                        (+ (descent b) (* 0.5 (leading b)))))))
+           (= (h b)
+              (ite (or (is-no-box l) (= (left-border f) (right-border l)))
+                   0.0
+                   (+ (max-if
+                       (realopt.value (above-baseline l))
+                       (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
+                       (+ (ascent b) (* 0.5 (leading b))))
+                      (max-if
+                       (realopt.value (below-baseline l))
+                       (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
+                       (+ (descent b) (* 0.5 (leading b))))))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
