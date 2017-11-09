@@ -723,6 +723,7 @@
 
        (compute-line-height b)
 
+       (= (baseline b) (baseline p))
        (= (text-indent b)
           (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
@@ -869,10 +870,13 @@
        (compute-line-height b)
        (realopt.is-some? (ascender-top b))
        (realopt.is-some? (descender-bottom b))
+       
+       (=> (and (is-box l) (realopt.is-some? (descender-bottom l)) (realopt.is-some? (ascender-top l)))
+           (= (y b) (min (realopt.value (ascender-top b)) (realopt.value (ascender-top l)))))
 
        (=> (and (is-box l) (realopt.is-some? (descender-bottom l)) (realopt.is-some? (ascender-top l)))
            (= (h b) (- (max (realopt.value (descender-bottom b)) (realopt.value (descender-bottom l)))
-                       (max (realopt.value (ascender-top b)) (realopt.value (ascender-top l))))))
+                       (min (realopt.value (ascender-top b)) (realopt.value (ascender-top l))))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
