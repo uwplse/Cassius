@@ -5,23 +5,6 @@
 (define extra-pointers (make-parameter '()))
 
 (define-constraints common-definitions
-  (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
-  (define-fun ropt-max-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
-         (ite (realopt.is-some? x)
-              (ite (and y? (realopt.is-some? y))
-                   (ite (> (realopt.value x) (realopt.value y))
-                        x
-                        y)
-                   x)
-              y))
-  (define-fun ropt-min-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
-         (ite (realopt.is-some? x)
-              (ite (and y? (realopt.is-some? y))
-                   (ite (< (realopt.value x) (realopt.value y))
-                        x
-                        y)
-                   x)
-              y))
   (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
   (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
   (define-fun max-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< x y)) y x))
@@ -44,11 +27,8 @@
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
-                (text-indent Real)
-                (font-size Real) (leading Real) (max-ascent RealOpt) (max-descent RealOpt)
-                (text-top Real) (text-bottom Real) (baseline Real) (ascent Real) (descent Real)
-                (ascender-top RealOpt) (descender-bottom RealOpt) (clh Real) ; computed line height
-                (above-baseline RealOpt) (below-baseline RealOpt)
+                (text-indent Real) (font-size Real) (baseline Real)
+                (above-baseline Real) (below-baseline Real) (seen-text Bool)
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
@@ -124,7 +104,10 @@
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
   
   (define-fun width-padding ((box Box)) Real (+ (pl box) (w box) (pr box)))
+  (define-fun height-content ((box Box)) Real (h box))
   (define-fun height-padding ((box Box)) Real (+ (pt box) (h box) (pb box)))
+  (define-fun height-border ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
+  (define-fun height-outer ((box Box)) Real (+ (mtp box) (mtn box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
 
   ;; Box predicate helpers
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool

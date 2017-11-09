@@ -64,7 +64,6 @@
   (node-set! box ':fs (data 'font-size))
   (node-set! box ':fg (data 'fg-color))
   (node-set! box ':bg (data 'bg-color))
-  (node-set! box ':l (data 'leading))
   (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
 
 (define (extract-elt! result elt)

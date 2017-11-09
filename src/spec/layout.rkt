@@ -517,21 +517,17 @@
              (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
                  (= (right-outer b) (- (right-padding pp) temp-right)))))))
 
-  ;; Helper method for computing the line height and leading of a box
-  (define-fun compute-line-height ((b Box)) Bool
-    (and
-     (= (clh b) 
-        ,(smt-cond
-          [(is-line-height/normal (lineheight b))
-           (font.line-height (font-info b))]
-          [(is-line-height/num (lineheight b))
-           (%of (* 100.0 (line-height.num (lineheight b))) (font-size b))]
-          [(is-line-height/px (lineheight b))
-           (line-height.px (lineheight b))]
-          [(is-line-height/% (lineheight b))
-           (%of (line-height.% (lineheight b)) (font-size b))]
-          [else 0]))
-     (= (leading b) (- (clh b) (font-size b)))))
+  (define-fun line-height ((b Box)) Real
+    ,(smt-cond
+      [(is-line-height/normal (lineheight b))
+       (font.line-height (font-info b))]
+      [(is-line-height/num (lineheight b))
+       (%of (* 100.0 (line-height.num (lineheight b))) (font-size b))]
+      [(is-line-height/px (lineheight b))
+       (line-height.px (lineheight b))]
+      [(is-line-height/% (lineheight b))
+       (%of (line-height.% (lineheight b)) (font-size b))]
+      [else 0]))
 
   ;; ez.line is a specialized thing for floats inside lines
   (declare-fun ez.line (Box) EZone)
@@ -684,8 +680,6 @@
        (= (text-indent b)
           (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
-       (compute-line-height b)
-
        ,(smt-cond
          [(or (is-position/absolute (position b)) (is-position/fixed (position b)))
           (a-block-positioned-box b)]
@@ -698,7 +692,8 @@
 
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
-               [p (pflow b)] [v (vflow b)] [l (lflow b)])
+               [p (pflow b)] [v (vflow b)] [l (lflow b)]
+               [metrics (font-info b)] [leading (- (line-height b) (font-size b))])
        (= (type b) box/inline)
        ,@(map extract-field '(bt bb pt pb mt mb))
        (ite (first-box? b)
@@ -725,35 +720,35 @@
               (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
            b))
 
-       (compute-line-height b)
-
        (= (text-indent b)
           (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
 
        (= (baseline b) (baseline p))
 
-       (= (ascent b) (font.ascent (font-info b)))
-       (= (descent b) (font.descent (font-info b)))
        ;(=> (and (is-elt e) (is-replaced e)) (= (inline-block-offset b) 1))
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
-           (and ;;; TODO: Handle this case
-            ;; WHY ± 1? The "baseline" referred to here is the *top* of the baseline pixels;
-            ;; images and inline blocks color those pixels
-            (< 0 (inline-block-offset b) (max (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)) (descent b)))
-            (= (above-baseline b) (ropt-max-if (realopt (- (+ (h b) (mtp b) (mtn b) (mbp b) (mbn b) (pt b) (pb b) (bt b) (bb b)) (inline-block-offset b)) true) (is-box v) (above-baseline v)))
-            ;; TODO: In quirks mode, instead of (descent b) you use 1.0
-            (= (below-baseline b) (ropt-max-if (realopt (inline-block-offset b) true) (is-box v) (below-baseline v)))
-            (= (bottom-outer b) (+ (baseline p) (inline-block-offset b))))
-           (ite (is-box l)
-                (and
-                 (= (top-content b) (- (baseline b) (ascent b) (font.topoffset (font-info b))))
-                 (= (above-baseline b) (ropt-max-if (above-baseline l) (is-box v) (above-baseline v)))
-                 (= (below-baseline b) (ropt-max-if (below-baseline l) (is-box v) (below-baseline v))))
-                (and
-                 (= (top-content b) (- (baseline b) (ascent b) (font.topoffset (font-info b))))
-                 (= (above-baseline b) (ropt-max-if (realopt (ascent b) true) (is-box v) (above-baseline v)))
-                 (= (below-baseline b) (ropt-max-if (realopt (descent b) true) (is-box v) (below-baseline v))))))
+           (and
+            (< 0 (inline-block-offset b) (max (height-outer b) (font.descent metrics)))
+            (= (above-baseline b)
+               (max-if (- (height-outer b) (inline-block-offset b))
+                       (and (is-box v) (seen-text v)) (above-baseline v)))
+            (= (below-baseline b)
+               (max-if (inline-block-offset b)
+                       (and (is-box v) (seen-text v)) (below-baseline v)))
+            (= (bottom-outer b) (+ (baseline p) (inline-block-offset b)))
+            (= (seen-text b) true))
+           (and
+            (= (top-content b) (- (baseline b) (font.ascent metrics) (font.topoffset (font-info b))))
+            (= (above-baseline b)
+               (max-if (max-if (+ (font.ascent metrics) (/ leading 2))
+                               (is-box v) (above-baseline v))
+                       (is-box l) (above-baseline l)))
+            (= (below-baseline b)
+               (max-if (max-if (+ (font.descent metrics) (/ leading 2))
+                               (is-box v) (below-baseline v))
+                       (is-box l) (below-baseline l)))
+            (= (seen-text b) true)))
 
        ,(smt-cond
          [(is-replaced e)
@@ -765,7 +760,7 @@
                   (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
          [else
           (= (h b) (+ (font.topoffset (font-info b))
-                      (ascent b) (descent b)
+                      (font.ascent metrics) (font.descent metrics)
                       (font.bottomoffset (font-info b))))])
 
        ,(smt-cond
@@ -797,7 +792,8 @@
              (ez.in b)]))))
 
   (define-fun a-text-box ((b Box)) Bool
-    ,(smt-let ([p (pflow b)] [v (vflow b)])
+    ,(smt-let ([p (pflow b)] [v (vflow b)]
+               [metrics (font-info b)] [leading (- (line-height b) (font-size b))])
        (= (type b) box/text)
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
@@ -810,38 +806,36 @@
        (= (font-size b) (font-size p))
 
        (= (text-indent b) 0.0)
-       (compute-line-height b)
        
-       (let ([metrics (font-info b)])
-         (and
-          (= (ascent b) (font.ascent metrics))
-          (= (descent b) (font.descent metrics))
-          (= (h b) (font.selection-height metrics))
-          (ite (> (w b) 0.0)
-               (and
-                (= (above-baseline b) (ropt-max-if
-                                       (realopt (+ (ascent b) (* 0.5 (leading b))) true)
-                                       (is-box v)
-                                       (above-baseline v)))
-                (= (below-baseline b) (ropt-max-if
-                                       (realopt (+ (descent b) (* 0.5 (leading b))) true)
-                                       (is-box v)
-                                       (below-baseline v)))
-                (=> (is-box p) (= (y b) (- (baseline p) (+ (ascent b) (font.topoffset metrics))))))
-               (and
-                (= (above-baseline b) (ite (is-box v) (above-baseline v) (realopt 0.0 false)))
-                (= (below-baseline b) (ite (is-box v) (below-baseline v) (realopt 0.0 false)))))))
+       (= (h b) (font.selection-height metrics))
+       (ite (> (w b) 0.0)
+            (and
+             (= (above-baseline b)
+                (max-if (+ (font.ascent metrics) (/ leading 2))
+                        (and (is-box v) (seen-text v)) (above-baseline v)))
+             (= (below-baseline b)
+                (max-if (+ (font.descent metrics) (/ leading 2))
+                        (and (is-box v) (seen-text v)) (below-baseline v)))
+             (= (seen-text b) true))
+            (and
+             (= (above-baseline b) (ite (is-box v) (above-baseline v) 0.0))
+             (= (below-baseline b) (ite (is-box v) (below-baseline v) 0.0))
+             (= (seen-text b) (and (is-box v) (seen-text v)))))
+
+       (=> (> (w b) 0.0)
+           (= (y b) (- (baseline p) (+ (font.ascent metrics) (font.topoffset metrics)))))
 
        (no-relative-offset b)
        (zero-box-model b)
-       (=> (is-box v) (= (x b) (right-outer v)))
+       (=> (is-box v) (= (x b) (right-outer v))) ; Otherwise set by the line box
        (= (ez.sufficient b) true)
        (= (ez.lookback b) true)
        (= (ez.out b) (ez.in b))))
 
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
-               [f (fflow b)] [l (lflow b)])
+               [f (fflow b)] [l (lflow b)]
+               [metrics (font-info b)] [leading (- (line-height b) (font-size b))])
        (= (type b) box/line)
        (no-relative-offset b)
 
@@ -879,29 +873,25 @@
 
        ;;; TODO: special case for list-items
        ;;; TODO: do we have to worry about the weird line-height=/=font-size thing?
-       (let ([metrics (font-info b)])
-         (and
-          (= (ascent b) (font.ascent metrics))
-          (= (descent b) (font.descent metrics))))
 
-       (compute-line-height b)
-       (=> (is-box l) (realopt.is-some? (above-baseline l))
-           (= (baseline b) (+ (y b) (max-if
-                                     (realopt.value (above-baseline l))
-                                     (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                                     (+ (ascent b) (* 0.5 (leading b)))))))
-       (=> (is-box l) (realopt.is-some? (above-baseline l)) (realopt.is-some? (below-baseline l))
+       (=> (is-box l) (seen-text l)
+           (= (baseline b)
+              (+ (y b) (max-if
+                        (above-baseline l)
+                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
+                        (+ (font.ascent metrics) (* 0.5 leading))))))
+       (=> (is-box l) (seen-text l)
            (= (h b)
               (ite (or (is-no-box l) (= (left-border f) (right-border l)))
                    0.0
                    (+ (max-if
-                       (realopt.value (above-baseline l))
+                       (above-baseline l)
                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                       (+ (ascent b) (* 0.5 (leading b))))
+                       (+ (font.ascent metrics) (* 0.5 leading)))
                       (max-if
-                       (realopt.value (below-baseline l))
+                       (below-baseline l)
                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                       (+ (descent b) (* 0.5 (leading b))))))))
+                       (+ (font.descent metrics) (* 0.5 leading)))))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
