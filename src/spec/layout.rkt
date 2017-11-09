@@ -52,8 +52,8 @@
                     (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
                (+ (bl b) (pl b) (pr b) (br b))
                0.0)
-          ,(get-px-or-% 'min-width '(w (pflow b)) 'b))
-         (ite (is-max-width/none (style.max-width (computed-style (box-elt b))))
+          (ite (is-elt (box-elt b)) ,(get-px-or-% 'min-width '(w (pflow b)) 'b) 0.0))
+         (ite (or (is-no-elt (box-elt b)) (is-max-width/none (style.max-width (computed-style (box-elt b)))))
               val
               (min val ,(get-px-or-% 'max-width '(w (pflow b)) 'b)))))
 
@@ -63,8 +63,8 @@
                     (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
                (+ (bt b) (pt b) (pb b) (bb b))
                0.0)
-          ,(get-px-or-% 'min-height '(h (pflow b)) 'b))
-         (ite (is-max-height/none (style.max-height (computed-style (box-elt b))))
+          (ite (is-elt (box-elt b))  ,(get-px-or-% 'min-height '(h (pflow b)) 'b) 0.0))
+         (ite (or (is-no-elt (box-elt b)) (is-max-height/none (style.max-height (computed-style (box-elt b)))))
               val
               (min val ,(get-px-or-% 'max-height '(h (pflow b)) 'b)))))
 
@@ -76,11 +76,13 @@
       [else 0.0]))
 
   (define-fun min-w ((b Box)) Real
-    (ite (is-width/auto (style.width (computed-style (box-elt b))))
-         (ite (is-replaced (box-elt b))
-              (intrinsic-width (box-elt b))
-              0.0)
-         ,(get-px-or-% 'width '(w (pflow b)) 'b)))
+    (ite (is-elt (box-elt b))
+         (ite (is-width/auto (style.width (computed-style (box-elt b))))
+              (ite (is-replaced (box-elt b))
+                   (intrinsic-width (box-elt b))
+                   0.0)
+              ,(get-px-or-% 'width '(w (pflow b)) 'b))
+         0.0))
 
   (define-fun min-ml ((b Box)) Real
     (ite (is-elt (box-elt b))
@@ -205,8 +207,8 @@
         [(is-flow-root b)
          (auto-height-for-flow-roots b)]
         ;; CSS 2.1 § 10.6.3, item 4
-        [(is-replaced (box-elt b))
-         (min-max-height (intrinsic-height (box-elt b)) b)]
+        [(and (is-elt e) (is-replaced e))
+         (min-max-height (intrinsic-height e) b)]
         [(is-no-box lb)
          (min-max-height 0.0 b)]
         ;; CSS 2.1 § 10.6.3, item 1
@@ -342,8 +344,8 @@
             (= (w b) w*)
             (= (ml b) ml*)
             (width-set b)]
-           [(and (is-width/auto (style.width r)) (not (is-replaced e)))
-            (ite (and (not (is-max-width/none (style.max-width r)))
+           [(or (is-no-elt e) (and (is-width/auto (style.width r)) (not (is-replaced e))))
+            (ite (and (is-elt e) (not (is-max-width/none (style.max-width r)))
                       (> (- available-width ml* (bl b) (pl b) (pr b) (br b) mr*)
                          ,(get-px-or-% 'max-width '(w p) 'b)))
                  (and
@@ -930,16 +932,15 @@
        (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b (w p))
+       (= (h b) (auto-height-for-flow-blocks b))
        (= (text-indent b) (text-indent p))
        (= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
        (= (stfwidth b) (max-if (stfwidth l) (is-box v) (stfwidth v)))
        (= (float-stfmax b)
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
-       (= (w b) (w p))
        (= (font-size b) (font-size p))
        (not (w-from-stfwidth b))
-       (= (bottom-content b) (bottom-border l))
        (= (y b) (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
        (= (ez.sufficient b) true)
