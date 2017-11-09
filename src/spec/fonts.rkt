@@ -11,7 +11,7 @@
 
 (define (fuzzy-=-constraint var val [fuzz *font-fuzz*])
   (if (fuzz)
-      `(< (- ,val ,(*font-fuzz*)) ,var (+ ,val ,(fuzz)))
+      `(< (- ,val ,(fuzz)) ,var (+ ,val ,(fuzz)))
       `(= ,val ,var)))
 
 (define/contract (make-font-table fonts)

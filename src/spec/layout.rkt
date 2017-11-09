@@ -804,7 +804,7 @@
        ;; This is super-weak, but for now it really is our formalization of line layout
        (horizontally-adjacent b p)
        (= (font-size b) (font-size p))
-
+       (= (baseline b) (baseline p))
        (= (text-indent b) 0.0)
        
        (= (h b) (font.selection-height metrics))
