@@ -142,4 +142,7 @@
     (and (<= (box-left b2) (box-left b1))
          (<= (box-top b2) (box-top b1))
          (<= (box-right b1) (box-right b2))
-         (<= (box-bottom b1) (box-bottom b2)))))
+         (<= (box-bottom b1) (box-bottom b2))))
+
+  (define-fun height-text ((b Box)) Real
+    (+ (font.ascent (font-info b)) (font.descent (font-info b)))))
