@@ -76,7 +76,7 @@
 (define-constraints style-computation
   (define-fun compute-style ((elt Element)) Bool
     (and
-     ,@(map (curryr not-inherited 'elt) (css-properties))
+     ;,@(map (curryr not-inherited 'elt) (css-properties))
      ,@(map (curryr prop-is-simple 'elt) simple-computed-properties)
      ,@(map (curryr prop-has-em 'elt) em-computed-properties)
      ,@(map (curryr prop-is-positive 'elt) positive-properties)
