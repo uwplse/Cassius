@@ -714,7 +714,7 @@
 
        ;(=> (and (is-elt e) (is-replaced e)) (= (inline-block-offset b) 1))
 
-       (ite (or (and (is-elt e) (is-replaced e)) (is-flow-root b) (is-display/inline-block (style.display r)))
+       (ite (or (and (is-elt e) (is-replaced e)) (is-display/inline-block (style.display r)))
            (and
             (< 0 (inline-block-offset b) (max (height-outer b) (font.descent metrics)))
             (= (above-baseline b)
