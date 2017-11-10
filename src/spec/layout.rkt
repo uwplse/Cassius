@@ -746,9 +746,7 @@
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                   (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
          [else
-          (= (h b) (+ (font.topoffset metrics)
-                      (font.ascent metrics) (font.descent metrics)
-                      (font.bottomoffset metrics)))])
+          (= (h b) (font.selection-height metrics))])
 
        ,(smt-cond
          [(is-replaced e)
