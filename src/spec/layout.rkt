@@ -123,16 +123,16 @@
 
   (define-fun vertical-position-for-flow-roots ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)])
-      (ite (is-no-box v)
-           (top-content p)
-           (ite (is-box/block (type v))
+      (ite (or (is-box/block (type p)) (is-box/root (type p)))
+           (ite (is-box v)
                 (+ (ite (box-collapsed-through v)
                         (top-outer v)
                         (bottom-border v))
                    (mbp v) (mbn v))
-                (ite (inline-float-next-line b)
-                     (bottom-border (ancestor-line b))
-                     (top-content (ancestor-line b)))))))
+                (top-content p))
+           (ite (inline-float-next-line b)
+                (bottom-border (ancestor-line b))
+                (top-content (ancestor-line b))))))
 
   (define-fun has-clearance ((b Box)) Bool
     (and (is-elt (box-elt b))
