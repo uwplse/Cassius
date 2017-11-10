@@ -9,31 +9,6 @@
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
         (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)))
 
-(define fields
-  '((padding-left padding pl) (padding-right padding pr)
-    (padding-top padding pt) (padding-bottom padding pb)
-    (margin-left margin ml) (margin-right margin mr)
-    (margin-top margin mt) (margin-bottom margin mb)
-    (border-top-width border bt) (border-right-width border br)
-    (border-bottom-width border bb) (border-left-width border bl)))
-
-(define (extract-field field)
-  (match-define (cons prop type)
-    (for/first ([rec fields] #:when (equal? (last rec) field))
-      (cons (first rec) (second rec))))
-  `(and
-    (=> (,(sformat "is-~a/%" type) (,(sformat "style.~a" prop) r))
-        (= (,field b) (%of (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r)) (w p))))
-    (=> (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) r))
-        (= (,field b) (,(sformat "~a.px" type) (,(sformat "style.~a" prop) r))))
-    (=> (,(sformat "is-~a/em" type) (,(sformat "style.~a" prop) r))
-        (= (,field b) (%of (* 100.0 (,(sformat "~a.em" type) (,(sformat "style.~a" prop) r))) (font-size b))))))
-
-(define (zero-auto-margins dirs)
-  (for/list ([dir dirs])
-    (define letter (sformat "~a" (substring (~a dir) 0 1)))
-    `(=> (is-margin/auto (,(sformat "style.margin-~a" dir) r)) (= (,(sformat "m~a" letter) b) 0.0))))
-
 (define-constraints layout-definitions
   (define-const quirks-mode Bool false)
 
@@ -71,8 +46,7 @@
   (define-fun margin-min-px ((m Margin) (b Box)) Real
     ,(smt-cond
       [(is-margin/px m) (margin.px m)]
-      [(is-margin/% m) (%of (margin.% m) (w (pflow b)))]
-      [(is-margin/em m) (%of (* 100 (margin.em m)) (font-size b))]
+      [(is-margin/% m) (%of (margin.% m) (w (pflow b)))] 
       [else 0.0]))
 
   (define-fun min-w ((b Box)) Real
@@ -286,26 +260,18 @@
            (= (xo b) (+ (offset.px (style.left r)) (xo p))))
        (=> (is-offset/% (style.left r))
            (= (xo b) (+ (%of (offset.% (style.left r)) (w p)) (xo p))))
-       (=> (is-offset/em (style.left r))
-           (= (xo b) (+ (%of (* 100 (offset.em (style.left r))) (font-size b)) (xo p))))
        (=> (is-offset/px (style.top r))
            (= (yo b) (+ (offset.px (style.top r)) (yo p))))
        (=> (is-offset/% (style.top r))
            (= (yo b) (+ (%of (offset.% (style.top r)) (h p)) (yo p))))
-       (=> (is-offset/em (style.top r))
-           (= (yo b) (+ (%of (* 100 (offset.em (style.top r))) (font-size b)) (yo p))))
        (=> (and (is-offset/auto (style.left r)) (is-offset/px (style.right r)))
            (= (xo b) (- (xo p) (offset.px (style.right r)))))
        (=> (and (is-offset/auto (style.left r)) (is-offset/% (style.right r)))
            (= (xo b) (- (xo p) (%of (offset.% (style.right r)) (w p)))))
-       (=> (and (is-offset/auto (style.left r)) (is-offset/em (style.right r)))
-           (= (xo b) (- (xo p) (%of (* 100 (offset.em (style.right r))) (font-size b)))))
        (=> (and (is-offset/auto (style.top r)) (is-offset/px (style.bottom r)))
            (= (yo b) (- (yo p) (offset.px (style.bottom r)))))
        (=> (and (is-offset/auto (style.top r)) (is-offset/% (style.bottom r)))
            (= (yo b) (- (yo p) (%of (offset.% (style.bottom r)) (h p)))))
-       (=> (and (is-offset/auto (style.top r)) (is-offset/em (style.bottom r)))
-           (= (yo b) (- (yo p) (%of (* 100 (offset.em (style.bottom r))) (font-size b)))))
        (=> (and (is-offset/auto (style.left r)) (is-offset/auto (style.right r)))
            (= (xo b) (xo p)))
        (=> (and (is-offset/auto (style.top r)) (is-offset/auto (style.bottom r)))
@@ -565,8 +531,10 @@
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
-       ,@(map extract-field '(mt mb))
-       ,@(zero-auto-margins '(top bottom))
+       (= (mt b)
+          (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top '(w p) 'b)))
+       (= (mb b)
+          (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom '(w p) 'b)))
        (margins-collapse b)
        (= (stfmax b) (min-max-width (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))) b))
        (= (float-stfmax b)
@@ -603,8 +571,10 @@
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
-       ,@(map extract-field '(mt mr mb ml))
-       ,@(zero-auto-margins '(left right top bottom))
+       (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top '(w p) 'b)))
+       (= (mr b) (ite (is-margin/auto (style.margin-right r)) 0.0 ,(get-px-or-% 'margin-right '(w p) 'b)))
+       (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom '(w p) 'b)))
+       (= (ml b) (ite (is-margin/auto (style.margin-left r)) 0.0 ,(get-px-or-% 'margin-left '(w p) 'b)))
        (margins-dont-collapse b)
 
        (= (w-from-stfwidth b) (is-width/auto (style.width r)))
@@ -670,7 +640,14 @@
   (define-fun a-block-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))] [p (pflow b)])
        (= (type b) box/block)
-       ,@(map extract-field '(pt pr pb pl bt br bb bl))
+       (= (bt b) ,(get-px-or-% 'border-top-width '(w p) 'b))
+       (= (br b) ,(get-px-or-% 'border-right-width '(w p) 'b))
+       (= (bb b) ,(get-px-or-% 'border-bottom-width '(w p) 'b))
+       (= (bl b) ,(get-px-or-% 'border-left-width '(w p) 'b))
+       (= (pt b) ,(get-px-or-% 'padding-top '(w p) 'b))
+       (= (pr b) ,(get-px-or-% 'padding-right '(w p) 'b))
+       (= (pb b) ,(get-px-or-% 'padding-bottom '(w p) 'b))
+       (= (pl b) ,(get-px-or-% 'padding-left '(w p) 'b))
        (= (stfwidth b) (min-max-width (compute-stfwidth b) b))
        ;;(= (stfmax b) (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))))
        ;;(= (float-stfmax b) (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
@@ -695,15 +672,25 @@
                [p (pflow b)] [v (vflow b)] [l (lflow b)]
                [metrics (font-info b)] [leading (- (line-height b) (font-size b))])
        (= (type b) box/inline)
-       ,@(map extract-field '(bt bb pt pb mt mb))
+       (= (bt b) ,(get-px-or-% 'border-top-width '(w p) 'b))
+       (= (bb b) ,(get-px-or-% 'border-bottom-width '(w p) 'b))
+       (= (pt b) ,(get-px-or-% 'padding-top '(w p) 'b))
+       (= (pb b) ,(get-px-or-% 'padding-bottom '(w p) 'b))
+       (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top '(w p) 'b)))
+       (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom '(w p) 'b)))
        (ite (first-box? b)
-            (and ,@(map extract-field '(pl bl ml)))
+            (and
+             (= (pl b) ,(get-px-or-% 'padding-left '(w p) 'b))
+             (= (bl b) ,(get-px-or-% 'border-left-width '(w p) 'b))
+             (= (ml b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-left '(w p) 'b))))
             (and (= (pl b) (bl b) (ml b) 0.0)))
        (ite (last-box? b)
-            (and ,@(map extract-field '(pr br mr)))
+            (and
+             (= (pr b) ,(get-px-or-% 'padding-right '(w p) 'b))
+             (= (br b) ,(get-px-or-% 'border-right-width '(w p) 'b))
+             (= (mr b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-right '(w p) 'b))))
             (and (= (pr b) (br b) (mr b) 0.0)))
 
-       ,@(zero-auto-margins '(left right top bottom))
        (margins-dont-collapse b)
 
        (ite (is-position/relative (style.position r))
@@ -739,7 +726,7 @@
             (= (bottom-outer b) (+ (baseline p) (inline-block-offset b)))
             (= (seen-text b) true))
            (and
-            (= (top-content b) (- (baseline b) (font.ascent metrics) (font.topoffset (font-info b))))
+            (= (top-content b) (- (baseline b) (font.ascent metrics) (font.topoffset metrics)))
             (= (above-baseline b)
                (max-if (max-if (+ (font.ascent metrics) (/ leading 2))
                                (is-box v) (above-baseline v))
@@ -759,9 +746,9 @@
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                   (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
          [else
-          (= (h b) (+ (font.topoffset (font-info b))
+          (= (h b) (+ (font.topoffset metrics)
                       (font.ascent metrics) (font.descent metrics)
-                      (font.bottomoffset (font-info b))))])
+                      (font.bottomoffset metrics)))])
 
        ,(smt-cond
          [(is-replaced e)
@@ -808,22 +795,15 @@
        (= (text-indent b) 0.0)
        
        (= (h b) (font.selection-height metrics))
-       (ite (> (w b) 0.0)
-            (and
-             (= (above-baseline b)
-                (max-if (+ (font.ascent metrics) (/ leading 2))
-                        (and (is-box v) (seen-text v)) (above-baseline v)))
-             (= (below-baseline b)
-                (max-if (+ (font.descent metrics) (/ leading 2))
-                        (and (is-box v) (seen-text v)) (below-baseline v)))
-             (= (seen-text b) true))
-            (and
-             (= (above-baseline b) (ite (is-box v) (above-baseline v) 0.0))
-             (= (below-baseline b) (ite (is-box v) (below-baseline v) 0.0))
-             (= (seen-text b) (and (is-box v) (seen-text v)))))
+       (= (above-baseline b)
+          (max-if (ite (> (w b) 0.0) (+ (font.ascent metrics) (/ leading 2)) 0.0)
+                  (and (is-box v) (seen-text v)) (above-baseline v)))
+       (= (below-baseline b)
+          (max-if (ite (> (w b) 0.0) (+ (font.descent metrics) (/ leading 2)) 0.0)
+                  (and (is-box v) (seen-text v)) (below-baseline v)))
+       (= (seen-text b) (or (> (w b) 0.0) (and (is-box v) (seen-text v))))
 
-       (=> (> (w b) 0.0)
-           (= (y b) (- (baseline p) (+ (font.ascent metrics) (font.topoffset metrics)))))
+       (= (y b) (- (baseline p) (+ (font.ascent metrics) (font.topoffset metrics))))
 
        (no-relative-offset b)
        (zero-box-model b)
@@ -874,24 +854,25 @@
        ;;; TODO: special case for list-items
        ;;; TODO: do we have to worry about the weird line-height=/=font-size thing?
 
-       (=> (is-box l) (seen-text l)
-           (= (baseline b)
-              (+ (y b) (max-if
-                        (above-baseline l)
-                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                        (+ (font.ascent metrics) (* 0.5 leading))))))
-       (=> (is-box l) (seen-text l)
-           (= (h b)
-              (ite (or (is-no-box l) (= (left-border f) (right-border l)))
-                   0.0
-                   (+ (max-if
-                       (above-baseline l)
-                       (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                       (+ (font.ascent metrics) (* 0.5 leading)))
-                      (max-if
-                       (below-baseline l)
-                       (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                       (+ (font.descent metrics) (* 0.5 leading)))))))
+       (= (baseline b)
+          (ite (or (is-no-box l) (= (left-border f) (right-border l)))
+               (y b)
+               (+ (y b) (max-if
+                         (above-baseline l)
+                         (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
+                         (+ (font.ascent metrics) (/ leading 2))))))
+
+       (= (h b)
+          (ite (or (is-no-box l) (= (left-border f) (right-border l)))
+               0.0
+               (+ (max-if
+                   (above-baseline l)
+                   (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
+                   (+ (font.ascent metrics) (/ leading 2)))
+                  (max-if
+                   (below-baseline l)
+                   (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
+                   (+ (font.descent metrics) (/ leading 2))))))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
