@@ -41,11 +41,11 @@
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (when (*debug*)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l :elt)))))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt)))))
      (eprintf "Accepted!\n")]
     [(failure stylesheet trees)
      (displayln (stylesheet->string stylesheet))
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l :elt :style))))
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt :style))))
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
@@ -56,7 +56,7 @@
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (eprintf "Different renderings possible.\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :l))))]
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs))))]
     [(failure stylesheet trees)
      (displayln (stylesheet->string stylesheet))]
     [(list 'error e)
@@ -93,7 +93,7 @@
   (match (wrapped-solve (dict-ref problem ':sheets) documents (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (eprintf "Rendered the following layout:\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :l :fs :elt))))]
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt))))]
     [(failure stylesheet trees)
      (eprintf "Unable to render.\n")]
     [(list 'error e)
@@ -124,7 +124,7 @@
                        #:test (dict-ref problem ':test)))
     [(success stylesheet trees doms)
      (eprintf "Counterexample found!\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fg :bg :fs :elt))))
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
      (printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
