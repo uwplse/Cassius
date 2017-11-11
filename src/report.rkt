@@ -282,8 +282,19 @@
     ['unsupported "☹"] ['error "!"] ['expected "-"]
     ['ready "0"]))
 
+(define (print-time ms)
+  (cond
+   [(< ms 2) (format "~ams" (~r ms #:precision 3))]
+   [(< ms 2000) (format "~ams" (~r ms #:precision 1))]
+   [(< ms 120000) (format "~as" (~r (/ ms 1000) #:precision 1))]
+   [(< ms 7200000) (format "~amin" (~r (/ ms 60000) #:precision 1))]
+   [else (format "~ahr" (~r (/ ms 3600000) #:precision 1))]))
+
 (define (write-report results #:output [outname #f])
   (write-json* results #:output outname)
+
+  (define total-time
+    (apply + (map result-time results)))
 
   (define (count-type set t)
     (count (λ (x) (equal? (result-status x) t)) set))
@@ -320,10 +331,8 @@
      (link ((rel "stylesheet") (href "report.css")))
      (title ,(format "Cassius results for ~a" (string-join (remove-duplicates (map result-file results)) ", ")))
      (body
-      (p (b "Cassius")
-         " version " (kbd ,(~a *version*))
-         " branch " (kbd ,(~a *branch*))
-         " commit " (kbd ,(~a *commit*)))
+      (p (b "Cassius") " version " (kbd ,(~a *version*)) " branch " (kbd ,(~a *branch*)) " commit " (kbd ,(~a *commit*)))
+      (p (b "Time") " total " ,(print-time total-time) " for " ,(~a (length results)) " tests.")
       (table ((id "sections") (rules "groups"))
        (thead
         ,(row #:cell 'th "" "Pass" "Fail" "Error" "Time" "Skip" "")
