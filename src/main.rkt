@@ -323,11 +323,13 @@
     (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
 
 (define (replaced-constraints dom emit elt)
-  (define replaced? (set-member? '(img input iframe object textarea) (node-type elt)))
+  (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
   (if replaced?
       (emit `(assert (! (is-replaced ,(dump-elt elt)) :named ,(sformat "replaced/~a" (name 'elt elt)))))
       (emit `(assert (! (not (is-replaced ,(dump-elt elt))) :named ,(sformat "not-replaced/~a" (name 'elt elt))))))
+  (when (equal? (node-type elt) 'br)
+    (emit `(assert (= (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt)) 0))))
   (when (node-get elt ':w)
     (emit `(assert (! (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w))
                    :named ,(sformat "intrinsic-width/~a" (name 'elt elt))))))

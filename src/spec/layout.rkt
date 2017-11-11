@@ -802,6 +802,15 @@
        (= (ez.lookback b) true)
        (= (ez.out b) (ez.in b))))
 
+  (declare-fun contains-content (Box) Bool)
+
+  (assert (forall ((b Box))
+                  (let ([e (box-elt b)] [v (vflow b)] [l (lflow b)])
+                    (= (contains-content b)
+                       (or (> (ml b) 0) (> (bl b) 0) (> (pl b) 0) (> (pr b) 0) (> (br b) 0) (> (mr b) 0)
+                           (> (w b) 0) (and (is-elt e) (is-replaced e))
+                           (and (is-box v) (contains-content v)) (and (is-box l) (contains-content l)))))))
+
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
                [f (fflow b)] [l (lflow b)]
@@ -851,8 +860,7 @@
                         (+ (font.ascent metrics) (* 0.5 leading))))))
        (=> (is-box l)
            (= (h b)
-              (ite (or (is-no-box l) (= (left-border f) (right-border l)))
-                   0.0
+              (ite (contains-content b)
                    (+ (max-if
                        (above-baseline l)
                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
@@ -860,7 +868,8 @@
                       (max-if
                        (below-baseline l)
                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                       (+ (font.descent metrics) (* 0.5 leading)))))))
+                       (+ (font.descent metrics) (* 0.5 leading))))
+                   0.0)))
 
        (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
        (=> (and (is-text-align/justify (textalign b)) (is-box f))
