@@ -27,8 +27,8 @@
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
-                (text-indent Real) (font-size Real) (baseline Real)
-                (above-baseline Real) (below-baseline Real) (seen-text Bool)
+                (text-indent Real)
+                (font-size Real) (baseline Real) (above-baseline Real) (below-baseline Real)
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)

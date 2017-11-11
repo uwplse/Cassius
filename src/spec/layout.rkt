@@ -388,18 +388,13 @@
                  (w b))
             (pr b) (br b) (min-mr b))])))
 
-  (define-fun resolve-font-size ((b Box)) Real
-    (let ([e (box-elt b)])
-      ,(smt-cond
-        [(is-no-elt e) (font-size (pbox b))]
-        [(is-font-size/px (style.font-size (computed-style e)))
-         (font-size.px (style.font-size (computed-style e)))]
-        [(is-font-size/% (style.font-size (computed-style e)))
-         (%of (font-size.% (style.font-size (computed-style e)))
-              (font-size (pbox b)))]
-        [else ; em
-         (%of (* 100 (font-size.em (style.font-size (computed-style e))))
-              (font-size (pbox b)))])))
+  (declare-fun font-size (Box) Real)
+  (assert
+   (forall ((b Box))
+           (= (font-size b)
+              (ite (is-elt (box-elt b))
+                   (font-size.px (style.font-size (computed-style e)))
+                   (font-size (pbox b))))))
 
   (define-fun positioned-vertical-layout ((b Box)) Bool
     ;; CSS 2.1 § 10.6.4
@@ -652,7 +647,6 @@
        ;;(= (stfmax b) (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))))
        ;;(= (float-stfmax b) (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
-       (= (font-size b) (resolve-font-size b))
 
        (= (text-indent b)
           (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
@@ -696,7 +690,6 @@
        (ite (is-position/relative (style.position r))
             (relatively-positioned b)
             (no-relative-offset b))
-       (= (font-size b) (resolve-font-size b))
        (= (stfwidth b) (min-max-width (compute-stfwidth b) b))
        (= (stfmax b) (min-max-width (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)) b))
        (= (float-stfmax b)
