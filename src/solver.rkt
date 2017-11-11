@@ -6,7 +6,7 @@
   (append
    '(get/elt &box &pelt &velt &nelt &felt &lelt)
    '(get/box &elt &pbox &vbox &nbox &fbox &lbox)
-   '(&pbflow &ppflow &vflow &nflow &flt &flt-up)
+   '(&pbflow &vflow &nflow)
    '(fid)
    (for/list ([(name p) (in-dict (extra-pointers))] [i (in-naturals)])
      (sformat "&~a" i))))
@@ -14,15 +14,15 @@
 (define to-expand
   (append
    '(link-element link-box)
-   '(match-element-box match-anon-box match-anon-element)
-   '(link-flow-simple link-flow-root link-flow-block)
+   '(match-element-box match-anon-box)
+   '(link-flow-root link-flow-simple link-flow-block)
    '(float position box-in-flow box-positioned)
    '(compute-style)
    '(pelt velt nelt felt lelt)
    '(pbox fbox lbox vbox nbox)
    '(pflow fflow lflow nflow vflow)
    '(ppflow pbflow flt)
-   '(box-elt elt-box)))
+   '(box-elt)))
 
 (define to-expand-2
   (append
