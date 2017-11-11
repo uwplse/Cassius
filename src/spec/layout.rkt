@@ -599,7 +599,11 @@
        (= (x b) (+ (ml b)
                    (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
        (= (ez.sufficient b) true)
-       (= (ez.out b) (ite (is-box (lbox b)) (ez.out (lbox b)) (ez.in b)))))
+       (= (ez.out b)
+          ,(smt-cond
+            [(is-flow-root b) (ez.in b)]
+            [(is-box (lbox b)) (ez.out (lbox b))]
+            [else (ez.in b)]))))
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
