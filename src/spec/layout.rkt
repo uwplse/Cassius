@@ -123,7 +123,7 @@
 
   (define-fun vertical-position-for-flow-roots ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)])
-      (ite (or (is-box/block (type p)) (is-box/root (type p)))
+      (ite (or (is-box/block (type p)) (is-flow-root p))
            (ite (is-box v)
                 (+ (ite (box-collapsed-through v)
                         (top-outer v)
@@ -781,8 +781,7 @@
           (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0)
              (ite (and (= (w b) 0.0) (is-no-box (nbox b))) 5.0 (w b)))) ;; HAXXX
        (= (float-stfmax b) (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
-       ;; This is super-weak, but for now it really is our formalization of line layout
-       (horizontally-adjacent b p)
+
        (= (font-size b) (font-size p))
        (= (baseline b) (baseline p))
        (= (text-indent b) 0.0)
