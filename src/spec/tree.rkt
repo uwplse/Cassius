@@ -98,8 +98,7 @@
      (= (fg-color (get/box &b))
         (style.color (computed-style (get/elt &e))))
      (= (bg-color (get/box &b))
-        (style.background-color (computed-style (get/elt &e))))
-     (= (&anc-w-elt (get/box &b)) &e)))
+        (style.background-color (computed-style (get/elt &e))))))
 
   (define-fun match-anon-box ((&b Int)) Bool
     (and
@@ -120,8 +119,7 @@
         (ite (is-no-box (pflow (get/box &b)))
              color/black
              (fg-color (pflow (get/box &b)))))
-     (= (bg-color (get/box &b)) color/transparent)
-     (= (&anc-w-elt (get/box &b)) (&anc-w-elt (pflow (get/box &b))))))
+     (= (bg-color (get/box &b)) color/transparent)))
 
   ;; `link-flow-simple`, `link-flow-root`, and `link-flow-block` link
   ;; boxes together in their flow trees. The "block" version is much
