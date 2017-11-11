@@ -393,7 +393,7 @@
    (forall ((b Box))
            (= (font-size b)
               (ite (is-elt (box-elt b))
-                   (font-size.px (style.font-size (computed-style e)))
+                   (font-size.px (style.font-size (computed-style (box-elt b))))
                    (font-size (pbox b))))))
 
   (define-fun positioned-vertical-layout ((b Box)) Bool
