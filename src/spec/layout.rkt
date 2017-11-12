@@ -666,7 +666,7 @@
   (define-fun an-inline-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [v (vflow b)] [l (lflow b)]
-               [metrics (font-info b)] [leading (- (line-height b) (font-size b))])
+               [metrics (font-info b)] [leading (- (line-height b) (height-text b))])
        (= (type b) box/inline)
        (= (bt b) ,(get-px-or-% 'border-top-width '(w p) 'b))
        (= (bb b) ,(get-px-or-% 'border-bottom-width '(w p) 'b))
@@ -771,7 +771,7 @@
 
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)]
-               [metrics (font-info b)] [leading (- (line-height b) (font-size b))])
+               [metrics (font-info b)] [leading (- (line-height b) (height-text b))])
        (= (type b) box/text)
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
@@ -812,7 +812,7 @@
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
                [f (fflow b)] [l (lflow b)]
-               [metrics (font-info b)] [leading (- (line-height b) (font-size b))])
+               [metrics (font-info b)] [leading (- (line-height b) (height-text b))])
        (= (type b) box/line)
        (no-relative-offset b)
 
