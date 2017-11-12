@@ -18,8 +18,9 @@
    (forall ((b Box))
            (= (box-collapsed-through b)
               (and (= (box-height b) 0.0)
-                   (not (is-box/line (type b)))
-                   (=> (is-box (lflow b)) (box-collapsed-through (lflow b)))))))
+                   (or (is-box/line (type b))
+                       (is-no-box (lflow b))
+                       (box-collapsed-through (lflow b)))))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
     (max (+
