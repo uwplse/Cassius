@@ -519,10 +519,10 @@
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
-       (ite (is-height/auto (style.height r))
-            (= (h b) (auto-height-for-flow-blocks b))
-            (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-               (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
+       (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+          (ite (is-height/auto (style.height r))
+            (auto-height-for-flow-blocks b)
+            (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
        (= (mt b)
           (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top '(w p) 'b)))
