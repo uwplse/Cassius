@@ -150,6 +150,6 @@
   (check equal?
          (sort
           (append simple-computed-properties em-computed-properties
-                  '(height float border-top-width border-right-width border-bottom-width border-left-width font-size) line-height)
+                  '(height float border-top-width border-right-width border-bottom-width border-left-width font-size line-height))
           string<? #:key symbol->string)
          (sort (css-properties) string<? #:key symbol->string)))
