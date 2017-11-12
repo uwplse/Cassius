@@ -188,13 +188,31 @@ function convert_margin(margin, elt) {
     throw "Error weird margin value";
 }
 
+function convert_offset(offset, elt) {
+    if (offset == "auto") {
+        return false;
+    } else if (offset.match(/%$/)) {
+        return val2pct(offset) * elt.parentNode.clientHeight;
+    } else {
+        return val2px(offset);
+    }
+    throw "Error weird offset value";
+}
+
 function get_margins(elt) {
     return {
-        top: convert_margin(cs(elt).marginTop),
-        right: convert_margin(cs(elt).marginRight),
-        bottom: convert_margin(cs(elt).marginBottom),
-        left: convert_margin(cs(elt).marginLeft)
+        top: convert_margin(cs(elt).marginTop, elt),
+        right: convert_margin(cs(elt).marginRight, elt),
+        bottom: convert_margin(cs(elt).marginBottom, elt),
+        left: convert_margin(cs(elt).marginLeft, elt)
     };
+}
+
+function get_relative_offset(elt) {
+    return {
+        top: convert_offset(cs(elt).top, elt),
+        bottom: convert_offset(cs(elt).bottom, elt),
+    }
 }
 
 function top_outer(elt) {
@@ -405,6 +423,9 @@ function infer_lines(box, parent) {
             var m = get_margins(prev.node);
             ph += m.top + m.bottom;
             py -= m.top;
+            var pos = get_relative_offset(prev.node);
+            if (pos.top) py -= pos.top;
+            else if (pos.bottom) py += pos.bottom;
         }
 
         var th = txt.props.h;
@@ -413,6 +434,9 @@ function infer_lines(box, parent) {
             var m = get_margins(txt.node);
             th += m.top + m.bottom;
             ty -= m.top;
+            var pos = get_relative_offset(txt.node);
+            if (pos.top) ty -= pos.top;
+            else if (pos.bottom) ty += pos.bottom;
         }
 
         var horiz_adj = (ty + th >= py && py >= ty || py + ph >= ty && ty >= py)
@@ -1362,7 +1386,6 @@ function dump_fonts(name) {
 	var font = fonts[fname];
         var metrics = get_font_metrics(font, fname);
         for (var i = 1; i < metrics.length; i++) metrics[i] = f2r(metrics[i]);
-        console.log(metrics);
 	text += "\n  [" + metrics.join(" ") + "]";
     }
     text += ")";
