@@ -486,8 +486,6 @@
        (%of (* 100.0 (line-height.num (lineheight b))) (font-size b))]
       [(is-line-height/px (lineheight b))
        (line-height.px (lineheight b))]
-      [(is-line-height/% (lineheight b))
-       (%of (line-height.% (lineheight b)) (font-size b))]
       [else 0]))
 
   ;; ez.line is a specialized thing for floats inside lines
