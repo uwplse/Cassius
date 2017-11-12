@@ -28,14 +28,14 @@
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (text-indent Real)
-                (font-size Real) (baseline Real) (above-baseline Real) (below-baseline Real)
+                (baseline Real) (above-baseline Real) (below-baseline Real)
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
                 (&root Int) ; Root box
                 (ez.in EZone) (ez.out EZone)
                 (ez.sufficient Bool) (ez.lookback Bool)
-                (has-contents Bool) (lineheight Line-Height) (textalign Text-Align) ; to handle inheritance; TODO: handle better
+                (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
                     `(,(sformat "&~a" i) Int))

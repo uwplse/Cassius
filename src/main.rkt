@@ -61,7 +61,6 @@
   (node-set! box ':y (+ (data 'y) (data 'yo)))
   (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'br)))
   (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'bb)))
-  (node-set! box ':fs (data 'font-size))
   (node-set! box ':fg (data 'fg-color))
   (node-set! box ':bg (data 'bg-color))
   (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
@@ -232,11 +231,11 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
-    (fs-name (param 'font-size))
 
     (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
     (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'h))))
-    (emit `(assert (= (font-size ,(dump-box (dom-boxes dom))) ,(param 'font-size))))))
+    ; Used in spec/compute-style.rkt
+    (fs-name (param 'font-size))))
 
 (define (number*? x)
   (match x

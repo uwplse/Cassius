@@ -388,14 +388,6 @@
                  (w b))
             (pr b) (br b) (min-mr b))])))
 
-  (declare-fun font-size (Box) Real)
-  (assert
-   (forall ((b Box))
-           (= (font-size b)
-              (ite (is-elt (box-elt b))
-                   (font-size.px (style.font-size (computed-style (box-elt b))))
-                   (font-size (pbox b))))))
-
   (define-fun positioned-vertical-layout ((b Box)) Bool
     ;; CSS 2.1 § 10.6.4
     ,(smt-let ([r (computed-style (box-elt b))]
@@ -478,15 +470,22 @@
              (=> (or (is-margin/auto (style.margin-left r)) (is-margin/auto (style.margin-right r)))
                  (= (right-outer b) (- (right-padding pp) temp-right)))))))
 
-  (define-fun line-height ((b Box)) Real
-    ,(smt-cond
-      [(is-line-height/normal (lineheight b))
-       (font.line-height (font-info b))]
-      [(is-line-height/num (lineheight b))
-       (%of (* 100.0 (line-height.num (lineheight b))) (font-size b))]
-      [(is-line-height/px (lineheight b))
-       (line-height.px (lineheight b))]
-      [else 0]))
+  (declare-fun line-height (Box) Real)
+  (assert
+   (forall ((b Box))
+           (let ([e (box-elt b)])
+             (= (line-height b)
+                (ite (is-elt e)
+                     (let ([lh (style.line-height (computed-style e))]
+                           [fs (style.font-size (computed-style e))])
+                       ,(smt-cond
+                         [(is-line-height/normal lh)
+                          (font.line-height (font-info b))]
+                         [(is-line-height/num lh)
+                          (%of (* 100.0 (line-height.num lh)) (font-size.px fs))]
+                         [else ;(is-line-height/px (lineheight b))
+                          (line-height.px lh)]))
+                     (ite (is-box (pflow b)) (line-height (pflow b)) 0.0))))))
 
   ;; ez.line is a specialized thing for floats inside lines
   (declare-fun ez.line (Box) EZone)
@@ -780,7 +779,6 @@
              (ite (and (= (w b) 0.0) (is-no-box (nbox b))) 5.0 (w b)))) ;; HAXXX
        (= (float-stfmax b) (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
 
-       (= (font-size b) (font-size p))
        (= (baseline b) (baseline p))
        (= (text-indent b) 0.0)
        
@@ -846,10 +844,7 @@
        (= (float-stfmax b)
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
-       (= (font-size b) (font-size p))
 
-       ;;; TODO: special case for list-items
-       ;;; TODO: do we have to worry about the weird line-height=/=font-size thing?
        (=> (is-box l)
            (= (baseline b)
               (+ (y b) (max-if
@@ -883,7 +878,6 @@
     (and
      (= (type b) box/root)
      (zero-box-model b)
-     (= (font-size b) 16.0)
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
      (= (ez.sufficient b) true)
@@ -908,7 +902,6 @@
        (= (float-stfmax b)
           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
-       (= (font-size b) (font-size p))
        (not (w-from-stfwidth b))
        (= (y b) (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
