@@ -39,6 +39,8 @@
        (cons op (map (curryr loop #f ctx) parts))]
       [(list (and (or '+ '- '* '/) op) parts ...)
        (cons op (map (curryr loop wrapped? ctx) parts))]
+      [`(max ,a ,b)
+       `(max ,(loop a #t ctx) ,(loop b #t ctx))]
 
       ;; Boxes
       ['null (if wrapped? 'no-box -1)]
