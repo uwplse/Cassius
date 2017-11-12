@@ -155,6 +155,15 @@
                        (or (and (not (is-box v)) (not (has-clearance v)))
                            (and (box-collapsed-through v) (not (has-clearance v)) (firstish-box v)))))))
 
+  (define-fun change-s831c ((b Box)) Bool
+    (and
+     (top-margin-collapses-with-children b)
+     (is-box (lflow b))
+     (firstish-box (lflow b))
+     (is-elt (box-elt b))
+     (> ,(get-px-or-% 'min-height '(h (pflow b)) 'b) 0.0)
+     (is-height/auto (style.height (computed-style (box-elt b))))))
+
   (define-fun auto-height-for-flow-roots ((b Box)) Real
     ;; CSS 2.1 § 10.6.7
     ,(smt-cond
@@ -234,7 +243,8 @@
           (max-if
            (max-if
             (ite (> (mb b) 0.0) (mb b) 0.0)
-            (and (bottom-margin-collapses-with-children b) (is-box l) (not (mb-clear l)))
+            (and (bottom-margin-collapses-with-children b) (is-box l) (not (mb-clear l))
+                 (not (change-s831c b)))
             (mbp l))
            (box-collapsed-through b)
            (mtp b)))
@@ -242,7 +252,8 @@
           (min-if
            (min-if
             (ite (< (mb b) 0.0) (mb b) 0.0)
-            (and (bottom-margin-collapses-with-children b) (is-box l) (not (mb-clear l)))
+            (and (bottom-margin-collapses-with-children b) (is-box l) (not (mb-clear l))
+                 (not (change-s831c b)))
             (mbn l))
            (box-collapsed-through b)
            (mtn b))))))
