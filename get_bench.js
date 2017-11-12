@@ -457,6 +457,7 @@ function infer_lines(box, parent) {
             sstack = sstack.slice(0, stack.length);
             if (b.node && b.node.tagName.toUpperCase() == "BR") {
                 new_line();
+                sstack = [];
             }
         } else {
             console.warn("Unknown box type", b);
