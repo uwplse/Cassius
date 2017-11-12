@@ -238,7 +238,7 @@
               '([padding-top (px 0)]
                 [padding-right (px 6)]
                 [padding-bottom (px 0)]
-                [padding-bottom (px 0)]
+                [padding-left (px 6)]
                 [border-top-width (px 2)]
                 [border-right-width (px 2)]
                 [border-bottom-width (px 2)]

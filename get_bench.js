@@ -955,12 +955,8 @@ ELTS = []
 
 function get_inherent_size(e) {
     return {
-        w: e.getBoundingClientRect().width
-            - val2px(cs(e).paddingLeft) - val2px(cs(e).paddingRight)
-            - val2px(cs(e).borderLeftWidth) - val2px(cs(e).borderRightWidth),
-        h: e.getBoundingClientRect().height
-            - val2px(cs(e).paddingTop) - val2px(cs(e).paddingBottom)
-            - val2px(cs(e).borderTopWidth) - val2px(cs(e).borderBottomWidth)
+        w: e.getBoundingClientRect().width,
+        h: e.getBoundingClientRect().height,
     };
 }
 

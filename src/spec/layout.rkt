@@ -54,7 +54,7 @@
     (ite (is-elt (box-elt b))
          (ite (is-width/auto (style.width (computed-style (box-elt b))))
               (ite (is-replaced (box-elt b))
-                   (intrinsic-width (box-elt b))
+                   (- (intrinsic-width (box-elt b)) (bl b) (br b) (pl b) (pr b))
                    0.0)
               ,(get-px-or-% 'width '(w (pflow b)) 'b))
          0.0))
@@ -168,7 +168,7 @@
     ;; CSS 2.1 § 10.6.7
     ,(smt-cond
       [(is-replaced (box-elt b))
-       (min-max-height (intrinsic-height (box-elt b)) b)]
+       (min-max-height (- (intrinsic-height (box-elt b)) (bt b) (bb b) (pt b) (pb b)) b)]
       [(is-no-box (fbox b)) (min-max-height 0.0 b)]
       [(is-no-box (fflow b))
        (min-max-height (max (- (ez.max (ez.out (lbox b))) (top-content b)) 0.0) b)]
@@ -192,7 +192,7 @@
          (auto-height-for-flow-roots b)]
         ;; CSS 2.1 § 10.6.3, item 4
         [(and (is-elt e) (is-replaced e))
-         (min-max-height (intrinsic-height e) b)]
+         (min-max-height (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)) b)]
         [(is-no-box lb)
          (min-max-height 0.0 b)]
         ;; CSS 2.1 § 10.6.3, item 1
@@ -360,7 +360,7 @@
        (ite (is-box l)
             (min (max (stfwidth l) (available-width b)) (+ (stfmax l) (float-stfmax l)))
             (ite (is-replaced (box-elt b))
-                 (intrinsic-width (box-elt b))
+                 (- (intrinsic-width (box-elt b)) (bl b) (br b) (pl b) (pr b))
                  0.0))
        b)))
 
@@ -406,7 +406,7 @@
                [pp (ite (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
                [temp-top ,(get-px-or-% 'top '(height-padding (ppflow b)) 'b)]
                [temp-bottom ,(get-px-or-% 'bottom '(height-padding (ppflow b)) 'b)]
-               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (intrinsic-height (box-elt b)) ,(get-px-or-% 'height '(height-padding (ppflow b)) 'b)) b)]
+               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (- (intrinsic-height (box-elt b)) (bt b) (bb b) (pt b) (pb b)) ,(get-px-or-% 'height '(height-padding (ppflow b)) 'b)) b)]
                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
                [height?
@@ -447,7 +447,7 @@
                 [p (pflow b)]
                 [temp-left ,(get-px-or-% 'left '(width-padding (ppflow b)) 'b)]
                 [temp-right ,(get-px-or-% 'right '(width-padding (ppflow b)) 'b)]
-                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (intrinsic-width (box-elt b)) ,(get-px-or-% 'width '(width-padding (ppflow b)) 'b)) b)]
+                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (- (intrinsic-width (box-elt b)) (bl b) (br b) (pl b) (pr b)) ,(get-px-or-% 'width '(width-padding (ppflow b)) 'b)) b)]
                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
                 [width? (or (is-replaced (box-elt b)) (not (is-width/auto (style.width (computed-style (box-elt b))))))])
@@ -594,7 +594,7 @@
        (width-set b)
        (ite (is-width/auto (style.width r))
             (ite (is-replaced e)
-                 (= (w b) (intrinsic-width e))
+                 (= (w b) (- (intrinsic-width e) (bl b) (br b) (pl b) (pr b)))
                  (= (w b) (usable-stfwidth b)))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
@@ -602,7 +602,7 @@
 
        (ite (is-height/auto (style.height r))
             (ite (is-replaced e)
-                 (= (h b) (intrinsic-height e))
+                 (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))
                  (=> (width-set b) (= (h b) (auto-height-for-flow-roots b))))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
@@ -743,7 +743,7 @@
 
        ,(smt-cond
          [(is-replaced e)
-          (= (h b) (intrinsic-height e))]
+          (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))]
          [(is-display/inline-block (style.display r))
           (ite (is-height/auto (style.height r))
                (= (h b) (auto-height-for-flow-roots b))
@@ -754,7 +754,7 @@
 
        ,(smt-cond
          [(is-replaced e)
-          (= (w b) (intrinsic-width e))]
+          (= (w b) (- (intrinsic-width e) (bl b) (br b) (pl b) (pr b)))]
          [(is-display/inline-block (style.display r))
           (ite (is-width/auto (style.width r))
                (= (w b) (usable-stfwidth b))
