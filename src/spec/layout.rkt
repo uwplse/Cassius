@@ -858,7 +858,7 @@
                         (+ (font.ascent metrics) (* 0.5 leading))))))
        (=> (is-box l)
            (= (h b)
-              (ite (contains-content b)
+              (ite (contains-content l)
                    (+ (max-if
                        (above-baseline l)
                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
