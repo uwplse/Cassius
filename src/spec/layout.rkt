@@ -12,13 +12,23 @@
 (define-constraints layout-definitions
   (define-const quirks-mode Bool false)
 
+  (declare-fun contains-content (Box) Bool)
+
+  (assert (forall ((b Box))
+                  (let ([e (box-elt b)] [v (vflow b)] [l (lflow b)])
+                    (= (contains-content b)
+                       (or (> (ml b) 0) (> (bl b) 0) (> (pl b) 0) (> (pr b) 0) (> (br b) 0) (> (mr b) 0)
+                           (> (w b) 0) (and (is-elt e) (is-replaced e))
+                           (and (is-box v) (contains-content v)) (and (is-box l) (contains-content l)))))))
+
   (declare-fun box-collapsed-through (Box) Bool)
 
   (assert
    (forall ((b Box))
            (= (box-collapsed-through b)
               (and (= (box-height b) 0.0)
-                   (or (is-box/line (type b))
+                   (or (and (is-box/line (type b))
+                            (=> (is-box (lflow b)) (not (contains-content (lflow b)))))
                        (is-no-box (lflow b))
                        (box-collapsed-through (lflow b)))))))
 
@@ -809,15 +819,6 @@
        (= (ez.sufficient b) true)
        (= (ez.lookback b) true)
        (= (ez.out b) (ez.in b))))
-
-  (declare-fun contains-content (Box) Bool)
-
-  (assert (forall ((b Box))
-                  (let ([e (box-elt b)] [v (vflow b)] [l (lflow b)])
-                    (= (contains-content b)
-                       (or (> (ml b) 0) (> (bl b) 0) (> (pl b) 0) (> (pr b) 0) (> (br b) 0) (> (mr b) 0)
-                           (> (w b) 0) (and (is-elt e) (is-replaced e))
-                           (and (is-box v) (contains-content v)) (and (is-box l) (contains-content l)))))))
 
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
