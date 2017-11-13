@@ -327,8 +327,11 @@
   (if replaced?
       (emit `(assert (! (is-replaced ,(dump-elt elt)) :named ,(sformat "replaced/~a" (name 'elt elt)))))
       (emit `(assert (! (not (is-replaced ,(dump-elt elt))) :named ,(sformat "not-replaced/~a" (name 'elt elt))))))
-  (when (equal? (node-type elt) 'br)
+  (when (equal? (slower (node-type elt)) 'br)
     (emit `(assert (= (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt)) 0))))
+  (if (equal? (slower (node-type elt)) 'img)
+      (emit `(assert (! (is-image ,(dump-elt elt)) :named ,(sformat "image/~a" (name 'elt elt)))))
+      (emit `(assert (! (not (is-image ,(dump-elt elt))) :named ,(sformat "not-image/~a" (name 'elt elt))))))
   (when (node-get elt ':w)
     (emit `(assert (! (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w))
                    :named ,(sformat "intrinsic-width/~a" (name 'elt elt))))))

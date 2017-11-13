@@ -729,7 +729,7 @@
 
        (= (baseline b) (baseline p))
 
-       ;(=> (and (is-elt e) (is-replaced e)) (= (inline-block-offset b) 1))
+       (=> (and (is-elt e) (is-image e)) (= (inline-block-offset b) 1))
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-display/inline-block (style.display r)))
            (and
@@ -812,7 +812,7 @@
        (= (below-baseline b)
           (max-if (ite (> (w b) 0.0) (+ (font.descent metrics) (/ leading 2)) 0.0)
                   (is-box v) (below-baseline v)))
-       (= (y b) (- (baseline p) (+ (font.ascent metrics) (font.topoffset metrics))))
+       (= (y b) (- (baseline b) (+ (font.ascent metrics) (font.topoffset metrics))))
 
        (no-relative-offset b)
        (zero-box-model b)

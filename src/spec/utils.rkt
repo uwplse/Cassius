@@ -43,7 +43,7 @@
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
-                (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
+                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real)
                 (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int) (fid Font-Metric)))))
 
   ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
