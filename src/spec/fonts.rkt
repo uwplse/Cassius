@@ -40,4 +40,23 @@
                                (font 0 0 0 0 0 0))))))
 
   (define-fun height-text ((b Box)) Real
-    (+ (font.ascent (font-info b)) (font.descent (font-info b)))))
+    (+ (font.ascent (font-info b)) (font.descent (font-info b))))
+
+  (define-fun horizontally-overlapping ((box1 Box) (box2 Box)) Bool
+    (let ([m1 (font-info box1)]
+          [m2 (font-info box2)])
+      (or (> (- (bottom-outer box1) (+ 1 (font.bottomoffset m1)))
+             (+ (top-outer box2) (font.topoffset m2))
+             (+ (top-outer box1) 1 (font.topoffset m1)))
+          (> (- (bottom-outer box2) (+ 1 (font.bottomoffset m2)))
+             (+ (top-outer box1) (font.topoffset m1))
+             (+ (top-outer box2) 1 (font.topoffset m2)))
+          (< (- 1) (- (+ (top-outer box1) (font.topoffset m1)) (+ (top-outer box2) (font.topoffset m2))) 1))))
+
+  (define-fun vertically-overlapping ((box1 Box) (box2 Box)) Bool
+    (or (> (right-outer box1) (left-outer box2) (left-outer box1))
+        (> (right-outer box2) (left-outer box1) (left-outer box2))
+        (= (left-outer box1) (left-outer box2))))
+
+  (define-fun overlaps ((b1 Box) (b2 Box)) Bool
+    (and (horizontally-overlapping b1 b2) (vertically-overlapping b1 b2))))

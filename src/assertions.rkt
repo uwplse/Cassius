@@ -75,6 +75,8 @@
        `(,function ,(loop box #t ctx))]
       [`(text-height ,box)
        `(let ([b ,(loop box #t ctx)]) (height-text b))]
+      [`(vertically-adjacent ,box1 ,box2)
+       `(vertically-adjacent ,(loop box1 #t ctx) ,(loop box2 #t ctx))]
 
       ;; Colors
       [`(fg ,box) `(fg-color ,(loop box #t ctx))]
