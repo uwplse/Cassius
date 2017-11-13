@@ -313,7 +313,7 @@
                               (list)
                               (supported-features)))
                          (list feature))) results)
-          (count (λ (x) (member feature (result-features x))) results)))
+          (count (λ (x) (set-member? (result-features x) feature)) results)))
 
   (define (sort-features data)
     (filter (λ (r) (> (third r) 0)) (sort (sort data > #:key third) > #:key second)))
