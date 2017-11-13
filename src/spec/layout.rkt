@@ -170,6 +170,7 @@
      (top-margin-collapses-with-children b)
      (is-box (lflow b))
      (firstish-box (lflow b))
+     (box-collapsed-through (lflow b))
      (is-elt (box-elt b))
      (> ,(get-px-or-% 'min-height '(h (pflow b)) 'b) 0.0)
      (is-height/auto (style.height (computed-style (box-elt b))))))
