@@ -55,11 +55,3 @@
 	        [line2 (ancestor b2 (has-type ? line))])
 		(=> (= (next line1) line2)
 		    (<= (+ (* 1.04 (max (text-height b1) (text-height b2))) (top b1)) (top b2))))))
-
-(define-test (paragraph-spacing b)
-  (=> (matches b (tag p))
-      (>= (- (height b outer) (height b border))
-          (* 1.5 (height (first b))))))
-
-(define-test (button-size b)
-  (=> (is-interactive b) (and (>= (width b) 30) (>= (height b) 30))))
