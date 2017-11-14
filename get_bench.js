@@ -639,7 +639,10 @@ function get_boxes(features) {
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
     view.children = make_boxes(document.documentElement, style, features);
-    if (window.scrollMaxY !== 0) view.props.w -= compute_scrollbar_width();
+    if (window.scrollMaxY !== 0) {
+        view.props.w -= compute_scrollbar_width();
+        features["scrollbar"] = true;
+    }
     return {view: view, style: style};
 }
 
