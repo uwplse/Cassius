@@ -537,6 +537,23 @@
   ;; and positioned layout. By and large, these functions refer to the
   ;; preceding functions.
 
+  (declare-fun uses-parent-w (Box) Bool)
+  
+  (assert
+   (forall ((b Box))
+           (let ([e (box-elt b)] [r (computed-style (box-elt b))])
+             (= (uses-parent-w b)
+                (or
+                 (and (=> (is-elt e) (is-width/auto (style.width r))) (is-box (vflow b)) (uses-parent-w (vflow b)))
+                 (and (=> (is-elt e) (is-width/auto (style.width r))) (is-box (lflow b)) (uses-parent-w (lflow b)))
+                 (and (is-elt e) (is-margin/% (style.margin-left r)))
+                 (and (is-elt e) (is-margin/% (style.margin-right r)))
+                 (and (is-elt e) (is-border/% (style.border-left-width r)))
+                 (and (is-elt e) (is-border/% (style.border-right-width r)))
+                 (and (is-elt e) (is-padding/% (style.padding-left r)))
+                 (and (is-elt e) (is-padding/% (style.padding-right r)))
+                 (and (is-elt e) (is-width/% (style.width r))))))))
+
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
@@ -606,7 +623,7 @@
        (ite (is-width/auto (style.width r))
             (ite (is-replaced e)
                  (= (w b) (- (intrinsic-width e) (bl b) (br b) (pl b) (pr b)))
-                 (= (w b) (usable-stfwidth b)))
+                 (or (= (w b) (usable-stfwidth b)) (uses-parent-w (lflow b))))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
                (min-max-width ,(get-px-or-% 'width '(w (pbflow b)) 'b) b)))
