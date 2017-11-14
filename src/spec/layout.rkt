@@ -901,7 +901,8 @@
                 (=> (is-box n) (= (right-outer l) (right-content b)))))
        (=> (and (is-text-align/right (textalign b)) (is-box f)) (= (right-outer l) (right-content b)))
        (=> (and (is-text-align/center (textalign b)) (is-box f))
-           (= (- (right-content b) (right-outer l)) (- (left-outer f) (left-content b))))
+           (= (- (left-outer f) (left-content b))
+              (max (- (right-content b) (right-outer l)) 0.0)))
        (= (ez.sufficient b) true)
        (= (ez.out b) (ez.out (lbox b)))))
 
