@@ -620,11 +620,13 @@ function make_boxes(elt, styles, features) {
 
 // Inspired by https://stackoverflow.com/questions/13382516/getting-scroll-bar-width-using-javascript
 function compute_scrollbar_width() {
-    var outer = document.createElement("div");
-    var inner = document.createElement("div");
+    var outer = document.createElement("CassiusBlock");
+    var inner = document.createElement("CassiusBlock");
+    outer.style.display = "block";
     outer.style.overflow = "scroll";
     outer.style.borderLeftStyle = "none";
     outer.style.borderRightStyle = "none";
+    outer.style.position = "absolute";
     outer.appendChild(inner);
     document.body.appendChild(outer);
     var out = outer.offsetWidth - outer.clientWidth;
