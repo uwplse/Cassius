@@ -9,7 +9,7 @@
 (define-by-match font-info?
   (list fid a x d t b))
 
-(define (fuzzy-=-constraint var val [fuzz *font-fuzz*])
+(define (fuzzy-=-constraint var val [fuzz *fuzz*])
   (if (fuzz)
       `(< (- ,val ,(fuzz)) ,var (+ ,val ,(fuzz)))
       `(= ,val ,var)))
@@ -24,14 +24,14 @@
                (and
                 (<= 0 (font.ascent ,var))
                 (<= 0 (font.descent ,var))
-                ,(fuzzy-=-constraint `(+ (font.ascent ,var) (font.descent ,var)) (+ a d))
+                ,(fuzzy-=-constraint `(+ (font.ascent ,var) (font.descent ,var)) (+ a d) *font-fuzz*)
                 ;; These are commented out because Firefox does not get the metrics correctly
-                #;,(fuzzy-=-constraint `(font.ascent ,var) a)
-                #;,(fuzzy-=-constraint `(font.descent ,var) d)
+                #;,(fuzzy-=-constraint `(font.ascent ,var) a *font-fuzz*)
+                #;,(fuzzy-=-constraint `(font.descent ,var) d *font-fuzz*)
                 ,(fuzzy-=-constraint `(font.topoffset ,var) t)
                 ,(fuzzy-=-constraint `(font.bottomoffset ,var) b)
-                ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a d t b) *fuzz*)
-                ,(fuzzy-=-constraint `(font.line-height ,var) l *fuzz*)))))))
+                ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a d t b))
+                ,(fuzzy-=-constraint `(font.line-height ,var) l)))))))
 
 (define-constraints font-computation
   (declare-fun font-info (Box) Font-Metric)
