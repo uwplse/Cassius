@@ -39,6 +39,8 @@
        (cons op (map (curryr loop #f ctx) parts))]
       [(list (and (or '+ '- '* '/) op) parts ...)
        (cons op (map (curryr loop wrapped? ctx) parts))]
+      [`(max ,a ,b)
+       `(max ,(loop a #t ctx) ,(loop b #t ctx))]
 
       ;; Boxes
       ['null (if wrapped? 'no-box -1)]
@@ -71,6 +73,10 @@
          (match edge* [(list edge) edge] [(list) 'border]))
        (define function (sformat "~a-~a" dir edge))
        `(,function ,(loop box #t ctx))]
+      [`(text-height ,box)
+       `(let ([b ,(loop box #t ctx)]) (height-text b))]
+      [`(vertically-adjacent ,box1 ,box2)
+       `(vertically-adjacent ,(loop box1 #t ctx) ,(loop box2 #t ctx))]
 
       ;; Colors
       [`(fg ,box) `(fg-color ,(loop box #t ctx))]
@@ -114,6 +120,8 @@
        (loop (apply (dict-ref helpers fname) args) wrapped? ctx)]
       [`(luminance ,color)
        `(lum (color.rgb ,(loop color wrapped? ctx)))]
+      [`(overlaps ,b1 ,b2)
+       `(overlaps ,(loop b1 #t ctx) ,(loop b2 #t ctx))]
 
       ;; Variables
       [(? symbol?)

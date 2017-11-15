@@ -188,13 +188,31 @@ function convert_margin(margin, elt) {
     throw "Error weird margin value";
 }
 
+function convert_offset(offset, elt) {
+    if (offset == "auto") {
+        return false;
+    } else if (offset.match(/%$/)) {
+        return val2pct(offset) * elt.parentNode.clientHeight;
+    } else {
+        return val2px(offset);
+    }
+    throw "Error weird offset value";
+}
+
 function get_margins(elt) {
     return {
-        top: convert_margin(cs(elt).marginTop),
-        right: convert_margin(cs(elt).marginRight),
-        bottom: convert_margin(cs(elt).marginBottom),
-        left: convert_margin(cs(elt).marginLeft)
+        top: convert_margin(cs(elt).marginTop, elt),
+        right: convert_margin(cs(elt).marginRight, elt),
+        bottom: convert_margin(cs(elt).marginBottom, elt),
+        left: convert_margin(cs(elt).marginLeft, elt)
     };
+}
+
+function get_relative_offset(elt) {
+    return {
+        top: convert_offset(cs(elt).top, elt),
+        bottom: convert_offset(cs(elt).bottom, elt),
+    }
 }
 
 function top_outer(elt) {
@@ -405,6 +423,9 @@ function infer_lines(box, parent) {
             var m = get_margins(prev.node);
             ph += m.top + m.bottom;
             py -= m.top;
+            var pos = get_relative_offset(prev.node);
+            if (pos.top) py -= pos.top;
+            else if (pos.bottom) py += pos.bottom;
         }
 
         var th = txt.props.h;
@@ -413,6 +434,9 @@ function infer_lines(box, parent) {
             var m = get_margins(txt.node);
             th += m.top + m.bottom;
             ty -= m.top;
+            var pos = get_relative_offset(txt.node);
+            if (pos.top) ty -= pos.top;
+            else if (pos.bottom) ty += pos.bottom;
         }
 
         var horiz_adj = (ty + th >= py && py >= ty || py + ph >= ty && ty >= py)
@@ -457,6 +481,7 @@ function infer_lines(box, parent) {
             sstack = sstack.slice(0, stack.length);
             if (b.node && b.node.tagName.toUpperCase() == "BR") {
                 new_line();
+                sstack = [];
             }
         } else {
             console.warn("Unknown box type", b);
@@ -516,7 +541,7 @@ function extract_block(elt, children) {
 function extract_inline(elt, children) {
     var r = elt.getClientRects();
     var box;
-    if (r.length == 1 && elt.tagName && elt.tagName.toUpperCase() == "IMG") { // TODO: enable in all cases
+    if (r.length == 1 && is_replaced(elt)) { // TODO: enable in all cases
         box = Inline(elt, {x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
     } else {
         box = Inline(elt, {});
@@ -595,11 +620,13 @@ function make_boxes(elt, styles, features) {
 
 // Inspired by https://stackoverflow.com/questions/13382516/getting-scroll-bar-width-using-javascript
 function compute_scrollbar_width() {
-    var outer = document.createElement("div");
-    var inner = document.createElement("div");
+    var outer = document.createElement("CassiusBlock");
+    var inner = document.createElement("CassiusBlock");
+    outer.style.display = "block";
     outer.style.overflow = "scroll";
     outer.style.borderLeftStyle = "none";
     outer.style.borderRightStyle = "none";
+    outer.style.position = "absolute";
     outer.appendChild(inner);
     document.body.appendChild(outer);
     var out = outer.offsetWidth - outer.clientWidth;
@@ -612,7 +639,10 @@ function get_boxes(features) {
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
     view.children = make_boxes(document.documentElement, style, features);
-    if (window.scrollMaxY !== 0) view.props.w -= compute_scrollbar_width();
+    if (window.scrollMaxY !== 0) {
+        view.props.w -= compute_scrollbar_width();
+        features["scrollbar"] = true;
+    }
     return {view: view, style: style};
 }
 
@@ -930,12 +960,8 @@ ELTS = []
 
 function get_inherent_size(e) {
     return {
-        w: e.getBoundingClientRect().width
-            - val2px(cs(e).paddingLeft) - val2px(cs(e).paddingRight)
-            - val2px(cs(e).borderLeftWidth) - val2px(cs(e).borderRightWidth),
-        h: e.getBoundingClientRect().height
-            - val2px(cs(e).paddingTop) - val2px(cs(e).paddingBottom)
-            - val2px(cs(e).borderTopWidth) - val2px(cs(e).borderBottomWidth)
+        w: e.getBoundingClientRect().width,
+        h: e.getBoundingClientRect().height,
     };
 }
 
@@ -1361,7 +1387,6 @@ function dump_fonts(name) {
 	var font = fonts[fname];
         var metrics = get_font_metrics(font, fname);
         for (var i = 1; i < metrics.length; i++) metrics[i] = f2r(metrics[i]);
-        console.log(metrics);
 	text += "\n  [" + metrics.join(" ") + "]";
     }
     text += ")";

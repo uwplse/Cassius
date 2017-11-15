@@ -4,6 +4,7 @@
 (require json (only-in xml write-xexpr))
 (require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "run.rkt")
 
+(define verbose (make-parameter false))
 (define timeout (make-parameter 60))
 (define show-success (make-parameter false))
 (define expected-failures (make-parameter '()))
@@ -80,8 +81,8 @@
                                  e)
                                 (list 'error e))])
 
-                (parameterize ([current-error-port (open-output-nowhere)]
-                               [current-output-port (open-output-nowhere)]
+                (parameterize ([current-error-port (if (verbose) (current-error-port) (open-output-nowhere))]
+                               [current-output-port (if (verbose) (current-output-port) (open-output-nowhere))]
                                [current-subprocess-custodian-mode 'kill]
                                [current-custodian custodian]
                                [*fuzz* fuzz?])
@@ -162,7 +163,8 @@
                 threads
                 (λ (i)
                   (place ch
-                         (match-define (cons timeout* expected-failures*) (place-channel-get ch))
+                         (match-define (list-rest verbose* timeout* expected-failures*) (place-channel-get ch))
+                         (verbose verbose*)
                          (timeout timeout*)
                          (expected-failures expected-failures*)
                          (let loop ()
@@ -173,7 +175,7 @@
                            (place-channel-put ch (cons self (cons id result)))
                            (loop)))))])
           (for ([worker workers])
-            (place-channel-put worker (cons (timeout) (expected-failures))))
+            (place-channel-put worker (list* (verbose) (timeout) (expected-failures))))
           (define to-send (map cons (range 0 (length inputs)) inputs))
           (for ([worker workers])
             (unless (null? to-send)
@@ -313,7 +315,7 @@
                               (list)
                               (supported-features)))
                          (list feature))) results)
-          (count (λ (x) (member feature (result-features x))) results)))
+          (count (λ (x) (set-member? (result-features x) feature)) results)))
 
   (define (sort-features data)
     (filter (λ (r) (> (third r) 0)) (sort (sort data > #:key third) > #:key second)))
@@ -458,6 +460,8 @@
     (set! out-file fname)]
    [("-t" "--timeout") s "Timeout in seconds"
     (timeout (string->number s))]
+   [("-v" "--verbose") "Print output of each solver process"
+    (verbose true)]
    [("--index") index-file "File name with section information for tests"
     (set! index (read-index index-file))]
    [("--show-all") "Do not hide successful or unsupported tests"
@@ -525,6 +529,25 @@
     (write-report
      #:output out-file
      (run-assertion-tests probs #:valid valid? #:index index #:threads threads))]
+
+   ["particular-assertions"
+    #:args (assertions file problems)
+    (define assns
+      (call-with-input-file assertions
+        (λ (p) (for/hash ([ass (sequence->list (in-port read p))])
+                 (match-define `(define-test (,name ,args ...) ,body) ass)
+                 (values name `(forall ,args ,body))))))
+    (define probs (call-with-input-file file parse-file))
+
+    (define insts
+      (call-with-input-file problems
+        (λ (f)
+          (for/list ([x (in-port read f)])
+            (list* (second x) file (first x) (dict-set (dict-ref probs (first x)) ':test (list (dict-ref assns (second x)))))))))
+
+    (write-report
+     #:output out-file
+     (run-assertion-tests insts #:valid valid? #:index index #:threads threads))]
 
    ["rerender"
     #:args (json-file)

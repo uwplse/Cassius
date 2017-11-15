@@ -9,7 +9,7 @@
 (define-by-match font-info?
   (list fid a x d t b))
 
-(define (fuzzy-=-constraint var val [fuzz *font-fuzz*])
+(define (fuzzy-=-constraint var val [fuzz *fuzz*])
   (if (fuzz)
       `(< (- ,val ,(fuzz)) ,var (+ ,val ,(fuzz)))
       `(= ,val ,var)))
@@ -22,12 +22,16 @@
         (sow `(declare-const ,var Font-Metric))
         (sow `(assert
                (and
-                ,(fuzzy-=-constraint `(font.ascent ,var) a)
-                ,(fuzzy-=-constraint `(font.descent ,var) d)
+                (<= 0 (font.ascent ,var))
+                (<= 0 (font.descent ,var))
+                ,(fuzzy-=-constraint `(+ (font.ascent ,var) (font.descent ,var)) (+ a d) *font-fuzz*)
+                ;; These are commented out because Firefox does not get the metrics correctly
+                #;,(fuzzy-=-constraint `(font.ascent ,var) a *font-fuzz*)
+                #;,(fuzzy-=-constraint `(font.descent ,var) d *font-fuzz*)
                 ,(fuzzy-=-constraint `(font.topoffset ,var) t)
                 ,(fuzzy-=-constraint `(font.bottomoffset ,var) b)
-                ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a d t b) *fuzz*)
-                ,(fuzzy-=-constraint `(font.line-height ,var) l *fuzz*)))))))
+                ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a d t b))
+                ,(fuzzy-=-constraint `(font.line-height ,var) l)))))))
 
 (define-constraints font-computation
   (declare-fun font-info (Box) Font-Metric)
@@ -37,4 +41,26 @@
                           (fid (box-elt b))
                           (ite (is-box (pbox b))
                                (font-info (pbox b))
-                               (font 0 0 0 0 0 0)))))))
+                               (font 0 0 0 0 0 0))))))
+
+  (define-fun height-text ((b Box)) Real
+    (+ (font.ascent (font-info b)) (font.descent (font-info b))))
+
+  (define-fun horizontally-overlapping ((box1 Box) (box2 Box)) Bool
+    (let ([m1 (font-info box1)]
+          [m2 (font-info box2)])
+      (or (> (- (bottom-outer box1) (+ 1 (font.bottomoffset m1)))
+             (+ (top-outer box2) (font.topoffset m2))
+             (+ (top-outer box1) 1 (font.topoffset m1)))
+          (> (- (bottom-outer box2) (+ 1 (font.bottomoffset m2)))
+             (+ (top-outer box1) (font.topoffset m1))
+             (+ (top-outer box2) 1 (font.topoffset m2)))
+          (< (- 1) (- (+ (top-outer box1) (font.topoffset m1)) (+ (top-outer box2) (font.topoffset m2))) 1))))
+
+  (define-fun vertically-overlapping ((box1 Box) (box2 Box)) Bool
+    (or (> (right-outer box1) (left-outer box2) (left-outer box1))
+        (> (right-outer box2) (left-outer box1) (left-outer box2))
+        (= (left-outer box1) (left-outer box2))))
+
+  (define-fun overlaps ((b1 Box) (b2 Box)) Bool
+    (and (horizontally-overlapping b1 b2) (vertically-overlapping b1 b2))))

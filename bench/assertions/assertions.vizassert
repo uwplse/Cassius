@@ -4,7 +4,7 @@
   (=> (has-type b text) (has-contents b)
       (let ([eb (ancestor b (not (anonymous? ?)))])
         (not (or (descends eb (class footer)) (descends eb (id footer)))))
-      (>= (height b) 14)))
+      (>= (height b) 13.5)))
 
 (define-test (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
@@ -41,3 +41,17 @@
          (and (descends e1 (tag h4)) (descends e2 (tag h5)))
          (and (descends e1 (tag h5)) (descends e2 (tag h6))))
      (> (height b1) (height b2)))))
+
+(define-test (overlapping-text b1 b2)
+  (=> (has-type b1 text) (has-type b2 text) (!= b1 b2)
+      (has-contents b1) (has-contents b2)
+      (viewable b1) (viewable b2)
+	  (not (overlaps b1 b2))))
+
+(define-test (line-spacing b1 b2)
+  (=> (has-type b1 text) (has-contents b1) (viewable b1)
+      (has-type b2 text) (has-contents b2) (viewable b2)
+      (let ([line1 (ancestor b1 (has-type ? line))]
+            [line2 (ancestor b2 (has-type ? line))])
+        (=> (= (next line1) line2)
+            (>= (- (top b2) (top b1)) (* 1.04 (text-height b1)))))))

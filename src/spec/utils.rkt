@@ -5,23 +5,6 @@
 (define extra-pointers (make-parameter '()))
 
 (define-constraints common-definitions
-  (declare-datatypes () ((RealOpt (realopt (realopt.value Real) (realopt.is-some? Bool)))))
-  (define-fun ropt-max-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
-         (ite (realopt.is-some? x)
-              (ite (and y? (realopt.is-some? y))
-                   (ite (> (realopt.value x) (realopt.value y))
-                        x
-                        y)
-                   x)
-              y))
-  (define-fun ropt-min-if ((x RealOpt) (y? Bool) (y RealOpt)) RealOpt
-         (ite (realopt.is-some? x)
-              (ite (and y? (realopt.is-some? y))
-                   (ite (< (realopt.value x) (realopt.value y))
-                        x
-                        y)
-                   x)
-              y))
   (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
   (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
   (define-fun max-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< x y)) y x))
@@ -45,17 +28,14 @@
                 (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (text-indent Real)
-                (font-size Real) (leading Real) (max-ascent RealOpt) (max-descent RealOpt)
-                (text-top Real) (text-bottom Real) (baseline Real) (ascent Real) (descent Real)
-                (ascender-top RealOpt) (descender-bottom RealOpt) (clh Real) ; computed line height
-                (above-baseline RealOpt) (below-baseline RealOpt)
+                (baseline Real) (above-baseline Real) (below-baseline Real)
                 (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
                 (&root Int) ; Root box
                 (ez.in EZone) (ez.out EZone)
                 (ez.sufficient Bool) (ez.lookback Bool)
-                (has-contents Bool) (lineheight Line-Height) (textalign Text-Align) ; to handle inheritance; TODO: handle better
+                (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (&elt Int) (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
                     `(,(sformat "&~a" i) Int))
@@ -63,7 +43,7 @@
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
-                (is-replaced Bool) (intrinsic-width Real) (intrinsic-height Real)
+                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real)
                 (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int) (fid Font-Metric)))))
 
   ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
@@ -123,7 +103,10 @@
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
   
   (define-fun width-padding ((box Box)) Real (+ (pl box) (w box) (pr box)))
+  (define-fun height-content ((box Box)) Real (h box))
   (define-fun height-padding ((box Box)) Real (+ (pt box) (h box) (pb box)))
+  (define-fun height-border ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
+  (define-fun height-outer ((box Box)) Real (+ (mtp box) (mtn box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
 
   ;; Box predicate helpers
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool
@@ -140,19 +123,6 @@
          (between (right-outer box2) (left-outer box1) (left-outer box2)))
      (=> (and (= (left-outer box1) (left-outer box2)) (= (right-outer box1) (right-outer box2)))
          (not (= (left-outer box1) (right-outer box2))))))
-
-  (define-fun horizontally-overlapping ((box1 Box) (box2 Box)) Bool
-    (or (> (- (bottom-outer box1) .25) (top-outer box2) (+ (top-outer box1) .25))
-        (> (- (bottom-outer box2) .25) (top-outer box1) (+ (top-outer box2) .25))
-        (< (- .25) (- (top-outer box1) (top-outer box2)) .25)))
-
-  (define-fun vertically-overlapping ((box1 Box) (box2 Box)) Bool
-    (or (> (- (right-outer box1) .25) (left-outer box2) (+ (left-outer box1) .25))
-        (> (- (right-outer box2) .25) (left-outer box1) (+ (left-outer box2) .25))
-        (< (- .25) (- (left-outer box1) (left-outer box2)) .25)))
-
-  (define-fun overlaps ((b1 Box) (b2 Box)) Bool
-    (and (horizontally-overlapping b1 b2) (vertically-overlapping b1 b2)))
 
   (define-fun within ((b1 Box) (b2 Box)) Bool
     (and (<= (box-left b2) (box-left b1))

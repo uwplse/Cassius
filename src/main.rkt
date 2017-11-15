@@ -61,7 +61,6 @@
   (node-set! box ':y (+ (data 'y) (data 'yo)))
   (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'br)))
   (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'bb)))
-  (node-set! box ':fs (data 'font-size))
   (node-set! box ':fg (data 'fg-color))
   (node-set! box ':bg (data 'bg-color))
   (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
@@ -232,11 +231,11 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
-    (fs-name (param 'font-size))
 
     (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
     (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'h))))
-    (emit `(assert (= (font-size ,(dump-box (dom-boxes dom))) ,(param 'font-size))))))
+    ; Used in spec/compute-style.rkt
+    (fs-name (param 'font-size))))
 
 (define (number*? x)
   (match x
@@ -323,11 +322,16 @@
     (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
 
 (define (replaced-constraints dom emit elt)
-  (define replaced? (set-member? '(img input iframe object textarea) (node-type elt)))
+  (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
   (if replaced?
       (emit `(assert (! (is-replaced ,(dump-elt elt)) :named ,(sformat "replaced/~a" (name 'elt elt)))))
       (emit `(assert (! (not (is-replaced ,(dump-elt elt))) :named ,(sformat "not-replaced/~a" (name 'elt elt))))))
+  (when (equal? (slower (node-type elt)) 'br)
+    (emit `(assert (= (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt)) 0))))
+  (if (equal? (slower (node-type elt)) 'img)
+      (emit `(assert (! (is-image ,(dump-elt elt)) :named ,(sformat "image/~a" (name 'elt elt)))))
+      (emit `(assert (! (not (is-image ,(dump-elt elt))) :named ,(sformat "not-image/~a" (name 'elt elt))))))
   (when (node-get elt ':w)
     (emit `(assert (! (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w))
                    :named ,(sformat "intrinsic-width/~a" (name 'elt elt))))))
@@ -405,11 +409,11 @@
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
     ,@(per-element font-constraints)
-    ,@(font-computation)
-    ,@(layout-definitions)
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)
     ,@(per-box contents-constraints)
+    ,@(font-computation)
+    ,@(layout-definitions)
     ,@(per-box layout-constraints)
     ))

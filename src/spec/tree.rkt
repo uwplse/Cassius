@@ -93,8 +93,6 @@
          `(= (,(sformat "&~a" i) (get/box &b)) ,(p '&b (sformat "&~a" i))))
      (= (textalign (get/box &b))
         (style.text-align (computed-style (get/elt &e))))
-     (= (lineheight (get/box &b))
-        (style.line-height (computed-style (get/elt &e))))
      (= (fg-color (get/box &b))
         (style.color (computed-style (get/elt &e))))
      (= (bg-color (get/box &b))
@@ -111,10 +109,6 @@
         (ite (is-no-box (pflow (get/box &b)))
              text-align/left
              (textalign (pflow (get/box &b)))))
-     (= (lineheight (get/box &b))
-        (ite (is-no-box (pflow (get/box &b)))
-             line-height/normal
-             (lineheight (pflow (get/box &b)))))
      (= (fg-color (get/box &b))
         (ite (is-no-box (pflow (get/box &b)))
              color/black

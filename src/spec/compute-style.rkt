@@ -33,7 +33,7 @@
    '(width min-width max-width min-height max-height)
    '(margin-top margin-right margin-bottom margin-left)
    '(padding-top padding-right padding-bottom padding-left)
-   '(top bottom left right text-indent line-height)))
+   '(top bottom left right text-indent)))
 
 (define (prop-is-simple prop elt)
   `(= (,(sformat "style.~a" prop) (computed-style ,elt))
@@ -150,6 +150,6 @@
   (check equal?
          (sort
           (append simple-computed-properties em-computed-properties
-                  '(height float border-top-width border-right-width border-bottom-width border-left-width font-size))
+                  '(height float border-top-width border-right-width border-bottom-width border-left-width font-size line-height))
           string<? #:key symbol->string)
          (sort (css-properties) string<? #:key symbol->string)))

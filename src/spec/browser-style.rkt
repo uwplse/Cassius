@@ -31,6 +31,7 @@
      ((tag colgroup) (display table-column-group)))))
 
 ; From https://hell.meiert.org/core/css/firefox-3.6.3.css
+; and https://dxr.mozilla.org/mozilla-central/source/layout/style/res/html.css
 
 (define firefox-sheet
   `(((tag blockquote)
@@ -237,7 +238,7 @@
               '([padding-top (px 0)]
                 [padding-right (px 6)]
                 [padding-bottom (px 0)]
-                [padding-bottom (px 0)]
+                [padding-left (px 6)]
                 [border-top-width (px 2)]
                 [border-right-width (px 2)]
                 [border-bottom-width (px 2)]
@@ -281,7 +282,27 @@
      [border-top-style none]
      [border-right-style none]
      [border-bottom-style none]
-     [border-left-style none])))
+     [border-left-style none])
+    ((tag textarea)
+     [margin-top (px 1)]
+     [margin-bottom (px 1)]
+     [border-top-width (px 1)]
+     [border-top-style inset]
+     [border-right-width (px 1)]
+     [border-right-style inset]
+     [border-bottom-width (px 1)]
+     [border-bottom-style inset]
+     [border-left-width (px 1)]
+     [border-left-style inset]
+     [padding-left (px 1)]
+     [padding-right (px 1)]
+     [font-size medium]
+     [text-align start]
+     [color black]
+     [background-color white]
+     #;[vertical-align text-bottom]
+     [text-indent 0]
+     #;[white-space pre-wrap])))
 
 (define (get-sheet browser)
   (match browser
