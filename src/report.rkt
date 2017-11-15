@@ -526,6 +526,25 @@
      #:output out-file
      (run-assertion-tests probs #:valid valid? #:index index #:threads threads))]
 
+   ["particular-assertions"
+    #:args (assertions file problems)
+    (define assns
+      (call-with-input-file assertions
+        (λ (p) (for/hash ([ass (sequence->list (in-port read p))])
+                 (match-define `(define-test (,name ,args ...) ,body) ass)
+                 (values name `(forall ,args ,body))))))
+    (define probs (call-with-input-file file parse-file))
+
+    (define insts
+      (call-with-input-file problems
+        (λ (f)
+          (for/list ([x (in-port read f)])
+            (list* (second x) file (first x) (dict-set (dict-ref probs (first x)) ':test (list (dict-ref assns (second x)))))))))
+
+    (write-report
+     #:output out-file
+     (run-assertion-tests insts #:valid valid? #:index index #:threads threads))]
+
    ["rerender"
     #:args (json-file)
     (write-report #:output out-file (load-results json-file))]))
