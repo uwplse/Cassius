@@ -21,6 +21,8 @@
 ("bench/fwt.working.rkt" doc-090 line-width)
 ("bench/fwt.working.rkt" doc-061 line-width)
 ("bench/fwt.working.rkt" doc-084 line-width)
+("bench/fwt.working.rkt" doc-062 line-width)
+("bench/fwt.working.rkt" doc-082 line-width)
 
 ("bench/fwt.working.rkt" doc-040 text-size)
 ("bench/fwt.working.rkt" doc-021 text-size)
@@ -63,6 +65,8 @@
 ("bench/fwt.working.rkt" doc-025 heading-size)
 ("bench/fwt.working.rkt" doc-054 heading-size)
 ("bench/fwt.working.rkt" doc-084 heading-size)
+("bench/fwt.working.rkt" doc-082 heading-size)
+("bench/fwt.working.rkt" doc-062 heading-size)
 
 ("bench/fwt.working.rkt" doc-080 line-spacing)
 ("bench/fwt.working.rkt" doc-088 line-spacing)
