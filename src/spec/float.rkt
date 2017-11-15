@@ -206,9 +206,11 @@
 
   (define-fun ez.valid? ((ez EZone)) Bool
     (and
-     (=> ,(line-exists? 0) (and (ez.mark? ez) (< (ez.mark ez) (ez.y0 ez))))
-     (=> (ez.l0? ez) (ez.r0? ez)
-         (<= (ez.l0 ez) (ez.r0 ez)))
+     ,(if (> (*exclusion-zone-registers*) 0)
+          `(and
+            (=> ,(line-exists? 0) (and (ez.mark? ez) (< (ez.mark ez) (ez.y0 ez))))
+            (=> (ez.l0? ez) (ez.r0? ez) (<= (ez.l0 ez) (ez.r0 ez))))
+          `true)
      ,@(for/list ([i (in-range 1 (*exclusion-zone-registers*))])
          `(and
            (=> (,(sformat "ez.l~a?" i) ez)
@@ -232,10 +234,12 @@
 
   (define-fun ez.can-add ((ez EZone) (bottom Real)) Bool
     ;; Assert this property after advancing an ezone but before adding to it.
-    (or
-     ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
-         `(and ,(line-exists? i) (= (,(sformat "ez.y~a" i) ez) bottom)))
-     (not ,(line-exists? (- (*exclusion-zone-registers*) 1)))))
+    ,(if (> (*exclusion-zone-registers*) 0)
+         `(or
+           ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
+               `(and ,(line-exists? i) (= (,(sformat "ez.y~a" i) ez) bottom)))
+           (not ,(line-exists? (- (*exclusion-zone-registers*) 1))))
+         'false))
 
   (define-fun ez.test ((ez EZone) (y Real)) Bool
     ;; Assert this property with the normal-flow position of any line box
