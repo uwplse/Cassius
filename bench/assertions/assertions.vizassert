@@ -50,8 +50,8 @@
 
 (define-test (line-spacing b1 b2)
   (=> (has-type b1 text) (has-contents b1) (viewable b1)
-	  (has-type b2 text) (has-contents b2) (viewable b2)
+      (has-type b2 text) (has-contents b2) (viewable b2)
       (let ([line1 (ancestor b1 (has-type ? line))]
-	        [line2 (ancestor b2 (has-type ? line))])
-		(=> (= (next line1) line2)
-		    (<= (+ (* 1.04 (max (text-height b1) (text-height b2))) (top b1)) (top b2))))))
+            [line2 (ancestor b2 (has-type ? line))])
+        (=> (= (next line1) line2)
+            (>= (- (top b2) (top b1)) (* 1.04 (text-height b1)))))))
