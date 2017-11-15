@@ -623,7 +623,7 @@
        (ite (is-width/auto (style.width r))
             (ite (is-replaced e)
                  (= (w b) (- (intrinsic-width e) (bl b) (br b) (pl b) (pr b)))
-                 (or (= (w b) (usable-stfwidth b)) (uses-parent-w (lflow b))))
+                 (or (= (w b) (usable-stfwidth b)) (and (is-box (lbox b)) (uses-parent-w (lbox b)))))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
                (min-max-width ,(get-px-or-% 'width '(w (pbflow b)) 'b) b)))
