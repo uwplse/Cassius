@@ -57,3 +57,6 @@ reports/fwt.html reports/fwt.json: bench/fwt.rkt
 
 reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
 	racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
+
+reports/specific.html reports/specific.json: bench/fwt.working.rkt bench/fwt/specific.sexp
+	racket src/report.rkt particular-assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.working.rkt bench/fwt/specific.sexp
