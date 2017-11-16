@@ -6,7 +6,7 @@
 (define helpers
   (hash
    'descends
-   (λ (b sel) `(matches ,b ,sel (desc ,sel *)))
+   (λ (b sel) `(matches (ancestor ,b (not (anonymous? ?))) ,sel (desc ,sel *)))
    'is-interactive
    (λ (b) `(matches ,b (tag a) (tag input) (tag button)))
    'viewable
@@ -122,6 +122,8 @@
        `(lum (color.rgb ,(loop color wrapped? ctx)))]
       [`(overlaps ,b1 ,b2)
        `(overlaps ,(loop b1 #t ctx) ,(loop b2 #t ctx))]
+      [`(within ,b1 ,b2)
+       `(within ,(loop b1 #t ctx) ,(loop b2 #t ctx))]
 
       ;; Variables
       [(? symbol?)

@@ -43,3 +43,14 @@
        (matches b2 (desc (id footer) (class last)))
        (and (= (top b1 outer) (top b2 outer))
             (<= (right b1 outer) (left b2 outer))))))
+
+; For genericwebsitetemplate
+(define-test (visible-text b)
+  (=> (descends b (desc (class body) (tag ul) (tag li)))
+      (has-type b text)
+      (within b (ancestor b (matches ? (desc (class body) (tag ul) (tag li)))))))
+
+; For carrepairshop
+(define-test (button-large b)
+  (=> (matches b (child (desc (id body) (class body) (tag div)) (tag a)))
+      (and (>= (height b) 24) (>= (width b) 72))))
