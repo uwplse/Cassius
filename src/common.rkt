@@ -25,7 +25,7 @@
      css:position css:font-size css:overflow-x css:overflow-y 
      css:text-indent css:inherit css:clear
      unit:% unit:em
-     empty-text
+     empty-text scrollbar
      display:inline-block tag:img tag:input display:list-item
      unknown-selector priority:important
      TEXT INLINE LINE BLOCK PAGE MAGIC ANON)))
