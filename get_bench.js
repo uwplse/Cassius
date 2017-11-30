@@ -52,7 +52,6 @@ Box.prototype.toString = function() {
 ERROR = false;
 
 LETTER = window.LETTER || "";
-SCROLLBAR = window.SCROLLBAR || "";
 ID = 0;
 PADDING = "0000";
 function gensym() {
@@ -635,13 +634,13 @@ function compute_scrollbar_width() {
     return out;
 }
 
-function get_boxes(features, scrollbar) {
+function get_boxes(features) {
     window.scrollTo(0, 0);
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
     view.children = make_boxes(document.documentElement, style, features);
     if (window.scrollMaxY !== 0) {
-        view.props.w -= (scrollbar || compute_scrollbar_width());
+        view.props.w -= compute_scrollbar_width();
         features["scrollbar"] = true;
     }
     return {view: view, style: style};
@@ -1148,7 +1147,7 @@ function annotate_box_elt(box) {
     }
 }
 
-function page2cassius(name, scrollbar) {
+function page2cassius(name) {
     var features = {};
 
     var text = "";
@@ -1157,7 +1156,7 @@ function page2cassius(name, scrollbar) {
         text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
     }
 
-    var out = get_boxes(features, scrollbar);
+    var out = get_boxes(features);
     var doc = dump_document(features);
     var page = out.view;
     annotate_box_elt(page);
@@ -1205,10 +1204,10 @@ function page2cassius(name, scrollbar) {
     return text;
 }
 
-function cassius(name, scrollbar) {
+function cassius(name) {
     var pre = document.createElement("pre");
     pre.id = "-x-cassius-output-block";
-    pre.innerText = page2cassius(name, scrollbar);
+    pre.innerText = page2cassius(name);
     with (pre.style) {
         background = "white", color = "black";
         position = "absolute", top = "0", left = "0";

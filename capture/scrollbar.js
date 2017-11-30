@@ -7,23 +7,3 @@ function estimate_scrollbar() {
     return width - html.clientWidth;
 }
 
-function exfiltrate(val) {
-    var pre = document.createElement("pre");
-    pre.id = "-x-cassius-output-block";
-    pre.innerText = "" + val;
-    with (pre.style) {
-        background = "white", color = "black";
-        position = "absolute", top = "0", left = "0";
-        zIndex = "1000000";
-    }
-
-    var root = document.documentElement;
-    root.appendChild(pre);
-
-    var r = document.createRange();
-    r.selectNodeContents(pre);
-
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(r);
-}

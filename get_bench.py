@@ -20,9 +20,7 @@ def measure_scrollbar(browser):
     browser.get("about:blank");
     with open("capture/scrollbar.js") as f:
         script = f.read()
-    browser.execute_script(script + "; exfiltrate(estimate_scrollbar())");
-    elt = browser.find_element_by_id("-x-cassius-output-block");
-    return int(elt.text)
+    browser.execute_script(script + "; estimate_scrollbar()");
 
 def make_browser():
     profile = webdriver.FirefoxProfile()
@@ -49,8 +47,7 @@ def main(urls, name=None, screenshot=False):
                 _, netloc, _, _, _, _ = urlparse.urlparse(url)
                 site_to_pages[netloc].append(url)
 
-        scrollbar = measure_scrollbar(browser)
-        print "Scrollbar:", scrollbar
+        measure_scrollbar(browser)
     
         for (netloc, urls) in sorted(site_to_pages.items()):
             fname = "bench/{}.rkt".format(netloc)
@@ -66,8 +63,7 @@ def main(urls, name=None, screenshot=False):
                             print "Saving screenshot to", iname
                             browser.save_screenshot(iname)
                         browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
-                        browser.execute_script("window.SCROLLBAR = arguments[0];", scrollbar)
-                        browser.execute_script(SCRIPT + "; cassius(LETTER, SCROLLBAR)")
+                        browser.execute_script(SCRIPT + "; cassius(LETTER)")
                         elt = browser.find_element_by_id("-x-cassius-output-block");
                         text = elt.text.encode("utf8")
                         fi.write(";; From {}\n\n{}\n\n".format(url, text))
