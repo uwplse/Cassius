@@ -1355,8 +1355,9 @@ function get_font_metrics(font, fname) {
 	var ascent = bt - ba;
 	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
 	var lineheight = get_font_lineheight(font.name, font.weight, font.style);
-
-	return [FontIDMap[fname], ascent, descent, offsets.top, offsets.bottom, lineheight];
+	
+	return [FontIDMap[fname], dump_string(font.family), dump_string(font.weight),
+	        dump_string(font.style), ascent, descent, offsets.top, offsets.bottom, lineheight];
 }
 
 function dump_fonts(name) {
@@ -1369,7 +1370,7 @@ function dump_fonts(name) {
 			var style = cs(elt);
 			var fname = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
 			var size = val2px(style.fontSize);
-			var font = {name: style.fontSize + " " + style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
+			var font = {name: style.fontSize + " " + style.fontFamily, family: style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
 
 			if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
 
@@ -1384,10 +1385,14 @@ function dump_fonts(name) {
 
     var text = "(define-fonts " + name;
     for (var fname of flist) {
-	var font = fonts[fname];
+		var font = fonts[fname];
         var metrics = get_font_metrics(font, fname);
-        for (var i = 1; i < metrics.length; i++) metrics[i] = f2r(metrics[i]);
-	text += "\n  [" + metrics.join(" ") + "]";
+        for (var i = 1; i < metrics.length; i++) {
+	         if (typeof metrics[i] !== "string") {
+	             metrics[i] = f2r(metrics[i]);
+	         }
+		}
+	    text += "\n  [" + metrics.join(" ") + "]";
     }
     text += ")";
 

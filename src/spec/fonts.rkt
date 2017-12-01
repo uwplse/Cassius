@@ -7,7 +7,7 @@
                                             (font.bottomoffset Real) (font.line-height Real) (font.selection-height Real))))))
 
 (define-by-match font-info?
-  (list fid a x d t b))
+  (list fid n s w a d t b lh))
 
 (define (fuzzy-=-constraint var val [fuzz *fuzz*])
   (if (fuzz)
@@ -17,7 +17,7 @@
 (define/contract (make-font-table fonts)
   (-> (listof font-info?) any/c)
   `(,@(for/reap [sow] ([font fonts])
-        (match-define (list fid a d t b l) font)
+        (match-define (list fid n s w a d t b l) font)
         (define var (sformat "font~a" (name 'font fid)))
         (sow `(declare-const ,var Font-Metric))
         (sow `(assert
@@ -31,7 +31,7 @@
                 ,(fuzzy-=-constraint `(font.topoffset ,var) t)
                 ,(fuzzy-=-constraint `(font.bottomoffset ,var) b)
                 ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a d t b))
-                ,(fuzzy-=-constraint `(font.line-height ,var) l)))))))
+                ,(fuzzy-=-constraint `(font.line-height ,var) l))))))))
 
 (define-constraints font-computation
   (declare-fun font-info (Box) Font-Metric)
