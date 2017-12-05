@@ -918,7 +918,10 @@
      (= (text-indent b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
-    (or (is-box/block (type b)) (is-box/inline (type b))))
+    (and
+     (or (is-box/block (type b)) (is-box/inline (type b)))
+     (ez.sufficient b)
+     (ez.lookback b)))
 
   (define-fun an-anon-block-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
