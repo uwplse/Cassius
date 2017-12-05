@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "spec/css-properties.rkt")
+(require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "spec/media-query.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes selector-matches?
          rule-matchlist (struct-out rulematch))
@@ -23,19 +23,6 @@
   `(type ,(? symbol?))
   `(media ,(? media-query?) ,(? selector?))
   `(fake ,(? string?) ,(? selector?) ...))
-
-(define-by-match media-query?
-  `(or ,(? media-query?) ...)
-  `(and ,(? media-query?) ...)
-  `(only ,(? media-query?))
-  `(not ,(? media-query?))
-  `(min-width (px ,(? number?)))
-  `(max-width (px ,(? number?)))
-  `(min-height (px ,(? number?)))
-  `(max-height (px ,(? number?)))
-  `(orientation landscape)
-  `(orientation portrait)
-  (or 'all 'screen 'print 'handheld 'projection 'tty 'tv))
 
 (define-by-match rule?
   (list (? selector?) (? attribute?) ... (list (? property?) _ (? attribute?) ...) ...))
@@ -63,7 +50,8 @@
     [`(type ,type)
      (and (node-get elt ':type) (equal? (node-get elt ':type) type))]
     [`(media ,query ,sel)
-     (and (media-matches? query) (selector-matches? sel elt))]
+     ;; TODO: Subtle
+     (selector-matches? sel elt)]
     [(list 'and sels ...) (andmap (curryr selector-matches? elt) sels)]
     [(list 'desc sels ...)
      (match-define (cons sel rsels) (reverse sels))
@@ -85,28 +73,6 @@
         [(selector-matches? (car rsels) elt)
          (loop (cdr rsels) (node-parent elt))]
         [else false]))]))
-
-(define (media-matches? query)
-  (match query
-    [`(or ,qs ...)
-     (ormap media-matches? qs)]
-    [`(and ,qs ...)
-     (andmap media-matches? qs)]
-    [`(only ,q)
-     (media-matches? q)]
-    [`(not ,q)
-     (not (media-matches? q))]
-    ['screen true]
-    ['all true]
-    [(or 'print 'handheld 'projection 'tty 'tv) false]
-    ;; TODO: Actually check viewport width and height
-    ['(orientation landscape) true]
-    ['(orientation portrait) false]
-    ;; TODO: Actually check viewport width and height
-    [`(max-width (px ,mw)) false]
-    [`(min-width (px ,mw)) false]
-    [`(max-height (px ,mh)) false]
-    [`(min-height (px ,mh)) false]))
 
 (module+ test
   (define tree

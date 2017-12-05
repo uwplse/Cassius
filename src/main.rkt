@@ -3,7 +3,8 @@
          "selectors.rkt" "match.rkt" "solver.rkt")
 (require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
          "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
-         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt")
+         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
+         "spec/media-query.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback)
@@ -109,7 +110,7 @@
       (and (dict-has-key? props prop)
            (not (null? (dict-ref props prop))))))
 
-(define (selector*-constraints emit elts rules)
+(define (selector*-constraints media-params emit elts rules)
   (define ml (rule-matchlist rules elts))
 
   (for ([rm ml])
@@ -129,7 +130,7 @@
                 ;; The `node-parent` here is for inheritable properties
                 (cons (not (node-parent elt))
                       (for/list ([rm ml]) (set-member? (rulematch-elts rm) elt)))) elts))
-
+  
   (for ([cls (map list elts)])
     (define elt (car cls))
     (define style `(specified-style ,(dump-elt elt)))
@@ -143,6 +144,11 @@
              #:when (selector-matches? (car (rulematch-rule rm)) elt))
           (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
           (define propname? (sformat "value/~a/~a?" (rulematch-idx rm) prop))
+
+          (match (car (rulematch-rule rm))
+            [`(media ,(? media-query? mq) ,_)
+             (set! propname? `(and ,propname? ,(media-matches? media-params mq)))]
+            [_ (void)])
           (emit `(assert (! (=> (and ,no-match-so-far ,propname?)
                                 (= (,(sformat "style.~a" prop) ,style) ,propname))
                             :named ,(sformat "~a^~a" propname (dump-elt elt)))))
@@ -211,7 +217,7 @@
       `(ite (= &box ,(name 'box box)) ,(dump-box box) ,body)))
   (emit `(define-fun get/box ((&box Int)) Box ,body)))
 
-(define (configuration-constraints doms emit)
+(define (configuration-constraints params doms emit)
   (for ([dom doms])
     (define w (car (dom-context dom ':w #:default '(?))))
     (define h (car (dom-context dom ':h #:default '(?))))
@@ -234,8 +240,11 @@
 
     (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
     (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'h))))
-    ; Used in spec/compute-style.rkt
-    (fs-name (param 'font-size))))
+
+    (fs-name (param 'font-size))
+    (dict-set! params ':fs (param 'font-size))
+    (dict-set! params ':w (param 'w))
+    (dict-set! params ':h (param 'h))))
 
 (define (number*? x)
   (match x
@@ -353,8 +362,8 @@
   (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
   (reap [emit] (selector-constraints emit eqcls)))
 
-(define (sheet*-constraints doms rules)
-  (reap [emit] (for ([dom doms]) (selector*-constraints emit (sequence->list (in-tree (dom-elements dom))) rules))))
+(define (sheet*-constraints params doms rules)
+  (reap [emit] (for ([dom doms]) (selector*-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
 (define (all-constraints sheets matcher doms fonts)
   (define (global f) (reap [sow] (f doms sow)))
@@ -362,6 +371,8 @@
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
+  
+  (define media-params (make-hash '((:type . screen))))
 
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
@@ -398,11 +409,11 @@
     ,@(tree-types)
     ,@(global dom-define-get/elt)
     ,@(global dom-define-get/box)
-    ,@(global configuration-constraints)
+    ,@(global (curry configuration-constraints media-params))
     ,@(utility-definitions)
     ,@(link-definitions)
     ,@(style-computation)
-    ,@(sheet*-constraints doms (apply append sheets))
+    ,@(sheet*-constraints media-params doms (apply append sheets))
     ,@(per-element tree-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-box box-constraints)

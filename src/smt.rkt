@@ -1,7 +1,9 @@
 #lang racket
 
 (require "common.rkt")
-(provide define-constraints smt-cond smt-let smt-and smt-or smt-replace smt-replace-terms)
+(provide define-constraints smt? smt-cond smt-let smt-not smt-and smt-or smt-replace smt-replace-terms)
+
+(define smt? any/c)
 
 (define-syntax smt-cond
   (syntax-rules (else)
@@ -19,6 +21,12 @@
 
 (define-syntax-rule (smt-let bindings constraints ...)
   `(let bindings (and constraints ...)))
+
+(define (smt-not x)
+  (match x
+    ['true 'false]
+    ['false 'true]
+    [_ (list 'not x)]))
 
 (define (smt-and . pieces)
   (define pieces* (filter (λ (x) (not (equal? x 'true))) pieces))
