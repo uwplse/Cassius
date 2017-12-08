@@ -717,8 +717,11 @@
             (and
              (= (pl b) ,(get-px-or-% 'padding-left '(w p) 'b))
              (= (bl b) ,(get-px-or-% 'border-left-width '(w p) 'b))
-             (= (ml b) (ite (is-margin/auto (style.margin-left r)) 0.0 ,(get-px-or-% 'margin-left '(w p) 'b))))
-            (and (= (pl b) (bl b) (ml b) 0.0)))
+             (= (ml b)
+                (+ (ite (is-margin/auto (style.margin-left r)) 0.0 ,(get-px-or-% 'margin-left '(w p) 'b))
+                   (ite (and (is-no-box v) (is-box/line (type p)) (is-no-box (vflow p))) (text-indent p) 0.0))))
+            (and (= (pl b) (bl b) 0.0)
+                 (= (ml b) (ite (and (is-no-box v) (is-box/line (type p)) (is-no-box (vflow p))) (text-indent p) 0.0))))
        (ite (last-box? b)
             (and
              (= (pr b) ,(get-px-or-% 'padding-right '(w p) 'b))
@@ -832,7 +835,14 @@
        (= (y b) (- (baseline b) (+ (font.ascent metrics) (font.topoffset metrics))))
 
        (no-relative-offset b)
-       (zero-box-model b)
+       (= (mtp b) (mtn b) (mbp b) (mbn b) (mtp-up b) (mtn-up b) 0.0)
+       (= (mb-clear b) false)
+       (= (mt b) (mr b) (mb b) 0.0)
+       (= (bt b) (br b) (bb b) (bl b) 0.0)
+       (= (pt b) (pr b) (pb b) (pl b) 0.0)
+
+       (= (ml b) (ite (and (is-no-box v) (is-box/line (type p)) (is-no-box (vflow p))) (text-indent p) 0.0))
+
        (=> (is-box v) (= (x b) (right-outer v))) ; Otherwise set by the line box
        (= (ez.sufficient b) true)
        (= (ez.lookback b) true)
@@ -844,16 +854,9 @@
                [metrics (font-info b)] [leading (- (line-height b) (height-text b))])
        (= (type b) box/line)
        (no-relative-offset b)
-
-       ;; Left-padding is not 0
-       (= (mtp b) (mtn b) (mbp b) (mbn b) (mtp-up b) (mtn-up b) 0.0)
-       (= (mb-clear b) false)
-       (= (mt b) (mr b) (mb b) (ml b) 0.0)
-       (= (bt b) (br b) (bb b) (bl b) 0.0)
-       (= (pt b) (pr b) (pb b) 0.0)
+       (zero-box-model b)
 
        (= (text-indent b) (text-indent p))
-       (= (pl b) (ite (is-no-box v) (text-indent b) 0.0))
 
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
              [ez (ez.line-up (lbox b))])
@@ -918,7 +921,10 @@
      (= (text-indent b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
-    (or (is-box/block (type b)) (is-box/inline (type b))))
+    (and
+     (or (is-box/block (type b)) (is-box/inline (type b)))
+     (ez.sufficient b)
+     (ez.lookback b)))
 
   (define-fun an-anon-block-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [l (lflow b)])

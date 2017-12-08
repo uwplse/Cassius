@@ -54,12 +54,7 @@
   (define query (all-constraints (cons browser-style sheets) matchers doms fonts))
 
   (define ms (model-sufficiency doms))
-  (set! query
-        (if tests
-            ;; This must be done together with ms because
-            ;; it is or'd with the tests but anded if there are no tests
-            (add-test doms query (cons `(forall () ,ms) tests*))
-            (append query `((assert ,ms)))))
+  (when tests (set! query (add-test doms query (cons `(forall () ,ms) tests*))))
 
   (log-phase "Produced ~a constraints of ~a terms"
              (length query) (tree-size query))

@@ -7,6 +7,6 @@ echo "(get-unsat-core)" \
 | grep -v sat \
 | tr -d '()' \
 | tr ' ' '\n' \
-| xargs -n1 -I '{}' grep '{}' "$1" \
+| xargs -n1 -I '{}' grep '{})' "$1" \
 | sed 's/(assert (! //g' \
 | sed 's/ :named .*$//g'
