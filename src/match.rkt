@@ -13,6 +13,20 @@
               'none
               (dict-ref value-hash (dict-ref class-hash elt)))))))
 
+(define (sheet->font elts sheet)
+  (if (ormap (curryr set-member? '?) sheet)
+      (λ (elt) (if (equal? (node-type elt) 'head) 'none '?))
+      (let ([eqs (equivalence-classes sheet (sequence->list (in-tree elts)))])
+        (λ (elt)
+          (match-define (cons class-hash-family value-hash-family) (dict-ref eqs 'font-family))
+          (match-define (cons class-hash-weight value-hash-weight) (dict-ref eqs 'font-weight))
+          (match-define (cons class-hash-style value-hash-style) (dict-ref eqs 'font-style))
+          (if (equal? (node-type elt) 'head)
+              'none
+              (list (dict-ref value-hash-family (dict-ref class-hash-family elt))
+                    (dict-ref value-hash-weight (dict-ref class-hash-weight elt))
+                    (dict-ref value-hash-style (dict-ref class-hash-style elt))))))))
+
 (define (link-matched-elts-boxes sheet elts boxes)
   (define num->elt (make-hasheq))
   (define box->elt (make-hasheq))

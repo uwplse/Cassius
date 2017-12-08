@@ -114,7 +114,8 @@
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
-    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop))
+    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop)
+	      #:unless (equal? prop 'font-family))
       (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
       (cond
        [(equal? '? (car (dict-ref (filter list? props) prop '(?))))
@@ -135,7 +136,7 @@
     (define style `(specified-style ,(dump-elt elt)))
     (for ([elt (cdr cls)])
       (emit `(assert (= (specified-style ,(dump-elt elt)) ,style))))
-    (for* ([(prop type default) (in-css-properties)])
+    (for* ([(prop type default) (in-css-properties)] #:unless (equal? prop 'font-family))
       (define nonecond
         (for/fold ([no-match-so-far 'true])
             ([rm ml]
@@ -317,7 +318,9 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
-(define (font-constraints dom emit elt)
+(define (font-constraints sheet dom emit elt)
+  #;(define font (sheet->font sheet elt))
+  
   (when (node-get elt ':fid)
     (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
 
@@ -408,7 +411,7 @@
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
-    ,@(per-element font-constraints)
+    ,@(per-element (curry font-constraints (apply append sheets)))
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)

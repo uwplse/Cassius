@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "../encode.rkt" "../registry.rkt")
-(provide make-font-datatype make-font-table font-computation)
+(provide make-font-datatype make-font-mapping make-font-table font-computation)
 
 (define-constraints make-font-datatype
   (declare-datatypes () ((Font-Metric (font (font.ascent Real) (font.descent Real) (font.topoffset Real)
@@ -13,6 +13,16 @@
   (if (fuzz)
       `(< (- ,val ,(fuzz)) ,var (+ ,val ,(fuzz)))
       `(= ,val ,var)))
+
+(define/contract (make-font-mapping fonts)
+  (-> (listof font-info?) any/c)
+  (define fid-table (make-hash))
+  (for ([font fonts])
+    (match-define (list fid n s w a d t b l) font)
+    (define font-name (sformat "~a ~a ~a" n s w))
+    (define fid-list (dict-ref! fid-table font-name '()))
+    (dict-set! fid-table font-name (cons fid fid-list)))
+  fid-table)
 
 (define/contract (make-font-table fonts)
   (-> (listof font-info?) any/c)
@@ -31,7 +41,7 @@
                 ,(fuzzy-=-constraint `(font.topoffset ,var) t)
                 ,(fuzzy-=-constraint `(font.bottomoffset ,var) b)
                 ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a d t b))
-                ,(fuzzy-=-constraint `(font.line-height ,var) l))))))))
+                ,(fuzzy-=-constraint `(font.line-height ,var) l)))))))
 
 (define-constraints font-computation
   (declare-fun font-info (Box) Font-Metric)
