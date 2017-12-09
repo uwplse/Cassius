@@ -1,4 +1,5 @@
 #lang racket
+(require racket/runtime-path (only-in xml write-xexpr make-cdata))
 
 (require json racket/date)
 (require "../src/common.rkt")
@@ -32,16 +33,17 @@
       (for*/hash ([(prob data) (in-dict old-data)] [rec data])
         (values (list (dict-ref rec ':time #f) prob (dict-ref rec ':branch #f)) rec)))
     (for ([json (directory-jsons subdir)])
+      (define rel-path (find-relative-path dir json))
       (define-values (branch prob) (parse-json-path (file-name-from-path json)))
       (define prob-data (dict-ref! data (string->symbol prob) (list)))
       (define time (seconds->date (string->number (directory-name subdir))))
-      (define file-data 
-        (let ([read-data (λ () (summarize-data time branch (call-with-input-file json read-json)))])
+      (define file-data
+        (let ([read-data (λ () (summarize-data time branch rel-path (call-with-input-file json read-json)))])
           (dict-ref skip (list (date->seconds time) (string->symbol prob) branch) read-data)))
       (dict-set! data (string->symbol prob) (cons file-data prob-data))))
   data)
 
-(define (summarize-data time branch data)
+(define (summarize-data time branch rel-path data)
   (define statuses (for/list ([problem data]) (dict-ref problem 'status)))
   (define status-counts
     (make-hash
@@ -53,25 +55,33 @@
     (dict-set! status-counts ':runtime runtime))
   (dict-set! status-counts ':time (date->seconds time))
   (dict-set! status-counts ':branch branch)
+  (dict-set! status-counts ':path (path->string rel-path))
   status-counts)
 
-(define (make-index data file #:cache [cache #f])
+(define-runtime-path graph-js-path "index-chart.js")
+
+(define (make-index data dir #:cache [cache #f])
   (when cache
     (call-with-output-file cache #:exists 'replace (λ (p) (write-json data p))))
+  (copy-file graph-js-path (build-path dir "chart.js") #t)
 
-  (for ([(prob data) (in-dict data)])
-    (printf "\n~a\n" prob)
-    (for ([data (sort data < #:key (curryr dict-ref ':time))])
-      (printf "~a,~a,~a,~a,~a,~a,~a,~a,~a\n"
-              (dict-ref data ':time)
-              (dict-ref data ':branch)
-              (dict-ref data 'success 0)
-              (dict-ref data 'expected 0)
-              (dict-ref data 'timeout 0)
-              (dict-ref data 'fail 0)
-              (dict-ref data 'error 0)
-              (dict-ref data 'unsupported 0)
-              (dict-ref data ':runtime #f)))))
+  (define script
+    (format "d3.json('~a', (data) => draw(d3.select('#chart'), data))"
+            (find-relative-path dir cache)))
+
+  (define page
+    `(html
+      (head
+       (meta ((charset "utf-8")))
+       (title "Cassius reports"))
+      (body
+       (figure ((id "chart")))
+       (script ((src "https://d3js.org/d3.v4.min.js")))
+       (script ((src "chart.js")))
+       (script ,(make-cdata #f #f script)))))
+
+  (call-with-output-file (build-path dir "index.html") #:exists 'replace
+                         (λ (p) (write-xexpr page p))))
 
 (module+ main
   (define cache #f)
@@ -80,5 +90,5 @@
    #:once-each
    ["--cache" cache-file "File to store a cache of read data in"
     (set! cache cache-file)]
-   #:args (dir index-file)
-   (make-index (gather-data dir #:cache cache) index-file #:cache cache)))
+   #:args (dir)
+   (make-index (gather-data dir #:cache cache) dir #:cache cache)))

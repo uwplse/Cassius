@@ -15,7 +15,7 @@ index () {
     if [[ $HARD = "true" ]]; then
         rm -f previous/index.cache
     fi
-    racket infra/make-index.rkt --cache previous/index.cache previous/ previous/index.html
+    racket infra/make-index.rkt --cache previous/index.cache previous/
 }
 
 while getopts "h" opt; do
@@ -29,6 +29,7 @@ CMD=${@:$OPTIND:1}
 
 if [[ $CMD = "index" ]]; then
     index
+    rsync -v --chmod=644 previous/* uwplse.org:/var/www/cassius/reports/
 elif [[ $CMD = "download" ]]; then
     download_reports
 fi
