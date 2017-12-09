@@ -29,7 +29,7 @@ CMD=${@:$OPTIND:1}
 
 if [[ $CMD = "index" ]]; then
     index
-    rsync -v --chmod=644 previous/* uwplse.org:/var/www/cassius/reports/
+    rsync -q --chmod=644 previous/* uwplse.org:/var/www/cassius/reports/
 elif [[ $CMD = "download" ]]; then
     download_reports
 fi

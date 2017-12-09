@@ -59,11 +59,13 @@
   status-counts)
 
 (define-runtime-path graph-js-path "index-chart.js")
+(define-runtime-path index-css-path "index.css")
 
 (define (make-index data dir #:cache [cache #f])
   (when cache
     (call-with-output-file cache #:exists 'replace (λ (p) (write-json data p))))
   (copy-file graph-js-path (build-path dir "chart.js") #t)
+  (copy-file index-css-path (build-path dir "index.css") #t)
 
   (define script
     (format "d3.json('~a', (data) => draw(d3.select('#chart'), data))"
@@ -73,7 +75,8 @@
     `(html
       (head
        (meta ((charset "utf-8")))
-       (title "Cassius reports"))
+       (title "Cassius reports")
+       (link ((rel "stylesheet") (href "index.css"))))
       (body
        (figure ((id "chart")))
        (script ((src "https://d3js.org/d3.v4.min.js")))
