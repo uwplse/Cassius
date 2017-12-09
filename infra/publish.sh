@@ -1,15 +1,31 @@
 #!/usr/bin/env bash
 
+HARD=false
+
 download_reports() {
-    rsync -v --include '*.json' --include '/*/' --include '/*/*/' --exclude '*' \
-          --recursive uwplse.org:/var/www/cassius/reports/ previous/
+    FLAGS="--checksum --inplace --ignore-existing"
+    if [[ $HARD = "true" ]]; then
+        FLAGS="--checksum"
+    fi
+    rsync --include '*.json' --include '/*/' --include '/*/*/' --exclude '*' \
+           $FLAGS --recursive uwplse.org:/var/www/cassius/reports/ previous/
 }
 
 index () {
-    racket infra/make-index.rkt --cache reports/previous/index.cache previous/ reports/index.html
+    if [[ $HARD = "true" ]]; then
+        rm -f previous/index.cache
+    fi
+    racket infra/make-index.rkt --cache previous/index.cache previous/ previous/index.html
 }
 
-CMD="$1"
+while getopts "h" opt; do
+    case $opt in
+        h) HARD=true ;;
+        \?) echo "Invalid option -$OPTARG" >&2; ;;
+    esac
+done
+
+CMD=${@:$OPTIND:1}
 
 if [[ $CMD = "index" ]]; then
     index
