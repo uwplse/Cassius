@@ -15,6 +15,21 @@ function add_fields(fields) {
     }
 }
 
+function html_path(json_path) {
+    return json_path.replace("/json/", "/").replace(".json", ".html");
+}
+
+MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
+
+function pretty_date(date) {
+    return date.getDate() + " " + MONTHS[date.getMonth()] + " " + date.getFullYear();
+}
+
+function pretty_time(date) {
+    var minutes = date.getMinutes();
+    return date.getHours() + ":" + (minutes < 10 ? "0" : "") + date.getMinutes();
+}
+
 function draw_class(node, name, data) {
     var header = node.append("header");
 
@@ -22,6 +37,8 @@ function draw_class(node, name, data) {
         .attr("width", width + 2 * margin + labels)
         .attr("height", height + 2 * margin + labels)
         .append("g").attr("transform", "translate(" + (margin + labels) + "," + margin + ")");
+
+    var table = node.append("table");
 
     var total = d3.max(data, add_fields(["success", "expected", "fail", "error", "timeout", "unsupported"]))
 
@@ -68,6 +85,24 @@ function draw_class(node, name, data) {
                 return s;
             });
     }
+
+    table.append("thead").selectAll("th")
+        .data(["Date", "Time", "Branch", "Passing", "Timeouts", "Link"]).enter().append("th")
+        .text((d) => d);
+
+    table.append("tbody").selectAll("tr")
+        .data(data).enter().append("tr")
+        .on("click", function() { this.children[this.children.length - 1].children[0].click() })
+        .selectAll("td").data(d => [
+            pretty_date(new Date(d[":time"] * 1000)),
+            pretty_time(new Date(d[":time"] * 1000)),
+            "<span style='color: " + key(d[":branch"]) + "'>" + d[":branch"] + "</span>",
+            add_fields(["success", "expected"])(d) + "/" +
+                add_fields(["success", "expected", "timeout", "fail", "unsupported"])(d),
+            d["timeout"] || 0,
+            "<a href='" + html_path(d[":path"]) + "'>»</a>",
+        ]).enter().append("td")
+        .html(d => d);
 }
 
 function relevant_data(data) {
