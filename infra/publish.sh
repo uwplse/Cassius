@@ -2,7 +2,7 @@
 
 HARD=false
 
-download_reports() {
+download () {
     FLAGS="--checksum --inplace --ignore-existing"
     if [[ $HARD = "true" ]]; then
         FLAGS="--checksum"
@@ -18,6 +18,10 @@ index () {
     racket infra/make-index.rkt --cache previous/index.cache previous/
 }
 
+upload () {
+    rsync -q --chmod=644 previous/* uwplse.org:/var/www/cassius/reports/
+}
+
 while getopts "h" opt; do
     case $opt in
         h) HARD=true ;;
@@ -25,11 +29,8 @@ while getopts "h" opt; do
     esac
 done
 
-CMD=${@:$OPTIND:1}
+CMD=${@:$OPTIND}
 
-if [[ $CMD = "index" ]]; then
-    index
-    rsync -q --chmod=644 previous/* uwplse.org:/var/www/cassius/reports/
-elif [[ $CMD = "download" ]]; then
-    download_reports
-fi
+for cmd in $CMD; do
+    $cmd
+done
