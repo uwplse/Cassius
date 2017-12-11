@@ -55,12 +55,10 @@ function draw_class(node, name, data) {
 
     var table = node.append("table");
 
-    var total = d3.max(data, add_fields(["success", "expected", "fail", "error", "timeout", "unsupported"]))
-
     var x = d3.scaleTime().range([0, width]);
     var y = d3.scaleLinear().range([height, 0]);
     x.domain(d3.extent(data, x => new Date(x[":time"] * 1000)));
-    y.domain([0, total]);
+    y.domain(d3.extent(data, x => add_fields(["success", "expected"])(x)));
     g.append("g").call(d3.axisLeft().scale(y))
     g.append("g").call(d3.axisBottom().scale(x))
         .attr("transform", "translate(0," + height + ")")
