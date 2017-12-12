@@ -6,6 +6,7 @@ reports/*.html
 reports/*.json
 bench/*.rkt
 geckodriver.log
+previous/
 
 # Racket junk
 src/compiled/

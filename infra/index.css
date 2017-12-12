@@ -1,0 +1,10 @@
+section { max-width: 800px; margin: 3em auto; }
+
+header h1 { font-size: 1em; }
+header ul { float: right; margin: 0; padding: 0; }
+header li { display: inline; border-left-style: solid; padding: 0 1em 0 .5em }
+
+table { width: 100%; text-align: right; border-collapse: collapse; }
+td, th { padding: .25em; }
+th { font-weight: normal; font-style: italic }
+tr:hover { cursor: pointer; background: #e0f8d8; }
