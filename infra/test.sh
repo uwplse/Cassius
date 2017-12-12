@@ -47,6 +47,7 @@ do
 done
 
 make clean
+rm -f reports/rkt/* reports/json/*
 
 for CSSWG in \
     abspos borders box-display box cascade floats-clear \
@@ -57,4 +58,7 @@ done | xargs make -j$THREADS bench/fwt.rkt
 
 make FLAGS="--verbose --threads $THREADS" reports/fwt.html reports/vizassert.html reports/csswg.html reports/specific.html
 
-cp bench/fwt.rkt bench/css/*.rkt reports/
+mkdir -p reports/rkt/
+mkdir -p reports/json/
+cp bench/fwt.rkt bench/css/*.rkt reports/rkt/
+mv reports/*.json reports/json/
