@@ -52,7 +52,6 @@
     (for ([json (directory-jsons subdir)])
       (define rel-path (find-relative-path dir json))
       (define-values (branch prob) (parse-json-path rel-path))
-      (eprintf "path ~a -> branch ~a and prob ~a\n" rel-path branch prob)
       (define prob-data (dict-ref! data (string->symbol prob) (list)))
       (define time (seconds->date (string->number (directory-name subdir))))
       (define file-data
