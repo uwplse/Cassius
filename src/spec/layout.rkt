@@ -616,7 +616,7 @@
        (margins-dont-collapse b)
 
        (= (w-from-stfwidth b) (is-width/auto (style.width r)))
-       (= (stfmax b) (min-max-width (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) b))
+       (= (stfmax b) (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0))
        (= (float-stfmax b) (min-max-width
                             (+ (max (- (right-outer b) (left-outer b)) 0.0)
                                (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
