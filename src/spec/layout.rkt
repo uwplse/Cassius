@@ -896,14 +896,19 @@
                        (+ (font.descent metrics) (* 0.5 leading))))
                    0.0)))
 
-       (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
-       (=> (and (is-text-align/justify (textalign b)) (is-box f))
-           (and (= (left-outer f) (left-content b))
-                (=> (is-box n) (= (right-outer l) (right-content b)))))
-       (=> (and (is-text-align/right (textalign b)) (is-box f)) (= (right-outer l) (right-content b)))
-       (=> (and (is-text-align/center (textalign b)) (is-box f))
-           (= (- (left-outer f) (left-content b))
-              (max (- (right-content b) (right-outer l)) 0.0)))
+       (=> (is-box f)
+           (let ([wsub (- (right-outer l) (left-outer f))])
+             ,(smt-cond
+               [(> wsub (w b)) (= (left-outer f) (left-content b))]
+               [(is-text-align/left (textalign b)) (= (left-outer f) (left-content b))]
+               [(is-text-align/justify (textalign b))
+                (and (= (left-outer f) (left-content b))
+                     (=> (is-box n) (= (right-outer l) (right-content b))))]
+               [(is-text-align/right (textalign b))
+                (= (right-outer l) (right-content b))]
+               [(is-text-align/center (textalign b))
+                (= (- (left-outer f) (left-content b)) (- (right-content b) (right-outer l)))]
+               [else false])))
        (= (ez.sufficient b) true)
        (= (ez.out b) (ez.out (lbox b)))))
 
