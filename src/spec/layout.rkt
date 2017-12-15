@@ -143,7 +143,9 @@
                 (top-content p))
            (ite (inline-float-next-line b)
                 (bottom-border (ancestor-line b))
-                (top-content (ancestor-line b))))))
+                (ite (is-box (vbox (ancestor-line b)))
+                     (bottom-border (vbox (ancestor-line b)))
+                     (top-content (pbox (ancestor-line b))))))))
 
   (define-fun has-clearance ((b Box)) Bool
     (and (is-elt (box-elt b))
