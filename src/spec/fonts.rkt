@@ -51,7 +51,7 @@
                           (fid (box-elt b))
                           (ite (is-box (pbox b))
                                (font-info (pbox b))
-                               (font 0 0 0 0 0 0))))))
+                               (font 0 0 0 0 0 0)))))) ; TODO: should be default font
 
   (define-fun height-text ((b Box)) Real
     (+ (font.ascent (font-info b)) (font.descent (font-info b))))

@@ -1349,7 +1349,8 @@ function get_font_offsets(font, weight, style, A, D) {
 }
 
 function get_font_metrics(font, fname) {
-	if (font.size == 0) return [FontIDMap[fname], 0, 0, 0, 0, 0];
+	if (font.size == 0) return [FontIDMap[fname], dump_string(font.family), dump_string(font.weight),
+	                            dump_string(font.style), 0, 0, 0, 0, 0];
 	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
 	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
 	var bb = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "bottom");
