@@ -14,12 +14,29 @@
         (sow dir)]))))
 
 (define (parse-json-path path)
-  (define s (path->string (path-replace-extension path #"")))
-  (match (string-split s ":")
-    [(list branch prob)
-     (values branch prob)]
-    [(list prob)
-     (values "master" prob)]))
+  (define branch
+    (match (filter (curryr string-contains? ":")
+                   (map path->string (explode-path path)))
+      [(list x) (first (string-split x ":"))]
+      [(list) "master"]
+      [_ (error "Multiple possible branches in path!" path)]))
+
+  (define file-name (path-replace-extension (file-name-from-path path) #""))
+  (define prob (last (string-split (path->string file-name) ":")))
+  (values branch prob))
+
+(module+ test
+  (require rackunit)
+
+  (let ([check
+         (λ (s b p)
+           (let-values ([(b* p*) (parse-json-path (string->path s))])
+             (with-check-info (['path s])
+                              (check-equal? b* b)
+                              (check-equal? p* p))))])
+    (check "1513249201/font-selecting:reports/vizassert.json" "font-selecting" "vizassert")
+    (check "1512515585/abspos.json" "master" "abspos")
+    (check "1510657201/json/font-metrics:csswg.json" "font-metrics" "csswg")))
 
 (define (directory-name path)
   (let-values ([(base name dir?) (split-path path)])
@@ -34,7 +51,7 @@
         (values (list (dict-ref rec ':time #f) prob (dict-ref rec ':branch #f)) rec)))
     (for ([json (directory-jsons subdir)])
       (define rel-path (find-relative-path dir json))
-      (define-values (branch prob) (parse-json-path (file-name-from-path json)))
+      (define-values (branch prob) (parse-json-path rel-path))
       (define prob-data (dict-ref! data (string->symbol prob) (list)))
       (define time (seconds->date (string->number (directory-name subdir))))
       (define file-data

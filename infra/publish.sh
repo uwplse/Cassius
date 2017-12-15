@@ -7,7 +7,7 @@ download () {
     if [[ $HARD = "true" ]]; then
         FLAGS="--checksum"
     fi
-    rsync --include '*.json' --include '/*/' --include '/*/*/' --exclude '*' \
+    rsync --include '*.json' --include "*/" --exclude '*' \
            $FLAGS --recursive uwplse.org:/var/www/cassius/reports/ previous/
 }
 

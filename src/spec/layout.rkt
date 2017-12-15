@@ -143,7 +143,9 @@
                 (top-content p))
            (ite (inline-float-next-line b)
                 (bottom-border (ancestor-line b))
-                (top-content (ancestor-line b))))))
+                (ite (is-box (vbox (ancestor-line b)))
+                     (bottom-border (vbox (ancestor-line b)))
+                     (top-content (pbox (ancestor-line b))))))))
 
   (define-fun has-clearance ((b Box)) Bool
     (and (is-elt (box-elt b))
@@ -211,14 +213,16 @@
          (min-max-height (- (bottom-border lb) (top-content b)) b)]
         [else ; (is-box/block (type lb)), because blocks only have block or line children
          (min-max-height 
-          (- ;; CSS 2.1 § 10.6.3, item 2
-           (+ (ite (box-collapsed-through lb)
-                   (top-outer lb)
-                   (bottom-border lb))
-              (ite (and (bottom-margin-collapses-with-children b) (not (mb-clear lb)))
-                   0.0
-                   (+ (mbp lb) (mbn lb))))
-           (top-content b))
+          (ite (and (box-collapsed-through lb) (firstish-box lb))
+               0.0 ;; This special case should be refactored
+               (- ;; CSS 2.1 § 10.6.3, item 2
+                (+ (ite (box-collapsed-through lb)
+                        (top-outer lb)
+                        (bottom-border lb))
+                   (ite (and (bottom-margin-collapses-with-children b) (not (mb-clear lb)))
+                        0.0
+                        (+ (mbp lb) (mbn lb))))
+                (top-content b)))
           b)])))
 
   (define-fun margins-collapse ((b Box)) Bool
@@ -614,7 +618,7 @@
        (margins-dont-collapse b)
 
        (= (w-from-stfwidth b) (is-width/auto (style.width r)))
-       (= (stfmax b) (min-max-width (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) b))
+       (= (stfmax b) (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0))
        (= (float-stfmax b) (min-max-width
                             (+ (max (- (right-outer b) (left-outer b)) 0.0)
                                (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
@@ -816,10 +820,10 @@
                [metrics (font-info b)] [leading (- (line-height b) (height-text b))])
        (= (type b) box/text)
        ;; Only true if there are no wrapping opportunities in the box
-       (= (stfwidth b) (max (w b) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
+       (= (stfwidth b) (max (+ (ml b) (w b)) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))
        (= (stfmax b)
           (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0)
-             (ite (and (= (w b) 0.0) (is-no-box (nbox b))) 5.0 (w b)))) ;; HAXXX
+             (ite (and (= (w b) 0.0) (is-no-box (nbox b))) 5.0 (+ (w b) (ml b))))) ;; HAXXX
        (= (float-stfmax b) (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
 
        (= (baseline b) (baseline p))
