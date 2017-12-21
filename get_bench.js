@@ -1349,8 +1349,8 @@ function get_font_offsets(font, weight, style, A, D) {
 }
 
 function get_font_metrics(font, fname) {
-	if (font.size == 0) return [FontIDMap[fname], dump_string(font.family), dump_string(font.weight),
-	                            dump_string(font.style), 0, 0, 0, 0, 0];
+	if (font.size == 0) return [FontIDMap[fname], font.family, font.weight,
+	                            font.style, 0, 0, 0, 0, 0];
 	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
 	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
 	var bb = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "bottom");
@@ -1359,8 +1359,8 @@ function get_font_metrics(font, fname) {
 	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
 	var lineheight = get_font_lineheight(font.name, font.weight, font.style);
 	
-	return [FontIDMap[fname], dump_string(font.family), dump_string(font.weight),
-	        dump_string(font.style), ascent, descent, offsets.top, offsets.bottom, lineheight];
+	return [FontIDMap[fname], dump_string(font.family), font.weight,
+	        font.style, ascent, descent, offsets.top, offsets.bottom, lineheight];
 }
 
 function dump_fonts(name) {

@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "selectors.rkt")
-(provide link-elts-boxes link-matched-elts-boxes)
+(provide link-elts-boxes link-matched-elts-boxes sheet->font)
 
 (define (sheet->display elts sheet)
   (if (ormap (curryr set-member? '?) sheet)
@@ -16,7 +16,7 @@
 (define (sheet->font elts sheet)
   (if (ormap (curryr set-member? '?) sheet)
       (λ (elt) (if (equal? (node-type elt) 'head) 'none '?))
-      (let ([eqs (equivalence-classes sheet (sequence->list (in-tree elts)))])
+      (let ([eqs (equivalence-classes sheet elts)])
         (λ (elt)
           (match-define (cons class-hash-family value-hash-family) (dict-ref eqs 'font-family))
           (match-define (cons class-hash-weight value-hash-weight) (dict-ref eqs 'font-weight))

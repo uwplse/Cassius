@@ -118,7 +118,7 @@
 (define-css-type (Line-Height (px Real) (% Real) (em Real) (num Real) normal)
   [line-height normal])
 
-(define inheritable-properties '(text-align text-indent color background-color line-height))
+(define inheritable-properties '(text-align text-indent color background-color line-height font-weight font-style font-family))
 
 (define (css-inheritable? x) (set-member? inheritable-properties x))
 

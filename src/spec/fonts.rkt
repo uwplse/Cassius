@@ -19,7 +19,7 @@
   (define fid-table (make-hash))
   (for ([font fonts])
     (match-define (list fid n s w a d t b l) font)
-    (define font-name (sformat "~a ~a ~a" n s w))
+    (define font-name (list n s w) #|(sformat "~a ~a ~a" n s w)|#)
     (define fid-list (dict-ref! fid-table font-name '()))
     (dict-set! fid-table font-name (cons fid fid-list)))
   fid-table)

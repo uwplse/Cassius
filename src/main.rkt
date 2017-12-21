@@ -334,6 +334,39 @@
   (when (node-get elt ':fid)
     (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
 
+(define (font-matching sheet fonts elts)
+  (define get-font (sheet->font elts sheet))
+  (define font->fids (make-font-mapping fonts))
+  (define (desugar-font-weight weight)
+    (match weight
+      ['normal 400]
+      ['bold 700]
+      [_ weight]))
+  (define (resolve-inheritance elt)
+    (if (node? elt)
+        (let ([pfont (resolve-inheritance (node-parent elt))])
+          (match-define (list family weight style) (get-font elt))
+          (list
+           (match family
+             ['inherit (car pfont)]
+             [_ family])
+           (match weight
+             ['normal 400]
+             ['bold 700]
+             ['inherit (cadr pfont)]
+             [_ weight])
+           (match style
+             ['inherit (caddr pfont)]
+             [_ style])))
+        (list "serif" 400 'normal))) ;; TODO: browser defaults
+  (for/list ([elt elts] #:when (node-get elt ':num))
+    (define font (get-font elt))
+    (define desugared (resolve-inheritance elt))
+    (define fids (dict-ref font->fids desugared))
+    (if (set-member? fids (node-get elt ':fid))
+        null
+        (error (sformat "Fid ~a not in fonts for ~a" (node-get elt ':fid) desugared)))))
+
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
@@ -375,8 +408,9 @@
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
-  
   (define media-params (make-hash '((:type . screen))))
+  (for* ([dom doms])
+    (font-matching (apply append sheets) fonts (sequence->list (in-elements dom))))
 
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
