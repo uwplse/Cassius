@@ -298,9 +298,9 @@
 (define (box-flow-constraints dom emit elt)
   (define (flow-linker b e)
     (match (node-type elt)
-      [(or 'BLOCK 'MAGIC 'ANON) `(link-flow-block ,b ,e)]
+      [(or 'BLOCK 'MAGIC 'ANON 'INLINE 'TEXT) `(link-flow-block ,b ,e)]
       ['VIEW `(link-flow-root ,b ,e)]
-      [(or 'LINE 'INLINE 'TEXT) `(link-flow-simple ,b ,e)]))
+      [(or 'LINE) `(link-flow-simple ,b ,e)]))
 
   (emit `(assert (! ,(flow-linker (dump-box elt) (name 'box elt))
                     :named ,(sformat "link-flow/~a" (name 'box elt))))))

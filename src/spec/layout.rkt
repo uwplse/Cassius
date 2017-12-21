@@ -572,12 +572,10 @@
        (= (mb b)
           (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom '(w p) 'b)))
        (margins-collapse b)
-       (= (stfmax b) (min-max-width (max-if (compute-stfmax b) (is-box (vbox b)) (stfmax (vbox b))) b))
+       (= (stfmax b) (max-if (min-max-width (compute-stfmax b) b) (is-box (vbox b)) (stfmax (vbox b))))
        (= (float-stfmax b)
-          (min-max-width
-           (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
-              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
-           b))
+          (+ (min-max-width (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0) b)
+             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
        (let ([y* (resolve-clear b (vertical-position-for-flow-boxes b))])
          (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
@@ -619,10 +617,9 @@
 
        (= (w-from-stfwidth b) (is-width/auto (style.width r)))
        (= (stfmax b) (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0))
-       (= (float-stfmax b) (min-max-width
-                            (+ (max (- (right-outer b) (left-outer b)) 0.0)
-                               (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
-                            b))
+       (= (float-stfmax b) 
+          (+ (min-max-width (max (- (right-outer b) (left-outer b)) 0.0) b)
+             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
        (width-set b)
        (ite (is-width/auto (style.width r))
             (ite (is-replaced e)
@@ -667,12 +664,10 @@
       (margins-dont-collapse b)
       (positioned-vertical-layout b)
       (positioned-horizontal-layout b)
-      (= (stfmax b) (min-max-width (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) b))
+      (= (stfmax b) (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0))
       (= (float-stfmax b)
-         (min-max-width
-          (+ (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0)
-             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
-          b))
+         (+ (min-max-width (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0) b)
+            (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
       (= (ez.sufficient b) true)
       (= (ez.lookback b) true)
       (= (ez.out b) (ez.in b))))
@@ -739,14 +734,13 @@
             (relatively-positioned b)
             (no-relative-offset b))
        (= (stfwidth b) (min-max-width (compute-stfwidth b) b))
-       (= (stfmax b) (min-max-width (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (compute-stfmax b)) b))
+       (= (stfmax b) (+ (ite (is-box (vbox b)) (stfmax (vbox b)) 0.0) (min-max-width (compute-stfmax b) b)))
        (= (float-stfmax b)
-          (min-max-width
-           (+ (ite (and (not (is-display/inline-block (style.display r)))
-                        (is-box (lbox b)))
-                   (float-stfmax (lbox b)) 0.0)
-              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0))
-           b))
+          (+ 
+           (ite (and (not (is-display/inline-block (style.display r))) (is-box (lbox b)))
+                (min-max-width (float-stfmax (lbox b)) b)
+                0.0)
+           (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
        (= (text-indent b)
           (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
@@ -902,14 +896,19 @@
                        (+ (font.descent metrics) (* 0.5 leading))))
                    0.0)))
 
-       (=> (and (is-text-align/left (textalign b)) (is-box f)) (= (left-outer f) (left-content b)))
-       (=> (and (is-text-align/justify (textalign b)) (is-box f))
-           (and (= (left-outer f) (left-content b))
-                (=> (is-box n) (= (right-outer l) (right-content b)))))
-       (=> (and (is-text-align/right (textalign b)) (is-box f)) (= (right-outer l) (right-content b)))
-       (=> (and (is-text-align/center (textalign b)) (is-box f))
-           (= (- (left-outer f) (left-content b))
-              (max (- (right-content b) (right-outer l)) 0.0)))
+       (=> (is-box f)
+           (let ([wsub (- (right-outer l) (left-outer f))])
+             ,(smt-cond
+               [(> wsub (w b)) (= (left-outer f) (left-content b))]
+               [(is-text-align/left (textalign b)) (= (left-outer f) (left-content b))]
+               [(is-text-align/justify (textalign b))
+                (and (= (left-outer f) (left-content b))
+                     (=> (is-box n) (= (right-outer l) (right-content b))))]
+               [(is-text-align/right (textalign b))
+                (= (right-outer l) (right-content b))]
+               [(is-text-align/center (textalign b))
+                (= (- (left-outer f) (left-content b)) (- (right-content b) (right-outer l)))]
+               [else false])))
        (= (ez.sufficient b) true)
        (= (ez.out b) (ez.out (lbox b)))))
 
