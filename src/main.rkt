@@ -329,19 +329,12 @@
       (emit `(assert (has-contents ,(dump-box box))))))
 
 (define (font-constraints sheet dom emit elt)
-  #;(define font (sheet->font sheet elt))
-  
   (when (node-get elt ':fid)
     (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
 
 (define (font-matching sheet fonts elts)
   (define get-font (sheet->font elts sheet))
   (define font->fids (make-font-mapping fonts))
-  (define (desugar-font-weight weight)
-    (match weight
-      ['normal 400]
-      ['bold 700]
-      [_ weight]))
   (define (resolve-inheritance elt)
     (if (node? elt)
         (let ([pfont (resolve-inheritance (node-parent elt))])
