@@ -14,11 +14,15 @@
         (sow dir)]))))
 
 (define (parse-json-path path)
+  (define path* (map path->string (explode-path path)))
   (define branch
-    (match (filter (curryr string-contains? ":")
-                   (map path->string (explode-path path)))
+    (match (filter (curryr string-contains? ":") path*)
       [(list x) (first (string-split x ":"))]
-      [(list) "master"]
+      [(list)
+       (match path*
+         [(list _ branch _ ..1) branch]
+         [(list _ file) "master"]
+         [_ (error "Too many folders, could not determine branch" path)])]
       [_ (error "Multiple possible branches in path!" path)]))
 
   (define file-name (path-replace-extension (file-name-from-path path) #""))
@@ -34,6 +38,7 @@
              (with-check-info (['path s])
                               (check-equal? b* b)
                               (check-equal? p* p))))])
+    (check "1513249201/font-selecting/vizassert.json" "font-selecting" "vizassert")
     (check "1513249201/font-selecting:reports/vizassert.json" "font-selecting" "vizassert")
     (check "1512515585/abspos.json" "master" "abspos")
     (check "1510657201/json/font-metrics:csswg.json" "font-metrics" "csswg")))
