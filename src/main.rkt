@@ -328,9 +328,12 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
-(define (font-constraints sheet dom emit elt)
+(define (font-constraints sheet fonts dom emit elt)
   (when (node-get elt ':fid)
-    (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
+    (emit `(assert (= (fid ,(dump-elt elt))
+                      (get-font
+                       ,(name 'font (node-get elt ':fid))
+                       (font-size.px (style.font-size (computed-style ,(dump-elt elt))))))))))
 
 (define (font-matching sheet fonts elts)
   (define get-font (sheet->font elts sheet))
@@ -433,6 +436,7 @@
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
     (define-const color/undefined Color color/transparent)
     ,@(make-font-table fonts)
+    ,(make-get-font fonts)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))
     ,@(common-definitions)
@@ -450,7 +454,7 @@
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
-    ,@(per-element (curry font-constraints (apply append sheets)))
+    ,@(per-element (curry font-constraints (apply append sheets) fonts))
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)

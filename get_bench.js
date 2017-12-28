@@ -1349,7 +1349,7 @@ function get_font_offsets(font, weight, style, A, D) {
 }
 
 function get_font_metrics(font, fname) {
-	if (font.size == 0) return [FontIDMap[fname], font.family, font.weight,
+	if (font.size == 0) return [FontIDMap[fname], font.size, font.family, font.weight,
 	                            font.style, 0, 0, 0, 0, 0];
 	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
 	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
@@ -1359,7 +1359,7 @@ function get_font_metrics(font, fname) {
 	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
 	var lineheight = get_font_lineheight(font.name, font.weight, font.style);
 	
-	return [FontIDMap[fname], dump_string(font.family), font.weight,
+	return [FontIDMap[fname], font.size, dump_string(font.family), font.weight,
 	        font.style, ascent, descent, offsets.top, offsets.bottom, lineheight];
 }
 
@@ -1373,7 +1373,7 @@ function dump_fonts(name) {
 			var style = cs(elt);
 			var fname = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
 			var size = val2px(style.fontSize);
-			var font = {name: style.fontSize + " " + style.fontFamily, family: style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
+			var font = {name: style.fontSize + " " + style.fontFamily, size: style.fontSize, family: style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
 
 			if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
 
