@@ -67,7 +67,7 @@
   (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt fid) result)
+  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt font) result)
   (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-ctx! model d)
@@ -330,7 +330,7 @@
 
 (define (font-constraints sheet fonts dom emit elt)
   (when (node-get elt ':fid)
-    (emit `(assert (= (fid ,(dump-elt elt))
+    (emit `(assert (= (font ,(dump-elt elt))
                       (get-font
                        ,(name 'font (node-get elt ':fid))
                        (font-size.px (style.font-size (computed-style ,(dump-elt elt))))))))))
@@ -358,10 +358,10 @@
   (for/list ([elt elts] #:when (node-get elt ':num))
     (define font (get-font elt))
     (define desugared (resolve-inheritance elt))
-    (define fids (dict-ref font->fids desugared))
-    (if (set-member? fids (node-get elt ':fid))
+    (define fonts (dict-ref font->fids desugared))
+    (if (set-member? fonts (node-get elt ':fid))
         null
-        (error (sformat "Fid ~a not in fonts for ~a" (node-get elt ':fid) desugared)))))
+        (error (sformat "Fid ~a not in fonts for ~a. ~a" (node-get elt ':fid) desugared (dump-elt elt))))))
 
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))

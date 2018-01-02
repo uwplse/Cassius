@@ -3,8 +3,8 @@
 (provide make-font-datatype make-font-mapping make-font-table make-get-font font-computation)
 
 (define-constraints make-font-datatype
-  (declare-datatypes () ((Font-Metric (font (font.ascent Real) (font.descent Real) (font.topoffset Real)
-                                            (font.bottomoffset Real) (font.line-height Real) (font.selection-height Real))))))
+  (declare-datatypes () ((Font-Metric (font-metric (font.ascent Real) (font.descent Real) (font.topoffset Real)
+                                                   (font.bottomoffset Real) (font.line-height Real) (font.selection-height Real))))))
 
 (define-by-match font-info?
   (list fid size n s w a d t b lh))
@@ -21,7 +21,7 @@
     (match-define (list fid size n s w a d t b l) font)
     (define font-name (list n s w))
     (define fid-list (dict-ref! fid-table font-name '()))
-    (dict-set! fid-table font-name (cons fid #;(cons size fid) fid-list)))
+    (dict-set! fid-table font-name (cons fid fid-list)))
   fid-table)
 
 (define/contract (make-fid-mapping fonts)
@@ -57,21 +57,21 @@
   (-> (listof font-info?) any/c)
   (define fid-map (make-fid-mapping fonts))
   `(define-fun get-font ((fid Int) (font-size Real)) Font-Metric
-     ,(for/fold ([outer `(font 0 0 0 0 0 0)]) ([fid (dict-keys fid-map)])
-        (for/fold ([inner outer]) ([font (dict-ref fid-map fid)])
-          (define size (car font))
-          (define metric (cdr font))
-          `(ite (= font-size ,size) ,metric ,outer)))))
+     ,(for/fold ([outer `(font-metric 0 0 0 0 0 0)]) ([fid-key (dict-keys fid-map)])
+        (for/fold ([inner outer]) ([size->metric (dict-ref fid-map fid-key)])
+          (define size (car size->metric))
+          (define metric (cdr size->metric))
+          `(ite (and (= fid ,fid-key) (= font-size ,size)) ,metric ,outer)))))
 
 (define-constraints font-computation
   (declare-fun font-info (Box) Font-Metric)
   (assert (forall ((b Box))
                   (= (font-info b)
                      (ite (is-elt (box-elt b))
-                          (fid (box-elt b))
+                          (font (box-elt b))
                           (ite (is-box (pbox b))
                                (font-info (pbox b))
-                               (font 0 0 0 0 0 0)))))) ; TODO: should be default font
+                               (font-metric 0 0 0 0 0 0)))))) ; TODO: should be default font
 
   (define-fun height-text ((b Box)) Real
     (+ (font.ascent (font-info b)) (font.descent (font-info b))))

@@ -808,8 +808,8 @@ function dump_rule(sel, style, features, is_from_style, media) {
         } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
             val = dump_length(val, _features);
         } else if (sname === "font-family") {
-			val = dump_string(val);
-		}
+	        val = dump_string(val);
+	    }
         
         if (Props.indexOf(sname) !== -1) {
             has_good_prop = true;
