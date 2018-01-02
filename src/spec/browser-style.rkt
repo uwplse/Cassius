@@ -68,30 +68,36 @@
     ((tag h1)
      :browser
      [font-size (em 2)]
+     [font-weight bold]
      [margin-top (em .67)]
      [margin-bottom (em .67)])
     ((tag h2)
      :browser
      [font-size (em 1.5)]
+     [font-weight bold]
      [margin-top (em .83)]
      [margin-bottom (em .83)])
     ((tag h3)
      :browser
      [font-size (em 1.17)]
+     [font-weight bold]
      [margin-top (em 1)]
      [margin-bottom (em 1)])
     ((tag h4)
      :browser
+     [font-weight bold]
      [margin-top (em 1.33)]
      [margin-bottom (em 1.33)])
     ((tag h5)
      :browser
      [font-size (em .83)]
+     [font-weight bold]
      [margin-top (em 1.67)]
      [margin-bottom (em 1.67)])
     ((tag h6)
      :browser
      [font-size (em 0.67)]
+     [font-weight bold]
      [margin-top (em 2.33)]
      [margin-bottom (em 2.33)])
     ((tag hr)
