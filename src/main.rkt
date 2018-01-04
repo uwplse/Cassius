@@ -344,6 +344,7 @@
           (match-define (list family weight style) (get-font elt))
           (list
            (match family
+             ["-moz-field" "MS Shell Dlg \32"]
              ['inherit (car pfont)]
              [_ family])
            (match weight

@@ -141,6 +141,7 @@
 
     ((tag input)
      :browser
+     [font-family "-moz-field"]
      [padding-left (px 1)]
      [padding-top (px 1)]
      [padding-right (px 1)]
