@@ -138,7 +138,18 @@
      [margin-top (em 1)]
      [margin-bottom (em 1)]
      [padding-left (px 40)])
-
+    ((tag em)
+     :browser
+     [font-style italic])
+    ((tag i)
+     :browser
+     [font-style italic])
+    ((tag b)
+     :browser
+     [font-weight bold])
+    ((tag strong)
+     :broswer
+     [font-weight bold])
     ((tag input)
      :browser
      [font-family "-moz-field"]
