@@ -31,14 +31,14 @@
     (match-define (list fid size n s w a d t b l) font)
     (define font-name (list n s w))
     (define fid-list (dict-ref! fid-table fid '()))
-    (dict-set! fid-table fid (cons (cons size (sformat "font~a-~a" (name 'font fid) size)) fid-list)))
+    (dict-set! fid-table fid (cons (cons size (sformat "font~a-~a" (name 'font fid) (name 'fs size))) fid-list)))
   fid-table)
 
 (define/contract (make-font-table fonts)
   (-> (listof font-info?) any/c)
   `(,@(for/reap [sow] ([font fonts])
         (match-define (list fid size n s w a d t b l) font)
-        (define var (sformat "font~a-~a" (name 'font fid) size))
+        (define var (sformat "font~a-~a" (name 'font fid) (name 'fs size)))
         (sow `(declare-const ,var Font-Metric))
         (sow `(assert
                (and
