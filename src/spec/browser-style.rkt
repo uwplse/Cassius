@@ -274,11 +274,15 @@
     ((and (tag input) (type color))
      [width (px 64)]
      [height (px 23)])
+    ((tag select)
+     :browser
+     [font-family "-moz-field"])
     ((tag button)
      :browser
      [text-align center]
      [text-indent (px 0)]
-     [display inline-block])
+     [display inline-block]
+     [font-family "-moz-field"])
     ((and (tag input) (type reset))
      :browser
      [text-align center])
