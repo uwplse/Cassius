@@ -803,13 +803,13 @@ function dump_rule(sel, style, features, is_from_style, media) {
             _features["css:inherit"] = true;
         } else if (val.startsWith("rgb")) {
             val = dump_color(val, _features);
+        } else if (sname === "font-family") {
+            val = dump_string(val);
         } else if (val.match(/^[a-z]+$/)) {
             // skip
         } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
             val = dump_length(val, _features);
-        } else if (sname === "font-family") {
-	        val = dump_string(val);
-	    }
+        }
         
         if (Props.indexOf(sname) !== -1) {
             has_good_prop = true;
