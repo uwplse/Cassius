@@ -836,6 +836,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
             sel_text = rescue_selector(sels[i]);
         }
         if (media && media.mediaText) {
+            features["@media"] = true;
             sel_text = "(media " + dump_media_query(media, features) + " " + sel_text + ")";
         }
         out += "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
