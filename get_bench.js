@@ -749,7 +749,7 @@ function dump_length(val, features) {
     } else if (val.match(/e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
     } else {
-        val = "(px " + val2px(val, features) + ")";
+        val = "(px " + f2r(val2px(val, features)) + ")";
     }
     return val;
 }
