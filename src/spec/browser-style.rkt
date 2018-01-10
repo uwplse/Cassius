@@ -129,10 +129,12 @@
     ((tag pre)
      :browser
      [margin-top (em 1)]
-     [margin-bottom (em 1)])
+     [margin-bottom (em 1)]
+     [font-family "monospace"])
     ((tag th)
      :browser
-     [text-align center])
+     [text-align center]
+     [font-weight bold])
     ((tag ul)
      :browser
      [margin-top (em 1)]
@@ -319,6 +321,7 @@
      [padding-left (px 1)]
      [padding-right (px 1)]
      [font-size medium]
+     [font-family "monospace"]
      [text-align start]
      [color black]
      [background-color white]
