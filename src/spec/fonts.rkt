@@ -61,7 +61,7 @@
         (for/fold ([inner outer]) ([size->metric (dict-ref fid-map fid-key)])
           (define size (car size->metric))
           (define metric (cdr size->metric))
-          `(ite (and (= fid ,fid-key) (= font-size ,size)) ,metric ,outer)))))
+          `(ite (and (= fid ,fid-key) ,(fuzzy-=-constraint 'font-size size *font-fuzz*)) ,metric ,outer)))))
 
 (define-constraints font-computation
   (declare-fun font-info (Box) Font-Metric)

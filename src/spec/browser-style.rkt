@@ -155,6 +155,7 @@
     ((tag input)
      :browser
      [font-family "-moz-field"]
+     [font-size (px 13.3333)]
      [padding-left (px 1)]
      [padding-top (px 1)]
      [padding-right (px 1)]

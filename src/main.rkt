@@ -356,13 +356,12 @@
              ['inherit (caddr pfont)]
              [_ style])))
         (list "serif" 400 'normal))) ;; TODO: browser defaults
-  (for/list ([elt elts] #:when (node-get elt ':num))
+  (for ([elt elts] #:when (node-get elt ':num))
     (define font (get-font elt))
     (define desugared (resolve-inheritance elt))
     (define fonts (dict-ref font->fids desugared))
-    (if (set-member? fonts (node-get elt ':fid))
-        null
-        (error (sformat "Fid ~a not in fonts for ~a. ~a" (node-get elt ':fid) desugared (dump-elt elt))))))
+    (unless (set-member? fonts (node-get elt ':fid))
+      (eprintf "Fid ~a not in fonts for ~a. ~a" (node-get elt ':fid) desugared (dump-elt elt)))))
 
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
