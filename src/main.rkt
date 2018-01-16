@@ -359,9 +359,9 @@
   (for ([elt elts] #:when (node-get elt ':num))
     (define font (get-font elt))
     (define desugared (resolve-inheritance elt))
-    (define fonts (dict-ref font->fids desugared))
-    (unless (set-member? fonts (node-get elt ':fid))
-      (eprintf "Fid ~a not in fonts for ~a. ~a" (node-get elt ':fid) desugared (dump-elt elt)))))
+    (define fonts (dict-ref font->fids desugared #f))
+    (unless (and fonts (set-member? fonts (node-get elt ':fid)))
+      (eprintf "Warning: fid ~a not in fonts for ~a of elt: ~a (are you using media queries?)\n" (node-get elt ':fid) desugared (dump-elt elt)))))
 
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
