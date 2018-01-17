@@ -335,34 +335,6 @@
                        ,(name 'font (list (node-get elt ':font-name) (node-get elt ':font-style) (node-get elt ':font-weight)))
                        (font-size.px (style.font-size (computed-style ,(dump-elt elt))))))))))
 
-(define (font-matching sheet fonts elts)
-  (define get-font (sheet->font elts sheet))
-  (define font->fids (make-font-mapping fonts))
-  (define (resolve-inheritance elt)
-    (if (node? elt)
-        (let ([pfont (resolve-inheritance (node-parent elt))])
-          (match-define (list family weight style) (get-font elt))
-          (list
-           (match family
-             ["-moz-field" "Sans"] ;; TODO: Make this be the default font for inputs
-             ['inherit (car pfont)]
-             [_ family])
-           (match weight
-             ['normal 400]
-             ['bold 700]
-             ['inherit (cadr pfont)]
-             [_ weight])
-           (match style
-             ['inherit (caddr pfont)]
-             [_ style])))
-        (list "serif" 400 'normal))) ;; TODO: browser defaults
-  (for ([elt elts] #:when (node-get elt ':num))
-    (define font (get-font elt))
-    (define desugared (resolve-inheritance elt))
-    (define fonts (dict-ref font->fids desugared #f))
-    (unless (and fonts (set-member? fonts (node-get elt ':fid)))
-      (eprintf "Warning: fid ~a not in fonts for ~a of elt: ~a (are you using media queries?)\n" (node-get elt ':fid) desugared (dump-elt elt)))))
-
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
@@ -405,8 +377,6 @@
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
   (define media-params (make-hash '((:type . screen))))
-  (for* ([dom doms])
-    (font-matching (apply append sheets) fonts (sequence->list (in-elements dom))))
 
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install

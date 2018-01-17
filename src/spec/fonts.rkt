@@ -1,43 +1,33 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "../encode.rkt" "../registry.rkt")
-(provide make-font-datatype make-font-mapping make-font-table make-get-font font-computation)
+(provide make-font-datatype make-font-table make-get-font font-computation)
 
 (define-constraints make-font-datatype
   (declare-datatypes () ((Font-Metric (font-metric (font.ascent Real) (font.descent Real) (font.topoffset Real)
                                                    (font.bottomoffset Real) (font.line-height Real) (font.selection-height Real))))))
 
 (define-by-match font-info?
-  (list fid size n s w a d t b lh))
+  (list size n s w a d t b lh))
 
 (define (fuzzy-=-constraint var val [fuzz *fuzz*])
   (if (fuzz)
       `(< (- ,val ,(fuzz)) ,var (+ ,val ,(fuzz)))
       `(= ,val ,var)))
 
-(define/contract (make-font-mapping fonts)
-  (-> (listof font-info?) any/c)
-  (define fid-table (make-hash))
-  (for ([font fonts])
-    (match-define (list fid size n s w a d t b l) font)
-    (define font-name (list n s w))
-    (define fid-list (dict-ref! fid-table font-name '()))
-    (dict-set! fid-table font-name (cons fid fid-list)))
-  fid-table)
-
 (define/contract (make-fid-mapping fonts)
   (-> (listof font-info?) any/c)
   (define fid-table (make-hash))
   (for ([font fonts])
-    (match-define (list fid size n s w a d t b l) font)
+    (match-define (list size n s w a d t b l) font)
     (define font-name (list n s w))
     (define fid-list (dict-ref! fid-table font-name '()))
-    (dict-set! fid-table fid (cons (cons size (sformat "font~a-~a" (name 'font font-name) (name 'fs size))) fid-list)))
+    (dict-set! fid-table (name 'font font-name) (cons (cons size (sformat "font~a-~a" (name 'font font-name) (name 'fs size))) fid-list)))
   fid-table)
 
 (define/contract (make-font-table fonts)
   (-> (listof font-info?) any/c)
   `(,@(for/reap [sow] ([font fonts])
-        (match-define (list fid size n s w a d t b l) font)
+        (match-define (list size n s w a d t b l) font)
         (define var (sformat "font~a-~a" (name 'font (list n s w)) (name 'fs size)))
         (sow `(declare-const ,var Font-Metric))
         (sow `(assert

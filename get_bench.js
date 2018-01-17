@@ -6,20 +6,6 @@ Props = "width height margin-top margin-right margin-bottom margin-left padding-
 BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
 BadTags = "img iframe input svg:svg button frame noframes".split(" ");
 
-var FontIDMap = Object();
-var nextID = 0;
-
-function get_font_ID(style) {
-	var font = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
-	if (!FontIDMap.hasOwnProperty(font)) {
-		var id = nextID++;
-		FontIDMap[font] = id;
-		return id;
-	} else {
-		return FontIDMap[font];
-	}
-}
-
 Box = function(type, node, props) {
     this.children = [];
     this.type = type; this.props = props; this.node = node;
@@ -995,14 +981,14 @@ function dump_document(features) {
             return false;
         } else if (typeof(elt.dataset) === "undefined"){
             console.log("Weird element", elt);
-            var rec = new Box(elt.tagName.toLowerCase(), elt, {fid: get_font_ID(cs(elt))});
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {});
             features["weird-element"] = true;
             return rec;
         } else {
             var num = ELTS.length;
             elt.dataset["num"] = num;
             ELTS.push(elt);
-            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num, fid: get_font_ID(cs(elt))});
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num});
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
@@ -1350,7 +1336,7 @@ function get_font_offsets(font, weight, style, A, D) {
 }
 
 function get_font_metrics(font, fname) {
-	if (font.size == 0) return [FontIDMap[fname], font.size, dump_string(font.family), font.weight,
+	if (font.size == 0) return [font.size, dump_string(font.family), font.weight,
 	                            font.style, 0, 0, 0, 0, 0];
 	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
 	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
@@ -1360,8 +1346,8 @@ function get_font_metrics(font, fname) {
 	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
 	var lineheight = get_font_lineheight(font.name, font.weight, font.style);
 	
-	return [FontIDMap[fname], font.size, dump_string(font.family), font.weight,
-	        font.style, ascent, descent, offsets.top, offsets.bottom, lineheight];
+	return [font.size, dump_string(font.family), font.weight, font.style,
+            ascent, descent, offsets.top, offsets.bottom, lineheight];
 }
 
 function dump_fonts(name) {
