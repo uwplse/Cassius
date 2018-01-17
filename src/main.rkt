@@ -329,10 +329,10 @@
       (emit `(assert (has-contents ,(dump-box box))))))
 
 (define (font-constraints sheet fonts dom emit elt)
-  (when (node-get elt ':fid)
+  (when (and (node-get elt ':font-name) (node-get elt ':font-style) (node-get elt ':font-weight))
     (emit `(assert (= (font ,(dump-elt elt))
                       (get-font
-                       ,(name 'font (node-get elt ':fid))
+                       ,(name 'font (list (node-get elt ':font-name) (node-get elt ':font-style) (node-get elt ':font-weight)))
                        (font-size.px (style.font-size (computed-style ,(dump-elt elt))))))))))
 
 (define (font-matching sheet fonts elts)
