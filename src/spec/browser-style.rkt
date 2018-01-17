@@ -68,30 +68,36 @@
     ((tag h1)
      :browser
      [font-size (em 2)]
+     [font-weight bold]
      [margin-top (em .67)]
      [margin-bottom (em .67)])
     ((tag h2)
      :browser
      [font-size (em 1.5)]
+     [font-weight bold]
      [margin-top (em .83)]
      [margin-bottom (em .83)])
     ((tag h3)
      :browser
      [font-size (em 1.17)]
+     [font-weight bold]
      [margin-top (em 1)]
      [margin-bottom (em 1)])
     ((tag h4)
      :browser
+     [font-weight bold]
      [margin-top (em 1.33)]
      [margin-bottom (em 1.33)])
     ((tag h5)
      :browser
      [font-size (em .83)]
+     [font-weight bold]
      [margin-top (em 1.67)]
      [margin-bottom (em 1.67)])
     ((tag h6)
      :browser
      [font-size (em 0.67)]
+     [font-weight bold]
      [margin-top (em 2.33)]
      [margin-bottom (em 2.33)])
     ((tag hr)
@@ -123,18 +129,33 @@
     ((tag pre)
      :browser
      [margin-top (em 1)]
-     [margin-bottom (em 1)])
+     [margin-bottom (em 1)]
+     [font-family "monospace"])
     ((tag th)
      :browser
-     [text-align center])
+     [text-align center]
+     [font-weight bold])
     ((tag ul)
      :browser
      [margin-top (em 1)]
      [margin-bottom (em 1)]
      [padding-left (px 40)])
-
+    ((tag em)
+     :browser
+     [font-style italic])
+    ((tag i)
+     :browser
+     [font-style italic])
+    ((tag b)
+     :browser
+     [font-weight bold])
+    ((tag strong)
+     :broswer
+     [font-weight bold])
     ((tag input)
      :browser
+     [font-family "-moz-field"]
+     [font-size (px 13.3333)]
      [padding-left (px 1)]
      [padding-top (px 1)]
      [padding-right (px 1)]
@@ -256,11 +277,15 @@
     ((and (tag input) (type color))
      [width (px 64)]
      [height (px 23)])
+    ((tag select)
+     :browser
+     [font-family "-moz-field"])
     ((tag button)
      :browser
      [text-align center]
      [text-indent (px 0)]
-     [display inline-block])
+     [display inline-block]
+     [font-family "-moz-field"])
     ((and (tag input) (type reset))
      :browser
      [text-align center])
@@ -297,6 +322,7 @@
      [padding-left (px 1)]
      [padding-right (px 1)]
      [font-size medium]
+     [font-family "monospace"]
      [text-align start]
      [color black]
      [background-color white]

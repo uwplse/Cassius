@@ -67,7 +67,7 @@
   (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt fid) result)
+  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt font) result)
   (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-ctx! model d)
@@ -115,7 +115,8 @@
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
-    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop))
+    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop)
+	      #:unless (or (equal? prop 'font-family) (equal? prop 'font-style) (equal? prop 'font-weight)))
       (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
       (cond
        [(equal? '? (car (dict-ref (filter list? props) prop '(?))))
@@ -136,7 +137,8 @@
     (define style `(specified-style ,(dump-elt elt)))
     (for ([elt (cdr cls)])
       (emit `(assert (= (specified-style ,(dump-elt elt)) ,style))))
-    (for* ([(prop type default) (in-css-properties)])
+    (for* ([(prop type default) (in-css-properties)]
+           #:unless (or (equal? prop 'font-family) (equal? prop 'font-style) (equal? prop 'font-weight)))
       (define nonecond
         (for/fold ([no-match-so-far 'true])
             ([rm ml]
@@ -326,9 +328,40 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
-(define (font-constraints dom emit elt)
+(define (font-constraints sheet fonts dom emit elt)
   (when (node-get elt ':fid)
-    (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
+    (emit `(assert (= (font ,(dump-elt elt))
+                      (get-font
+                       ,(name 'font (node-get elt ':fid))
+                       (font-size.px (style.font-size (computed-style ,(dump-elt elt))))))))))
+
+(define (font-matching sheet fonts elts)
+  (define get-font (sheet->font elts sheet))
+  (define font->fids (make-font-mapping fonts))
+  (define (resolve-inheritance elt)
+    (if (node? elt)
+        (let ([pfont (resolve-inheritance (node-parent elt))])
+          (match-define (list family weight style) (get-font elt))
+          (list
+           (match family
+             ["-moz-field" "Sans"] ;; TODO: Make this be the default font for inputs
+             ['inherit (car pfont)]
+             [_ family])
+           (match weight
+             ['normal 400]
+             ['bold 700]
+             ['inherit (cadr pfont)]
+             [_ weight])
+           (match style
+             ['inherit (caddr pfont)]
+             [_ style])))
+        (list "serif" 400 'normal))) ;; TODO: browser defaults
+  (for ([elt elts] #:when (node-get elt ':num))
+    (define font (get-font elt))
+    (define desugared (resolve-inheritance elt))
+    (define fonts (dict-ref font->fids desugared #f))
+    (unless (and fonts (set-member? fonts (node-get elt ':fid)))
+      (eprintf "Warning: fid ~a not in fonts for ~a of elt: ~a (are you using media queries?)\n" (node-get elt ':fid) desugared (dump-elt elt)))))
 
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
@@ -371,8 +404,9 @@
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
-  
   (define media-params (make-hash '((:type . screen))))
+  (for* ([dom doms])
+    (font-matching (apply append sheets) fonts (sequence->list (in-elements dom))))
 
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
@@ -402,6 +436,7 @@
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
     (define-const color/undefined Color color/transparent)
     ,@(make-font-table fonts)
+    ,(make-get-font fonts)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))
     ,@(common-definitions)
@@ -419,7 +454,7 @@
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
-    ,@(per-element font-constraints)
+    ,@(per-element (curry font-constraints (apply append sheets) fonts))
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)

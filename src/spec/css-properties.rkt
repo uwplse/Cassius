@@ -95,6 +95,16 @@
 (define-css-type (Font-Size (px Real) (% Real) (em Real))
   [font-size (em 1)])
 
+; Font Family is a string so should never make it to Z3
+(define-css-type (Font-Family)
+  [font-family "serif"])
+
+(define-css-type (Font-Weight normal bold bolder lighter (num Real) initial inherit)
+  [font-weight 400])
+
+(define-css-type (Font-Style normal italic oblique initial inherit)
+  [font-style normal])
+
 (define-css-type (Text-Indent (px Real) (% Real) (em Real))
   [text-indent (px 0)])
 
@@ -108,7 +118,7 @@
 (define-css-type (Line-Height (px Real) (% Real) (em Real) (num Real) normal)
   [line-height normal])
 
-(define inheritable-properties '(text-align text-indent color background-color line-height))
+(define inheritable-properties '(text-align text-indent color background-color line-height font-weight font-style font-family))
 
 (define (css-inheritable? x) (set-member? inheritable-properties x))
 
