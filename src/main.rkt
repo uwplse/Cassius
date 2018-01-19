@@ -328,12 +328,29 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
-(define (font-constraints sheet fonts dom emit elt)
-  (when (and (node-get elt ':font-name) (node-get elt ':font-style) (node-get elt ':font-weight))
-    (emit `(assert (= (font ,(dump-elt elt))
-                      (get-font
-                       ,(name 'font (list (node-get elt ':font-name) (node-get elt ':font-style) (node-get elt ':font-weight)))
-                       (font-size.px (style.font-size (computed-style ,(dump-elt elt))))))))))
+(define (font-constraints get-font dom emit elt)
+  (define (resolve-inheritance elt)
+    (if (node? elt)
+        (let ([pfont (resolve-inheritance (node-parent elt))])
+          (match-define (list family weight style) (get-font elt))
+          (list
+           (match family
+             ["-moz-field" "Sans"] ;; TODO: make this be the default font for inputs
+             ['inherit (car pfont)]
+             [_ family])
+           (match weight
+             ['normal 400]
+             ['bold 700]
+             ['inherit (cadr pfont)]
+             [_ weight])
+           (match style
+             ['inherit (caddr pfont)]
+             [_ style])))
+        (list "serif" 400 'normal))) ;; TODO: browser defaults
+  (emit `(assert (= (font ,(dump-elt elt))
+                    (get-font
+                     ,(name 'font (resolve-inheritance elt))
+                     (font-size.px (style.font-size (computed-style ,(dump-elt elt)))))))))
 
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
@@ -424,7 +441,6 @@
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
-    ,@(per-element (curry font-constraints (apply append sheets) fonts))
     ,@(per-box box-flow-constraints)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)
@@ -432,4 +448,9 @@
     ,@(font-computation)
     ,@(layout-definitions)
     ,@(per-box layout-constraints)
+    ,@(reap [sow] (for* ([dom doms])
+                    (define get-font
+                      (sheet->font (sequence->list (in-elements dom)) (apply append sheets)))
+                    (for* ([elt (in-elements dom)])
+                      (font-constraints get-font dom sow elt))))
     ))
