@@ -16,7 +16,7 @@
 
 (define/contract (make-fid-mapping fonts)
   (-> (listof font-info?) any/c)
-  (define/contract fid-table (hash/c integer? (listof (cons/c (or/c integer? list?) symbol?))) (make-hash))
+  (define/contract fid-table (hash/c integer? (listof (cons/c (or/c integer? number?) symbol?))) (make-hash))
   (for ([font fonts])
     (match-define (list size n s w a d t b l) font)
     (define font-name (list n s w))
