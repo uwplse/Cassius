@@ -328,7 +328,24 @@
      [background-color white]
      #;[vertical-align text-bottom]
      [text-indent 0]
-     #;[white-space pre-wrap])))
+     #;[white-space pre-wrap])
+    ((tag select)
+     [margin-top (px 0)]
+     [margin-right (px 0)]
+     [margin-bottom (px 0)]
+     [margin-left (px 0)]
+     [line-height normal :important]
+     [text-align start]
+     [box-sizing border-box]
+     [border-top-width (px 2)]
+     [border-top-style inset]
+     [border-right-width (px 2)]
+     [border-right-style inset]
+     [border-bottom-width (px 2)]
+     [border-bottom-style inset]
+     [border-left-width (px 2)]
+     [border-left-style inset]
+     [text-indent (px 0)])))
 
 (define (get-sheet browser)
   (match browser
