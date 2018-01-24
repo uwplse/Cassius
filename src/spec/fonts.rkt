@@ -16,11 +16,11 @@
 
 (define/contract (make-fid-mapping fonts)
   (-> (listof font-info?) any/c)
-  (define fid-table (make-hash))
+  (define/contract fid-table (hash/c integer? (listof (cons/c (or/c integer? list?) symbol?))) (make-hash))
   (for ([font fonts])
     (match-define (list size n s w a d t b l) font)
     (define font-name (list n s w))
-    (define fid-list (dict-ref! fid-table font-name '()))
+    (define fid-list (dict-ref! fid-table (name 'font font-name) '()))
     (dict-set! fid-table (name 'font font-name) (cons (cons size (sformat "font~a-~a" (name 'font font-name) (name 'fs size))) fid-list)))
   fid-table)
 
@@ -51,7 +51,7 @@
         (for/fold ([inner outer]) ([size->metric (dict-ref fid-map fid-key)])
           (define size (car size->metric))
           (define metric (cdr size->metric))
-          `(ite (and (= fid ,fid-key) ,(fuzzy-=-constraint 'font-size size *font-fuzz*)) ,metric ,outer)))))
+          `(ite (and (= fid ,fid-key) ,(fuzzy-=-constraint 'font-size size *font-fuzz*)) ,metric ,inner)))))
 
 (define-constraints font-computation
   (declare-fun font-info (Box) Font-Metric)
