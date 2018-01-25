@@ -18,7 +18,7 @@
     '(elt ([spec . (>= (h ?) 6)])
       (elt ([width . 6] [height . 2] [spec . (= (h ?) 2)])
        (elt ([ratio . 1])))
-      (elt ([spec . (=> (good-box (parent ?)) (>= (h ?) 4))])
+      (elt ([spec . (>= (h ?) 4)])
        (elt ([width . 4])
         (elt ([ratio . 1])))
        (elt ()
@@ -175,10 +175,9 @@
      (define-fun good-box ((b Box)) Bool
        (and (>= (w b) (* 2 (padding-value b))) (>= (h b) 0)))
 
-     ,rendering-function
+     (assert (forall ((b Box)) (good-box b)))
 
-     ,@(for/list ([elt (in-tree doc)])
-         `(assert (good-box ,(id elt))))
+     ,rendering-function
 
      ,@(for/list ([elt (in-tree doc)])
          (match elt
@@ -244,7 +243,7 @@
 
   (check-false
    (verify
-    '(elt ([spec . (=> (good-box (parent ?)) (>= (h ?) 4))])
+    '(elt ([spec . (>= (h ?) 4)])
       (elt ([width . 4])
            (elt ([ratio . 1])))
       (elt ()
@@ -255,7 +254,7 @@
    (verify
     '(elt ([spec . (>= (h ?) 6)])
       (component (= (h ?) 2))
-      (component (=> (good-box (parent ?)) (>= (h ?) 4)))))))
+      (component (>= (h ?) 4))))))
 
 (define (verify/modular doc)
   (-> document? (or/c #f (cons/c template? rendering?)))
