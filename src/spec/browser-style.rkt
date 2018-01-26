@@ -86,6 +86,7 @@
     ((tag h4)
      :browser
      [font-weight bold]
+     [font-size (em 1.0)]
      [margin-top (em 1.33)]
      [margin-bottom (em 1.33)])
     ((tag h5)
