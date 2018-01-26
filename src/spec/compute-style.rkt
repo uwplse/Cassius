@@ -25,7 +25,7 @@
   (append
    '(border-top-style border-right-style border-bottom-style border-left-style)
    '(text-align overflow-x overflow-y position color background-color)
-   '(clear display box-sizing)))
+   '(clear display box-sizing font-weight font-style font-family)))
 
 (define em-computed-properties
   ;; These are properties whose computed style must convert em values to pixels

@@ -54,6 +54,8 @@
   (define prefix (slower type))
   (match value
     [(? symbol?) (sformat "~a/~a" prefix value)]
+    [(? string?) (let ([str (if (equal? value "-moz-field") "Sans" value)])
+                   (list (sformat "~a/num" prefix) (name 'type str)))] ;; TODO: Default input font instead of "Sans"
     [0 (list (sformat "~a/px" prefix) 0)]
     [(? number?) (list (sformat "~a/num" prefix) (number->z3 value))]
     [(list 'em n) (list (sformat "~a/em" prefix) (number->z3 n))]

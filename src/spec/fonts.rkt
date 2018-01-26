@@ -14,21 +14,21 @@
       `(< (- ,val ,(fuzz)) ,var (+ ,val ,(fuzz)))
       `(= ,val ,var)))
 
-(define/contract (make-fid-mapping fonts)
+(define/contract (make-font-mapping fonts)
   (-> (listof font-info?) any/c)
-  (define/contract fid-table (hash/c integer? (listof (cons/c (or/c integer? number?) symbol?))) (make-hash))
+  (define/contract font-map (hash/c (list/c string? (or/c symbol? number?) symbol?) (listof (cons/c number? symbol?))) (make-hash))
   (for ([font fonts])
-    (match-define (list size n s w a d t b l) font)
-    (define font-name (list n s w))
-    (define fid-list (dict-ref! fid-table (name 'font font-name) '()))
-    (dict-set! fid-table (name 'font font-name) (cons (cons size (sformat "font~a-~a" (name 'font font-name) (name 'fs size))) fid-list)))
-  fid-table)
+    (match-define (list size n w s a d t b l) font)
+    (define font-name (list n w s))
+    (define font-list (dict-ref! font-map font-name '()))
+    (dict-set! font-map font-name (cons (cons size (sformat "font~a-~a" (name 'font font-name) (name 'fs size))) font-list)))
+  font-map)
 
 (define/contract (make-font-table fonts)
   (-> (listof font-info?) any/c)
   `(,@(for/reap [sow] ([font fonts])
-        (match-define (list size n s w a d t b l) font)
-        (define var (sformat "font~a-~a" (name 'font (list n s w)) (name 'fs size)))
+        (match-define (list size n w s a d t b l) font)
+        (define var (sformat "font~a-~a" (name 'font (list n w s)) (name 'fs size)))
         (sow `(declare-const ,var Font-Metric))
         (sow `(assert
                (and
@@ -45,16 +45,29 @@
 
 (define/contract (make-get-font fonts)
   (-> (listof font-info?) any/c)
-  (define fid-map (make-fid-mapping fonts))
-  `(define-fun get-font ((fid Int) (font-size Real)) Font-Metric
-     ,(for/fold ([outer `(font-metric 0 0 0 0 0 0)]) ([fid-key (dict-keys fid-map)])
-        (for/fold ([inner outer]) ([size->metric (dict-ref fid-map fid-key)])
-          (define size (car size->metric))
-          (define metric (cdr size->metric))
-          `(ite (and (= fid ,fid-key) ,(fuzzy-=-constraint 'font-size size *font-fuzz*)) ,metric ,inner)))))
+  (define font-map (make-font-mapping fonts))
+  `(define-fun get-font ((family Font-Family) (weight Font-Weight) (style Font-Style) (font-size Real)) Font-Metric
+     ,(for/fold ([outer `(font-metric 0 0 0 0 0 0)]) ([font (dict-keys font-map)])
+        (for/fold ([inner outer]) ([size->metric (dict-ref font-map font)])
+          (match-define (list family weight style) font)
+          (match-define (cons size metric) size->metric)
+          `(ite (and (= family ,(dump-value 'font-family family))
+                     (= weight  ,(if (number? weight) `(font-weight/num ,weight) (sformat "font-weight/~a" weight)))
+                     (= style ,(sformat "font-style/~a" style))
+                     ,(fuzzy-=-constraint 'font-size size *font-fuzz*))
+                ,metric
+                ,inner)))))
 
 (define-constraints font-computation
   (declare-fun font-info (Box) Font-Metric)
+
+  (define-fun font ((e Element)) Font-Metric
+    (let ([style (computed-style e)])
+      (get-font (style.font-family style)
+                (style.font-weight style)
+                (style.font-style style)
+                (font-size.px (style.font-size style)))))
+
   (assert (forall ((b Box))
                   (= (font-info b)
                      (ite (is-elt (box-elt b))

@@ -328,30 +328,6 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
-(define (font-constraints get-font dom emit elt)
-  (define (resolve-inheritance elt)
-    (if (node? elt)
-        (let ([pfont (resolve-inheritance (node-parent elt))])
-          (match-define (list family weight style) (get-font elt))
-          (list
-           (match family
-             ["-moz-field" "Sans"] ;; TODO: make this be the default font for inputs
-             ['inherit (car pfont)]
-             [_ family])
-           (match weight
-             ['normal 400]
-             ['bold 700]
-             ['inherit (cadr pfont)]
-             [_ weight])
-           (match style
-             ['inherit (caddr pfont)]
-             [_ style])))
-        (list "serif" 400 'normal))) ;; TODO: browser defaults
-  (emit `(assert (= (font ,(dump-elt elt))
-                    (get-font
-                     ,(name 'font (resolve-inheritance elt))
-                     (font-size.px (style.font-size (computed-style ,(dump-elt elt)))))))))
-
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
@@ -421,6 +397,8 @@
     (define-const font-size/xx-large Font-Size (font-size/px 32))
     (define-const font-size/smaller Font-Size (font-size/em (/ 2.0 3.0)))
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
+    (define-const font-weight/normal Font-Weight (font-weight/num 400))
+    (define-const font-weight/bold Font-Weight (font-weight/num 700))
     (define-const color/undefined Color color/transparent)
     ,@(make-font-table fonts)
     ,(make-get-font fonts)
@@ -448,9 +426,4 @@
     ,@(font-computation)
     ,@(layout-definitions)
     ,@(per-box layout-constraints)
-    ,@(reap [sow] (for* ([dom doms])
-                    (define get-font
-                      (sheet->font (sequence->list (in-elements dom)) (apply append sheets)))
-                    (for* ([elt (in-elements dom)])
-                      (font-constraints get-font dom sow elt))))
     ))
