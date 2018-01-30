@@ -36,7 +36,7 @@
                 (ez.in EZone) (ez.out EZone)
                 (ez.sufficient Bool) (ez.lookback Bool)
                 (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
-                (&elt Int) (first-box? Bool) (last-box? Bool)
+                (first-box? Bool) (last-box? Bool)
                 ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
                     `(,(sformat "&~a" i) Int))
                 (fg-color Color) (bg-color Color)))
@@ -46,9 +46,7 @@
                 (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real) (fid Font-Metric)))))
 
   ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
-      `(assert (= (,field no-box) -1)))
-
-  (assert (= (&elt no-box) -1)))
+      `(assert (= (,field no-box) -1))))
 
 (define-constraints utility-definitions
   ;; The elements in each direction in the element tree
@@ -66,7 +64,8 @@
   (define-fun nbox ((box Box)) Box (get/box (&nbox box)))
 
   ;; From boxes to elements
-  (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
+  (declare-fun box-elt (Box) Element)
+  (assert (is-no-elt (box-elt no-box)))
 
   ;; Box model helpers
   (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))

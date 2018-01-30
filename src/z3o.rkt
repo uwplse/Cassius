@@ -404,6 +404,9 @@
             (for ([field fields] [type types])
               (hash-set! fns field type))]))
        cmd]
+      [`(declare-fun ,(? fn? name) (,types ...) ,rtype)
+       (hash-set! fns name rtype)
+       cmd]
       [`(define-fun ,(? fn? name) ((,args ,types) ...) ,rtype ,body)
        (hash-set! fns name rtype)
        cmd]
@@ -533,9 +536,9 @@
       [`(is-box (get/box -1)) 'false]
       [`(is-no-box (get/box ,(? number?))) 'false]
       [`(is-box ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) 'true]
-      [`(is-no-elt (get/elt -1)) 'true]
-      [`(is-elt (get/elt -1)) 'false]
-      [`(is-no-elt (get/elt ,(? number?))) 'false]
+      [`(is-no-elt no-elt) 'true]
+      [`(is-elt no-elt) 'false]
+      [`(is-no-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'false]
       [`(is-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'true]
       ;; END DOMAIN SPECIFIC
       [(list 'and rest ...)
@@ -689,4 +692,4 @@
 
 (module+ main
   (define inl (sequence->list (in-port read (current-input-port))))
-  (z3-print-all ((z3-lift-arguments 'get/box 'get/elt) inl)))
+  (z3-print-all ((z3-lift-arguments 'get/box) inl)))

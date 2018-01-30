@@ -79,23 +79,23 @@
   ;; `match-element-box` matchs elements and boxes together.
   ;; `match-anon-element` and `match-anon-box` do the same for
   ;; elements and boxes without links on the other side.
-  (define-fun match-element-box ((&e Int) (&b Int) (first? Bool) (last? Bool)) Bool
+  (define-fun match-element-box ((e Element) (&b Int) (first? Bool) (last? Bool)) Bool
     (and
-     (= (&elt (get/box &b)) &e)
+     (= (box-elt (get/box &b)) e)
      (= (first-box? (get/box &b)) first?)
      (= (last-box? (get/box &b)) last?)
      ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
          `(= (,(sformat "&~a" i) (get/box &b)) ,(p '&b (sformat "&~a" i))))
      (= (textalign (get/box &b))
-        (style.text-align (computed-style (get/elt &e))))
+        (style.text-align (computed-style e)))
      (= (fg-color (get/box &b))
-        (style.color (computed-style (get/elt &e))))
+        (style.color (computed-style e)))
      (= (bg-color (get/box &b))
-        (style.background-color (computed-style (get/elt &e))))))
+        (style.background-color (computed-style e)))))
 
   (define-fun match-anon-box ((&b Int)) Bool
     (and
-     (= (&elt (get/box &b)) -1)
+     (is-no-elt (box-elt (get/box &b)))
      (= (first-box? (get/box &b)) true)
      (= (last-box? (get/box &b)) true)
      ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])

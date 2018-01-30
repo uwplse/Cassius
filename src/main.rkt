@@ -63,8 +63,7 @@
   (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'br)))
   (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'bb)))
   (node-set! box ':fg (data 'fg-color))
-  (node-set! box ':bg (data 'bg-color))
-  (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
+  (node-set! box ':bg (data 'bg-color)))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style is-replaced is-image intrinsic-width fid) result)
@@ -191,7 +190,7 @@
          (emit `(assert (! (match-anon-box ,(name 'box box))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]
         [(list elt first? last?)
-         (emit `(assert (! (match-element-box ,(name 'elt elt) ,(name 'box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
+         (emit `(assert (! (match-element-box ,(dump-elt elt) ,(name 'box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]))))
 
 (define (model-sufficiency doms)
@@ -199,14 +198,10 @@
          (for*/list ([dom doms] [box (in-boxes dom)])
            `(ez.sufficient ,(dump-box box)))))
 
-(define (dom-define-get/elt doms emit)
+(define (dom-define-elements doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
     (emit `(declare-const ,(dump-elt elt) Element))
-    (emit `(assert (is-elt ,(dump-elt elt)))))
-  (define body
-    (for*/fold ([body '(ite (= &elt -1) no-elt no-elt)]) ([dom doms] [elt (in-elements dom)])
-      `(ite (= &elt ,(name 'elt elt)) ,(dump-elt elt) ,body)))
-  (emit `(define-fun get/elt ((&elt Int)) Element ,body)))
+    (emit `(assert (is-elt ,(dump-elt elt))))))
 
 (define (dom-define-get/box doms emit)
   (for* ([dom doms] [box (in-boxes dom)])
@@ -407,7 +402,7 @@
     ,@(common-definitions)
     ,@(exclusion-zones)
     ,@(tree-types)
-    ,@(global dom-define-get/elt)
+    ,@(global dom-define-elements)
     ,@(global dom-define-get/box)
     ,@(global (curry configuration-constraints media-params))
     ,@(utility-definitions)

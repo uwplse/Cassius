@@ -94,14 +94,13 @@
 
       ;; Elements
       [`(anonymous? ,b)
-       `(= (&elt ,(loop b #t ctx)) -1)]
+       `(is-no-elt (box-elt ,(loop b #t ctx)))]
       [`(matches ,b ,sels ...)
        (define b* (loop b #t ctx))
        (apply smt-or
               (for*/list ([dom doms] [elt (in-elements dom)]
-                          #:when (ormap (curryr selector-matches? elt)
-                                        sels))
-                `(= (&elt ,b*) ,(name 'elt elt))))]
+                          #:when (ormap (curryr selector-matches? elt) sels))
+                `(= (box-elt ,b*) ,(dump-elt elt))))]
 
       ;; Extra syntax
       [`(if ,c ,t ,f)
