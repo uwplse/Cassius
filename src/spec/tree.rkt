@@ -49,8 +49,8 @@
   (define-fun link-element ((elt Element) (pe Element) (ve Element) (ne Element) (fe Element) (le Element)) Bool
     (and (= (pelt elt) pe) (= (velt elt) ve) (= (nelt elt) ne) (= (felt elt) fe) (= (lelt elt) le)))
 
-  (define-fun link-box ((box Box) (&p Int) (&v Int) (&n Int) (&f Int) (&l Int)) Bool
-    (and (= (&pbox box) &p) (= (&vbox box) &v) (= (&nbox box) &n) (= (&fbox box) &f) (= (&lbox box) &l)
+  (define-fun link-box ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
+    (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n) (= (fbox box) f) (= (lbox box) l)
          ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent
              `(>= (,field box) 0.0))
          ,@(for/list ([field '(mtn mbn)])

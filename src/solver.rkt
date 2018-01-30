@@ -5,7 +5,7 @@
 (define to-resolve
   (append
    '(box-elt pelt velt nelt felt lelt)
-   '(get/box &pbox &vbox &nbox &fbox &lbox)
+   '(get/box pbox vbox nbox fbox lbox)
    '(ppflow pbflow vflow nflow rootbox)
    '(fid)
    (for/list ([(name p) (in-dict (extra-pointers))] [i (in-naturals)])

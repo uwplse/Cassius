@@ -25,7 +25,6 @@
                 (pt Real) (pr Real) (pb Real) (pl Real) ; padding
                 (bt Real) (br Real) (bb Real) (bl Real) ; border
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
-                (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (text-indent Real)
                 (baseline Real) (above-baseline Real) (below-baseline Real)
@@ -41,8 +40,7 @@
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real) (fid Font-Metric)))))
 
-  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox)])
-      `(assert (= (,field no-box) -1))))
+  )
 
 (define-constraints utility-definitions
   ;; The elements in each direction in the element tree
@@ -53,11 +51,14 @@
   (declare-fun lelt (Element) Element)
 
   ;; The boxes in each direction in the box tree
-  (define-fun pbox ((box Box)) Box (get/box (&pbox box)))
-  (define-fun fbox ((box Box)) Box (get/box (&fbox box)))
-  (define-fun lbox ((box Box)) Box (get/box (&lbox box)))
-  (define-fun vbox ((box Box)) Box (get/box (&vbox box)))
-  (define-fun nbox ((box Box)) Box (get/box (&nbox box)))
+  (declare-fun pbox (Box) Box)
+  (declare-fun fbox (Box) Box)
+  (declare-fun lbox (Box) Box)
+  (declare-fun vbox (Box) Box)
+  (declare-fun nbox (Box) Box)
+
+  ,@(for/list ([field '(pbox vbox nbox fbox lbox)])
+      `(assert (= (,field no-box) no-box)))
 
   ;; From boxes to elements
   (declare-fun box-elt (Box) Element)

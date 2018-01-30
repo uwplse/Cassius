@@ -281,11 +281,11 @@
 (define (box-link-constraints dom emit elt)
   (emit `(assert (! (link-box
                      ,(dump-box elt)
-                     ,(name 'box (node-parent elt) -1)
-                     ,(name 'box (node-prev elt) -1)
-                     ,(name 'box (node-next elt) -1)
-                     ,(name 'box (node-fchild elt) -1)
-                     ,(name 'box (node-lchild elt) -1))
+                     ,(dump-box (node-parent elt))
+                     ,(dump-box (node-prev elt))
+                     ,(dump-box (node-next elt))
+                     ,(dump-box (node-fchild elt))
+                     ,(dump-box (node-lchild elt)))
                     :named ,(sformat "link-box/~a" (name 'box elt))))))
 
 (define (box-flow-constraints dom emit elt)
