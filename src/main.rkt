@@ -115,8 +115,7 @@
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
-    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop)
-	      #:unless (or (equal? prop 'font-family) (equal? prop 'font-style) (equal? prop 'font-weight)))
+    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop))
       (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
       (cond
        [(equal? '? (car (dict-ref (filter list? props) prop '(?))))
@@ -137,8 +136,7 @@
     (define style `(specified-style ,(dump-elt elt)))
     (for ([elt (cdr cls)])
       (emit `(assert (= (specified-style ,(dump-elt elt)) ,style))))
-    (for* ([(prop type default) (in-css-properties)]
-           #:unless (or (equal? prop 'font-family) (equal? prop 'font-style) (equal? prop 'font-weight)))
+    (for* ([(prop type default) (in-css-properties)])
       (define nonecond
         (for/fold ([no-match-so-far 'true])
             ([rm ml]
