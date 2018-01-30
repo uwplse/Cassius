@@ -203,14 +203,10 @@
     (emit `(declare-const ,(dump-elt elt) Element))
     (emit `(assert (is-elt ,(dump-elt elt))))))
 
-(define (dom-define-get/box doms emit)
+(define (dom-define-boxes doms emit)
   (for* ([dom doms] [box (in-boxes dom)])
     (emit `(declare-const ,(dump-box box) Box))
-    (emit `(assert (is-box ,(dump-box box)))))
-  (define body
-    (for*/fold ([body '(ite (= &box -1) no-box no-box)]) ([dom doms] [box (in-boxes dom)])
-      `(ite (= &box ,(name 'box box)) ,(dump-box box) ,body)))
-  (emit `(define-fun get/box ((&box Int)) Box ,body)))
+    (emit `(assert (is-box ,(dump-box box))))))
 
 (define (configuration-constraints params doms emit)
   (for ([dom doms])
@@ -403,7 +399,7 @@
     ,@(exclusion-zones)
     ,@(tree-types)
     ,@(global dom-define-elements)
-    ,@(global dom-define-get/box)
+    ,@(global dom-define-boxes)
     ,@(global (curry configuration-constraints media-params))
     ,@(utility-definitions)
     ,@(link-definitions)

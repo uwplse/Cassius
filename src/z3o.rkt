@@ -532,9 +532,9 @@
       [`(not true) 'false]
       [`(and) `true]
       ;; DOMAIN SPECIFIC
-      [`(is-no-box (get/box -1)) 'true]
-      [`(is-box (get/box -1)) 'false]
-      [`(is-no-box (get/box ,(? number?))) 'false]
+      [`(is-no-box no-box) 'true]
+      [`(is-box no-box) 'false]
+      [`(is-no-box ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) 'false]
       [`(is-box ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) 'true]
       [`(is-no-elt no-elt) 'true]
       [`(is-elt no-elt) 'false]
@@ -692,4 +692,4 @@
 
 (module+ main
   (define inl (sequence->list (in-port read (current-input-port))))
-  (z3-print-all ((z3-lift-arguments 'get/box) inl)))
+  (z3-print-all inl))

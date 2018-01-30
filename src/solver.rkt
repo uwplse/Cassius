@@ -5,7 +5,7 @@
 (define to-resolve
   (append
    '(box-elt pelt velt nelt felt lelt)
-   '(get/box pbox vbox nbox fbox lbox)
+   '(pbox vbox nbox fbox lbox)
    '(ppflow pbflow vflow nflow rootbox)
    '(fid)))
 
@@ -45,20 +45,20 @@
    ;z3-simplif
    z3-assert-and
    ;(apply z3-resolve-fns to-resolve)
-   ;(z3-sink-fields-and 'get/box 'is-box 'is-no-box 'is-elt 'is-no-elt)
+   ;(z3-sink-fields-and 'is-box 'is-no-box 'is-elt 'is-no-elt)
    ;(z3-expand to-expand-2 #:clear true)
    ;z3-simplif
    ;z3-assert-and
    (unless-debug (apply z3-lift-arguments to-resolve))
    ;(apply z3-resolve-fns to-resolve)
-   (z3-sink-fields-and 'get/box 'is-box 'is-no-box 'is-elt 'is-no-elt)
+   (z3-sink-fields-and 'is-box 'is-no-box 'is-elt 'is-no-elt)
    ;(apply z3-resolve-fns to-resolve)
    ;;; It's important to lift and expand earlier up to make these passes fast.
    ;z3-if-and
    (apply z3-resolve-fns to-resolve)
    z3-simplif
    #;z3-dco
-   #;(z3-check-trivial-calls 'get/box)
+   #;(z3-check-trivial-calls)
    ;z3-check-datatypes z3-check-functions z3-check-let #;z3-check-fields
    z3-clean-no-opt
    ))
