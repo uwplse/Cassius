@@ -54,7 +54,7 @@
           `(ite (and (= family ,(dump-value 'font-family family))
                      (= weight  ,(if (number? weight) `(font-weight/num ,weight) (sformat "font-weight/~a" weight)))
                      (= style ,(sformat "font-style/~a" style))
-                     ,(fuzzy-=-constraint 'font-size size *font-fuzz*))
+                     ,(fuzzy-=-constraint 'font-size size *fuzz*))
                 ,metric
                 ,inner)))))
 
