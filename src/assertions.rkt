@@ -1,7 +1,9 @@
 #lang racket
 
 (require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt")
-(provide compile-assertion)
+(provide compile-assertion auxiliary-definitions)
+
+(define auxiliary-definitions (make-parameter '()))
 
 (define helpers
   (hash
@@ -55,15 +57,13 @@
            ['last  (if wrapped? 'lflow '&lflow)]))
        `(,function ,(loop box #t ctx))]
       [`(ancestor ,box ,cond*)
-       (define cond (loop cond* #f #hash((? . &b))))
-       (define (cond-fn &b id)
-         `(ite (let ([&b ,&b]) ,cond)
-               ,&b
-               (,id (pflow (get/box ,&b)))))
-       (define idx (length (extra-pointers)))
-       (extra-pointers (append (extra-pointers) (list (cons cond* cond-fn))))
-       (define ptr `(,(sformat "&~a" idx) ,(loop box #t ctx)))
-       (if wrapped? `(get/box ,ptr) ptr)]
+       (define cond (loop cond* #f #hash((? . b))))
+       (define aux (name 'aux cond))
+       (define aux-def
+         `((declare-fun ,aux (Box) Box)
+           (assert (forall ((b Box)) (= (,aux b) (ite ,cond b (,aux (pflow b))))))))
+       (auxiliary-definitions (append auxiliary-definitions aux-def))
+       `(,aux ,(loop box #t ctx))]
       [`(has-contents ,box) `(has-contents ,(loop box #t ctx))]
       [`(has-type ,box ,(and (or 'root 'text 'inline 'block 'line) boxtype))
        (define function (sformat "is-box/~a" boxtype))

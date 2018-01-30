@@ -59,46 +59,42 @@
   ;; `match-element-box` matchs elements and boxes together.
   ;; `match-anon-element` and `match-anon-box` do the same for
   ;; elements and boxes without links on the other side.
-  (define-fun match-element-box ((e Element) (&b Int) (first? Bool) (last? Bool)) Bool
+  (define-fun match-element-box ((e Element) (b Box) (first? Bool) (last? Bool)) Bool
     (and
-     (= (box-elt (get/box &b)) e)
-     (= (first-box? (get/box &b)) first?)
-     (= (last-box? (get/box &b)) last?)
-     ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
-         `(= (,(sformat "&~a" i) (get/box &b)) ,(p '&b (sformat "&~a" i))))
-     (= (textalign (get/box &b))
+     (= (box-elt b) e)
+     (= (first-box? b) first?)
+     (= (last-box? b) last?)
+     (= (textalign b)
         (style.text-align (computed-style e)))
-     (= (fg-color (get/box &b))
+     (= (fg-color b)
         (style.color (computed-style e)))
-     (= (bg-color (get/box &b))
+     (= (bg-color b)
         (style.background-color (computed-style e)))))
 
-  (define-fun match-anon-box ((&b Int)) Bool
+  (define-fun match-anon-box ((b Box)) Bool
     (and
-     (is-no-elt (box-elt (get/box &b)))
-     (= (first-box? (get/box &b)) true)
-     (= (last-box? (get/box &b)) true)
-     ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
-         `(= (,(sformat "&~a" i) (get/box &b)) ,(p '&b (sformat "&~a" i))))
-     (= (textalign (get/box &b))
-        (ite (is-no-box (pflow (get/box &b)))
+     (is-no-elt (box-elt b))
+     (= (first-box? b) true)
+     (= (last-box? b) true)
+     (= (textalign b)
+        (ite (is-no-box (pflow b))
              text-align/left
-             (textalign (pflow (get/box &b)))))
-     (= (fg-color (get/box &b))
-        (ite (is-no-box (pflow (get/box &b)))
+             (textalign (pflow b))))
+     (= (fg-color b)
+        (ite (is-no-box (pflow b))
              color/black
-             (fg-color (pflow (get/box &b)))))
-     (= (bg-color (get/box &b)) color/transparent)))
+             (fg-color (pflow b))))
+     (= (bg-color b) color/transparent)))
 
   ;; `link-flow-simple`, `link-flow-root`, and `link-flow-block` link
   ;; boxes together in their flow trees. The "block" version is much
   ;; more complex than the non-block version, because so many things
   ;; can only be true of block boxes.
-  (define-fun link-flow-root ((b Box) (&b Int)) Bool
+  (define-fun link-flow-root ((b Box)) Bool
     (and
      (= (ez.in b) ez.init)))
 
-  (define-fun link-flow-simple ((b Box) (&b Int)) Bool
+  (define-fun link-flow-simple ((b Box)) Bool
     (and
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
@@ -106,7 +102,7 @@
                             (ez.in (pbox b)))
                        (ez.out (vbox b))))))
 
-  (define-fun link-flow-block ((b Box) (&b Int)) Bool
+  (define-fun link-flow-block ((b Box)) Bool
     (and
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))

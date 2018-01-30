@@ -1,8 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt")
-(provide extra-pointers common-definitions tree-types utility-definitions)
-
-(define extra-pointers (make-parameter '()))
+(provide common-definitions tree-types utility-definitions)
 
 (define-constraints common-definitions
   (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
@@ -32,8 +30,6 @@
                 (ez.sufficient Bool) (ez.lookback Bool)
                 (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (first-box? Bool) (last-box? Bool)
-                ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
-                    `(,(sformat "&~a" i) Int))
                 (fg-color Color) (bg-color Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt

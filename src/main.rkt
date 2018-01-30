@@ -187,10 +187,10 @@
           #:when true [box (in-boxes dom)])
       (match (matcher box)
         [#f
-         (emit `(assert (! (match-anon-box ,(name 'box box))
+         (emit `(assert (! (match-anon-box ,(dump-box box))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]
         [(list elt first? last?)
-         (emit `(assert (! (match-element-box ,(dump-elt elt) ,(name 'box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
+         (emit `(assert (! (match-element-box ,(dump-elt elt) ,(dump-box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]))))
 
 (define (model-sufficiency doms)
@@ -289,13 +289,13 @@
                     :named ,(sformat "link-box/~a" (name 'box elt))))))
 
 (define (box-flow-constraints dom emit elt)
-  (define (flow-linker b e)
+  (define (flow-linker b)
     (match (node-type elt)
-      [(or 'BLOCK 'MAGIC 'ANON 'INLINE 'TEXT) `(link-flow-block ,b ,e)]
-      ['VIEW `(link-flow-root ,b ,e)]
-      [(or 'LINE) `(link-flow-simple ,b ,e)]))
+      [(or 'BLOCK 'MAGIC 'ANON 'INLINE 'TEXT) `(link-flow-block ,b)]
+      ['VIEW `(link-flow-root ,b)]
+      [(or 'LINE) `(link-flow-simple ,b)]))
 
-  (emit `(assert (! ,(flow-linker (dump-box elt) (name 'box elt))
+  (emit `(assert (! ,(flow-linker (dump-box elt))
                     :named ,(sformat "link-flow/~a" (name 'box elt))))))
 
 (define (layout-constraints dom emit elt)
