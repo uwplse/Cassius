@@ -49,28 +49,13 @@
 
   ;; The boxes in each direction in the flow tree
   (define-fun pflow ((box Box)) Box (pbox box))
-  (define-fun nflow ((box Box)) Box (get/box (&nflow box)))
-  (define-fun vflow ((box Box)) Box (get/box (&vflow box)))
-  (define-fun &fflow ((b Box)) Int
-    (ite (=> (is-box (fbox b)) (box-in-flow (fbox b)))
-         (&fbox b) (&nflow (fbox b))))
-  (define-fun &lflow ((b Box)) Int
-    (ite (=> (is-box (lbox b)) (box-in-flow (lbox b)))
-         (&lbox b) (&vflow (lbox b))))
-  (define-fun fflow ((box Box)) Box (get/box (&fflow box)))
-  (define-fun lflow ((box Box)) Box (get/box (&lflow box)))
 
   ;; `link-element` and `link-box` set the element and box tree pointers
   (define-fun link-element ((elt Element) (pe Element) (ve Element) (ne Element) (fe Element) (le Element)) Bool
     (and (= (pelt elt) pe) (= (velt elt) ve) (= (nelt elt) ne) (= (felt elt) fe) (= (lelt elt) le)))
 
   (define-fun link-box ((box Box) (&p Int) (&v Int) (&n Int) (&f Int) (&l Int)) Bool
-    (and (is-box box)
-         (= (&pbox box) &p)
-         (= (&vbox box) &v)
-         (= (&nbox box) &n)
-         (= (&fbox box) &f)
-         (= (&lbox box) &l)
+    (and (= (&pbox box) &p) (= (&vbox box) &v) (= (&nbox box) &n) (= (&fbox box) &f) (= (&lbox box) &l)
          ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent
              `(>= (,field box) 0.0))
          ,@(for/list ([field '(mtn mbn)])
@@ -118,8 +103,6 @@
     (and
      (= (&ppflow b) &b)
      (= (&pbflow b) -1)
-     (= (&vflow b) -1)
-     (= (&nflow b) -1)
      (= (&root b) &b)
      (= (ez.in b) ez.init)))
 
@@ -127,8 +110,6 @@
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
      (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
-     (= (&vflow b) (&vbox b))
-     (= (&nflow b) (&nbox b))
      (= (&root b) (&root (pbox b)))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
@@ -140,16 +121,6 @@
     (and
      (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pbox b))))
      (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
-     (= (&vflow b)
-        ,(smt-cond
-          [(is-no-box (vbox b)) -1]
-          [(box-in-flow (vbox b)) (&vbox b)]
-          [else (&vflow (vbox b))]))
-     (= (&nflow b)
-        ,(smt-cond
-          [(is-no-box (nbox b)) -1]
-          [(box-in-flow (nbox b)) (&nbox b)]
-          [else (&nflow (nbox b))]))
      (= (&root b) (&root (pbox b)))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))

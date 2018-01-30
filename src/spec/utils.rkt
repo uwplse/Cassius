@@ -29,7 +29,6 @@
                 (width-set Bool) ; used for dependency creation only
                 (text-indent Real)
                 (baseline Real) (above-baseline Real) (below-baseline Real)
-                (&nflow Int) (&vflow Int) ; flow tree pointers
                 (&ppflow Int) ; parent positioned pointers
                 (&pbflow Int)
                 (&root Int) ; Root box
@@ -45,7 +44,7 @@
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real) (fid Font-Metric)))))
 
-  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
+  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &ppflow &pbflow)])
       `(assert (= (,field no-box) -1))))
 
 (define-constraints utility-definitions

@@ -10,6 +10,36 @@
         (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)))
 
 (define-constraints layout-definitions
+
+  (declare-fun fflow (Box) Box)
+  (declare-fun lflow (Box) Box)
+  (declare-fun nflow (Box) Box)
+  (declare-fun vflow (Box) Box)
+
+  (assert
+   (forall ((b Box))
+           (= (fflow b) (ite (=> (is-box (fbox b)) (box-in-flow (fbox b))) (fbox b) (nflow (fbox b))))))
+  (assert
+   (forall ((b Box))
+           (= (lflow b) (ite (=> (is-box (lbox b)) (box-in-flow (lbox b))) (lbox b) (vflow (lbox b))))))
+
+  (assert
+   (forall ((b Box))
+           (= (nflow b)
+              (ite (is-no-box (nbox b))
+                   no-box
+                   (ite (box-in-flow (nbox b))
+                        (nbox b)
+                        (nflow (nbox b)))))))
+  (assert
+   (forall ((b Box))
+           (= (vflow b)
+              (ite (is-no-box (vbox b))
+                   no-box
+                   (ite (box-in-flow (vbox b))
+                        (vbox b)
+                        (vflow (vbox b)))))))
+
   (define-const quirks-mode Bool false)
 
   (declare-fun contains-content (Box) Bool)
