@@ -31,7 +31,7 @@
         (is-position/relative (position box))))
 
   (define-fun is-root-elt ((e Element)) Bool
-    (= (&pelt e) -1))
+    (is-no-elt (pelt e)))
 
   (define-fun box-in-flow ((box Box)) Bool
     (and (is-box box) (is-float/none (float box))
@@ -61,13 +61,8 @@
   (define-fun lflow ((box Box)) Box (get/box (&lflow box)))
 
   ;; `link-element` and `link-box` set the element and box tree pointers
-  (define-fun link-element ((elt Element) (&p Int) (&v Int) (&n Int) (&f Int) (&l Int)) Bool
-    (and (is-elt elt)
-         (= (&pelt elt) &p)
-         (= (&velt elt) &v)
-         (= (&nelt elt) &n)
-         (= (&felt elt) &f)
-         (= (&lelt elt) &l)))
+  (define-fun link-element ((elt Element) (pe Element) (ve Element) (ne Element) (fe Element) (le Element)) Bool
+    (and (= (pelt elt) pe) (= (velt elt) ve) (= (nelt elt) ne) (= (felt elt) fe) (= (lelt elt) le)))
 
   (define-fun link-box ((box Box) (&p Int) (&v Int) (&n Int) (&f Int) (&l Int)) Bool
     (and (is-box box)

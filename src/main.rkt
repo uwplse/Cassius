@@ -67,7 +67,7 @@
   (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt fid) result)
+  (match-define (list 'elt spec-style comp-style is-replaced is-image intrinsic-width fid) result)
   (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-ctx! model d)
@@ -97,11 +97,11 @@
    `(assert
      (!
       (link-element ,(dump-elt elt)
-                    ,(name 'elt (node-parent elt) -1)
-                    ,(name 'elt (node-prev   elt) -1)
-                    ,(name 'elt (node-next   elt) -1)
-                    ,(name 'elt (node-fchild elt) -1)
-                    ,(name 'elt (node-lchild elt) -1))
+                    ,(dump-elt (node-parent elt))
+                    ,(dump-elt (node-prev   elt))
+                    ,(dump-elt (node-next   elt))
+                    ,(dump-elt (node-fchild elt))
+                    ,(dump-elt (node-lchild elt)))
       :named ,(sformat "tree/~a" (dump-elt elt))))))
 
 (define (rule-allows-property? rule prop)

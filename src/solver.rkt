@@ -4,7 +4,7 @@
 
 (define to-resolve
   (append
-   '(get/elt &box &pelt &velt &nelt &felt &lelt)
+   '(get/elt)
    '(get/box &elt &pbox &vbox &nbox &fbox &lbox)
    '(&pbflow &vflow &nflow)
    '(fid)

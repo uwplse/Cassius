@@ -43,11 +43,8 @@
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
-                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real)
-                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int) (fid Font-Metric)))))
+                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real) (fid Font-Metric)))))
 
-  ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
-      `(assert (= (,field no-elt) -1)))
   ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
       `(assert (= (,field no-box) -1)))
 
@@ -55,11 +52,11 @@
 
 (define-constraints utility-definitions
   ;; The elements in each direction in the element tree
-  (define-fun velt ((elt Element)) Element (get/elt (&velt elt)))
-  (define-fun nelt ((elt Element)) Element (get/elt (&nelt elt)))
-  (define-fun pelt ((elt Element)) Element (get/elt (&pelt elt)))
-  (define-fun felt ((elt Element)) Element (get/elt (&felt elt)))
-  (define-fun lelt ((elt Element)) Element (get/elt (&lelt elt)))
+  (declare-fun velt (Element) Element)
+  (declare-fun nelt (Element) Element)
+  (declare-fun pelt (Element) Element)
+  (declare-fun felt (Element) Element)
+  (declare-fun lelt (Element) Element)
 
   ;; The boxes in each direction in the box tree
   (define-fun pbox ((box Box)) Box (get/box (&pbox box)))
