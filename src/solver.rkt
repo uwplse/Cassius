@@ -6,7 +6,7 @@
   (append
    '(box-elt pelt velt nelt felt lelt)
    '(get/box &pbox &vbox &nbox &fbox &lbox)
-   '(&pbflow &vflow &nflow)
+   '(ppflow pbflow vflow nflow rootbox)
    '(fid)
    (for/list ([(name p) (in-dict (extra-pointers))] [i (in-naturals)])
      (sformat "&~a" i))))

@@ -8,11 +8,6 @@
 
 (define-constraints link-definitions
 
-  ;; Three additional pointers: to the previous floating box, the
-  ;; parent block box, and the parent positioned box.
-  (define-fun ppflow ((box Box)) Box (get/box (&ppflow box)))
-  (define-fun pbflow ((box Box)) Box (get/box (&pbflow box)))
-  (define-fun rootbox ((box Box)) Box (get/box (&root box)))
 
   ;; Helper functions for some basic primitives
   (define-fun float ((b Box)) Float
@@ -101,16 +96,10 @@
   ;; can only be true of block boxes.
   (define-fun link-flow-root ((b Box) (&b Int)) Bool
     (and
-     (= (&ppflow b) &b)
-     (= (&pbflow b) -1)
-     (= (&root b) &b)
      (= (ez.in b) ez.init)))
 
   (define-fun link-flow-simple ((b Box) (&b Int)) Bool
     (and
-     (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pflow b))))
-     (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
-     (= (&root b) (&root (pbox b)))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
                             ez.init
@@ -119,9 +108,6 @@
 
   (define-fun link-flow-block ((b Box) (&b Int)) Bool
     (and
-     (= (&ppflow b) (ite (box-positioned (pbox b)) (&pbox b) (&ppflow (pbox b))))
-     (= (&pbflow b) (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (&pbox b) (&pbflow (pbox b))))
-     (= (&root b) (&root (pbox b)))
      (= (ez.in b) (ite (is-no-box (vbox b))
                        (ite (is-flow-root (pbox b))
                             ez.init

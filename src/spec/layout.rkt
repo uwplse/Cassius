@@ -11,18 +11,7 @@
 
 (define-constraints layout-definitions
 
-  (declare-fun fflow (Box) Box)
-  (declare-fun lflow (Box) Box)
   (declare-fun nflow (Box) Box)
-  (declare-fun vflow (Box) Box)
-
-  (assert
-   (forall ((b Box))
-           (= (fflow b) (ite (=> (is-box (fbox b)) (box-in-flow (fbox b))) (fbox b) (nflow (fbox b))))))
-  (assert
-   (forall ((b Box))
-           (= (lflow b) (ite (=> (is-box (lbox b)) (box-in-flow (lbox b))) (lbox b) (vflow (lbox b))))))
-
   (assert
    (forall ((b Box))
            (= (nflow b)
@@ -31,6 +20,8 @@
                    (ite (box-in-flow (nbox b))
                         (nbox b)
                         (nflow (nbox b)))))))
+
+  (declare-fun vflow (Box) Box)
   (assert
    (forall ((b Box))
            (= (vflow b)
@@ -39,6 +30,43 @@
                    (ite (box-in-flow (vbox b))
                         (vbox b)
                         (vflow (vbox b)))))))
+
+  (declare-fun fflow (Box) Box)
+  (assert
+   (forall ((b Box))
+           (= (fflow b) (ite (=> (is-box (fbox b)) (box-in-flow (fbox b))) (fbox b) (nflow (fbox b))))))
+
+  (declare-fun lflow (Box) Box)
+  (assert
+   (forall ((b Box))
+           (= (lflow b) (ite (=> (is-box (lbox b)) (box-in-flow (lbox b))) (lbox b) (vflow (lbox b))))))
+
+
+  ;; Three additional pointers: to the previous floating box, the
+  ;; parent block box, and the parent positioned box.
+  (declare-fun ppflow (Box) Box)
+  (assert
+   (forall ((b Box))
+           (= (ppflow b)
+              (ite (is-no-box (pbox b))
+                   b
+                   (ite (box-positioned (pbox b)) (pbox b) (ppflow (pbox b)))))))
+
+  (declare-fun pbflow (Box) Box)
+  (assert
+   (forall ((b Box))
+           (= (pbflow b)
+              (ite (is-no-box (pbox b))
+                   no-box
+                   (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (pbox b) (pbflow (pbox b)))))))
+  
+  (declare-fun rootbox (Box) Box)
+  (assert
+   (forall ((b Box))
+           (= (rootbox b)
+              (ite (is-no-box (pbox b))
+                   b
+                   (rootbox (pbox b))))))
 
   (define-const quirks-mode Bool false)
 
