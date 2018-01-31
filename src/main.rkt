@@ -343,10 +343,10 @@
   `(,@constraints
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
-        (sow `(declare-const ,var Int))
+        (sow `(declare-const ,var Box))
         (sow `(assert ,(apply smt-or
                               (for*/list ([dom doms] [box (in-boxes dom)])
-                                `(= ,var ,(name 'box box)))))))
+                                `(= ,var ,(dump-box box)))))))
     (assert ,(apply smt-or (map (curry list 'not) tests)))))
 
 (define (sheet-constraints doms eqcls)
