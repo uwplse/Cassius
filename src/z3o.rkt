@@ -3,7 +3,7 @@
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
          z3-check-let z3-check-fields z3-print-all z3-ground-quantifiers
-         z3-clean-no-opt z3-strip-inner-names z3-fix-rational)
+         z3-strip-inner-names z3-fix-rational)
 
 (define (z3-dco cmds)
   (let ([store (make-hash)])
@@ -643,17 +643,6 @@
   (for/list ([cmd cmds] [i (in-naturals)])
     (match cmd
       [`(assert ,expr) `(assert ,(ground expr))]
-      [_ cmd])))
-
-(define (z3-clean-no-opt cmds)
-  (for/list ([cmd cmds])
-    (match cmd
-      [`(assert (=> ,c (! ,terms ... :opt ,_)))
-       `(assert (=> ,c (! ,@terms)))]
-      [`(assert (! (! ,terms ...  :opt ,_) ,rest ...))
-       `(assert (! ,@terms ,@rest))]
-      [`(assert (! ,terms ... :opt ,_))
-       `(assert (! ,@terms))]
       [_ cmd])))
 
 (define (fix-rational expr)
