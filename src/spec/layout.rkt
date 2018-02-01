@@ -1,6 +1,9 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "css-properties.rkt")
-(provide layout-definitions)
+(provide layout-definitions view-width-name view-height-name)
+
+(define view-width-name (make-parameter false))
+(define view-height-name (make-parameter false))
 
 (define (get-px-or-% prop wrt b)
   (define r `(computed-style (box-elt ,b)))
@@ -947,6 +950,8 @@
      (zero-box-model b)
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
+     (= (w b) ,(view-width-name))
+     (= (h b) ,(view-height-name))
      (= (ez.lookback b) true)
      (= (text-indent b) 0.0)))
 

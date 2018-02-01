@@ -228,11 +228,9 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
-
-    (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
-    (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'h))))
-
     (fs-name (param 'font-size))
+    (view-width-name (param 'w))
+    (view-height-name (param 'h))
     (dict-set! params ':fs (param 'font-size))
     (dict-set! params ':w (param 'w))
     (dict-set! params ':h (param 'h))))
