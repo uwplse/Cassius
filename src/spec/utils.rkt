@@ -26,7 +26,6 @@
                 (width-set Bool) ; used for dependency creation only
                 (text-indent Real)
                 (baseline Real) (above-baseline Real) (below-baseline Real)
-                (ez.in EZone) (ez.out EZone)
                 (ez.sufficient Bool) (ez.lookback Bool)
                 (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
                 (first-box? Bool) (last-box? Bool)

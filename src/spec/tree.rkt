@@ -84,29 +84,5 @@
         (ite (is-no-box (pflow b))
              color/black
              (fg-color (pflow b))))
-     (= (bg-color b) color/transparent)))
-
-  ;; `link-flow-simple`, `link-flow-root`, and `link-flow-block` link
-  ;; boxes together in their flow trees. The "block" version is much
-  ;; more complex than the non-block version, because so many things
-  ;; can only be true of block boxes.
-  (define-fun link-flow-root ((b Box)) Bool
-    (and
-     (= (ez.in b) ez.init)))
-
-  (define-fun link-flow-simple ((b Box)) Bool
-    (and
-     (= (ez.in b) (ite (is-no-box (vbox b))
-                       (ite (is-flow-root (pbox b))
-                            ez.init
-                            (ez.in (pbox b)))
-                       (ez.out (vbox b))))))
-
-  (define-fun link-flow-block ((b Box)) Bool
-    (and
-     (= (ez.in b) (ite (is-no-box (vbox b))
-                       (ite (is-flow-root (pbox b))
-                            ez.init
-                            (ez.in (pbox b)))
-                       (ez.out (vbox b)))))))
+     (= (bg-color b) color/transparent))))
 

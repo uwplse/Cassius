@@ -284,16 +284,6 @@
                      ,(dump-box (node-lchild elt)))
                     :named ,(sformat "link-box/~a" (name 'box elt))))))
 
-(define (box-flow-constraints dom emit elt)
-  (define (flow-linker b)
-    (match (node-type elt)
-      [(or 'BLOCK 'MAGIC 'ANON 'INLINE 'TEXT) `(link-flow-block ,b)]
-      ['VIEW `(link-flow-root ,b)]
-      [(or 'LINE) `(link-flow-simple ,b)]))
-
-  (emit `(assert (! ,(flow-linker (dump-box elt))
-                    :named ,(sformat "link-flow/~a" (name 'box elt))))))
-
 (define (layout-constraints dom emit elt)
   (define cns
     (match (node-type elt)
@@ -411,7 +401,7 @@
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
     ,@(per-element font-constraints)
-    ,@(per-box box-flow-constraints)
+    ,@(ez-fields)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)
     ,@(per-box contents-constraints)

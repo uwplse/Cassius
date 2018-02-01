@@ -655,13 +655,7 @@
                 (and (>= (left-outer b) (left-content p)) (<= (right-outer b) (right-content p))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
-                   (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
-       (= (ez.sufficient b) true)
-       (= (ez.out b)
-          ,(smt-cond
-            [(is-flow-root b) (ez.in b)]
-            [(is-box (lbox b)) (ez.out (lbox b))]
-            [else (ez.in b)]))))
+                   (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))))
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
@@ -707,15 +701,7 @@
          (and
           (= (top-outer b) y*)
           (= (left-outer b) x)
-          ;; The idea here is that if there are not enough registers,
-          ;; so that you can *not* add, then we want to provide
-          ;; maximum freedom to ez.out, to try to ensure SAT, so we
-          ;; can look inside the model, see that it's not sufficient,
-          ;; and then restart with more registers.
-          (= (ez.sufficient b) (ez.can-add ez* (+ y* h)))
-          (= (ez.lookback b) true)
-          (=> (ez.sufficient b)
-              (= (ez.out b) (ez.add ez* (style.float r) y* (+ w x) (+ h y*) x)))))))
+          (= (ez.lookback b) true)))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     (and
@@ -726,9 +712,7 @@
       (= (float-stfmax b)
          (+ (min-max-width (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0) b)
             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
-      (= (ez.sufficient b) true)
-      (= (ez.lookback b) true)
-      (= (ez.out b) (ez.in b))))
+      (= (ez.lookback b) true)))
 
   (define-fun a-block-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))] [p (pflow b)])
@@ -856,16 +840,7 @@
 
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
-       (= (ez.sufficient b) true)
-       (= (ez.lookback b) true)
-       (= (ez.out b)
-          ,(smt-cond
-            [(is-display/inline-block (style.display r))
-             (ez.in b)]
-            [(is-box (lbox b))
-             (ez.out (lbox b))]
-            [else
-             (ez.in b)]))))
+       (= (ez.lookback b) true)))
 
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)]
@@ -900,9 +875,7 @@
        (= (ml b) (ite (and (is-no-box v) (is-box/line (type p)) (is-no-box (vflow p))) (text-indent p) 0.0))
 
        (=> (is-box v) (= (x b) (right-outer v))) ; Otherwise set by the line box
-       (= (ez.sufficient b) true)
-       (= (ez.lookback b) true)
-       (= (ez.out b) (ez.in b))))
+       (= (ez.lookback b) true)))
 
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
@@ -966,9 +939,7 @@
                 (= (right-outer l) (right-content b))]
                [(is-text-align/center (textalign b))
                 (= (- (left-outer f) (left-content b)) (- (right-content b) (right-outer l)))]
-               [else false])))
-       (= (ez.sufficient b) true)
-       (= (ez.out b) (ez.out (lbox b)))))
+               [else false])))))
 
   (define-fun a-view-box ((b Box)) Bool
     (and
@@ -976,15 +947,12 @@
      (zero-box-model b)
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
-     (= (ez.sufficient b) true)
      (= (ez.lookback b) true)
-     (= (ez.out b) (ez.out (lbox b)))
      (= (text-indent b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
     (and
      (or (is-box/block (type b)) (is-box/inline (type b)))
-     (ez.sufficient b)
      (ez.lookback b)))
 
   (define-fun an-anon-block-box ((b Box)) Bool
@@ -1004,6 +972,4 @@
        (not (w-from-stfwidth b))
        (= (y b) (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
-       (= (ez.sufficient b) true)
-       (= (ez.lookback b) true)
-       (= (ez.out b) (ez.out (lbox b))))))
+       (= (ez.lookback b) true))))
