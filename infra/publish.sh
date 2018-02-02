@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 HARD=false
 
 download () {

@@ -1,5 +1,5 @@
-#!/bin/sh
-
+\#!/bin/sh
+exit
 set -e
 
 FWT_PATH=${FWT_PATH:-$HOME/src/fwt/}
