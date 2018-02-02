@@ -13,7 +13,7 @@
 (define-constraints tree-types
   (declare-datatypes ()
      ((Box no-box
-           (box (type BoxType)
+           (box (bid Int) (type BoxType)
                 (x Real) (y Real) (w Real) (h Real) ; X, Y and width/height
                 (xo Real) (yo Real) ; X and Y offset
                 (mt Real) (mr Real) (mb Real) (ml Real) ; margins
@@ -32,10 +32,8 @@
                 (fg-color Color) (bg-color Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
-           (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
-                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real) (fid Font-Metric)))))
-
-  )
+           (elt (eid Int) (specified-style Style) (computed-style Style) ; see compute-style.rkt
+                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real) (fid Font-Metric))))))
 
 (define-constraints utility-definitions
   ;; The elements in each direction in the element tree

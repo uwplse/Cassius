@@ -201,11 +201,13 @@
 (define (dom-define-elements doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
     (emit `(declare-const ,(dump-elt elt) Element))
+    (emit `(assert (= (eid ,(dump-elt elt)) ,(name 'elt elt))))
     (emit `(assert (is-elt ,(dump-elt elt))))))
 
 (define (dom-define-boxes doms emit)
   (for* ([dom doms] [box (in-boxes dom)])
     (emit `(declare-const ,(dump-box box) Box))
+    (emit `(assert (= (bid ,(dump-box box)) ,(name 'box box))))
     (emit `(assert (is-box ,(dump-box box))))))
 
 (define (configuration-constraints params doms emit)
