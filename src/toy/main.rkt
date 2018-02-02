@@ -133,10 +133,11 @@
      (declare-fun first (Box) Box)
      (declare-fun last (Box) Box)
 
-     ,@(let ([predicate (if component? 'is-box 'is-no-box)])
-         `((assert (,predicate (parent ,(id doc))))
-           (assert (,predicate (previous ,(id doc))))
-           (assert (,predicate (next ,(id doc))))))
+     ,@(if component?
+         `((assert (is-box (parent ,(id doc))))
+           (assert (is-box (previous ,(id doc))))
+           (assert (is-box (next ,(id doc)))))
+         '())
 
      ,@(for/reap [sow] ([elt (in-tree doc)])
          (match-define (list (or 'elt 'component) props children ...) elt)
