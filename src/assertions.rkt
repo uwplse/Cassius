@@ -53,11 +53,11 @@
        `(,function ,(loop box ctx))]
       [`(ancestor ,box ,cond*)
        (define cond (loop cond* #hash((? . b))))
-       (define aux (name 'aux cond))
+       (define aux (sformat "aux~a" (name 'aux cond)))
        (define aux-def
          `((declare-fun ,aux (Box) Box)
            (assert (forall ((b Box)) (= (,aux b) (ite ,cond b (,aux (pflow b))))))))
-       (auxiliary-definitions (append auxiliary-definitions aux-def))
+       (auxiliary-definitions (remove-duplicates (append (auxiliary-definitions) aux-def)))
        `(,aux ,(loop box ctx))]
       [`(has-contents ,box) `(has-contents ,(loop box ctx))]
       [`(has-type ,box ,(and (or 'root 'text 'inline 'block 'line) boxtype))

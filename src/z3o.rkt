@@ -632,16 +632,13 @@
        (map ground expr)]
       [_ expr]))
 
-  (for ([cmd cmds])
+  (for/list ([cmd cmds])
     (match cmd
       [(or
         `(define-const ,name ,(? (curry dict-has-key? type-values) type) ,_)
         `(declare-const ,name ,(? (curry dict-has-key? type-values) type)))
-       (dict-set! type-values type (cons name (dict-ref type-values type)))]
-      [_ (void)]))
-
-  (for/list ([cmd cmds] [i (in-naturals)])
-    (match cmd
+       (dict-set! type-values type (cons name (dict-ref type-values type)))
+       cmd]
       [`(assert ,expr) `(assert ,(ground expr))]
       [_ cmd])))
 
