@@ -96,13 +96,13 @@
   [font-size (em 1)])
 
 ; Font Family is a string so should never make it to Z3
-(define-css-type (Font-Family)
+(define-css-type (Font-Family (num Real))
   [font-family "serif"])
 
-(define-css-type (Font-Weight normal bold bolder lighter (num Real) initial inherit)
+(define-css-type (Font-Weight bolder lighter (num Real) initial)
   [font-weight 400])
 
-(define-css-type (Font-Style normal italic oblique initial inherit)
+(define-css-type (Font-Style normal italic oblique initial)
   [font-style normal])
 
 (define-css-type (Text-Indent (px Real) (% Real) (em Real))
