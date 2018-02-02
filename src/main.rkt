@@ -66,7 +66,7 @@
   (node-set! box ':bg (data 'bg-color)))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style is-replaced is-image intrinsic-width fid) result)
+  (match-define (list 'elt spec-style comp-style is-replaced is-image intrinsic-width font) result)
   (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-ctx! model d)
@@ -307,10 +307,6 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
-(define (font-constraints dom emit elt)
-  (when (node-get elt ':fid)
-    (emit `(assert (= (fid ,(dump-elt elt)) ,(sformat "font~a" (name 'font (node-get elt ':fid))))))))
-
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
@@ -352,7 +348,6 @@
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
-  
   (define media-params (make-hash '((:type . screen))))
 
   `((set-option :produce-unsat-cores true)
@@ -381,8 +376,11 @@
     (define-const font-size/xx-large Font-Size (font-size/px 32))
     (define-const font-size/smaller Font-Size (font-size/em (/ 2.0 3.0)))
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
+    (define-const font-weight/normal Font-Weight (font-weight/num 400))
+    (define-const font-weight/bold Font-Weight (font-weight/num 700))
     (define-const color/undefined Color color/transparent)
     ,@(make-font-table fonts)
+    ,(make-get-font fonts)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))
     ,@(common-definitions)
@@ -400,7 +398,6 @@
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
-    ,@(per-element font-constraints)
     ,@(ez-fields)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)

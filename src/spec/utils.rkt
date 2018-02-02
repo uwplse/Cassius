@@ -33,7 +33,7 @@
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
            (elt (eid Int) (specified-style Style) (computed-style Style) ; see compute-style.rkt
-                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real) (fid Font-Metric))))))
+                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real))))))
 
 (define-constraints utility-definitions
   ;; The elements in each direction in the element tree

@@ -2,23 +2,9 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size text-indent clear color background-color line-height vertical-align".split(" ");
+Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size font-family font-style font-weight text-indent clear color background-color line-height vertical-align".split(" ");
 BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
 BadTags = "img iframe input svg:svg button frame noframes".split(" ");
-
-var FontIDMap = Object();
-var nextID = 0;
-
-function get_font_ID(style) {
-	var font = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
-	if (!FontIDMap.hasOwnProperty(font)) {
-		var id = nextID++;
-		FontIDMap[font] = id;
-		return id;
-	} else {
-		return FontIDMap[font];
-	}
-}
 
 Box = function(type, node, props) {
     this.children = [];
@@ -749,7 +735,7 @@ function dump_length(val, features) {
     } else if (val.match(/e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
     } else {
-        val = "(px " + val2px(val, features) + ")";
+        val = "(px " + f2r(val2px(val, features)) + ")";
     }
     return val;
 }
@@ -803,6 +789,8 @@ function dump_rule(sel, style, features, is_from_style, media) {
             _features["css:inherit"] = true;
         } else if (val.startsWith("rgb")) {
             val = dump_color(val, _features);
+        } else if (sname === "font-family") {
+            val = dump_string(val);
         } else if (val.match(/^[a-z]+$/)) {
             // skip
         } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
@@ -834,6 +822,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
             sel_text = rescue_selector(sels[i]);
         }
         if (media && media.mediaText) {
+            features["@media"] = true;
             sel_text = "(media " + dump_media_query(media, features) + " " + sel_text + ")";
         }
         out += "\n  (" + sel_text + (is_from_style ? " :style" : "") + text + ")";
@@ -992,14 +981,14 @@ function dump_document(features) {
             return false;
         } else if (typeof(elt.dataset) === "undefined"){
             console.log("Weird element", elt);
-            var rec = new Box(elt.tagName.toLowerCase(), elt, {fid: get_font_ID(cs(elt))});
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {});
             features["weird-element"] = true;
             return rec;
         } else {
             var num = ELTS.length;
             elt.dataset["num"] = num;
             ELTS.push(elt);
-            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num, fid: get_font_ID(cs(elt))});
+            var rec = new Box(elt.tagName.toLowerCase(), elt, {num: num});
             if (elt.id) rec.props["id"] = elt.id;
             if (elt.classList.length) rec.props["class"] = ("(" + elt.classList + ")").replace(/#/g, "");
 
@@ -1347,7 +1336,8 @@ function get_font_offsets(font, weight, style, A, D) {
 }
 
 function get_font_metrics(font, fname) {
-	if (font.size == 0) return [FontIDMap[fname], 0, 0, 0, 0, 0];
+	if (font.size == 0) return [font.size, dump_string(font.family), font.weight,
+	                            font.style, 0, 0, 0, 0, 0];
 	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
 	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
 	var bb = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "bottom");
@@ -1355,8 +1345,9 @@ function get_font_metrics(font, fname) {
 	var ascent = bt - ba;
 	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
 	var lineheight = get_font_lineheight(font.name, font.weight, font.style);
-
-	return [FontIDMap[fname], ascent, descent, offsets.top, offsets.bottom, lineheight];
+	
+	return [font.size, dump_string(font.family), font.weight, font.style,
+            ascent, descent, offsets.top, offsets.bottom, lineheight];
 }
 
 function dump_fonts(name) {
@@ -1369,7 +1360,7 @@ function dump_fonts(name) {
 			var style = cs(elt);
 			var fname = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
 			var size = val2px(style.fontSize);
-			var font = {name: style.fontSize + " " + style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
+			var font = {name: style.fontSize + " " + style.fontFamily, size: style.fontSize, family: style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
 
 			if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
 
@@ -1384,10 +1375,14 @@ function dump_fonts(name) {
 
     var text = "(define-fonts " + name;
     for (var fname of flist) {
-	var font = fonts[fname];
+		var font = fonts[fname];
         var metrics = get_font_metrics(font, fname);
-        for (var i = 1; i < metrics.length; i++) metrics[i] = f2r(metrics[i]);
-	text += "\n  [" + metrics.join(" ") + "]";
+        for (var i = 1; i < metrics.length; i++) {
+	         if (typeof metrics[i] !== "string") {
+	             metrics[i] = f2r(metrics[i]);
+	         }
+		}
+	    text += "\n  [" + metrics.join(" ") + "]";
     }
     text += ")";
 
