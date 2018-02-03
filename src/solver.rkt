@@ -12,7 +12,7 @@
 
 (define to-expand
   (append
-   '(link-element link-box)
+   '(link-element link-element-component link-box link-box-component)
    '(match-element-box match-anon-box)
    '(link-flow-root link-flow-simple link-flow-block)
    '(float position box-in-flow box-positioned)

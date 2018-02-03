@@ -92,15 +92,16 @@
     (node-add! node ':cex `(bad ,var))))
 
 (define (tree-constraints dom emit elt)
+  (define link-function (if (dom-context dom ':component) 'link-element-component 'link-element))
   (emit
    `(assert
      (!
-      (link-element ,(dump-elt elt)
-                    ,(dump-elt (node-parent elt))
-                    ,(dump-elt (node-prev   elt))
-                    ,(dump-elt (node-next   elt))
-                    ,(dump-elt (node-fchild elt))
-                    ,(dump-elt (node-lchild elt)))
+      (,link-function ,(dump-elt elt)
+                      ,(dump-elt (node-parent elt))
+                      ,(dump-elt (node-prev   elt))
+                      ,(dump-elt (node-next   elt))
+                      ,(dump-elt (node-fchild elt))
+                      ,(dump-elt (node-lchild elt)))
       :named ,(sformat "tree/~a" (dump-elt elt))))))
 
 (define (rule-allows-property? rule prop)
@@ -275,7 +276,8 @@
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 
 (define (box-link-constraints dom emit elt)
-  (emit `(assert (! (link-box
+  (define link-function (if (dom-context dom ':component) 'link-box-component 'link-box))
+  (emit `(assert (! (,link-function
                      ,(dump-box elt)
                      ,(dump-box (node-parent elt))
                      ,(dump-box (node-prev elt))
