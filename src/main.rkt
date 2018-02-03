@@ -87,7 +87,8 @@
 
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)] #:when (string-prefix? (~a name) "cex"))
-    (define node (by-name 'box value))
+    (define id (dict-ref (extract-box value) 'bid))
+    (define node (by-name 'box id))
     (define var (car (by-name 'cex (string->number (substring (~a name) 3)))))
     (node-add! node ':cex `(bad ,var))))
 
