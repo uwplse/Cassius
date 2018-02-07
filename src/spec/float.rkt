@@ -443,15 +443,14 @@
    (forall ((b Box))
            (= (ez.sufficient b)
               (=>
-               (and (is-box/block (type b)) (not (box-positioned b)) (not (is-float/none (float b))))
+               (and (is-box/block (type b)) (not (or (is-position/absolute (position b)) (is-position/fixed (position b)))) (not (is-float/none (float b))))
                (ez.can-add (ez.advance (ez.in b) (top-outer b)) (bottom-outer b))))))
 
   (assert
    (forall ((b Box))
            (=> (ez.sufficient b)
                (= (ez.out b)
-                  (ite (and (is-box/block (type b)) (not (box-positioned b)) (not (is-float/none (float b))))
-                                        ; TODO: Handle ez.sufficient
+                  (ite (and (is-box/block (type b)) (not (or (is-position/absolute (position b)) (is-position/fixed (position b)))) (not (is-float/none (float b))))
                        (ez.add (ez.advance (ez.in b) (top-outer b)) (float b) (top-outer b) (right-outer b) (bottom-outer b) (left-outer b))
                        ,(smt-cond
                          [(is-box/root (type b)) (ez.out (lbox b))]
