@@ -19,6 +19,9 @@ publish:
 clean:
 	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
 
+nightly:
+	bash infra/test.sh
+
 # CSSWG test suite
 
 CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2
