@@ -558,7 +558,7 @@
                  (and (is-elt e) (is-padding/% (style.padding-right r)))
                  (and (is-elt e) (is-width/% (style.width r))))))))
 
-  (declare-fun lookback-overflow-width ((b Box)) Real)
+  (declare-fun lookback-overflow-width (Box) Real)
   (assert (forall ((b Box)) (<= (lookback-overflow-width b) (w (pbox b)))))
 
   (define-fun a-block-flow-box ((b Box)) Bool
