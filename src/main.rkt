@@ -287,6 +287,11 @@
                      ,(dump-box (node-lchild elt)))
                     :named ,(sformat "link-box/~a" (name 'box elt))))))
 
+(define (spec-constraints dom emit box)
+  (when (node-get box ':spec)
+    (emit `(assert (! (let ([? ,(dump-box box)]) ,(node-get box ':spec))
+                      :named ,(sformat "spec/~a" (name 'box box)))))))
+
 (define (layout-constraints dom emit elt)
   (define cns
     (match (node-type elt)
@@ -406,6 +411,7 @@
     ,@(per-element replaced-constraints)
     ,@(per-box contents-constraints)
     ,@(font-computation)
+    ,@(per-box spec-constraints)
     ,@(layout-definitions)
     ,@(per-box layout-constraints)
     ))
