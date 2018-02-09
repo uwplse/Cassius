@@ -886,6 +886,11 @@
 
        (=> (is-box v) (= (x b) (right-outer v))) ; Otherwise set by the line box
        (= (ez.lookback b) true)))
+  
+  (declare-fun ancestor-elt (Box) Elt)
+  (assert
+   (forall ((b Box))
+           (= (ancestor-elt b) (ite (is-elt (box-elt b)) (box-elt b) (ite (is-box (pbox b)) (ancestor-elt (pbox b)) no-elt)))))
 
   (define-fun a-line-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
@@ -938,16 +943,17 @@
                    0.0)))
 
        (=> (is-box f)
-           (let ([wsub (- (right-outer l) (left-outer f))])
+           (let ([wsub (- (right-outer l) (left-outer f))]
+                 [textalign (style.text-align (computed-style (ancestor-elt b)))])
              ,(smt-cond
                [(> wsub (w b)) (= (left-outer f) (left-content b))]
-               [(is-text-align/left (textalign b)) (= (left-outer f) (left-content b))]
-               [(is-text-align/justify (textalign b))
+               [(is-text-align/left textalign) (= (left-outer f) (left-content b))]
+               [(is-text-align/justify textalign)
                 (and (= (left-outer f) (left-content b))
                      (=> (is-box n) (= (right-outer l) (right-content b))))]
-               [(is-text-align/right (textalign b))
+               [(is-text-align/right textalign)
                 (= (right-outer l) (right-content b))]
-               [(is-text-align/center (textalign b))
+               [(is-text-align/center textalign)
                 (= (- (left-outer f) (left-content b)) (- (right-content b) (right-outer l)))]
                [else false])))))
 

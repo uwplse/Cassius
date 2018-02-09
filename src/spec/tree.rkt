@@ -75,8 +75,6 @@
      (= (box-elt b) e)
      (= (first-box? b) first?)
      (= (last-box? b) last?)
-     (= (textalign b)
-        (style.text-align (computed-style e)))
      (= (fg-color b)
         (style.color (computed-style e)))
      (= (bg-color b)
@@ -87,10 +85,6 @@
      (is-no-elt (box-elt b))
      (= (first-box? b) true)
      (= (last-box? b) true)
-     (= (textalign b)
-        (ite (is-no-box (pflow b))
-             text-align/left
-             (textalign (pflow b))))
      (= (fg-color b)
         (ite (is-no-box (pflow b))
              color/black

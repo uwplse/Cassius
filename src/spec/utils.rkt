@@ -27,8 +27,7 @@
                 (text-indent Real)
                 (baseline Real) (above-baseline Real) (below-baseline Real)
                 (ez.sufficient Bool) (ez.lookback Bool)
-                (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
-                (first-box? Bool) (last-box? Bool)
+                (has-contents Bool) (first-box? Bool) (last-box? Bool)
                 (fg-color Color) (bg-color Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
