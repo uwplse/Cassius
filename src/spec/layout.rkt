@@ -887,7 +887,7 @@
        (=> (is-box v) (= (x b) (right-outer v))) ; Otherwise set by the line box
        (= (ez.lookback b) true)))
   
-  (declare-fun ancestor-elt (Box) Elt)
+  (declare-fun ancestor-elt (Box) Element)
   (assert
    (forall ((b Box))
            (= (ancestor-elt b) (ite (is-elt (box-elt b)) (box-elt b) (ite (is-box (pbox b)) (ancestor-elt (pbox b)) no-elt)))))
