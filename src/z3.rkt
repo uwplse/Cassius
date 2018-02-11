@@ -69,8 +69,12 @@
      (raise-syntax-error 'Z3 (format "Z3 error (~a:~a)" line column) text)]
     ['unsupported
      (error "Z3 unsupported:" input)]
-    [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
-     (for/hash ([c consts] [v vals]) (values c (deserialize v)))]
+    [`(model ,entries ...)
+     (for/hash ([entry entries]
+                #:when (equal? (first entry) 'define-fun)
+                #:when (null? (third entry)))
+       (match-define `(define-fun ,const ,_ ,_ ,val) entry)
+       (values const (deserialize val)))]
     [(? eof-object?)
      (error "Z3 error: premature EOF received")]
     [_ msg]))

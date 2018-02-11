@@ -88,6 +88,8 @@
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
   
   (define-fun width-padding ((box Box)) Real (+ (pl box) (w box) (pr box)))
+  (define-fun width-border ((box Box)) Real (+ (bl box) (pl box) (w box) (pr box) (br box)))
+  (define-fun width-outer ((box Box)) Real (+ (ml box) (bl box) (pl box) (w box) (pr box) (br box) (mr box)))
   (define-fun height-content ((box Box)) Real (h box))
   (define-fun height-padding ((box Box)) Real (+ (pt box) (h box) (pb box)))
   (define-fun height-border ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
@@ -109,8 +111,31 @@
      (=> (and (= (left-outer box1) (left-outer box2)) (= (right-outer box1) (right-outer box2)))
          (not (= (left-outer box1) (right-outer box2))))))
 
-  (define-fun within ((b1 Box) (b2 Box)) Bool
-    (and (<= (box-left b2) (box-left b1))
-         (<= (box-top b2) (box-top b1))
-         (<= (box-right b1) (box-right b2))
-         (<= (box-bottom b1) (box-bottom b2)))))
+  (define-fun overlaps-outer ((box1 Box) (box2 Box)) Bool
+    (and (horizontally-adjacent box1 box2) (vertically-adjacent box1 box2)))
+
+  (define-fun within-outer ((b1 Box) (b2 Box)) Bool
+    (and (>= (left-outer b1) (left-outer b2))
+         (>= (top-outer b1) (top-outer b2))
+         (<= (right-outer b1) (right-outer b2))
+         (<= (bottom-outer b1) (bottom-outer b2)))))
+
+(module+ test
+  (require "test.rkt")
+
+  (add-header! `((declare-sort Color) (declare-sort Style)))
+  (add-header! (common-definitions))
+  (add-header! (tree-types))
+  (add-header! (utility-definitions))
+  (add-header! `((declare-datatypes () ((Rect (rect (rx Real) (ry Real) (rw Real) (rh Real)))))))
+
+  (check-sat #hash((b1 . Box) (b2 . Box) (b3 . Box) (r1 . Rect) (r2 . Rect) (r3 . Rect))
+             `(=>
+               (is-box b1) (is-box b2) (is-box b3)
+               (= r1 (rect (top-outer b1) (right-outer b1) (bottom-outer b1) (left-outer b1)))
+               (= r2 (rect (top-outer b2) (right-outer b2) (bottom-outer b2) (left-outer b2)))
+               (= r3 (rect (top-outer b3) (right-outer b3) (bottom-outer b3) (left-outer b3)))
+               (>= (width-outer b1) 0) (>= (width-outer b2) 0) (>= (width-outer b3) 0)
+               (>= (height-outer b1) 0) (>= (height-outer b2) 0) (>= (height-outer b3) 0)
+               (within-outer b1 b2) (overlaps-outer b1 b3)
+               (overlaps-outer b2 b3))))

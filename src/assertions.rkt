@@ -115,7 +115,7 @@
       [`(overlaps ,b1 ,b2)
        `(overlaps ,(loop b1 ctx) ,(loop b2 ctx))]
       [`(within ,b1 ,b2)
-       `(within ,(loop b1 ctx) ,(loop b2 ctx))]
+       `(within-outer ,(loop b1 ctx) ,(loop b2 ctx))]
 
       ;; Variables
       [(? symbol?)
