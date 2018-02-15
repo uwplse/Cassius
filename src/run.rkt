@@ -177,7 +177,7 @@
    ["verify"
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
-   ["assertions"
+   ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))
     (define assertions
