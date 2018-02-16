@@ -39,10 +39,7 @@ def run_accept(name=None):
         print("Cassius rejected the minimized version, continuing...")
         sys.stdout.flush()
         lines = result.split()
-        elements = []
-        for line in lines[1:]:
-            elements.append(str(json.loads(line)))
-        return (False, elements)
+        return (False, lines[1:])
     else:
         print("Cassius accepted the minimized version, backtracking...")
         sys.stdout.flush()
@@ -78,7 +75,8 @@ def get_bench(urls, elts, name=None):
                     id = str(i+1).rjust(len(str(len(urls))), "0")
                     try:
                         browser.get(url)
-                        browser.execute_script('taglist = [{}];'.format(elts) + MINIMIZER)
+                        browser.execute_script('window.TAGLIST = [{}];'.format(",".join(elts)))
+                        browser.execute_script(MINIMIZER)
                         browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
                         browser.execute_script(SCRIPT + "; cassius(LETTER)")
                         elt = browser.find_element_by_id("-x-cassius-output-block")
@@ -104,10 +102,12 @@ if __name__ == "__main__":
     p.add_argument("--name", dest="name", default=None, type=str, help="File name under bench/.")
     args = p.parse_args()
     
-    get_bench(args.urls, "", name=args.name)
+    eliminated = []
+    get_bench(args.urls, eliminated, name=args.name)
     accepted, elts = run_accept(name=args.name)
-    print ("[" + ",".join(elts) + "]")
-    #while not accepted:
-    #    get_bench(args.urls, name=args.name, ",".join(elts))
-    #    accepted, elts = run_accept(name=args.name)
+    while not accepted:
+        eliminated.extend(elts)
+        print(eliminated)
+        get_bench(args.urls, eliminated, name=args.name)
+        accepted, elts = run_accept(name=args.name)
 
