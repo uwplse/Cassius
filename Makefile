@@ -1,22 +1,7 @@
-TIME=$(shell date +%s)
 FLAGS=
-
-.PHONY: download deploy publish
-
-deploy:
-	rsync -r www/ $(shell ~/uwplse/getdir)
 
 test:
 	raco test src
-
-publish:
-	rsync -rv reports/ uwplse.org:/var/www/cassius/reports/$(TIME)/
-	ssh uwplse.org chmod a+x /var/www/cassius/reports/$(TIME)/
-	ssh uwplse.org chmod -R a+r /var/www/cassius/reports/$(TIME)/
-	@ echo "Uploaded to http://cassius.uwplse.org/reports/$(TIME)/"
-
-clean:
-	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
 
 # CSSWG test suite
 
@@ -26,21 +11,14 @@ bench/css/%.rkt: get_bench.py get_bench.js
 	@ sh bench/css/get.sh $* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/$*/*.xht))
 
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
-	racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg $^
+	racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg --sections s8.3,s8.3.1,s9.5,s9.5.1,s9.5.2,s10.8,s10.8.1 $^
 
-bench/css/index.json:
-	xdg-open "http://test.csswg.org/suites/css2.1/20110323/html4/toc.html"
-	@ echo "Please run the following code on every linked page and collect the results into bench/css/index.json:"
-	@ echo
-	@ echo 'k = {}; a = $$("td a"); for (var i = 0; i < a.length; i++) { p = a[i].parentNode; while (p.tagName!="TBODY") p = p.parentNode; k[a[i].textContent] = p.id }; p = document.createElement("pre"); document.body.appendChild(p); p.textContent = JSON.stringify(k)'
+reports/csswg-extra.html reports/csswg-extra.json: $(wildcard bench/css/*.rkt)
+	racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg-extra $^
 
 # FWT test suite
 
 FWT_PATH=$(HOME)/src/fwt
-
-# Not recommended
-bench/fwt/%.rkt: get_bench.py get_bench.js $(FWT_PATH)/%.zip
-	sh bench/fwt/get.sh $(FWT_PATH)/$*.zip
 
 bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*.zip)
 	sh bench/fwt/get-all.sh $(wildcard $(FWT_PATH)/*.zip)
