@@ -14,6 +14,7 @@ import urlparse
 import collections
 import argparse
 import subprocess
+import json
 
 SCRIPT=open("get_bench.js").read()
 MINIMIZER=open("minimize.js").read()
@@ -32,15 +33,22 @@ def make_browser():
 
 def run_accept(name=None):
     print("Running Cassius:")
-    result = subprocess.check_output(["racket", "src/run.rkt", "accept", "bench/"+name+".rkt", "doc-1"], shell=True, stderr=subprocess.STDOUT)
+    result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "bench/"+name+".rkt", "doc-1"], shell=True, stderr=subprocess.STDOUT)
     print(result)
-    if "Accepted!" not in result:
+    if "Accepted" not in result:
         print("Cassius rejected the minimized version, continuing...")
+        sys.stdout.flush()
+        lines = result.split()
+        elements = []
+        for line in lines[1:]:
+            elements.append(str(json.loads(line)))
+        return (False, elements)
     else:
         print("Cassius accepted the minimized version, backtracking...")
-    sys.stdout.flush()
+        sys.stdout.flush()
+        return (True, [])
 
-def get_bench(urls, name=None):
+def get_bench(urls, elts, name=None):
     browser = make_browser()
 
     try:
@@ -70,10 +78,10 @@ def get_bench(urls, name=None):
                     id = str(i+1).rjust(len(str(len(urls))), "0")
                     try:
                         browser.get(url)
-                        browser.execute_script('taglist = [{tag: "a", index: 0}];' + MINIMIZER)
+                        browser.execute_script('taglist = [{}];'.format(elts) + MINIMIZER)
                         browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
                         browser.execute_script(SCRIPT + "; cassius(LETTER)")
-                        elt = browser.find_element_by_id("-x-cassius-output-block");
+                        elt = browser.find_element_by_id("-x-cassius-output-block")
                         text = elt.text.encode("utf8")
                         fi.write(";; From {}\n\n{}\n\n".format(url, text))
                         print "{}".format(id),
@@ -96,5 +104,10 @@ if __name__ == "__main__":
     p.add_argument("--name", dest="name", default=None, type=str, help="File name under bench/.")
     args = p.parse_args()
     
-    get_bench(args.urls, name=args.name)
-    run_accept(name=args.name)
+    get_bench(args.urls, "", name=args.name)
+    accepted, elts = run_accept(name=args.name)
+    print ("[" + ",".join(elts) + "]")
+    #while not accepted:
+    #    get_bench(args.urls, name=args.name, ",".join(elts))
+    #    accepted, elts = run_accept(name=args.name)
+

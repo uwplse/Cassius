@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/cmdline (only-in xml write-xexpr)
+(require racket/cmdline (only-in xml write-xexpr) json
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
          "frontend.rkt" "solver.rkt"
          "print/tree.rkt" "print/css.rkt" "print/smt.rkt")
@@ -49,6 +49,32 @@
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
+(define (get-last-json doms docs)
+  (define tagcounts (make-hash))
+  (define last #f)
+  (for* ([dom doms] [elt (in-tree (parse-tree dom))])
+    (match-define num (dict-ref (node-attrs elt) ':elt #f))
+      (when num
+        (for* ([doc docs] [html (in-elements (parse-dom doc))] #:final (equal? num (dict-ref (node-attrs html) ':num #f)))
+          (when (equal? num (dict-ref (node-attrs html) ':num #f))
+            (define tag (node-type html))
+            (set! last (cons tag (dict-ref! tagcounts tag 0)))
+            (dict-set! tagcounts tag (+ 1 (dict-ref tagcounts tag)))))))
+  last)
+
+(define (do-minimize problem)
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
+    [(success stylesheet trees doms)
+     (eprintf "Accepted\n")]
+    [(failure stylesheet trees)
+     (eprintf "Rejected\n")
+     (match-define (cons tag index) (get-last-json trees (dict-ref problem ':documents)))
+     (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))]
+    [(list 'error e)
+     (eprintf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break
      (eprintf "Terminated.\n")]))
 
@@ -155,6 +181,9 @@
    ["accept"
     #:args (fname problem)
     (do-accept (get-problem fname problem))]
+   ["minimize"
+    #:args (fname problem)
+    (begin (minimize-mode!) (do-minimize (get-problem fname problem)))]
    ["debug"
     #:args (fname problem)
     (do-debug (get-problem fname problem))]
