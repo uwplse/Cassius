@@ -1,6 +1,6 @@
 #lang racket
 (require "z3o.rkt" "common.rkt" "spec/utils.rkt")
-(provide z3-prepare z3-clean z3-namelines cassius-check-sat)
+(provide z3-prepare z3-clean z3-namelines vizassert-check-sat)
 
 (define to-resolve
   (append
@@ -84,7 +84,7 @@
        `(assert (! ,expr :named ,(string->symbol (format "line$~a" i))))]
       [_ cmd])))
 
-(define cassius-check-sat
+(define vizassert-check-sat
   '(check-sat-using
     (then
      (! propagate-values

@@ -532,7 +532,7 @@
                   (ez.line-up (vbox b))
                   (ez.in b))))))
 
-  ;; These three functions define the three types of layouts Cassius
+  ;; These three functions define the three types of layouts VizAssert
   ;; supports for block boxes: normal in-flow layout, floating layout,
   ;; and positioned layout. By and large, these functions refer to the
   ;; preceding functions.

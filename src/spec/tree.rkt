@@ -2,7 +2,7 @@
 (require "../common.rkt" "../smt.rkt" "../encode.rkt" "utils.rkt")
 (provide link-definitions)
 
-;; This file defines the tree structures used in Cassius's SMT
+;; This file defines the tree structures used in VizAssert's SMT
 ;; encoding of CSS. It defines the Element and Box classes, and
 ;; functions to properly establish the pointers each holds.
 

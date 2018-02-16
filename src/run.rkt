@@ -143,7 +143,7 @@
   (define screenshot #f)
 
   (multi-command-line
-   #:program "cassius"
+   #:program "vizassert"
 
    #:multi
    [("-d" "--debug") "Turn on debug mode"

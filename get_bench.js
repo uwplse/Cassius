@@ -620,8 +620,8 @@ function make_boxes(elt, styles, features) {
 
 // Inspired by https://stackoverflow.com/questions/13382516/getting-scroll-bar-width-using-javascript
 function compute_scrollbar_width() {
-    var outer = document.createElement("CassiusBlock");
-    var inner = document.createElement("CassiusBlock");
+    var outer = document.createElement("VizAssertBlock");
+    var inner = document.createElement("VizAssertBlock");
     outer.style.display = "block";
     outer.style.overflow = "scroll";
     outer.style.borderLeftStyle = "none";
@@ -1147,7 +1147,7 @@ function annotate_box_elt(box) {
     }
 }
 
-function page2cassius(name) {
+function page2vizassert(name) {
     var features = {};
 
     var text = "";
@@ -1204,10 +1204,10 @@ function page2cassius(name) {
     return text;
 }
 
-function cassius(name) {
+function vizassert(name) {
     var pre = document.createElement("pre");
-    pre.id = "-x-cassius-output-block";
-    pre.innerText = page2cassius(name);
+    pre.id = "-x-vizassert-output-block";
+    pre.innerText = page2vizassert(name);
     with (pre.style) {
         background = "white", color = "black";
         position = "absolute", top = "0", left = "0";
@@ -1226,7 +1226,7 @@ function cassius(name) {
 }
 
 function draw_rect(rect) {
-    var d = document.createElement("CassiusRect");
+    var d = document.createElement("VizAssertRect");
     d.style.position = "absolute";
     d.style.top = rect.top + "px";
     d.style.left = rect.left + "px";
@@ -1268,7 +1268,7 @@ function measure_font(font, size, weight, style, txt, baseline) {
 
 function get_font_lineheight(font, weight, style) {
 	var body = document.querySelector("body");
-	var div = document.createElement("CassiusBlock");
+	var div = document.createElement("VizAssertBlock");
 	div.innerHTML = "Hxy";
 	body.appendChild(div);
 
@@ -1297,8 +1297,8 @@ function get_font_lineheight(font, weight, style) {
 
 function get_font_offsets(font, weight, style, A, D) {
 	var body = document.querySelector("body");
-	var div = document.createElement("CassiusBlock");
-	var span = document.createElement("CassiusInline");
+	var div = document.createElement("VizAssertBlock");
+	var span = document.createElement("VizAssertInline");
 	span.innerHTML = "Hxy";
 	div.appendChild(span);
 	body.appendChild(div);

@@ -1,9 +1,9 @@
 #!/bin/python2.7
 
 """
-Benchmark creator, for Cassius.
+Benchmark creator, for VizAssert.
 
-Uses Selenium Webdriver to download new benchmarks for Casssius.
+Uses Selenium Webdriver to download new benchmarks for VizAssert.
 Opens a page in Firefox, causes it to execute get_bench.js, and saves the result.
 """
 
@@ -55,8 +55,8 @@ def main(urls, name=None, screenshot=False):
                             print "Saving screenshot to", iname
                             browser.save_screenshot(iname)
                         browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
-                        browser.execute_script(SCRIPT + "; cassius(LETTER)")
-                        elt = browser.find_element_by_id("-x-cassius-output-block");
+                        browser.execute_script(SCRIPT + "; vizassert(LETTER)")
+                        elt = browser.find_element_by_id("-x-vizassert-output-block");
                         text = elt.text.encode("utf8")
                         fi.write(";; From {}\n\n{}\n\n".format(url, text))
                         print "{}".format(id),
@@ -69,7 +69,7 @@ def main(urls, name=None, screenshot=False):
         browser.quit()
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
+    p = argparse.ArgumentParser(description="Download a website as vizassert test cases")
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
     p.add_argument("--name", dest="name", default=None, type=str, help="File name under bench/.")
     p.add_argument("--screenshot", dest="screenshot", default=False, action="store_true", help="File name under bench/.")

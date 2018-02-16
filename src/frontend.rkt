@@ -76,7 +76,7 @@
 
 (define (query sheets docs fonts [tests #f])
   (define-values (doms query) (constraints (make-log) sheets docs fonts tests))
-  (append query (list cassius-check-sat)))
+  (append query (list vizassert-check-sat)))
 
 (define (solve sheets docs fonts [tests #f])
   (define log-phase (make-log))
@@ -87,7 +87,7 @@
     (let ([z3 (z3-process)])
       (with-handlers ([exn? (λ (e) (z3-kill z3) (raise e))])
         (z3-send z3 query)
-        (begin0 (z3-check-sat z3 #:strategy cassius-check-sat)
+        (begin0 (z3-check-sat z3 #:strategy vizassert-check-sat)
           (z3-kill z3)))))
 
   (define trees (map dom-boxes doms))

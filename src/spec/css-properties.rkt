@@ -2,7 +2,7 @@
 (require "../common.rkt")
 (provide in-css-properties in-css-types css-shorthand-properties css-type css-properties css-types css-default css-inheritable?)
 
-;; The CSS properties and data types Cassius supports. The file is in
+;; The CSS properties and data types VizAssert supports. The file is in
 ;; three parts: helper macros, type and property definitions, and
 ;; helper functions
 
