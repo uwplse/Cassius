@@ -24,27 +24,38 @@ two experiments:
   collapsing, and floating layout agree's with Mozilla Firefox's,
   demonstrating that this formalization is correct (contribution 2).
 
-This document guides the artifact evaluator through setting up
+This document guides the artifact reviewer through setting up
 VizAssert, running the two main experiments, and verifying various
-additional claims made in the paper's evaluation (§6). The document
-then gives a brief description of the VizAssert code base, allowing
-the evaluator to check that it (roughly) corresponds to the
+additional claims made in the evaluation (Section 6 in the paper). The
+document then gives a brief description of the VizAssert code base,
+allowing the reviewer to check that it (roughly) corresponds to the
 description in the paper, and also explains how to run additional
-experiments of the evaluator's choosing (including writing new
+experiments of the reviewer's choosing (including writing new
 assertions, using those assertions on new web pages, and evaluating
 other portions of the semantics).
+
+*Note*: This document is very long, but that need not frighten the
+reviewer. A full reproduction of the results in the paper using the
+provided virtual machine requires running but two commands. (These
+commands can take a few days to run, depending on the machine, but the
+provided virtual machine includes freshly-generated outputs as well.)
+The length of this document reflects additional instructions not
+necessary to reproduce the paper's results, and instead provided in
+case the reviewer wishes to further investigate the VizAssert tool or
+wishes to set up VizAssert on their own machine (instead of using the
+virtual machine).
 
 Setting up VizAssert
 --------------------
 
-VizAssert is provided to the artifact evaluator in two formats:
+VizAssert is provided to the artifact reviewer in two formats:
 
 + A tarball containing the source code
 + A virtual machine image
 
 In the virtual machine image, all of the setup steps described below
-have been done. Evaluators using the virtual machine image can skip
-this section. Evaluators can choose to use the following instructions
+have been done. Reviewers using the virtual machine image can skip
+this section. Reviewers can choose to use the following instructions
 instead, but the authors will not necessarily be able help debug
 installation problems on all systems, so the virtual machine is
 recommended.
@@ -57,12 +68,12 @@ browser, and the Selenium Python package. Finally, its associated
 scripts also use the `xvfb-run`, `curl`, and `fuse-zip` commands, and
 some versions of Selenium and Firefox additionally require the
 `geckodriver` binary. The PIP package manager is also recommended.
-This section guides the evaluator through installing all of these
+This section guides the reviewer through installing all of these
 prerequisites.
 
 VizAssert has been observed to work on several different Linux
 distributions, macOS, and Windows. However, this section describes
-installation instructions only on Linux; evaluators on other operating
+installation instructions only on Linux; reviewers on other operating
 systems will have to modify them. Note that several of the scripting
 prerequisites are not available on macOS and Windows. The reproduction
 experiments will describe workarounds where available, but the
@@ -71,7 +82,7 @@ artifact is not optimized for this use case. The VM uses Ubuntu
 
 We have also seen reports that Retina and other Hi-DPI displays cause
 problems when capturing pages in VizAssert. We've not been able to
-investigate these reports, and cannot confirm them. Evaluators on
+investigate these reports, and cannot confirm them. Reviewers on
 devices with Hi-DPI screens may want to use the VM, where the capture
 step has already been completed on a device with a Lo-DPI screen.
 
@@ -101,9 +112,11 @@ are:
 
 Note that Racket, Python, Z3, and Firefox must all be available on
 your PATH (as `racket`, `python2`, `z3`, and `firefox`). On Windows,
-modifying one's PATH is fairly complicated; the authors don't remember
-how to do it, and we hope that the evaluators do. <!-- TODO --> The
-utilities listed below must also be available on the PATH.
+modifying one's PATH is fairly complicated; we do not have a Windows
+machine and cannot vouch for it, but [this
+guide](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/)
+seems to describe the process. The utilities listed below must also be
+available on the PATH.
 
 Selenium is best installed from PIP (the Python package manager). PIP
 can be installed from its website or from a package manager (any
@@ -140,7 +153,7 @@ and decompressing them would make the VM download much bigger and slow
 down the scripts by hitting disk much more often. In can be installed
 from package managers, but it will likely require a reboot and
 possibly some group manipulations to allow the user to access FUSE. We
-ask the evaluator to consult their distribution's guidelines on FUSE;
+ask the reviewer to consult their distribution's guidelines on FUSE;
 on Windows or macOS we recommend workarounds below. 
 <!-- TODO -->
 If `xvfb-run` is not present, delete the code `xvfb-run -a -s '-screen
@@ -201,7 +214,7 @@ from Firefox. To capture websites, run:
 This will produce the file `bench/fwt.rkt` and several files in
 `bench/css/` with the `.rkt` extension. These correspond to the FWTs
 and CSSWG files; comments in those files indicate which captured entry
-corresponds to which file. (The evaluator is free to verify that the
+corresponds to which file. (The reviewer is free to verify that the
 capturing behaved correctly.)
 
 Note that capture script only captures files named `index.html`; each
@@ -238,12 +251,12 @@ takes longer than checking a particular rendering, so this timeout is
 lower than the timeout of 30 minutes for verifying assertions.)
 
 VizAssert produces the file `reports/fwt.html` describing the results,
-which the evaluator should examine. The main table, with colored check
+which the reviewer should examine. The main table, with colored check
 marks and Xs, should contain many green checkmarks (the table at the
 top should list the number, in the "success" column). If, instead, it
 only has white-on-black exclamation marks, some part of the setup did
 not work, and VizAssert is running into errors. (See below.) On the
-paper evaluation machine, 51 FWTs passed this stage; evaluators may
+paper evaluation machine, 51 FWTs passed this stage; reviewers may
 see a different number due to different machine speed (affecting
 timeouts) or different fonts (affecting the rendering). We believe
 that numbers in the 40–60 range are sufficiently close to achieve
@@ -262,13 +275,456 @@ VizAssert can be run on an individual FWT with this command:
 Here, `doc-080` names an FWT, which are numbered from `doc-001` to
 `doc-100`. (`doc-080` is the yoga website in Figure 7.)
 
-Running individual FWTs may help evaluators debug problems they face
+Running individual FWTs may help reviewers debug problems they face
 setting up Racket, Z3, or the other components above. We do not
-recommend evaluators 
+recommend reviewers 
 
 ### Conclusion
 
-After following these steps, the evaluator should have the file
+After following these steps, the reviewer should have the file
 `bench/fwt.working.rkt` and several files `bench/css/*.rkt`, plus a
 working installation of VizAssert. These are sufficient to move on to
 artifact evaluation.
+
+Verifying Assertions on the FreeWebsiteTemplates
+------------------------------------------------
+
+The first major experiment in the VizAssert paper is an evaluation of
+VizAssert on 51 professionally-designed web pages from the
+FreeWebsiteTemplates community (FWTs).
+
+Due to differing machines and, the setup step may have left the
+reviewer with slightly more or slightly fewer than 51 FWTs in the file
+`bench/fwt.working.rkt`. (Even different runs on the paper evaluation
+computer produce as few as 49 and as many as 53 FWTs.) The VM has <!--
+TODO --> the same 51 FWTs selected as in the paper.
+
+The next step is testing each FWT against all 8 general assertions,
+and then testing the additional 6 specific assertions. This can be
+done automatically with the command:
+
+    make reports/general.html reports/specific.html
+
+This will generate `reports/general.html` with the results of running
+the 8 general assertions on all 51 FWTs and `reports/specific.html`
+with the results of running the 6 specific assertions each on their
+particular FWT. (If you installed VizAssert yourself you may need to
+change the `FWT_PATH` Make variable.)
+
+This command will run for several hours or perhaps up to a day. The VM
+contains freshly generated versions of these two files, which the
+reviewer can examine while the above command is running.
+
+Each of these pages will contain two parts: a summary table at the top
+(listing the successful verifications "success", false positives
+"fail", timeouts "timeout", and true positives "expected"); and a
+detailed table below (listing each FWT and a icon for every
+assertion).
+
+The results can be compared to Table 2 in the paper. Due to variation
+between machines, some numbers, especially the number of timeouts, may
+change somewhat from run to run. We would consider variations as many
+as 30 timeouts expected given the expected slowdown from running
+inside a virtual machine; the paper's evaluation was done on a very
+fast machine.
+
+Note that true positives are verified by hand (all manual
+verifications are recorded in `bench/fwt/expected.sexp`). If your
+setup chose more than 51 supported FWTs, or possibly a slightly
+different set of supported pages, you may see more "false positives".
+
+### Validating the experiment
+
+This section describes in more detail the commands being executed, so
+the reviewer can be certain that the experiment reproduced corresponds
+to the text of the paper.
+
+The `make` command above uses information in the `Makefile` to execute
+the experiment. These execute `racket src/report.rkt`, which runs
+VizAssert on multiple input files and produces HTML reports. This
+command takes multiple arguments.
+
+To produce `reports/general.html`, it is run in `assertions` mode with
+two arguments:
+
++ `bench/assertions/assertions.vizassert`, a file containing the 8
+  general assertions. This file can be read by the reviewers to ensure
+  correspondence to visual logic, as described in the paper, and that
+  the assertions implement the described guidelines. The supplementary
+  material Appendix A can describe details of the formalization. The
+  assertions are written in that appendix with inline function
+  definitions and various shorthand; thus the assertions in this file
+  differ in cosmetic ways from Appendix A.
++ `bench/fwt.working.rkt`, a file containing the 51 FWTs selected as
+  fitting within VizAssert's supported subset of CSS.
+
+To produce `reports/specific.html`, `report.rkt` is run in
+`particular-assertions` and takes an additional argument,
+`bench/fwt/specific.sexp`. This file specifies FWT-assertion pairs.
+These assertions are drawn from `bench/assertions/specific.vizassert`.
+
+Several additional arguments are passed:
+
++ `--expected bench/fwt/expected.sexp` names the file containing
+  manually-verified true positives.
++ `--timeout 1800` sets the timeout to a half hour.
++ `--show-all` shows successful verifications on the report.
++ `-o reports/general.html` sets the output name.
+
+The reviewer can pass additional flags either by editing the Makefile
+or by passing the `FLAGS` make variable. The reviewer may with to set
+the `--threads` option, which allows the reports to be generated in
+parallel. The paper evaluation server ran with 6 threads.
+
+### Verifying a single assertion-FWT combination
+
+To verify a true or false positive, a single assertion-FWT combination
+can be run. The command to do this is:
+
+    racket src/run.rkt assertion bench/assertions/assertions.vizassert \
+      <assertion-name> bench/fwt.working.rkt <document-name>
+
+(To run one of the specific assertions, change `assertions.vizassert`
+to `specific.vizassert`.)
+
+This will print basic timing information and then output a
+counterexample rendering followed by the rendering parameters for this
+rendering. The counterexample rendering will also have (in red if your
+terminal supports it) a tag such as `:cex b` on one of the boxes in
+the rendering. Here `b` is the variable which is bound to that box for
+the assertion to fail.
+
+The best way to verify whether the counterexample is a true or false
+positive is to open the responsible FWT in a browser. This is tricky.
+Suppose you are verifying a failed assertion on `doc-080`.
+<!-- TODO cassius -->
+
+1. First, search `fwt.working.rkt` for `define-problem doc-080`. Two
+   lines down will be a path such as
+   `file:///tmp/cassius-get-bench.fKaFdo.zip/rehabilitation-yoga/rehabilitation-yoga/upload/index.html`.
+   Extract from this path the name of this FWT, in this case
+   `rehabilitation-yoga`.
+2. Run `make /tmp/rehabilitation-yoga/`. The final slash is necessary.
+3. Change directory to `/tmp/rehabilitation-yoga/` and run
+   `find -name index.html` to find the main page of the site.
+4. Open this file in Firefox.
+
+To find, in the browser, HTML element responsible for the assertion
+failing take a bit of further effort.
+
++ The box with the `:cex b` tag will likely also have a tag such as
+  `:elt 12`. (If the box in question does not, one of its siblings or
+  ancestors will.) Remember this number.
++ Search `fwt.working.rkt` for `define-document doc-080`
++ Search *from that point forward* for `:num 12`.
++ That identifies the HTML element in VizAssert's encoding of the
+  HTML. The corresponding element can be identified in the browser.
+
+VizAssert could do most of these steps automatically if it had tighter
+integration into the user's workflow, and since the paper we have made
+some of these changes. However, these changes are not included in this
+artifact, in order to faithfully reflect the tool described in the
+paper.
+
+### Checking Instance and Proof Sizes, and Run Time
+
+<!-- TODO -->
+
+Verifying the Semantics on the CSSWG Test Suite
+-----------------------------------------------
+
+The second major VizAssert experiment tests that VizAssert's
+formalization of line height, margin collapsing, and floating layout
+is correct. The experiment can be run with:
+
+    make reports/csswg.html
+
+Like the first experiment, the `FLAGS` Make variable can be passed to
+run this experiment with multiple threads. With a single thread it
+takes several hours to complete.
+
+This command generates `reports/csswg.html`, which the reviewer can
+open in a web browser and compare to Table 3, columns 3 and 4, of the
+paper. The "success" column on the report corresponds to the "Pass"
+column in the paper, while "unsupported" and "timeout" are added
+together to compute the "Unsup" column.
+
+As with the other experiments, different computer setups may cause
+slightly more or slightly fewer tests to time out than on the paper
+evaluation machine. We would consider as few as 900 passing tests to
+substantially correspond to the numbers in Table 3.
+
+Note that unlike the prior experiment, the reviewer will see few green
+check marks (or red cross marks) on this report, because this report
+is generated without the `--show-all` flag set, and thus hides passing
+tests. The reviewer will, however, see a new section listing
+"unsupported features". This table is generated during capturing (see
+Section 1 of this README) and marks various features used by the page.
+It is not an exhaustive list of all supported or unsupported features,
+but it does provide some guidance explaining why tests end up in the
+"unsupported" column. (In this table, the "# Necessary" column lists
+the number of failing tests that are unsupported and use this feature,
+while the "# Blocking" column lists the number of failing tests that
+are unsupported and use *only* this feature.)
+
+As described in the paper, four tests are expected failures (and so do
+not count as failures in the report). These are `doc-13`, `doc-17`,
+`doc-19`, and `doc-21` in `floats.rkt`, or, in the CSSWG tests
+(located in `~/src/csswg` in the VM):
+
++ `css/CSS2/floats/floats-rule3-outside-left-002.xht`
++ `css/CSS2/floats/floats-rule3-outside-right-002.xht`
++ `css/CSS2/floats/floats-rule7-outside-left-001.xht`
++ `css/CSS2/floats/floats-rule7-outside-right-001.xht`
+
+To verify that Firefox's rendering is incorrect, and thus that
+VizAssert's failure is expected, the reviewer can add `-ref` just
+before the `.xht` to any of those file names to see the test's
+reference example; Firefox will render the test and the reference
+differently, demonstrating that its rendering is incorrect. (The paper
+cites a relevant bug report.)
+
+### Validating the experiment
+
+This section describes in more detail the commands being executed, so
+the reviewer can be certain that the experiment reproduced corresponds
+to the text of the paper.
+
+The `make` command above uses information in the `Makefile` to execute
+the experiment. It executes `report.rkt` in the `regression` mode,
+which tests whether VizAssert accepts Firefox's rendering. In
+addition, it passes the arguments:
+
++ `--index bench/css/index.json`, which points VizAssert to a JSON
+  file giving the section of the standard any particular unit test was
+  drawn from, according to the [CSSWG's
+  site](http://test.csswg.org/suites/css2.1/20110323/html4/toc.html).
++ `--expected bench/css/expected.sexp` describes expected failures
++ `--sections ...` lists all of the sections of the CSS standard
+  tested in this experiment.
+
+### Running an individual test
+
+Unlike the FWT tests, the CSSWG tests are organized into multiple
+files, reflecting the structure of the test suite. For example, most
+(but not all) of the tests for floating layout are located in the
+`floats` and `floats-clear` collections. Each collection's tests are
+numbered sequentially, but a collection also contains tests
+corresponding to multiple sections of the standard. (We don't know why
+the CSSWG uses this organization scheme.) To reference a test, you
+must know both its collection (like `floats`) and the test name (like
+`doc-13`).
+
+An individual test can be reproduced with:
+
+    racket src/run.rkt accept bench/css/<collection>.rkt <test>
+
+This will either print "Accepted.", which means that VizAssert agreed
+that Firefox's rendering was correct, or "Rejected." followed by a
+visualization of the unsatisfiability core of VizAssert's rejection of
+Firefox's rendering. On the provided tests, this unsatisfiability core
+is rarely useful, because the underlying reason for the failure is
+more "VizAssert doesn't understand tables" and less "this element
+shouldn't have width 100px".
+
+An individual test can also be rendered by VizAssert with:
+
+    racket src/run.rkt render -d bench/css/<collection>.rkt <test>
+
+This rendering does not use any information about Firefox's rendering,
+and instead produces some rendering that VizAssert believes is valid.
+
+Note that VizAssert is mildly non-deterministic and can accept
+multiple renderings. However, it's semantics are fairly tight, as
+demonstrated by the first experiment: if too many renderings were
+accepted, VizAssert would produce false positives at a high rate.
+
+The `-d` flag places VizAssert in "debug mode", whose most important
+consequence is that VizAssert does not apply "fuzzing" to font
+measurements (see Footnote 13 in the paper). It also causes VizAssert
+to write out its SMT query to `/tmp/out.z3`. The reviewer may read
+that file to see the character of queries produced by VizAssert.
+
+### Running further tests
+
+The reviewer can run:
+
+    make reports/csswg-extra.html
+
+This generates a larger report which evaluates VizAssert not only on
+the sections described in the paper but also on a variety of other
+CSSWG tests. We stress that these tests apply to aspects of the CSS
+semantics not discussed in the paper, and do not evaluate any of the
+paper's core contributions.
+
+The reviewer will likely see a variety of test failures (between one
+and two hundred out of 5000 tests) in this experiment. These are not
+fully understood at the moment; some may be due to errors in the
+semantics, others are due to errors in the capture script, or
+represent expected failures not yet manually verified. Note also that
+some of these tests are intended to be applied only on machines with
+certain properties, such as certain font setups, and so are simply not
+applicable.
+
+Reviewers who are interested in exploring this broader scope of tests
+are encouraged to use the `accept` and `render` commands above to
+explore some of the failing tests.
+
+Despite the unfortunate presence of some test failures, the relatively
+low rate (roughly 2% of tests) suggests that even in the unevaluated
+portions of the CSS standard, VizAssert's semantics is correct except
+for some details, which is of course to be expected given that it
+successfully passes the two main experiments.
+
+The VizAssert Codebase
+----------------------
+
+VizAssert is a total of approximately 7000 lines of code in `src/`.
+This code formalizes CSS, including the formalizations of line height,
+margin collapsing, and floating layout described in the paper;
+generates SMT queries for web pages using this formalization; and
+interacts with the solver.
+
+Visual logic is implemented by `assertions.rkt`.
+
+The constraint generator lives in `main.rkt` and `frontend.rkt` and
+refers to functions defined in the formalization.
+
+The formalization lives, by and large, in `spec/`. `spec/utils.rkt`
+defines the element and box types, and `spec/tree.rkt` describes
+functions that set up both tree structures. `spec/layout.rkt`
+formalizes the CSS 2.1 layout algorithm. `spec/float.rkt` implements
+the exclusion zone data structure, and includes formal properties
+describing its correctness. (These properties can be checked with
+`raco test`). `spec/css-properties.rkt` houses the implementation of
+CSS properties, `spec/compute-style.rkt` of inheritance, and
+`selectors.rkt` of selectors and cascading. Other files in `spec/`
+contain various additional utility functions.
+
+Constraints are partly grounded manually in the formalization files
+above, and partly by the Z3 optimizer in `z3o.rkt`. Interaction with
+the solver is in `z3.rkt`.
+
+`run.rkt` and `report.rkt` implement the VizAssert frontend.
+
+The various other files define various data structures and helper
+functions.
+
+As this paper emphasizes the formalizations of line height, margin
+collapsing, and floating layout, reviewers may want to directly look
+at the code implementing these features. All three features are
+implemented in `spec/layout.rkt` and, due to the need to implement the
+features in a way that makes solving them efficient, are more
+fragmented than the description in the paper.
+
+Line height computation is implemented in lines 879–896 (which
+computes the position and height of lines) and supported by lines
+751–770 and 825–833 (which propagate the `above-baseline` and
+`below-baseline` properties for inline and text boxes). In this code,
+`b` generally refers to the particular box whose values are being
+computed, `l` its last child, and `v` its previous sibling. Note that
+the full implementation is more complex than the paper sketch, due to
+details like zero-height line boxes that were elided from the paper
+for simplicity.
+
+Margin collapsing is implemented in lines 224–270. It follows the
+sketch in the paper; the variable `mtp` and `mtn` are the variables
+`mt+` and `mt-` (likewise `mbp`/`mbn`), `mtn-up` the variable `mt↑`,
+and `mb-clear` the boolean `mb?`. The `b`, `l` and `v` variables are
+as above, with `f` for first child and `n` for next child joining
+them. This implementation of margin collapsing is supported by lines
+121–131, which uses the results of the margin collapsing code to
+implement placement for in-flow block boxes.
+
+Floating layout is implemented in lines 639–659 (which place floating
+boxes and update exclusion zones) and supported by lines 858–871
+(which places line boxes to avoid floats). Exclusion zones themselves
+are implemented in `spec/floats.rkt`.
+
+These implementations cannot be easily read on their own, since they
+tie into the larger formalization of floating layout and also since
+they include special cases not discussed in the paper yet important
+for correctly implementing the relevant behavior. (For example, the
+paper simply did not have room to discuss clearance, an important
+component of CSS layout that is intimately related to floating
+layout.) However, we hope that reviewers will be able to see some
+rough correspondence to the descriptions in the paper, at least
+relating common variables and a rough understanding of data flow.
+
+Running VizAssert on new inputs
+-------------------------------
+
+We encourage reviewers to try VizAssert on new web pages and new
+assertions if they are so inclined, keeping in mind that VizAssert's
+formalization of CSS is still limited to a subset of the full features
+and that visual logic does not at the moment have comprehensive and
+comprehensible error reporting.
+
+To run VizAssert, one fundamentally needs two things: a web page and
+an assertion. Reviewers may write a web page or choose any public page
+on the Internet; VizAssert can be used either on files on disk or on
+HTTP-accessible (but not HTTPS-accessible) pages. VizAssert can have
+surprising and unpredictable results on JavaScript-heavy web pages,
+because that capture scripts that import web pages into VizAssert's
+input format are themselves written in JavaScript, and will run at
+an unpredictable time and may conflict in their use of global
+variables. We recommend reviewers choose pages with minimal
+JavaScript.
+
+Reviewers who wish to run VizAssert on JavaScript-heavy or
+HTTPS-accessible pages can use their browser's "save page" feature to
+save a static version of the page on disk. (Some browsers will save and
+later run JavaScript on such pages; we recommend simply deleting the
+relevant JavaScript file if it causes problems.)
+
+Once a page is chosen, run:
+
+    python2 get_bench.py --name test <url>
+
+Here, `test` is any name; the script will create `bench/test.rkt`
+by going to the chosen URL (it may also be a Unix path), running the
+capture script, and recording the results. Multiple URLs can be given,
+but we do not recommend reviewers do this.
+
+The resulting `bench/test.rkt` file will contain a single VizAssert
+input, named `doc-1`.
+
+Given an input file, run:
+
+    racket src/run.rkt accept bench/test.rkt doc-1
+
+You should see the text `Accepted` if your page is supported by
+VizAssert. Note that this process can take a long time for large, or
+even some moderate-sized pages. VizAssert cannot be run, for example,
+on the CNN or New York Times front pages—these pages are simply too
+big.
+
+A new assertion can be written by creating an empty file and filling
+it with this template:
+
+    (define-test (<name> <forall-quantified-vars> ...)
+      <assertion>)
+
+For example the simplest of the 8 general-purpose assertions is
+defined by:
+
+    (define-test (interactive-onscreen b)
+      (=> (is-interactive b) (onscreen b)))
+
+The syntax of the assertion language is defined in
+`src/assertions.rkt` and largely follows the visual logic in the
+paper. In incorporates some but not all of the shorthands used in
+the supplementary Appendix A.
+
+With a supported input file and an assertion, run:
+
+    racket src/run.rkt assertion <assertion-file> <assertion-name> bench/test.rkt doc-1
+
+This asks VizAssert to verify that the page satisfies the assertion.
+If the page cannot be verified, VizAssert will produce a
+counterexample. These counterexamples were described in detail when
+discussing the first experiment.
+
+Note that though we encourage reviewers to experiment with VizAssert,
+specifying new assertions can be tricky and it may be difficult for us
+to help troubleshoot reviewer's web pages and assertions.
