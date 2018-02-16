@@ -36,14 +36,19 @@ other portions of the semantics).
 
 *Note*: This document is very long, but that need not frighten the
 reviewer. A full reproduction of the results in the paper using the
-provided virtual machine requires running but two commands. (These
-commands can take a few days to run, depending on the machine, but the
-provided virtual machine includes freshly-generated outputs as well.)
+provided virtual machine requires running but two commands.
 The length of this document reflects additional instructions not
-necessary to reproduce the paper's results, and instead provided in
-case the reviewer wishes to further investigate the VizAssert tool or
-wishes to set up VizAssert on their own machine (instead of using the
-virtual machine).
+necessary to reproduce the paper's results.
+
+*Note*: These commands that reproduce the main experiments can take a
+few days to run, depending on the machine, but the provided virtual
+machine includes freshly-generated outputs as well. We recommend the
+reviewers run each of the main experiments overnight and plan to pause
+the virtual machine and continue the experiment on the next night if
+more time is necessary. This document includes instructions to set up
+VizAssert on their own machine (instead of using the virtual machine),
+which may make the evaluation faster, but is also much more
+labor-intensive.
 
 Setting up VizAssert
 --------------------
@@ -428,7 +433,65 @@ paper.
 
 ### Checking Instance and Proof Sizes, and Run Time
 
-<!-- TODO -->
+Unfortunately, the artifact does not include the code used to generate
+Figures 8, 9, and 10 of the paper (because that code is tightly
+integrated into the TeX built process for the paper itself). However,
+the raw data is available, and code is included to reproduce the broad
+summary statistics given in Section 6.1 that run parallel to Figure 8.
+
+#### Figure 8
+
+Figure 8 examines the captured web pages and simply counts the number
+of rules, boxes, and elements. Rough statistics about these sizes can
+be found by running:
+
+    racket aec/histogram.rkt bench/fwt.working.rkt
+
+This outputs the averages, IQRs, and total ranges for the sets of
+elements, boxes, and rules. Also output are data for drawing a
+histogram, such as:
+
+    Histogram: "min": 53, "max":468, "interval": 42, "counts": [10,39,29,8,6,3,3,1,1,1]
+
+This represents a histogram that ranges for 53 to 468 with buckets of
+size 42, where the first bucket (53–95) containing 10 entries, the
+second 39 entries, and so on.
+
+Note that the given command uses the supported web pages, which may be
+a slightly different set than on the paper evaluation server. However,
+the result should be roughly comparable.
+
+#### Figure 9
+
+Figure 9 tracks the size of instances and unsatisfiability cores.
+These are output by VizAssert every time it verifies a web page, and
+are recorded in `reports/general.txt`. Each log entry looks something
+like this:
+
+    bench/fwt.working.rkt	doc-021	interactive-onscreen
+    [   0.001s] Read 1 documents with 75 elements, 186 boxes, and 87 rules
+    [   1.789s] Produced 7757 constraints of 82108 terms
+    [  12.274s] Prepared 28623 constraints of 677318 terms
+    [  35.239s] Found core with 11920 constraints
+    success
+
+In this log entry, the instance has 677,318 terms, and the proof size
+is 11,920 constraints. Code to turn these data into a CDF are not
+included with this artifact, but we encourage reviewers to spot check
+a few entries at random and check that the numbers are plausible.
+
+#### Figure 10
+
+Figure 10 tracks the time needed to verify assertions on the FWT
+pages. Like Figure 9, the code to generate the figure itself is not
+included, but the raw data is present in the JSON file
+`reports/general.json`. The data in `general.json` is structured as an
+array, each element of which is an object containing a `time` key in
+with a value in milliseconds.
+
+Since the plotting code is not included in the artifact, we recommend
+the reviewers sample several entries and verify that the numbers are
+plausible given the figure.
 
 Verifying the Semantics on the CSSWG Test Suite
 -----------------------------------------------
