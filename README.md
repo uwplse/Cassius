@@ -298,11 +298,13 @@ The first major experiment in the VizAssert paper is an evaluation of
 VizAssert on 51 professionally-designed web pages from the
 FreeWebsiteTemplates community (FWTs).
 
-Due to differing machines and, the setup step may have left the
-reviewer with slightly more or slightly fewer than 51 FWTs in the file
-`bench/fwt.working.rkt`. (Even different runs on the paper evaluation
-computer produce as few as 49 and as many as 53 FWTs.) The VM has <!--
-TODO --> the same 51 FWTs selected as in the paper.
+Due to differing machines and VM overhead, the setup step may have
+left the reviewer with slightly more or slightly fewer than 51 FWTs in
+the file `bench/fwt.working.rkt`. (Even different runs on the paper
+evaluation computer produce as few as 49 and as many as 53 FWTs.) The
+VM has the same 46 FWTs selected as in the paper. We believe that as
+few as 40 or as many as 60 FWTs supported would represent
+substantially similar results to those in the paper.
 
 The next step is testing each FWT against all 8 general assertions,
 and then testing the additional 6 specific assertions. This can be
@@ -377,7 +379,7 @@ Several additional arguments are passed:
 + `-o reports/general.html` sets the output name.
 
 The reviewer can pass additional flags either by editing the Makefile
-or by passing the `FLAGS` make variable. The reviewer may with to set
+or by passing the `FLAGS` make variable. The reviewer may wish to set
 the `--threads` option, which allows the reports to be generated in
 parallel. The paper evaluation server ran with 6 threads.
 
