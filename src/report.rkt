@@ -536,7 +536,7 @@
      #:output out-file
      (run-assertion-tests probs #:valid valid? #:index index #:threads threads))]
 
-   ["particular-assertions"
+   ["specific-assertions"
     #:args (assertions file problems)
     (define assns
       (call-with-input-file assertions
