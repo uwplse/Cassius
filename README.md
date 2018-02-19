@@ -212,13 +212,11 @@ paper.
 Checking Instance and Proof Sizes, and Run Time
 -----------------------------------------------
 
-<!-- TODO: add plot code from paper -->
-
-Unfortunately, the artifact does not include the code used to generate
-Figures 8, 9, and 10 of the paper (because that code is tightly
-integrated into the TeX build process for the paper itself). However,
-the raw data is available, and code is included to reproduce the broad
-summary statistics given in Section 6.1 that run parallel to Figure 8.
+The artifact contains the code necessary to regenerate Figures 8, 9,
+and 10 of the paper. These plots are generated as TeX code and then
+rendered to a PDF. The raw data for the plots is also available, and
+code is included to reproduce the broad summary statistics given in
+Section 6.1 that run parallel to Figure 8.
 
 #### Figure 8
 
@@ -237,6 +235,10 @@ histogram, such as:
 This represents a histogram that ranges from 53 to 468 with buckets of
 size 42, where the first bucket (53–95) contains 10 entries, the
 second contains 39 entries, and so on.
+
+The histograms can be rendered with:
+
+    make reports/hists.pdf
 
 Note that the given command uses the supported web pages, which may be
 a slightly different set than on the paper evaluation server. However,
@@ -257,23 +259,27 @@ like this:
     success
 
 In this log entry, the instance has 677,318 terms, and the proof size
-is 11,920 constraints. Code to turn these data into a CDF are not
-included with this artifact, but we encourage reviewers to spot check
-a few entries at random and check that the numbers are plausible.
+is 11,920 constraints.
+
+The CDFs of Figure 9 can be regenerated with:
+
+    make reports/insts.pdf
+
+Like with Figure 8, this may not exactly match the paper, but should
+be similar.
 
 #### Figure 10
 
 Figure 10 tracks the time needed to verify assertions on the FWT
-pages. Like Figure 9, the code to generate the figure itself is not
-included, but the raw data is present in the JSON file
-`reports/general.json`. The data in `general.json` is structured as an
-array, each element of which is an object containing a `time` key in
-with a value in milliseconds.
+pages. This figure draws data from `general.json`.
 
-Since the plotting code is not included in the artifact, we recommend
-the reviewers sample several entries and verify that the numbers are
-plausible given the figure.
+The CDFs of Figure 10 can be regenerated with:
 
+    make reports/runtime.pdf
+
+Just as Figure 8 and 9, the generated figure may not exactly match the
+paper. In particular, the slowdown due to virtualization overhead will
+likely shift the plot to the right, compared to the plot in the paper.
 
 Verifying the Semantics on the CSSWG Test Suite
 -----------------------------------------------
@@ -785,6 +791,17 @@ comparable results in the remainder of the artifact evaluation.
 Then, using the data in this file (and its associated JSON version
 `reports/fwt.json`) it produces a filtered version
 `bench/fwt.working.rkt` with only those FWTs that passed the check.
+
+### Prerequisites for generating plotting code
+
+Python 3.6+ is required to run the plotting code. The VM uses <!--
+TODO VM version -->, while the paper's evaluation environment used
+Python 3.6.3.
+
+A TeX installation is also required; any modern TeX installation that
+includes the `tikz` package should suffice; the VM uses TeXLive <!--
+TODO VM version -->, while the paper's evaluation environment used
+TexLive 2016.
 
 ### Debugging
 
