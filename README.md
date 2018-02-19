@@ -710,8 +710,6 @@ every system.
 Choose a directory `DIR` to obtain the CSSWG test suite and the FWTs,
 then obtain them by running (the VM uses `~/src/`):
 
-<!-- TODO -->
-
     mkdir DIR
     cd DIR
     git clone https://github.com/w3c/web-platform-tests.git
