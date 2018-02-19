@@ -15,7 +15,7 @@ if [ ! -s "$FILE" ]; then
     exit 1
 fi
 
-tmpdir=$(mktemp -d /tmp/cassius-get-bench.XXXXXX.zip)
+tmpdir=$(mktemp -d /tmp/vizassert-get-bench.XXXXXX.zip)
 unzip -q "$FILE" -d $tmpdir
 loc=$(find "$tmpdir" -name 'index.html' | head -n1)
 xvfb-run -a -s '-screen 0 1920x10800x24' python2 get_bench.py "file://$loc" --name fwt/"$NAME" "$@"

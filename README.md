@@ -48,18 +48,22 @@ experiments.
 Downloading the Virtual Machine
 -------------------------------
 
-<!-- TODO -->
-
 VizAssert is provided to the artifact reviewer in two formats:
 
 + A virtual machine image
 + A tarball containing the source code
 
-The authors recommend that you use the virtual machine image. This section
-describes how the VM image was created.  This enhances reproducibility
-by enabling reviewers to verify the VM contents and permitting
-VizAssert to be installed on other machines.  VizAssert also runs
-faster when not run in a VM.
+The authors recommend that you use the virtual machine image. Most of
+this guide assumes the use of the virtual machine image. However, the
+final section describes how the VM image was created, enabling
+reviewers to verify the VM contents and permitting VizAssert to be
+installed on other machines. VizAssert also runs faster when not run
+in a VM, which may allow a closer correspondence to the numbers in the
+paper (which were gathered on a fast machine, run natively).
+
+The Virtual Machine image is available from:
+
+<!-- TODO -->
 
 
 Verifying Assertions on the FreeWebsiteTemplates
@@ -176,11 +180,10 @@ causes the assertion to fail.
 The best way to verify whether the counterexample is a true or false
 positive is to open the responsible FWT in a browser. This is tricky.
 Suppose you are verifying a failed assertion on `doc-080`.
-<!-- TODO cassius -->
 
 1. First, search `fwt.working.rkt` for `define-problem doc-080`. Two
    lines down will be a path such as
-   `file:///tmp/cassius-get-bench.fKaFdo.zip/rehabilitation-yoga/rehabilitation-yoga/upload/index.html`.
+   `file:///tmp/vizassert-get-bench.fKaFdo.zip/rehabilitation-yoga/rehabilitation-yoga/upload/index.html`.
    Extract from this path the name of this FWT, in this case
    `rehabilitation-yoga`.
 2. Run `make /tmp/rehabilitation-yoga/`. The final slash is necessary.

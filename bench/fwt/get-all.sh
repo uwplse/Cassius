@@ -4,7 +4,7 @@ set -e
 
 hash fuse-zip &>/dev/null || (echo "You need fuse-zip to use the get-all script"; exit 1)
 
-tmpdir=$(mktemp -d /tmp/cassius-get-bench.XXXXXX.zip)
+tmpdir=$(mktemp -d /tmp/vizassert-get-bench.XXXXXX.zip)
 loc=
 
 for FILE in "$@"; do
