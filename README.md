@@ -130,7 +130,7 @@ command takes multiple arguments.
 To produce `reports/general.html`, it is run in `assertions` mode with
 two arguments:
 
-+ `bench/assertions/assertions.vizassert`, a file containing the 8
++ `bench/assertions/general.vizassert`, a file containing the 8
   general assertions. This file can be read by the reviewers to ensure
   correspondence to visual logic, as described in the paper, and that
   the assertions implement the described guidelines. The supplementary
@@ -164,10 +164,10 @@ in parallel. The paper evaluation server ran with 6 threads.
 To verify a true or false positive, a single assertion-FWT combination
 can be run. The command to do this is:
 
-    racket src/run.rkt assertion bench/assertions/assertions.vizassert \
+    racket src/run.rkt assertion bench/assertions/general.vizassert \
       <assertion-name> bench/fwt.working.rkt <document-name>
 
-(To run one of the specific assertions, change `assertions.vizassert`
+(To run one of the specific assertions, change `general.vizassert`
 to `specific.vizassert`.)
 
 This will print basic timing information and then output a
@@ -502,7 +502,7 @@ defined by:
       (=> (is-interactive b) (onscreen b)))
 
 Note that `is-interactive` and `onscreen` are shorthands built into
-the assertion language. Consult `assertions.vizassert` for more
+the assertion language. Consult `general.vizassert` for more
 examples. <!-- TODO better examples -->
 
 The syntax of the assertion language is defined in
