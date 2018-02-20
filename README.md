@@ -70,12 +70,34 @@ updates applied. It comes with all necessary software pre-installed,
 all evaluation materials pre-downloaded, and a variety of preliminary
 steps completed.
 
+### Structure of the Virtual Machine
+
+The virtual machine contains a complete checkout of the artifact in
+`~/Desktop/vizassert`. This directory is also accessible as the
+symbolic link `~/vizassert`. The virtual machine also contains the FWT
+and CSSWG test pages in `~/src`.
+
+The VizAssert source is stored in a `git` repository. **The git log
+and configuration can break anonymity, and reviewers should not
+examine it.** The git repository is provided so that the authors can
+provide updates to scripts during artifact evaluation if reviewers
+discover errors or request more information, in which case `git pull`
+should download the update without breaking anonymity.
+
+The virtual machine contains installations of Vim, Emacs, Atom, and VS
+Code, and the default logic has `sudo` power without a password,
+allowing reviewers to install additional software.
+
 The virtual machine image logs directly into a GUI session for the
 `vizassert` user. Authors on slower machines may wish to log out, and
 log back into the `vizassert` user (password `vizassert`) using the
 "Gnome Classic (metacity)" session, which has fewer animations and
-visual details. The `vizassert` user should have `sudo` power without
-a password, making it possible to install additional software.
+visual details.
+
+The VM requests 2GB of memory and 1 processor core by default. If the
+reviewer's machine has more memory and processor cores, these defaults
+can be increased. (In VirtualBox, while the VM is powered off, in the
+"Machine" menu select "Settings" and adjust values in the "System" tab.)
 
 
 Verifying Assertions on the FreeWebsiteTemplates
