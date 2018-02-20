@@ -61,9 +61,21 @@ installed on other machines. VizAssert also runs faster when not run
 in a VM, which may allow a closer correspondence to the numbers in the
 paper (which were gathered on a fast machine, run natively).
 
-The Virtual Machine image is available from:
+The virtual machine image is available from:
 
 <!-- TODO -->
+
+The virtual machine image is based on Ubuntu 16.04 LTS with all recent
+updates applied. It comes with all necessary software pre-installed,
+all evaluation materials pre-downloaded, and a variety of preliminary
+steps completed.
+
+The virtual machine image logs directly into a GUI session for the
+`vizassert` user. Authors on slower machines may wish to log out, and
+log back into the `vizassert` user (password `vizassert`) using the
+"Gnome Classic (metacity)" session, which has fewer animations and
+visual details. The `vizassert` user should have `sudo` power without
+a password, making it possible to install additional software.
 
 
 Verifying Assertions on the FreeWebsiteTemplates
@@ -791,14 +803,12 @@ Then, using the data in this file (and its associated JSON version
 
 ### Prerequisites for generating plotting code
 
-Python 3.6+ is required to run the plotting code. The VM uses <!--
-TODO VM version -->, while the paper's evaluation environment used
-Python 3.6.3.
+Python 3.5+ is required to run the plotting code. The VM uses Python
+3.5.2, while the paper's evaluation environment used Python 3.6.3.
 
 A TeX installation is also required; any modern TeX installation that
-includes the `tikz` package should suffice; the VM uses TeXLive <!--
-TODO VM version -->, while the paper's evaluation environment used
-TexLive 2016.
+includes the `tikz` package should suffice; the VM uses TeXLive 2015,
+while the paper's evaluation environment used TexLive 2016.
 
 ### Debugging
 
