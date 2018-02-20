@@ -498,17 +498,14 @@ it with this template:
 For example, the simplest of the 8 general-purpose assertions is
 defined by:
 
-    (define-test (interactive-onscreen b)
-      (=> (is-interactive b) (onscreen b)))
+    (define-test (no-horizontal-scroll b)
+      (<= (right b) (right root)))
 
-Note that `is-interactive` and `onscreen` are shorthands built into
-the assertion language. Consult `general.vizassert` for more
-examples. <!-- TODO better examples -->
+Consult `general.vizassert` for more and more complex examples.
 
-The syntax of the assertion language is defined in
-`src/assertions.rkt` and largely follows the visual logic in the
-paper. It incorporates some but not all of the shorthands used in
-the supplementary Appendix A.
+The the assertion language is defined in `src/assertions.rkt` and
+largely follows the visual logic in the paper. It incorporates some
+but not all of the shorthands used in the supplementary Appendix A.
 
 Note that though we encourage reviewers to experiment with VizAssert,
 specifying new assertions can be tricky and it may be difficult for us
