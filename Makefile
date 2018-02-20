@@ -40,13 +40,13 @@ reports/specific.html reports/specific.json: bench/fwt.working.rkt bench/asserti
 	racket src/report.rkt specific-assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.working.rkt bench/assertions/specific.sexp
 
 reports/runtime.tex: reports/general.json
-	python3 aec/runtime.py -d reports/general.json > reports/runtime.tex
+	python3 aec/runtime.py --debug reports/general.json > reports/runtime.tex
 
 reports/hists.tex: reports/general.txt
-	python3 aec/hist.py -d reports/general.txt > reports/hists.tex
+	python3 aec/hist.py --debug reports/general.txt > reports/hists.tex
 
 reports/insts.tex: reports/general.txt
-	python3 aec/insts.py -d reports/general.txt > reports/insts.tex
+	python3 aec/insts.py --debug reports/general.txt > reports/insts.tex
 
 reports/%.pdf: reports/%.tex
 	cd reports && pdflatex $*.tex

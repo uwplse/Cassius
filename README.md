@@ -230,6 +230,9 @@ rendered to a PDF. The raw data for the plots is also available, and
 code is included to reproduce the broad summary statistics given in
 Section 6.1 that run parallel to Figure 8.
 
+Each plot is generated from a Python script in `aec/`. Generated PDFs
+can be viewed within the VM using the `evince` PDF reader.
+
 #### Figure 8
 
 Figure 8 examines the captured web pages and simply counts the number
@@ -652,7 +655,7 @@ are:
 + Firefox 52 or later should all work. Earlier versions will also
   work, but used a different protocol for communicating with Selenium,
   so need to be carefully matched to Selenium versions. The VM uses
-  Firefox 58, while the paper's evaluation environment used Firefox
+  Firefox 58.0.2, while the paper's evaluation environment used Firefox
   52.5.2.
 
 Note that Racket, Python, Z3, Firefox, and the utilities below must
@@ -677,7 +680,7 @@ install a binary named `geckodriver` and place it on your path. This
 binary is sometimes available in package managers, named
 `geckodriver`, `firefoxdriver`, or `firefox-webdriver`. It may also be
 part of the Firefox installation. You can check by executing, in a
-Python REPL (`python`),
+Python REPL (`python2`),
 
     import selenium.webdriver
     f = selenium.webdriver.Firefox()
@@ -688,21 +691,21 @@ fail. If this command issues an exception complaining about not
 finding a `geckodriver` or `webdriver` binary, then you will need to
 install `geckodriver`. It can be found on Github; it comes in a
 tarball which decompresses into a single binary. This binary must be
-placed on your PATH.
+placed on your `PATH`.
 
-The VizAssert scripting also uses the `fuse-zip` and `xvfb-run`
-commands. `fuse-zip` allows mounting ZIP files as a file system; the
-scripting uses this because the FWT web pages compress really well,
-and decompressing them would make the VM download much bigger and slow
-down the scripts by hitting disk much more often. It can be installed
-from package managers, but it will likely require a reboot and
-possibly some group manipulations to allow the user to access FUSE.
-The authors ask the reviewer to consult their distribution's
-guidelines on FUSE. If `fuse-zip` is not present (e.g., on Windows or
-macOS), delete the line that begins with `hash fuse-zip` at the top of
-`get-all.sh` and then replace `fuse-zip -r "$FILE" $tmpdir/$NAME` with
-`unzip "$FILE" -d $tmpdir/$NAME` and the line `fusermount -u
-$tmpdir/$NAME` with `rm -rf $tmpdir/$NAME`.
+The VizAssert scripting also uses the `fuse-zip`, `xvfb-run`, and
+`curl` commands. `fuse-zip` allows mounting ZIP files as a file
+system; the scripting uses this because the FWT web pages compress
+really well, and decompressing them would make the VM download much
+bigger and slow down the scripts by hitting disk much more often. It
+can be installed from package managers, but it will likely require a
+reboot and possibly some group manipulations to allow the user to
+access FUSE. The authors ask the reviewer to consult their
+distribution's guidelines on FUSE. If `fuse-zip` is not present (e.g.,
+on Windows or macOS), delete the line that begins with `hash fuse-zip`
+at the top of `get-all.sh` and then replace `fuse-zip -r "$FILE"
+$tmpdir/$NAME` with `unzip "$FILE" -d $tmpdir/$NAME` and the line
+`fusermount -u $tmpdir/$NAME` with `rm -rf $tmpdir/$NAME`.
 
 `xvfb-run` allows rendering GUI applications to a virtual screen; the
 VizAssert scripts use this to run Firefox without opening a physical
@@ -717,7 +720,7 @@ different screen size is used to capture web pages (see below). This
 is unlikely to change the results, but could in principle lead to a
 few tests no longer passing.
 
-`curl` is available online or from its website and runs on pretty much
+`curl` is available online from its website and runs on pretty much
 every system.
 
 ### Downloading the CSSWG test suite and the FWTs
@@ -728,14 +731,16 @@ then obtain them by running (the VM uses `~/src/`):
     mkdir DIR
     cd DIR
     git clone https://github.com/w3c/web-platform-tests.git
-    mkdir fwts
+    mkdir fwt
     cd <source directory>
-    bash aec/download-fwts.sh "DIR/fwts/"
+    bash aec/download-fwts.sh "DIR/fwt/"
 
-The `aec/download.sh` script will take minutes to an hour, depending
-on your connection, and require about 500MB of storage. The script
-contains the list of 100 FWTs downloaded. These are the 100 most
-recent FWTs, as can be verified on the [FWT
+The `aec/download-fwts.sh` script will take minutes to an hour,
+depending on your connection. In total, this step requires about 2.3GB
+of storage.
+
+The `download-fwts.sh` script contains the list of 100 FWTs downloaded. These
+are the 100 most recent FWTs, as can be verified on the [FWT
 website](https://freewebsitetemplates.com).
 
 Next, *capture* the CSSWG unit tests and the FWT pages.  Capturing
@@ -746,7 +751,7 @@ instance to run a large and complex JavaScript file (`get_bench.js`)
 that extracts rendering information from Firefox. To capture websites,
 run:
 
-    bash aec/capture.sh "DIR/fwts/" "DIR/web-platform-tests/"
+    bash aec/capture.sh "DIR/fwt/" "DIR/web-platform-tests/"
 
 This will produce the file `bench/fwt.rkt` and several files
 `bench/css/*.rkt`.  Comments in those files indicate which captured
