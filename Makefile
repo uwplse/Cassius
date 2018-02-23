@@ -34,7 +34,8 @@ reports/fwt.html reports/fwt.json: bench/fwt.rkt
 	racket src/report.rkt regression $(FLAGS) --show-all --timeout 900 -o reports/fwt $^
 
 reports/general.html reports/general.json reports/general.txt: bench/fwt.working.rkt
-	racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/vizassert bench/assertions/general.vizassert bench/fwt.working.rkt | tee reports/general.txt
+	racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/vizassert bench/assertions/general.vizassert bench/fwt.working.rkt | tee reports/general.log
+	mv reports/general.log reports/general.txt
 
 reports/specific.html reports/specific.json: bench/fwt.working.rkt bench/assertions/specific.sexp
 	racket src/report.rkt specific-assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.rkt bench/assertions/specific.sexp
