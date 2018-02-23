@@ -9,13 +9,11 @@
 
 (define (constraints log-phase sheets docs fonts [tests #f])
   (define doms (map parse-dom docs))
-
-  (when (not *minimize*)*
-    (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
+  (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
              (length doms)
              (length (append-map (compose sequence->list in-tree dom-elements) doms))
              (length (append-map (compose sequence->list in-tree dom-boxes) doms))
-             (length (car sheets))))
+             (length (car sheets)))
 
   (define browser-styles (map (curryr dom-context ':browser) doms))
   (unless (= (length (remove-duplicates browser-styles)) 1)
@@ -57,18 +55,14 @@
   (define ms (model-sufficiency doms))
   (when tests (set! query (add-test doms query (cons `(forall () ,ms) tests*))))
 
-  (when (not *minimize*)*
-    (log-phase "Produced ~a constraints of ~a terms"
-             (length query) (tree-size query)))
+  (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
 
   (if (memq 'z3o (flags))
       (set! query (z3-prepare query))
       (set! query (z3-clean query)))
   (when (memq 'debug (flags)) (set! query (z3-namelines query)))
 
-  (when (not *minimize*)*
-    (log-phase "Prepared ~a constraints of ~a terms"
-               (length query) (tree-size query)))
+    (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
   
   (values doms query))
 
@@ -91,8 +85,7 @@
   (define trees (map dom-boxes doms))
   (match out
     [(list 'model m)
-     (when (not *minimize*)*
-       (log-phase "Found model with ~a variables" (dict-count m)))
+       (log-phase "Found model with ~a variables" (dict-count m))
      (cond
       [(extract-model-sufficiency m trees)
        (unless (extract-model-lookback m trees)
@@ -108,6 +101,6 @@
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
          (solve sheets docs fonts tests))])]
     [(list 'core c)
-     (when (not *minimize*)* (log-phase "Found core with ~a constraints" (length c)))
+     (log-phase "Found core with ~a constraints" (length c))
      (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
      (failure stylesheet* (map unparse-tree trees*))]))

@@ -151,9 +151,10 @@
     (let* ([now (current-inexact-milliseconds)]
            [delta (- now time-start)])
       (set! time-start now)
-      (apply eprintf (string-append "[~as] " fmt "\n")
-             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
-             args))))
+      (unless (*minimize*)
+        (apply eprintf (string-append "[~as] " fmt "\n")
+               (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
+               args)))))
 
 (define (boolean<? b1 b2)
   (and (not b1) b2))

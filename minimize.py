@@ -35,13 +35,17 @@ def run_accept(name=None):
     print("Running Cassius:")
     result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "bench/"+name+".rkt", "doc-1"], shell=True, stderr=subprocess.STDOUT)
     print(result)
-    if "Accepted" not in result:
+    if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
         sys.stdout.flush()
         lines = result.split()
         return (False, lines[1:])
-    else:
+    elif "Accepted" in result:
         print("Cassius accepted the minimized version, backtracking...")
+        sys.stdout.flush()
+        return (True, [])
+    else:
+        print("Minimized!")
         sys.stdout.flush()
         return (True, [])
 
