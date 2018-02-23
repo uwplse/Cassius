@@ -508,10 +508,16 @@ Given an input file, run:
     racket src/run.rkt accept bench/test.rkt doc-1
 
 You should see the text `Accepted` if your page is supported by
-VizAssert. Note that this process can take a long time for large, for
-even some moderate-sized pages. VizAssert cannot be run, for example,
-on the CNN or New York Times front pages—these pages are simply too
-big. VizAssert has been successfully run on <!-- TODO -->.
+VizAssert. If it is not, you may see error messages at various stages
+of the process. Unfortunately, at the moment these error messages are
+not particularly clear.
+
+Note that this process can take a long time for large, or even
+moderate-sized pages. VizAssert cannot be run, for example, on the CNN
+or New York Times front pages—these pages are simply too big.
+The authors recommend trying the reviewer's personal web page (of
+course, it will be difficult to assist in debugging given the
+requirements of anonymity.)
 
 Given a supported input file and an assertion, run:
 
