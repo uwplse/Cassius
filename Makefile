@@ -3,6 +3,9 @@ FLAGS=
 test:
 	raco test src
 
+README.html:
+	pandoc -H aec/header.html --toc README.md -o README.html
+
 # CSSWG test suite
 
 CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2

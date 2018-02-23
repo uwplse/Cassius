@@ -1,5 +1,4 @@
-VizAssert Artifact Evaluation
-=============================
+% VizAssert Artifact Evaluation
 
 VizAssert automatically checks formal properties about the possible
 renderings of a web page. Its main contributions are (Section 1.3):
@@ -255,7 +254,7 @@ Section 6.1 that run parallel to Figure 8.
 Each plot is generated from a Python script in `aec/`. Generated PDFs
 can be viewed within the VM using the `evince` PDF reader.
 
-#### Figure 8
+### Figure 8
 
 Figure 8 examines the captured web pages and simply counts the number
 of rules, boxes, and elements. Rough statistics about these sizes can
@@ -281,7 +280,7 @@ Note that the given command uses the supported web pages, which may be
 a slightly different set than on the paper evaluation server. However,
 the result should be roughly comparable.
 
-#### Figure 9
+### Figure 9
 
 Figure 9 tracks the size of instances and unsatisfiability cores.
 These are output by VizAssert every time it verifies a web page, and
@@ -305,7 +304,7 @@ The CDFs of Figure 9 can be regenerated with:
 Like with Figure 8, this may not exactly match the paper, but should
 be similar.
 
-#### Figure 10
+### Figure 10
 
 Figure 10 tracks the time needed to verify assertions on the FWT
 pages. This figure draws data from `general.json`.
@@ -466,6 +465,81 @@ have successfully passed the two main experiments without largely
 correct semantics for the core of CSS.
 
 
+The VizAssert Codebase
+----------------------
+
+VizAssert is a total of approximately 7000 lines of code in `src/`.
+This code formalizes CSS, including the formalizations of line height,
+margin collapsing, and floating layout described in the paper;
+generates SMT queries for web pages using this formalization; and
+interacts with the solver.
+
+Visual logic is implemented by `assertions.rkt`.
+
+The constraint generator lives in `main.rkt` and `frontend.rkt` and
+refers to functions defined in the formalization.
+
+The formalization lives, by and large, in `spec/`. `spec/utils.rkt`
+defines the element and box types, and `spec/tree.rkt` describes
+functions that set up both tree structures. `spec/layout.rkt`
+formalizes the CSS 2.1 layout algorithm. `spec/float.rkt` implements
+the exclusion zone data structure, and includes formal properties
+describing its correctness. (These properties can be checked with
+`raco test`.) `spec/css-properties.rkt` houses the implementation of
+CSS properties, `spec/compute-style.rkt` of inheritance, and
+`selectors.rkt` of selectors and cascading. Other files in `spec/`
+contain utility functions.
+
+Constraints are simplified by a Z3 optimizer in `z3o.rkt`. Interaction
+with the solver is in `z3.rkt`.
+
+`run.rkt` and `report.rkt` implement the VizAssert frontend.
+
+The various other files define various data structures and helper
+functions.
+
+As this paper emphasizes the formalizations of line height, margin
+collapsing, and floating layout, reviewers may want to directly look
+at the code implementing these features. All three features are
+implemented in `spec/layout.rkt` and, due to the need to implement the
+features in a way that makes solving them efficient, are more
+fragmented than the description in the paper.
+
+Line height computation is implemented in lines 879–896 (which
+computes the position and height of lines) and supported by lines
+751–770 and 825–833 (which propagate the `above-baseline` and
+`below-baseline` properties for inline and text boxes). In this code,
+`b` generally refers to the particular box whose values are being
+computed, `l` is its last child, and `v` is its previous sibling. Note
+that the full implementation is more complex than the paper sketch,
+due to details like zero-height line boxes that were elided from the
+paper for simplicity.
+
+Margin collapsing is implemented in lines 224–270. It follows the
+sketch in the paper; the variable `mtp` and `mtn` are the variables
+`mt+` and `mt-` (likewise `mbp`/`mbn`), `mtn-up` the variable `mt↑`,
+and `mb-clear` the boolean `mb?`. The `b`, `l`, and `v` variables are
+as above, with `f` for the first child and `n` for the next
+child. This implementation of margin collapsing is supported by lines
+121–131, which uses the results of the margin collapsing code to
+implement placement for in-flow block boxes.
+
+Floating layout is implemented in lines 639–659 (which place floating
+boxes and update exclusion zones) and supported by lines 858–871
+(which places line boxes to avoid floats). Exclusion zones themselves
+are implemented in `spec/floats.rkt`.
+
+These implementations cannot be easily read on their own, since they
+tie into the larger formalization of floating layout and also since
+they include special cases not discussed in the paper yet important
+for correctly implementing the relevant behavior. (For example, the
+paper simply did not have room to discuss clearance, an important
+component of CSS layout that is intimately related to floating
+layout.) However, we hope that reviewers will be able to see some
+rough correspondence to the descriptions in the paper, at least
+relating common variables and a rough understanding of data flow.
+
+
 Running VizAssert on new inputs
 -------------------------------
 
@@ -553,81 +627,6 @@ but not all of the shorthands used in the supplementary Appendix A.
 Note that though we encourage reviewers to experiment with VizAssert,
 specifying new assertions can be tricky and it may be difficult for us
 to help troubleshoot reviewers' web pages and assertions.
-
-
-The VizAssert Codebase
-----------------------
-
-VizAssert is a total of approximately 7000 lines of code in `src/`.
-This code formalizes CSS, including the formalizations of line height,
-margin collapsing, and floating layout described in the paper;
-generates SMT queries for web pages using this formalization; and
-interacts with the solver.
-
-Visual logic is implemented by `assertions.rkt`.
-
-The constraint generator lives in `main.rkt` and `frontend.rkt` and
-refers to functions defined in the formalization.
-
-The formalization lives, by and large, in `spec/`. `spec/utils.rkt`
-defines the element and box types, and `spec/tree.rkt` describes
-functions that set up both tree structures. `spec/layout.rkt`
-formalizes the CSS 2.1 layout algorithm. `spec/float.rkt` implements
-the exclusion zone data structure, and includes formal properties
-describing its correctness. (These properties can be checked with
-`raco test`.) `spec/css-properties.rkt` houses the implementation of
-CSS properties, `spec/compute-style.rkt` of inheritance, and
-`selectors.rkt` of selectors and cascading. Other files in `spec/`
-contain utility functions.
-
-Constraints are simplified by a Z3 optimizer in `z3o.rkt`. Interaction
-with the solver is in `z3.rkt`.
-
-`run.rkt` and `report.rkt` implement the VizAssert frontend.
-
-The various other files define various data structures and helper
-functions.
-
-As this paper emphasizes the formalizations of line height, margin
-collapsing, and floating layout, reviewers may want to directly look
-at the code implementing these features. All three features are
-implemented in `spec/layout.rkt` and, due to the need to implement the
-features in a way that makes solving them efficient, are more
-fragmented than the description in the paper.
-
-Line height computation is implemented in lines 879–896 (which
-computes the position and height of lines) and supported by lines
-751–770 and 825–833 (which propagate the `above-baseline` and
-`below-baseline` properties for inline and text boxes). In this code,
-`b` generally refers to the particular box whose values are being
-computed, `l` is its last child, and `v` is its previous sibling. Note
-that the full implementation is more complex than the paper sketch,
-due to details like zero-height line boxes that were elided from the
-paper for simplicity.
-
-Margin collapsing is implemented in lines 224–270. It follows the
-sketch in the paper; the variable `mtp` and `mtn` are the variables
-`mt+` and `mt-` (likewise `mbp`/`mbn`), `mtn-up` the variable `mt↑`,
-and `mb-clear` the boolean `mb?`. The `b`, `l`, and `v` variables are
-as above, with `f` for the first child and `n` for the next
-child. This implementation of margin collapsing is supported by lines
-121–131, which uses the results of the margin collapsing code to
-implement placement for in-flow block boxes.
-
-Floating layout is implemented in lines 639–659 (which place floating
-boxes and update exclusion zones) and supported by lines 858–871
-(which places line boxes to avoid floats). Exclusion zones themselves
-are implemented in `spec/floats.rkt`.
-
-These implementations cannot be easily read on their own, since they
-tie into the larger formalization of floating layout and also since
-they include special cases not discussed in the paper yet important
-for correctly implementing the relevant behavior. (For example, the
-paper simply did not have room to discuss clearance, an important
-component of CSS layout that is intimately related to floating
-layout.) However, we hope that reviewers will be able to see some
-rough correspondence to the descriptions in the paper, at least
-relating common variables and a rough understanding of data flow.
 
 
 Setting up VizAssert on another machine
