@@ -56,7 +56,6 @@ def draw_graph(data, which=0):
     print("%max: ", Ma)
     print("%min: ", Mi)
 
-    if DEBUG: print(r"\documentclass{article}\usepackage{tikz}\begin{document}")
     print("{")
     print(colors)
     print(r"\begin{tikzpicture}[xscale=%f,yscale=%f]" % (3.1 / (Ma - Mi), 2.8 / N))
@@ -104,7 +103,6 @@ def draw_graph(data, which=0):
 
     print(r"\end{tikzpicture}%")
     print("}")
-    if DEBUG: print(r"\end{document}")
 
 # def draw_graph(data, which=0):
     # sorted_data = sorted(data["text-size"][0])
@@ -142,6 +140,8 @@ if __name__ == "__main__":
             file = sys.argv[1]
         with open(file) as f:
             data = get_data(f)
+        if DEBUG: print(r"\documentclass{article}\usepackage{tikz}\begin{document}")
         draw_graph(data, 1)
         #draw_graph(data, 2)
         draw_graph(data, 3)
+        if DEBUG: print(r"\end{document}")

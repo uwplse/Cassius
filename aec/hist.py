@@ -33,6 +33,10 @@ def makeplot(data):
     print(r"\end{tikzpicture}")
 
 if __name__ == "__main__":
+    if "--debug" == sys.argv[1]:
+        DEBUG = True
+        del sys.argv[1]
+    if DEBUG: print(r"\documentclass{article}\usepackage{pgfplots}\begin{document}")
     elts, boxes, rules = get_data(open(sys.argv[1]))
     print(r"{\pgfplotsset{every tick label/.append style={font=\large}}")
     print(r"\pgfplotsset{every axis/.append style={font=\LARGE}}")
@@ -46,4 +50,5 @@ if __name__ == "__main__":
     makeplot(prep_hist("Rules", rules, 50, 470, 42))
     print(r"\end{minipage}")
     print(r"}")
+    if DEBUG: print(r"\end{document}")
 
