@@ -3,7 +3,7 @@ FLAGS=
 test:
 	raco test src
 
-README.html:
+README.html: README.md aec/header.html
 	pandoc -H aec/header.html --toc README.md -o README.html
 
 # CSSWG test suite
