@@ -62,7 +62,7 @@ paper (which were gathered on a fast machine, run natively).
 
 The virtual machine image is available from:
 
-<!-- TODO -->
+> https://www.dropbox.com/s/lg2gjgt2fl73lt0/vizassert-aec.ova
 
 The virtual machine image is based on Ubuntu 16.04 LTS with all recent
 updates applied. It comes with all necessary software pre-installed,
