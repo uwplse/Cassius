@@ -52,6 +52,12 @@
     ['break
      (eprintf "Terminated.\n")]))
 
+(define (sub-tree-size node)
+  (define count 1)
+  (for ([child (node-children node)])
+    (set! count (+ count (sub-tree-size child))))
+  count)
+
 (define (has-elt? node)
   (if (and node (dict-ref (node-attrs node) ':elt #f))
       node
@@ -66,6 +72,14 @@
             [prev (node-prev node)])
         (or (has-elt? fromparent) (has-elt? next) (has-elt? prev)))
       #f))
+
+(define (get-statistics to-remove docs)
+  (define doms (map parse-dom docs))
+  (define removed-boxes (sub-tree-size to-remove))
+  (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
+  (list removed-boxes
+        total-boxes
+        (real->decimal-string (* (/ removed-boxes total-boxes) 100) 2)))
 
 (define (get-last-json new old)
   (define tagcounts (make-hash))
@@ -86,7 +100,7 @@
             (define tag (node-type html))
             (set! result (cons tag (dict-ref! tagcounts tag 0)))
             (dict-set! tagcounts tag (+ 1 (dict-ref tagcounts tag)))))
-        result)
+        (cons (get-statistics to-remove old) result))
       to-remove))
 
 (define (do-minimize problem)
@@ -97,7 +111,12 @@
      (define to-remove (get-last-json trees (dict-ref problem ':documents)))
      (when to-remove
        (eprintf "Rejected\n")
-       (match-define (cons tag index) to-remove)
+       (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
+       ;; TODO: Make two JSON outputs into one JSON output
+       (write-json (make-hash (list (cons 'removed removed)
+                                    (cons 'total total)
+                                    (cons 'efficiency efficiency))))
+       (newline)
        (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index)))))
      (unless to-remove
        (eprintf "Minimized\n"))]

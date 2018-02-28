@@ -15,9 +15,11 @@ import collections
 import argparse
 import subprocess
 import json
+import time
 
 SCRIPT=open("get_bench.js").read()
 MINIMIZER=open("minimize.js").read()
+STATISTICS=[]
 
 def measure_scrollbar(browser):
     browser.get("about:blank");
@@ -33,21 +35,24 @@ def make_browser():
 
 def run_accept(name=None):
     print("Running Cassius:")
+    start = time.time()
     result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "bench/"+name+".rkt", "doc-1"], shell=True, stderr=subprocess.STDOUT)
-    print(result)
+    end = time.time()
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
         sys.stdout.flush()
         lines = result.split()
-        return (False, lines[1:])
+        stats = json.loads(lines[1])
+        STATISTICS.append((stats, end - start))
+        return (0, lines[2:])
     elif "Accepted" in result:
         print("Cassius accepted the minimized version, backtracking...")
         sys.stdout.flush()
-        return (True, [])
+        return (1, [])
     else:
         print("Minimized!")
         sys.stdout.flush()
-        return (True, [])
+        return (2, [])
 
 def get_bench(urls, elts, name=None):
     browser = make_browser()
@@ -107,11 +112,31 @@ if __name__ == "__main__":
     args = p.parse_args()
     
     eliminated = []
+    start = time.time()
     get_bench(args.urls, eliminated, name=args.name)
-    accepted, elts = run_accept(name=args.name)
-    while not accepted:
+    result, elts = run_accept(name=args.name)
+    while result == 0:
         eliminated.extend(elts)
-        print(eliminated)
         get_bench(args.urls, eliminated, name=args.name)
-        accepted, elts = run_accept(name=args.name)
+        result, elts = run_accept(name=args.name)
+    end = time.time()
 
+    if (result == 2):
+        i = 0
+        initial = None
+        total_time = end - start
+        total_removed = 0
+        print("\n\nStatistics:")
+
+        print("Iteration\tBeginning #\t# Removed (%)\t# Remaining")
+        for (stats,time) in STATISTICS:
+            print("{0}\t\t{1}\t\t{2} ({3:.2f})\t\t{4}".format(i,stats["total"], stats["removed"], float(stats["efficiency"]), stats["total"] - stats["removed"]))
+            if initial is None:
+                initial = stats["total"]
+            total_removed += stats["removed"]
+            i += 1
+            sys.stdout.flush()
+
+        print('\nIn total, {0} boxes were removed in {1} iteration(s), taking {2:.2f} seconds.'.format(total_removed, i, total_time))
+        print('A total of {0} boxes remained for a {1:.2f}% reduction overall.'.format(initial - total_removed, (total_removed * 100.0) / initial))
+        sys.stdout.flush()
