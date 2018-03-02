@@ -46,8 +46,8 @@ bench/fwt/%.rkt: get_bench.py get_bench.js $(FWT_PATH)/%.zip
 bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*.zip)
 	sh bench/fwt/get-all.sh $(wildcard $(FWT_PATH)/*.zip)
 
-bench/fwt.working.rkt: bench/fwt.rkt reports/fwt.json
-	racket infra/filter-working.rkt reports/fwt.json <bench/fwt.rkt >bench/fwt.working.rkt
+bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
+	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
 
 # Debugging aid
 /tmp/%/: bench/fwt/%.zip
