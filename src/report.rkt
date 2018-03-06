@@ -470,6 +470,12 @@
     (and! valid? (λ (p) (subset? (dict-ref p ':features '()) (supported-features))))]
    [("--failed") json-file "Run only tests that failed in given JSON file"
     (and! valid? (read-failed-tests json-file))]
+   [("--sections") sections "Run only tests for particular sections (needs --index)"
+    (define secs (string-split sections ","))
+    (define (valid-sections? prob)
+      (define url (car (dict-ref prob ':url '("/tmp"))))
+      (set-member? (get-index index (file-name-stem url)) secs))
+    (and! valid? valid-sections?)]
    [("--feature") feature "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
    [("--expected") efile "Expect failures named in this file"
@@ -511,7 +517,7 @@
            #:when (subset? (dict-ref prob ':features '()) (supported-features)))
       (printf "~a ~a\n" file name))]
 
-   ["assertions"
+   ["assertion"
     #:args (assertions . fnames)
     (define prob1
       (for/append ([file (sort fnames string<?)])
