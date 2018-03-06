@@ -1,10 +1,7 @@
 TIME=$(shell date +%s)
 FLAGS=
 
-.PHONY: download deploy publish
-
-deploy:
-	rsync -r www/ $(shell ~/uwplse/getdir)
+.PHONY: deploy test publish index clean nightly
 
 test:
 	raco test src
@@ -14,10 +11,15 @@ publish:
 	ssh uwplse.org chmod a+x /var/www/cassius/reports/$(TIME)/
 	ssh uwplse.org chmod -R a+r /var/www/cassius/reports/$(TIME)/
 	@ echo "Uploaded to http://cassius.uwplse.org/reports/$(TIME)/"
+
+index:
 	bash infra/publish.sh download index upload
 
 clean:
 	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
+
+deploy:
+	rsync -r www/ $(shell ~/uwplse/getdir)
 
 nightly:
 	bash infra/test.sh
