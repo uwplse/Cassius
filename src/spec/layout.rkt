@@ -558,9 +558,6 @@
                  (and (is-elt e) (is-padding/% (style.padding-right r)))
                  (and (is-elt e) (is-width/% (style.width r))))))))
 
-  (declare-fun lookback-overflow-width (Box) Real)
-  (assert (forall ((b Box)) (<= (lookback-overflow-width b) (w (pbox b)))))
-
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
@@ -601,7 +598,7 @@
                 ;; narrower than `(w p)`, because we don't know the
                 ;; shape of the exclusion zone when `(not (ez.lookback
                 ;; b))`.
-                (flow-horizontal-layout b (lookback-overflow-width b)))
+                (and (>= (left-outer b) (left-content p)) (<= (right-outer b) (right-content p)))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
                    (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))
