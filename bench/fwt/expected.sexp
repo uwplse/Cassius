@@ -71,3 +71,5 @@
 ("bench/fwt.working.rkt" doc-080 line-spacing)
 ("bench/fwt.working.rkt" doc-088 line-spacing)
 ("bench/fwt.working.rkt" doc-093 line-spacing)
+
+("bench/fwt.rkt" doc-047 visible-text)
