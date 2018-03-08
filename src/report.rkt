@@ -517,7 +517,7 @@
            #:when (subset? (dict-ref prob ':features '()) (supported-features)))
       (printf "~a ~a\n" file name))]
 
-   ["assertion"
+   ["assertions"
     #:args (assertions . fnames)
     (define prob1
       (for/append ([file (sort fnames string<?)])
