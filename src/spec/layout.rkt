@@ -213,7 +213,7 @@
          (min-max-height (- (bottom-border lb) (top-content b)) b)]
         [else ; (is-box/block (type lb)), because blocks only have block or line children
          (min-max-height 
-          (ite (and (box-collapsed-through lb) (firstish-box lb))
+          (ite (and (box-collapsed-through lb) (firstish-box lb) (not (mb-clear lb)))
                0.0 ;; This special case should be refactored
                (- ;; CSS 2.1 § 10.6.3, item 2
                 (+ (ite (box-collapsed-through lb)
