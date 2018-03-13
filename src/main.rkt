@@ -93,7 +93,14 @@
     (node-add! node ':cex `(bad ,var))))
 
 (define (tree-constraints dom emit elt)
-  (define link-function (if (dom-context dom ':component) 'link-element-component 'link-element))
+  (define link-function
+    (cond
+     [(dom-context dom ':component)
+      'link-element-component]
+     [(equal? (node-type elt) 'MAGIC)
+      'link-element-magic]
+     [else
+      'link-element]))
   (emit
    `(assert
      (!
