@@ -19,6 +19,8 @@ publish:
 clean:
 	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
 
+nightly: reports/minimized.html reports/minimized/
+
 # CSSWG test suite
 
 CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2
@@ -46,6 +48,11 @@ bench/fwt/%.rkt: get_bench.py get_bench.js $(FWT_PATH)/%.zip
 bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*.zip)
 	sh bench/fwt/get-all.sh $(wildcard $(FWT_PATH)/*.zip)
 
+reports/minimized.html reports/minimized/: reports/fwt.json
+	mkdir -p reports/minimized
+	<reports/fwt.json python2 minimize-all.py
+
+#    sh bench/fwt/delete-all.sh $(shell racket infra/get-directory.rkt <bench/fwt.rkt)
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
 

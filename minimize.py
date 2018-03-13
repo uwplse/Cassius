@@ -36,7 +36,7 @@ def make_browser():
 def run_accept(name=None):
     print("Running Cassius:")
     start = time.time()
-    result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "bench/"+name+".rkt", "doc-1"], shell=True, stderr=subprocess.STDOUT)
+    result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "reports/minimized/"+name+"-minimized.rkt", "doc-1"], shell=True, stderr=subprocess.STDOUT)
     end = time.time()
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
@@ -76,7 +76,7 @@ def get_bench(urls, elts, name=None):
         measure_scrollbar(browser)
     
         for (netloc, urls) in sorted(site_to_pages.items()):
-            fname = "bench/{}.rkt".format(netloc)
+            fname = "reports/minimized/{}-minimized.rkt".format(netloc)
             with open(fname, "wb") as fi:
                 print "Saving layout to {}:".format(fname),
                 sys.stdout.flush()
@@ -107,8 +107,9 @@ def get_bench(urls, elts, name=None):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
+    p.add_argument("name", type=str, help="File name under bench/.")
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
-    p.add_argument("--name", dest="name", default=None, type=str, help="File name under bench/.")
+    p.add_argument("--website", dest="website", default="", type=str, help="File name under bench/.")
     args = p.parse_args()
     
     eliminated = []
@@ -140,3 +141,13 @@ if __name__ == "__main__":
         print('\nIn total, {0} boxes were removed in {1} iteration(s), taking {2:.2f} seconds.'.format(total_removed, i, total_time))
         print('A total of {0} boxes remained for a {1:.2f}% reduction overall.'.format(initial - total_removed, (total_removed * 100.0) / initial))
         sys.stdout.flush()
+
+        # Write statistics to file
+        with open("reports/minimized.html", "a") as out:
+            out.write("<tr>\n")
+            out.write("\t<td>{}</td>\n".format(args.website))
+            out.write("\t<td>{}</td>\n".format(args.name))
+            out.write("\t<td>{}</td>\n".format(initial))
+            out.write("\t<td>{}</td>\n".format(initial - total_removed))
+            out.write("\t<td>{0:.2f}</td>\n".format(total_time))
+            out.write("</tr>\n")
