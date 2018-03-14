@@ -294,9 +294,26 @@
                      ,(dump-box (node-lchild elt)))
                     :named ,(sformat "link-box/~a" (name 'box elt))))))
 
+(define (nodes-below node stop)
+  (reap [sow]
+        (let loop ([node node])
+          (sow node)
+          (for ([child (node-children node)])
+            (unless (pred child)
+              (loop child))))))
+
 (define (spec-constraints dom emit box)
   (when (node-get box ':spec)
-    (emit `(assert (! (let ([? ,(dump-box box)]) ,(node-get box ':spec))
+    (define-values (vars body)
+      (match (node-get box ':spec)
+        [`(forall (,vars ...) ,body) (values vars body)]
+        [body (values '() body)]))
+    (define nodes (nodes-below node (λ (x) (node-get pred ':spec))))
+    (emit `(assert (! (let ([? ,(dump-box box)])
+                        (and
+                         ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
+                             `(let ,(map list vars vals)
+                                ,body))))
                       :named ,(sformat "spec/~a" (name 'box box)))))))
 
 (define (layout-constraints dom emit elt)
@@ -357,7 +374,7 @@
 (define (sheet*-constraints params doms rules)
   (reap [emit] (for ([dom doms]) (selector*-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
-(define (all-constraints sheets matcher doms fonts)
+(define (all-constraints sheets matcher doms fonts #:render? [render? true])
   (define (global f) (reap [sow] (f doms sow)))
   (define (per-element f)
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
@@ -420,5 +437,5 @@
     ,@(font-computation)
     ,@(per-box spec-constraints)
     ,@(layout-definitions)
-    ,@(per-box layout-constraints)
+    ,@(if render? (per-box layout-constraints) '())
     ))
