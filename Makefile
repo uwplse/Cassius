@@ -49,8 +49,8 @@ bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*.zip)
 	sh bench/fwt/get-all.sh $(wildcard $(FWT_PATH)/*.zip)
 
 reports/minimized.html reports/minimized/: reports/fwt.json
-	mkdir -p reports/minimized \
-	<reports/fwt.json python2 minimize-all.py \
+	mkdir -p reports/minimized
+	<reports/fwt.json python2 minimize-all.py
 	sh bench/fwt/delete-all.sh $(shell racket infra/get-directory.rkt <bench/fwt.rkt)
 
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
