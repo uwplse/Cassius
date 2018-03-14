@@ -294,12 +294,12 @@
                      ,(dump-box (node-lchild elt)))
                     :named ,(sformat "link-box/~a" (name 'box elt))))))
 
-(define (nodes-below node stop)
+(define (nodes-below node stop?)
   (reap [sow]
         (let loop ([node node])
           (sow node)
           (for ([child (node-children node)])
-            (unless (pred child)
+            (unless (stop? child)
               (loop child))))))
 
 (define (spec-constraints dom emit box)
