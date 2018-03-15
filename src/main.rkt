@@ -308,7 +308,7 @@
       (match (node-get box ':spec)
         [`(forall (,vars ...) ,body) (values vars body)]
         [body (values '() body)]))
-    (define nodes (nodes-below node (λ (x) (node-get pred ':spec))))
+    (define nodes (nodes-below box (λ (x) (node-get x ':spec))))
     (emit `(assert (! (let ([? ,(dump-box box)])
                         (and
                          ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
