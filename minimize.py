@@ -20,7 +20,7 @@ STATISTICS=[]
 def run_accept(name=None):
     print("Running Cassius:")
     start = time.time()
-    result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "reports/minimized/"+name+"-minimized.rkt", "doc-1"], shell=True, stderr=subprocess.STDOUT)
+    result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "reports/minimized/"+name+"-minimized.rkt", "doc-1"], stderr=subprocess.STDOUT)
     end = time.time()
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
@@ -41,15 +41,15 @@ def run_accept(name=None):
 def get_minimized(url, elts, name):
     args = []
     if sys.platform.startswith("linux"):
-        args.append('xvfb-run')
-        args.append("-s -a '-screen 0, 1920x1080x24'")
-    args.append('python2')
-    args.append('get_minimized.py')
+        args.append('./minimize.sh')
+    else:
+        args.append('python2')
+        args.append('get_minimized.py')
     args.append(name)
     args.append(url)
     for elt in elts:
         args.append(elt)
-    subprocess.check_output(args, shell=True)
+    result = subprocess.check_output(args)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
