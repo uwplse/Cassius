@@ -19,7 +19,7 @@ publish:
 clean:
 	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
 
-nightly: reports/minimized.html reports/minimized/
+nightly: clean reports/minimized.html reports/minimized/
 
 # CSSWG test suite
 
