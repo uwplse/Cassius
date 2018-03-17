@@ -31,11 +31,11 @@
       (dict-set ctx field value)))
   (struct-copy dom d [properties ctx*]))
 
-(define (wrapped-solve sheets documents fonts #:test [test #f])
+(define (wrapped-solve sheets documents fonts #:test [test #f] #:render? [render? #t])
   (with-handlers
       ([exn:break? (λ (e) 'break)]
        [exn:fail? (λ (e) (list 'error e))])
-    (solve sheets documents test fonts)))
+    (solve sheets documents test fonts #:render? render?)))
 
 (define (do-accept problem)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
@@ -123,17 +123,37 @@
         (wrapped-solve (dict-ref problem ':sheets) documents (dict-ref problem ':fonts)
                        #:test (dict-ref problem ':test)))
     [(success stylesheet trees doms)
-     (eprintf "Counterexample found!\n")
+     (eprintf "counterexample found!\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
-     (printf "\n\nConfiguration:\n")
+     (printf "\n\nconfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
     [(failure stylesheet trees)
-     (eprintf "Verified.\n")]
+     (eprintf "verified.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
-     (eprintf "Terminated.\n")]))
+     (eprintf "terminated.\n")]))
+
+(define (do-verify/modular problem)
+  (define documents (map dom-strip-positions (dict-ref problem ':documents)))
+  #;(define pieces (append-map split-document document))
+  (match
+      (parameterize ([*fuzz* #f])
+        (wrapped-solve (dict-ref problem ':sheets) documents (dict-ref problem ':fonts)
+                       #:test (dict-ref problem ':test) #:render? false))
+    [(success stylesheet trees doms)
+     (eprintf "counterexample found!\n")
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
+     (printf "\n\nconfiguration:\n")
+     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+       (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
+    [(failure stylesheet trees)
+     (eprintf "verified.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "terminated.\n")]))
 
 (define (get-problem fname pname)
   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
@@ -177,6 +197,9 @@
    ["verify"
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
+   ["merify"
+    #:args (fname problem)
+    (do-verify/modular (get-problem fname problem))]
    ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))

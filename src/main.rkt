@@ -4,7 +4,7 @@
 (require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
          "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
          "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
-         "spec/media-query.rkt")
+         "spec/media-query.rkt" "assertions.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback)
@@ -309,11 +309,12 @@
         [`(forall (,vars ...) ,body) (values vars body)]
         [body (values '() body)]))
     (define nodes (nodes-below box (λ (x) (node-get x ':spec))))
+    (define spec (compile-assertion (list dom) body (map cons vars vars)))
     (emit `(assert (! (let ([? ,(dump-box box)])
                         (and
                          ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
-                             `(let ,(map list vars vals)
-                                ,body))))
+                             `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
+                                ,spec))))
                       :named ,(sformat "spec/~a" (name 'box box)))))))
 
 (define (layout-constraints dom emit elt)
@@ -381,7 +382,7 @@
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
   (define media-params (make-hash '((:type . screen))))
-
+  
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
@@ -430,12 +431,12 @@
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
-    ,@(ez-fields)
+    ,@(if render? (ez-fields) '())
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)
     ,@(per-box contents-constraints)
     ,@(font-computation)
     ,@(per-box spec-constraints)
-    ,@(layout-definitions)
+    ,@(if render? (layout-definitions) '())
     ,@(if render? (per-box layout-constraints) '())
     ))
