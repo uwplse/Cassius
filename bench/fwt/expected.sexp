@@ -23,6 +23,8 @@
 ("bench/fwt.working.rkt" doc-084 line-width)
 ("bench/fwt.working.rkt" doc-062 line-width)
 ("bench/fwt.working.rkt" doc-082 line-width)
+("bench/fwt.working.rkt" doc-033 line-width)
+("bench/fwt.working.rkt" doc-055 line-width)
 
 ("bench/fwt.working.rkt" doc-040 text-size)
 ("bench/fwt.working.rkt" doc-021 text-size)
@@ -37,7 +39,14 @@
 ("bench/fwt.working.rkt" doc-055 text-size)
 ("bench/fwt.working.rkt" doc-074 text-size)
 ("bench/fwt.working.rkt" doc-025 text-size)
-("bench/fwt.working.rkt" doc-040 text-size)
+("bench/fwt.working.rkt" doc-009 text-size) ; copyright text not in footer div
+("bench/fwt.working.rkt" doc-033 text-size)
+("bench/fwt.working.rkt" doc-039 text-size)
+("bench/fwt.working.rkt" doc-061 text-size)
+("bench/fwt.working.rkt" doc-072 text-size)
+("bench/fwt.working.rkt" doc-075 text-size)
+("bench/fwt.working.rkt" doc-081 text-size)
+("bench/fwt.working.rkt" doc-097 text-size)
 
 ("bench/fwt.working.rkt" doc-040 heading-size)
 ("bench/fwt.working.rkt" doc-021 heading-size)
@@ -67,9 +76,18 @@
 ("bench/fwt.working.rkt" doc-084 heading-size)
 ("bench/fwt.working.rkt" doc-082 heading-size)
 ("bench/fwt.working.rkt" doc-062 heading-size)
+; h5 has height larger than h4, but h4 is larger font than h5. So
+; formally true positive, not sure if ACTUALLY true positive (h5
+; looks smaller to me, but it IS abusing the hierarchy visually)
+("bench/fwt.working.rkt" doc-061 heading-size)
+("bench/fwt.working.rkt" doc-072 heading-size)
+
+("bench/fwt.working.rkt" doc-030 overlapping-text)
 
 ("bench/fwt.working.rkt" doc-080 line-spacing)
 ("bench/fwt.working.rkt" doc-088 line-spacing)
 ("bench/fwt.working.rkt" doc-093 line-spacing)
+("bench/fwt.working.rkt" doc-026 line-spacing)
+("bench/fwt.working.rkt" doc-074 line-spacing)
 
 ("bench/fwt.rkt" doc-047 visible-text)
