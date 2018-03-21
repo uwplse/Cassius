@@ -39,16 +39,7 @@ def run_accept(name=None):
         return (2, [])
 
 def get_minimized(url, elts, name):
-    args = []
-    if sys.platform.startswith("linux"):
-        args.append('./minimize.sh')
-    else:
-        args.append('python2')
-        args.append('get_minimized.py')
-    args.append(name)
-    args.append(url)
-    for elt in elts:
-        args.append(elt)
+    args = ["python2", "get_minimized.py", name, url] + elts
     result = subprocess.check_output(args)
 
 if __name__ == "__main__":
