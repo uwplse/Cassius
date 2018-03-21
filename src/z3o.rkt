@@ -540,6 +540,10 @@
       [`(is-elt no-elt) 'false]
       [`(is-no-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'false]
       [`(is-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'true]
+      [`(= ,(and (or 'no-elt (? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) args) ...)
+       (match args [(list) 'true] [(list a) 'true] [(list a as ...) (if (andmap (curry equal? a) as) 'true 'false)])]
+      [`(= ,(and (or 'no-box (? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) args) ...)
+       (match args [(list) 'true] [(list a) 'true] [(list a as ...) (if (andmap (curry equal? a) as) 'true 'false)])]
       ;; END DOMAIN SPECIFIC
       [(list 'and rest ...)
        (if (member 'false rest)

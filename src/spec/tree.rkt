@@ -86,7 +86,7 @@
 
   (define-fun match-anon-box ((b Box)) Bool
     (and
-     (is-no-elt (box-elt b))
+     (= (box-elt b) no-elt)
      (= (first-box? b) true)
      (= (last-box? b) true)
      (= (fg-color b)
