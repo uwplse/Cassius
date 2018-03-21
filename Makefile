@@ -17,7 +17,7 @@ publish:
 	bash infra/publish.sh download index upload
 
 clean:
-	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
+	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json reports/minimized/
 
 nightly: clean reports/minimized.html reports/minimized/
 
