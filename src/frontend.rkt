@@ -49,7 +49,7 @@
       (define ctx
         (for/hash ([var (cadr test)])
           (values var (sformat "cex~a" (name 'cex (cons var test))))))
-      (compile-assertion doms (caddr test) ctx)))
+      (compile-assertion doms (caddr test) (hash-set ctx '? (car (map (compose dump-box dom-boxes) doms))))))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms fonts #:render? render?))
 
