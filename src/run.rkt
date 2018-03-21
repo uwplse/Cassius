@@ -135,25 +135,56 @@
     ['break
      (eprintf "terminated.\n")]))
 
+(define (split-document doc)
+  (reap [sow]
+    (let loop ([tree (dom-boxes doc)])
+      (define children* (map loop (rest tree)))
+      (if (set-member? (first tree) ':spec)
+          (let* ([component (parse-tree (cons (first tree) children*))]
+                 [spec (node-get component ':spec)])
+            (node-remove! component ':spec)
+            (sow (cons (struct-copy dom doc [boxes (unparse-tree component)]) spec))
+            (list (cons 'MAGIC (rest (first tree)))))
+          (cons (first tree) children*)))))
+
 (define (do-verify/modular problem)
   (define documents (map dom-strip-positions (dict-ref problem ':documents)))
-  #;(define pieces (append-map split-document document))
+  (define pieces (append-map split-document documents))
+  (for ([(piece spec) (in-dict pieces)] [i (in-naturals 1)])
+    (match
+        (parameterize ([*fuzz* #f])
+          (wrapped-solve (dict-ref problem ':sheets) (list piece) (dict-ref problem ':fonts) #:test (list spec)))
+      [(success stylesheet trees dom)
+       (eprintf "Counterexample found in component ~a!\n" (parse-tree (dom-boxes piece)))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
+       (printf "\n\nconfiguration:\n")
+       (for* ([(k v) (in-dict (dom-properties piece))])
+         (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
+       (exit i)]
+      [(failure stylesheet trees)
+       (eprintf "Verified component ~a.\n" (parse-tree (dom-boxes piece)))]
+      [(list 'error e)
+       ((error-display-handler) (exn-message e) e)
+       (exit 1)]
+      ['break
+       (eprintf "Terminated.\n")
+       (exit 127)]))
   (match
       (parameterize ([*fuzz* #f])
         (wrapped-solve (dict-ref problem ':sheets) documents (dict-ref problem ':fonts)
                        #:test (dict-ref problem ':test) #:render? false))
     [(success stylesheet trees doms)
-     (eprintf "counterexample found!\n")
+     (eprintf "Counterexample found!\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
-     (printf "\n\nconfiguration:\n")
+     (printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
     [(failure stylesheet trees)
-     (eprintf "verified.\n")]
+     (eprintf "Verified full page modularly.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
-     (eprintf "terminated.\n")]))
+     (eprintf "Terminated.\n")]))
 
 (define (get-problem fname pname)
   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
