@@ -309,7 +309,7 @@
         [`(forall (,vars ...) ,body) (values vars body)]
         [body (values '() body)]))
     (define nodes (nodes-below box (λ (x) (node-get x ':spec))))
-    (define spec (compile-assertion (list dom) body (map cons vars vars)))
+    (define spec (compile-assertion (list dom) body (cons (cons '? '?) (map cons vars vars))))
     (emit `(assert (! (let ([? ,(dump-box box)])
                         (and
                          ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
