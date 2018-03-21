@@ -53,10 +53,6 @@
   (define-fun link-element-component ((elt Element) (pe Element) (ve Element) (ne Element) (fe Element) (le Element)) Bool
     (and (=> (is-elt pe) (and (= (pelt elt) pe) (= (velt elt) ve) (= (nelt elt) ne))) (= (felt elt) fe) (= (lelt elt) le)))
 
-  ;; Link `link-element` but skips children pointers
-  (define-fun link-element-magic ((elt Element) (pe Element) (ve Element) (ne Element) (fe Element) (le Element)) Bool
-    (and (= (pelt elt) pe) (= (velt elt) ve) (= (nelt elt) ne)))
-
   (define-fun link-box ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
     (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n) (= (fbox box) f) (= (lbox box) l)
          ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent
@@ -65,7 +61,15 @@
              `(<= (,field box) 0.0))))
 
   (define-fun link-box-component ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
-    (and (=> (is-box p) (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n))) (= (fbox box) f) (= (lbox box) l)
+    (and (=> (is-box p) (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n)))
+         (= (fbox box) f) (= (lbox box) l)
+         ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent
+             `(>= (,field box) 0.0))
+         ,@(for/list ([field '(mtn mbn)])
+             `(<= (,field box) 0.0))))
+
+  (define-fun link-box-magic ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
+    (and (=> (is-box p) (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n)))
          ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent
              `(>= (,field box) 0.0))
          ,@(for/list ([field '(mtn mbn)])

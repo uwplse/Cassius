@@ -141,10 +141,12 @@
       (define children* (map loop (rest tree)))
       (if (set-member? (first tree) ':spec)
           (let* ([component (parse-tree (cons (first tree) children*))]
-                 [spec (node-get component ':spec)])
+                 [spec (node-get component ':spec)]
+                 [ctx (dom-properties doc)])
             (node-remove! component ':spec)
-            (sow (cons (struct-copy dom doc [boxes (unparse-tree component)]) spec))
-            (list (cons 'MAGIC (rest (first tree)))))
+            (node-add! component ':component 'true)
+            (sow (cons (struct-copy dom doc [boxes (unparse-tree component)] [properties (dict-set ctx ':component '())]) spec))
+            (list (first tree)))
           (cons (first tree) children*)))))
 
 (define (do-verify/modular problem)

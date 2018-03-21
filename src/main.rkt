@@ -97,8 +97,6 @@
     (cond
      [(dom-context dom ':component)
       'link-element-component]
-     [(equal? (node-type elt) 'MAGIC)
-      'link-element-magic]
      [else
       'link-element]))
   (emit
@@ -283,16 +281,21 @@
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 
-(define (box-link-constraints dom emit elt)
-  (define link-function (if (dom-context dom ':component) 'link-box-component 'link-box))
+(define (box-link-constraints dom emit box)
+  (define link-function
+    (if (dom-context dom ':component)
+        'link-box-component
+        (if (node-get* box ':component)
+            'link-box-magic
+            'link-box)))
   (emit `(assert (! (,link-function
-                     ,(dump-box elt)
-                     ,(dump-box (node-parent elt))
-                     ,(dump-box (node-prev elt))
-                     ,(dump-box (node-next elt))
-                     ,(dump-box (node-fchild elt))
-                     ,(dump-box (node-lchild elt)))
-                    :named ,(sformat "link-box/~a" (name 'box elt))))))
+                     ,(dump-box box)
+                     ,(dump-box (node-parent box))
+                     ,(dump-box (node-prev box))
+                     ,(dump-box (node-next box))
+                     ,(dump-box (node-fchild box))
+                     ,(dump-box (node-lchild box)))
+                    :named ,(sformat "link-box/~a" (name 'box box))))))
 
 (define (nodes-below node stop?)
   (reap [sow]

@@ -117,6 +117,10 @@
       [`(within ,b1 ,b2)
        `(within-outer ,(loop b1 ctx) ,(loop b2 ctx))]
 
+      [`(raw ,expr)
+       `(let (,(for/list ([(var expr) (in-dict ctx)]) (list var expr)))
+          ,expr)]
+
       ;; Variables
       [(? symbol?)
        (dict-ref ctx expr)])))
