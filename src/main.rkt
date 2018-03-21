@@ -63,8 +63,7 @@
   (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'br)))
   (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'bb)))
   (node-set! box ':fg (data 'fg-color))
-  (node-set! box ':bg (data 'bg-color))
-  (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
+  (node-set! box ':bg (data 'bg-color)))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt font) result)
