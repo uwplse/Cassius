@@ -25,6 +25,8 @@
 ("bench/fwt.working.rkt" doc-082 line-width)
 ("bench/fwt.working.rkt" doc-033 line-width)
 ("bench/fwt.working.rkt" doc-055 line-width)
+("bench/fwt.working.rkt" doc-092 line-width)
+("bench/fwt.working.rkt" doc-097 line-width)
 
 ("bench/fwt.working.rkt" doc-040 text-size)
 ("bench/fwt.working.rkt" doc-021 text-size)
@@ -40,6 +42,7 @@
 ("bench/fwt.working.rkt" doc-074 text-size)
 ("bench/fwt.working.rkt" doc-025 text-size)
 ("bench/fwt.working.rkt" doc-009 text-size) ; copyright text not in footer div
+("bench/fwt.working.rkt" doc-011 text-size)
 ("bench/fwt.working.rkt" doc-033 text-size)
 ("bench/fwt.working.rkt" doc-039 text-size)
 ("bench/fwt.working.rkt" doc-061 text-size)
