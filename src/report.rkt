@@ -213,11 +213,10 @@
     (match-define (list file pname prob index) rec)
     (test-mutations file pname prob #:index index)))
 
-(define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)]
+(define (run-assertion-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                              #:threads [threads #f])
   (define inputs
-    (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x))
-               [_ (in-range repeat)])
+    (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x)))
       (list assertion (first x) (second x) (cddr x) index)))
   (for/threads threads ([rec inputs])
     (match-define (list assertion file pname prob index) rec)
