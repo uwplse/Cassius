@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "utils.rkt")
-(provide exclusion-zones ez-fields *exclusion-zone-registers*)
+(provide exclusion-zones ez-fields ez-field-compute *exclusion-zone-registers*)
 
 (define *exclusion-zone-registers* (make-parameter 5))
 
@@ -422,8 +422,9 @@
 
   ;; The "in" and "out" EZones track EZones in-order through the tree
   (declare-fun ez.in (Box) EZone)
-  (declare-fun ez.out (Box) EZone)
+  (declare-fun ez.out (Box) EZone))
 
+(define-constraints ez-field-compute
   (assert
    (forall ((b Box))
            (= (ez.in b)

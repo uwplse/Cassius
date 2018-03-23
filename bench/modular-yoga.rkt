@@ -1188,10 +1188,18 @@
   [12 "\"latoregular\"" 400 normal 10 2 0.5 0.5 13])
 
 (define-layout (yoga :browser firefox :matched true :w 1267 :h 901 :fs 16)
- ([VIEW :w 1267 :spec (forall (a) (and (=> (matches a (id footer)) (= (width a) 960)) (=> (is-interactive a) (onscreen a))))]
+ ([VIEW :w 1267 :spec (forall (a) (and (=> (matches a (id header)) (raw (ez.outside (ez.in a) a)))
+                                       (=> (matches a (id body)) (= (top a outer) (bottom (prev a))))
+                                       (=> (matches a (id footer)) (and (= (top a) (bottom (prev a) outer)) (= (width a) 960)))
+                                       (= (top ?) 0.0) (= (left ?) 0.0)
+                                       (onscreen a)))]
   ([BLOCK :x 0 :y 0 :w 1267 :h 1254.5 :elt 0]
    ([BLOCK :x 0 :y 0 :w 1267 :h 1254.5 :elt 1]
-    ([BLOCK :x 153.5 :y 0 :w 960 :h 191.5 :elt 2 :spec (forall (a) (=> (and (onscreen ?) (is-interactive a)) (onscreen a)))]
+    ([BLOCK :x 153.5 :y 0 :w 960 :h 191.5 :elt 2
+            :spec (forall (a)
+                          (and (raw (no-margins ?)) (> (height ?) 0.0)
+                               (=> (and (raw (ez.outside (ez.in ?) ?)) (onscreen ?))
+                                   (and (raw (ez.inside (ez.out ?) ?)) (=> (is-interactive a) (onscreen a))))))]
      ([BLOCK :x 153.5 :y 0 :w 960 :h 160 :elt 3]
       ([ANON]
        ([LINE]
@@ -1226,7 +1234,10 @@
         ([INLINE :elt 21]
          ([TEXT :x 937.5 :y 164.5 :w 47 :h 21 :text "Blog"]))
         ([TEXT :x 1030.5 :y 168.5 :w 0 :h 16 :text " "])))))
-    ([BLOCK :x 153.5 :y 192.5 :w 960 :h 918 :elt 22 :spec (forall (a) (=> (and (onscreen ?) (is-interactive a)) (onscreen a)))]
+    ([BLOCK :x 153.5 :y 192.5 :w 960 :h 918 :elt 22
+            :spec (forall (a)
+                          (and (raw (non-negative-margins ?)) (> (height ?) 0.0)
+                               (=> (raw (ez.outside (ez.in ?) ?)) (raw (ez.inside (ez.out ?) ?)))))]
      ([BLOCK :x 218.5 :y 347.5 :w 510 :h 498 :elt 23]
       ([BLOCK :x 218.5 :y 347.5 :w 510 :h 155 :elt 24]
        ([LINE]
@@ -1239,7 +1250,11 @@
        ([LINE]
         ([TEXT :x 235 :y 738 :w 477 :h 115 :text "Flexibility "]))))
      ([BLOCK :x 752.5 :y 311.5 :w 283 :h 676 :elt 26]))
-    ([BLOCK :x 153.5 :y 1110.5 :w 960 :h 144 :elt 27 :spec (forall (a) (=> (and (onscreen ?) (= (width ?) 960)) (=> (is-interactive a) (onscreen a))))]
+    ([BLOCK :x 153.5 :y 1110.5 :w 960 :h 144 :elt 27
+            :spec (forall (a)
+                          (and (raw (no-margins ?)) (> (height ?) 0.0)
+                               (=> (and (raw (ez.outside (ez.in ?) ?)) (onscreen ?) (= (width ?) 960) (is-interactive a))
+                                   (and (raw (ez.inside (ez.out ?) ?)) (onscreen a)))))]
      ([BLOCK :x 153.5 :y 1140.5 :w 500 :h 54 :elt 28]
       ([BLOCK :x 153.5 :y 1140.5 :w 500 :h 24 :elt 29]
        ([LINE]

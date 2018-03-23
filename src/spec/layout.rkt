@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "css-properties.rkt")
-(provide layout-definitions view-width-name view-height-name)
+(provide layout-definitions view-width-name view-height-name assertion-helpers)
 
 (define view-width-name (make-parameter false))
 (define view-height-name (make-parameter false))
@@ -12,7 +12,14 @@
         (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
         (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)))
 
-(define-constraints layout-definitions
+(define-constraints assertion-helpers
+  (declare-fun rootbox (Box) Box)
+  (assert
+   (forall ((b Box))
+           (= (rootbox b)
+              (ite (is-no-box (pbox b))
+                   b
+                   (rootbox (pbox b))))))
 
   (declare-fun nflow (Box) Box)
   (assert
@@ -45,6 +52,20 @@
            (= (lflow b) (ite (=> (is-box (lbox b)) (box-in-flow (lbox b))) (lbox b) (vflow (lbox b))))))
 
 
+  (define-fun ez.outside ((ez EZone) (b Box)) Bool
+    (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez) (top-border b)))))
+
+  (define-fun ez.inside ((ez EZone) (b Box)) Bool
+    (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez) (bottom-border b)))))
+
+  (define-fun no-margins ((b Box)) Bool
+    (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0))
+
+  (define-fun non-negative-margins ((b Box)) Bool
+    (and (>= (mtp b) (- (mtn b))) (>= (mbp b) (- (mbn b))))))
+
+(define-constraints layout-definitions
+
   ;; Three additional pointers: to the previous floating box, the
   ;; parent block box, and the parent positioned box.
   (declare-fun ppflow (Box) Box)
@@ -63,14 +84,6 @@
                    no-box
                    (ite (or (is-box/block (type (pbox b))) (is-flow-root (pbox b))) (pbox b) (pbflow (pbox b)))))))
   
-  (declare-fun rootbox (Box) Box)
-  (assert
-   (forall ((b Box))
-           (= (rootbox b)
-              (ite (is-no-box (pbox b))
-                   b
-                   (rootbox (pbox b))))))
-
   (define-const quirks-mode Bool false)
 
   (declare-fun contains-content (Box) Bool)

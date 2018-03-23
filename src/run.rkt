@@ -144,9 +144,13 @@
                  [spec (node-get component ':spec)]
                  [ctx (dom-properties doc)])
             (node-remove! component ':spec)
-            (node-add! component ':component 'true)
-            (sow (cons (struct-copy dom doc [boxes (unparse-tree component)] [properties (dict-set ctx ':component '())]) spec))
-            (list (first tree)))
+            (define props
+              (if (eq? tree (dom-boxes doc)) ctx (dict-set ctx ':component '())))
+            (sow (cons (struct-copy dom doc [boxes (unparse-tree component)] [properties props]) spec))
+            (unless (eq? tree (dom-boxes doc))
+              (node-add! component ':component 'true))
+            (node-add! component ':spec spec)
+            (list (first (unparse-tree component))))
           (cons (first tree) children*)))))
 
 (define (do-verify/modular problem)
@@ -158,7 +162,7 @@
           (wrapped-solve (dict-ref problem ':sheets) (list piece) (dict-ref problem ':fonts) #:test (list spec)))
       [(success stylesheet trees dom)
        (eprintf "Counterexample found in component ~a!\n" (parse-tree (dom-boxes piece)))
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :component :spec))))
        (printf "\n\nconfiguration:\n")
        (for* ([(k v) (in-dict (dom-properties piece))])
          (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
