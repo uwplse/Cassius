@@ -1187,7 +1187,7 @@
   [26 "\"latoregular\"" 400 normal 21 5 1.5 1.5 29]
   [12 "\"latoregular\"" 400 normal 10 2 0.5 0.5 13])
 
-(define-layout (yoga :browser firefox :matched true :w 1267 :h 901 :fs 16)
+(define-layout (yoga :browser firefox :matched true :w (between 800 1920) :h (between 600 1280) :fs (between 16 32))
  ([VIEW :w 1267
         :spec (and (raw (ez.outside (ez.in header) header))
                    (<= (bottom header) (top body outer) (bottom body outer) (top footer))
