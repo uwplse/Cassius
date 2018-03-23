@@ -1,5 +1,6 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
+(require racket/hash
+         "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
          "selectors.rkt" "match.rkt" "solver.rkt")
 (require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
          "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
@@ -306,6 +307,10 @@
                 (sow child)
                 (loop child))))))
 
+(define (get-node-names nodes)
+  (for/hash ([node nodes] #:when (node-get node ':name #:default false))
+    (values (node-get node ':name) (dump-box node))))
+
 (define (spec-constraints dom emit box)
   (when (node-get box ':spec)
     (define-values (vars body)
@@ -313,12 +318,15 @@
         [`(forall (,vars ...) ,body) (values vars body)]
         [body (values '() body)]))
     (define nodes (nodes-below box (λ (x) (node-get x ':spec))))
-    (define spec (compile-assertion (list dom) body (cons (cons '? '?) (map cons vars vars))))
-    (emit `(assert (! (let ([? ,(dump-box box)])
-                        (and
-                         ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
-                             `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
-                                ,spec))))
+    (define ctx
+      (hash-union
+       (for/hash ([var vars]) (values var var))
+       (get-node-names nodes)))
+    (define spec (compile-assertion (list dom) body ctx))
+    (emit `(assert (! (and
+                       ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
+                           `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
+                              ,spec)))
                       :named ,(sformat "spec/~a" (name 'box box)))))))
 
 (define (layout-constraints dom emit elt)

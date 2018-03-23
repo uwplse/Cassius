@@ -121,17 +121,17 @@
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
     [(success stylesheet trees doms)
-     (eprintf "counterexample found!\n")
+     (eprintf "Counterexample found!\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
-     (printf "\n\nconfiguration:\n")
+     (printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
     [(failure stylesheet trees)
-     (eprintf "verified.\n")]
+     (eprintf "Verified.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
-     (eprintf "terminated.\n")]))
+     (eprintf "Terminated.\n")]))
 
 (define (do-verify/modular problem)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
@@ -141,12 +141,12 @@
       [(success stylesheet trees dom)
        (eprintf "Counterexample found in component ~a!\n" (or (dom-name (first dom)) i))
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :component :spec :name))))
-       (printf "\n\nconfiguration:\n")
+       (printf "\n\nConfiguration:\n")
        (for* ([(k v) (in-dict (dom-properties dom))])
          (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
        (exit i)]
       [(failure stylesheet trees)
-       (eprintf "Verified component ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))]
+       (eprintf "Verified ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))]
       [(list 'error e)
        ((error-display-handler) (exn-message e) e)
        (exit 127)]
@@ -161,7 +161,7 @@
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
     [(failure stylesheet trees)
-     (eprintf "Verified full page modularly.\n")]
+     (eprintf "Verified modularly.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break

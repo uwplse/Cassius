@@ -14,7 +14,11 @@
             (node-remove! component ':spec)
             (define props
               (if (eq? tree (dom-boxes doc)) ctx (dict-set ctx ':component '())))
-            (sow (cons (struct-copy dom doc [name (dict-ref ctx ':name #f)] [boxes (unparse-tree component)] [properties props]) spec))
+            (sow (cons (struct-copy dom doc
+                                    [name (node-get component ':name #:default false)]
+                                    [boxes (unparse-tree component)]
+                                    [properties props])
+                       spec))
             (unless (eq? tree (dom-boxes doc))
               (node-add! component ':component 'true))
             (node-add! component ':spec spec)
