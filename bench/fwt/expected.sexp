@@ -84,8 +84,10 @@
 ; looks smaller to me, but it IS abusing the hierarchy visually)
 ("bench/fwt.working.rkt" doc-061 heading-size)
 ("bench/fwt.working.rkt" doc-072 heading-size)
+("bench/fwt.working.rkt" doc-058 heading-size)
 
 ("bench/fwt.working.rkt" doc-030 overlapping-text)
+("bench/fwt.working.rkt" doc-074 overlapping-text)
 
 ("bench/fwt.working.rkt" doc-080 line-spacing)
 ("bench/fwt.working.rkt" doc-088 line-spacing)
