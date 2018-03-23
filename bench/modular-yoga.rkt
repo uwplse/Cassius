@@ -1191,7 +1191,7 @@
  ([VIEW :w 1267
         :spec (and (raw (ez.outside (ez.in header) header))
                    (<= (bottom header) (top body outer) (bottom body outer) (top footer))
-                   (= (width footer) 960)
+                   (>= (width footer) 200)
                    (= (top root) 0.0) (= (left root) 0.0)
                    (onscreen header) (onscreen body) (onscreen footer))]
   ([BLOCK :x 0 :y 0 :w 1267 :h 1254.5 :elt 0]
@@ -1256,7 +1256,7 @@
             :name footer
             :spec (forall (a)
                           (and (raw (no-margins footer)) (> (height footer) 0.0)
-                               (=> (and (raw (ez.outside (ez.in footer) footer)) (onscreen footer) (= (width footer) 960) (is-interactive a))
+                               (=> (and (raw (ez.outside (ez.in footer) footer)) (onscreen footer) (>= (width footer) 200) (is-interactive a))
                                    (and (raw (ez.inside (ez.out footer) footer)) (onscreen a)))))]
      ([BLOCK :x 153.5 :y 1140.5 :w 500 :h 54 :elt 28]
       ([BLOCK :x 153.5 :y 1140.5 :w 500 :h 24 :elt 29]
