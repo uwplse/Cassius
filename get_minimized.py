@@ -40,7 +40,6 @@ def get_minimized(url, elts, name):
             id = "1"
             try:
                 browser.get(url)
-                print("Got")
                 browser.execute_script('window.TAGLIST = [{}];'.format(",".join(elts)))
                 browser.execute_script(MINIMIZER)
                 browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)

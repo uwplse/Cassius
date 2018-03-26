@@ -17,7 +17,7 @@ import time
 
 STATISTICS=[]
 
-def run_accept(name=None):
+def run_accept(name):
     print("Running Cassius:")
     start = time.time()
     result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "reports/minimized/"+name+"-minimized.rkt", "doc-1"], stderr=subprocess.STDOUT)
@@ -49,15 +49,22 @@ if __name__ == "__main__":
     p.add_argument("--website", dest="website", default="", type=str, help="File name under bench/.")
     args = p.parse_args()
     
+    iterations = 0
     eliminated = []
     start = time.time()
     get_minimized(args.urls, eliminated, args.name)
     result, elts = run_accept(name=args.name)
     while result == 0:
         eliminated.extend(elts)
-        get_minimized(args.urls, eliminated, args.name)
-        result, elts = run_accept(name=args.name)
+        get_minimized(args.urls, eliminated, args.name + "-" + str(iterations))
+        result, elts = run_accept(args.name + "-" + str(iterations))
+        iterations += 1
     end = time.time()
+
+    if result == 1:
+        if len(eliminated) > 0:
+            eliminated.pop()
+            result = 2
 
     if (result == 2):
         i = 0
