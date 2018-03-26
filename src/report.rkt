@@ -146,7 +146,7 @@
 
 (define (test-assertions assertion file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t~a\t" file pname assertion)
-  (define prob* (dict-update prob ':documents (curry map dom-strip-positions)))
+  (define prob* (dict-update prob ':documents (curry map (compose dom-set-range dom-strip-positions))))
   (define res (make-result file pname prob #:subproblem assertion #:index index))
   (define-values (out runtime) (run-problem prob* #:fuzz #f))
   (define status (get-status (list file pname assertion) prob out #:invert true #:unsupported false))
