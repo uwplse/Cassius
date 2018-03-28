@@ -58,7 +58,7 @@
 (define (get-elt-ancestor box)
   (if (has-elt? box)
       box
-      (and (node-parent box) (get-elt-ancestor (node-parent box)))))
+      (and box (node-parent box) (get-elt-ancestor (node-parent box)))))
 
 (define (get-elt->index old)
   (define tagcounts (make-hash))
@@ -82,13 +82,16 @@
   (cons box->elt elt->box))
 
 (define (get-box-to-remove new old)
-  (define problem-box (get-elt-ancestor (find-problem-box new)))
-  (match-define (cons box->elt elt->box) (get-box-elt-map new old))
-  (define elt->index (get-elt->index old))
-  (define problem-html (dict-ref box->elt (dict-ref (node-attrs problem-box) ':elt)))
-  (define to-remove (choose-to-remove problem-html))
-  (if to-remove
-      (let* ([num (get-num to-remove)]
-             [result (cons (node-type to-remove) (dict-ref elt->index num))])
-        (cons (get-statistics (dict-ref elt->box num) old) result))
-      to-remove))
+  (define problem-box (find-problem-box new))
+  (define problem-elt (get-elt-ancestor problem-box))
+  (if (has-elt? problem-elt)
+      (let ([elt->index (get-elt->index old)])
+        (match-define (cons box->elt elt->box) (get-box-elt-map new old))
+        (define problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt)))
+        (define to-remove (choose-to-remove problem-html))
+        (if to-remove
+            (let* ([num (get-num to-remove)]
+                   [result (cons (node-type to-remove) (dict-ref elt->index num))])
+              (cons (get-statistics (dict-ref elt->box num) old) result))
+            to-remove))
+      #f)) ;; TODO: Choose a different mode
