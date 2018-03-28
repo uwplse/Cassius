@@ -28,7 +28,7 @@ def run_accept(name):
         lines = result.split()
         stats = json.loads(lines[1])
         STATISTICS.append((stats, end - start))
-        return (0, lines[2:], -1)
+        return (0, lines[2:], stats["total"])
     elif "Accepted" in result:
         print("Cassius accepted the minimized version, backtracking...")
         sys.stdout.flush()
