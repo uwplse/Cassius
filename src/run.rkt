@@ -69,7 +69,10 @@
        (newline)
        (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index)))))
      (unless to-remove
-       (eprintf "Minimized\n"))]
+       (eprintf "Minimized\n")
+       (define doms (map parse-dom (dict-ref problem ':documents)))
+       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
+       (eprintf "~s\n" total-boxes))]
     [(list 'error e)
      (eprintf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break

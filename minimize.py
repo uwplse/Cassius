@@ -28,19 +28,32 @@ def run_accept(name):
         lines = result.split()
         stats = json.loads(lines[1])
         STATISTICS.append((stats, end - start))
-        return (0, lines[2:])
+        return (0, lines[2:], -1)
     elif "Accepted" in result:
         print("Cassius accepted the minimized version, backtracking...")
         sys.stdout.flush()
-        return (1, [])
+        return (1, [], -1)
     else:
         print("Minimized!")
+        lines = result.split()
+        remaining_boxes = int(lines[1])
         sys.stdout.flush()
-        return (2, [])
+        return (2, [], remaining_boxes)
 
 def get_minimized(url, elts, name):
     args = ["python2", "get_minimized.py", name, url] + elts
     result = subprocess.check_output(args)
+
+# Write statistics to file
+def write_output(website, name, before, after, time):
+    with open("reports/minimized.html", "a") as out:
+        out.write("<tr>\n")
+        out.write("\t<td>{}</td>\n".format(website))
+        out.write("\t<td>{}</td>\n".format(name))
+        out.write("\t<td>{}</td>\n".format(before))
+        out.write("\t<td>{}</td>\n".format(after))
+        out.write("\t<td>{0:.2f}</td>\n".format(time))
+        out.write("</tr>\n")
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
@@ -53,31 +66,29 @@ if __name__ == "__main__":
     eliminated = []
     start = time.time()
     get_minimized(args.urls, eliminated, args.name)
-    result, elts = run_accept(name=args.name)
+    result, elts, initial = run_accept(name=args.name)
     while result == 0:
         eliminated.extend(elts)
         get_minimized(args.urls, eliminated, args.name + "-" + str(iterations))
-        result, elts = run_accept(args.name + "-" + str(iterations))
+        result, elts, _ = run_accept(args.name + "-" + str(iterations))
         iterations += 1
-    end = time.time()
+    total_time = time.time() - start
 
     if result == 1:
         if len(eliminated) > 0:
             eliminated.pop()
             result = 2
+        else:
+            write_output(args.website, args.name, initial, initial, total_time)
 
-    if (result == 2):
+    if result == 2:
         i = 0
-        initial = None
-        total_time = end - start
         total_removed = 0
         print("\n\nStatistics:")
 
         print("Iteration\tBeginning #\t# Removed (%)\t# Remaining")
         for (stats,time) in STATISTICS:
             print("{0}\t\t{1}\t\t{2} ({3:.2f})\t\t{4}".format(i,stats["total"], stats["removed"], float(stats["efficiency"]), stats["total"] - stats["removed"]))
-            if initial is None:
-                initial = stats["total"]
             total_removed += stats["removed"]
             i += 1
             sys.stdout.flush()
@@ -86,12 +97,4 @@ if __name__ == "__main__":
         print('A total of {0} boxes remained for a {1:.2f}% reduction overall.'.format(initial - total_removed, (total_removed * 100.0) / initial))
         sys.stdout.flush()
 
-        # Write statistics to file
-        with open("reports/minimized.html", "a") as out:
-            out.write("<tr>\n")
-            out.write("\t<td>{}</td>\n".format(args.website))
-            out.write("\t<td>{}</td>\n".format(args.name))
-            out.write("\t<td>{}</td>\n".format(initial))
-            out.write("\t<td>{}</td>\n".format(initial - total_removed))
-            out.write("\t<td>{0:.2f}</td>\n".format(total_time))
-            out.write("</tr>\n")
+        write_output(args.website, args.name, initial, initial - total_removed, total_time)
