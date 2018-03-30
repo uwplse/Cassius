@@ -1,10 +1,7 @@
 TIME=$(shell date +%s)
 FLAGS=
 
-.PHONY: download deploy publish
-
-deploy:
-	rsync -r www/ $(shell ~/uwplse/getdir)
+.PHONY: deploy test publish index clean nightly
 
 test:
 	raco test src
@@ -14,13 +11,20 @@ publish:
 	ssh uwplse.org chmod a+x /var/www/cassius/reports/$(TIME)/
 	ssh uwplse.org chmod -R a+r /var/www/cassius/reports/$(TIME)/
 	@ echo "Uploaded to http://cassius.uwplse.org/reports/$(TIME)/"
+
+index:
 	bash infra/publish.sh download index upload
 
 clean:
 	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
-	rm -rf reports/minimized/
 
-nightly: clean reports/minimized.html reports/minimized/
+deploy:
+	rsync -r www/ $(shell ~/uwplse/getdir)
+
+infra:
+	bash infra/test.sh
+
+nightly: clean infra reports/minimized.html reports/minimized/
 
 # CSSWG test suite
 
@@ -58,7 +62,7 @@ bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
 
 # Debugging aid
-/tmp/%/: bench/fwt/%.zip
+/tmp/%/: $(FWT_PATH)/%.zip
 	unzip -q $< -d /tmp/
 
 reports/fwt.html reports/fwt.json: bench/fwt.rkt
@@ -68,4 +72,4 @@ reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
 	racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
 
 reports/specific.html reports/specific.json: bench/fwt.rkt bench/fwt/specific.sexp
-	racket src/report.rkt particular-assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.rkt bench/fwt/specific.sexp
+	racket src/report.rkt specific-assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.rkt bench/assertions/specific.sexp

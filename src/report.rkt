@@ -146,7 +146,7 @@
 
 (define (test-assertions assertion file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t~a\t" file pname assertion)
-  (define prob* (dict-update prob ':documents (curry map dom-strip-positions)))
+  (define prob* (dict-update prob ':documents (curry map (compose dom-set-range dom-strip-positions))))
   (define res (make-result file pname prob #:subproblem assertion #:index index))
   (define-values (out runtime) (run-problem prob* #:fuzz #f))
   (define status (get-status (list file pname assertion) prob out #:invert true #:unsupported false))
@@ -213,11 +213,10 @@
     (match-define (list file pname prob index) rec)
     (test-mutations file pname prob #:index index)))
 
-(define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)]
+(define (run-assertion-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                              #:threads [threads #f])
   (define inputs
-    (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x))
-               [_ (in-range repeat)])
+    (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x)))
       (list assertion (first x) (second x) (cddr x) index)))
   (for/threads threads ([rec inputs])
     (match-define (list assertion file pname prob index) rec)
@@ -470,6 +469,12 @@
     (and! valid? (λ (p) (subset? (dict-ref p ':features '()) (supported-features))))]
    [("--failed") json-file "Run only tests that failed in given JSON file"
     (and! valid? (read-failed-tests json-file))]
+   [("--sections") sections "Run only tests for particular sections (needs --index)"
+    (define secs (string-split sections ","))
+    (define (valid-sections? prob)
+      (define url (car (dict-ref prob ':url '("/tmp"))))
+      (set-member? (get-index index (file-name-stem url)) secs))
+    (and! valid? valid-sections?)]
    [("--feature") feature "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
    [("--expected") efile "Expect failures named in this file"
@@ -530,7 +535,7 @@
      #:output out-file
      (run-assertion-tests probs #:valid valid? #:index index #:threads threads))]
 
-   ["particular-assertions"
+   ["specific-assertions"
     #:args (assertions file problems)
     (define assns
       (call-with-input-file assertions

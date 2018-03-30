@@ -6,7 +6,7 @@
          "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
          "minimize.rkt")
 
-(provide dom-strip-positions)
+(provide dom-strip-positions dom-set-range)
 
 (define (dom-strip-positions d)
   (define boxes*
