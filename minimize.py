@@ -77,6 +77,7 @@ if __name__ == "__main__":
     if result == 1:
         if len(eliminated) > 0:
             eliminated.pop()
+            STATISTICS.pop()
             result = 2
         else:
             write_output(args.website, args.name, initial, initial, total_time)

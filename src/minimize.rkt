@@ -21,10 +21,14 @@
 (define (get-num html)
   (and html (dict-ref (node-attrs html) ':num #f)))
 
+(define (is-marked? html)
+  (and html (node-get html ':dnr #:default #f)))
+
 (define (has-num? html)
-  (if (get-num html)
-      html
-      #f))
+  (and (get-num html) html))
+
+(define (valid? html)
+  (and (not (is-marked? html)) (has-num? html)))
 
 ;; Returns the elt of a child, from the highest ancestor in the hierarchy with multiple children, that is not an ancestor of the original node
 (define (choose-to-remove node)
@@ -33,7 +37,7 @@
       (let ([fromparent (choose-to-remove parent)]
             [next (node-next node)]
             [prev (node-prev node)])
-        (or (has-num? fromparent) (has-num? next) (has-num? prev)))
+        (or (valid? fromparent) (valid? next) (valid? prev)))
       #f))
 
 (define (get-statistics to-remove docs)
@@ -44,16 +48,17 @@
         total-boxes
         (real->decimal-string (* (/ removed-boxes total-boxes) 100) 2)))
 
-(define (find-problem-box new)
-  (define last #f)
-  (for* ([dom new] [node (in-tree (parse-tree dom))]
+(define (find-problem-boxes new)
+  (define (is-problem box)
+    (for/or ([(key value) (in-dict (node-attrs box))])
+      (match value
+        [(list (list 'bad prop)) #t]
+        [_ #f])))
+
+  (for*/list ([dom new] [node (in-tree (parse-tree dom))]
                    #:when node
-                   [(key value) (in-dict (node-attrs node))]
-                   #:break last)
-    (match value
-      [(list (list 'bad prop)) (set! last node)]
-      [_ '()]))
-  last)
+                   #:when (is-problem node))
+    node))
 
 (define (get-elt-ancestor box)
   (if (has-elt? box)
@@ -81,17 +86,28 @@
       (dict-set! elt->box (get-num html) node)))
   (cons box->elt elt->box))
 
+(define (mark-tree failing)
+  (define (mark-node node)
+    (when node
+      (node-set! node ':dnr #t)
+      (mark-node (node-parent node))))
+
+  (for ([node failing])
+    (mark-node node)))
+
 (define (get-box-to-remove new old)
-  (define problem-box (find-problem-box new))
-  (define problem-elt (get-elt-ancestor problem-box))
-  (if (has-elt? problem-elt)
-      (let ([elt->index (get-elt->index old)])
-        (match-define (cons box->elt elt->box) (get-box-elt-map new old))
-        (define problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt)))
-        (define to-remove (choose-to-remove problem-html))
-        (if to-remove
-            (let* ([num (get-num to-remove)]
-                   [result (cons (node-type to-remove) (dict-ref elt->index num))])
-              (cons (get-statistics (dict-ref elt->box num) old) result))
-            to-remove))
-      #f)) ;; TODO: Choose a different mode
+  (define failing (find-problem-boxes new))
+  (mark-tree failing)
+  (for/or ([problem-box failing])
+    (define problem-elt (get-elt-ancestor problem-box))
+    (if (has-elt? problem-elt)
+        (let ([elt->index (get-elt->index old)])
+          (match-define (cons box->elt elt->box) (get-box-elt-map new old))
+          (define problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt)))
+          (define to-remove (choose-to-remove problem-html))
+          (if to-remove
+              (let* ([num (get-num to-remove)]
+                     [result (cons (node-type to-remove) (dict-ref elt->index num))])
+                (cons (get-statistics (dict-ref elt->box num) old) result))
+              to-remove))
+        #f))) ;; TODO: Choose a different mode
