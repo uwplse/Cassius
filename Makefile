@@ -1,7 +1,7 @@
 TIME=$(shell date +%s)
 FLAGS=
 
-.PHONY: deploy test publish index clean nightly
+.PHONY: deploy test nightly publish index clean
 
 test:
 	raco test src
@@ -24,7 +24,7 @@ deploy:
 infra:
 	bash infra/test.sh
 
-nightly: clean infra reports/minimized.html reports/minimized/
+nightly: infra reports/minimized.html reports/minimized/
 
 # CSSWG test suite
 
