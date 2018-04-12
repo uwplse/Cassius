@@ -49,7 +49,7 @@ do
         exit 1
     fi
 
-    if [ ! -f "$DIR" ]; then
+    if [ ! -d "$DIR" ]; then
         mkdir -p "$FWT_PATH/$FWT"
         if hash fuse-zip &>/dev/null; then
             fuse-zip -r "$FILE" "$FWT_PATH/$FWT"
