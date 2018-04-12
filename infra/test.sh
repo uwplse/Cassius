@@ -6,6 +6,9 @@ FWT_PATH=${FWT_PATH:-$HOME/src/fwt/}
 CSSWG_PATH=${CSSWG_PATH:-$HOME/src/web-platform-tests/css/CSS2}
 THREADS=6
 
+mkdir -p "$FWT_PATH"
+mkdir -p "$CSSWG_PATH"
+
 for FWT in \
     adventurewebsitetemplate airsportswebsitetemplate amusementparkwebsitetemplate applefarm \
     armyacademywebsitetemplate astronomywebsitetemplate backupsoftwarewebtemplate barwebsitetemplate \
@@ -36,7 +39,7 @@ do
     FILE=$FWT_PATH/$FWT.zip
 
     if [ ! -f "$FILE" ]; then
-        curl -L -s https://freewebsitetemplates.com/download/"$NAME"/ > "$FILE"
+        curl -L -s https://freewebsitetemplates.com/download/"$FWT"/ > "$FILE"
     fi
 
     if [ ! -s "$FILE" ]; then

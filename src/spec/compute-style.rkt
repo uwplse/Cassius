@@ -25,7 +25,7 @@
   (append
    '(border-top-style border-right-style border-bottom-style border-left-style)
    '(text-align overflow-x overflow-y position color background-color)
-   '(clear display box-sizing)))
+   '(clear display box-sizing font-weight font-style font-family)))
 
 (define em-computed-properties
   ;; These are properties whose computed style must convert em values to pixels
@@ -150,6 +150,6 @@
   (check equal?
          (sort
           (append simple-computed-properties em-computed-properties
-                  '(height float border-top-width border-right-width border-bottom-width border-left-width font-size line-height font-family font-weight font-style))
+                  '(height float border-top-width border-right-width border-bottom-width border-left-width font-size line-height))
           string<? #:key symbol->string)
          (sort (css-properties) string<? #:key symbol->string)))

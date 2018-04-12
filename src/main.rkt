@@ -63,8 +63,7 @@
   (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'br)))
   (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'bb)))
   (node-set! box ':fg (data 'fg-color))
-  (node-set! box ':bg (data 'bg-color))
-  (when (>= (data '&elt) 0) (node-set! box ':elt (data '&elt))))
+  (node-set! box ':bg (data 'bg-color)))
 
 (define (extract-elt! result elt)
   (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt font) result)
@@ -115,8 +114,7 @@
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
-    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop)
-	      #:unless (or (equal? prop 'font-family) (equal? prop 'font-style) (equal? prop 'font-weight)))
+    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop))
       (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
       (cond
        [(equal? '? (car (dict-ref (filter list? props) prop '(?))))
@@ -137,8 +135,7 @@
     (define style `(specified-style ,(dump-elt elt)))
     (for ([elt (cdr cls)])
       (emit `(assert (= (specified-style ,(dump-elt elt)) ,style))))
-    (for* ([(prop type default) (in-css-properties)]
-           #:unless (or (equal? prop 'font-family) (equal? prop 'font-style) (equal? prop 'font-weight)))
+    (for* ([(prop type default) (in-css-properties)])
       (define nonecond
         (for/fold ([no-match-so-far 'true])
             ([rm ml]
@@ -328,30 +325,6 @@
       (emit `(assert (not (has-contents ,(dump-box box)))))
       (emit `(assert (has-contents ,(dump-box box))))))
 
-(define (font-constraints get-font dom emit elt)
-  (define (resolve-inheritance elt)
-    (if (node? elt)
-        (let ([pfont (resolve-inheritance (node-parent elt))])
-          (match-define (list family weight style) (get-font elt))
-          (list
-           (match family
-             ["-moz-field" "Sans"] ;; TODO: make this be the default font for inputs
-             ['inherit (car pfont)]
-             [_ family])
-           (match weight
-             ['normal 400]
-             ['bold 700]
-             ['inherit (cadr pfont)]
-             [_ weight])
-           (match style
-             ['inherit (caddr pfont)]
-             [_ style])))
-        (list "serif" 400 'normal))) ;; TODO: browser defaults
-  (emit `(assert (= (font ,(dump-elt elt))
-                    (get-font
-                     ,(name 'font (resolve-inheritance elt))
-                     (font-size.px (style.font-size (computed-style ,(dump-elt elt)))))))))
-
 (define (replaced-constraints dom emit elt)
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
@@ -421,6 +394,8 @@
     (define-const font-size/xx-large Font-Size (font-size/px 32))
     (define-const font-size/smaller Font-Size (font-size/em (/ 2.0 3.0)))
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
+    (define-const font-weight/normal Font-Weight (font-weight/num 400))
+    (define-const font-weight/bold Font-Weight (font-weight/num 700))
     (define-const color/undefined Color color/transparent)
     ,@(make-font-table fonts)
     ,(make-get-font fonts)
@@ -448,9 +423,4 @@
     ,@(font-computation)
     ,@(layout-definitions)
     ,@(per-box layout-constraints)
-    ,@(reap [sow] (for* ([dom doms])
-                    (define get-font
-                      (sheet->font (sequence->list (in-elements dom)) (apply append sheets)))
-                    (for* ([elt (in-elements dom)])
-                      (font-constraints get-font dom sow elt))))
     ))

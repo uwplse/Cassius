@@ -3,9 +3,10 @@
 (require racket/cmdline (only-in xml write-xexpr) json
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
          "frontend.rkt" "solver.rkt"
-         "print/tree.rkt" "print/css.rkt" "print/smt.rkt")
+         "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
+         "minimize.rkt")
 
-(provide dom-strip-positions)
+(provide dom-strip-positions dom-set-range)
 
 (define (dom-strip-positions d)
   (define boxes*
@@ -52,63 +53,12 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (sub-tree-size node)
-  (define count 1)
-  (for ([child (node-children node)])
-    (set! count (+ count (sub-tree-size child))))
-  count)
-
-(define (has-elt? node)
-  (if (and node (dict-ref (node-attrs node) ':elt #f))
-      node
-      #f))
-
-;; Returns the elt of a child, from the highest ancestor in the hierarchy with multiple children, that is not an ancestor of the original node
-(define (choose-to-remove node)
-  (define parent (and node (node-parent node)))
-  (if parent
-      (let ([fromparent (choose-to-remove parent)]
-            [next (node-next node)]
-            [prev (node-prev node)])
-        (or (has-elt? fromparent) (has-elt? next) (has-elt? prev)))
-      #f))
-
-(define (get-statistics to-remove docs)
-  (define doms (map parse-dom docs))
-  (define removed-boxes (sub-tree-size to-remove))
-  (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
-  (list removed-boxes
-        total-boxes
-        (real->decimal-string (* (/ removed-boxes total-boxes) 100) 2)))
-
-(define (get-last-json new old)
-  (define tagcounts (make-hash))
-  (define last #f)
-  (define result #f)
-  (for* ([dom new] [node (in-tree (parse-tree dom))]
-                   #:when node
-                   [(key value) (in-dict (node-attrs node))]
-                   #:break last)
-    (match value
-      [(list (list 'bad prop)) (set! last node)]
-      [_ '()]))
-  (define to-remove (choose-to-remove last))
-  (if to-remove
-      (begin
-        (let ([elt-to-remove (dict-ref (node-attrs to-remove) ':elt #f)])
-          (for* ([doc old] [html (in-elements (parse-dom doc))] #:when html #:final (equal? elt-to-remove (dict-ref (node-attrs html) ':num #f)))
-            (define tag (node-type html))
-            (set! result (cons tag (dict-ref! tagcounts tag 0)))
-            (dict-set! tagcounts tag (+ 1 (dict-ref tagcounts tag)))))
-        (cons (get-statistics to-remove old) result))
-      to-remove))
-
 (define (do-minimize problem)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (eprintf "Accepted\n")]
     [(failure stylesheet trees)
-     (define to-remove (get-last-json trees (dict-ref problem ':documents)))
+     (define to-remove (get-box-to-remove trees (dict-ref problem ':documents)))
      (when to-remove
        (eprintf "Rejected\n")
        (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
@@ -119,7 +69,10 @@
        (newline)
        (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index)))))
      (unless to-remove
-       (eprintf "Minimized\n"))]
+       (eprintf "Minimized\n")
+       (define doms (map parse-dom (dict-ref problem ':documents)))
+       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
+       (eprintf "~s\n" total-boxes))]
     [(list 'error e)
      (eprintf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break

@@ -213,7 +213,7 @@
          (min-max-height (- (bottom-border lb) (top-content b)) b)]
         [else ; (is-box/block (type lb)), because blocks only have block or line children
          (min-max-height 
-          (ite (and (box-collapsed-through lb) (firstish-box lb))
+          (ite (and (box-collapsed-through lb) (firstish-box lb) (not (mb-clear lb)))
                0.0 ;; This special case should be refactored
                (- ;; CSS 2.1 § 10.6.3, item 2
                 (+ (ite (box-collapsed-through lb)
@@ -594,6 +594,10 @@
            (ite (ez.lookback b)
                 (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
                                              (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))))
+                ;; `lookback-overflow-width` is a black box that is
+                ;; narrower than `(w p)`, because we don't know the
+                ;; shape of the exclusion zone when `(not (ez.lookback
+                ;; b))`.
                 (and (>= (left-outer b) (left-content p)) (<= (right-outer b) (right-content p))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
