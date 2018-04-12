@@ -44,12 +44,12 @@ bench/css/index.json:
 
 FWT_PATH=$(HOME)/src/fwt
 
-# Not recommended
-bench/fwt/%.rkt: get_bench.py get_bench.js $(FWT_PATH)/%.zip
-	sh bench/fwt/get.sh $(FWT_PATH)/$*.zip
-
-bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*.zip)
-	sh bench/fwt/get-all.sh $(wildcard $(FWT_PATH)/*.zip)
+bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
+# Note that the "2-with-javascript" bit handles a special case for the childrensappwebsitetemplate
+	xvfb-run -a -s '-screen 0 1920x1080x24' \
+	    python2 get_bench.py --name fwt \
+	        $(shell find $(wildcard $(FWT_PATH)/*/*) \
+	              -name 'index.html' -not -path '*2-with-javascript*' )
 
 bench/fwt.working.rkt: bench/fwt.rkt reports/fwt.json
 	racket infra/filter-working.rkt reports/fwt.json <bench/fwt.rkt >bench/fwt.working.rkt
