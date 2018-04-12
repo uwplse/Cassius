@@ -56,12 +56,12 @@
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])
-		 (λ (elt) (if elt
-			      (begin (set! store (cons elt store))
-				     elt)
-			      store)))] ...)
-    body ...
-    (values (reverse (sows #f)) ...)))
+                 (cons
+                  (λ () store)
+                  (λ (elt) (set! store (cons elt store)))))] ...)
+    (let ([sows (cdr sows)] ...)
+      body ...)
+    (values (reverse ((car sows))) ...)))
 
 (define-syntax-rule (for/reap [sows ...] (iters ...) body ...)
   (reap [sows ...] (for (iters ...) body ...)))

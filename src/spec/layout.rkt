@@ -287,7 +287,7 @@
          (min-max-height (- (bottom-border lb) (top-content b)) b)]
         [else ; (is-box/block (type lb)), because blocks only have block or line children
          (min-max-height 
-          (ite (and (box-collapsed-through lb) (firstish-box lb) (top-margin-collapses-with-children b))
+          (ite (and (box-collapsed-through lb) (firstish-box lb) (top-margin-collapses-with-children b) (not (mb-clear lb)))
                0.0 ;; This special case should be refactored
                (- ;; CSS 2.1 § 10.6.3, item 2
                 (+ (ite (box-collapsed-through lb)
@@ -632,9 +632,6 @@
                  (and (is-elt e) (is-padding/% (style.padding-right r)))
                  (and (is-elt e) (is-width/% (style.width r))))))))
 
-  (declare-fun lookback-overflow-width (Box) Real)
-  (assert (forall ((b Box)) (<= (lookback-overflow-width b) (w (pbox b)))))
-
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
@@ -675,7 +672,7 @@
                 ;; narrower than `(w p)`, because we don't know the
                 ;; shape of the exclusion zone when `(not (ez.lookback
                 ;; b))`.
-                (flow-horizontal-layout b (lookback-overflow-width b)))
+                (and (>= (left-outer b) (left-content p)) (<= (right-outer b) (right-content p))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
                    (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))))

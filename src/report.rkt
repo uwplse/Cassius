@@ -146,7 +146,7 @@
 
 (define (test-assertions assertion file pname prob #:index [index (hash)])
   (eprintf "~a\t~a\t~a\t" file pname assertion)
-  (define prob* (dict-update prob ':documents (curry map dom-strip-positions)))
+  (define prob* (dict-update prob ':documents (curry map (compose dom-set-range dom-strip-positions))))
   (define res (make-result file pname prob #:subproblem assertion #:index index))
   (define-values (out runtime) (run-problem prob* #:fuzz #f))
   (define status (get-status (list file pname assertion) prob out #:invert true #:unsupported false))
@@ -213,11 +213,10 @@
     (match-define (list file pname prob index) rec)
     (test-mutations file pname prob #:index index)))
 
-(define (run-assertion-tests probs #:repeat [repeat 1] #:valid [valid? (const true)] #:index [index (hash)]
+(define (run-assertion-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                              #:threads [threads #f])
   (define inputs
-    (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x))
-               [_ (in-range repeat)])
+    (for/list ([(assertion x) (in-dict probs)] #:when (valid? (cddr x)))
       (list assertion (first x) (second x) (cddr x) index)))
   (for/threads threads ([rec inputs])
     (match-define (list assertion file pname prob index) rec)
@@ -474,7 +473,7 @@
     (define secs (string-split sections ","))
     (define (valid-sections? prob)
       (define url (car (dict-ref prob ':url '("/tmp"))))
-      (set-member? (get-index index (file-name-stem url)) secs))
+      (set-member? secs (get-index index (file-name-stem url))))
     (and! valid? valid-sections?)]
    [("--feature") feature "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
