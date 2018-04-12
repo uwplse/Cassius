@@ -399,7 +399,7 @@
                  (apply row (~a problem) `(a ([href ,url]) ,(~a test)) description
                         (for/list ([res ress])
                           `(span ([class ,(~a (result-status res))]
-                                  [title ,(~a (or (result-subproblem res) ""))])
+                                  [title ,(format "~a\nTime: ~a" (or (result-subproblem res) "") (print-time (result-time res)))])
                                  ,(status-symbol (result-status res))))))))))))))
 
 (define (print-feature-table problems)
