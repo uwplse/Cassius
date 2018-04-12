@@ -24,6 +24,7 @@ deploy:
 nightly:
 	bash infra/test.sh
 	racket src/run.rkt merify bench/modular-yoga.rkt yoga 2> yoga.log >&2
+	$(MAKE) index
 
 # CSSWG test suite
 
