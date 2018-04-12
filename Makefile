@@ -23,6 +23,7 @@ deploy:
 
 nightly:
 	bash infra/test.sh
+	$(MAKE) index
 
 # CSSWG test suite
 
