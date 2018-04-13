@@ -53,12 +53,13 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-minimize problem)
+(define (do-minimize problem backtracked)
+  (string->jsexpr backtracked)
   (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
     [(success stylesheet trees doms)
      (eprintf "Accepted\n")]
     [(failure stylesheet trees)
-     (define to-remove (get-box-to-remove trees (dict-ref problem ':documents)))
+     (define to-remove (get-box-to-remove trees (dict-ref problem ':documents) backtracked))
      (when to-remove
        (eprintf "Rejected\n")
        (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
@@ -182,8 +183,8 @@
     #:args (fname problem)
     (do-accept (get-problem fname problem))]
    ["minimize"
-    #:args (fname problem)
-    (begin (minimize-mode!) (do-minimize (get-problem fname problem)))]
+    #:args (fname problem [backtracked "[]"])
+    (begin (minimize-mode!) (do-minimize (get-problem fname problem) backtracked))]
    ["debug"
     #:args (fname problem)
     (do-debug (get-problem fname problem))]

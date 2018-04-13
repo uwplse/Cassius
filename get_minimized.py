@@ -9,10 +9,10 @@ SCRIPT=open("get_bench.js").read()
 MINIMIZER=open("minimize.js").read()
 
 def measure_scrollbar(browser):
-    browser.get("about:blank");
+    browser.get("about:blank")
     with open("capture/scrollbar.js") as f:
         script = f.read()
-    browser.execute_script(script + "; estimate_scrollbar()");
+    browser.execute_script(script + "; estimate_scrollbar()")
 
 def make_browser():
     profile = webdriver.FirefoxProfile()

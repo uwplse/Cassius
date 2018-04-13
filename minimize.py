@@ -17,10 +17,12 @@ import time
 
 STATISTICS=[]
 
-def run_accept(name):
+def run_accept(name, backtracked):
     print("Running Cassius:")
     start = time.time()
-    result = subprocess.check_output(["racket", "src/run.rkt", "minimize", "reports/minimized/"+name+"-minimized.rkt", "doc-1"], stderr=subprocess.STDOUT)
+    result = subprocess.check_output(["racket", "src/run.rkt", "minimize",
+                                      "reports/minimized/"+name+"-minimized.rkt",
+                                      "doc-1", "["+",".join(backtracked)+"]"], stderr=subprocess.STDOUT)
     end = time.time()
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
@@ -61,19 +63,27 @@ if __name__ == "__main__":
     p.add_argument("urls", metavar="URLs", type=str, help="URLs to dowload")
     p.add_argument("--website", dest="website", default="", type=str, help="File name under bench/.")
     args = p.parse_args()
-    
+
     iterations = 0
     eliminated = []
+    backtracked = []
     start = time.time()
     get_minimized(args.urls, eliminated, args.name)
-    result, elts, initial = run_accept(name=args.name)
+    result, elts, initial = run_accept(args.name, backtracked)
     while result == 0:
         eliminated.extend(elts)
         get_minimized(args.urls, eliminated, args.name + "-" + str(iterations))
-        result, elts, _ = run_accept(args.name + "-" + str(iterations))
+        result, elts, _ = run_accept(args.name + "-" + str(iterations), backtracked)
         iterations += 1
+
+        if result == 1:
+            backtracked.append(eliminated.pop())
+            STATISTICS.pop()
+            result = 0
+
     total_time = time.time() - start
 
+    '''
     if result == 1:
         if len(eliminated) > 0:
             eliminated.pop()
@@ -81,6 +91,7 @@ if __name__ == "__main__":
             result = 2
         else:
             write_output(args.website, args.name, initial, initial, total_time)
+    '''
 
     if result == 2:
         i = 0

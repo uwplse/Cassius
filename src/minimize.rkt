@@ -21,23 +21,24 @@
 (define (get-num html)
   (and html (dict-ref (node-attrs html) ':num #f)))
 
-(define (is-marked? html)
-  (and html (node-get html ':dnr #:default #f)))
+(define (is-marked? mark html)
+  (and html (node-get html mark #:default #f)))
 
 (define (has-num? html)
   (and (get-num html) html))
 
-(define (valid? html)
-  (and (not (is-marked? html)) (has-num? html)))
+(define (valid? mark)
+  (lambda (html)
+    (and (not (is-marked? mark html)) (has-num? html))))
 
 ;; Returns the elt of a child, from the highest ancestor in the hierarchy with multiple children, that is not an ancestor of the original node
-(define (choose-to-remove node)
+(define (choose-to-remove node test)
   (define parent (and node (node-parent node)))
   (if parent
-      (let ([fromparent (choose-to-remove parent)]
+      (let ([fromparent (choose-to-remove parent test)]
             [next (node-next node)]
             [prev (node-prev node)])
-        (or (valid? fromparent) (valid? next) (valid? prev)))
+        (or (test fromparent) (test next) (test prev)))
       #f))
 
 (define (get-statistics to-remove docs)
@@ -65,49 +66,64 @@
       box
       (and box (node-parent box) (get-elt-ancestor (node-parent box)))))
 
-(define (get-elt->index old)
+(define (elt<->tag&idx-association old)
   (define tagcounts (make-hash))
-  (define elt->index (make-hash))
-  (for* ([doc old] [html (in-elements (parse-dom doc))] #:when (has-num? html))
+  (define tag&index->elt (make-hash))
+  (for* ([doc old] [html (in-elements doc)])
     (define tag (node-type html))
-    (dict-set! elt->index (get-num html) (dict-ref! tagcounts tag 0))
-    (dict-set! tagcounts tag (+ 1 (dict-ref tagcounts tag))))
-  elt->index)
+    (define idx (dict-ref tagcounts tag 0))
+    (node-set! html ':idx idx)
+    (dict-set! tag&index->elt (cons tag idx) html)
+    (dict-set! tagcounts tag (+ 1 idx)))
+  tag&index->elt)
 
 (define (get-box-elt-map new old)
   (define box->elt (make-hash))
   (define elt->box (make-hash))
   (for* ([dom new] [doc old]
                    [node (in-tree (parse-tree dom))]
-                   [html (in-elements (parse-dom doc))]
+                   [html (in-elements doc)]
                    #:when (and (has-elt? node) (has-num? html)))
     (when (equal? (dict-ref (node-attrs node) ':elt) (dict-ref (node-attrs html) ':num))
       (dict-set! box->elt (dict-ref (node-attrs node) ':elt) html)
       (dict-set! elt->box (get-num html) node)))
   (cons box->elt elt->box))
 
-(define (mark-tree failing)
+(define (mark-tree nodes mark value)
   (define (mark-node node)
     (when node
-      (node-set! node ':dnr #t)
+      (node-set! node mark value)
       (mark-node (node-parent node))))
 
-  (for ([node failing])
+  (for ([node nodes])
     (mark-node node)))
 
-(define (get-box-to-remove new old)
+(define (parse-backtracked backtracked tag&index->elt)
+  (define nodes (string->jsexpr backtracked))
+  (map (lambda (node)
+         (define tag&index (cons (dict-ref node 'tag #f) (dict-ref node 'index #f)))
+         (dict-ref tag&index->elt tag&index #f))
+       nodes))
+
+(define (get-box-to-remove new old backtracked)
+  (define docs (map parse-dom old))
   (define failing (find-problem-boxes new))
-  (mark-tree failing)
+  (define tag&index->elt (elt<->tag&idx-association docs))
+  (define backtracked-elts (parse-backtracked backtracked tag&index->elt))
+  (mark-tree (append failing backtracked-elts) ':bad #t)
+  (mark-tree backtracked-elts ':dnr #t)
+
   (for/or ([problem-box failing])
     (define problem-elt (get-elt-ancestor problem-box))
     (if (has-elt? problem-elt)
-        (let ([elt->index (get-elt->index old)])
-          (match-define (cons box->elt elt->box) (get-box-elt-map new old))
+        (match-let ([(cons box->elt elt->box) (get-box-elt-map new docs)])
           (define problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt)))
-          (define to-remove (choose-to-remove problem-html))
+          (define weak-candidate (choose-to-remove problem-html (valid? ':bad)))
+          (define strong-candidate (choose-to-remove problem-html (valid? ':dnr)))
+          (define to-remove (or weak-candidate strong-candidate))
           (if to-remove
               (let* ([num (get-num to-remove)]
-                     [result (cons (node-type to-remove) (dict-ref elt->index num))])
+                     [result (cons (node-type to-remove) (node-get to-remove ':idx))])
                 (cons (get-statistics (dict-ref elt->box num) old) result))
               to-remove))
         #f))) ;; TODO: Choose a different mode
