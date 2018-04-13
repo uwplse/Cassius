@@ -473,7 +473,7 @@
     (define secs (string-split sections ","))
     (define (valid-sections? prob)
       (define url (car (dict-ref prob ':url '("/tmp"))))
-      (set-member? (get-index index (file-name-stem url)) secs))
+      (set-member? secs (get-index index (file-name-stem url))))
     (and! valid? valid-sections?)]
    [("--feature") feature "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
