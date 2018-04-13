@@ -56,8 +56,8 @@ bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
 
 reports/minimized.html reports/minimized/: reports/fwt.json
 	mkdir -p reports/minimized
-	xvfb-run <reports/fwt.json python2 minimize-all.py
-	sh bench/fwt/delete-all.sh $(shell racket infra/get-directory.rkt <bench/fwt.rkt)
+	xvfb-run -a -s '-screen 0 1920x1080x24' \
+        <reports/fwt.json python2 minimize-all.py
 
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
