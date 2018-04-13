@@ -23,6 +23,7 @@ deploy:
 
 infra:
 	bash infra/test.sh
+	$(MAKE) index
 
 nightly: infra reports/minimized.html reports/minimized/
 
@@ -46,12 +47,12 @@ bench/css/index.json:
 
 FWT_PATH=$(HOME)/src/fwt
 
-# Not recommended
-bench/fwt/%.rkt: get_bench.py get_bench.js $(FWT_PATH)/%.zip
-	sh bench/fwt/get.sh $(FWT_PATH)/$*.zip
-
-bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*.zip)
-	sh bench/fwt/get-all.sh $(wildcard $(FWT_PATH)/*.zip)
+bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
+# Note that the "2-with-javascript" bit handles a special case for the childrensappwebsitetemplate
+	xvfb-run -a -s '-screen 0 1920x1080x24' \
+	    python2 get_bench.py --name fwt \
+	        $(shell find $(wildcard $(FWT_PATH)/*/*) \
+	              -name 'index.html' -not -path '*2-with-javascript*' )
 
 reports/minimized.html reports/minimized/: reports/fwt.json
 	mkdir -p reports/minimized
