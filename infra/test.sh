@@ -1,5 +1,4 @@
-\#!/bin/sh
-exit
+#!/bin/sh
 set -e
 
 FWT_PATH=${FWT_PATH:-$HOME/src/fwt/}
@@ -70,6 +69,7 @@ do
 done | xargs make -j$THREADS bench/fwt.rkt
 
 make FWT_PATH="$FWT_PATH" FLAGS="--verbose --threads $THREADS" reports/fwt.html reports/vizassert.html reports/csswg.html reports/specific.html
+make FWT_PATH="$FWT_PATH" reports/minimized.html
 
 mkdir -p reports/rkt/
 mkdir -p reports/json/

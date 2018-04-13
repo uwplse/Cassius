@@ -21,11 +21,9 @@ clean:
 deploy:
 	rsync -r www/ $(shell ~/uwplse/getdir)
 
-infra:
+nightly:
 	bash infra/test.sh
 	$(MAKE) index
-
-nightly: infra reports/minimized.html reports/minimized/ index
 
 # CSSWG test suite
 
