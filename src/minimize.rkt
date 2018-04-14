@@ -89,6 +89,15 @@
       (dict-set! elt->box (get-num html) node)))
   (cons box->elt elt->box))
 
+(define (mark-failing nodes)
+  (define (mark-node node)
+    (when node
+      (node-set! node ':bad-children (node-get node ':bad-children #:default 0))
+      (mark-node (node-parent node))))
+
+  (for ([node nodes])
+    (mark-node node)))
+
 (define (mark-tree nodes mark value)
   (define (mark-node node)
     (when node
@@ -110,20 +119,30 @@
   (define failing (find-problem-boxes new))
   (define tag&index->elt (elt<->tag&idx-association docs))
   (define backtracked-elts (parse-backtracked backtracked tag&index->elt))
+  (mark-failing (append failing backtracked-elts))
   (mark-tree (append failing backtracked-elts) ':bad #t)
   (mark-tree backtracked-elts ':dnr #t)
 
-  (for/or ([problem-box failing])
-    (define problem-elt (get-elt-ancestor problem-box))
-    (if (has-elt? problem-elt)
+  (define candidates
+    (for/list ([problem-box failing])
+      (define problem-elt (get-elt-ancestor problem-box))
+      (if (has-elt? problem-elt)
+          (match-let ([(cons box->elt elt->box) (get-box-elt-map new docs)])
+            (define problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt)))
+            (define weak-candidate (choose-to-remove problem-html (valid? ':bad)))
+            (define strong-candidate (choose-to-remove problem-html (valid? ':dnr)))
+            (or weak-candidate strong-candidate))
+          #f)))
+
+  (define to-remove
+    (for/fold ([default #f]) ([candidate candidates])
+      (or (and candidate default
+               (if (> (sub-tree-size candidate) (sub-tree-size default)) candidate default))
+          candidate default)))
+
+  (if to-remove
+      (let* ([num (get-num to-remove)]
+             [result (cons (node-type to-remove) (node-get to-remove ':idx))])
         (match-let ([(cons box->elt elt->box) (get-box-elt-map new docs)])
-          (define problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt)))
-          (define weak-candidate (choose-to-remove problem-html (valid? ':bad)))
-          (define strong-candidate (choose-to-remove problem-html (valid? ':dnr)))
-          (define to-remove (or weak-candidate strong-candidate))
-          (if to-remove
-              (let* ([num (get-num to-remove)]
-                     [result (cons (node-type to-remove) (node-get to-remove ':idx))])
-                (cons (get-statistics (dict-ref elt->box num) old) result))
-              to-remove))
-        #f))) ;; TODO: Choose a different mode
+          (cons (get-statistics (dict-ref elt->box num) old) result)))
+      to-remove)) ;; TODO: Choose a different mode
