@@ -25,7 +25,8 @@ infra:
 	bash infra/test.sh
 	$(MAKE) index
 
-nightly: infra reports/minimized.html reports/minimized/
+nightly: infra
+#reports/minimized.html reports/minimized/
 
 # CSSWG test suite
 
