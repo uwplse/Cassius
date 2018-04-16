@@ -931,6 +931,8 @@ function dump_stylesheet(ss, features, media) {
                 text += dump_rule(r.selectorText, r.style, features, false, media);
             } else if (  r.type === CSSRule.MOZ_KEYFRAMES_RULE
                      || r.type === CSSRule.MOZ_KEYFRAME_RULE
+                     || r.type === CSSRule.KEYFRAMES_RULE
+                     || r.type === CSSRule.KEYFRAME_RULE
                      || r.type === CSSRule.FONT_FACE_RULE) {
                 // Don't need these...
             } else {
