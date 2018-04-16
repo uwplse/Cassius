@@ -1136,7 +1136,7 @@ function annotate_box_elt(box) {
     }
 }
 
-function page2cassius(name) {
+function page2text(name) {
     var features = {};
 
     var text = "";
@@ -1193,10 +1193,10 @@ function page2cassius(name) {
     return text;
 }
 
-function cassius(name) {
+function select_page_text(name) {
     var pre = document.createElement("pre");
     pre.id = "-x-cassius-output-block";
-    pre.innerText = page2cassius(name);
+    pre.innerText = page2text(name);
     with (pre.style) {
         background = "white", color = "black";
         position = "absolute", top = "0", left = "0";

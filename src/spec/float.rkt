@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "utils.rkt")
-(provide exclusion-zones *exclusion-zone-registers*)
+(provide exclusion-zones ez-fields ez-field-compute *exclusion-zone-registers*)
 
 (define *exclusion-zone-registers* (make-parameter 5))
 
@@ -416,5 +416,45 @@
   ;; Regression test for floats-rule3-outside-left-001
   (check-sat #hash((y . Real))
              `(=> (= y (ez.level (ez.add (ez.init-at 8.0) float/right 8.0 508.0 308.0 458.0) 425.0 8.0 408.0 8.0 float/left))
-                  (= y 8.0)))
-  )
+                  (= y 8.0))))
+
+(define-constraints ez-fields
+
+  ;; The "in" and "out" EZones track EZones in-order through the tree
+  (declare-fun ez.in (Box) EZone)
+  (declare-fun ez.out (Box) EZone))
+
+(define-constraints ez-field-compute
+  (assert
+   (forall ((b Box))
+           (= (ez.in b)
+              (ite (is-no-box (vbox b))
+                   (ite (or (is-no-box (pbox b)) (is-flow-root (pbox b)))
+                        ez.init
+                        (ez.in (pbox b)))
+                   (ez.out (vbox b))))))
+
+  ;; "sufficient" determines whether we there's room to add to an EZone
+  ;; The idea here is that if there are not enough registers,
+  ;; so that you can *not* add, then we want to provide
+  ;; maximum freedom to ez.out, to try to ensure SAT, so we
+  ;; can look inside the model, see that it's not sufficient,
+  ;; and then restart with more registers.
+  (assert
+   (forall ((b Box))
+           (= (ez.sufficient b)
+              (=>
+               (and (is-box/block (type b)) (not (or (is-position/absolute (position b)) (is-position/fixed (position b)))) (not (is-float/none (float b))))
+               (ez.can-add (ez.advance (ez.in b) (top-outer b)) (bottom-outer b))))))
+
+  (assert
+   (forall ((b Box))
+           (=> (ez.sufficient b)
+               (= (ez.out b)
+                  (ite (and (is-box/block (type b)) (not (or (is-position/absolute (position b)) (is-position/fixed (position b)))) (not (is-float/none (float b))))
+                       (ez.add (ez.advance (ez.in b) (top-outer b)) (float b) (top-outer b) (right-outer b) (bottom-outer b) (left-outer b))
+                       ,(smt-cond
+                         [(is-box/root (type b)) (ez.out (lbox b))]
+                         [(is-flow-root b) (ez.in b)]
+                         [(is-box (lbox b)) (ez.out (lbox b))]
+                         [else (ez.in b)])))))))

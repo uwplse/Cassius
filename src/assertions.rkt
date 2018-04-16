@@ -1,7 +1,9 @@
 #lang racket
 
 (require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt")
-(provide compile-assertion)
+(provide compile-assertion auxiliary-definitions)
+
+(define auxiliary-definitions (make-parameter '()))
 
 (define helpers
   (hash
@@ -21,111 +23,104 @@
    (λ (b [dir 'border]) `(- (bottom ,b ,dir) (top ,b ,dir)))
    ))
 
-(define (compile-assertion doms body ctx #:wrapped [wrapped? #t])
+(define (compile-assertion doms body ctx)
   (match-define (list dom) doms)
-  (let loop ([expr body] [wrapped? wrapped?] [ctx ctx])
+  (let loop ([expr body] [ctx ctx])
     (match expr
       ;; Booleans
       [(or 'true 'false) expr]
-      [`(and ,parts ...) `(and ,@(map (curryr loop wrapped? ctx) parts))]
-      [`(or ,parts ...) `(or ,@(map (curryr loop wrapped? ctx) parts))]
+      [`(and ,parts ...) `(and ,@(map (curryr loop ctx) parts))]
+      [`(or ,parts ...) `(or ,@(map (curryr loop ctx) parts))]
       [`(=> ,as ... ,b)
-       `(=> ,@(map (curryr loop wrapped? ctx) as) ,(loop b wrapped? ctx))]
-      [`(not ,part) `(not ,(loop part wrapped? ctx))]
+       `(=> ,@(map (curryr loop ctx) as) ,(loop b ctx))]
+      [`(not ,part) `(not ,(loop part ctx))]
 
       ;; Real numbers
       [(? number?) expr]
       [(list (and (or '= '< '> '<= '>=) op) parts ...)
-       (cons op (map (curryr loop #f ctx) parts))]
+       (cons op (map (curryr loop ctx) parts))]
       [(list (and (or '+ '- '* '/) op) parts ...)
-       (cons op (map (curryr loop wrapped? ctx) parts))]
+       (cons op (map (curryr loop ctx) parts))]
       [`(max ,a ,b)
-       `(max ,(loop a #t ctx) ,(loop b #t ctx))]
+       `(max ,(loop a ctx) ,(loop b ctx))]
 
       ;; Boxes
-      ['null (if wrapped? 'no-box -1)]
-      ['root (if wrapped? (dump-box (dom-boxes dom)) (name 'box (dom-boxes dom)))]
+      ['null 'no-box]
+      ['root `(rootbox ,(dump-box (dom-boxes dom)))]
       [(list (and (or 'parent 'next 'prev 'first 'last) field) box)
        (define function
-         (match field
-           ['parent (if wrapped? 'pflow '&pbox)]
-           ['next  (if wrapped? 'nflow '&nflow)]
-           ['prev  (if wrapped? 'vflow '&vflow)]
-           ['first (if wrapped? 'fflow '&fflow)]
-           ['last  (if wrapped? 'lflow '&lflow)]))
-       `(,function ,(loop box #t ctx))]
+         (match field ['parent 'pflow] ['next  'nflow] ['prev  'vflow] ['first 'fflow] ['last  'lflow]))
+       `(,function ,(loop box ctx))]
       [`(ancestor ,box ,cond*)
-       (define cond (loop cond* #f #hash((? . &b))))
-       (define (cond-fn &b id)
-         `(ite (let ([&b ,&b]) ,cond)
-               ,&b
-               (,id (pflow (get/box ,&b)))))
-       (define idx (length (extra-pointers)))
-       (extra-pointers (append (extra-pointers) (list (cons cond* cond-fn))))
-       (define ptr `(,(sformat "&~a" idx) ,(loop box #t ctx)))
-       (if wrapped? `(get/box ,ptr) ptr)]
-      [`(has-contents ,box) `(has-contents ,(loop box #t ctx))]
+       (define cond (loop cond* #hash((? . b))))
+       (define aux (sformat "aux~a" (name 'aux cond)))
+       (define aux-def
+         `((declare-fun ,aux (Box) Box)
+           (assert (forall ((b Box)) (= (,aux b) (ite ,cond b (,aux (pflow b))))))))
+       (auxiliary-definitions (remove-duplicates (append (auxiliary-definitions) aux-def)))
+       `(,aux ,(loop box ctx))]
+      [`(has-contents ,box) `(has-contents ,(loop box ctx))]
       [`(has-type ,box ,(and (or 'root 'text 'inline 'block 'line) boxtype))
        (define function (sformat "is-box/~a" boxtype))
-       `(,function (type ,(loop box #t ctx)))]
+       `(,function (type ,(loop box ctx)))]
       [(list-rest (and (or 'top 'right 'bottom 'left) dir) box edge*)
        (define edge
          (match edge* [(list edge) edge] [(list) 'border]))
        (define function (sformat "~a-~a" dir edge))
-       `(,function ,(loop box #t ctx))]
+       `(,function ,(loop box ctx))]
       [`(text-height ,box)
-       `(let ([b ,(loop box #t ctx)]) (height-text b))]
+       `(let ([b ,(loop box ctx)]) (height-text b))]
       [`(vertically-adjacent ,box1 ,box2)
-       `(vertically-adjacent ,(loop box1 #t ctx) ,(loop box2 #t ctx))]
+       `(vertically-adjacent ,(loop box1 ctx) ,(loop box2 ctx))]
 
       ;; Colors
-      [`(fg ,box) `(fg-color ,(loop box #t ctx))]
-      [`(bg ,box) `(bg-color ,(loop box #t ctx))]
+      [`(fg ,box) `(fg-color ,(loop box ctx))]
+      [`(bg ,box) `(bg-color ,(loop box ctx))]
       ['transparent 'color/transparent]
       [`(color ,name) (sformat "color/~a" name)]
       [`(rgb ,(? number? r) ,(? number? g) ,(? number? b))
        (dump-value (list 'rgb r g b))]
       [(list (and (or 'r 'g 'b) component) `(gamma ,color))
        (define function (sformat "color.~a-corr" component))
-       `(,function (color.rgb ,(loop color #t ctx)))]
+       `(,function (color.rgb ,(loop color ctx)))]
       [(list (and (or 'r 'g 'b) component) color)
        (define function (sformat "color.~a" component))
-       `(,function (color.rgb ,(loop color #t ctx)))]
+       `(,function (color.rgb ,(loop color ctx)))]
 
       ;; Elements
       [`(anonymous? ,b)
-       `(= (&elt ,(loop b #t ctx)) -1)]
+       `(is-no-elt (box-elt ,(loop b ctx)))]
       [`(matches ,b ,sels ...)
-       (define b* (loop b #t ctx))
+       (define b* (loop b ctx))
        (apply smt-or
               (for*/list ([dom doms] [elt (in-elements dom)]
-                          #:when (ormap (curryr selector-matches? elt)
-                                        sels))
-                `(= (&elt ,b*) ,(name 'elt elt))))]
+                          #:when (ormap (curryr selector-matches? elt) sels))
+                `(= (box-elt ,b*) ,(dump-elt elt))))]
 
       ;; Extra syntax
       [`(if ,c ,t ,f)
-       `(if ,(loop c wrapped? ctx)
-            ,(loop t wrapped? ctx)
-            ,(loop f wrapped? ctx))]
+       `(if ,(loop c ctx) ,(loop t ctx) ,(loop f ctx))]
       [`(let ([,vars ,vals] ...) ,body)
-       (define vals* (for/list ([val vals]) (loop val #f ctx)))
+       (define vals* (for/list ([val vals]) (loop val ctx)))
        (define ctx*
          (for/fold ([ctx ctx]) ([var vars])
            (dict-set ctx var var)))
-       `(let (,@(map list vars vals*)) ,(loop body wrapped? ctx*))]
+       `(let (,@(map list vars vals*)) ,(loop body ctx*))]
 
       ;; Expandable
       [(list (? (curry dict-has-key? helpers) fname) args ...)
-       (loop (apply (dict-ref helpers fname) args) wrapped? ctx)]
+       (loop (apply (dict-ref helpers fname) args) ctx)]
       [`(luminance ,color)
-       `(lum (color.rgb ,(loop color wrapped? ctx)))]
+       `(lum (color.rgb ,(loop color ctx)))]
       [`(overlaps ,b1 ,b2)
-       `(overlaps ,(loop b1 #t ctx) ,(loop b2 #t ctx))]
+       `(overlaps ,(loop b1 ctx) ,(loop b2 ctx))]
       [`(within ,b1 ,b2)
-       `(within ,(loop b1 #t ctx) ,(loop b2 #t ctx))]
+       `(within-outer ,(loop b1 ctx) ,(loop b2 ctx))]
+
+      [`(raw ,expr)
+       `(let (,@(for/list ([(var expr) (in-dict ctx)]) (list var expr)))
+          ,expr)]
 
       ;; Variables
       [(? symbol?)
-       (define name (dict-ref ctx expr))
-       (if wrapped? `(get/box ,name) name)])))
+       (dict-ref ctx expr)])))
