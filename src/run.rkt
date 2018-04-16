@@ -55,7 +55,7 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-minimize problem)
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
+  (match (solve-problem problem)
     [(success stylesheet trees doms)
      (eprintf "Accepted\n")]
     [(failure stylesheet trees)
