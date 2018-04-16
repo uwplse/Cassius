@@ -2,7 +2,7 @@
 
 (require racket/cmdline (only-in xml write-xexpr)
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
-         "frontend.rkt" "solver.rkt"
+         "frontend.rkt" "solver.rkt" "modularize.rkt"
          "print/tree.rkt" "print/css.rkt" "print/smt.rkt")
 
 (provide dom-strip-positions dom-set-range)
@@ -31,14 +31,15 @@
       (dict-set ctx field value)))
   (struct-copy dom d [properties ctx*]))
 
-(define (wrapped-solve sheets documents fonts #:test [test #f])
+(define (solve-problem problem)
   (with-handlers
       ([exn:break? (λ (e) 'break)]
        [exn:fail? (λ (e) (list 'error e))])
-    (solve sheets documents test fonts)))
+    (solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':test #f)
+           (dict-ref problem ':fonts) #:render? (equal? (dict-ref problem ':render 'true) 'true))))
 
 (define (do-accept problem)
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
+  (match (solve-problem problem)
     [(success stylesheet trees doms)
      (when (*debug*)
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt)))))
@@ -53,7 +54,7 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-debug problem)
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
+  (match (solve-problem problem)
     [(success stylesheet trees doms)
      (eprintf "Different renderings possible.\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs))))]
@@ -89,8 +90,8 @@
             (append-map loop (cdr tree)))]))))))
 
 (define (do-render problem)
-  (define documents (map dom-strip-positions (dict-ref problem ':documents)))
-  (match (wrapped-solve (dict-ref problem ':sheets) documents (dict-ref problem ':fonts))
+  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
+  (match (solve-problem problem*)
     [(success stylesheet trees doms)
      (eprintf "Rendered the following layout:\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt))))]
@@ -102,7 +103,7 @@
      (eprintf "Rendering terminated.\n")]))
 
 (define (do-sketch problem)
-  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
+  (match (solve-problem problem)
     [(success stylesheet trees doms)
      (displayln (stylesheet->string stylesheet))]
     [(failure stylesheet trees)
@@ -117,11 +118,8 @@
   (call-with-output-file output #:exists 'replace (curry displayln out)))
 
 (define (do-verify problem)
-  (define documents (map dom-strip-positions (dict-ref problem ':documents)))
-  (match
-      (parameterize ([*fuzz* #f])
-        (wrapped-solve (dict-ref problem ':sheets) documents (dict-ref problem ':fonts)
-                       #:test (dict-ref problem ':test)))
+  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
+  (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
     [(success stylesheet trees doms)
      (eprintf "Counterexample found!\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
@@ -130,6 +128,40 @@
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
     [(failure stylesheet trees)
      (eprintf "Verified.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
+(define (do-verify/modular problem)
+  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
+  (match-define (list check components ...) (modularize problem*))
+  (for ([component components] [i (in-naturals 1)])
+    (match (parameterize ([*fuzz* #f]) (solve-problem component))
+      [(success stylesheet trees dom)
+       (eprintf "Counterexample found in component ~a!\n" (or (dom-name (first dom)) i))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :component :spec :name))))
+       (printf "\n\nConfiguration:\n")
+       (for* ([(k v) (in-dict (dom-properties dom))])
+         (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
+       (exit i)]
+      [(failure stylesheet trees)
+       (eprintf "Verified ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))]
+      [(list 'error e)
+       ((error-display-handler) (exn-message e) e)
+       (exit 127)]
+      ['break
+       (eprintf "Terminated.\n")
+       (exit 127)]))
+  (match (parameterize ([*fuzz* #f]) (solve-problem check))
+    [(success stylesheet trees doms)
+     (eprintf "Counterexample found!\n")
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name))))
+     (printf "\n\nConfiguration:\n")
+     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+       (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
+    [(failure stylesheet trees)
+     (eprintf "Verified modularly.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
@@ -177,7 +209,10 @@
    ["verify"
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
-   ["assertions"
+   ["merify"
+    #:args (fname problem)
+    (do-verify/modular (get-problem fname problem))]
+   ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))
     (define assertions

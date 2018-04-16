@@ -63,14 +63,19 @@
 (define (parse-output msg input)
   (match msg
     [`(error ,description)
-     (match-define (list line/col text) (string-split description ": "))
+     (match-define (list line/col parts ...) (string-split description ": "))
+     (define text (string-join parts ": "))
      (match-define (list "line" (app string->number line) "column" (app string->number column))
                    (string-split line/col))
      (raise-syntax-error 'Z3 (format "Z3 error (~a:~a)" line column) text)]
     ['unsupported
      (error "Z3 unsupported:" input)]
-    [`(model (define-fun ,consts ,_ ,_ ,vals) ...)
-     (for/hash ([c consts] [v vals]) (values c (deserialize v)))]
+    [`(model ,entries ...)
+     (for/hash ([entry entries]
+                #:when (equal? (first entry) 'define-fun)
+                #:when (null? (third entry)))
+       (match-define `(define-fun ,const ,_ ,_ ,val) entry)
+       (values const (deserialize val)))]
     [(? eof-object?)
      (error "Z3 error: premature EOF received")]
     [_ msg]))
