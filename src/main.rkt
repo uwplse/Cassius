@@ -1,10 +1,11 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
+(require racket/hash
+         "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
          "selectors.rkt" "match.rkt" "solver.rkt")
 (require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
          "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
          "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
-         "spec/media-query.rkt")
+         "spec/media-query.rkt" "assertions.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback)
@@ -66,7 +67,7 @@
   (node-set! box ':bg (data 'bg-color)))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style &pelt &velt &nelt &felt &lelt font) result)
+  (match-define (list 'elt spec-style comp-style is-replaced is-image intrinsic-width font) result)
   (node-set! elt ':style (extract-style spec-style)))
 
 (define (extract-ctx! model d)
@@ -87,20 +88,27 @@
 
 (define (extract-counterexample! smt-out)
   (for ([(name value) (in-hash smt-out)] #:when (string-prefix? (~a name) "cex"))
-    (define node (by-name 'box value))
+    (define id (dict-ref (extract-box value) 'bid))
+    (define node (by-name 'box id))
     (define var (car (by-name 'cex (string->number (substring (~a name) 3)))))
     (node-add! node ':cex `(bad ,var))))
 
 (define (tree-constraints dom emit elt)
+  (define link-function
+    (cond
+     [(dom-context dom ':component)
+      'link-element-component]
+     [else
+      'link-element]))
   (emit
    `(assert
      (!
-      (link-element ,(dump-elt elt)
-                    ,(name 'elt (node-parent elt) -1)
-                    ,(name 'elt (node-prev   elt) -1)
-                    ,(name 'elt (node-next   elt) -1)
-                    ,(name 'elt (node-fchild elt) -1)
-                    ,(name 'elt (node-lchild elt) -1))
+      (,link-function ,(dump-elt elt)
+                      ,(dump-elt (node-parent elt))
+                      ,(dump-elt (node-prev   elt))
+                      ,(dump-elt (node-next   elt))
+                      ,(dump-elt (node-fchild elt))
+                      ,(dump-elt (node-lchild elt)))
       :named ,(sformat "tree/~a" (dump-elt elt))))))
 
 (define (rule-allows-property? rule prop)
@@ -187,10 +195,10 @@
           #:when true [box (in-boxes dom)])
       (match (matcher box)
         [#f
-         (emit `(assert (! (match-anon-box ,(name 'box box))
+         (emit `(assert (! (match-anon-box ,(dump-box box))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]
         [(list elt first? last?)
-         (emit `(assert (! (match-element-box ,(name 'elt elt) ,(name 'box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
+         (emit `(assert (! (match-element-box ,(dump-elt elt) ,(dump-box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
                            :named ,(sformat "box-element/~a" (dump-box box)))))]))))
 
 (define (model-sufficiency doms)
@@ -198,23 +206,17 @@
          (for*/list ([dom doms] [box (in-boxes dom)])
            `(ez.sufficient ,(dump-box box)))))
 
-(define (dom-define-get/elt doms emit)
+(define (dom-define-elements doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
     (emit `(declare-const ,(dump-elt elt) Element))
-    (emit `(assert (is-elt ,(dump-elt elt)))))
-  (define body
-    (for*/fold ([body '(ite (= &elt -1) no-elt no-elt)]) ([dom doms] [elt (in-elements dom)])
-      `(ite (= &elt ,(name 'elt elt)) ,(dump-elt elt) ,body)))
-  (emit `(define-fun get/elt ((&elt Int)) Element ,body)))
+    (emit `(assert (= (eid ,(dump-elt elt)) ,(name 'elt elt))))
+    (emit `(assert (is-elt ,(dump-elt elt))))))
 
-(define (dom-define-get/box doms emit)
+(define (dom-define-boxes doms emit)
   (for* ([dom doms] [box (in-boxes dom)])
     (emit `(declare-const ,(dump-box box) Box))
-    (emit `(assert (is-box ,(dump-box box)))))
-  (define body
-    (for*/fold ([body '(ite (= &box -1) no-box no-box)]) ([dom doms] [box (in-boxes dom)])
-      `(ite (= &box ,(name 'box box)) ,(dump-box box) ,body)))
-  (emit `(define-fun get/box ((&box Int)) Box ,body)))
+    (emit `(assert (= (bid ,(dump-box box)) ,(name 'box box))))
+    (emit `(assert (is-box ,(dump-box box))))))
 
 (define (configuration-constraints params doms emit)
   (for ([dom doms])
@@ -236,11 +238,9 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
-
-    (emit `(assert (= (w ,(dump-box (dom-boxes dom))) ,(param 'w))))
-    (emit `(assert (= (h ,(dump-box (dom-boxes dom))) ,(param 'h))))
-
     (fs-name (param 'font-size))
+    (view-width-name (param 'w))
+    (view-height-name (param 'h))
     (dict-set! params ':fs (param 'font-size))
     (dict-set! params ':w (param 'w))
     (dict-set! params ':h (param 'h))))
@@ -282,25 +282,52 @@
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 
-(define (box-link-constraints dom emit elt)
-  (emit `(assert (! (link-box
-                     ,(dump-box elt)
-                     ,(name 'box (node-parent elt) -1)
-                     ,(name 'box (node-prev elt) -1)
-                     ,(name 'box (node-next elt) -1)
-                     ,(name 'box (node-fchild elt) -1)
-                     ,(name 'box (node-lchild elt) -1))
-                    :named ,(sformat "link-box/~a" (name 'box elt))))))
+(define (box-link-constraints dom emit box)
+  (define link-function
+    (if (dom-context dom ':component)
+        'link-box-component
+        (if (node-get* box ':component)
+            'link-box-magic
+            'link-box)))
+  (emit `(assert (! (,link-function
+                     ,(dump-box box)
+                     ,(dump-box (node-parent box))
+                     ,(dump-box (node-prev box))
+                     ,(dump-box (node-next box))
+                     ,(dump-box (node-fchild box))
+                     ,(dump-box (node-lchild box)))
+                    :named ,(sformat "link-box/~a" (name 'box box))))))
 
-(define (box-flow-constraints dom emit elt)
-  (define (flow-linker b e)
-    (match (node-type elt)
-      [(or 'BLOCK 'MAGIC 'ANON 'INLINE 'TEXT) `(link-flow-block ,b ,e)]
-      ['VIEW `(link-flow-root ,b ,e)]
-      [(or 'LINE) `(link-flow-simple ,b ,e)]))
+(define (nodes-below node stop?)
+  (reap [sow]
+        (let loop ([node node])
+          (sow node)
+          (for ([child (node-children node)])
+            (if (stop? child)
+                (sow child)
+                (loop child))))))
 
-  (emit `(assert (! ,(flow-linker (dump-box elt) (name 'box elt))
-                    :named ,(sformat "link-flow/~a" (name 'box elt))))))
+(define (get-node-names nodes)
+  (for/hash ([node nodes] #:when (node-get node ':name #:default false))
+    (values (node-get node ':name) (dump-box node))))
+
+(define (spec-constraints dom emit box)
+  (when (node-get box ':spec)
+    (define-values (vars body)
+      (match (node-get box ':spec)
+        [`(forall (,vars ...) ,body) (values vars body)]
+        [body (values '() body)]))
+    (define nodes (nodes-below box (λ (x) (node-get x ':spec))))
+    (define ctx
+      (hash-union
+       (for/hash ([var vars]) (values var var))
+       (get-node-names nodes)))
+    (define spec (compile-assertion (list dom) body ctx))
+    (emit `(assert (! (and
+                       ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
+                           `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
+                              ,spec)))
+                      :named ,(sformat "spec/~a" (name 'box box)))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -347,10 +374,10 @@
   `(,@constraints
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
-        (sow `(declare-const ,var Int))
+        (sow `(declare-const ,var Box))
         (sow `(assert ,(apply smt-or
                               (for*/list ([dom doms] [box (in-boxes dom)])
-                                `(= ,var ,(name 'box box)))))))
+                                `(= ,var ,(dump-box box)))))))
     (assert ,(apply smt-or (map (curry list 'not) tests)))))
 
 (define (sheet-constraints doms eqcls)
@@ -360,14 +387,14 @@
 (define (sheet*-constraints params doms rules)
   (reap [emit] (for ([dom doms]) (selector*-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
-(define (all-constraints sheets matcher doms fonts)
+(define (all-constraints sheets matcher doms fonts #:render? [render? true])
   (define (global f) (reap [sow] (f doms sow)))
   (define (per-element f)
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
   (define media-params (make-hash '((:type . screen))))
-
+  
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
@@ -404,8 +431,8 @@
     ,@(common-definitions)
     ,@(exclusion-zones)
     ,@(tree-types)
-    ,@(global dom-define-get/elt)
-    ,@(global dom-define-get/box)
+    ,@(global dom-define-elements)
+    ,@(global dom-define-boxes)
     ,@(global (curry configuration-constraints media-params))
     ,@(utility-definitions)
     ,@(link-definitions)
@@ -416,11 +443,14 @@
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
     ,@(per-element style-constraints)
-    ,@(per-box box-flow-constraints)
+    ,@(ez-fields)
+    ,@(ez-field-compute)
     ,@(per-element compute-style-constraints)
     ,@(per-element replaced-constraints)
     ,@(per-box contents-constraints)
     ,@(font-computation)
-    ,@(layout-definitions)
-    ,@(per-box layout-constraints)
+    ,@(assertion-helpers)
+    ,@(if render? (layout-definitions) '())
+    ,@(per-box spec-constraints)
+    ,@(if render? (per-box layout-constraints) '())
     ))

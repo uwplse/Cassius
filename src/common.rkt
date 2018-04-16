@@ -226,7 +226,7 @@
         (or (string-trim (with-output-to-string (λ () (system cmd)))) default))
       default))
 
-(define *version* "2.0")
+(define *version* "3.0")
 
 (define *commit*
   (git-command "rev-parse" "HEAD" #:default *version*))

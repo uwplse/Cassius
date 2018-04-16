@@ -1,8 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt")
-(provide extra-pointers common-definitions tree-types utility-definitions)
-
-(define extra-pointers (make-parameter '()))
+(provide common-definitions tree-types utility-definitions)
 
 (define-constraints common-definitions
   (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
@@ -15,7 +13,7 @@
 (define-constraints tree-types
   (declare-datatypes ()
      ((Box no-box
-           (box (type BoxType)
+           (box (bid Int) (type BoxType)
                 (x Real) (y Real) (w Real) (h Real) ; X, Y and width/height
                 (xo Real) (yo Real) ; X and Y offset
                 (mt Real) (mr Real) (mb Real) (ml Real) ; margins
@@ -25,51 +23,38 @@
                 (pt Real) (pr Real) (pb Real) (pl Real) ; padding
                 (bt Real) (br Real) (bb Real) (bl Real) ; border
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
-                (&pbox Int) (&vbox Int) (&nbox Int) (&fbox Int) (&lbox Int) ; box tree pointers
                 (width-set Bool) ; used for dependency creation only
                 (text-indent Real)
                 (baseline Real) (above-baseline Real) (below-baseline Real)
-                (&nflow Int) (&vflow Int) ; flow tree pointers
-                (&ppflow Int) ; parent positioned pointers
-                (&pbflow Int)
-                (&root Int) ; Root box
-                (ez.in EZone) (ez.out EZone)
                 (ez.sufficient Bool) (ez.lookback Bool)
-                (has-contents Bool) (textalign Text-Align) ; to handle inheritance; TODO: handle better
-                (&elt Int) (first-box? Bool) (last-box? Bool)
-                ,@(for/list ([i (in-naturals)] [(name p) (in-dict (extra-pointers))])
-                    `(,(sformat "&~a" i) Int))
+                (has-contents Bool) (first-box? Bool) (last-box? Bool)
                 (fg-color Color) (bg-color Color)))
       (BoxType box/root box/text box/inline box/block box/line)
       (Element no-elt
-           (elt (specified-style Style) (computed-style Style) ; see compute-style.rkt
-                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real)
-                (&pelt Int) (&velt Int) (&nelt Int) (&felt Int) (&lelt Int)))))
-
-  ,@(for/list ([field '(&pelt &velt &nelt &felt &lelt)])
-      `(assert (= (,field no-elt) -1)))
-  ,@(for/list ([field '(&pbox &vbox &nbox &fbox &lbox &nflow &vflow &ppflow &pbflow)])
-      `(assert (= (,field no-box) -1)))
-
-  (assert (= (&elt no-box) -1)))
+           (elt (eid Int) (specified-style Style) (computed-style Style) ; see compute-style.rkt
+                (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real))))))
 
 (define-constraints utility-definitions
   ;; The elements in each direction in the element tree
-  (define-fun velt ((elt Element)) Element (get/elt (&velt elt)))
-  (define-fun nelt ((elt Element)) Element (get/elt (&nelt elt)))
-  (define-fun pelt ((elt Element)) Element (get/elt (&pelt elt)))
-  (define-fun felt ((elt Element)) Element (get/elt (&felt elt)))
-  (define-fun lelt ((elt Element)) Element (get/elt (&lelt elt)))
+  (declare-fun velt (Element) Element)
+  (declare-fun nelt (Element) Element)
+  (declare-fun pelt (Element) Element)
+  (declare-fun felt (Element) Element)
+  (declare-fun lelt (Element) Element)
 
   ;; The boxes in each direction in the box tree
-  (define-fun pbox ((box Box)) Box (get/box (&pbox box)))
-  (define-fun fbox ((box Box)) Box (get/box (&fbox box)))
-  (define-fun lbox ((box Box)) Box (get/box (&lbox box)))
-  (define-fun vbox ((box Box)) Box (get/box (&vbox box)))
-  (define-fun nbox ((box Box)) Box (get/box (&nbox box)))
+  (declare-fun pbox (Box) Box)
+  (declare-fun fbox (Box) Box)
+  (declare-fun lbox (Box) Box)
+  (declare-fun vbox (Box) Box)
+  (declare-fun nbox (Box) Box)
+
+  ,@(for/list ([field '(pbox vbox nbox fbox lbox)])
+      `(assert (= (,field no-box) no-box)))
 
   ;; From boxes to elements
-  (define-fun box-elt ((box Box)) Element (get/elt (&elt box)))
+  (declare-fun box-elt (Box) Element)
+  (assert (is-no-elt (box-elt no-box)))
 
   ;; Box model helpers
   (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))
@@ -103,6 +88,8 @@
   (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
   
   (define-fun width-padding ((box Box)) Real (+ (pl box) (w box) (pr box)))
+  (define-fun width-border ((box Box)) Real (+ (bl box) (pl box) (w box) (pr box) (br box)))
+  (define-fun width-outer ((box Box)) Real (+ (ml box) (bl box) (pl box) (w box) (pr box) (br box) (mr box)))
   (define-fun height-content ((box Box)) Real (h box))
   (define-fun height-padding ((box Box)) Real (+ (pt box) (h box) (pb box)))
   (define-fun height-border ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
@@ -124,8 +111,31 @@
      (=> (and (= (left-outer box1) (left-outer box2)) (= (right-outer box1) (right-outer box2)))
          (not (= (left-outer box1) (right-outer box2))))))
 
-  (define-fun within ((b1 Box) (b2 Box)) Bool
-    (and (<= (box-left b2) (box-left b1))
-         (<= (box-top b2) (box-top b1))
-         (<= (box-right b1) (box-right b2))
-         (<= (box-bottom b1) (box-bottom b2)))))
+  (define-fun overlaps-outer ((box1 Box) (box2 Box)) Bool
+    (and (horizontally-adjacent box1 box2) (vertically-adjacent box1 box2)))
+
+  (define-fun within-outer ((b1 Box) (b2 Box)) Bool
+    (and (>= (left-outer b1) (left-outer b2))
+         (>= (top-outer b1) (top-outer b2))
+         (<= (right-outer b1) (right-outer b2))
+         (<= (bottom-outer b1) (bottom-outer b2)))))
+
+(module+ test
+  (require "test.rkt")
+
+  (add-header! `((declare-sort Color) (declare-sort Style)))
+  (add-header! (common-definitions))
+  (add-header! (tree-types))
+  (add-header! (utility-definitions))
+  (add-header! `((declare-datatypes () ((Rect (rect (rx Real) (ry Real) (rw Real) (rh Real)))))))
+
+  (check-sat #hash((b1 . Box) (b2 . Box) (b3 . Box) (r1 . Rect) (r2 . Rect) (r3 . Rect))
+             `(=>
+               (is-box b1) (is-box b2) (is-box b3)
+               (= r1 (rect (top-outer b1) (right-outer b1) (bottom-outer b1) (left-outer b1)))
+               (= r2 (rect (top-outer b2) (right-outer b2) (bottom-outer b2) (left-outer b2)))
+               (= r3 (rect (top-outer b3) (right-outer b3) (bottom-outer b3) (left-outer b3)))
+               (>= (width-outer b1) 0) (>= (width-outer b2) 0) (>= (width-outer b3) 0)
+               (>= (height-outer b1) 0) (>= (height-outer b2) 0) (>= (height-outer b3) 0)
+               (within-outer b1 b2) (overlaps-outer b1 b3)
+               (overlaps-outer b2 b3))))
