@@ -57,11 +57,11 @@
 (define (do-minimize problem backtracked)
   (match (solve-problem problem)
     [(success stylesheet trees doms)
-     (eprintf "Accepted\n")]
+     (printf "Accepted\n")]
     [(failure stylesheet trees)
      (define to-remove (get-box-to-remove trees (dict-ref problem ':documents) backtracked))
      (when to-remove
-       (eprintf "Rejected\n")
+       (printf "Rejected\n")
        (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
        ;; TODO: Make two JSON outputs into one JSON output
        (write-json (make-hash (list (cons 'removed removed)
@@ -70,14 +70,14 @@
        (newline)
        (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index)))))
      (unless to-remove
-       (eprintf "Minimized\n")
+       (printf "Minimized\n")
        (define doms (map parse-dom (dict-ref problem ':documents)))
        (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
-       (eprintf "~s\n" total-boxes))]
+       (printf "~s\n" total-boxes))]
     [(list 'error e)
-     (eprintf "Error\n") ((error-display-handler) (exn-message e) e)]
+     (printf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break
-     (eprintf "Terminated.\n")]))
+     (printf "Terminated.\n")]))
 
 (define (do-debug problem)
   (match (solve-problem problem)

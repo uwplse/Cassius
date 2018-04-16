@@ -22,7 +22,7 @@ def run_accept(name, backtracked):
     start = time.time()
     result = subprocess.check_output(["racket", "src/run.rkt", "minimize",
                                       "reports/minimized/"+name+"-minimized.rkt",
-                                      "doc-1", "["+",".join(backtracked)+"]"], stderr=subprocess.STDOUT)
+                                      "doc-1", "["+",".join(backtracked)+"]"])
     end = time.time()
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
@@ -82,16 +82,6 @@ if __name__ == "__main__":
             result = 0
 
     total_time = time.time() - start
-
-    '''
-    if result == 1:
-        if len(eliminated) > 0:
-            eliminated.pop()
-            STATISTICS.pop()
-            result = 2
-        else:
-            write_output(args.website, args.name, initial, initial, total_time)
-    '''
 
     if result == 2:
         i = 0

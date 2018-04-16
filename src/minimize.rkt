@@ -110,7 +110,7 @@
 (define (parse-backtracked backtracked tag&index->elt)
   (define nodes (string->jsexpr backtracked))
   (map (lambda (node)
-         (define tag&index (cons (dict-ref node 'tag #f) (dict-ref node 'index #f)))
+         (define tag&index (cons (string->symbol (dict-ref node 'tag #f)) (dict-ref node 'index #f)))
          (dict-ref tag&index->elt tag&index #f))
        nodes))
 
@@ -122,13 +122,13 @@
   (mark-failing (append failing backtracked-elts))
   (mark-tree (append failing backtracked-elts) ':bad #t)
   (mark-tree backtracked-elts ':dnr #t)
+  (match-define (cons box->elt elt->box) (get-box-elt-map new docs))
 
   (define candidates
     (for/list ([problem-box failing])
       (define problem-elt (get-elt-ancestor problem-box))
       (if (has-elt? problem-elt)
-          (match-let ([(cons box->elt elt->box) (get-box-elt-map new docs)])
-            (define problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt)))
+          (let ([problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt))])
             (define weak-candidate (choose-to-remove problem-html (valid? ':bad)))
             (define strong-candidate (choose-to-remove problem-html (valid? ':dnr)))
             (or weak-candidate strong-candidate))
@@ -143,6 +143,5 @@
   (if to-remove
       (let* ([num (get-num to-remove)]
              [result (cons (node-type to-remove) (node-get to-remove ':idx))])
-        (match-let ([(cons box->elt elt->box) (get-box-elt-map new docs)])
-          (cons (get-statistics (dict-ref elt->box num) old) result)))
-      to-remove)) ;; TODO: Choose a different mode
+          (cons (get-statistics (dict-ref elt->box num) old) result))
+      to-remove))

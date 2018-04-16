@@ -26,9 +26,6 @@ nightly:
 	racket src/run.rkt merify bench/modular-yoga.rkt yoga 2> yoga.log >&2
 	$(MAKE) index
 
-#nightly: infra
-#reports/minimized.html reports/minimized/
-
 # CSSWG test suite
 
 CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2
