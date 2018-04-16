@@ -12,8 +12,10 @@
  boolean<? lex<? output<?
  define-by-match
  list-intersect multi-command-line debug-mode!
+ minimize-mode!
  *debug* *fuzz* *font-fuzz*
- *version* *commit* *branch*)
+ *version* *commit* *branch*
+ *minimize*)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -50,6 +52,10 @@
   (*debug* true)
   (*fuzz* #f)
   (*font-fuzz* #f))
+
+(define *minimize* (make-parameter false))
+(define (minimize-mode!)
+  (*minimize* true))
 
 (define *fuzz* (make-parameter '(/ 10 60)))
 (define *font-fuzz* (make-parameter 1))
@@ -145,9 +151,10 @@
     (let* ([now (current-inexact-milliseconds)]
            [delta (- now time-start)])
       (set! time-start now)
-      (apply eprintf (string-append "[~as] " fmt "\n")
-             (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
-             args))))
+      (unless (*minimize*)
+        (apply eprintf (string-append "[~as] " fmt "\n")
+               (~r #:precision '(= 3) #:min-width 8 (/ delta 1000))
+               args)))))
 
 (define (boolean<? b1 b2)
   (and (not b1) b2))

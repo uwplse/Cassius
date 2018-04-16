@@ -1,7 +1,7 @@
 TIME=$(shell date +%s)
 FLAGS=
 
-.PHONY: deploy test publish index clean nightly
+.PHONY: deploy test nightly publish index clean
 
 test:
 	raco test src
@@ -53,8 +53,13 @@ bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
 	        $(shell find $(wildcard $(FWT_PATH)/*/*) \
 	              -name 'index.html' -not -path '*2-with-javascript*' )
 
-bench/fwt.working.rkt: bench/fwt.rkt reports/fwt.json
-	racket infra/filter-working.rkt reports/fwt.json <bench/fwt.rkt >bench/fwt.working.rkt
+reports/minimized.html reports/minimized/: reports/fwt.json
+	mkdir -p reports/minimized
+	xvfb-run -a -s '-screen 0 1920x1080x24' \
+        <reports/fwt.json python2 minimize-all.py
+
+bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
+	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
 
 # Debugging aid
 /tmp/%/: $(FWT_PATH)/%.zip

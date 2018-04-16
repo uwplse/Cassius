@@ -1,9 +1,10 @@
 #lang racket
 
-(require racket/cmdline (only-in xml write-xexpr)
+(require racket/cmdline (only-in xml write-xexpr) json
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
          "frontend.rkt" "solver.rkt" "modularize.rkt"
-         "print/tree.rkt" "print/css.rkt" "print/smt.rkt")
+         "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
+         "minimize.rkt")
 
 (provide dom-strip-positions dom-set-range)
 
@@ -50,6 +51,31 @@
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
+(define (do-minimize problem)
+  (match (wrapped-solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))
+    [(success stylesheet trees doms)
+     (eprintf "Accepted\n")]
+    [(failure stylesheet trees)
+     (define to-remove (get-box-to-remove trees (dict-ref problem ':documents)))
+     (when to-remove
+       (eprintf "Rejected\n")
+       (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
+       ;; TODO: Make two JSON outputs into one JSON output
+       (write-json (make-hash (list (cons 'removed removed)
+                                    (cons 'total total)
+                                    (cons 'efficiency efficiency))))
+       (newline)
+       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index)))))
+     (unless to-remove
+       (eprintf "Minimized\n")
+       (define doms (map parse-dom (dict-ref problem ':documents)))
+       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
+       (eprintf "~s\n" total-boxes))]
+    [(list 'error e)
+     (eprintf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break
      (eprintf "Terminated.\n")]))
 
@@ -187,6 +213,9 @@
    ["accept"
     #:args (fname problem)
     (do-accept (get-problem fname problem))]
+   ["minimize"
+    #:args (fname problem)
+    (begin (minimize-mode!) (do-minimize (get-problem fname problem)))]
    ["debug"
     #:args (fname problem)
     (do-debug (get-problem fname problem))]

@@ -9,7 +9,6 @@
 
 (define (constraints log-phase sheets docs fonts [tests #f] #:render? [render? #t])
   (define doms (map parse-dom docs))
-
   (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
              (length doms)
              (length (append-map (compose sequence->list in-tree dom-elements) doms))
@@ -62,16 +61,14 @@
                                         (cons `(forall () ,ms) tests*)
                                         tests*))))
 
-  (log-phase "Produced ~a constraints of ~a terms"
-             (length query) (tree-size query))
+  (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
 
   (if (memq 'z3o (flags))
       (set! query (z3-prepare query))
       (set! query (z3-clean query)))
   (when (memq 'debug (flags)) (set! query (z3-namelines query)))
 
-  (log-phase "Prepared ~a constraints of ~a terms"
-           (length query) (tree-size query))
+    (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
   
   (values doms query))
 
@@ -94,7 +91,7 @@
   (define trees (map dom-boxes doms))
   (match out
     [(list 'model m)
-     (log-phase "Found model with ~a variables" (dict-count m))
+       (log-phase "Found model with ~a variables" (dict-count m))
      (cond
       [(or (not render?) (extract-model-sufficiency m trees))
        (unless (extract-model-lookback m trees)

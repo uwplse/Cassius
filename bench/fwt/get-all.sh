@@ -26,11 +26,3 @@ for FILE in "$@"; do
 done
 
 xvfb-run -a -s '-screen 0 1920x1080x24' python2 get_bench.py --name fwt $loc
-
-for FILE in "$@"; do
-    NAME=`basename "$FILE" .zip`
-    fusermount -u $tmpdir/$NAME
-    rmdir $tmpdir/$NAME
-done
-
-rmdir $tmpdir
