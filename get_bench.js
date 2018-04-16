@@ -732,7 +732,7 @@ function rescue_selector(sel) {
 function dump_length(val, features) {
     if (val.match(/%$/)) {
         val = "(% " + val2pct(val, features) + ")";
-    } else if (val.match(/e[mx]$/)) {
+    } else if (val.match(/[0-9]e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
     } else {
         val = "(px " + f2r(val2px(val, features)) + ")";
