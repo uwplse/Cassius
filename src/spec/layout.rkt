@@ -502,10 +502,10 @@
                 (or (is-replaced (box-elt b))
                     (not (is-height/auto (style.height (computed-style (box-elt b))))))])
        (=> top? (= (top-outer b) (+ (top-padding pp) temp-top)))
-       (=> height? (= (h b) temp-height))
+       (=> height? (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b)) temp-height))
        (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-roots b)))
        (=> (and (not height?) (not (and top? bottom?)))
-           (= (h b) (auto-height-for-flow-roots b)))
+           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b)) (auto-height-for-flow-roots b)))
        (=> (and bottom? (not (and top? height?)))
            (= (bottom-outer b) (- (bottom-padding pp) temp-bottom)))
 
@@ -550,9 +550,10 @@
              (= (mr b) (margin-min-px (style.margin-right r) b))))
 
         (=> left? (= (left-outer b) (+ (left-padding pp) temp-left)))
-        (=> width? (and (= (w b) temp-width) (not (w-from-stfwidth b))))
+        (=> width? (and (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b)) temp-width)
+                        (not (w-from-stfwidth b))))
         (=> (and (not width?) (not (and left? right?)))
-            (and (= (w b) (usable-stfwidth b))
+            (and (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b)) (usable-stfwidth b))
                  (w-from-stfwidth b)))
         (=> (and (not left?) (not right?))
             (= (left-outer b) (left-padding p)))
@@ -695,16 +696,21 @@
        (width-set b)
        (ite (is-width/auto (style.width r))
             (ite (is-replaced e)
-                 (= (w b) (- (intrinsic-width e) (bl b) (br b) (pl b) (pr b)))
-                 (or (= (w b) (usable-stfwidth b)) (and (is-box (lbox b)) (uses-parent-w (lbox b)))))
+                 (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                    (- (intrinsic-width e) (bl b) (br b) (pl b) (pr b)))
+                 (or (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                        (usable-stfwidth b)) (and (is-box (lbox b)) (uses-parent-w (lbox b)))))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
                (min-max-width ,(get-px-or-% 'width '(w (pbflow b)) 'b) b)))
 
        (ite (is-height/auto (style.height r))
             (ite (is-replaced e)
-                 (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))
-                 (=> (width-set b) (= (h b) (auto-height-for-flow-roots b))))
+                 (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+                    (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))
+                 (=> (width-set b)
+                     (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+                        (auto-height-for-flow-roots b))))
             (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
@@ -834,10 +840,12 @@
 
        ,(smt-cond
          [(is-replaced e)
-          (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))]
+          (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+             (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))]
          [(is-display/inline-block (style.display r))
           (ite (is-height/auto (style.height r))
-               (= (h b) (auto-height-for-flow-roots b))
+               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+                  (auto-height-for-flow-roots b))
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
                   (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
          [else
@@ -845,10 +853,12 @@
 
        ,(smt-cond
          [(is-replaced e)
-          (= (w b) (- (intrinsic-width e) (bl b) (br b) (pl b) (pr b)))]
+          (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+             (- (intrinsic-width e) (bl b) (br b) (pl b) (pr b)))]
          [(is-display/inline-block (style.display r))
           (ite (is-width/auto (style.width r))
-               (= (w b) (usable-stfwidth b))
+               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
+                  (usable-stfwidth b))
                (= (ite (is-box-sizing/content-box (style.box-sizing r)) (w b) (box-width b))
                   (min-max-width ,(get-px-or-% 'width '(w p) 'b) b)))]
          [(is-box (fflow b))
