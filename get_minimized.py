@@ -43,7 +43,7 @@ def get_minimized(url, elts, name):
                 browser.execute_script('window.TAGLIST = [{}];'.format(",".join(elts)))
                 browser.execute_script(MINIMIZER)
                 browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
-                browser.execute_script(SCRIPT + "; cassius(LETTER)")
+                browser.execute_script(SCRIPT + "; page2text(LETTER)")
                 elt = browser.find_element_by_id("-x-cassius-output-block")
                 text = elt.text.encode("utf8")
                 fi.write(";; From {}\n\n{}\n\n".format(url, text))

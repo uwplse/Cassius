@@ -730,7 +730,10 @@ function rescue_selector(sel) {
 }
 
 function dump_length(val, features) {
-    if (val.match(/%$/)) {
+    if (val.match(/^calc\(/)) {
+        features["unit:calc"] = true;
+        val = 0;
+    } else if (val.match(/%$/)) {
         val = "(% " + val2pct(val, features) + ")";
     } else if (val.match(/[0-9]e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
