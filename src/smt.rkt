@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt")
-(provide define-constraints smt? smt-cond smt-let smt-not smt-and smt-or smt-replace smt-replace-terms)
+(provide define-constraints smt? smt-cond smt-let smt-let* smt-not smt-and smt-or smt-replace smt-replace-terms)
 
 (define smt? any/c)
 
@@ -21,6 +21,13 @@
 
 (define-syntax-rule (smt-let bindings constraints ...)
   `(let bindings (and constraints ...)))
+
+(define-syntax smt-let*
+  (syntax-rules ()
+    [(smt-let* () constraints ...)
+     '(and constraints ...)]
+    [(smt-let* ([a b] rest ...) constraints ...)
+     `(let ([a b]) ,(smt-let* (rest ...) constraints ...))]))
 
 (define (smt-not x)
   (match x

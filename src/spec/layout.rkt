@@ -491,16 +491,16 @@
 
   (define-fun positioned-vertical-layout ((b Box)) Bool
     ;; CSS 2.1 § 10.6.4
-    ,(smt-let ([r (computed-style (box-elt b))]
-               [pp (ite (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
-               [temp-top ,(get-px-or-% 'top '(height-padding (ppflow b)) 'b)]
-               [temp-bottom ,(get-px-or-% 'bottom '(height-padding (ppflow b)) 'b)]
-               [temp-height (min-max-height (ite (is-replaced (box-elt b)) (- (intrinsic-height (box-elt b)) (bt b) (bb b) (pt b) (pb b)) ,(get-px-or-% 'height '(height-padding (ppflow b)) 'b)) b)]
-               [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
-               [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
-               [height?
-                (or (is-replaced (box-elt b))
-                    (not (is-height/auto (style.height (computed-style (box-elt b))))))])
+    ,(smt-let* ([r (computed-style (box-elt b))]
+                [pp (ite (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
+                [temp-top ,(get-px-or-% 'top '(height-padding pp) 'b)]
+                [temp-bottom ,(get-px-or-% 'bottom '(height-padding pp) 'b)]
+                [temp-height (min-max-height (ite (is-replaced (box-elt b)) (- (intrinsic-height (box-elt b)) (bt b) (bb b) (pt b) (pb b)) ,(get-px-or-% 'height '(height-padding pp) 'b)) b)]
+                [top? (not (is-offset/auto (style.top (computed-style (box-elt b)))))]
+                [bottom? (not (is-offset/auto (style.bottom (computed-style (box-elt b)))))]
+                [height?
+                 (or (is-replaced (box-elt b))
+                     (not (is-height/auto (style.height (computed-style (box-elt b))))))])
        (=> top? (= (top-outer b) (+ (top-padding pp) temp-top)))
        (=> height? (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b)) temp-height))
        (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-roots b)))
@@ -531,15 +531,15 @@
 
 
   (define-fun positioned-horizontal-layout ((b Box)) Bool
-     ,(smt-let ([r (computed-style (box-elt b))]
-                [pp (ite (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
-                [p (pflow b)]
-                [temp-left ,(get-px-or-% 'left '(width-padding (ppflow b)) 'b)]
-                [temp-right ,(get-px-or-% 'right '(width-padding (ppflow b)) 'b)]
-                [temp-width (min-max-width (ite (is-replaced (box-elt b)) (- (intrinsic-width (box-elt b)) (bl b) (br b) (pl b) (pr b)) ,(get-px-or-% 'width '(width-padding (ppflow b)) 'b)) b)]
-                [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
-                [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
-                [width? (or (is-replaced (box-elt b)) (not (is-width/auto (style.width (computed-style (box-elt b))))))])
+     ,(smt-let* ([r (computed-style (box-elt b))]
+                 [pp (ite (is-position/fixed (style.position (computed-style (box-elt b)))) (rootbox b) (ppflow b))]
+                 [p (pflow b)]
+                 [temp-left ,(get-px-or-% 'left '(width-padding pp) 'b)]
+                 [temp-right ,(get-px-or-% 'right '(width-padding pp) 'b)]
+                 [temp-width (min-max-width (ite (is-replaced (box-elt b)) (- (intrinsic-width (box-elt b)) (bl b) (br b) (pl b) (pr b)) ,(get-px-or-% 'width '(width-padding pp) 'b)) b)]
+                 [left? (not (is-offset/auto (style.left (computed-style (box-elt b)))))]
+                 [right? (not (is-offset/auto (style.right (computed-style (box-elt b)))))]
+                 [width? (or (is-replaced (box-elt b)) (not (is-width/auto (style.width (computed-style (box-elt b))))))])
 
         (width-set b)
 
