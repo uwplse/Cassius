@@ -145,7 +145,7 @@
       (emit `(assert (= (specified-style ,(dump-elt elt)) ,style))))
     (for* ([(prop type default) (in-css-properties)])
       (define nonecond
-        (for/fold ([no-match-so-far 'true])
+        (for/fold ([no-match-so-far 'true]) ; SLOW LOOP
             ([rm ml]
              #:when (rule-allows-property? (rulematch-rule rm) prop)
              #:when (selector-matches? (car (rulematch-rule rm)) elt))
