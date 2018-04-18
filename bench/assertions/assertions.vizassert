@@ -3,7 +3,7 @@
 (define-test (text-size b)
   (=> (has-type b text) (has-contents b)
       (let ([eb (ancestor b (not (anonymous? ?)))])
-        (not (or (descends eb (class footer)) (descends eb (id footer)))))
+        (not (descends eb (class footer) (id footer))))
       (>= (height b) 13.5)))
 
 (define-test (interactive-onscreen b)
