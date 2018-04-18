@@ -178,7 +178,7 @@
 (define/contract (rule-matchlist rules elts)
   (-> (listof partial-rule?) (listof node?) (listof rulematch?))
   (define scores (rule-scores rules))
-  (define matches (for/list ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
+  (define matches (for/set ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
   (define presort
     (map cdr
          (reverse ; Reverse so that HIGHEST score comes first

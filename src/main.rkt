@@ -132,7 +132,7 @@
         (emit `(define-const ,propname ,type ,(dump-value type (car (dict-ref (filter list? props) prop)))))
         (emit `(define-const ,(sformat "~a?" propname) Bool true))])))
 
-  (define elt-classes
+  (define elt-classes ; Can replace `(map list elts)` below. Speeds up generating constraints, slows down solving them
     (group-by (λ (elt)
                 ;; The `node-parent` here is for inheritable properties
                 (cons (not (node-parent elt))
@@ -145,10 +145,10 @@
       (emit `(assert (= (specified-style ,(dump-elt elt)) ,style))))
     (for* ([(prop type default) (in-css-properties)])
       (define nonecond
-        (for/fold ([no-match-so-far 'true]) ; SLOW LOOP
+        (for/fold ([no-match-so-far 'true])
             ([rm ml]
-             #:when (rule-allows-property? (rulematch-rule rm) prop)
-             #:when (selector-matches? (car (rulematch-rule rm)) elt))
+             #:when (set-member? (rulematch-elts rm) elt)
+             #:when (rule-allows-property? (rulematch-rule rm) prop))
           (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
           (define propname? (sformat "value/~a/~a?" (rulematch-idx rm) prop))
 
