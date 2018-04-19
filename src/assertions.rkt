@@ -8,7 +8,7 @@
 (define helpers
   (hash
    'descends
-   (λ (b sel) `(!= (ancestor ,b (matches ? ,sel)) null))
+   (λ (b . sels) `(!= (ancestor ,b (matches ? ,@sels)) null))
    'is-interactive
    (λ (b) `(matches ,b (tag a) (tag input) (tag button)))
    'viewable
