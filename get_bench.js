@@ -730,10 +730,7 @@ function rescue_selector(sel) {
 }
 
 function dump_length(val, features) {
-    if (val.match(/^calc\(/)) {
-        features["unit:calc"] = true;
-        val = 0;
-    } else if (val.match(/%$/)) {
+    if (val.match(/%$/)) {
         val = "(% " + val2pct(val, features) + ")";
     } else if (val.match(/[0-9]e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
@@ -794,6 +791,9 @@ function dump_rule(sel, style, features, is_from_style, media) {
             val = dump_color(val, _features);
         } else if (sname === "font-family") {
             val = dump_string(val);
+        } else if (val.match(/^calc\(/)) {
+            features["unit:calc"] = true;
+            val = "0"
         } else if (val.match(/^[a-z]+$/)) {
             // skip
         } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
