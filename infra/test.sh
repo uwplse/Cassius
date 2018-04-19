@@ -70,7 +70,7 @@ done | xargs make -j$THREADS bench/fwt.rkt
 
 make FWT_PATH="$FWT_PATH" FLAGS="--verbose --threads $THREADS" \
      reports/fwt.html reports/vizassert.html reports/csswg.html reports/specific.html \
-     reports/modular.rkt #reports/minimized.html # Currently infinite loops
+     reports/modular.html #reports/minimized.html # Currently infinite loops
 
 mkdir -p reports/rkt/
 mkdir -p reports/json/
