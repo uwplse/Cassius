@@ -107,26 +107,38 @@
                        (box-collapsed-through (lflow b)))))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
-    (max (+
+    (max (-
+          (ite (is-elt (box-elt b)) ,(get-px-or-% 'min-width '(w (pflow b)) 'b) 0.0)
           (ite (and (is-elt (box-elt b))
                     (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
                (+ (bl b) (pl b) (pr b) (br b))
-               0.0)
-          (ite (is-elt (box-elt b)) ,(get-px-or-% 'min-width '(w (pflow b)) 'b) 0.0))
+               0.0))
          (ite (or (is-no-elt (box-elt b)) (is-max-width/none (style.max-width (computed-style (box-elt b)))))
               val
-              (min val ,(get-px-or-% 'max-width '(w (pflow b)) 'b)))))
+              (min val
+                   (-
+                    ,(get-px-or-% 'max-width '(w (pflow b)) 'b)
+                    (ite (and (is-elt (box-elt b))
+                              (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
+                         (+ (bl b) (pl b) (pr b) (br b))
+                         0.0))))))
 
   (define-fun min-max-height ((val Real) (b Box)) Real
-    (max (+
+    (max (-
+          (ite (is-elt (box-elt b))  ,(get-px-or-% 'min-height '(h (pflow b)) 'b) 0.0)
           (ite (and (is-elt (box-elt b))
                     (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
                (+ (bt b) (pt b) (pb b) (bb b))
-               0.0)
-          (ite (is-elt (box-elt b))  ,(get-px-or-% 'min-height '(h (pflow b)) 'b) 0.0))
+               0.0))
          (ite (or (is-no-elt (box-elt b)) (is-max-height/none (style.max-height (computed-style (box-elt b)))))
               val
-              (min val ,(get-px-or-% 'max-height '(h (pflow b)) 'b)))))
+              (min val
+                   (-
+                    ,(get-px-or-% 'max-height '(h (pflow b)) 'b)
+                    (ite (and (is-elt (box-elt b))
+                              (is-box-sizing/border-box (style.box-sizing (computed-style (box-elt b)))))
+                         (+ (bl b) (pl b) (pr b) (br b))
+                         0.0))))))
 
   (define-fun margin-min-px ((m Margin) (b Box)) Real
     ,(smt-cond
@@ -637,9 +649,9 @@
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
-       (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-          (ite (is-height/auto (style.height r))
-            (auto-height-for-flow-blocks b)
+       (ite (is-height/auto (style.height r))
+         (= (h b) (auto-height-for-flow-blocks b))
+         (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
             (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
        (= (mt b)
