@@ -17,19 +17,30 @@ import time
 
 STATISTICS=[]
 
-def run_accept(name, backtracked):
+def run_accept(name, backtracked, maxtime=600):
     print("Running Cassius:")
     start = time.time()
-    result = subprocess.check_output(["racket", "src/run.rkt", "minimize",
-                                      "reports/minimized/"+name+"-minimized.rkt",
-                                      "doc-1", "["+",".join(backtracked)+"]"])
+    process = subprocess.Popen(["racket", "src/run.rkt", "minimize",
+                                    "reports/minimized/"+name+"-minimized.rkt",
+                                    "doc-1", "["+",".join(backtracked)+"]"])
+    i = 0
+    while process.poll() == None:
+        if (i >= maxtime):
+            process.terminate()
+            return (1, [], -1)
+        time.sleep(5)
+        i += 5
+
+    result = process.communicate()
     end = time.time()
+
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
         sys.stdout.flush()
         lines = result.split()
         stats = json.loads(lines[1])
         STATISTICS.append((stats, end - start))
+        print(lines[2:])
         return (0, lines[2:], stats["total"])
     elif "Accepted" in result:
         print("Cassius accepted the minimized version, backtracking...")
@@ -62,6 +73,7 @@ if __name__ == "__main__":
     p.add_argument("name", type=str, help="File name under bench/.")
     p.add_argument("urls", metavar="URLs", type=str, help="URLs to dowload")
     p.add_argument("--website", dest="website", default="", type=str, help="File name under bench/.")
+    p.add_argument("--timeout", dest="timeout", default=600, type=int, help="Timeout for each running instance of Cassius/.")
     args = p.parse_args()
 
     iterations = 0
@@ -69,11 +81,11 @@ if __name__ == "__main__":
     backtracked = []
     start = time.time()
     get_minimized(args.urls, eliminated, args.name)
-    result, elts, initial = run_accept(args.name, backtracked)
+    result, elts, initial = run_accept(args.name, backtracked, maxtime=args.timeout)
     while result == 0:
         eliminated.extend(elts)
         get_minimized(args.urls, eliminated, args.name + "-" + str(iterations))
-        result, elts, _ = run_accept(args.name + "-" + str(iterations), backtracked)
+        result, elts, _ = run_accept(args.name + "-" + str(iterations), backtracked, maxtime=args.timeout)
         iterations += 1
 
         if result == 1:
