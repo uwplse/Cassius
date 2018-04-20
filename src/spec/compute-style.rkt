@@ -71,15 +71,12 @@
           (* 100
              (,(sformat "~a.em" type) (,(sformat "style.~a" prop) (specified-style ,elt))))
           (font-size.px (style.font-size (computed-style ,elt)))))
-        (ite (,(sformat "is-~a/rem" type) (,(sformat "style.~a" prop) (specified-style ,elt)))
-             (,(sformat "~a/px" type)
-              (%of
-               (* 100
-                  (,(sformat "~a.rem" type) (,(sformat "style.~a" prop) (specified-style ,elt))))
-               ,(fs-name)))
-             (,(sformat "style.~a" prop) (specified-style ,elt)))))
+        (,(sformat "style.~a" prop) (specified-style ,elt))))
 
 (define-constraints style-computation
+  (define-fun rem2px ((rem Real)) Real
+    (%of rem ,(fs-name)))
+
   (define-fun compute-style ((elt Element)) Bool
     (and
      ;,@(map (curryr not-inherited 'elt) (css-properties))
@@ -100,8 +97,6 @@
              (font-size/px (%of (font-size.% fs) pfs))]
             [(is-font-size/em fs)
              (font-size/px (%of (* 100 (font-size.em fs)) pfs))]
-            [(is-font-size/rem fs)
-             (font-size/px (%of (* 100 (font-size.rem fs)) ,(fs-name)))]
             [else
              fs])))
 

@@ -26,6 +26,7 @@
             (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
             (for ([(prop value) (in-dict props)])
               (match (car value)
+                [(list 'rem v) (sow (* 100 (z3->number v)))]
                 [(list 'em v) (sow (* 100 (z3->number v)))]
                 [(list '% v) (sow (z3->number v))]
                 [(? number? v) (sow (* v 100))]
