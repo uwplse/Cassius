@@ -119,6 +119,8 @@ function val2em(val, features) {
     var match;
     if (val.match(/^[-+0-9.e]+em$/)) {
         return +val.substr(0, val.length - 2);
+    } else if (val.match(/^[-+0-9.e]+rem$/)) {
+        return +val.substr(0, val.length - 3);
     } else if (val.match(/^-?[-+0-9.e]+ex$/)) {
         features["unit:ex"] = true;
         return +val.substr(0, val.length - 2) / 16 * 9;
@@ -734,6 +736,8 @@ function dump_length(val, features) {
         val = "(% " + val2pct(val, features) + ")";
     } else if (val.match(/[0-9]e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
+    } else if (val.match(/[0-9]rem$/)) {
+        val = "(rem " + val2em(val, features) + ")";
     } else {
         val = "(px " + f2r(val2px(val, features)) + ")";
     }
@@ -797,7 +801,12 @@ function dump_rule(sel, style, features, is_from_style, media) {
         } else if (val.match(/^[a-z]+$/)) {
             // skip
         } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
-            val = dump_length(val, _features);
+            try {
+                val = dump_length(val, _features);
+            } catch (e) {
+                console.warn(sel, e);
+                window.ERROR = e;
+            }
         }
         
         if (Props.indexOf(sname) !== -1) {
