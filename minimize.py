@@ -22,7 +22,7 @@ def run_accept(name, backtracked, maxtime=600):
     start = time.time()
     process = subprocess.Popen(["racket", "src/run.rkt", "minimize",
                                     "reports/minimized/"+name+"-minimized.rkt",
-                                    "doc-1", "["+",".join(backtracked)+"]"])
+                                    "doc-1", "["+",".join(backtracked)+"]"], stdout=subprocess.PIPE)
     i = 0
     while process.poll() == None:
         if (i >= maxtime):
@@ -31,7 +31,7 @@ def run_accept(name, backtracked, maxtime=600):
         time.sleep(5)
         i += 5
 
-    result = process.communicate()
+    result, _ = process.communicate()
     end = time.time()
 
     if "Rejected" in result:
@@ -40,7 +40,6 @@ def run_accept(name, backtracked, maxtime=600):
         lines = result.split()
         stats = json.loads(lines[1])
         STATISTICS.append((stats, end - start))
-        print(lines[2:])
         return (0, lines[2:], stats["total"])
     elif "Accepted" in result:
         print("Cassius accepted the minimized version, backtracking...")

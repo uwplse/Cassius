@@ -68,7 +68,8 @@
                                     (cons 'total total)
                                     (cons 'efficiency efficiency))))
        (newline)
-       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index)))))
+       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+       (newline))
      (unless to-remove
        (printf "Minimized\n")
        (define doms (map parse-dom (dict-ref problem ':documents)))
