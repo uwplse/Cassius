@@ -61,8 +61,8 @@
   (define data (curry dict-ref (extract-box z3-box)))
   (node-set! box ':x (+ (data 'x) (data 'xo)))
   (node-set! box ':y (+ (data 'y) (data 'yo)))
-  (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'br)))
-  (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'bb)))
+  (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'scroll-y) (data 'br)))
+  (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'scroll-x) (data 'bb)))
   (node-set! box ':fg (data 'fg-color))
   (node-set! box ':bg (data 'bg-color)))
 
@@ -223,6 +223,7 @@
     (define w (car (dom-context dom ':w #:default '(?))))
     (define h (car (dom-context dom ':h #:default '(?))))
     (define fs (car (dom-context dom ':fs #:default '(?))))
+    (define scrollw (car (dom-context dom ':scrollw #:default '(?))))
 
     (define (param var) (sformat "config/~a/~a" (name 'dom dom) var))
     (define (emit-const name type value)
@@ -238,10 +239,13 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
+    (emit-const (param 'scrollbar-width) 'Real fs)
     (fs-name (param 'font-size))
     (view-width-name (param 'w))
     (view-height-name (param 'h))
+    (scroll-width-name (param 'scrollbar-width))
     (dict-set! params ':fs (param 'font-size))
+    (dict-set! params ':scrollbar-width (param 'scrollbar-width))
     (dict-set! params ':w (param 'w))
     (dict-set! params ':h (param 'h))))
 

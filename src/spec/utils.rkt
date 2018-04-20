@@ -22,6 +22,7 @@
                 (mtp-up Real) (mtn-up Real) (mb-clear Bool)
                 (pt Real) (pr Real) (pb Real) (pl Real) ; padding
                 (bt Real) (br Real) (bb Real) (bl Real) ; border
+                (scroll-x Real) (scroll-y Real)
                 (stfwidth Real) (stfmax Real) (float-stfmax Real) (w-from-stfwidth Bool)
                 (width-set Bool) ; used for dependency creation only
                 (text-indent Real)
@@ -66,8 +67,8 @@
   (define-fun right-content ((box Box)) Real (+ (x box) (bl box) (pl box) (w box)))
   (define-fun right-padding ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box)))
   (define-fun box-right ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box)))
-  (define-fun right-border ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box)))
-  (define-fun right-outer ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (br box) (mr box)))
+  (define-fun right-border ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (scroll-y box) (br box)))
+  (define-fun right-outer ((box Box)) Real (+ (x box) (bl box) (pl box) (w box) (pr box) (scroll-y box) (br box) (mr box)))
 
   (define-fun top-outer ((box Box)) Real (- (y box) (mtn box) (mtp box)))
   (define-fun top-border ((box Box)) Real (y box))
@@ -78,22 +79,22 @@
   (define-fun bottom-content ((box Box)) Real (+ (y box) (bt box) (pt box) (h box)))
   (define-fun bottom-padding ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box)))
   (define-fun box-bottom ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box)))
-  (define-fun bottom-border ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box)))
-  (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
+  (define-fun bottom-border ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (scroll-x box) (bb box)))
+  (define-fun bottom-outer ((box Box)) Real (+ (y box) (bt box) (pt box) (h box) (pb box) (scroll-x box) (bb box) (mbp box) (mbn box)))
 
   ;; Box position and size helpers
   (define-fun box-x ((box Box)) Real (+ (x box) (xo box)))
   (define-fun box-y ((box Box)) Real (+ (y box) (yo box)))
-  (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (br box)))
-  (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
+  (define-fun box-width ((box Box)) Real  (+ (bl box) (pl box) (w box) (pr box) (scroll-y box) (br box)))
+  (define-fun box-height ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (scroll-x box) (bb box)))
   
   (define-fun width-padding ((box Box)) Real (+ (pl box) (w box) (pr box)))
-  (define-fun width-border ((box Box)) Real (+ (bl box) (pl box) (w box) (pr box) (br box)))
-  (define-fun width-outer ((box Box)) Real (+ (ml box) (bl box) (pl box) (w box) (pr box) (br box) (mr box)))
+  (define-fun width-border ((box Box)) Real (+ (bl box) (pl box) (w box) (pr box) (scroll-y box) (br box)))
+  (define-fun width-outer ((box Box)) Real (+ (ml box) (bl box) (pl box) (w box) (pr box) (scroll-y box) (br box) (mr box)))
   (define-fun height-content ((box Box)) Real (h box))
   (define-fun height-padding ((box Box)) Real (+ (pt box) (h box) (pb box)))
-  (define-fun height-border ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (bb box)))
-  (define-fun height-outer ((box Box)) Real (+ (mtp box) (mtn box) (bt box) (pt box) (h box) (pb box) (bb box) (mbp box) (mbn box)))
+  (define-fun height-border ((box Box)) Real (+ (bt box) (pt box) (h box) (pb box) (scroll-x box) (bb box)))
+  (define-fun height-outer ((box Box)) Real (+ (mtp box) (mtn box) (bt box) (pt box) (h box) (pb box) (scroll-x box) (bb box) (mbp box) (mbn box)))
 
   ;; Box predicate helpers
   (define-fun horizontally-adjacent ((box1 Box) (box2 Box)) Bool

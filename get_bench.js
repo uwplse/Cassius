@@ -627,11 +627,7 @@ function get_boxes(features) {
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
     view.children = make_boxes(document.documentElement, style, features);
-    if (window.scrollMaxY !== 0) {
-        view.props.w -= compute_scrollbar_width();
-        features["scrollbar"] = true;
-    }
-    return {view: view, style: style};
+    return {view: view, style: style, scroll: compute_scrollbar_width()};
 }
 
 function dump_selector(sel) {
@@ -1178,7 +1174,7 @@ function page2text(name) {
 	text += dump_fonts(name);
 
     text += "\n\n(define-layout (" + name
-    var props = {browser: "firefox", matched: "true", w: page.props.w, h: page.props.h, fs: 16 };
+    var props = {browser: "firefox", matched: "true", w: page.props.w, h: page.props.h, fs: 16, scrollw: out.scroll };
     for (var prop in props) {
         if (typeof props[prop] !== "undefined") {
             text += " :" + prop + " " + props[prop];

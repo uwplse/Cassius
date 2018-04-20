@@ -1,9 +1,10 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "css-properties.rkt")
-(provide layout-definitions view-width-name view-height-name assertion-helpers)
+(provide layout-definitions view-width-name view-height-name assertion-helpers scroll-width-name)
 
 (define view-width-name (make-parameter false))
 (define view-height-name (make-parameter false))
+(define scroll-width-name (make-parameter false))
 
 (define (get-px-or-% prop wrt b)
   (define r `(computed-style (box-elt ,b)))
@@ -1022,4 +1023,18 @@
        (not (w-from-stfwidth b))
        (= (y b) (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
-       (= (ez.lookback b) true))))
+       (= (ez.lookback b) true)))
+
+  (assert
+   (forall ((b Box))
+           (= (scroll-x b)
+              (ite (and (is-elt (box-elt b)) (is-overflow/scroll (style.overflow-x (computed-style (box-elt b)))))
+                   ,(scroll-width-name)
+                   0))))
+
+  (assert
+   (forall ((b Box))
+           (= (scroll-y b)
+              (ite (and (is-elt (box-elt b)) (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
+                   ,(scroll-width-name)
+                   0)))))
