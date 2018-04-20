@@ -23,8 +23,7 @@ deploy:
 
 nightly:
 	bash infra/test.sh
-	racket src/run.rkt merify bench/modular-yoga.rkt yoga 2> yoga.log >&2
-	$(MAKE) index
+	$(MAKE) publish
 
 # CSSWG test suite
 
@@ -55,8 +54,7 @@ bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
 
 reports/minimized.html reports/minimized/: reports/fwt.json
 	mkdir -p reports/minimized
-	xvfb-run -a -s '-screen 0 1920x1080x24' \
-        <reports/fwt.json python2 minimize-all.py
+	xvfb-run -a -s '-screen 0 1920x1080x24' <reports/fwt.json python2 minimize-all.py
 
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
@@ -73,3 +71,6 @@ reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
 
 reports/specific.html reports/specific.json: bench/fwt.rkt bench/assertions/specific.sexp
 	racket src/report.rkt specific-assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.rkt bench/assertions/specific.sexp
+
+reports/modular.html reports/modular.json: bench/modular-yoga.rkt
+	racket src/report.rkt merify $(FLAGS) --show-all --timeout 600 -o reports/modular $^

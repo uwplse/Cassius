@@ -163,22 +163,21 @@
 (define (split-rule rule)
   (match-define (list (? selector? selector) (? attribute? attrs) ...
                       (list (? property? properties) values (? attribute? propattrs) ...) ...) rule)
+  (define-values (important unimportant)
+    (partition (λ (x) (set-member? (third x) ':important))
+               (map list properties values propattrs)))
   (list
-   `(,selector ,@attrs ,@(for/list ([prop properties] [val values] [attrs propattrs]
-                                    #:when (set-member? attrs ':important))
-                           (list* prop val attrs)))
-   `(,selector ,@attrs ,@(for/list ([prop properties] [val values] [attrs propattrs]
-                                    #:unless (set-member? attrs ':important))
-                           (list* prop val attrs)))))
+   (if (null? important) #f `(,selector ,@attrs ,@important))
+   (if (null? unimportant) #f `(,selector ,@attrs ,@unimportant))))
 
 (define (split-rm rm)
   (for/list ([r* (split-rule (rulematch-rule rm))])
-    (struct-copy rulematch rm [rule r*])))
+    (and r* (struct-copy rulematch rm [rule r*]))))
 
 (define/contract (rule-matchlist rules elts)
   (-> (listof partial-rule?) (listof node?) (listof rulematch?))
   (define scores (rule-scores rules))
-  (define matches (for/list ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
+  (define matches (for/list ([rule rules]) (for/set ([elt (in-list elts)] #:when (selector-matches? (car rule) elt)) elt)))
   (define presort
     (map cdr
          (reverse ; Reverse so that HIGHEST score comes first
@@ -187,7 +186,7 @@
              (cons s (rulematch r m i)))
            score<? #:key car))))
   (define split (map split-rm presort))
-  (append (map first split) (map second split)))
+  (filter identity (append (map first split) (map second split))))
 
 (define/contract (matchlist-find matchlist elt prop)
   (-> (listof rulematch?) node? property? (or/c rulematch? #f))

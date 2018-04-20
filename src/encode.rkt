@@ -59,6 +59,7 @@
     [0 (list (sformat "~a/px" prefix) 0)]
     [(? number?) (list (sformat "~a/num" prefix) (number->z3 value))]
     [(list 'em n) (list (sformat "~a/em" prefix) (number->z3 n))]
+    [(list 'rem n) (list (sformat "~a/rem" prefix) (number->z3 n))]
     [(list 'px n) (list (sformat "~a/px" prefix) (number->z3 n))]
     [(list '% n) (list (sformat "~a/%" prefix) (number->z3 n))]
     [(list 'rgb r g b) `(color/rgb (color ,r ,g ,b ,(gamma-correction r) ,(gamma-correction g) ,(gamma-correction b)))]

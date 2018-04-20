@@ -25,37 +25,37 @@
     (hash-set! css-property-hash 'prop (cons 'name 'default)) ...))
 
 ;; CSS datatypes and the properties that use them
-(define-css-type (Width auto (px Real) (% Real) (em Real))
+(define-css-type (Width auto (px Real) (% Real) (em Real) (rem Real))
   [width auto])
 
-(define-css-type (Min-Width (px Real) (% Real) (em Real))
+(define-css-type (Min-Width (px Real) (% Real) (em Real) (rem Real))
   [min-width (px 0)])
 
-(define-css-type (Max-Width none (px Real) (% Real) (em Real))
+(define-css-type (Max-Width none (px Real) (% Real) (em Real) (rem Real))
   [max-width none])
 
-(define-css-type (Height auto (px Real) (% Real) (em Real))
+(define-css-type (Height auto (px Real) (% Real) (em Real) (rem Real))
   [height auto])
 
-(define-css-type (Min-Height (px Real) (% Real) (em Real))
+(define-css-type (Min-Height (px Real) (% Real) (em Real) (rem Real))
   [min-height (px 0)])
 
-(define-css-type (Max-Height none (px Real) (% Real) (em Real))
+(define-css-type (Max-Height none (px Real) (% Real) (em Real) (rem Real))
   [max-height none])
 
-(define-css-type (Margin auto (px Real) (% Real) (em Real))
+(define-css-type (Margin auto (px Real) (% Real) (em Real) (rem Real))
   [margin-top auto]
   [margin-right (px 0)]
   [margin-bottom auto]
   [margin-left (px 0)])
 
-(define-css-type (Padding (px Real) (% Real) (em Real))
+(define-css-type (Padding (px Real) (% Real) (em Real) (rem Real))
   [padding-top (px 0)]
   [padding-right (px 0)]
   [padding-bottom (px 0)]
   [padding-left (px 0)])
 
-(define-css-type (Border (px Real) (% Real) (em Real))
+(define-css-type (Border (px Real) (% Real) (em Real) (rem Real))
   [border-top-width medium]
   [border-right-width medium]
   [border-bottom-width medium]
@@ -80,7 +80,7 @@
 (define-css-type (Position static relative absolute fixed)
   [position static])
 
-(define-css-type (Offset (px Real) (% Real) (em Real) auto)
+(define-css-type (Offset (px Real) (% Real) (em Real) (rem Real) auto)
   [top auto]
   [right auto]
   [bottom auto]
@@ -89,10 +89,10 @@
 (define-css-type (Box-Sizing border-box content-box)
   [box-sizing content-box])
 
-(define-css-type (Display block inline inline-block none list-item inline-table table table-row table-column table-cell table-caption table-column-group table-row-group table-header-group table-footer-group)
+(define-css-type (Display block inline inline-block none list-item inline-table table table-row table-column table-cell table-caption table-column-group table-row-group table-header-group table-footer-group flex)
   [display inline])
 
-(define-css-type (Font-Size (px Real) (% Real) (em Real))
+(define-css-type (Font-Size (px Real) (% Real) (em Real) (rem Real))
   [font-size (em 1)])
 
 ; Font Family is a string so should never make it to Z3
@@ -105,7 +105,7 @@
 (define-css-type (Font-Style normal italic oblique initial)
   [font-style normal])
 
-(define-css-type (Text-Indent (px Real) (% Real) (em Real))
+(define-css-type (Text-Indent (px Real) (% Real) (em Real) (rem Real))
   [text-indent (px 0)])
 
 (define-css-type (Clear none left right both)
@@ -115,7 +115,7 @@
   [color (rgb 0 0 0)]
   [background-color transparent])
 
-(define-css-type (Line-Height (px Real) (% Real) (em Real) (num Real) normal)
+(define-css-type (Line-Height (px Real) (% Real) (em Real) (rem Real) (num Real) normal)
   [line-height normal])
 
 (define inheritable-properties '(text-align text-indent color background-color line-height font-weight font-style font-family))

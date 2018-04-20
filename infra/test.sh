@@ -68,8 +68,9 @@ do
     echo bench/css/$CSSWG.rkt
 done | xargs make -j$THREADS bench/fwt.rkt
 
-make FWT_PATH="$FWT_PATH" FLAGS="--verbose --threads $THREADS" reports/fwt.html reports/vizassert.html reports/csswg.html reports/specific.html
-make FWT_PATH="$FWT_PATH" reports/minimized.html
+make FWT_PATH="$FWT_PATH" FLAGS="--verbose --threads $THREADS" \
+     reports/fwt.html reports/vizassert.html reports/csswg.html reports/specific.html \
+     reports/modular.html #reports/minimized.html # Currently infinite loops
 
 mkdir -p reports/rkt/
 mkdir -p reports/json/
