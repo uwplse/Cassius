@@ -856,10 +856,9 @@
           (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
              (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))]
          [(is-display/inline-block (style.display r))
-          (ite (is-height/auto (style.height r))
-               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
-                  (auto-height-for-flow-roots b))
-               (= (ite (is-box-sizing/content-box (style.box-sizing r)) (h b) (box-height b))
+          (= (h b)
+             (ite (is-height/auto (style.height r))
+                  (auto-height-for-flow-roots b)
                   (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
          [else
           (= (h b) (font.selection-height metrics))])
