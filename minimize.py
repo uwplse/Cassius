@@ -27,6 +27,8 @@ def run_accept(name, backtracked, maxtime=600):
     while process.poll() == None:
         if (i >= maxtime):
             process.terminate()
+            print("Cassius timed out, backtracking...")
+            sys.stdout.flush()
             return (1, [], -1)
         time.sleep(5)
         i += 5
