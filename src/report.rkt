@@ -287,19 +287,24 @@
   (call-with-output-to
    outname #:extension "json" #:exists 'replace
    write-json
-   (for/list ([res results])
-     (match-define (result file problem subproblem test section status description features time url) res)
-     (make-hash
-      `((file . ,(~a file))
-        (problem . ,(~a problem))
-        (subproblem . ,(and subproblem (~a subproblem)))
-        (test . ,(~a test))
-        (section . ,section)
-        (status . ,(~a status))
-        (description . ,description)
-        (features . ,(map ~a features))
-        (time . ,time)
-        (url . ,url))))))
+   (make-hash
+    `((branch . ,*branch*)
+      (commit . ,*commit*)
+      (version . ,*version*)
+      (problems
+       . ,(for/list ([res results])
+            (match-define (result file problem subproblem test section status description features time url) res)
+            (make-hash
+             `((file . ,(~a file))
+               (problem . ,(~a problem))
+               (subproblem . ,(and subproblem (~a subproblem)))
+               (test . ,(~a test))
+               (section . ,section)
+               (status . ,(~a status))
+               (description . ,description)
+               (features . ,(map ~a features))
+               (time . ,time)
+               (url . ,url)))))))))
 
 (define (status-symbol status)
   (match status
@@ -438,7 +443,7 @@
   (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
 
 (define (read-index iname)
-  (for*/hash ([sec (call-with-input-file iname read-json)]
+  (for*/hash ([sec (dict-ref (call-with-input-file iname read-json) 'problems)]
               [(k v) (in-hash sec)])
     (define name
       (if (string=? (last (string-split (~a k) "-")) (substring v 1))

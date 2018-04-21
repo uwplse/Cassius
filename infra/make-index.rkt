@@ -66,7 +66,10 @@
   data)
 
 (define (summarize-data time branch rel-path data)
-  (define statuses (for/list ([problem data]) (dict-ref problem 'status)))
+  (define problems (if (list? data) data (dict-ref data 'problems)))
+  (when (hash? data) (set! branch (dict-ref data 'branch)))
+  (define statuses
+    (for/list ([problem problems]) (dict-ref problem 'status)))
   (define status-counts
     (make-hash
      (for/list ([group (group-by identity statuses)])
