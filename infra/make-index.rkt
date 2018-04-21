@@ -75,7 +75,7 @@
      (for/list ([group (group-by identity statuses)])
        (cons (string->symbol (car group)) (length group)))))
   (define runtime
-    (apply + (for/list ([problem data]) (dict-ref problem 'time 0))))
+    (apply + (for/list ([problem problems]) (dict-ref problem 'time 0))))
   (when (> runtime 0)
     (dict-set! status-counts ':runtime runtime))
   (dict-set! status-counts ':time (date->seconds time))
