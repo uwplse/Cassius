@@ -24,7 +24,10 @@ def run_accept(name, backtracked, maxtime=600):
                                     "reports/minimized/"+name+"-minimized.rkt",
                                     "doc-1", "["+",".join(backtracked)+"]"], stdout=subprocess.PIPE)
     i = 0
-    while process.poll() == None:
+
+    result, _ = process.communicate()
+    while result == None:
+        result, _ = process.communicate()
         if (i >= maxtime):
             process.terminate()
             print("Cassius timed out, backtracking...")
@@ -33,7 +36,6 @@ def run_accept(name, backtracked, maxtime=600):
         time.sleep(5)
         i += 5
 
-    result, _ = process.communicate()
     end = time.time()
 
     if "Rejected" in result:
