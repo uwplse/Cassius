@@ -19,7 +19,7 @@
   `(and ,(? selector?) ...)
   `(desc ,(? selector?) ...)
   `(child ,(? selector?) ...)
-  `(pseudo-class ,(or 'first-child 'last-child 'hover))
+  `(pseudo-class ,(or 'first-child 'last-child 'hover 'last-of-type 'first-of-type))
   `(type ,(? symbol?))
   `(media ,(? media-query?) ,(? selector?))
   `(fake ,(? string?) ,(? selector?) ...))
@@ -46,6 +46,20 @@
      (equal? (slower (node-type elt)) (slower tag))]
     [`(pseudo-class first-child) (not (node-prev elt))]
     [`(pseudo-class last-child) (not (node-next elt))]
+    [`(pseudo-class first-of-type)
+     (let loop ([sib (node-prev elt)])
+       (cond
+        [(not sib) true]
+        [(equal? (slower (node-type sib)) (slower (node-type elt)))
+         false]
+        [else (loop (node-prev sib))]))]
+    [`(pseudo-class last-of-type)
+     (let loop ([sib (node-next elt)])
+       (cond
+        [(not sib) true]
+        [(equal? (slower (node-type sib)) (slower (node-type elt)))
+         false]
+        [else (loop (node-next sib))]))]
     [`(pseudo-class hover) false] ; We assume not hovering
     [`(type ,type)
      (and (node-get elt ':type) (equal? (node-get elt ':type) type))]

@@ -688,7 +688,7 @@ function dump_primitive_selector(sel) {
     if (match = sel.match(/^\.([\w-]+)$/)) {
         return "(class " + match[1] + ")";
     } else if (match = sel.match(/^:([\w-]+)$/)) {
-        if (["first-child", "last-child", "hover"].indexOf(match[1]) !== -1) {
+        if (["first-child", "last-child", "hover", "last-of-type", "first-of-type"].indexOf(match[1]) !== -1) {
             return "(pseudo-class " + match[1] + ")";
         } else {
             return false;
