@@ -10,15 +10,18 @@
       (if (set-member? (first tree) ':spec)
           (let* ([component (parse-tree (cons (first tree) children*))]
                  [spec (node-get component ':spec)]
+                 [admit? (node-get* component ':admit #:default false)]
                  [ctx (dom-properties doc)])
             (node-remove! component ':spec)
+            (node-remove! component ':admit)
             (define props
               (if (eq? tree (dom-boxes doc)) ctx (dict-set ctx ':component '())))
-            (sow (cons (struct-copy dom doc
-                                    [name (node-get component ':name #:default false)]
-                                    [boxes (unparse-tree component)]
-                                    [properties props])
-                       spec))
+            (unless admit?
+                (sow (cons (struct-copy dom doc
+                                        [name (node-get component ':name #:default false)]
+                                        [boxes (unparse-tree component)]
+                                        [properties props])
+                           spec)))
             (unless (eq? tree (dom-boxes doc))
               (node-add! component ':component 'true))
             (node-add! component ':spec spec)
