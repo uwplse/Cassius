@@ -17,13 +17,27 @@ import time
 
 STATISTICS=[]
 
-def run_accept(name, backtracked):
+def run_accept(name, backtracked, maxtime=600):
     print("Running Cassius:")
     start = time.time()
-    result = subprocess.check_output(["racket", "src/run.rkt", "minimize",
-                                      "reports/minimized/"+name+"-minimized.rkt",
-                                      "doc-1", "["+",".join(backtracked)+"]"], stderr=subprocess.STDOUT)
+    process = subprocess.Popen(["racket", "src/run.rkt", "minimize",
+                                    "reports/minimized/"+name+"-minimized.rkt",
+                                    "doc-1", "["+",".join(backtracked)+"]"], stdout=subprocess.PIPE)
+    i = 0
+
+    result, _ = process.communicate()
+    while result == None:
+        result, _ = process.communicate()
+        if (i >= maxtime):
+            process.terminate()
+            print("Cassius timed out, backtracking...")
+            sys.stdout.flush()
+            return (1, [], -1)
+        time.sleep(5)
+        i += 5
+
     end = time.time()
+
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
         sys.stdout.flush()
@@ -62,6 +76,7 @@ if __name__ == "__main__":
     p.add_argument("name", type=str, help="File name under bench/.")
     p.add_argument("urls", metavar="URLs", type=str, help="URLs to dowload")
     p.add_argument("--website", dest="website", default="", type=str, help="File name under bench/.")
+    p.add_argument("--timeout", dest="timeout", default=600, type=int, help="Timeout for each running instance of Cassius/.")
     args = p.parse_args()
 
     iterations = 0
@@ -69,11 +84,11 @@ if __name__ == "__main__":
     backtracked = []
     start = time.time()
     get_minimized(args.urls, eliminated, args.name)
-    result, elts, initial = run_accept(args.name, backtracked)
+    result, elts, initial = run_accept(args.name, backtracked, maxtime=args.timeout)
     while result == 0:
         eliminated.extend(elts)
         get_minimized(args.urls, eliminated, args.name + "-" + str(iterations))
-        result, elts, _ = run_accept(args.name + "-" + str(iterations), backtracked)
+        result, elts, _ = run_accept(args.name + "-" + str(iterations), backtracked, maxtime=args.timeout)
         iterations += 1
 
         if result == 1:
@@ -82,16 +97,6 @@ if __name__ == "__main__":
             result = 0
 
     total_time = time.time() - start
-
-    '''
-    if result == 1:
-        if len(eliminated) > 0:
-            eliminated.pop()
-            STATISTICS.pop()
-            result = 2
-        else:
-            write_output(args.website, args.name, initial, initial, total_time)
-    '''
 
     if result == 2:
         i = 0
