@@ -1,5 +1,5 @@
 #lang racket
-(require plot/no-gui "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
+(require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
 (provide query solve (struct-out success) (struct-out failure))
@@ -7,7 +7,7 @@
 (struct success (stylesheet elements doms))
 (struct failure (stylesheet trees))
 
-(define (constraints log-phase sheets docs fonts [tests #f])
+(define (constraints log-phase sheets docs fonts [tests #f] #:render? [render? #t])
   (define doms (map parse-dom docs))
   (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
              (length doms)
@@ -26,6 +26,7 @@
             (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
             (for ([(prop value) (in-dict props)])
               (match (car value)
+                [(list 'rem v) (sow (* 100 (z3->number v)))]
                 [(list 'em v) (sow (* 100 (z3->number v)))]
                 [(list '% v) (sow (z3->number v))]
                 [(? number? v) (sow (* v 100))]
@@ -46,14 +47,20 @@
   (define tests*
     (for/list ([test (or tests '())])
       (define ctx
-        (for/hash ([var (cadr test)])
-          (values var (sformat "cex~a" (name 'cex (cons var test))))))
+        (hash-union
+         (for/hash ([var (cadr test)])
+           (values var (sformat "cex~a" (name 'cex (cons var test)))))
+         (for*/hash ([dom doms] [node (in-boxes dom)] #:when (node-get node ':name #:default false))
+           (values (node-get node ':name) (dump-box node)))))
       (compile-assertion doms (caddr test) ctx)))
 
-  (define query (all-constraints (cons browser-style sheets) matchers doms fonts))
+  (define query (all-constraints (cons browser-style sheets) matchers doms fonts #:render? render?))
 
   (define ms (model-sufficiency doms))
-  (when tests (set! query (add-test doms query (cons `(forall () ,ms) tests*))))
+  (when tests (set! query (add-test doms (append query (auxiliary-definitions))
+                                    (if render?
+                                        (cons `(forall () ,ms) tests*)
+                                        tests*))))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
 
@@ -70,10 +77,10 @@
   (define-values (doms query) (constraints (make-log) sheets docs fonts tests))
   (append query (list cassius-check-sat)))
 
-(define (solve sheets docs fonts [tests #f])
+(define (solve sheets docs fonts [tests #f] #:render? [render? #t])
   (define log-phase (make-log))
   (reset-names!)
-  (define-values (doms query) (constraints log-phase sheets docs tests fonts))
+  (define-values (doms query) (constraints log-phase sheets docs tests fonts #:render? render?))
 
   (define out
     (let ([z3 (z3-process)])
@@ -87,7 +94,7 @@
     [(list 'model m)
        (log-phase "Found model with ~a variables" (dict-count m))
      (cond
-      [(extract-model-sufficiency m trees)
+      [(or (not render?) (extract-model-sufficiency m trees))
        (unless (extract-model-lookback m trees)
          (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)

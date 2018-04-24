@@ -74,6 +74,9 @@
         (,(sformat "style.~a" prop) (specified-style ,elt))))
 
 (define-constraints style-computation
+  (define-fun rem2px ((rem Real)) Real
+    (%of rem ,(fs-name)))
+
   (define-fun compute-style ((elt Element)) Bool
     (and
      ;,@(map (curryr not-inherited 'elt) (css-properties))

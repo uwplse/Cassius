@@ -119,6 +119,8 @@ function val2em(val, features) {
     var match;
     if (val.match(/^[-+0-9.e]+em$/)) {
         return +val.substr(0, val.length - 2);
+    } else if (val.match(/^[-+0-9.e]+rem$/)) {
+        return +val.substr(0, val.length - 3);
     } else if (val.match(/^-?[-+0-9.e]+ex$/)) {
         features["unit:ex"] = true;
         return +val.substr(0, val.length - 2) / 16 * 9;
@@ -625,11 +627,7 @@ function get_boxes(features) {
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
     var style = {};
     view.children = make_boxes(document.documentElement, style, features);
-    if (window.scrollMaxY !== 0) {
-        view.props.w -= compute_scrollbar_width();
-        features["scrollbar"] = true;
-    }
-    return {view: view, style: style};
+    return {view: view, style: style, scroll: compute_scrollbar_width()};
 }
 
 function dump_selector(sel) {
@@ -690,7 +688,7 @@ function dump_primitive_selector(sel) {
     if (match = sel.match(/^\.([\w-]+)$/)) {
         return "(class " + match[1] + ")";
     } else if (match = sel.match(/^:([\w-]+)$/)) {
-        if (["first-child", "last-child", "hover"].indexOf(match[1]) !== -1) {
+        if (["first-child", "last-child", "hover", "last-of-type", "first-of-type"].indexOf(match[1]) !== -1) {
             return "(pseudo-class " + match[1] + ")";
         } else {
             return false;
@@ -732,8 +730,10 @@ function rescue_selector(sel) {
 function dump_length(val, features) {
     if (val.match(/%$/)) {
         val = "(% " + val2pct(val, features) + ")";
-    } else if (val.match(/e[mx]$/)) {
+    } else if (val.match(/[0-9]e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
+    } else if (val.match(/[0-9]rem$/)) {
+        val = "(rem " + val2em(val, features) + ")";
     } else {
         val = "(px " + f2r(val2px(val, features)) + ")";
     }
@@ -791,10 +791,18 @@ function dump_rule(sel, style, features, is_from_style, media) {
             val = dump_color(val, _features);
         } else if (sname === "font-family") {
             val = dump_string(val);
+        } else if (val.match(/^calc\(/)) {
+            features["unit:calc"] = true;
+            val = "0"
         } else if (val.match(/^[a-z]+$/)) {
             // skip
         } else if (val.match(/^([-+0-9.e]+)([a-z%]+)$/)) {
-            val = dump_length(val, _features);
+            try {
+                val = dump_length(val, _features);
+            } catch (e) {
+                console.warn(sel, e);
+                window.ERROR = e;
+            }
         }
         
         if (Props.indexOf(sname) !== -1) {
@@ -931,6 +939,8 @@ function dump_stylesheet(ss, features, media) {
                 text += dump_rule(r.selectorText, r.style, features, false, media);
             } else if (  r.type === CSSRule.MOZ_KEYFRAMES_RULE
                      || r.type === CSSRule.MOZ_KEYFRAME_RULE
+                     || r.type === CSSRule.KEYFRAMES_RULE
+                     || r.type === CSSRule.KEYFRAME_RULE
                      || r.type === CSSRule.FONT_FACE_RULE) {
                 // Don't need these...
             } else {
@@ -1136,7 +1146,7 @@ function annotate_box_elt(box) {
     }
 }
 
-function page2cassius(name) {
+function page2text(name) {
     var features = {};
 
     var text = "";
@@ -1164,7 +1174,7 @@ function page2cassius(name) {
 	text += dump_fonts(name);
 
     text += "\n\n(define-layout (" + name
-    var props = {browser: "firefox", matched: "true", w: page.props.w, h: page.props.h, fs: 16 };
+    var props = {browser: "firefox", matched: "true", w: page.props.w, h: page.props.h, fs: 16, scrollw: out.scroll };
     for (var prop in props) {
         if (typeof props[prop] !== "undefined") {
             text += " :" + prop + " " + props[prop];
@@ -1193,10 +1203,10 @@ function page2cassius(name) {
     return text;
 }
 
-function cassius(name) {
+function select_page_text(name) {
     var pre = document.createElement("pre");
     pre.id = "-x-cassius-output-block";
-    pre.innerText = page2cassius(name);
+    pre.innerText = page2text(name);
     with (pre.style) {
         background = "white", color = "black";
         position = "absolute", top = "0", left = "0";

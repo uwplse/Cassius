@@ -19,7 +19,7 @@
   `(and ,(? selector?) ...)
   `(desc ,(? selector?) ...)
   `(child ,(? selector?) ...)
-  `(pseudo-class ,(or 'first-child 'last-child 'hover))
+  `(pseudo-class ,(or 'first-child 'last-child 'hover 'last-of-type 'first-of-type))
   `(type ,(? symbol?))
   `(media ,(? media-query?) ,(? selector?))
   `(fake ,(? string?) ,(? selector?) ...))
@@ -46,6 +46,20 @@
      (equal? (slower (node-type elt)) (slower tag))]
     [`(pseudo-class first-child) (not (node-prev elt))]
     [`(pseudo-class last-child) (not (node-next elt))]
+    [`(pseudo-class first-of-type)
+     (let loop ([sib (node-prev elt)])
+       (cond
+        [(not sib) true]
+        [(equal? (slower (node-type sib)) (slower (node-type elt)))
+         false]
+        [else (loop (node-prev sib))]))]
+    [`(pseudo-class last-of-type)
+     (let loop ([sib (node-next elt)])
+       (cond
+        [(not sib) true]
+        [(equal? (slower (node-type sib)) (slower (node-type elt)))
+         false]
+        [else (loop (node-next sib))]))]
     [`(pseudo-class hover) false] ; We assume not hovering
     [`(type ,type)
      (and (node-get elt ':type) (equal? (node-get elt ':type) type))]
@@ -163,22 +177,21 @@
 (define (split-rule rule)
   (match-define (list (? selector? selector) (? attribute? attrs) ...
                       (list (? property? properties) values (? attribute? propattrs) ...) ...) rule)
+  (define-values (important unimportant)
+    (partition (λ (x) (set-member? (third x) ':important))
+               (map list properties values propattrs)))
   (list
-   `(,selector ,@attrs ,@(for/list ([prop properties] [val values] [attrs propattrs]
-                                    #:when (set-member? attrs ':important))
-                           (list* prop val attrs)))
-   `(,selector ,@attrs ,@(for/list ([prop properties] [val values] [attrs propattrs]
-                                    #:unless (set-member? attrs ':important))
-                           (list* prop val attrs)))))
+   (if (null? important) #f `(,selector ,@attrs ,@important))
+   (if (null? unimportant) #f `(,selector ,@attrs ,@unimportant))))
 
 (define (split-rm rm)
   (for/list ([r* (split-rule (rulematch-rule rm))])
-    (struct-copy rulematch rm [rule r*])))
+    (and r* (struct-copy rulematch rm [rule r*]))))
 
 (define/contract (rule-matchlist rules elts)
   (-> (listof partial-rule?) (listof node?) (listof rulematch?))
   (define scores (rule-scores rules))
-  (define matches (for/list ([rule rules]) (filter (curry selector-matches? (car rule)) elts)))
+  (define matches (for/list ([rule rules]) (for/set ([elt (in-list elts)] #:when (selector-matches? (car rule) elt)) elt)))
   (define presort
     (map cdr
          (reverse ; Reverse so that HIGHEST score comes first
@@ -187,7 +200,7 @@
              (cons s (rulematch r m i)))
            score<? #:key car))))
   (define split (map split-rm presort))
-  (append (map first split) (map second split)))
+  (filter identity (append (map first split) (map second split))))
 
 (define/contract (matchlist-find matchlist elt prop)
   (-> (listof rulematch?) node? property? (or/c rulematch? #f))

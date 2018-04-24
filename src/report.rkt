@@ -2,7 +2,7 @@
 
 (require racket/path racket/set racket/engine racket/cmdline)
 (require json (only-in xml write-xexpr))
-(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "run.rkt")
+(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "run.rkt" "modularize.rkt" "tree.rkt")
 
 (define verbose (make-parameter false))
 (define timeout (make-parameter 60))
@@ -222,6 +222,30 @@
     (match-define (list assertion file pname prob index) rec)
     (test-assertions assertion file pname prob #:index index)))
 
+(define (run-merify-tests probs #:valid [valid? (const true)] #:index [index (hash)]
+                              #:threads [threads #f])
+  (define inputs
+    (for/append ([(file x) (in-dict probs)] #:when (valid? (cdr x)))
+      (define parts (modularize (cdr x)))
+      (for/list ([part parts])
+        (define name
+          (if (equal? part (car parts))
+              "<check>"
+              (node-get (parse-tree (dom-boxes (car (dict-ref part ':documents))))
+                        ':name #:default "<anon>")))
+        (list file name (car x) part index))))
+
+  (for/threads threads ([rec inputs])
+    (match-define (list file name pname prob index) rec)
+    (eprintf "~a\t~a\t~a\t" file pname name)
+    (define res (make-result file pname prob #:subproblem name #:index index))
+    (define-values (out runtime) (run-problem prob))
+    (define status (get-status (list file pname) prob out #:invert true #:unsupported true))
+    (eprintf "~a\n" status)
+    (flush-output (current-error-port))
+    (struct-copy result res [status status] [time runtime])))
+
+
 (define (file-name-stem fn)
   (define-values (_1 uname _2) (split-path fn))
   uname)
@@ -263,19 +287,24 @@
   (call-with-output-to
    outname #:extension "json" #:exists 'replace
    write-json
-   (for/list ([res results])
-     (match-define (result file problem subproblem test section status description features time url) res)
-     (make-hash
-      `((file . ,(~a file))
-        (problem . ,(~a problem))
-        (subproblem . ,(and subproblem (~a subproblem)))
-        (test . ,(~a test))
-        (section . ,section)
-        (status . ,(~a status))
-        (description . ,description)
-        (features . ,(map ~a features))
-        (time . ,time)
-        (url . ,url))))))
+   (make-hash
+    `((branch . ,*branch*)
+      (commit . ,*commit*)
+      (version . ,*version*)
+      (problems
+       . ,(for/list ([res results])
+            (match-define (result file problem subproblem test section status description features time url) res)
+            (make-hash
+             `((file . ,(~a file))
+               (problem . ,(~a problem))
+               (subproblem . ,(and subproblem (~a subproblem)))
+               (test . ,(~a test))
+               (section . ,section)
+               (status . ,(~a status))
+               (description . ,description)
+               (features . ,(map ~a features))
+               (time . ,time)
+               (url . ,url)))))))))
 
 (define (status-symbol status)
   (match status
@@ -375,7 +404,7 @@
                  (apply row (~a problem) `(a ([href ,url]) ,(~a test)) description
                         (for/list ([res ress])
                           `(span ([class ,(~a (result-status res))]
-                                  [title ,(~a (or (result-subproblem res) ""))])
+                                  [title ,(format "~a\nTime: ~a" (or (result-subproblem res) "") (print-time (result-time res)))])
                                  ,(status-symbol (result-status res))))))))))))))
 
 (define (print-feature-table problems)
@@ -414,7 +443,7 @@
   (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
 
 (define (read-index iname)
-  (for*/hash ([sec (call-with-input-file iname read-json)]
+  (for*/hash ([sec (dict-ref (call-with-input-file iname read-json) 'problems)]
               [(k v) (in-hash sec)])
     (define name
       (if (string=? (last (string-split (~a k) "-")) (substring v 1))
@@ -473,7 +502,7 @@
     (define secs (string-split sections ","))
     (define (valid-sections? prob)
       (define url (car (dict-ref prob ':url '("/tmp"))))
-      (set-member? (get-index index (file-name-stem url)) secs))
+      (set-member? secs (get-index index (file-name-stem url))))
     (and! valid? valid-sections?)]
    [("--feature") feature "Test a particular feature"
     (and! valid? (λ (p) (set-member? (dict-ref p ':features '()) (string->symbol feature))))]
@@ -553,6 +582,15 @@
     (write-report
      #:output out-file
      (run-assertion-tests insts #:valid valid? #:index index #:threads threads))]
+
+   ["merify"
+    #:args fnames
+    (write-report
+     #:output out-file
+     (let ([probs (for/append ([file (sort fnames string<?)])
+                              (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
+                              (map (curry cons file) x))])
+       (run-merify-tests probs #:valid valid? #:index index #:threads threads)))]
 
    ["rerender"
     #:args (json-file)

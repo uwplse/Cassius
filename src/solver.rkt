@@ -4,24 +4,20 @@
 
 (define to-resolve
   (append
-   '(get/elt &box &pelt &velt &nelt &felt &lelt)
-   '(get/box &elt &pbox &vbox &nbox &fbox &lbox)
-   '(&pbflow &vflow &nflow)
-   '(fid)
-   (for/list ([(name p) (in-dict (extra-pointers))] [i (in-naturals)])
-     (sformat "&~a" i))))
+   '(box-elt pelt velt nelt felt lelt)
+   '(pbox vbox nbox fbox lbox)
+   '(fflow lflow vflow nflow)
+   '(ppflow pbflow rootbox)
+   '(fid)))
 
 (define to-expand
   (append
-   '(link-element link-box)
+   '(link-element link-element-component link-box link-box-component)
    '(match-element-box match-anon-box)
    '(link-flow-root link-flow-simple link-flow-block)
    '(float position box-in-flow box-positioned)
    '(compute-style)
-   '(pelt velt nelt felt lelt)
-   '(pbox fbox lbox vbox nbox)
-   '(pflow fflow lflow nflow vflow)
-   '(ppflow pbflow flt)
+   '(pflow)
    '(box-elt)))
 
 (define to-expand-2
@@ -40,30 +36,14 @@
    (z3-ground-quantifiers 'Box)
    z3-fix-rational
    z3-unlet ; LETs are weirdly slow for some reason
-   (z3-resolve-fns)
-   #;z3-dco
    (z3-expand to-expand)
    (z3-expand to-expand-2)
    z3-unlet
-   ;z3-simplif
    z3-assert-and
-   ;(apply z3-resolve-fns to-resolve)
-   ;(z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
-   ;(z3-expand to-expand-2 #:clear true)
-   ;z3-simplif
-   ;z3-assert-and
    (unless-debug (apply z3-lift-arguments to-resolve))
-   ;(apply z3-resolve-fns to-resolve)
-   (z3-sink-fields-and 'get/box 'get/elt 'is-box 'is-no-box 'is-elt 'is-no-elt)
-   ;(apply z3-resolve-fns to-resolve)
-   ;;; It's important to lift and expand earlier up to make these passes fast.
-   ;z3-if-and
+   (apply z3-sink-fields-and 'is-box 'is-no-box 'is-elt 'is-no-elt to-resolve)
    (apply z3-resolve-fns to-resolve)
    z3-simplif
-   #;z3-dco
-   #;(z3-check-trivial-calls 'get/box 'get/elt)
-   ;z3-check-datatypes z3-check-functions z3-check-let #;z3-check-fields
-   z3-clean-no-opt
    ))
 
 (define (z3-prepare exprs)
@@ -73,7 +53,7 @@
     (action exprs)))
 
 (define (z3-clean exprs)
-  (append (z3-clean-no-opt (z3-strip-inner-names (z3-fix-rational exprs))) '((check-sat))))
+  (append (z3-strip-inner-names (z3-fix-rational exprs)) '((check-sat))))
 
 (define (z3-namelines cmds)
   (for/list ([cmd cmds] [i (in-naturals)])

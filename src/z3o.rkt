@@ -3,7 +3,7 @@
 (provide z3-dco z3-unlet z3-expand z3-assert-and z3-lift-arguments z3-resolve-fns z3-sink-fields-and
          z3-if-and z3-simplif z3-check-trivial-calls z3-check-datatypes z3-check-functions
          z3-check-let z3-check-fields z3-print-all z3-ground-quantifiers
-         z3-clean-no-opt z3-strip-inner-names z3-fix-rational)
+         z3-strip-inner-names z3-fix-rational)
 
 (define (z3-dco cmds)
   (let ([store (make-hash)])
@@ -404,6 +404,9 @@
             (for ([field fields] [type types])
               (hash-set! fns field type))]))
        cmd]
+      [`(declare-fun ,(? fn? name) (,types ...) ,rtype)
+       (hash-set! fns name rtype)
+       cmd]
       [`(define-fun ,(? fn? name) ((,args ,types) ...) ,rtype ,body)
        (hash-set! fns name rtype)
        cmd]
@@ -529,14 +532,18 @@
       [`(not true) 'false]
       [`(and) `true]
       ;; DOMAIN SPECIFIC
-      [`(is-no-box (get/box -1)) 'true]
-      [`(is-box (get/box -1)) 'false]
-      [`(is-no-box (get/box ,(? number?))) 'false]
+      [`(is-no-box no-box) 'true]
+      [`(is-box no-box) 'false]
+      [`(is-no-box ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) 'false]
       [`(is-box ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) 'true]
-      [`(is-no-elt (get/elt -1)) 'true]
-      [`(is-elt (get/elt -1)) 'false]
-      [`(is-no-elt (get/elt ,(? number?))) 'false]
+      [`(is-no-elt no-elt) 'true]
+      [`(is-elt no-elt) 'false]
+      [`(is-no-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'false]
       [`(is-elt ,(? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) 'true]
+      [`(= ,(and (or 'no-elt (? (λ (x) (and (symbol? x) (string-prefix? (~a x) "elt"))))) args) ...)
+       (match args [(list) 'true] [(list a) 'true] [(list a as ...) (if (andmap (curry equal? a) as) 'true 'false)])]
+      [`(= ,(and (or 'no-box (? (λ (x) (and (symbol? x) (string-prefix? (~a x) "box"))))) args) ...)
+       (match args [(list) 'true] [(list a) 'true] [(list a as ...) (if (andmap (curry equal? a) as) 'true 'false)])]
       ;; END DOMAIN SPECIFIC
       [(list 'and rest ...)
        (if (member 'false rest)
@@ -629,28 +636,14 @@
        (map ground expr)]
       [_ expr]))
 
-  (for ([cmd cmds])
+  (for/list ([cmd cmds])
     (match cmd
       [(or
         `(define-const ,name ,(? (curry dict-has-key? type-values) type) ,_)
         `(declare-const ,name ,(? (curry dict-has-key? type-values) type)))
-       (dict-set! type-values type (cons name (dict-ref type-values type)))]
-      [_ (void)]))
-
-  (for/list ([cmd cmds] [i (in-naturals)])
-    (match cmd
+       (dict-set! type-values type (cons name (dict-ref type-values type)))
+       cmd]
       [`(assert ,expr) `(assert ,(ground expr))]
-      [_ cmd])))
-
-(define (z3-clean-no-opt cmds)
-  (for/list ([cmd cmds])
-    (match cmd
-      [`(assert (=> ,c (! ,terms ... :opt ,_)))
-       `(assert (=> ,c (! ,@terms)))]
-      [`(assert (! (! ,terms ...  :opt ,_) ,rest ...))
-       `(assert (! ,@terms ,@rest))]
-      [`(assert (! ,terms ... :opt ,_))
-       `(assert (! ,@terms))]
       [_ cmd])))
 
 (define (fix-rational expr)
@@ -689,4 +682,4 @@
 
 (module+ main
   (define inl (sequence->list (in-port read (current-input-port))))
-  (z3-print-all ((z3-lift-arguments 'get/box 'get/elt) inl)))
+  (z3-print-all inl))
