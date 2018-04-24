@@ -19,7 +19,7 @@
     thing))
 
 (define (all-by-name kind)
-  (dict-ref name-registry kind))
+  (dict-ref name-registry kind '()))
 
 (define (reset-names!)
   (dict-clear! name-registry))

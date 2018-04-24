@@ -46,13 +46,14 @@
 
   (define tests*
     (for/list ([test (or tests '())])
+      (define-values (vars body) (match test [`(forall (,vars ...) ,body) (values vars body)] [body (values '() body)]))
       (define ctx
         (hash-union
-         (for/hash ([var (cadr test)])
+         (for/hash ([var vars])
            (values var (sformat "cex~a" (name 'cex (cons var test)))))
          (for*/hash ([dom doms] [node (in-boxes dom)] #:when (node-get node ':name #:default false))
            (values (node-get node ':name) (dump-box node)))))
-      (compile-assertion doms (caddr test) ctx)))
+      (compile-assertion doms body ctx)))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms fonts #:render? render?))
 
