@@ -45,14 +45,6 @@
   ;; The boxes in each direction in the flow tree
   (define-fun pflow ((box Box)) Box (pbox box))
 
-  ;; `link-element` and `link-box` set the element and box tree pointers
-  (define-fun link-element ((elt Element) (pe Element) (ve Element) (ne Element) (fe Element) (le Element)) Bool
-    (and (= (pelt elt) pe) (= (velt elt) ve) (= (nelt elt) ne) (= (felt elt) fe) (= (lelt elt) le)))
-
-  ;; Link `link-element` but treats the root differently
-  (define-fun link-element-component ((elt Element) (pe Element) (ve Element) (ne Element) (fe Element) (le Element)) Bool
-    (and (=> (is-elt pe) (and (= (pelt elt) pe) (= (velt elt) ve) (= (nelt elt) ne))) (= (felt elt) fe) (= (lelt elt) le)))
-
   (define-fun link-box ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
     (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n) (= (fbox box) f) (= (lbox box) l)
          ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent

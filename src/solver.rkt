@@ -4,15 +4,14 @@
 
 (define to-resolve
   (append
-   '(box-elt pelt velt nelt felt lelt)
-   '(pbox vbox nbox fbox lbox)
+   '(box-elt pelt pbox vbox nbox fbox lbox)
    '(fflow lflow vflow nflow)
    '(ppflow pbflow rootbox)
    '(fid)))
 
 (define to-expand
   (append
-   '(link-element link-element-component link-box link-box-component)
+   '(link-box link-box-component)
    '(match-element-box match-anon-box)
    '(link-flow-root link-flow-simple link-flow-block)
    '(float position box-in-flow box-positioned)

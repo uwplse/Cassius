@@ -94,22 +94,8 @@
     (node-add! node ':cex `(bad ,var))))
 
 (define (tree-constraints dom emit elt)
-  (define link-function
-    (cond
-     [(dom-context dom ':component)
-      'link-element-component]
-     [else
-      'link-element]))
-  (emit
-   `(assert
-     (!
-      (,link-function ,(dump-elt elt)
-                      ,(dump-elt (node-parent elt))
-                      ,(dump-elt (node-prev   elt))
-                      ,(dump-elt (node-next   elt))
-                      ,(dump-elt (node-fchild elt))
-                      ,(dump-elt (node-lchild elt)))
-      :named ,(sformat "tree/~a" (dump-elt elt))))))
+  (emit `(assert (! (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt)))
+                    :named ,(sformat "tree/~a" (dump-elt elt))))))
 
 (define (rule-allows-property? rule prop)
   (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
