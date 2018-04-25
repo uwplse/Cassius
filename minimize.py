@@ -19,42 +19,41 @@ STATISTICS=[]
 
 def run_accept(name, backtracked, maxtime=600):
     print("Running Cassius:")
-    start = time.time()
     process = subprocess.Popen(["racket", "src/run.rkt", "minimize",
                                     "reports/minimized/"+name+"-minimized.rkt",
                                     "doc-1", "["+",".join(backtracked)+"]"], stdout=subprocess.PIPE)
     i = 0
 
-    result, _ = process.communicate()
-    while result == None:
-        result, _ = process.communicate()
+    while process.poll() == None:
         if (i >= maxtime):
-            process.terminate()
             print("Cassius timed out, backtracking...")
+            process.terminate()
             sys.stdout.flush()
             return (1, [], -1)
         time.sleep(5)
         i += 5
 
-    end = time.time()
+    result, _ = process.communicate()
 
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
         sys.stdout.flush()
         lines = result.split()
         stats = json.loads(lines[1])
-        STATISTICS.append((stats, end - start))
+        STATISTICS.append((stats, i))
         return (0, lines[2:], stats["total"])
     elif "Accepted" in result:
         print("Cassius accepted the minimized version, backtracking...")
         sys.stdout.flush()
         return (1, [], -1)
-    else:
+    elif "Minimized" in result:
         print("Minimized!")
         lines = result.split()
         remaining_boxes = int(lines[1])
         sys.stdout.flush()
         return (2, [], remaining_boxes)
+    else:
+        raise Exception()
 
 def get_minimized(url, elts, name):
     args = ["python2", "get_minimized.py", name, url] + elts
