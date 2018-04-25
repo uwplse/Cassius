@@ -3,6 +3,27 @@
 (require "common.rkt" "tree.rkt" "dom.rkt")
 (provide modularize)
 
+(define (prune-elements boxes elts-stx) ; TODO: kind of weird here with the unparsing
+  (define used-ids
+    (for/set ([box (in-tree boxes)] #:when (node-get* box ':elt #:default false))
+      (node-get box ':elt)))
+  (match-define (cons ids node)
+                (let loop ([elt (parse-tree elts-stx)])
+                  (define child-res (map loop (node-children elt)))
+                  (cons
+                   (set-union
+                    (if (null? child-res)
+                        (set)
+                        (apply set-union (map car child-res)))
+                    (if (node-get* elt ':num #:default false)
+                        (set (node-get elt ':num))
+                        (set)))
+                   (cons (car (unparse-tree elt))
+                         (for/list ([(ids child) (in-dict child-res)]
+                                            #:unless (set-empty? (set-intersect ids used-ids)))
+                                   child)))))
+  node)
+
 (define (split-document doc)
   (reap [sow]
     (let loop ([tree (dom-boxes doc)])
@@ -20,6 +41,7 @@
                 (sow (cons (struct-copy dom doc
                                         [name (node-get component ':name #:default false)]
                                         [boxes (unparse-tree component)]
+                                        [elements (prune-elements component (dom-elements doc))]
                                         [properties props])
                            spec)))
             (unless (eq? tree (dom-boxes doc))
