@@ -4,11 +4,11 @@
 
 (define (filter-problems data working not-working)
   (define working-set
-    (for/set ([rec data] #:when (equal? (dict-ref rec 'status) "success"))
+    (for/set ([rec (dict-ref data 'problems)] #:when (equal? (dict-ref rec 'status) "success"))
       (dict-ref rec 'problem)))
 
   (define failing-set
-    (for/set ([rec data] #:when (equal? (dict-ref rec 'status) "fail"))
+    (for/set ([rec (dict-ref data 'problems)] #:when (equal? (dict-ref rec 'status) "fail"))
       (dict-ref rec 'problem)))
 
   (define (output sexp)
@@ -38,7 +38,6 @@
   (command-line
    #:program "filter-working.rkt"
    #:args (json working not-working)
-   (eprintf "~s ~s\n" working not-working)
    ;; Clear output files
    (call-with-output-file working #:exists 'replace (lambda (port) (display "" port)))
    (call-with-output-file not-working #:exists 'replace (lambda (port) (display "" port)))
