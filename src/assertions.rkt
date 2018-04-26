@@ -123,4 +123,5 @@
 
       ;; Variables
       [(? symbol?)
-       (dict-ref ctx expr)])))
+       (with-handlers ([exn:fail:contract? (λ (e) (eprintf "Could not find ~a (context includes ~a)\n" expr (dict-keys ctx)) (raise e))])
+           (dict-ref ctx expr))])))
