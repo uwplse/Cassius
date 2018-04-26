@@ -159,10 +159,12 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-verify/modular problem)
+(define (do-verify/modular problem #:component [subcomponent #f])
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match-define (list check components ...) (modularize problem*))
-  (for ([component components] [i (in-naturals 1)])
+  (for ([component components] [i (in-naturals 1)]
+        #:when (or (not subcomponent)
+                   (equal? subcomponent (dom-name (first (dict-ref component ':documents))))))
     (match (parameterize ([*fuzz* #f]) (solve-problem component))
       [(success stylesheet trees doms)
        (eprintf "Counterexample found in component ~a!\n" (or (dom-name (first doms)) i))
@@ -200,6 +202,8 @@
   (define debug '())
   (define screenshot #f)
 
+  (define subcomponent #f)
+
   (multi-command-line
    #:program "cassius"
 
@@ -232,15 +236,17 @@
     #:args (fname problem)
     (do-sketch (get-problem fname problem))]
    ["smt2"
-    #:once-each
     #:args (fname problem output)
     (do-smt2 (get-problem fname problem) output)]
    ["verify"
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
    ["merify"
+    #:once-each
+    [("--component") component "Only verify a subcomponent (for debugging)"
+     (set! subcomponent (string->symbol component))]
     #:args (fname problem)
-    (do-verify/modular (get-problem fname problem))]
+    (do-verify/modular (get-problem fname problem) #:component subcomponent)]
    ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))
