@@ -139,7 +139,9 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-smt2 problem output)
+(define (do-smt2 problem output #:render? [render? false])
+  (when render?
+    (set! problem (dict-update problem ':documents (curry map dom-strip-positions))))
   (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))))
   (call-with-output-file output #:exists 'replace (curry displayln out)))
 
@@ -203,6 +205,7 @@
   (define screenshot #f)
 
   (define subcomponent #f)
+  (define render? #f)
 
   (multi-command-line
    #:program "cassius"
@@ -236,8 +239,11 @@
     #:args (fname problem)
     (do-sketch (get-problem fname problem))]
    ["smt2"
+    #:once-each
+    [("--render") "Dumps the SMT-LIB2 for the `render` action"
+     (set! render? #t)]
     #:args (fname problem output)
-    (do-smt2 (get-problem fname problem) output)]
+    (do-smt2 (get-problem fname problem) output #:render? render?)]
    ["verify"
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
