@@ -56,6 +56,7 @@
         (hash-union
          (for/hash ([var (test-variables test)])
            (values var (sformat "cex~a" (name 'cex (cons var test)))))
+         (hash '? (dump-box (dom-boxes (first doms))))
          (for*/hash ([dom doms] [node (in-boxes dom)] #:when (node-get node ':name #:default false))
            (values (node-get node ':name) (dump-box node)))))
       (compile-assertion doms (test-body test) ctx)))

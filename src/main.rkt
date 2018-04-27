@@ -311,6 +311,7 @@
     (define ctx
       (hash-union
        (for/hash ([var vars]) (values var var))
+       (hash '? (dump-box box))
        (get-node-names nodes)))
     (define spec (compile-assertion (list dom) body ctx))
     (emit `(assert (! (and
