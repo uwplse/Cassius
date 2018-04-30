@@ -3,8 +3,7 @@
 (require racket/cmdline (only-in xml write-xexpr) json
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
          "frontend.rkt" "solver.rkt" "modularize.rkt"
-         "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
-         "minimize.rkt")
+         "print/tree.rkt" "print/css.rkt" "print/smt.rkt")
 
 (provide dom-strip-positions dom-set-range)
 
@@ -54,27 +53,12 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-minimize problem backtracked)
+(define (do-minimize problem cache backtracked)
   (match (solve-problem problem)
     [(success stylesheet trees doms)
      (printf "Accepted\n")]
     [(failure stylesheet trees)
-     (define to-remove (get-box-to-remove trees (dict-ref problem ':documents) backtracked))
-     (when to-remove
-       (printf "Rejected\n")
-       (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
-       ;; TODO: Make two JSON outputs into one JSON output
-       (write-json (make-hash (list (cons 'removed removed)
-                                    (cons 'total total)
-                                    (cons 'efficiency efficiency))))
-       (newline)
-       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
-       (newline))
-     (unless to-remove
-       (printf "Minimized\n")
-       (define doms (map parse-dom (dict-ref problem ':documents)))
-       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
-       (printf "~s\n" total-boxes))]
+     (with-output-to-file cache #:exists 'replace (lambda () (printf "(define-tree ~s)\n(define-document ~s)\n" trees (dict-ref problem ':documents))))]
     [(list 'error e)
      (printf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break
@@ -222,8 +206,8 @@
     #:args (fname problem)
     (do-accept (get-problem fname problem))]
    ["minimize"
-    #:args (fname problem [backtracked "[]"])
-    (begin (minimize-mode!) (do-minimize (get-problem fname problem) backtracked))]
+    #:args (fname problem cache [backtracked "[]"])
+    (begin (minimize-mode!) (do-minimize (get-problem fname problem) cache backtracked))]
    ["debug"
     #:args (fname problem)
     (do-debug (get-problem fname problem))]

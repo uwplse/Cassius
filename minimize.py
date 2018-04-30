@@ -17,23 +17,13 @@ import time
 
 STATISTICS=[]
 
-def run_accept(name, backtracked, maxtime=600):
-    print("Running Cassius:")
-    process = subprocess.Popen(["racket", "src/run.rkt", "minimize",
-                                    "reports/minimized/"+name+"-minimized.rkt",
-                                    "doc-1", "["+",".join(backtracked)+"]"], stdout=subprocess.PIPE)
-    i = 0
+def run_minimizer(name, backtracked, i, cache_name):
+    print("Running Minimizer:")
+    minimizer = subprocess.Popen(["racket", "minimizer/minimize.rkt",
+                                  "minimizer/{}.rkt".format(cache_name), "["+",".join(backtracked)+"]"],
+                                  stdout=subprocess.PIPE)
 
-    while process.poll() == None:
-        if (i >= maxtime):
-            print("Cassius timed out, backtracking...")
-            process.terminate()
-            sys.stdout.flush()
-            return (1, [], -1)
-        time.sleep(5)
-        i += 5
-
-    result, _ = process.communicate()
+    result, _ = minimizer.communicate()
 
     if "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...")
@@ -41,19 +31,44 @@ def run_accept(name, backtracked, maxtime=600):
         lines = result.split()
         stats = json.loads(lines[1])
         STATISTICS.append((stats, i))
-        return (0, lines[2:], stats["total"])
-    elif "Accepted" in result:
-        print("Cassius accepted the minimized version, backtracking...")
-        sys.stdout.flush()
-        return (1, [], -1)
+        return (False, lines[2:], stats["total"])
     elif "Minimized" in result:
         print("Minimized!")
         lines = result.split()
         remaining_boxes = int(lines[1])
         sys.stdout.flush()
-        return (2, [], remaining_boxes)
+        return (True, [], remaining_boxes)
     else:
         raise Exception()
+
+def run_accept(name, cache_name, maxtime=600):
+    print("Running Cassius:")
+    cassius = subprocess.Popen(["racket", "src/run.rkt", "minimize",
+                                "reports/minimized/"+name+"-minimized.rkt",
+                                "doc-1", "minimizer/{}.rkt".format(cache_name)], stdout=subprocess.PIPE)
+    i = 0
+
+    while cassius.poll() == None:
+        if (i >= maxtime):
+            print("Cassius timed out, backtracking...")
+            cassius.terminate()
+            sys.stdout.flush()
+            return (True, -1)
+        time.sleep(5)
+        i += 5
+
+    result, _ = cassius.communicate()
+
+    if "Accepted" in result:
+        print("Cassius accepted the minimized version, backtracking...")
+        sys.stdout.flush()
+        return (True, -1)
+    elif "Error" in result:
+        print("Cassius encountered an error, terminating")
+        sys.stdout.flush()
+        raise Exception()
+
+    return (False, i)
 
 def get_minimized(url, elts, name):
     args = ["python2", "get_minimized.py", name, url] + elts
@@ -82,34 +97,48 @@ if __name__ == "__main__":
     eliminated = []
     backtracked = []
     start = time.time()
+    initial = -1
+
     get_minimized(args.urls, eliminated, args.name)
-    result, elts, initial = run_accept(args.name, backtracked, maxtime=args.timeout)
-    while result == 0:
-        eliminated.extend(elts)
-        get_minimized(args.urls, eliminated, args.name + "-" + str(iterations))
-        result, elts, _ = run_accept(args.name + "-" + str(iterations), backtracked, maxtime=args.timeout)
+    accepted, t = run_accept(args.name, args.name, maxtime=args.timeout)
+    if accepted:
+        raise Exception("Full FWT accepted")
+    else:
         iterations += 1
 
-        if result == 1:
+    while True:
+        minimized, elts, x = run_minimizer(args.name, backtracked, t, args.name)
+
+        if initial == -1:
+            initial = x
+
+        if minimized:
+            break
+
+        eliminated.extend(elts)
+        get_minimized(args.urls, eliminated, args.name)
+        accepted, t = run_accept(args.name, args.name, maxtime=args.timeout)
+        if accepted:
             backtracked.append(eliminated.pop())
             STATISTICS.pop()
-            result = 0
+        else:
+            iterations += 1
 
     total_time = time.time() - start
 
-    if result == 2:
-        i = 0
+    if minimized == True:
         total_removed = 0
+        i = 0
         print("\n\nStatistics:")
 
         print("Iteration\tBeginning #\t# Removed (%)\t# Remaining")
         for (stats,time) in STATISTICS:
             print("{0}\t\t{1}\t\t{2} ({3:.2f})\t\t{4}".format(i,stats["total"], stats["removed"], float(stats["efficiency"]), stats["total"] - stats["removed"]))
             total_removed += stats["removed"]
-            i += 1
             sys.stdout.flush()
+            i += 1
 
-        print('\nIn total, {0} boxes were removed in {1} iteration(s), taking {2:.2f} seconds.'.format(total_removed, i, total_time))
+        print('\nIn total, {0} boxes were removed in {1} iteration(s), taking {2:.2f} seconds.'.format(total_removed, iterations, total_time))
         print('A total of {0} boxes remained for a {1:.2f}% reduction overall.'.format(initial - total_removed, (total_removed * 100.0) / initial))
         sys.stdout.flush()
 

@@ -1,11 +1,19 @@
 #lang racket
 
 (require json
-         "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
-         "frontend.rkt" "solver.rkt"
-         "print/tree.rkt" "print/css.rkt" "print/smt.rkt")
+         "../src/common.rkt" "../src/input.rkt" "../src/tree.rkt" "../src/dom.rkt"
+         "../src/frontend.rkt" "../src/solver.rkt"
+         "../src/print/tree.rkt" "../src/print/css.rkt" "../src/print/smt.rkt")
 
-(provide get-box-to-remove)
+;(provide get-box-to-remove)
+
+(define (parse-cache port)
+  (define cache (make-hash))
+  (for ([expr (in-port read port)])
+    (match expr
+      [`(define-tree ,tree) (dict-set! cache ':tree tree)]
+      [`(define-document ,document) (dict-set! cache ':document document)]))
+  cache)
 
 (define (sub-tree-size node)
   (define count 1)
@@ -124,6 +132,8 @@
   (mark-tree backtracked-elts ':dnr #t)
   (match-define (cons box->elt elt->box) (get-box-elt-map new docs))
 
+  ;(eprintf "~s\n" new)
+
   (define candidates
     (for/list ([problem-box failing])
       (define problem-elt (get-elt-ancestor problem-box))
@@ -145,3 +155,27 @@
              [result (cons (node-type to-remove) (node-get to-remove ':idx))])
           (cons (get-statistics (dict-ref elt->box num) old) result))
       to-remove))
+
+(module+ main
+  (multi-command-line
+   #:program "cassius minimizer"
+   #:args (cache-file [backtracked "[]"])
+   (define cache (call-with-input-file cache-file parse-cache))
+   (define to-remove (get-box-to-remove
+                      (dict-ref cache ':tree)
+                      (dict-ref cache ':document)
+                      backtracked))
+     (when to-remove
+       (printf "Rejected\n")
+       (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
+       ;; TODO: Make two JSON outputs into one JSON output
+       (write-json (make-hash (list (cons 'removed removed)
+                                    (cons 'total total)
+                                    (cons 'efficiency efficiency))))
+       (newline)
+       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+       (newline))
+     (unless to-remove
+       (printf "Minimized\n")
+       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref cache ':document)))))
+       (printf "~s\n" total-boxes))))
