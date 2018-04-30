@@ -443,7 +443,7 @@
   (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
 
 (define (read-index iname)
-  (for*/hash ([sec (dict-ref (call-with-input-file iname read-json) 'problems)]
+  (for*/hash ([sec (call-with-input-file iname read-json)]
               [(k v) (in-hash sec)])
     (define name
       (if (string=? (last (string-split (~a k) "-")) (substring v 1))

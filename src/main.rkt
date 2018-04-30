@@ -94,22 +94,8 @@
     (node-add! node ':cex `(bad ,var))))
 
 (define (tree-constraints dom emit elt)
-  (define link-function
-    (cond
-     [(dom-context dom ':component)
-      'link-element-component]
-     [else
-      'link-element]))
-  (emit
-   `(assert
-     (!
-      (,link-function ,(dump-elt elt)
-                      ,(dump-elt (node-parent elt))
-                      ,(dump-elt (node-prev   elt))
-                      ,(dump-elt (node-next   elt))
-                      ,(dump-elt (node-fchild elt))
-                      ,(dump-elt (node-lchild elt)))
-      :named ,(sformat "tree/~a" (dump-elt elt))))))
+  (emit `(assert (! (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt)))
+                    :named ,(sformat "tree/~a" (dump-elt elt))))))
 
 (define (rule-allows-property? rule prop)
   (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
@@ -239,7 +225,7 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
-    (emit-const (param 'scrollbar-width) 'Real fs)
+    (emit-const (param 'scrollbar-width) 'Real scrollw)
     (fs-name (param 'font-size))
     (view-width-name (param 'w))
     (view-height-name (param 'h))
@@ -325,6 +311,7 @@
     (define ctx
       (hash-union
        (for/hash ([var vars]) (values var var))
+       (hash '? (dump-box box))
        (get-node-names nodes)))
     (define spec (compile-assertion (list dom) body ctx))
     (emit `(assert (! (and
@@ -398,7 +385,8 @@
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
   (define media-params (make-hash '((:type . screen))))
-  
+  (define (for-render cns) (if render? cns '()))
+
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
@@ -440,21 +428,21 @@
     ,@(global (curry configuration-constraints media-params))
     ,@(utility-definitions)
     ,@(link-definitions)
-    ,@(style-computation)
-    ,@(sheet*-constraints media-params doms (apply append sheets))
+    ,@(for-render (style-computation))
+    ,@(for-render (sheet*-constraints media-params doms (apply append sheets)))
     ,@(per-element tree-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
-    ,@(per-element style-constraints)
+    ,@(for-render (per-element style-constraints))
     ,@(ez-fields)
-    ,@(ez-field-compute)
-    ,@(per-element compute-style-constraints)
+    ,@(for-render (ez-field-compute))
+    ,@(for-render (per-element compute-style-constraints))
     ,@(per-element replaced-constraints)
     ,@(per-box contents-constraints)
     ,@(font-computation)
     ,@(assertion-helpers)
-    ,@(if render? (layout-definitions) '())
-    ,@(per-box spec-constraints)
-    ,@(if render? (per-box layout-constraints) '())
+    ,@(for-render (layout-definitions))
+    ,@(if render? '() (per-box spec-constraints))
+    ,@(for-render (per-box layout-constraints))
     ))

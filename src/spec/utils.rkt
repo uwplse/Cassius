@@ -36,12 +36,8 @@
                 (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real))))))
 
 (define-constraints utility-definitions
-  ;; The elements in each direction in the element tree
-  (declare-fun velt (Element) Element)
-  (declare-fun nelt (Element) Element)
+  ;; Elements only need parents
   (declare-fun pelt (Element) Element)
-  (declare-fun felt (Element) Element)
-  (declare-fun lelt (Element) Element)
 
   ;; The boxes in each direction in the box tree
   (declare-fun pbox (Box) Box)

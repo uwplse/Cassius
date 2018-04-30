@@ -730,10 +730,12 @@ function rescue_selector(sel) {
 function dump_length(val, features) {
     if (val.match(/%$/)) {
         val = "(% " + val2pct(val, features) + ")";
-    } else if (val.match(/[0-9]e[mx]$/)) {
+    } else if (val.match(/[0-9.]e[mx]$/)) {
         val = "(em " + val2em(val, features) + ")";
-    } else if (val.match(/[0-9]rem$/)) {
+    } else if (val.match(/[0-9.]rem$/)) {
         val = "(rem " + val2em(val, features) + ")";
+    } else if (val.match(/[0-9.]s$/)) {
+        val = "(s " + val.slice(0,-1) + ")"; // Not supported, just to avoid error message
     } else {
         val = "(px " + f2r(val2px(val, features)) + ")";
     }
@@ -787,7 +789,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
         var _features = Props.indexOf(sname) ? features : {};
         if (val == "inherit") {
             _features["css:inherit"] = true;
-        } else if (val.startsWith("rgb")) {
+        } else if (val.startsWith("rgb") && val.endsWith(")")) {
             val = dump_color(val, _features);
         } else if (sname === "font-family") {
             val = dump_string(val);

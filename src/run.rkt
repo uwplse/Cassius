@@ -140,7 +140,9 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-smt2 problem output)
+(define (do-smt2 problem output #:render? [render? false])
+  (when render?
+    (set! problem (dict-update problem ':documents (curry map dom-strip-positions))))
   (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))))
   (call-with-output-file output #:exists 'replace (curry displayln out)))
 
@@ -160,16 +162,18 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-verify/modular problem)
+(define (do-verify/modular problem #:component [subcomponent #f])
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match-define (list check components ...) (modularize problem*))
-  (for ([component components] [i (in-naturals 1)])
+  (for ([component components] [i (in-naturals 1)]
+        #:when (or (not subcomponent)
+                   (equal? subcomponent (dom-name (first (dict-ref component ':documents))))))
     (match (parameterize ([*fuzz* #f]) (solve-problem component))
-      [(success stylesheet trees dom)
-       (eprintf "Counterexample found in component ~a!\n" (or (dom-name (first dom)) i))
+      [(success stylesheet trees doms)
+       (eprintf "Counterexample found in component ~a!\n" (or (dom-name (first doms)) i))
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :component :spec :name))))
        (printf "\n\nConfiguration:\n")
-       (for* ([(k v) (in-dict (dom-properties dom))])
+       (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
          (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
        (exit i)]
       [(failure stylesheet trees)
@@ -182,7 +186,7 @@
        (exit 127)]))
   (match (parameterize ([*fuzz* #f]) (solve-problem check))
     [(success stylesheet trees doms)
-     (eprintf "Counterexample found!\n")
+     (eprintf "Counterexample found in final check!\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name))))
      (printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
@@ -200,6 +204,9 @@
 (module+ main
   (define debug '())
   (define screenshot #f)
+
+  (define subcomponent #f)
+  (define render? #f)
 
   (multi-command-line
    #:program "cassius"
@@ -234,14 +241,19 @@
     (do-sketch (get-problem fname problem))]
    ["smt2"
     #:once-each
+    [("--render") "Dumps the SMT-LIB2 for the `render` action"
+     (set! render? #t)]
     #:args (fname problem output)
-    (do-smt2 (get-problem fname problem) output)]
+    (do-smt2 (get-problem fname problem) output #:render? render?)]
    ["verify"
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
    ["merify"
+    #:once-each
+    [("--component") component "Only verify a subcomponent (for debugging)"
+     (set! subcomponent (string->symbol component))]
     #:args (fname problem)
-    (do-verify/modular (get-problem fname problem))]
+    (do-verify/modular (get-problem fname problem) #:component subcomponent)]
    ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))
