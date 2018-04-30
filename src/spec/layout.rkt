@@ -974,8 +974,8 @@
      (zero-box-model b)
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
-     (= (w b) ,(view-width-name))
-     (= (h b) ,(view-height-name))
+     (= (box-width b) ,(view-width-name))
+     (= (box-height b) ,(view-height-name))
      (= (ez.lookback b) true)
      (= (text-indent b) 0.0)))
 
@@ -1012,7 +1012,10 @@
 
   (assert
    (forall ((b Box))
-           (= (scroll-y b)
-              (ite (and (is-elt (box-elt b)) (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
-                   ,(scroll-width-name)
-                   0)))))
+           (or
+            (= (scroll-y b)
+               (ite (and (is-elt (box-elt b)) (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
+                    ,(scroll-width-name)
+                    0))
+            ;; The root scroll bar is often a different width from the width of other elements :(
+            (is-no-box (pbox b))))))

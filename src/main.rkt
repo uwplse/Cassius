@@ -225,7 +225,7 @@
     (emit-const (param 'w) 'Real w)
     (emit-const (param 'h) 'Real h)
     (emit-const (param 'font-size) 'Real fs)
-    (emit-const (param 'scrollbar-width) 'Real fs)
+    (emit-const (param 'scrollbar-width) 'Real scrollw)
     (fs-name (param 'font-size))
     (view-width-name (param 'w))
     (view-height-name (param 'h))
