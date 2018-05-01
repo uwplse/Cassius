@@ -28,7 +28,7 @@ def make_browser():
     profile.set_preference("security.mixed_content.block_display_content", False)
     return webdriver.Firefox(firefox_profile=profile)
 
-def main(urls, name=None, screenshot=False):
+def main(urls, name=None):
     browser = make_browser()
 
     try:
@@ -36,7 +36,7 @@ def main(urls, name=None, screenshot=False):
 
         for url in urls:
             scheme, _, _, _, _, _ = urlparse.urlparse(url)
-            if scheme not in ["http", "file"]:
+            if scheme not in ["http", "https", "file"]:
                 warnings.warn("Only http and file scheme supported (not {})".format(scheme))
     
         if name:
@@ -58,14 +58,8 @@ def main(urls, name=None, screenshot=False):
                     id = str(i+1).rjust(len(str(len(urls))), "0")
                     try:
                         browser.get(url)
-                        if screenshot:
-                            iname = "bench/{}-{}.png".format(netloc, id)
-                            print "Saving screenshot to", iname
-                            browser.save_screenshot(iname)
                         browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
-                        browser.execute_script(SCRIPT + "; select_page_text(LETTER)")
-                        elt = browser.find_element_by_id("-x-cassius-output-block");
-                        text = elt.text.encode("utf8")
+                        text = browser.execute_script(SCRIPT + "; return page2text(LETTER);").encode("utf8")
                         fi.write(";; From {}\n\n{}\n\n".format(url, text))
                         print "{}".format(id),
                         sys.stdout.flush()
@@ -80,7 +74,6 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
     p.add_argument("--name", dest="name", default=None, type=str, help="File name under bench/.")
-    p.add_argument("--screenshot", dest="screenshot", default=False, action="store_true", help="File name under bench/.")
     args = p.parse_args()
     
-    main(args.urls, name=args.name, screenshot=args.screenshot)
+    main(args.urls, name=args.name)

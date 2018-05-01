@@ -952,6 +952,7 @@ function dump_stylesheet(ss, features, media) {
         } catch (e) {
             console.warn(r, e);
             window.ERROR = e;
+            features["unknown-error"] = true;
         }
     }
     return text;
@@ -1154,7 +1155,14 @@ function page2text(name) {
     var text = "";
     text += "(define-stylesheet " + name;
     for (var sid in document.styleSheets) {
-        text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
+        console.log("Reading", sid, document.styleSheets[sid]);
+        try {
+            text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
+        } catch (e) {
+            console.warn(document.styleSheets[sid], e);
+            window.ERROR = e;
+            features["unknown-error"] = true;
+        }
     }
 
     var out = get_boxes(features);
