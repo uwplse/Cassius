@@ -104,7 +104,8 @@
                  (node-set! box ':spec 'true)
                  (set! components (cons box components)))]))
        (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
-       (sow problem*)])))
+       (define problem** (dict-set problem* ':test (list (dict-ref theorem-context theorem))))
+       (sow problem**)])))
 
 (define (dom-set-range d)
   (define ctx*

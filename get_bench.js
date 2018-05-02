@@ -588,6 +588,8 @@ function make_boxes(elt, styles, features) {
 
     if (is_comment(elt)) {
         return [];
+    } else if (elt.dataset && elt.dataset["cassius"] == "magic") {
+        return [extract_magic(elt, children)];
     } else if (is_text(elt)) {
         var out = extract_text(elt);
         var out2 = out.filter(function(x) {return x.props.w !== 0 || x.props.h !== 0});
