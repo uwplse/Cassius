@@ -1,0 +1,41 @@
+
+(define (onscreen-plus b delta)
+  (and (>= (top b) (+ (top root) delta)) (>= (left b) (left root))))
+
+(theorem (interactive-onscreen b)
+  (=> (is-interactive b) (onscreen b)))
+
+(proof (proof1 interactive-onscreen)
+  (component sidebar (id masthead))
+  (component sidebar-content (id tabs))
+  (component sidebar-title (class site-title))
+  (component sidebar-host (id front-widgets))
+  (component content (id content))
+  (component heading (desc (id main) (tag header)))
+  (component linkbar (class entry-meta))
+  (component articletext (class entry-content))
+  (component subscribe (id post-footer-widgets))
+  (component aboutauthor (class author-info))
+  (component nav (class post-navigation))
+  (component colophon (id colophon))
+  (components (child (class entry-content) *))
+
+  ;; I call this the "proof strategy"; if this were true, it would prove the theorem
+  (assert * (forall (b) (=> (onscreen ?)
+                            (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+
+  (assert root (onscreen root))
+
+  (spec sidebar (raw (not (box-in-flow sidebar))))
+  (spec sidebar (onscreen sidebar))
+  (assert sidebar (onscreen-plus sidebar-content 5))
+  (admit sidebar)
+
+  (assert sidebar-content
+    (=> (onscreen-plus sidebar-content 5)
+        (onscreen-plus sidebar-title 5)))
+
+  (assert! sidebar-title
+    (forall (b)
+            (=> (onscreen-plus sidebar-title 5)
+                (is-interactive b) (onscreen b)))))
