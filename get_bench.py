@@ -28,7 +28,7 @@ def make_browser():
     profile.set_preference("security.mixed_content.block_display_content", False)
     return webdriver.Firefox(firefox_profile=profile)
 
-def main(urls, name=None):
+def main(urls, prerun=None, name=None):
     browser = make_browser()
 
     try:
@@ -58,6 +58,7 @@ def main(urls, name=None):
                     id = str(i+1).rjust(len(str(len(urls))), "0")
                     try:
                         browser.get(url)
+                        if prerun: browser.execute_script(prerun)
                         browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
                         text = browser.execute_script(SCRIPT + "; return page2text(LETTER);").encode("utf8")
                         fi.write(";; From {}\n\n{}\n\n".format(url, text))
@@ -74,6 +75,8 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
     p.add_argument("--name", dest="name", default=None, type=str, help="File name under bench/.")
+    p.add_argument("--prerun", dest="prerun", type=argparse.FileType('r'), default=None, help="JS file to run before capturing.")
     args = p.parse_args()
     
-    main(args.urls, name=args.name)
+    prerun = args.prerun.read()
+    main(args.urls, prerun=prerun, name=args.name)
