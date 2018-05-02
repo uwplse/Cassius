@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "dom.rkt")
+(require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt")
 (provide modularize)
 
 (define (prune-elements boxes elts-stx) ; TODO: kind of weird here with the unparsing
@@ -28,12 +28,14 @@
   (reap [sow]
     (let loop ([tree (dom-boxes doc)])
       (define children* (map loop (rest tree)))
-      (if (set-member? (first tree) ':spec)
+      (if (or (set-member? (first tree) ':spec) (set-member? (first tree) ':assert))
           (let* ([component (parse-tree (cons (first tree) children*))]
-                 [spec (node-get component ':spec)]
+                 [spec (node-get component ':spec #:default 'true)]
+                 [assert (node-get component ':assert #:default 'true)]
                  [admit? (node-get* component ':admit #:default false)]
                  [ctx (dom-properties doc)])
             (node-remove! component ':spec)
+            (node-remove! component ':assert)
             (node-remove! component ':admit)
             (define props
               (if (eq? tree (dom-boxes doc)) ctx (dict-set ctx ':component '())))
@@ -43,7 +45,7 @@
                                         [boxes (unparse-tree component)]
                                         [elements (prune-elements component (dom-elements doc))]
                                         [properties props])
-                           spec)))
+                           (and-assertions spec assert))))
             (unless (eq? tree (dom-boxes doc))
               (node-add! component ':component 'true))
             (node-add! component ':spec spec)

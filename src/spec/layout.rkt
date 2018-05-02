@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "css-properties.rkt")
-(provide layout-definitions view-width-name view-height-name assertion-helpers scroll-width-name)
+(provide layout-definitions view-width-name view-height-name boxref-definitions scroll-width-name)
 
 (define view-width-name (make-parameter false))
 (define view-height-name (make-parameter false))
@@ -21,7 +21,7 @@
              0.0))
       out))
 
-(define-constraints assertion-helpers
+(define-constraints boxref-definitions
   (declare-fun rootbox (Box) Box)
   (assert
    (forall ((b Box))
