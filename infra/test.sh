@@ -8,33 +8,7 @@ THREADS=6
 mkdir -p "$FWT_PATH"
 mkdir -p "$CSSWG_PATH"
 
-for FWT in \
-    adventurewebsitetemplate airsportswebsitetemplate amusementparkwebsitetemplate applefarm \
-    armyacademywebsitetemplate astronomywebsitetemplate backupsoftwarewebtemplate barwebsitetemplate \
-    beachresort beachresortwebsitetemplate bikegearwebsitetemplate bookauthorportfoliowebtemplate \
-    businessanalystwebsitetemplate businessexpertswebsitetemplate businessnewswebtemplate businesssolutions \
-    businesssolutionwebtemplate businessworldtemplate cakewebsitetemplate cardiologywebsitetemplate \
-    carracingwebtemplate carrepairshop cartoonappswebtemplate childrensappwebsitetemplate \
-    cinematheaterwebsitetemplate coffeewebsitetemplate cookingrecipewebtemplate corporateconsultantwebtemplate \
-    cruisevacationtemplate customshirtwebtemplate denimjeanswebtemplate displaywebsitetemplate \
-    drinkingjuicewebtemplate ecoliving ecologicalwebsitetemplate eternalbeautyessentialswebtemplate \
-    familychessclub fantasygamewebtemplate finemindsmarketingwebtemplate firefighterwebsitetemplate \
-    fishingwebsitetemplate footballwebsitetemplate furnitureshopwebsitetemplate gadgetshopwebsitetemplate \
-    gamewebsitetemplate gardenwalkthrough genericwebsitetemplate hairrepairwebsitetemplate \
-    hairstylesalon healthylifetemplate helicoptertransportationwebtemplate herdesignswebtemplate \
-    highfashion icecreamwebsitetemplate iphonegamewebtemplate islandhotelwebsitetemplate \
-    lawfirm lawfirmwebsitetemplate logistics lollipops \
-    madillustratorsportfoliotemplate magictree makeupwebsitetemplate medicalhospitalwebsitetemplate \
-    morumallwebsitetemplate musicartistwebtemplate musicschoolwebsitetemplate mustacheenthusiast \
-    neodance ngowebsitetemplate omorfiumgamingwebsite originarchitectswebsitetemplate \
-    paintrepublic paredeswinerywebsitetemplate personalizedwebtemplate personalwebsitetemplate \
-    petshoptemplate photographywebsitetemplate puppy rehabilitation-yoga \
-    resortandcountryclubwebtemplate retrodiner running scienceclubwebsitetemplate \
-    snackswebsitetemplate socialadvicewebsitetemplate space-science sportinggoodswebtemplate \
-    summercamp sushihanii tailorshopwebsitetemplate themargaritafragrancewebtemplate \
-    tourismsurfing treepreservation vinylrecordshopwebtemplate weddingblog \
-    womenclothing woodworkingwebsitetemplate yogawebsitetemplate zerotype;
-do
+for FWT in `cat bench/fwt/all.txt`; do
     FILE=$FWT_PATH/$FWT.zip
     DIR=$FWT_PATH/$FWT/$FWT
 
