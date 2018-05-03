@@ -78,5 +78,5 @@ if __name__ == "__main__":
     p.add_argument("--prerun", dest="prerun", type=argparse.FileType('r'), default=None, help="JS file to run before capturing.")
     args = p.parse_args()
     
-    prerun = args.prerun.read()
+    prerun = args.prerun.read() if args.prerun else None
     main(args.urls, prerun=prerun, name=args.name)
