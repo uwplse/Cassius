@@ -242,9 +242,9 @@
     [_ #f]))
 
 (define (box-constraints dom emit elt)
-  (for ([cmd '(:x :y :w :h :mtp :mbp)] #:when (node-get* elt cmd #:default #f))
+  (for ([cmd '(:x :y :w :h)] #:when (node-get* elt cmd #:default #f))
     (define arg (node-get elt cmd))
-    (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width) (:mbp . mbp) (:mtp . mtp)) cmd))
+    (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg

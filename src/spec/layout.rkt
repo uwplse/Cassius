@@ -409,7 +409,7 @@
              [ml* (min-ml b)]
              [mr* (min-mr b)])
          ,(smt-cond
-           [(> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) available-width)
+           [(> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr* (scroll-y b)) available-width)
             (= (w b) (- w* (scroll-y b)))
             (= (ml b) ml*)
             (width-set b)]
@@ -1003,11 +1003,9 @@
        (= (x b) (left-content p))
        (= (ez.lookback b) true)))
 
-  ;; TODO: This is incorrect. There are a few caveats here.
-  ;; First, `height` sets `(+ h scroll-w)` and likewise `width`
-  ;; Second, a scrollbar isn't shown if (- box-height scroll-other) is below 45
-  ;; Third, in some cases either the x or y scrollbar can be shown but not both;
-  ;; in this case only the y scrollbar is ever shown?
+  ;; In some cases either the x or y scrollbar can be shown but not both;
+  ;; in this case only the y scrollbar is ever shown
+  ;; Also, we do not model the fact no scrollbars is preferred if both are possible
   (define-const min-size-for-scrollbars Real 45.0)
 
   (assert
@@ -1022,13 +1020,9 @@
 
   (assert
    (forall ((b Box))
-           (or
-            (= (scroll-y b)
-               (ite (and (is-elt (box-elt b))
-                         (is-box (pbox b))
-                         (is-overflow/scroll (style.overflow-y (computed-style (box-elt b))))
-                         (> (- (box-height b) (scroll-x b)) min-size-for-scrollbars))
-                    ,(scroll-width-name)
-                    0))
-            ;; The root scroll bar is often a different width from the width of other elements :(
-            (is-no-box (pbox b))))))
+           (= (scroll-y b)
+              (ite (and (is-elt (box-elt b))
+                        (is-overflow/scroll (style.overflow-y (computed-style (box-elt b))))
+                        (> (- (box-height b) (scroll-x b)) min-size-for-scrollbars))
+                   ,(scroll-width-name)
+                   0)))))
