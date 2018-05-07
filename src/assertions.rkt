@@ -59,8 +59,10 @@
       [(list-rest (and (or 'top 'right 'bottom 'left) dir) box edge*)
        (define edge
          (match edge* [(list edge) edge] [(list) 'border]))
+       (define adjustment
+         (match dir [(or 'top 'bottom) 'yo] [(or 'left 'right) 'xo]))
        (define function (sformat "~a-~a" dir edge))
-       `(,function ,(loop box ctx))]
+       `(+ (,function ,(loop box ctx)) (,adjustment ,(loop box ctx)))]
       [`(text-height ,box)
        `(let ([b ,(loop box ctx)]) (height-text b))]
       [`(vertically-adjacent ,box1 ,box2)

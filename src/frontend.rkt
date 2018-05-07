@@ -4,12 +4,6 @@
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
 (provide query solve (struct-out success) (struct-out failure))
 
-(define (test-variables test)
-  (match test [(list 'forall (list vars ...) body) vars] [_ '()]))
-
-(define (test-body test)
-  (match test [(list 'forall (list vars ...) body) body] [_ test]))
-
 (struct success (stylesheet elements doms))
 (struct failure (stylesheet trees))
 
@@ -47,19 +41,17 @@
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
 
-  (when (check-duplicates (apply append (map test-variables (or tests '()))))
-    (error "Duplicate variable names in assertions!"))
-
   (define tests*
     (for/list ([test (or tests '())])
+      (define-values (test-vars test-body) (disassemble-forall test))
       (define ctx
         (hash-union
-         (for/hash ([var (test-variables test)])
+         (for/hash ([var test-vars])
            (values var (sformat "cex~a" (name 'cex (cons var test)))))
          (hash '? (dump-box (dom-boxes (first doms))))
          (for*/hash ([dom doms] [node (in-boxes dom)] #:when (node-get node ':name #:default false))
            (values (node-get node ':name) (dump-box node)))))
-      (compile-assertion doms (test-body test) ctx)))
+      (compile-assertion doms test-body ctx)))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms fonts #:render? render?))
 

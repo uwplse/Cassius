@@ -30,6 +30,8 @@
                    b
                    (rootbox (pbox b))))))
 
+  (assert (forall ((b Box)) (is-box (rootbox b))))
+
   (declare-fun nflow (Box) Box)
   (assert
    (forall ((b Box))

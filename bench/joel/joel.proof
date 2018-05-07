@@ -9,16 +9,24 @@
   (component sidebar (id masthead))
   (component sidebar-content (id tabs))
   (component sidebar-title (class site-title))
-  (component sidebar-host (id front-widgets))
+  (component sidebar-description (class site-description))
+  (components (id front-widgets))
   (component content (id content))
   (component heading (desc (id main) (tag header)))
   (component linkbar (class entry-meta))
   (component articletext (class entry-content))
-  (component subscribe (id post-footer-widgets))
-  (component aboutauthor (class author-info))
+  (components (id post-footer-widgets))
+  (components (class author-info))
   (component nav (class post-navigation))
   (component colophon (id colophon))
   (components (child (class entry-content) *))
+
+  (components (id site-navigation))
+  (components (desc (id site-navigation) (tag li)))
+
+  (components (id comments))
+  (components (desc (id comments) (tag li)))
+  (components (id respond))
 
   ;; I call this the "proof strategy"; if this were true, it would prove the theorem
   (assert * (forall (b) (=> (onscreen ?)
@@ -30,6 +38,14 @@
   (spec sidebar (onscreen sidebar))
   (assert sidebar (onscreen-plus sidebar-content 5))
   (admit sidebar)
+  
+  (spec sidebar-title (raw (non-negative-margins sidebar-title)))
+
+  (spec sidebar-description (= (top sidebar-description) (bottom (prev sidebar-description))))
+  (spec sidebar-description (raw (non-negative-margins sidebar-description)))
+  (spec sidebar-description (raw (= (yo sidebar-description) (xo sidebar-description) 0.0)))
+  (spec sidebar-description (= (left sidebar-description) (left (parent sidebar-description))))
+  (admit sidebar-description)
 
   (assert sidebar-content
     (=> (onscreen-plus sidebar-content 5)

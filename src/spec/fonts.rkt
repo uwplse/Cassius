@@ -41,7 +41,7 @@
                 #;,(fuzzy-=-constraint `(font.descent ,var) d* *font-fuzz*)
                 ,(fuzzy-=-constraint `(font.topoffset ,var) t*)
                 ,(fuzzy-=-constraint `(font.bottomoffset ,var) b*)
-                ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a* d* t* b*))
+                #;,(fuzzy-=-constraint `(font.selection-height ,var) (+ a* d* t* b*))
                 ,(fuzzy-=-constraint `(font.line-height ,var) l)))))))
 
 (define/contract (make-get-font fonts)

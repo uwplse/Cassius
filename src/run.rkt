@@ -99,7 +99,7 @@
                         (define elt (matcher box))
                         (and elt (ormap (curryr selector-matches? elt) sels) box))))
             (when (null? selected-boxes)
-              (raise (format "Could not find any elements matching ~a" (string-join (map ~a sels) ", "))))
+              (eprintf "Warning: Could not find any elements matching ~a\n" (string-join (map ~a sels) ", ")))
             (for ([box selected-boxes])
                  (node-set! box ':spec 'true)
                  (set! components (cons box components)))]))
