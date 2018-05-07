@@ -40,6 +40,7 @@
   (admit sidebar)
   
   (spec sidebar-title (raw (non-negative-margins sidebar-title)))
+  (spec sidebar-title (> (height sidebar-title) 0))
 
   (spec sidebar-description (= (top sidebar-description) (bottom (prev sidebar-description))))
   (spec sidebar-description (raw (non-negative-margins sidebar-description)))
