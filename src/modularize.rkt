@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt")
+(require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt")
 (provide modularize)
 
 (define (prune-elements boxes elts-stx) ; TODO: kind of weird here with the unparsing
@@ -23,6 +23,12 @@
                                             #:unless (set-empty? (set-intersect ids used-ids)))
                                    child)))))
   node)
+
+(define (prune-sheets sheets elements)
+  (for/list ([sheet sheets])
+    (for/list ([rule sheet]
+               #:when (for/or ([elt (in-tree (parse-tree elements))]) (selector-matches? (car rule) elt)))
+      rule)))
 
 (define (split-document doc)
   (reap [sow]
@@ -56,4 +62,5 @@
   (cons
    (dict-set problem ':render false)
    (for/list ([(piece spec) (in-dict (append-map split-document (dict-ref problem ':documents)))])
-     (dict-set (dict-set problem ':documents (list piece)) ':test (list spec)))))
+     (define sheets* (prune-sheets (dict-ref problem ':sheets) (dom-elements piece)))
+     (dict-set (dict-set (dict-set problem ':documents (list piece)) ':test (list spec)) ':sheets sheets*))))
