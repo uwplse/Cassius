@@ -2,10 +2,10 @@
 (require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
-(provide query solve (struct-out success) (struct-out failure))
+(provide query solve (struct-out success) (struct-out failure) solve-cached)
 
-(struct success (stylesheet elements doms))
-(struct failure (stylesheet trees))
+(struct success (stylesheet elements doms) #:prefab)
+(struct failure (stylesheet trees) #:prefab)
 
 (define (constraints log-phase sheets docs fonts [tests #f] #:render? [render? #t])
   (define doms (map parse-dom docs))
@@ -110,3 +110,20 @@
      (log-phase "Found core with ~a constraints" (length c))
      (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
      (failure stylesheet* (map unparse-tree trees*))]))
+
+(define (solve-cached sheets docs fonts [tests #f] #:render? [render? #t])
+  (cond
+   [(*cache-file*)
+    (define key (list sheets docs fonts tests render?))
+    (define out
+      (cond
+       [(hash-has-key? *cache* key)
+        ((make-log) "Retrieved result from cache")
+        (hash-ref *cache* key)]
+       [else
+        (solve sheets docs fonts tests #:render? render?)]))
+    (hash-set! *cache* key out)
+    (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p)))
+    out]
+   [else
+    (solve sheets docs fonts tests #:render? render?)]))

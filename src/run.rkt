@@ -121,8 +121,8 @@
   (with-handlers
       ([exn:break? (λ (e) 'break)]
        [exn:fail? (λ (e) (list 'error e))])
-    (solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':test #f)
-           (dict-ref problem ':fonts) #:render? (equal? (dict-ref problem ':render 'true) 'true))))
+    (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':test #f)
+                  (dict-ref problem ':fonts) #:render? (equal? (dict-ref problem ':render 'true) 'true))))
 
 (define (do-accept problem)
   (match (solve-problem problem)
@@ -304,6 +304,14 @@
     (debug-mode!)]
    [("+x") name "Set an option" (flags (set-add (flags) (string->symbol name)))]
    [("-x") name "Unset an option" (flags (set-remove (flags) (string->symbol name)))]
+   [("--cache") file-name "Cache for Z3 results"
+    (*cache-file* file-name)
+    (when (file-exists? file-name)
+      (call-with-input-file file-name
+        (λ (p)
+          (define cache (read p))
+          (for ([(k v) (in-hash cache)])
+            (hash-set! *cache* k v)))))]
 
    #:subcommands
    ["accept"
