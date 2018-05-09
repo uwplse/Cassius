@@ -242,9 +242,9 @@
     [_ #f]))
 
 (define (box-constraints dom emit elt)
-  (for ([cmd '(:x :y :w :h :mtp :mbp)] #:when (node-get* elt cmd #:default #f))
+  (for ([cmd '(:x :y :w :h)] #:when (node-get* elt cmd #:default #f))
     (define arg (node-get elt cmd))
-    (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width) (:mbp . mbp) (:mtp . mtp)) cmd))
+    (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg
@@ -279,6 +279,8 @@
         (if (node-get* box ':component)
             'link-box-magic
             'link-box)))
+  (define is-component (or (node-get* box ':component) (node-get* box ':spec)))
+  (emit `(assert (= (is-component ,(dump-box box)) ,(if is-component 'true 'false))))
   (emit `(assert (! (,link-function
                      ,(dump-box box)
                      ,(dump-box (node-parent box))
@@ -301,19 +303,21 @@
   (for/hash ([node nodes] #:when (node-get node ':name #:default false))
     (values (node-get node ':name) (dump-box node))))
 
-(define (spec-constraints dom emit box)
-  (when (node-get box ':spec)
+(define (spec-constraints fields dom emit box)
+  (when (ormap (curry node-get box) fields)
     (define-values (vars body)
-      (match (node-get box ':spec)
-        [`(forall (,vars ...) ,body) (values vars body)]
-        [body (values '() body)]))
-    (define nodes (nodes-below box (λ (x) (node-get x ':spec))))
+      (disassemble-forall (apply and-assertions (map (λ (x) (node-get box x #:default 'true)) fields))))
+    (define nodes (nodes-below box (λ (x) (ormap (curry node-get x) fields))))
     (define ctx
       (hash-union
        (for/hash ([var vars]) (values var var))
        (hash '? (dump-box box))
        (get-node-names nodes)))
     (define spec (compile-assertion (list dom) body ctx))
+    ;(eprintf "For ~a, say ~a for (~a)\n" box spec (name 'box box))
+    ;(for ([node nodes])
+    ;  (eprintf "  ~a\n" node))
+    ;(eprintf "\n")
     (emit `(assert (! (and
                        ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
                            `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
@@ -441,8 +445,8 @@
     ,@(per-element replaced-constraints)
     ,@(per-box contents-constraints)
     ,@(font-computation)
-    ,@(assertion-helpers)
+    ,@(boxref-definitions)
     ,@(for-render (layout-definitions))
-    ,@(if render? '() (per-box spec-constraints))
+    ,@(per-box (curry spec-constraints (if render? '(:spec) '(:spec :assert))))
     ,@(for-render (per-box layout-constraints))
     ))

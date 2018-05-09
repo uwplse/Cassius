@@ -5,14 +5,21 @@
          "../src/frontend.rkt" "../src/solver.rkt"
          "../src/print/tree.rkt" "../src/print/css.rkt" "../src/print/smt.rkt")
 
-;(provide get-box-to-remove)
-
-(define (parse-cache port)
+(define (parse-unsat-cache port)
   (define cache (make-hash))
   (for ([expr (in-port read port)])
     (match expr
       [`(define-tree ,tree) (dict-set! cache ':tree tree)]
       [`(define-document ,document) (dict-set! cache ':document document)]))
+  cache)
+
+(define (parse-cex-cache port)
+  (define cache (make-hash))
+  (for ([expr (in-port read port)])
+    (match expr
+      [`(define-tree ,tree) (dict-set! cache ':tree tree)]
+      [`(define-document ,document) (dict-set! cache ':document document)]
+      [`(define-config ,config) (dict-set! cache ':config config)]))
   cache)
 
 (define (sub-tree-size node)
@@ -57,16 +64,21 @@
         total-boxes
         (real->decimal-string (* (/ removed-boxes total-boxes) 100) 2)))
 
-(define (find-problem-boxes new)
-  (define (is-problem box)
+(define (is-problem box)
     (for/or ([(key value) (in-dict (node-attrs box))])
       (match value
         [(list (list 'bad prop)) #t]
         [_ #f])))
 
+#;(define (is-cex box)
+    (for/or ([(key value) (in-dict (node-attrs box))])
+      (match key
+        [':cex #t]
+        [_ #f])))
+
+(define (find-problem-boxes new test)
   (for*/list ([dom new] [node (in-tree (parse-tree dom))]
-                   #:when node
-                   #:when (is-problem node))
+                   #:when (and node (test node)))
     node))
 
 (define (get-elt-ancestor box)
@@ -124,15 +136,13 @@
 
 (define (get-box-to-remove new old backtracked)
   (define docs (map parse-dom old))
-  (define failing (find-problem-boxes new))
+  (define failing (find-problem-boxes new is-problem)) ; Switch to is-cex for assertions
   (define tag&index->elt (elt<->tag&idx-association docs))
   (define backtracked-elts (parse-backtracked backtracked tag&index->elt))
   (mark-failing (append failing backtracked-elts))
   (mark-tree (append failing backtracked-elts) ':bad #t)
   (mark-tree backtracked-elts ':dnr #t)
   (match-define (cons box->elt elt->box) (get-box-elt-map new docs))
-
-  ;(eprintf "~s\n" new)
 
   (define candidates
     (for/list ([problem-box failing])
@@ -159,23 +169,51 @@
 (module+ main
   (multi-command-line
    #:program "cassius minimizer"
-   #:args (cache-file [backtracked "[]"])
-   (define cache (call-with-input-file cache-file parse-cache))
-   (define to-remove (get-box-to-remove
-                      (dict-ref cache ':tree)
-                      (dict-ref cache ':document)
-                      backtracked))
-     (when to-remove
-       (printf "Rejected\n")
-       (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
-       ;; TODO: Make two JSON outputs into one JSON output
-       (write-json (make-hash (list (cons 'removed removed)
-                                    (cons 'total total)
-                                    (cons 'efficiency efficiency))))
-       (newline)
+
+   #:subcommands
+   ["rendering"
+    #:args (cache-file [backtracked "[]"])
+    (define cache (call-with-input-file cache-file parse-unsat-cache))
+    (define to-remove (get-box-to-remove
+                       (dict-ref cache ':tree)
+                       (dict-ref cache ':document)
+                       backtracked))
+    (when to-remove
+      (printf "Rejected\n")
+      (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
+      ;; TODO: Make two JSON outputs into one JSON output
+      (write-json (make-hash (list (cons 'removed removed)
+                                   (cons 'total total)
+                                   (cons 'efficiency efficiency))))
+      (newline)
        (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
-       (newline))
-     (unless to-remove
-       (printf "Minimized\n")
-       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref cache ':document)))))
-       (printf "~s\n" total-boxes))))
+      (newline))
+    (unless to-remove
+      (printf "Minimized\n")
+      (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref cache ':document)))))
+      (printf "~s\n" total-boxes))]
+   ["assertion"
+    #:args (cache-file cexes [backtracked "[]"])
+    (eprintf "Minimizing assertions is currently unsupported\n\n")
+    (define cache (call-with-input-file cache-file parse-cex-cache))
+    (define properties (dict-ref cache ':config))
+    (eprintf "Dom-properties: ~s\n" properties)
+    
+    (define to-remove (get-box-to-remove
+                       (dict-ref cache ':tree)
+                       (dict-ref cache ':document)
+                       backtracked))
+    (when to-remove
+      (printf "Rejected\n")
+      (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
+      ;; TODO: Make two JSON outputs into one JSON output
+      (write-json (make-hash (list (cons 'removed removed)
+                                   (cons 'total total)
+                                   (cons 'efficiency efficiency))))
+      (newline)
+       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+      (newline))
+    (unless to-remove
+      (printf "Minimized\n")
+      (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref cache ':document)))))
+      (printf "~s\n" total-boxes))]))

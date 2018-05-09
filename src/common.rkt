@@ -15,7 +15,8 @@
  minimize-mode!
  *debug* *fuzz* *font-fuzz*
  *version* *commit* *branch*
- *minimize*)
+ *minimize*
+ *cache-file* *cache*)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -26,7 +27,7 @@
      css:min-width css:max-width css:max-height css:min-height
      css:position css:font-size css:overflow-x css:overflow-y 
      css:text-indent css:inherit css:clear
-     unit:% unit:em
+     unit:% unit:em @media
      empty-text scrollbar
      display:inline-block tag:img tag:input display:list-item
      unknown-selector priority:important
@@ -233,3 +234,7 @@
 
 (define *branch*
   (git-command "rev-parse" "--abbrev-ref" "HEAD" #:default "release"))
+
+(define *cache-file* (make-parameter #f))
+
+(define *cache* (make-hash))

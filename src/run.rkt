@@ -3,7 +3,8 @@
 (require racket/cmdline (only-in xml write-xexpr) json
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
          "frontend.rkt" "solver.rkt" "modularize.rkt"
-         "print/tree.rkt" "print/css.rkt" "print/smt.rkt")
+         "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
+         "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt")
 
 (provide dom-strip-positions dom-set-range)
 
@@ -21,6 +22,91 @@
        (map loop children))))
   (struct-copy dom d [boxes boxes*]))
 
+(define (dom-run-proof problem cmds)
+  (define theorem-context (make-hash))
+  (for/reap [sow] ([cmd cmds])
+    (match cmd
+      [`(define (,name ,args ...) ,body)
+       (hash-set! assertion-helpers name
+                  (procedure-reduce-arity
+                   (λ vals (smt-replace-terms body (map cons args vals)))
+                   (length args)))]
+      [`(theorem (,name ,args ...) ,body)
+       (hash-set! theorem-context name `(forall ,args ,body))]
+      [`(proof (,name ,theorem) ,subcmds ...)
+       (define the-dom (first (dict-ref problem ':documents)))
+       (define elts (parse-tree (dom-elements the-dom)))
+       (define boxes (parse-tree (dom-boxes the-dom)))
+
+       (match (dom-context the-dom ':matched) ['(true) (void)])
+       (define matcher
+         (let ([linker (link-matched-elts-boxes #f elts boxes)])
+           (λ (x) (match (linker x) [#f #f] [(list a b c) a]))))
+
+       (define box-context (make-hash (list (cons 'root boxes))))
+       (define components (hash-values box-context))
+       (for ([cmd subcmds])
+         (match cmd
+           [`(spec * ,spec)
+            (for ([box components])
+              (node-set! box ':spec (and-assertions (node-get box ':spec #:default 'true) spec)))]
+           [`(spec! * ,spec)
+            (for ([box components])
+              (node-set! box ':spec spec))]
+           [`(spec! ,name ,spec)
+            (define box (dict-ref box-context name))
+            (when (eq? box boxes) (node-set! box ':name 'root))
+            (node-set! box ':spec spec)]
+           [`(spec ,name ,spec)
+            (define box (dict-ref box-context name))
+            (when (eq? box boxes) (node-set! box ':name 'root))
+            (node-set! box ':spec (and-assertions (node-get box ':spec #:default 'true) spec))]
+           [`(assert * ,assert)
+            (for ([box components])
+              (node-set! box ':assert (and-assertions (node-get box ':assert #:default 'true) assert)))]
+           [`(assert! * ,assert)
+            (for ([box components])
+              (node-set! box ':assert assert))]
+           [`(assert! ,name ,assert)
+            (define box (dict-ref box-context name))
+            (when (eq? box boxes) (node-set! box ':name 'root))
+            (node-set! box ':assert assert)]
+           [`(assert ,name ,assert)
+            (define box (dict-ref box-context name))
+            (when (eq? box boxes) (node-set! box ':name 'root))
+            (node-set! box ':assert (and-assertions (node-get box ':assert #:default 'true) assert))]
+           [`(admit ,name)
+            (define box (dict-ref box-context name))
+            (when (eq? box boxes) (node-set! box ':name 'root))
+            (node-set! box ':admit true)]
+           [`(component ,name ,sel)
+            (define selected-boxes
+              (for/list ([box (in-tree boxes)] #:when (and (matcher box) (selector-matches? sel (matcher box))))
+                box))
+            (define box
+              (match selected-boxes
+                [(list) (raise (format "Could not find any elements matching ~a" sel))]
+                [(list box) box]
+                [(list boxes ...) (raise (format "~a matches multiple elements ~a" (string-join (map ~a boxes) ", ")))]))
+            (hash-set! box-context name box)
+            (set! components (cons box components))
+            (node-set! box ':name name)
+            (node-set! box ':spec 'true)]
+           [`(components ,sels ...)
+            (define selected-boxes
+              (filter identity
+                      (for/list ([box (in-tree boxes)] #:when (matcher box))
+                        (define elt (matcher box))
+                        (and elt (ormap (curryr selector-matches? elt) sels) box))))
+            (when (null? selected-boxes)
+              (eprintf "Warning: Could not find any elements matching ~a\n" (string-join (map ~a sels) ", ")))
+            (for ([box selected-boxes])
+                 (node-set! box ':spec 'true)
+                 (set! components (cons box components)))]))
+       (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
+       (define problem** (dict-set problem* ':test (list (dict-ref theorem-context theorem))))
+       (sow problem**)])))
+
 (define (dom-set-range d)
   (define ctx*
     (for/fold ([ctx (dom-properties d)])
@@ -35,8 +121,8 @@
   (with-handlers
       ([exn:break? (λ (e) 'break)]
        [exn:fail? (λ (e) (list 'error e))])
-    (solve (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':test #f)
-           (dict-ref problem ':fonts) #:render? (equal? (dict-ref problem ':render 'true) 'true))))
+    (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':test #f)
+                  (dict-ref problem ':fonts) #:render? (equal? (dict-ref problem ':render 'true) 'true))))
 
 (define (do-accept problem)
   (match (solve-problem problem)
@@ -53,7 +139,7 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-minimize problem cache backtracked)
+(define (do-minimize problem cache)
   (match (solve-problem problem)
     [(success stylesheet trees doms)
      (printf "Accepted\n")]
@@ -146,12 +232,36 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-verify/modular problem #:component [subcomponent #f])
+(define (do-minimize-assertion problem cache)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
-  (match-define (list check components ...) (modularize problem*))
+  (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
+    [(success stylesheet trees doms)
+     (eprintf "Counterexample found!\n")
+     ;(for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
+     ;(printf "\n\nConfiguration:\n")
+     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+       (eprintf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
+     (with-output-to-file cache #:exists 'replace
+       (lambda ()
+         (printf "(define-tree ~s)\n" trees)
+         (printf "(define-document ~s)\n" (dict-ref problem ':documents))
+         (printf "(define-config ~s)\n" (dom-properties (apply append doms)))))]
+    [(failure stylesheet trees)
+     (eprintf "Verified.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
+(define (do-verify/modular problem proof-file #:component [subcomponent #f])
+  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
+  (define proof-cmds (call-with-input-file proof-file (λ (p) (sequence->list (in-port read p)))))
+  (define problem** (dom-run-proof problem* proof-cmds))
+  (match-define (list check components ...) (append-map modularize problem**))
   (for ([component components] [i (in-naturals 1)]
         #:when (or (not subcomponent)
                    (equal? subcomponent (dom-name (first (dict-ref component ':documents))))))
+    (eprintf "Verifying ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))
     (match (parameterize ([*fuzz* #f]) (solve-problem component))
       [(success stylesheet trees doms)
        (eprintf "Counterexample found in component ~a!\n" (or (dom-name (first doms)) i))
@@ -168,10 +278,11 @@
       ['break
        (eprintf "Terminated.\n")
        (exit 127)]))
+  (eprintf "Verifying proof correctness.\n")
   (match (parameterize ([*fuzz* #f]) (solve-problem check))
     [(success stylesheet trees doms)
      (eprintf "Counterexample found in final check!\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name))))
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert))))
      (printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
@@ -200,14 +311,39 @@
     (debug-mode!)]
    [("+x") name "Set an option" (flags (set-add (flags) (string->symbol name)))]
    [("-x") name "Unset an option" (flags (set-remove (flags) (string->symbol name)))]
+   [("--cache") file-name "Cache for Z3 results"
+    (*cache-file* file-name)
+    (when (file-exists? file-name)
+      (call-with-input-file file-name
+        (λ (p)
+          (define cache (read p))
+          (for ([(k v) (in-hash cache)])
+            (hash-set! *cache* k v)))))]
 
    #:subcommands
    ["accept"
     #:args (fname problem)
     (do-accept (get-problem fname problem))]
    ["minimize"
-    #:args (fname problem cache [backtracked "[]"])
-    (begin (minimize-mode!) (do-minimize (get-problem fname problem) cache backtracked))]
+    #:args (fname problem cache)
+    (begin (minimize-mode!) (do-minimize (get-problem fname problem) cache))]
+   ["minimize-assertion"
+    #:args (aname assertion fname problem cache)
+    (define prob (get-problem fname problem))
+    (define assertions
+      (call-with-input-file aname
+        (λ (p)
+          (for/hash ([assertion (in-port read p)])
+            (match-define `(define-test (,name ,vars ...) ,body) assertion)
+            (values name `(forall ,vars ,body))))))
+    (define documents
+      (map (compose dom-set-range dom-strip-positions)
+           (dict-ref prob ':documents)))
+    (do-minimize-assertion
+     (dict-set
+      (dict-set prob ':documents documents)
+      ':test (list (dict-ref assertions (string->symbol assertion))))
+     cache)]
    ["debug"
     #:args (fname problem)
     (do-debug (get-problem fname problem))]
@@ -232,12 +368,12 @@
    ["verify"
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
-   ["merify"
+   ["check-proof"
     #:once-each
     [("--component") component "Only verify a subcomponent (for debugging)"
      (set! subcomponent (string->symbol component))]
-    #:args (fname problem)
-    (do-verify/modular (get-problem fname problem) #:component subcomponent)]
+    #:args (fname problem proof-file)
+    (do-verify/modular (get-problem fname problem) proof-file #:component subcomponent)]
    ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))

@@ -44,9 +44,9 @@
   [max-height none])
 
 (define-css-type (Margin auto (px Real) (% Real) (em Real))
-  [margin-top auto]
+  [margin-top (px 0)]
   [margin-right (px 0)]
-  [margin-bottom auto]
+  [margin-bottom (px 0)]
   [margin-left (px 0)])
 
 (define-css-type (Padding (px Real) (% Real) (em Real))

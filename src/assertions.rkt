@@ -1,27 +1,19 @@
 #lang racket
 
 (require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt")
-(provide compile-assertion auxiliary-definitions)
+(provide compile-assertion auxiliary-definitions assertion-helpers)
 
 (define auxiliary-definitions (make-parameter '()))
 
-(define helpers
-  (hash
-   'descends
-   (λ (b . sels) `(!= (ancestor ,b (matches ? ,@sels)) null))
-   'is-interactive
-   (λ (b) `(matches ,b (tag a) (tag input) (tag button)))
-   'viewable
-   (λ (b) `(and (> (right ,b) (left root)) (> (bottom ,b) (top root))))
-   'onscreen
-   (λ (b) `(and (>= (left ,b) (left root)) (>= (top ,b) (top root))))
-   '!=
-   (λ (a b) `(not (= ,a ,b)))
-   'width
-   (λ (b [dir 'border]) `(- (right ,b ,dir) (left ,b ,dir)))
-   'height
-   (λ (b [dir 'border]) `(- (bottom ,b ,dir) (top ,b ,dir)))
-   ))
+(define assertion-helpers
+  (make-hash
+   `((descends . ,(λ (b . sels) `(!= (ancestor ,b (matches ? ,@sels)) null)))
+     (is-interactive . ,(λ (b) `(matches ,b (tag a) (tag input) (tag button))))
+     (viewable . ,(λ (b) `(and (> (right ,b) (left root)) (> (bottom ,b) (top root)))))
+     (onscreen . ,(λ (b) `(and (>= (left ,b) (left root)) (>= (top ,b) (top root)))))
+     (!= . ,(λ (a b) `(not (= ,a ,b))))
+     (width . ,(λ (b [dir 'border]) `(- (right ,b ,dir) (left ,b ,dir))))
+     (height . ,(λ (b [dir 'border]) `(- (bottom ,b ,dir) (top ,b ,dir)))))))
 
 (define (compile-assertion doms body ctx)
   (match-define (list dom) doms)
@@ -60,14 +52,17 @@
        (auxiliary-definitions (remove-duplicates (append (auxiliary-definitions) aux-def)))
        `(,aux ,(loop box ctx))]
       [`(has-contents ,box) `(has-contents ,(loop box ctx))]
+      [`(is-component ,box) `(is-component ,(loop box ctx))]
       [`(has-type ,box ,(and (or 'root 'text 'inline 'block 'line) boxtype))
        (define function (sformat "is-box/~a" boxtype))
        `(,function (type ,(loop box ctx)))]
       [(list-rest (and (or 'top 'right 'bottom 'left) dir) box edge*)
        (define edge
          (match edge* [(list edge) edge] [(list) 'border]))
+       (define adjustment
+         (match dir [(or 'top 'bottom) 'yo] [(or 'left 'right) 'xo]))
        (define function (sformat "~a-~a" dir edge))
-       `(,function ,(loop box ctx))]
+       `(+ (,function ,(loop box ctx)) (,adjustment ,(loop box ctx)))]
       [`(text-height ,box)
        `(let ([b ,(loop box ctx)]) (height-text b))]
       [`(vertically-adjacent ,box1 ,box2)
@@ -108,8 +103,8 @@
        `(let (,@(map list vars vals*)) ,(loop body ctx*))]
 
       ;; Expandable
-      [(list (? (curry dict-has-key? helpers) fname) args ...)
-       (loop (apply (dict-ref helpers fname) args) ctx)]
+      [(list (? (curry dict-has-key? assertion-helpers) fname) args ...)
+       (loop (apply (dict-ref assertion-helpers fname) args) ctx)]
       [`(luminance ,color)
        `(lum (color.rgb ,(loop color ctx)))]
       [`(overlaps ,b1 ,b2)

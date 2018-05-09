@@ -86,8 +86,8 @@
                                [current-subprocess-custodian-mode 'kill]
                                [current-custodian custodian]
                                [*fuzz* fuzz?])
-                  (solve (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)
-                         (dict-ref prob ':fonts)))))))
+                  (solve-cached (dict-ref prob ':sheets) (dict-ref prob ':documents) (dict-ref prob ':test #f)
+                                (dict-ref prob ':fonts)))))))
 
   (define t (current-inexact-milliseconds))
   (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout))
@@ -482,6 +482,12 @@
     (debug-mode!)]
    [("+x") name "Set an option" (flags (cons (string->symbol name) (flags)))]
    [("-x") name "Unset an option" (flags (cons (string->symbol name) (flags)))]
+   [("--cache") file-name "Cache for Z3 results"
+    (*cache-file* file-name)
+    (call-with-input-file file-name
+      (λ (p)
+        (for ([(k v) (in-dict (read p))])
+          (hash-set! *cache* k v))))]
 
    #:once-each
    [("-o" "--output") fname "File name for final CSS file"

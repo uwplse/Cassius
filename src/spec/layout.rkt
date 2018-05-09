@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "css-properties.rkt")
-(provide layout-definitions view-width-name view-height-name assertion-helpers scroll-width-name)
+(provide layout-definitions view-width-name view-height-name boxref-definitions scroll-width-name)
 
 (define view-width-name (make-parameter false))
 (define view-height-name (make-parameter false))
@@ -13,15 +13,23 @@
     `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
           (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
           (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)))
-  (if (set-member? '(min-width width max-width min-height height max-height) prop)
-      `(-
-        ,out
-        (ite (is-box-sizing/border-box (style.box-sizing ,r))
-             (+ (bl ,b) (pl ,b) (pr ,b) (br ,b))
-             0.0))
-      out))
+  (match prop
+   [(or 'min-width 'width 'max-width)
+    `(-
+      ,out
+      (ite (is-box-sizing/border-box (style.box-sizing ,r))
+           (+ (bl ,b) (pl ,b) (pr ,b) (br ,b))
+           0.0))]
+   [(or 'min-height 'height 'max-height)
+    `(-
+      ,out
+      (ite (is-box-sizing/border-box (style.box-sizing ,r))
+           (+ (bt ,b) (pt ,b) (pb ,b) (bb ,b))
+           0.0))]
+   [else
+    out]))
 
-(define-constraints assertion-helpers
+(define-constraints boxref-definitions
   (declare-fun rootbox (Box) Box)
   (assert
    (forall ((b Box))
@@ -29,6 +37,8 @@
               (ite (is-no-box (pbox b))
                    b
                    (rootbox (pbox b))))))
+
+  (assert (forall ((b Box)) (is-box (rootbox b))))
 
   (declare-fun nflow (Box) Box)
   (assert
@@ -409,8 +419,8 @@
              [ml* (min-ml b)]
              [mr* (min-mr b)])
          ,(smt-cond
-           [(> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr*) available-width)
-            (= (w b) w*)
+           [(> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr* (scroll-y b)) available-width)
+            (= (w b) (- w* (scroll-y b)))
             (= (ml b) ml*)
             (width-set b)]
            [(or (is-no-elt e) (and (is-width/auto (style.width r)) (not (is-replaced e))))
@@ -418,7 +428,7 @@
                       (> (- available-width ml* (bl b) (pl b) (pr b) (br b) mr*)
                          ,(get-px-or-% 'max-width '(w p) 'b)))
                  (and
-                  (= (w b) ,(get-px-or-% 'max-width '(w p) 'b))
+                  (= (w b) (- ,(get-px-or-% 'max-width '(w p) 'b) (scroll-y b)))
                   ,(smt-cond
                     [(not (is-margin/auto (style.margin-left r)))
                      (= (ml b) ml*)]
@@ -432,7 +442,7 @@
                   (= (mr b) mr*)
                   (width-set b)))]
            [else
-            (= (w b) w*)
+            (= (w b) (- w* (scroll-y b)))
             (width-set b)
             ,(smt-cond
               [(not (is-margin/auto (style.margin-left r)))
@@ -504,7 +514,7 @@
                  (or (is-replaced (box-elt b))
                      (not (is-height/auto (style.height (computed-style (box-elt b))))))])
        (=> top? (= (top-outer b) (+ (top-padding pp) temp-top)))
-       (=> height? (= (h b) temp-height))
+       (=> height? (= (h b) (- temp-height (scroll-x b))))
        (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-roots b)))
        (=> (and (not height?) (not (and top? bottom?)))
            (= (h b) (auto-height-for-flow-roots b)))
@@ -552,13 +562,13 @@
              (= (mr b) (margin-min-px (style.margin-right r) b))))
 
         (=> left? (= (left-outer b) (+ (left-padding pp) temp-left)))
-        (=> width? (and (= (w b) temp-width)
+        (=> width? (and (= (w b) (- temp-width (scroll-y b)))
                         (not (w-from-stfwidth b))))
         (=> (and (not width?) (not (and left? right?)))
             (and (= (w b) (usable-stfwidth b))
                  (w-from-stfwidth b)))
         (=> (and (not left?) (not right?))
-            (= (left-outer b) (left-padding p)))
+            (= (left-outer b) (left-content p)))
         (=> (and right? (not (and left? width?)))
             (= (right-outer b) (- (right-padding pp) temp-right)))
         (=> (and left? right?) (not (w-from-stfwidth b)))
@@ -641,7 +651,7 @@
 
        (ite (is-height/auto (style.height r))
          (= (h b) (auto-height-for-flow-blocks b))
-         (= (h b) (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
+         (= (h b) (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))
 
        (= (mt b)
           (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top '(w p) 'b)))
@@ -701,14 +711,14 @@
                  (or (= (w b) (usable-stfwidth b)) (and (is-box (lbox b)) (uses-parent-w (lbox b)))))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (w b)
-               (min-max-width ,(get-px-or-% 'width '(w (pbflow b)) 'b) b)))
+               (- (min-max-width ,(get-px-or-% 'width '(w (pbflow b)) 'b) b) (scroll-y b))))
 
        (ite (is-height/auto (style.height r))
             (ite (is-replaced e)
                  (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))
                  (=> (width-set b)
                      (= (h b) (auto-height-for-flow-roots b))))
-            (= (h b) (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
+            (= (h b) (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))
 
        ;; level -> x -> advance -> can-add -> add
        (let* ([ez (ez.in b)]
@@ -841,7 +851,7 @@
           (= (h b)
              (ite (is-height/auto (style.height r))
                   (auto-height-for-flow-roots b)
-                  (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
+                  (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))]
          [else
           (= (h b) (font.selection-height metrics))])
 
@@ -851,7 +861,7 @@
          [(is-display/inline-block (style.display r))
           (ite (is-width/auto (style.width r))
                (= (w b) (usable-stfwidth b))
-               (= (w b) (min-max-width ,(get-px-or-% 'width '(w p) 'b) b)))]
+               (= (w b) (- (min-max-width ,(get-px-or-% 'width '(w p) 'b) b) (scroll-y b))))]
          [(is-box (fflow b))
           (and
            (= (left-outer (fflow b)) (left-content b))
@@ -1003,19 +1013,37 @@
        (= (x b) (left-content p))
        (= (ez.lookback b) true)))
 
+  ;; In some cases either the x or y scrollbar can be shown but not both;
+  ;; in this case only the y scrollbar is ever shown
+  ;; Also, we do not model the fact no scrollbars is preferred if both are possible
+  (define-const min-size-for-scrollbars Real 45.0)
+
   (assert
    (forall ((b Box))
-           (= (scroll-x b)
-              (ite (and (is-elt (box-elt b)) (is-overflow/scroll (style.overflow-x (computed-style (box-elt b)))))
-                   ,(scroll-width-name)
-                   0))))
+           (or 
+            (= (scroll-x b)
+               (ite
+                (and
+                 (> (- (box-width b) (scroll-y b)) min-size-for-scrollbars)
+                 (is-box (pbox b))
+                 (is-elt (box-elt b))
+                 (is-elt (pelt (box-elt b)))
+                 (is-overflow/scroll (style.overflow-x (computed-style (box-elt b)))))
+                ,(scroll-width-name)
+                0))
+            (is-no-box (pbox b))))) ; The root box is weird in several ways
 
   (assert
    (forall ((b Box))
            (or
             (= (scroll-y b)
-               (ite (and (is-elt (box-elt b)) (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
-                    ,(scroll-width-name)
-                    0))
-            ;; The root scroll bar is often a different width from the width of other elements :(
+               (ite 
+                (and
+                 (> (- (box-height b) (scroll-x b)) min-size-for-scrollbars)
+                 (is-box (pbox b))
+                 (is-elt (box-elt b))
+                 (is-elt (pelt (box-elt b)))
+                 (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
+                ,(scroll-width-name)
+                0))
             (is-no-box (pbox b))))))

@@ -2,16 +2,10 @@
 (require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
-(provide query solve (struct-out success) (struct-out failure))
+(provide query solve (struct-out success) (struct-out failure) solve-cached)
 
-(define (test-variables test)
-  (match test [(list 'forall (list vars ...) body) vars] [_ '()]))
-
-(define (test-body test)
-  (match test [(list 'forall (list vars ...) body) body] [_ test]))
-
-(struct success (stylesheet elements doms))
-(struct failure (stylesheet trees))
+(struct success (stylesheet elements doms) #:prefab)
+(struct failure (stylesheet trees) #:prefab)
 
 (define (constraints log-phase sheets docs fonts [tests #f] #:render? [render? #t])
   (define doms (map parse-dom docs))
@@ -47,19 +41,17 @@
             link-elts-boxes))
       (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
 
-  (when (check-duplicates (apply append (map test-variables (or tests '()))))
-    (error "Duplicate variable names in assertions!"))
-
   (define tests*
     (for/list ([test (or tests '())])
+      (define-values (test-vars test-body) (disassemble-forall test))
       (define ctx
         (hash-union
-         (for/hash ([var (test-variables test)])
+         (for/hash ([var test-vars])
            (values var (sformat "cex~a" (name 'cex (cons var test)))))
          (hash '? (dump-box (dom-boxes (first doms))))
          (for*/hash ([dom doms] [node (in-boxes dom)] #:when (node-get node ':name #:default false))
            (values (node-get node ':name) (dump-box node)))))
-      (compile-assertion doms (test-body test) ctx)))
+      (compile-assertion doms test-body ctx)))
 
   (define query (all-constraints (cons browser-style sheets) matchers doms fonts #:render? render?))
 
@@ -118,3 +110,20 @@
      (log-phase "Found core with ~a constraints" (length c))
      (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
      (failure stylesheet* (map unparse-tree trees*))]))
+
+(define (solve-cached sheets docs fonts [tests #f] #:render? [render? #t])
+  (cond
+   [(*cache-file*)
+    (define key (list sheets docs fonts tests render?))
+    (define out
+      (cond
+       [(hash-has-key? *cache* key)
+        ((make-log) "Retrieved result from cache")
+        (hash-ref *cache* key)]
+       [else
+        (solve sheets docs fonts tests #:render? render?)]))
+    (hash-set! *cache* key out)
+    (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p)))
+    out]
+   [else
+    (solve sheets docs fonts tests #:render? render?)]))

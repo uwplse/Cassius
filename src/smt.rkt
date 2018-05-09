@@ -1,7 +1,8 @@
 #lang racket
 
 (require "common.rkt")
-(provide define-constraints smt? smt-cond smt-let smt-let* smt-not smt-and smt-or smt-replace smt-replace-terms)
+(provide define-constraints smt? smt-cond smt-let smt-let* smt-not smt-and smt-or smt-replace smt-replace-terms
+         and-assertions disassemble-forall)
 
 (define smt? any/c)
 
@@ -73,3 +74,20 @@
        (if (list? x)
            (cons (car x) (map loop (cdr x)))
            x)])))
+
+(define/match (disassemble-forall a)
+  [(`(forall (,vars ...) ,body))
+   (values vars body)]
+  [(body)
+   (values '() body)])
+
+(define (and-assertions . as)
+  (define-values (vars body)
+    (let loop ([as as])
+      (match as
+        ['() (values '() 'true)]
+        [(cons a as)
+         (define-values (avars abody) (disassemble-forall a))
+         (define-values (bvars bbody) (loop as))
+         (values (set-union avars bvars) (smt-and abody bbody))])))
+  `(forall ,vars ,body))

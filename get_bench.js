@@ -588,6 +588,8 @@ function make_boxes(elt, styles, features) {
 
     if (is_comment(elt)) {
         return [];
+    } else if (elt.dataset && elt.dataset["cassius"] == "magic") {
+        return [extract_magic(elt, children)];
     } else if (is_text(elt)) {
         var out = extract_text(elt);
         var out2 = out.filter(function(x) {return x.props.w !== 0 || x.props.h !== 0});
@@ -952,6 +954,7 @@ function dump_stylesheet(ss, features, media) {
         } catch (e) {
             console.warn(r, e);
             window.ERROR = e;
+            features["unknown-error"] = true;
         }
     }
     return text;
@@ -1154,7 +1157,14 @@ function page2text(name) {
     var text = "";
     text += "(define-stylesheet " + name;
     for (var sid in document.styleSheets) {
-        text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
+        console.log("Reading", sid, document.styleSheets[sid]);
+        try {
+            text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
+        } catch (e) {
+            console.warn(document.styleSheets[sid], e);
+            window.ERROR = e;
+            features["unknown-error"] = true;
+        }
     }
 
     var out = get_boxes(features);

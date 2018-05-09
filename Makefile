@@ -75,3 +75,7 @@ reports/specific.html reports/specific.json: bench/fwt.rkt bench/assertions/spec
 
 reports/modular.html reports/modular.json: bench/modular-yoga.rkt
 	racket src/report.rkt merify $(FLAGS) --show-all --timeout 600 -o reports/modular $^
+
+# Joel on Software blog posts
+bench/joel.rkt: bench/joel/joel.js
+	python get_bench.py --name joel --prerun bench/joel/joel.js "https://www.joelonsoftware.com/2018/04/13/gamification/"
