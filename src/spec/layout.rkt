@@ -13,13 +13,21 @@
     `(ite (,(sformat "is-~a/px" type) (,(sformat "style.~a" prop) ,r))
           (,(sformat "~a.px" type) (,(sformat "style.~a" prop) ,r))
           (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)))
-  (if (set-member? '(min-width width max-width min-height height max-height) prop)
-      `(-
-        ,out
-        (ite (is-box-sizing/border-box (style.box-sizing ,r))
-             (+ (bl ,b) (pl ,b) (pr ,b) (br ,b))
-             0.0))
-      out))
+  (match prop
+   [(or 'min-width 'width 'max-width)
+    `(-
+      ,out
+      (ite (is-box-sizing/border-box (style.box-sizing ,r))
+           (+ (bl ,b) (pl ,b) (pr ,b) (br ,b))
+           0.0))]
+   [(or 'min-height 'height 'max-height)
+    `(-
+      ,out
+      (ite (is-box-sizing/border-box (style.box-sizing ,r))
+           (+ (bt ,b) (pt ,b) (pb ,b) (bb ,b))
+           0.0))]
+   [else
+    out]))
 
 (define-constraints boxref-definitions
   (declare-fun rootbox (Box) Box)
