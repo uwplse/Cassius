@@ -560,7 +560,7 @@
             (and (= (w b) (usable-stfwidth b))
                  (w-from-stfwidth b)))
         (=> (and (not left?) (not right?))
-            (= (left-outer b) (left-padding p)))
+            (= (left-outer b) (left-content p)))
         (=> (and right? (not (and left? width?)))
             (= (right-outer b) (- (right-padding pp) temp-right)))
         (=> (and left? right?) (not (w-from-stfwidth b)))
