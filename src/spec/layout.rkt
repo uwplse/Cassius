@@ -1012,19 +1012,30 @@
 
   (assert
    (forall ((b Box))
-           (= (scroll-x b)
-              (ite (and (is-elt (box-elt b))
-                        (is-box (pbox b))
-                        (is-overflow/scroll (style.overflow-x (computed-style (box-elt b))))
-                        (> (- (box-width b) (scroll-y b)) min-size-for-scrollbars))
-                   ,(scroll-width-name)
-                   0))))
+           (or 
+            (= (scroll-x b)
+               (ite
+                (and
+                 (> (- (box-width b) (scroll-y b)) min-size-for-scrollbars)
+                 (is-box (pbox b))
+                 (is-elt (box-elt b))
+                 (is-elt (pelt (box-elt b)))
+                 (is-overflow/scroll (style.overflow-x (computed-style (box-elt b)))))
+                ,(scroll-width-name)
+                0))
+            (is-no-box (pbox b))))) ; The root box is weird in several ways
 
   (assert
    (forall ((b Box))
-           (= (scroll-y b)
-              (ite (and (is-elt (box-elt b))
-                        (is-overflow/scroll (style.overflow-y (computed-style (box-elt b))))
-                        (> (- (box-height b) (scroll-x b)) min-size-for-scrollbars))
-                   ,(scroll-width-name)
-                   0)))))
+           (or
+            (= (scroll-y b)
+               (ite 
+                (and
+                 (> (- (box-height b) (scroll-x b)) min-size-for-scrollbars)
+                 (is-box (pbox b))
+                 (is-elt (box-elt b))
+                 (is-elt (pelt (box-elt b)))
+                 (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
+                ,(scroll-width-name)
+                0))
+            (is-no-box (pbox b))))))
