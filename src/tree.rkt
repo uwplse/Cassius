@@ -1,9 +1,13 @@
 #lang racket
 (require "common.rkt")
 (provide parse-tree unparse-tree tree-copy tree=?
-         node? node-type node-parent node-children* node-children node-attrs
+         node-stx? node? node-type node-parent node-children* node-children node-attrs
          node-get node-get* node-set! node-set*! node-add! node-remove!
          node-prev node-next node-fchild node-lchild in-tree)
+
+(define-by-match node-stx?
+  (? string?)
+  (list (list (? symbol?) _ ...) (? node-stx?) ...))
 
 (struct node (type attrs parent children*) #:mutable
         #:methods gen:custom-write

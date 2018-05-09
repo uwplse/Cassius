@@ -3,7 +3,9 @@
 (require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt")
 (provide modularize)
 
-(define (prune-elements boxes elts-stx) ; TODO: kind of weird here with the unparsing
+(define/contract (prune-elements box-stx elts-stx) ; TODO: kind of weird here with the unparsing
+  (-> node-stx? node-stx? node-stx?)
+  (define boxes (parse-tree box-stx))
   (define used-ids
     (for/set ([box (in-tree boxes)] #:when (node-get* box ':elt #:default false))
       (node-get box ':elt)))
@@ -24,11 +26,32 @@
                                    child)))))
   node)
 
-(define (prune-sheets sheets elements)
+(define (prune-sheets sheets elements-stxs)
+  (define elementss (map parse-tree elements-stxs))
   (for/list ([sheet sheets])
     (for/list ([rule sheet]
-               #:when (for/or ([elt (in-tree (parse-tree elements))]) (selector-matches? (car rule) elt)))
+               #:when (for*/or ([elements elementss] [elt (in-tree elements)])
+                        (selector-matches? (car rule) elt)))
       rule)))
+
+(define (classes-used selector)
+  (reap [sow]
+        (let loop ([selector selector])
+          (match selector
+            [(list 'class cls)
+             (sow cls)]
+            [(or (list (or 'and 'desc 'child) args ...) (list (or 'media 'fake) _ args ...))
+             (for-each loop args)]
+            [_ (void)]))))
+
+(define (prune-classes elts-stx sheets)
+  (define used-classes
+    (apply set-union (map (compose classes-used car) (apply append sheets))))
+  (define elts (parse-tree elts-stx))
+  (for ([elt (in-tree elts)])
+    (define old-classes (node-get elt ':class #:default '()))
+    (node-set! elt ':class (set-intersect old-classes used-classes)))
+  (unparse-tree elts))
 
 (define (split-document doc)
   (reap [sow]
@@ -49,7 +72,6 @@
                 (sow (cons (struct-copy dom doc
                                         [name (node-get component ':name #:default false)]
                                         [boxes (unparse-tree component)]
-                                        [elements (prune-elements component (dom-elements doc))]
                                         [properties props])
                            (and-assertions spec assert))))
             (unless (eq? tree (dom-boxes doc))
@@ -59,8 +81,14 @@
           (cons (first tree) children*)))))
 
 (define (modularize problem)
+  (define sheets* (prune-sheets (dict-ref problem ':sheets) (map dom-elements (dict-ref problem ':documents))))
   (cons
    (dict-set problem ':render false)
    (for/list ([(piece spec) (in-dict (append-map split-document (dict-ref problem ':documents)))])
-     (define sheets* (prune-sheets (dict-ref problem ':sheets) (dom-elements piece)))
-     (dict-set (dict-set (dict-set problem ':documents (list piece)) ':test (list spec)) ':sheets sheets*))))
+     (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
+     (define sheets** (prune-sheets sheets* (list elements*)))
+     (define elements** (prune-classes elements* sheets*))
+     (dict-set* problem
+                ':documents (list (struct-copy dom piece [elements elements**]))
+                ':test (list spec)
+                ':sheets sheets**))))
