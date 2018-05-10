@@ -788,7 +788,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
 
         var val = style[sname];
 
-        var _features = Props.indexOf(sname) ? features : {};
+        var _features = Props.indexOf(sname) !== -1 ? features : {};
         if (val == "inherit") {
             _features["css:inherit"] = true;
         } else if (val.startsWith("rgb") && val.endsWith(")")) {
