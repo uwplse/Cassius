@@ -34,23 +34,31 @@
                         (selector-matches? (car rule) elt)))
       rule)))
 
-(define (classes-used selector)
-  (reap [sow]
+(define (classes-ids-used selector)
+  (reap [class! id!]
         (let loop ([selector selector])
           (match selector
             [(list 'class cls)
-             (sow cls)]
+             (class! cls)]
+            [(list 'id cls)
+             (id! cls)]
             [(or (list (or 'and 'desc 'child) args ...) (list (or 'media 'fake) _ args ...))
              (for-each loop args)]
             [_ (void)]))))
 
 (define (prune-classes elts-stx sheets)
-  (define used-classes
-    (apply set-union (map (compose classes-used car) (apply append sheets))))
+  (define-values (used-classes* used-ids*)
+    (for*/lists (classes ids) ([sheet sheets] [rule sheet])
+      (classes-ids-used (car rule))))
+  (define used-classes (apply set-union used-classes*))
+  (define used-ids (apply set-union used-ids*))
   (define elts (parse-tree elts-stx))
   (for ([elt (in-tree elts)])
     (define old-classes (node-get elt ':class #:default '()))
-    (node-set! elt ':class (set-intersect old-classes used-classes)))
+    (node-set! elt ':class (set-intersect old-classes used-classes))
+    (define old-id (node-get elt ':id))
+    (when (and old-id (not (set-member? used-ids old-id)))
+      (node-remove! elt ':id)))
   (unparse-tree elts))
 
 (define (split-document doc)
