@@ -9,11 +9,12 @@
 
 (define (constraints log-phase sheets docs fonts [tests #f] #:render? [render? #t])
   (define doms (map parse-dom docs))
-  (log-phase "Read ~a documents with ~a elements, ~a boxes, and ~a rules"
+  (log-phase "Read ~a documents with ~a elements, ~a boxes, ~a rules, and ~a fonts"
              (length doms)
              (length (append-map (compose sequence->list in-tree dom-elements) doms))
              (length (append-map (compose sequence->list in-tree dom-boxes) doms))
-             (length (car sheets)))
+             (length (car sheets))
+             (length fonts))
 
   (define browser-styles (map (curryr dom-context ':browser) doms))
   (unless (= (length (remove-duplicates browser-styles)) 1)
