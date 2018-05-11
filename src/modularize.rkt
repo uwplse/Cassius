@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt")
+(require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt" "assertions.rkt")
 (provide modularize)
 
 (define/contract (prune-elements box-stx elts-stx) ; TODO: kind of weird here with the unparsing
@@ -51,7 +51,8 @@
     [`(forall (,vars ...) ,body) (selectors-in-test body)]
     [`(matches ,b ,sels ...)
      (append (selectors-in-test b) sels)]
-    ;; TODO: inline assertion helpers?
+    [(list (? (curry dict-has-key? assertion-helpers) fname) args ...)
+     (selectors-in-test (apply (dict-ref assertion-helpers fname) args))]
     [(list head args ...)
      (append-map selectors-in-test args)]
     [_ '()]))
