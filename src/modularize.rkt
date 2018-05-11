@@ -46,13 +46,28 @@
              (for-each loop args)]
             [_ (void)]))))
 
-(define (prune-classes elts-stx sheets)
+(define (selectors-in-test test)
+  (match test
+    [`(forall (,vars ...) ,body) (selectors-in-test body)]
+    [`(matches ,b ,sels ...)
+     (append (selectors-in-test b) sels)]
+    ;; TODO: inline assertion helpers?
+    [(list head args ...)
+     (append-map selectors-in-test args)]
+    [_ '()]))
+
+(define (prune-classes elts-stx sheets tests)
+  (define elts (parse-tree elts-stx))
+  (define asserts
+    (append
+     tests
+     (for/append ([elt (in-tree elts)] #:when (or (node-get* elt ':spec) (node-get* elt ':assert)))
+       (append (node-get* elt ':spec #:default '()) (node-get* elt ':assert #:default '())))))
+  (define selectors (append (append-map (curry map car) sheets) asserts))
   (define-values (used-classes* used-ids*)
-    (for*/lists (classes ids) ([sheet sheets] [rule sheet])
-      (classes-ids-used (car rule))))
+    (for*/lists (classes ids) ([sel selectors]) (classes-ids-used sel)))
   (define used-classes (apply set-union used-classes*))
   (define used-ids (apply set-union used-ids*))
-  (define elts (parse-tree elts-stx))
   (for ([elt (in-tree elts)])
     (define old-classes (node-get elt ':class #:default '()))
     (node-set! elt ':class (set-intersect old-classes used-classes))
@@ -95,7 +110,7 @@
    (for/list ([(piece spec) (in-dict (append-map split-document (dict-ref problem ':documents)))])
      (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
      (define sheets** (prune-sheets sheets* (list elements*)))
-     (define elements** (prune-classes elements* sheets*))
+     (define elements** (prune-classes elements* sheets* (list spec)))
      (dict-set* problem
                 ':documents (list (struct-copy dom piece [elements elements**]))
                 ':test (list spec)
