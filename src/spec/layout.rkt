@@ -517,7 +517,7 @@
        (=> height? (= (h b) (- temp-height (scroll-x b))))
        (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-roots b)))
        (=> (and (not height?) (not (and top? bottom?)))
-           (= (h b) (auto-height-for-flow-roots b)))
+           (= (h b) (- (auto-height-for-flow-roots b) (scroll-x b))))
        (=> (and bottom? (not (and top? height?)))
            (= (bottom-outer b) (- (bottom-padding pp) temp-bottom)))
 
@@ -650,7 +650,7 @@
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
        (ite (is-height/auto (style.height r))
-         (= (h b) (auto-height-for-flow-blocks b))
+         (= (h b) (- (auto-height-for-flow-blocks b) (scroll-x b)))
          (= (h b) (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))
 
        (= (mt b)
@@ -715,9 +715,9 @@
 
        (ite (is-height/auto (style.height r))
             (ite (is-replaced e)
-                 (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))
+                 (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b) (scroll-x b)))
                  (=> (width-set b)
-                     (= (h b) (auto-height-for-flow-roots b))))
+                     (= (h b) (- (auto-height-for-flow-roots b) (scroll-x b)))))
             (= (h b) (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))
 
        ;; level -> x -> advance -> can-add -> add
@@ -846,11 +846,11 @@
 
        ,(smt-cond
          [(is-replaced e)
-          (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))]
+          (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b) (scroll-x b)))]
          [(is-display/inline-block (style.display r))
           (= (h b)
              (ite (is-height/auto (style.height r))
-                  (auto-height-for-flow-roots b)
+                  (- (auto-height-for-flow-roots b) (scroll-x b))
                   (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))]
          [else
           (= (h b) (font.selection-height metrics))])
@@ -1001,7 +1001,7 @@
        (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b (w p))
-       (= (h b) (auto-height-for-flow-blocks b))
+       (= (h b) (- (auto-height-for-flow-blocks b) (scroll-x b)))
        (= (text-indent b) (text-indent p))
        (= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
        (= (stfwidth b) (max-if (stfwidth l) (is-box v) (stfwidth v)))

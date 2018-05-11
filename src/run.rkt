@@ -278,20 +278,21 @@
       ['break
        (eprintf "Terminated.\n")
        (exit 127)]))
-  (eprintf "Verifying proof correctness.\n")
-  (match (parameterize ([*fuzz* #f]) (solve-problem check))
-    [(success stylesheet trees doms)
-     (eprintf "Counterexample found in final check!\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert))))
-     (printf "\n\nConfiguration:\n")
-     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
-       (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
-    [(failure stylesheet trees)
-     (eprintf "Verified modularly.\n")]
-    [(list 'error e)
-     ((error-display-handler) (exn-message e) e)]
-    ['break
-     (eprintf "Terminated.\n")]))
+  (when (or (not subcomponent) (equal? subcomponent '<check>))
+    (eprintf "Verifying proof correctness.\n")
+    (match (parameterize ([*fuzz* #f]) (solve-problem check))
+      [(success stylesheet trees doms)
+       (eprintf "Counterexample found in final check!\n")
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert))))
+       (printf "\n\nConfiguration:\n")
+       (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+         (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
+      [(failure stylesheet trees)
+       (eprintf "Verified modularly.\n")]
+      [(list 'error e)
+       ((error-display-handler) (exn-message e) e)]
+      ['break
+       (eprintf "Terminated.\n")])))
 
 (define (get-problem fname pname)
   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
