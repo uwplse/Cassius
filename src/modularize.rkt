@@ -77,6 +77,28 @@
       (node-remove! elt ':id)))
   (unparse-tree elts))
 
+(define (prune-fonts fonts sheets)
+  (define-values (families weights styles)
+    (reap [f! w! s!]
+      (f! "serif")
+      (w! 400)
+      [s! 'normal]
+      (for* ([sheet sheets] [rule sheet])
+        (define p&vs (filter list? (cdr rule)))
+        (for ([prop (map first p&vs)] [val (map second p&vs)])
+          (match prop
+            ['font-family (f! val)]
+            ['font-weight (w! val)]
+            ['font-style (s! val)]
+            [_ (void)])))))
+  (filter
+   identity
+   (for/list ([font fonts])
+     (match-define (list size family weight style metrics ...) font)
+     (if (and (set-member? families family) (set-member? weights weight) (set-member? styles style))
+         font
+         #f))))
+
 (define (split-document doc)
   (reap [sow]
     (let loop ([tree (dom-boxes doc)])
@@ -111,8 +133,10 @@
    (for/list ([(piece spec) (in-dict (append-map split-document (dict-ref problem ':documents)))])
      (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
      (define sheets** (prune-sheets sheets* (list elements*)))
-     (define elements** (prune-classes elements* sheets* (list spec)))
+     (define elements** (prune-classes elements* sheets** (list spec)))
+     (define fonts* (prune-fonts (dict-ref problem ':fonts) sheets**))
      (dict-set* problem
                 ':documents (list (struct-copy dom piece [elements elements**]))
                 ':test (list spec)
-                ':sheets sheets**))))
+                ':sheets sheets**
+                ':fonts fonts*))))
