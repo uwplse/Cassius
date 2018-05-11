@@ -49,7 +49,7 @@ if __name__ == "__main__":
         out.write('\t\t\t<th>Time (s)</th>\n')
         out.write('\t\t</tr>\n')
 
-    for fwt in data:
+    for fwt in data[u'problems']:
         if fwt[u'status'] == u"fail":
             #print("python2 minimize.py {} {}".format(fwt[u'problem'], fwt[u'url']))
             os.system("python2 minimize.py {} {} --website=\"{}\"".format(fwt[u'problem'], fwt[u'url'], fwt[u'description']))
