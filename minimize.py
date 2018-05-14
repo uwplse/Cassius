@@ -44,7 +44,7 @@ def run_minimizer(name, backtracked, i, cache_name):
 def run_accept(name, cache_name, maxtime=600):
     print("Running Cassius:")
     cassius = subprocess.Popen(["racket", "src/run.rkt", "minimize",
-                                "reports/minimized/"+name+"-minimized.rkt",
+                                "bench/"+name+".rkt",
                                 "doc-1", "minimizer/{}.rkt".format(cache_name)], stdout=subprocess.PIPE)
     i = 0
 
@@ -71,8 +71,13 @@ def run_accept(name, cache_name, maxtime=600):
     return (False, i)
 
 def get_minimized(url, elts, name):
-    args = ["python2", "get_minimized.py", name, url] + elts
-    result = subprocess.check_output(args)
+    p = subprocess.Popen(["python2", "get_bench.py", "--name", name, "--prerun", "-", url], stdin=subprocess.PIPE)
+    p.communicate('TAGLIST = [{}];'.format(",".join(elts)) +
+                  'for (i in TAGLIST) {' +
+                      'var tag = TAGLIST[i].tag;' +
+                      'var index = TAGLIST[i].index;' +
+                      'document.getElementsByTagName(tag)[index].remove();' +
+                  '}')
 
 # Write statistics to file
 def write_output(website, name, before, after, time):
@@ -98,16 +103,17 @@ if __name__ == "__main__":
     backtracked = []
     start = time.time()
     initial = -1
+    name = args.name
 
-    get_minimized(args.urls, eliminated, args.name)
-    accepted, t = run_accept(args.name, args.name, maxtime=args.timeout)
+    get_minimized(args.urls, eliminated, name)
+    accepted, t = run_accept(name, args.name, maxtime=args.timeout)
     if accepted:
         raise Exception("Full FWT accepted")
     else:
         iterations += 1
 
     while True:
-        minimized, elts, x = run_minimizer(args.name, backtracked, t, args.name)
+        minimized, elts, x = run_minimizer(name, backtracked, t, args.name)
 
         if initial == -1:
             initial = x
@@ -116,8 +122,9 @@ if __name__ == "__main__":
             break
 
         eliminated.extend(elts)
-        get_minimized(args.urls, eliminated, args.name)
-        accepted, t = run_accept(args.name, args.name, maxtime=args.timeout)
+        name = "{}-{}-minimized".format(args.name, iterations)
+        get_minimized(args.urls, eliminated, name)
+        accepted, t = run_accept(name, args.name, maxtime=args.timeout)
         if accepted:
             backtracked.append(eliminated.pop())
             STATISTICS.pop()
