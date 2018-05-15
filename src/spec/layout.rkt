@@ -1033,7 +1033,9 @@
                  (is-overflow/scroll (style.overflow-x (computed-style (box-elt b)))))
                 ,(scroll-width-name)
                 0))
-            (is-no-box (pbox b))))) ; The root box is weird in several ways
+            (and
+             (is-no-box (pbox b))
+             (or (= (scroll-x b) 0) (= (scroll-x b) ,(scroll-width-name))))))) ; The root box is weird in several ways
 
   (assert
    (forall ((b Box))
@@ -1048,4 +1050,6 @@
                  (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
                 ,(scroll-width-name)
                 0))
-            (is-no-box (pbox b))))))
+            (and
+             (is-no-box (pbox b))
+             (or (= (scroll-y b) 0) (= (scroll-y b) ,(scroll-width-name))))))))
