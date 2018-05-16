@@ -848,7 +848,7 @@
 
        ,(smt-cond
          [(is-replaced e)
-          (= (h b) (intrinsic-height e) (bt b) (bb b) (pt b) (pb b))]
+          (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))]
          [(is-display/inline-block (style.display r))
           (= (h b)
              (ite (is-height/auto (style.height r))
