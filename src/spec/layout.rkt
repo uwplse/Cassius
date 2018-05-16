@@ -27,7 +27,7 @@
       (ite (is-box-sizing/border-box (style.box-sizing ,r))
            (+ (bt ,b) (pt ,b) (pb ,b) (bb ,b))
            0.0)
-      (scroll-y ,b))]
+      (scroll-x ,b))]
    [else
     out]))
 
