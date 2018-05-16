@@ -253,7 +253,7 @@
   (match-define (list check components ...) (append-map modularize problem**))
   (for ([component components] [i (in-naturals 1)]
         #:when (or (not subcomponent)
-                   (equal? subcomponent (dom-name (first (dict-ref component ':documents))))))
+                   (equal? subcomponent (or (dom-name (first (dict-ref component ':documents))) i))))
     (eprintf "Verifying ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))
     (match (parameterize ([*fuzz* #f]) (solve-problem component))
       [(success stylesheet trees doms)
@@ -348,7 +348,7 @@
    ["check-proof"
     #:once-each
     [("--component") component "Only verify a subcomponent (for debugging)"
-     (set! subcomponent (string->symbol component))]
+     (set! subcomponent (or (string->number component) (string->symbol component)))]
     #:args (fname problem proof-file)
     (do-verify/modular (get-problem fname problem) proof-file #:component subcomponent)]
    ["assertion"

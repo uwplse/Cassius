@@ -6,5 +6,6 @@ document.querySelector("#panel-3 i").dataset["cassius"] = "magic";
 document.querySelector("#panel-3 i + i").dataset["cassius"] = "magic";
 document.querySelector("#panel-3 span").dataset["cassius"] = "magic";
 document.querySelector("h2.site-description").dataset["cassius"] = "magic";
+for (var e of document.querySelectorAll(".alignright")) { e.remove() };
 document.querySelectorAll(".nav-links .meta-nav")[0].innerText = "Previous Post";
 document.querySelectorAll(".nav-links .meta-nav")[1].innerText = "Next Post";
