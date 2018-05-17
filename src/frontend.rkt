@@ -54,7 +54,7 @@
   (define ms (model-sufficiency doms))
   (when tests (set! query (add-test doms (append query (auxiliary-definitions))
                                     (if render?
-                                        (cons `(forall () ,ms) tests*)
+                                        (append tests* `((forall () ,ms)))
                                         tests*))))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
@@ -75,7 +75,7 @@
 (define (solve sheets docs fonts [tests #f] #:render? [render? #t])
   (define log-phase (make-log))
   (reset-names!)
-  (define-values (doms query) (constraints log-phase sheets docs tests fonts #:render? render?))
+  (define-values (doms query) (constraints log-phase sheets docs fonts tests #:render? render?))
 
   (define out
     (let ([z3 (z3-process)])
@@ -93,7 +93,7 @@
        (unless (extract-model-lookback m trees)
          (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)
-       (extract-counterexample! m)
+       (extract-counterexample! m tests)
        (define doms* (map (curry extract-ctx! m) doms))
        (define sheet* (apply append sheets)) ; (extract-rules (car sheets) trees m)
        (success sheet* (map unparse-tree trees) doms*)]

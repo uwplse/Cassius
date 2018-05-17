@@ -21,7 +21,7 @@
     (match cmd
       [`(spec * ,spec)
        (for ([box components])
-         (node-set! box ':spec (and-assertions (node-get box ':spec #:default 'true) spec)))]
+         (node-add! box ':spec spec))]
       [`(spec! * ,spec)
        (for ([box components])
          (node-set! box ':spec spec))]
@@ -32,10 +32,10 @@
       [`(spec ,name ,spec)
        (define box (dict-ref box-context name))
        (when (eq? box boxes) (node-set! box ':name 'root))
-       (node-set! box ':spec (and-assertions (node-get box ':spec #:default 'true) spec))]
+       (node-add! box ':spec spec)]
       [`(assert * ,assert)
        (for ([box components])
-         (node-set! box ':assert (and-assertions (node-get box ':assert #:default 'true) assert)))]
+         (node-add! box ':assert assert))]
       [`(assert! * ,assert)
        (for ([box components])
          (node-set! box ':assert assert))]
@@ -46,7 +46,7 @@
       [`(assert ,name ,assert)
        (define box (dict-ref box-context name))
        (when (eq? box boxes) (node-set! box ':name 'root))
-       (node-set! box ':assert (and-assertions (node-get box ':assert #:default 'true) assert))]
+       (node-add! box ':assert assert)]
       [`(admit ,name)
        (define box (dict-ref box-context name))
        (when (eq? box boxes) (node-set! box ':name 'root))
@@ -63,7 +63,7 @@
        (hash-set! box-context name box)
        (set! components (cons box components))
        (node-set! box ':name name)
-       (node-set! box ':spec 'true)]
+       (node-set*! box ':spec (list))]
       [`(components ,sels ...)
        (define selected-boxes
          (filter identity
@@ -73,7 +73,7 @@
        (when (null? selected-boxes)
          (eprintf "Warning: Could not find any elements matching ~a\n" (string-join (map ~a sels) ", ")))
        (for ([box selected-boxes])
-         (node-set! box ':spec 'true)
+         (node-set*! box ':spec (list))
          (set! components (cons box components)))]))
   (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
   (define problem** (dict-set problem* ':test (list theorem)))

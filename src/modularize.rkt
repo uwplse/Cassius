@@ -105,8 +105,8 @@
       (define children* (map loop (rest tree)))
       (if (or (set-member? (first tree) ':spec) (set-member? (first tree) ':assert))
           (let* ([component (parse-tree (cons (first tree) children*))]
-                 [spec (node-get component ':spec #:default 'true)]
-                 [assert (node-get component ':assert #:default 'true)]
+                 [specs (node-get* component ':spec #:default '())]
+                 [asserts (node-get* component ':assert #:default '())]
                  [admit? (node-get* component ':admit #:default false)]
                  [ctx (dom-properties doc)])
             (node-remove! component ':spec)
@@ -119,10 +119,10 @@
                                         [name (node-get component ':name #:default false)]
                                         [boxes (unparse-tree component)]
                                         [properties props])
-                           (and-assertions spec assert))))
+                           (append specs asserts))))
             (unless (eq? tree (dom-boxes doc))
               (node-add! component ':component 'true))
-            (node-add! component ':spec spec)
+            (node-set*! component ':spec specs)
             (list (first (unparse-tree component))))
           (cons (first tree) children*)))))
 
@@ -130,13 +130,13 @@
   (define sheets* (prune-sheets (dict-ref problem ':sheets) (map dom-elements (dict-ref problem ':documents))))
   (cons
    (dict-set problem ':render false)
-   (for/list ([(piece spec) (in-dict (append-map split-document (dict-ref problem ':documents)))])
+   (for/list ([(piece specs) (in-dict (append-map split-document (dict-ref problem ':documents)))])
      (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
      (define sheets** (prune-sheets sheets* (list elements*)))
-     (define elements** (prune-classes elements* sheets** (list spec)))
+     (define elements** (prune-classes elements* sheets** specs))
      (define fonts* (prune-fonts (dict-ref problem ':fonts) sheets**))
      (dict-set* problem
                 ':documents (list (struct-copy dom piece [elements elements**]))
-                ':test (list spec)
+                ':test specs
                 ':sheets sheets**
                 ':fonts fonts*))))

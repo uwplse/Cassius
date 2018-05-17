@@ -86,12 +86,15 @@
     (define elt-model (dict-ref smt-out (dump-elt elt) #f))
     (when (and elt-model (list? elt-model)) (extract-elt! elt-model elt))))
 
-(define (extract-counterexample! smt-out)
+(define (extract-counterexample! smt-out tests)
+  (define bad-test (list-ref tests (hash-ref smt-out 'which-constraint)))
+  (define-values (bad-vars bad-body) (disassemble-forall bad-test))
   (for ([(name value) (in-hash smt-out)] #:when (string-prefix? (~a name) "cex"))
     (define id (dict-ref (extract-box value) 'bid))
     (define node (by-name 'box id))
     (define var (car (by-name 'cex (string->number (substring (~a name) 3)))))
-    (node-add! node ':cex `(bad ,var))))
+    (when (set-member? bad-vars var)
+      (node-add! node ':cex `(bad ,var)))))
 
 (define (tree-constraints dom emit elt)
   (emit `(assert (! (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt)))
@@ -306,7 +309,8 @@
 (define (spec-constraints fields dom emit box)
   (when (ormap (curry node-get box) fields)
     (define-values (vars body)
-      (disassemble-forall (apply and-assertions (map (λ (x) (node-get box x #:default 'true)) fields))))
+      (disassemble-forall
+       (apply and-assertions (map (λ (x) (node-get box x #:default 'true)) fields))))
     (define nodes (nodes-below box (λ (x) (ormap (curry node-get x) fields))))
     (define ctx
       (hash-union
@@ -367,13 +371,16 @@
 
 (define (add-test doms constraints tests)
   `(,@constraints
+    (declare-const which-constraint Real)
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
         (sow `(declare-const ,var Box))
         (sow `(assert ,(apply smt-or
                               (for*/list ([dom doms] [box (in-boxes dom)])
                                 `(= ,var ,(dump-box box)))))))
-    (assert ,(apply smt-or (map (curry list 'not) tests)))))
+    (assert ,(apply smt-or
+                    (for/list ([test tests] [i (in-naturals)])
+                      `(and (not ,test) (= which-constraint ,i)))))))
 
 (define (sheet-constraints doms eqcls)
   (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
