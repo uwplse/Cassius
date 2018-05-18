@@ -4,7 +4,8 @@
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
          "frontend.rkt" "solver.rkt" "modularize.rkt"
          "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
-         "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt")
+         "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
+         "../minimizer/minimize.rkt")
 
 (provide dom-strip-positions dom-set-range)
 
@@ -139,12 +140,29 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-minimize problem cache)
+(define (do-minimize problem backtracked)
   (match (solve-problem problem)
     [(success stylesheet trees doms)
      (printf "Accepted\n")]
     [(failure stylesheet trees)
-     (with-output-to-file cache #:exists 'replace (lambda () (printf "(define-tree ~s)\n(define-document ~s)\n" trees (dict-ref problem ':documents))))]
+     (define to-remove (get-box-to-remove
+                       trees
+                       (dict-ref problem ':documents)
+                       backtracked))
+    (when to-remove
+      (printf "Rejected\n")
+      (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
+      ;; TODO: Make two JSON outputs into one JSON output
+      (write-json (make-hash (list (cons 'removed removed)
+                                   (cons 'total total)
+                                   (cons 'efficiency efficiency))))
+      (newline)
+      (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+      (newline))
+    (unless to-remove
+      (printf "Minimized\n")
+      (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
+      (printf "~s\n" total-boxes))]
     [(list 'error e)
      (printf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break
@@ -326,8 +344,8 @@
     #:args (fname problem)
     (do-accept (get-problem fname problem))]
    ["minimize"
-    #:args (fname problem cache)
-    (begin (minimize-mode!) (do-minimize (get-problem fname problem) cache))]
+    #:args (fname problem [backtracked "[]"])
+    (do-minimize (get-problem fname problem) backtracked)]
    ["minimize-assertion"
     #:args (aname assertion fname problem cache)
     (define prob (get-problem fname problem))

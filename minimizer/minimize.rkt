@@ -5,6 +5,8 @@
          "../src/frontend.rkt" "../src/solver.rkt"
          "../src/print/tree.rkt" "../src/print/css.rkt" "../src/print/smt.rkt")
 
+(provide get-box-to-remove)
+
 (define (parse-unsat-cache port)
   (define cache (make-hash))
   (for ([expr (in-port read port)])
@@ -166,7 +168,7 @@
           (cons (get-statistics (dict-ref elt->box num) old) result))
       to-remove))
 
-(module+ main
+#;(module+ main
   (multi-command-line
    #:program "cassius minimizer"
 
