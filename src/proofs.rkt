@@ -16,6 +16,7 @@
       (λ (x) (match (linker x) [#f #f] [(list a b c) a]))))
 
   (define box-context (make-hash (list (cons 'root boxes))))
+  (node-set! boxes ':name 'root)
   (define components (hash-values box-context))
   (for ([cmd tactics])
     (match cmd
@@ -27,11 +28,9 @@
          (node-set! box ':spec spec))]
       [`(spec! ,name ,spec)
        (define box (dict-ref box-context name))
-       (when (eq? box boxes) (node-set! box ':name 'root))
        (node-set! box ':spec spec)]
       [`(spec ,name ,spec)
        (define box (dict-ref box-context name))
-       (when (eq? box boxes) (node-set! box ':name 'root))
        (node-add! box ':spec spec)]
       [`(assert * ,assert)
        (for ([box components])
@@ -41,15 +40,12 @@
          (node-set! box ':assert assert))]
       [`(assert! ,name ,assert)
        (define box (dict-ref box-context name))
-       (when (eq? box boxes) (node-set! box ':name 'root))
        (node-set! box ':assert assert)]
       [`(assert ,name ,assert)
        (define box (dict-ref box-context name))
-       (when (eq? box boxes) (node-set! box ':name 'root))
        (node-add! box ':assert assert)]
       [`(admit ,name)
        (define box (dict-ref box-context name))
-       (when (eq? box boxes) (node-set! box ':name 'root))
        (node-set! box ':admit true)]
       [`(component ,name ,sel)
        (define selected-boxes
@@ -87,10 +83,11 @@
       (for ([cmd (in-port read p)])
         (match cmd
           [`(define (,name ,args ...) ,body)
-           (hash-set! assertion-helpers name
-                      (procedure-reduce-arity
-                       (λ vals (smt-replace-terms body (map cons args vals)))
-                       (length args)))]
+           (define helper
+             (procedure-reduce-arity
+              (λ vals (smt-replace-terms body (map cons args vals)))
+              (length args)))
+           (hash-set! assertion-helpers name helper)]
           [`(theorem (,name ,args ...) ,body)
            (hash-set! theorem-context name `(forall ,args ,body))]
           [`(proof (,name ,thmname) ,subcmds ...)

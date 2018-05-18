@@ -307,11 +307,11 @@
     (values (node-get node ':name) (dump-box node))))
 
 (define (spec-constraints fields dom emit box)
-  (when (ormap (curry node-get box) fields)
+  (when (ormap (curry node-get* box) fields)
     (define-values (vars body)
       (disassemble-forall
-       (apply and-assertions (map (λ (x) (node-get box x #:default 'true)) fields))))
-    (define nodes (nodes-below box (λ (x) (ormap (curry node-get x) fields))))
+       (apply and-assertions (append-map (λ (x) (node-get* box x #:default 'true)) fields))))
+    (define nodes (nodes-below box (λ (x) (ormap (curry node-get* x) fields))))
     (define ctx
       (hash-union
        (for/hash ([var vars]) (values var var))

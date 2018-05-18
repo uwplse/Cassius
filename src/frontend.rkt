@@ -93,7 +93,7 @@
        (unless (extract-model-lookback m trees)
          (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)
-       (extract-counterexample! m tests)
+       (when tests (extract-counterexample! m tests))
        (define doms* (map (curry extract-ctx! m) doms))
        (define sheet* (apply append sheets)) ; (extract-rules (car sheets) trees m)
        (success sheet* (map unparse-tree trees) doms*)]
