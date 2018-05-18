@@ -42,7 +42,7 @@
 
 (define (do-accept problem)
   (match (solve-problem problem)
-    [(success stylesheet trees doms)
+    [(success stylesheet trees doms test)
      (when (*debug*)
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt)))))
      (eprintf "Accepted!\n")]
@@ -57,7 +57,7 @@
 
 (define (do-minimize problem)
   (match (solve-problem problem)
-    [(success stylesheet trees doms)
+    [(success stylesheet trees doms test)
      (eprintf "Accepted\n")]
     [(failure stylesheet trees)
      (define to-remove (get-box-to-remove trees (dict-ref problem ':documents)))
@@ -82,7 +82,7 @@
 
 (define (do-debug problem)
   (match (solve-problem problem)
-    [(success stylesheet trees doms)
+    [(success stylesheet trees doms test)
      (eprintf "Different renderings possible.\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs))))]
     [(failure stylesheet trees)
@@ -119,7 +119,7 @@
 (define (do-render problem)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (solve-problem problem*)
-    [(success stylesheet trees doms)
+    [(success stylesheet trees doms test)
      (eprintf "Rendered the following layout:\n")
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt))))]
     [(failure stylesheet trees)
@@ -131,7 +131,7 @@
 
 (define (do-sketch problem)
   (match (solve-problem problem)
-    [(success stylesheet trees doms)
+    [(success stylesheet trees doms test)
      (displayln (stylesheet->string stylesheet))]
     [(failure stylesheet trees)
      (eprintf "Rejected.\n")]
@@ -149,8 +149,8 @@
 (define (do-verify problem)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
-    [(success stylesheet trees doms)
-     (eprintf "Counterexample found!\n")
+    [(success stylesheet trees doms test)
+     (eprintf "Counterexample found to ~a!\n" test)
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
      (printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
@@ -171,8 +171,8 @@
                    (equal? subcomponent (or (dom-name (first (dict-ref component ':documents))) i))))
     (eprintf "Verifying ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))
     (match (parameterize ([*fuzz* #f]) (solve-problem component))
-      [(success stylesheet trees doms)
-       (eprintf "Counterexample found in component ~a!\n" (or (dom-name (first doms)) i))
+      [(success stylesheet trees doms test)
+       (eprintf "Counterexample found in component ~a to ~a!\n" (or (dom-name (first doms)) i) test)
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :component :spec :name))))
        (printf "\n\nConfiguration:\n")
        (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
@@ -189,8 +189,8 @@
   (when (or (not subcomponent) (equal? subcomponent '<check>))
     (eprintf "Verifying proof correctness.\n")
     (match (parameterize ([*fuzz* #f]) (solve-problem check))
-      [(success stylesheet trees doms)
-       (eprintf "Counterexample found in final check!\n")
+      [(success stylesheet trees doms test)
+       (eprintf "Counterexample found in final check to ~a!\n" test)
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert))))
        (printf "\n\nConfiguration:\n")
        (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])

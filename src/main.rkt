@@ -8,7 +8,7 @@
          "spec/media-query.rkt" "assertions.rkt")
 (module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
-         extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback)
+         extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback extract-test)
 
 (define (css-normalize-body body)
   (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
@@ -86,8 +86,10 @@
     (define elt-model (dict-ref smt-out (dump-elt elt) #f))
     (when (and elt-model (list? elt-model)) (extract-elt! elt-model elt))))
 
-(define (extract-counterexample! smt-out tests)
-  (define bad-test (list-ref tests (hash-ref smt-out 'which-constraint)))
+(define (extract-test smt-out tests)
+  (list-ref tests (hash-ref smt-out 'which-constraint)))
+
+(define (extract-counterexample! smt-out bad-test)
   (define-values (bad-vars bad-body) (disassemble-forall bad-test))
   (for ([(name value) (in-hash smt-out)] #:when (string-prefix? (~a name) "cex"))
     (define id (dict-ref (extract-box value) 'bid))
@@ -310,7 +312,7 @@
   (when (ormap (curry node-get* box) fields)
     (define-values (vars body)
       (disassemble-forall
-       (apply and-assertions (append-map (λ (x) (node-get* box x #:default 'true)) fields))))
+       (apply and-assertions (append-map (λ (x) (node-get* box x #:default '())) fields))))
     (define nodes (nodes-below box (λ (x) (ormap (curry node-get* x) fields))))
     (define ctx
       (hash-union
