@@ -1186,7 +1186,7 @@ function page2text(name) {
 	text += dump_fonts(name);
 
     text += "\n\n(define-layout (" + name
-    var props = {browser: "firefox", matched: "true", w: page.props.w, h: page.props.h, fs: 16, scrollw: out.scroll };
+    var props = {matched: "true", w: page.props.w, h: page.props.h, fs: 16, scrollw: out.scroll };
     for (var prop in props) {
         if (typeof props[prop] !== "undefined") {
             text += " :" + prop + " " + props[prop];
@@ -1203,7 +1203,7 @@ function page2text(name) {
     text += "(define-problem " + name;
     text += "\n  :title " + title;
     text += "\n  :url \""  + location;
-    text += "\"\n  :sheets " + name;
+    text += "\"\n  :sheets firefox " + name;
 	text += "\n  :fonts " + name;
     text += "\n  :documents " + name;
     text += "\n  :layouts " + name;

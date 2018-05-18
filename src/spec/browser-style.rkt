@@ -1,6 +1,6 @@
 #lang racket
 
-(provide get-sheet)
+(provide baseline-sheet firefox-sheet)
 
 (define default-displays
   #hash([inline
@@ -13,7 +13,7 @@
         [inline-block
          . (button select object)]))
 
-(define baseline
+(define baseline-sheet
   (append
    (for*/list ([(display-type tags) (in-hash default-displays)]
                [tag (in-list tags)])
@@ -34,7 +34,8 @@
 ; and https://dxr.mozilla.org/mozilla-central/source/layout/style/res/html.css
 
 (define firefox-sheet
-  `(((tag blockquote)
+  `(,@baseline-sheet
+    ((tag blockquote)
      :browser
      [margin-top (em 1)]
      [margin-right (px 40)]
@@ -347,9 +348,3 @@
      [border-left-width (px 2)]
      [border-left-style inset]
      [text-indent (px 0)])))
-
-(define (get-sheet browser)
-  (match browser
-    ['firefox (append baseline firefox-sheet)]
-    [#f baseline]
-    ['user #f]))

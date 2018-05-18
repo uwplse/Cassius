@@ -30,7 +30,7 @@
 (define em-computed-properties
   ;; These are properties whose computed style must convert em values to pixels
   (append
-   '(width min-width max-width min-height max-height)
+   '(width min-width max-width)
    '(margin-top margin-right margin-bottom margin-left)
    '(padding-top padding-right padding-bottom padding-left)
    '(top bottom left right text-indent)))
@@ -113,7 +113,6 @@
 
      ;; CSS 2.1 § 10.5: height
      ;; TODO: Positioning case absent here
-     ;; TODO: Also applies somewhat to max and min height, not implemented here
      (= (style.height (computed-style elt))
         (let ([h ,(em-to-px 'height 'elt)]
               [h* (style.height (computed-style (pelt elt)))])
@@ -125,6 +124,34 @@
                          (not (is-position/fixed (style.position (computed-style elt)))))
                     height/auto
                     h))))
+
+     (= (style.min-height (computed-style elt))
+        (let ([mh ,(em-to-px 'min-height 'elt)]
+              [h* (style.height (computed-style (pelt elt)))])
+          (ite (is-min-height/inherit mh)
+               (ite (is-elt (pelt elt))
+                    (style.min-height (computed-style (pelt elt)))
+                    (min-height/px 0))
+               (ite (and (is-min-height/% mh)
+                         (is-elt (pelt elt)) (is-height/auto h*)
+                         (not (is-position/absolute (style.position (computed-style elt))))
+                         (not (is-position/fixed (style.position (computed-style elt)))))
+                    (min-height/px 0)
+                    mh))))
+
+     (= (style.max-height (computed-style elt))
+        (let ([mh ,(em-to-px 'max-height 'elt)]
+              [h* (style.height (computed-style (pelt elt)))])
+          (ite (is-max-height/inherit mh)
+               (ite (is-elt (pelt elt))
+                    (style.max-height (computed-style (pelt elt)))
+                    max-height/none)
+               (ite (and (is-max-height/% mh)
+                         (is-elt (pelt elt)) (is-height/auto h*)
+                         (not (is-position/absolute (style.position (computed-style elt))))
+                         (not (is-position/fixed (style.position (computed-style elt)))))
+                    max-height/none
+                    mh))))
 
      ;; CSS 2.1 § 9.7: relationship between `float` and `position`
      ;; NOTE: The standard is ambiguous / undefined, but this is what Firefox does.
@@ -153,6 +180,6 @@
   (check equal?
          (sort
           (append simple-computed-properties em-computed-properties
-                  '(height float border-top-width border-right-width border-bottom-width border-left-width font-size line-height))
+                  '(height min-height max-height float border-top-width border-right-width border-bottom-width border-left-width font-size line-height))
           string<? #:key symbol->string)
          (sort (css-properties) string<? #:key symbol->string)))

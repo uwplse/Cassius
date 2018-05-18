@@ -1,0 +1,42 @@
+(define (is-interactive b)
+  (matches b (tag a) (tag input) (tag button)))
+
+(define (onscreen b)
+  (and (>= (top b) (top root)) (>= (left b) (left root))))
+
+(theorem (interactive-onscreen b)
+  (=> (is-interactive b) (onscreen b)))
+
+(proof (yoga interactive-onscreen)
+  (component header (id header))
+  (component body (id body))
+  (component footer (id footer))
+
+  (assert root (raw (ez.outside (ez.in header) header)))
+  (assert root (raw (= (ez.out header) (ez.in body))))
+  (assert root (raw (= (ez.out body) (ez.in footer))))
+  (assert root (<= (raw (bottom-border header)) (raw (top-border body))
+                   (raw (bottom-border body)) (raw (top-border footer))))
+  (assert root (>= (width footer) 200))
+  (assert root (= (top root) 0.0))
+  (assert root (= (left root) 0.0))
+  (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
+
+  (spec header (raw (no-margins header)))
+  (spec header (> (height header) 0))
+  (spec header
+    (forall (a)
+            (=> (and (raw (ez.outside (ez.in header) header)) (onscreen header))
+                (and (raw (ez.inside (ez.out header) header)) (=> (is-interactive a) (onscreen a))))))
+
+  (spec body (raw (non-negative-margins body)))
+  (spec body (> (height body) 0))
+  (spec body (=> (raw (ez.outside (ez.in body) body)) (raw (ez.inside (ez.out body) body))))
+
+  (spec footer (raw (no-margins footer)))
+  (spec footer (> (height footer) 0))
+
+  (spec footer
+    (forall (a)
+            (=> (and (raw (ez.outside (ez.in footer) footer)) (onscreen footer) (>= (width footer) 200))
+                (and (raw (ez.inside (ez.out footer) footer)) (=> (is-interactive a) (onscreen a)))))))

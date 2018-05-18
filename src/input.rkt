@@ -1,12 +1,13 @@
 #lang racket
 
-(require "common.rkt" "dom.rkt" "tree.rkt" "spec/css-properties.rkt")
+(require "common.rkt" "dom.rkt" "tree.rkt" "spec/css-properties.rkt" "spec/browser-style.rkt")
 (provide parse-file)
 
 (define (parse-file port)
   (define problems (make-hash))
   (define fonts (make-hash))
-  (define sheets (make-hash))
+  (define sheets (make-hash (list (cons 'firefox firefox-sheet)
+                                  (cons 'baseline baseline-sheet))))
   (define docs (make-hash))
   (define layouts (make-hash))
   (define actions (make-hash))

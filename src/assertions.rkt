@@ -48,7 +48,8 @@
        (define aux (sformat "aux~a" (name 'aux cond)))
        (define aux-def
          `((declare-fun ,aux (Box) Box)
-           (assert (forall ((b Box)) (= (,aux b) (ite ,cond b (,aux (pflow b))))))))
+           (assert (forall ((b Box)) (= (,aux b) (ite ,cond b (,aux (pflow b))))))
+           (assert (= (,aux no-box) no-box))))
        (auxiliary-definitions (remove-duplicates (append (auxiliary-definitions) aux-def)))
        `(,aux ,(loop box ctx))]
       [`(has-contents ,box) `(has-contents ,(loop box ctx))]
@@ -65,8 +66,6 @@
        `(+ (,function ,(loop box ctx)) (,adjustment ,(loop box ctx)))]
       [`(text-height ,box)
        `(let ([b ,(loop box ctx)]) (height-text b))]
-      [`(vertically-adjacent ,box1 ,box2)
-       `(vertically-adjacent ,(loop box1 ctx) ,(loop box2 ctx))]
 
       ;; Colors
       [`(fg ,box) `(fg-color ,(loop box ctx))]

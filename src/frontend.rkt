@@ -1,6 +1,6 @@
 #lang racket
 (require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
-         "selectors.rkt" "spec/browser-style.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
+         "selectors.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
 (provide query solve (struct-out success) (struct-out failure) solve-cached)
 
@@ -13,17 +13,12 @@
              (length doms)
              (length (append-map (compose sequence->list in-tree dom-elements) doms))
              (length (append-map (compose sequence->list in-tree dom-boxes) doms))
-             (length (car sheets))
+             (length (apply append sheets))
              (length fonts))
-
-  (define browser-styles (map (curryr dom-context ':browser) doms))
-  (unless (= (length (remove-duplicates browser-styles)) 1)
-    (error "Multiple documents with different browsers not supported"))
-  (define browser-style (get-sheet (and (car browser-styles) (caar browser-styles))))
 
   (define %s
     (reap [sow]
-          (for* ([sheet (cons browser-style sheets)] [rule sheet])
+          (for* ([sheet sheets] [rule sheet])
             (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
             (for ([(prop value) (in-dict props)])
               (match (car value)
@@ -40,7 +35,7 @@
         (if (dom-context dom ':matched)
             link-matched-elts-boxes
             link-elts-boxes))
-      (linker (append browser-style (car sheets)) (dom-elements dom) (dom-boxes dom))))
+      (linker (apply append sheets) (dom-elements dom) (dom-boxes dom))))
 
   (define tests*
     (for/list ([test (or tests '())])
@@ -54,12 +49,12 @@
            (values (node-get node ':name) (dump-box node)))))
       (compile-assertion doms test-body ctx)))
 
-  (define query (all-constraints (cons browser-style sheets) matchers doms fonts #:render? render?))
+  (define query (all-constraints sheets matchers doms fonts #:render? render?))
 
   (define ms (model-sufficiency doms))
   (when tests (set! query (add-test doms (append query (auxiliary-definitions))
                                     (if render?
-                                        (cons `(forall () ,ms) tests*)
+                                        (append tests* `((forall () ,ms)))
                                         tests*))))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
@@ -80,7 +75,7 @@
 (define (solve sheets docs fonts [tests #f] #:render? [render? #t])
   (define log-phase (make-log))
   (reset-names!)
-  (define-values (doms query) (constraints log-phase sheets docs tests fonts #:render? render?))
+  (define-values (doms query) (constraints log-phase sheets docs fonts tests #:render? render?))
 
   (define out
     (let ([z3 (z3-process)])
@@ -98,9 +93,9 @@
        (unless (extract-model-lookback m trees)
          (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)
-       (extract-counterexample! m)
+       (when tests (extract-counterexample! m tests))
        (define doms* (map (curry extract-ctx! m) doms))
-       (define sheet* (car sheets)) ; (extract-rules (car sheets) trees m)
+       (define sheet* (apply append sheets)) ; (extract-rules (car sheets) trees m)
        (success sheet* (map unparse-tree trees) doms*)]
       [else
        (log-phase "Insufficient float registers, trying again with ~a"
@@ -109,7 +104,7 @@
          (solve sheets docs fonts tests))])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
-     (define-values (stylesheet* trees*) (extract-core (car sheets) trees c))
+     (define-values (stylesheet* trees*) (extract-core (apply append sheets) trees c))
      (failure stylesheet* (map unparse-tree trees*))]))
 
 (define (solve-cached sheets docs fonts [tests #f] #:render? [render? #t])

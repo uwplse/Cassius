@@ -29,18 +29,16 @@
   (<= (right b) (right root)))
 
 (define-test (heading-size b1 b2)
-  (let ([e1 (ancestor b1 (not (anonymous? ?)))]
-        [e2 (ancestor b2 (not (anonymous? ?)))])
-    (=>
-     (has-type b1 text) (has-type b2 text)
-     (has-contents b1) (has-contents b2)
-     (viewable b1) (viewable b2)
-     (or (and (descends e1 (tag h1)) (descends e2 (tag h2)))
-         (and (descends e1 (tag h2)) (descends e2 (tag h3)))
-         (and (descends e1 (tag h3)) (descends e2 (tag h4)))
-         (and (descends e1 (tag h4)) (descends e2 (tag h5)))
-         (and (descends e1 (tag h5)) (descends e2 (tag h6))))
-     (> (height b1) (height b2)))))
+  (=>
+   (has-type b1 text) (has-type b2 text)
+   (has-contents b1) (has-contents b2)
+   (viewable b1) (viewable b2)
+   (or (and (descends b1 (tag h1)) (descends b2 (tag h2)))
+       (and (descends b1 (tag h2)) (descends b2 (tag h3)))
+       (and (descends b1 (tag h3)) (descends b2 (tag h4)))
+       (and (descends b1 (tag h4)) (descends b2 (tag h5)))
+       (and (descends b1 (tag h5)) (descends b2 (tag h6))))
+   (> (height b1) (height b2))))
 
 (define-test (overlapping-text b1 b2)
   (=> (has-type b1 text) (has-type b2 text) (!= b1 b2)

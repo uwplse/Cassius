@@ -19,13 +19,15 @@
       ,out
       (ite (is-box-sizing/border-box (style.box-sizing ,r))
            (+ (bl ,b) (pl ,b) (pr ,b) (br ,b))
-           0.0))]
+           0.0)
+      (scroll-y ,b))]
    [(or 'min-height 'height 'max-height)
     `(-
       ,out
       (ite (is-box-sizing/border-box (style.box-sizing ,r))
            (+ (bt ,b) (pt ,b) (pb ,b) (bb ,b))
-           0.0))]
+           0.0)
+      (scroll-x ,b))]
    [else
     out]))
 
@@ -420,7 +422,7 @@
              [mr* (min-mr b)])
          ,(smt-cond
            [(> (+ ml* (bl b) (pl b) w* (pr b) (br b) mr* (scroll-y b)) available-width)
-            (= (w b) (- w* (scroll-y b)))
+            (= (w b) w*)
             (= (ml b) ml*)
             (width-set b)]
            [(or (is-no-elt e) (and (is-width/auto (style.width r)) (not (is-replaced e))))
@@ -428,7 +430,7 @@
                       (> (- available-width ml* (bl b) (pl b) (pr b) (br b) mr*)
                          ,(get-px-or-% 'max-width '(w p) 'b)))
                  (and
-                  (= (w b) (- ,(get-px-or-% 'max-width '(w p) 'b) (scroll-y b)))
+                  (= (w b) ,(get-px-or-% 'max-width '(w p) 'b))
                   ,(smt-cond
                     [(not (is-margin/auto (style.margin-left r)))
                      (= (ml b) ml*)]
@@ -442,7 +444,7 @@
                   (= (mr b) mr*)
                   (width-set b)))]
            [else
-            (= (w b) (- w* (scroll-y b)))
+            (= (w b) w*)
             (width-set b)
             ,(smt-cond
               [(not (is-margin/auto (style.margin-left r)))
@@ -514,10 +516,10 @@
                  (or (is-replaced (box-elt b))
                      (not (is-height/auto (style.height (computed-style (box-elt b))))))])
        (=> top? (= (top-outer b) (+ (top-padding pp) temp-top)))
-       (=> height? (= (h b) (- temp-height (scroll-x b))))
+       (=> height? (= (h b) temp-height))
        (=> (and (not top?) (not bottom?)) (= (top-outer b) (vertical-position-for-flow-roots b)))
        (=> (and (not height?) (not (and top? bottom?)))
-           (= (h b) (- (auto-height-for-flow-roots b) (scroll-x b))))
+           (= (h b) (auto-height-for-flow-roots b)))
        (=> (and bottom? (not (and top? height?)))
            (= (bottom-outer b) (- (bottom-padding pp) temp-bottom)))
 
@@ -562,7 +564,7 @@
              (= (mr b) (margin-min-px (style.margin-right r) b))))
 
         (=> left? (= (left-outer b) (+ (left-padding pp) temp-left)))
-        (=> width? (and (= (w b) (- temp-width (scroll-y b)))
+        (=> width? (and (= (w b) temp-width)
                         (not (w-from-stfwidth b))))
         (=> (and (not width?) (not (and left? right?)))
             (and (= (w b) (usable-stfwidth b))
@@ -650,8 +652,8 @@
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
 
        (ite (is-height/auto (style.height r))
-         (= (h b) (- (auto-height-for-flow-blocks b) (scroll-x b)))
-         (= (h b) (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))
+         (= (h b) (auto-height-for-flow-blocks b))
+         (= (h b) (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
        (= (mt b)
           (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top '(w p) 'b)))
@@ -711,14 +713,14 @@
                  (or (= (w b) (usable-stfwidth b)) (and (is-box (lbox b)) (uses-parent-w (lbox b)))))
             ;; todo: what do browsers do when (w-from-stfwidth p) and (is-margin/%)?
             (= (w b)
-               (- (min-max-width ,(get-px-or-% 'width '(w (pbflow b)) 'b) b) (scroll-y b))))
+               (min-max-width ,(get-px-or-% 'width '(w (pbflow b)) 'b) b)))
 
        (ite (is-height/auto (style.height r))
             (ite (is-replaced e)
-                 (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b) (scroll-x b)))
+                 (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))
                  (=> (width-set b)
-                     (= (h b) (- (auto-height-for-flow-roots b) (scroll-x b)))))
-            (= (h b) (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))
+                     (= (h b) (auto-height-for-flow-roots b))))
+            (= (h b) (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
        ;; level -> x -> advance -> can-add -> add
        (let* ([ez (ez.in b)]
@@ -846,12 +848,12 @@
 
        ,(smt-cond
          [(is-replaced e)
-          (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b) (scroll-x b)))]
+          (= (h b) (- (intrinsic-height e) (bt b) (bb b) (pt b) (pb b)))]
          [(is-display/inline-block (style.display r))
           (= (h b)
              (ite (is-height/auto (style.height r))
-                  (- (auto-height-for-flow-roots b) (scroll-x b))
-                  (- (min-max-height ,(get-px-or-% 'height '(h p) 'b) b) (scroll-x b))))]
+                  (auto-height-for-flow-roots b)
+                  (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))]
          [else
           (= (h b) (font.selection-height metrics))])
 
@@ -861,7 +863,7 @@
          [(is-display/inline-block (style.display r))
           (ite (is-width/auto (style.width r))
                (= (w b) (usable-stfwidth b))
-               (= (w b) (- (min-max-width ,(get-px-or-% 'width '(w p) 'b) b) (scroll-y b))))]
+               (= (w b) (min-max-width ,(get-px-or-% 'width '(w p) 'b) b)))]
          [(is-box (fflow b))
           (and
            (= (left-outer (fflow b)) (left-content b))
@@ -1001,7 +1003,7 @@
        (zero-box-model-except-collapse b)
        (margins-collapse b)
        (flow-horizontal-layout b (w p))
-       (= (h b) (- (auto-height-for-flow-blocks b) (scroll-x b)))
+       (= (h b) (auto-height-for-flow-blocks b))
        (= (text-indent b) (text-indent p))
        (= (stfmax b) (max-if (stfmax l) (is-box v) (stfmax v)))
        (= (stfwidth b) (max-if (stfwidth l) (is-box v) (stfwidth v)))
@@ -1031,7 +1033,9 @@
                  (is-overflow/scroll (style.overflow-x (computed-style (box-elt b)))))
                 ,(scroll-width-name)
                 0))
-            (is-no-box (pbox b))))) ; The root box is weird in several ways
+            (and
+             (is-no-box (pbox b))
+             (or (= (scroll-x b) 0) (= (scroll-x b) ,(scroll-width-name))))))) ; The root box is weird in several ways
 
   (assert
    (forall ((b Box))
@@ -1046,4 +1050,6 @@
                  (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
                 ,(scroll-width-name)
                 0))
-            (is-no-box (pbox b))))))
+            (and
+             (is-no-box (pbox b))
+             (or (= (scroll-y b) 0) (= (scroll-y b) ,(scroll-width-name))))))))

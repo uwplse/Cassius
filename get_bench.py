@@ -10,11 +10,14 @@ Opens a page in Firefox, causes it to execute get_bench.js, and saves the result
 from selenium import webdriver
 import os, sys
 import warnings
-import urlparse
+try:
+    import urllib.parse as parse
+except:
+    import urlparse as parse
 import collections
 import argparse
 
-SCRIPT=open("get_bench.js").read()
+SCRIPT=open("get_bench.js", "rt").read()
 
 def measure_scrollbar(browser):
     browser.get("about:blank");
@@ -32,10 +35,11 @@ def main(urls, prerun=None, name=None):
     browser = make_browser()
 
     try:
-        urls = sorted(["file://" + url if url.startswith("/") else url for url in urls])
+        urls = sorted([url if "://" in url else "file://" + os.path.abspath(url)
+                       for url in urls])
 
         for url in urls:
-            scheme, _, _, _, _, _ = urlparse.urlparse(url)
+            scheme, _, _, _, _, _ = parse.urlparse(url)
             if scheme not in ["http", "https", "file"]:
                 warnings.warn("Only http and file scheme supported (not {})".format(scheme))
     
@@ -44,7 +48,7 @@ def main(urls, prerun=None, name=None):
         else:
             site_to_pages = collections.defaultdict(list)
             for url in urls:
-                _, netloc, _, _, _, _ = urlparse.urlparse(url)
+                _, netloc, _, _, _, _ = parse.urlparse(url)
                 site_to_pages[netloc].append(url)
 
         measure_scrollbar(browser)
@@ -52,7 +56,7 @@ def main(urls, prerun=None, name=None):
         for (netloc, urls) in sorted(site_to_pages.items()):
             fname = "bench/{}.rkt".format(netloc)
             with open(fname, "wb") as fi:
-                print "Saving layout to {}:".format(fname),
+                sys.stdout.write("Saving layout to {}: ".format(fname))
                 sys.stdout.flush()
                 for i, url in enumerate(urls):
                     id = str(i+1).rjust(len(str(len(urls))), "0")
@@ -61,13 +65,19 @@ def main(urls, prerun=None, name=None):
                         if prerun: browser.execute_script(prerun)
                         browser.execute_script("window.LETTER = arguments[0];", "doc-" + id)
                         text = browser.execute_script(SCRIPT + "; return page2text(LETTER);").encode("utf8")
-                        fi.write(";; From {}\n\n{}\n\n".format(url, text))
-                        print "{}".format(id),
+                        fi.write(b";; From ")
+                        fi.write(url.encode("utf-8"))
+                        fi.write(b"\n\n")
+                        fi.write(text)
+                        fi.write(b"\n\n")
+                        sys.stdout.write(str(id) + " ")
                         sys.stdout.flush()
                     except:
                         import traceback
                         traceback.print_exc()
                         continue
+            sys.stdout.write("\n")
+            sys.stdout.flush()
     finally:
         browser.quit()
 
