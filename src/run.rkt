@@ -169,7 +169,7 @@
 (define (do-minimize-assertion problem cache)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
-    [(success stylesheet trees doms)
+    [(success stylesheet trees doms test)
      (eprintf "Counterexample found!\n")
      ;(for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
      ;(printf "\n\nConfiguration:\n")
