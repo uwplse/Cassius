@@ -310,25 +310,23 @@
 
 (define (spec-constraints fields dom emit box)
   (when (ormap (curry node-get* box) fields)
-    (define-values (vars body)
-      (disassemble-forall
-       (apply and-assertions (append-map (λ (x) (node-get* box x #:default '())) fields))))
     (define nodes (nodes-below box (λ (x) (ormap (curry node-get* x) fields))))
-    (define ctx
-      (hash-union
-       (for/hash ([var vars]) (values var var))
-       (hash '? (dump-box box))
-       (get-node-names nodes)))
-    (define spec (compile-assertion (list dom) body ctx))
-    ;(eprintf "For ~a, say ~a for (~a)\n" box spec (name 'box box))
-    ;(for ([node nodes])
-    ;  (eprintf "  ~a\n" node))
-    ;(eprintf "\n")
-    (emit `(assert (! (and
-                       ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
-                           `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
-                              ,spec)))
-                      :named ,(sformat "spec/~a" (name 'box box)))))))
+
+    (for ([field fields] #:when (node-get* box field) [test (node-get* box field)] [i (in-naturals)])
+      (define-values (vars body) (disassemble-forall test))
+
+      (define ctx
+        (hash-union
+         (for/hash ([var vars]) (values var var))
+         (hash '? (dump-box box))
+         (get-node-names nodes)))
+      (define spec (compile-assertion (list dom) body ctx))
+
+      (emit `(assert (! (and
+                         ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
+                             `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
+                                ,spec)))
+                        :named ,(sformat "spec/~a/~a" (name 'box box) i)))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
