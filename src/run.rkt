@@ -4,7 +4,8 @@
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
          "frontend.rkt" "solver.rkt" "modularize.rkt"
          "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
-         "minimize.rkt" "proofs.rkt")
+         "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
+         "../minimizer/minimize.rkt" "proofs.rkt")
 
 (provide dom-strip-positions dom-set-range)
 
@@ -55,30 +56,33 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-minimize problem)
+(define (do-minimize problem backtracked)
   (match (solve-problem problem)
     [(success stylesheet trees doms test)
-     (eprintf "Accepted\n")]
+     (printf "Accepted\n")]
     [(failure stylesheet trees)
-     (define to-remove (get-box-to-remove trees (dict-ref problem ':documents)))
-     (when to-remove
-       (eprintf "Rejected\n")
-       (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
-       ;; TODO: Make two JSON outputs into one JSON output
-       (write-json (make-hash (list (cons 'removed removed)
-                                    (cons 'total total)
-                                    (cons 'efficiency efficiency))))
-       (newline)
-       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index)))))
-     (unless to-remove
-       (eprintf "Minimized\n")
-       (define doms (map parse-dom (dict-ref problem ':documents)))
-       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) doms)))
-       (eprintf "~s\n" total-boxes))]
+     (define to-remove (get-box-to-remove
+                       trees
+                       (dict-ref problem ':documents)
+                       backtracked))
+    (when to-remove
+      (printf "Rejected\n")
+      (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
+      ;; TODO: Make two JSON outputs into one JSON output
+      (write-json (make-hash (list (cons 'removed removed)
+                                   (cons 'total total)
+                                   (cons 'efficiency efficiency))))
+      (newline)
+      (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+      (newline))
+    (unless to-remove
+      (printf "Minimized\n")
+      (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
+      (printf "~s\n" total-boxes))]
     [(list 'error e)
-     (eprintf "Error\n") ((error-display-handler) (exn-message e) e)]
+     (printf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break
-     (eprintf "Terminated.\n")]))
+     (printf "Terminated.\n")]))
 
 (define (do-debug problem)
   (match (solve-problem problem)
@@ -162,6 +166,27 @@
     ['break
      (eprintf "Terminated.\n")]))
 
+(define (do-minimize-assertion problem cache)
+  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
+  (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
+    [(success stylesheet trees doms test)
+     (eprintf "Counterexample found!\n")
+     ;(for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
+     ;(printf "\n\nConfiguration:\n")
+     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+       (eprintf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
+     (with-output-to-file cache #:exists 'replace
+       (lambda ()
+         (printf "(define-tree ~s)\n" trees)
+         (printf "(define-document ~s)\n" (dict-ref problem ':documents))
+         (printf "(define-config ~s)\n" (dom-properties (apply append doms)))))]
+    [(failure stylesheet trees)
+     (eprintf "Verified.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
 (define (do-verify/modular problem proof #:component [subcomponent #f])
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (define problem** (proof problem*))
@@ -234,8 +259,25 @@
     #:args (fname problem)
     (do-accept (get-problem fname problem))]
    ["minimize"
-    #:args (fname problem)
-    (begin (minimize-mode!) (do-minimize (get-problem fname problem)))]
+    #:args (fname problem [backtracked "[]"])
+    (do-minimize (get-problem fname problem) backtracked)]
+   ["minimize-assertion"
+    #:args (aname assertion fname problem cache)
+    (define prob (get-problem fname problem))
+    (define assertions
+      (call-with-input-file aname
+        (λ (p)
+          (for/hash ([assertion (in-port read p)])
+            (match-define `(define-test (,name ,vars ...) ,body) assertion)
+            (values name `(forall ,vars ,body))))))
+    (define documents
+      (map (compose dom-set-range dom-strip-positions)
+           (dict-ref prob ':documents)))
+    (do-minimize-assertion
+     (dict-set
+      (dict-set prob ':documents documents)
+      ':test (list (dict-ref assertions (string->symbol assertion))))
+     cache)]
    ["debug"
     #:args (fname problem)
     (do-debug (get-problem fname problem))]

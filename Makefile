@@ -53,8 +53,7 @@ bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
 	        $(shell find $(wildcard $(FWT_PATH)/*/*) \
 	              -name 'index.html' -not -path '*2-with-javascript*' )
 
-reports/minimized.html reports/minimized/: reports/fwt.json
-	mkdir -p reports/minimized
+reports/minimized.html: reports/fwt.json
 	xvfb-run -a -s '-screen 0 1920x1080x24' <reports/fwt.json python2 minimize-all.py
 
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
