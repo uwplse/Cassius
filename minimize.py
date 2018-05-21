@@ -29,7 +29,7 @@ def run_accept(name, cache_name, backtracked, maxtime=600):
             print("Cassius timed out, backtracking...")
             cassius.terminate()
             sys.stdout.flush()
-            return (True, -1)
+            return (True, False, [], -1)
         time.sleep(5)
         i += 5
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     iterations = 0
     eliminated = []
-    backtracked = []
+    backtracked = [u'{"tag":"head","index":0}', u'{"tag":"meta","index":0}', u'{"tag":"title","index":0}']
     start = time.time()
     name = args.name
 
