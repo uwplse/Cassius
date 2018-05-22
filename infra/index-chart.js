@@ -100,7 +100,7 @@ function draw_class(node, name, data) {
     }
 
     table.append("thead").selectAll("th")
-        .data(["Date", "Time", "Branch", "Passing", "Timeouts", "Link"]).enter().append("th")
+        .data(["Date", "Time", "Branch", "Passing", "Failures", "Link"]).enter().append("th")
         .text((d) => d);
 
     table.append("tbody").selectAll("tr")
@@ -112,7 +112,7 @@ function draw_class(node, name, data) {
             "<span style='color: " + key(d[":branch"]) + "'>" + d[":branch"] + "</span>",
             add_fields(["success", "expected"])(d) + "/" +
                 add_fields(["success", "expected", "timeout", "fail", "unsupported"])(d),
-            d["timeout"] || 0,
+            add_fields(["fail", "error"])(d),
             "<a href='" + html_path(d[":path"]) + "'>»</a>",
         ]).enter().append("td")
         .html(d => d);
