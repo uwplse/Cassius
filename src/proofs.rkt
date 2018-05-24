@@ -5,8 +5,12 @@
 
 (provide read-proofs)
 
-(define (dom-run-proof problem tactics theorem)
-  (define the-dom (first (dict-ref problem ':documents)))
+(define (dom-run-proof problem tactics theorem props)
+  (define the-dom* (first (dict-ref problem ':documents)))
+  (define ctx*
+    (for/fold ([ctx (dom-properties the-dom*)]) ([(k v) (in-dict props)])
+      (dict-set ctx k v)))
+  (define the-dom (struct-copy dom the-dom* [properties ctx*]))
   (define elts (parse-tree (dom-elements the-dom)))
   (define boxes (parse-tree (dom-boxes the-dom)))
 
@@ -90,8 +94,9 @@
            (hash-set! assertion-helpers name helper)]
           [`(theorem (,name ,args ...) ,body)
            (hash-set! theorem-context name `(forall ,args ,body))]
-          [`(proof (,name ,thmname) ,subcmds ...)
+          [`(proof (,name ,thmname ,attrs ...) ,subcmds ...)
            (define theorem (dict-ref theorem-context thmname))
-           (hash-set! proof-context name (curryr dom-run-proof subcmds theorem))]))))
+           (define props (attributes->dict attrs))
+           (hash-set! proof-context name (curryr dom-run-proof subcmds theorem props))]))))
   proof-context)
 
