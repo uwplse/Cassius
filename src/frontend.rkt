@@ -4,7 +4,7 @@
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
 (provide query solve (struct-out success) (struct-out failure) solve-cached)
 
-(struct success (stylesheet elements doms) #:prefab)
+(struct success (stylesheet elements doms test) #:prefab)
 (struct failure (stylesheet trees) #:prefab)
 
 (define (constraints log-phase sheets docs fonts [tests #f] #:render? [render? #t])
@@ -93,10 +93,15 @@
        (unless (extract-model-lookback m trees)
          (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)
-       (when tests (extract-counterexample! m tests))
+       (define test
+         (if tests
+             (let ([bad-test (extract-test m tests)])
+               (extract-counterexample! m bad-test)
+               bad-test)
+             #f))
        (define doms* (map (curry extract-ctx! m) doms))
        (define sheet* (apply append sheets)) ; (extract-rules (car sheets) trees m)
-       (success sheet* (map unparse-tree trees) doms*)]
+       (success sheet* (map unparse-tree trees) doms* test)]
       [else
        (log-phase "Insufficient float registers, trying again with ~a"
                   (+ 1 (*exclusion-zone-registers*)))

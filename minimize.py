@@ -132,7 +132,7 @@ def write_output(website, name, before, after, time):
 def minimize(args, run, afile, aname):
     iterations = 0
     eliminated = []
-    backtracked = []
+    backtracked = [u'{"tag":"head","index":0}', u'{"tag":"meta","index":0}', u'{"tag":"title","index":0}']
     start = time.time()
     name = args.name
 

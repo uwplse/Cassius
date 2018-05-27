@@ -129,7 +129,7 @@
 (define (modularize problem)
   (define sheets* (prune-sheets (dict-ref problem ':sheets) (map dom-elements (dict-ref problem ':documents))))
   (cons
-   (dict-set problem ':render false)
+   (dict-set (dict-set problem ':render false) ':sheets sheets*)
    (for/list ([(piece specs) (in-dict (append-map split-document (dict-ref problem ':documents)))])
      (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
      (define sheets** (prune-sheets sheets* (list elements*)))
