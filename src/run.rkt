@@ -166,22 +166,35 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-minimize-assertion problem cache)
+(define (do-minimize-assertion problem backtracked)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
     [(success stylesheet trees doms)
-     (eprintf "Counterexample found!\n")
      ;(for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
      ;(printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (eprintf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
-     (with-output-to-file cache #:exists 'replace
-       (lambda ()
-         (printf "(define-tree ~s)\n" trees)
-         (printf "(define-document ~s)\n" (dict-ref problem ':documents))
-         (printf "(define-config ~s)\n" (dom-properties (apply append doms)))))]
+     (define to-remove (get-box-to-remove
+                        trees
+                        (dict-ref problem ':documents)
+                        backtracked
+                        ':dnr))
+     (when to-remove
+       (printf "Rejected\n")
+       (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
+       ;; TODO: Make two JSON outputs into one JSON output
+       (write-json (make-hash (list (cons 'removed removed)
+                                    (cons 'total total)
+                                    (cons 'efficiency efficiency))))
+       (newline)
+       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+       (newline))
+     (unless to-remove
+       (printf "Minimized\n")
+       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
+       (printf "~s\n" total-boxes))]
     [(failure stylesheet trees)
-     (eprintf "Verified.\n")]
+     (printf "Verified.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
     ['break
@@ -262,7 +275,7 @@
     #:args (fname problem [backtracked "[]"])
     (do-minimize (get-problem fname problem) backtracked)]
    ["minimize-assertion"
-    #:args (aname assertion fname problem cache)
+    #:args (aname assertion fname problem [backtracked "[]"])
     (define prob (get-problem fname problem))
     (define assertions
       (call-with-input-file aname
@@ -277,7 +290,7 @@
      (dict-set
       (dict-set prob ':documents documents)
       ':test (list (dict-ref assertions (string->symbol assertion))))
-     cache)]
+     backtracked)]
    ["debug"
     #:args (fname problem)
     (do-debug (get-problem fname problem))]

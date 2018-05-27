@@ -38,15 +38,15 @@
 (define (get-num html)
   (and html (dict-ref (node-attrs html) ':num #f)))
 
-(define (is-marked? mark html)
-  (and html (node-get html mark #:default #f)))
+(define (is-marked? html marks)
+  (for/or ([mark marks]) (node-get html mark #:default #f)))
 
 (define (has-num? html)
   (and (get-num html) html))
 
-(define (valid? mark)
+(define (valid? . marks)
   (lambda (html)
-    (and (not (is-marked? mark html)) (has-num? html))))
+    (and html (not (is-marked? html marks)) (has-num? html))))
 
 ;; Returns the elt of a child, from the highest ancestor in the hierarchy with multiple children, that is not an ancestor of the original node
 (define (choose-to-remove node test)
@@ -136,13 +136,13 @@
          (dict-ref tag&index->elt tag&index #f))
        nodes))
 
-(define (get-box-to-remove new old backtracked)
+(define (get-box-to-remove new old backtracked [unsatmark ':bad])
   (define docs (map parse-dom old))
   (define failing (find-problem-boxes new is-problem)) ; Switch to is-cex for assertions
   (define tag&index->elt (elt<->tag&idx-association docs))
   (define backtracked-elts (parse-backtracked backtracked tag&index->elt))
   (mark-failing (append failing backtracked-elts))
-  (mark-tree (append failing backtracked-elts) ':bad #t)
+  (mark-tree (append failing backtracked-elts) unsatmark #t)
   (mark-tree backtracked-elts ':dnr #t)
   (match-define (cons box->elt elt->box) (get-box-elt-map new docs))
 
@@ -151,11 +151,11 @@
       (define problem-elt (get-elt-ancestor problem-box))
       (if (has-elt? problem-elt)
           (let ([problem-html (dict-ref box->elt (dict-ref (node-attrs problem-elt) ':elt))])
-            (define weak-candidate (choose-to-remove problem-html (valid? ':bad)))
+            (define weak-candidate (choose-to-remove problem-html (valid? ':bad ':dnr)))
             (define strong-candidate (choose-to-remove problem-html (valid? ':dnr)))
             (or weak-candidate strong-candidate))
           #f)))
-
+  
   (define to-remove
     (for/fold ([default #f]) ([candidate candidates])
       (or (and candidate default
