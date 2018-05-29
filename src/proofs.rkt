@@ -48,9 +48,9 @@
       [`(assert ,name ,assert)
        (define box (dict-ref box-context name))
        (node-add! box ':assert assert)]
-      [`(admit ,name)
+      [`(admit ,name ,assert)
        (define box (dict-ref box-context name))
-       (node-set! box ':admit true)]
+       (node-add! box ':admit assert)]
       [`(component ,name ,sel)
        (define selected-boxes
          (for/list ([box (in-tree boxes)] #:when (and (matcher box) (selector-matches? sel (matcher box))))

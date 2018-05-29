@@ -34,19 +34,21 @@
 
   (assert root (onscreen root))
 
-  (spec sidebar (raw (not (box-in-flow sidebar))))
-  (spec sidebar (onscreen sidebar))
-  (assert sidebar (onscreen-plus sidebar-content 5))
-  (admit sidebar)
+  (assert! sidebar true)
+  (admit sidebar (raw (not (box-in-flow sidebar))))
+  (admit sidebar (onscreen sidebar))
+  (admit sidebar (onscreen-plus sidebar-content 5))
+  (admit sidebar (forall (b) (=> (onscreen ?) (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
   
   (spec sidebar-title (raw (non-negative-margins sidebar-title)))
   (spec sidebar-title (> (height sidebar-title) 0))
 
-  (spec sidebar-description (= (top sidebar-description) (bottom (prev sidebar-description))))
-  (spec sidebar-description (raw (non-negative-margins sidebar-description)))
-  (spec sidebar-description (raw (= (yo sidebar-description) (xo sidebar-description) 0.0)))
-  (spec sidebar-description (= (left sidebar-description) (left (parent sidebar-description))))
-  (admit sidebar-description)
+  (assert! sidebar-description true)
+  (admit sidebar-description (= (top sidebar-description) (bottom (prev sidebar-description))))
+  (admit sidebar-description (raw (non-negative-margins sidebar-description)))
+  (admit sidebar-description (raw (= (yo sidebar-description) (xo sidebar-description) 0.0)))
+  (admit sidebar-description (= (left sidebar-description) (left (parent sidebar-description))))
+  (admit sidebar-description (forall (b) (=> (onscreen ?) (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
 
   (assert sidebar-content
     (=> (onscreen-plus sidebar-content 5)

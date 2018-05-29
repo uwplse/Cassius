@@ -216,7 +216,7 @@
     (match (parameterize ([*fuzz* #f]) (solve-problem check))
       [(success stylesheet trees doms test)
        (eprintf "Counterexample found in final check to ~a!\n" test)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert))))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert :admit))))
        (printf "\n\nConfiguration:\n")
        (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
          (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
