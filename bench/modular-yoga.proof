@@ -1,3 +1,5 @@
+;; -*- mode: scheme -*-
+
 (define (is-interactive b)
   (matches b (tag a) (tag input) (tag button)))
 
@@ -36,5 +38,7 @@
 
   (spec footer
     (forall (a)
-            (=> (and (raw (ez.outside (ez.in footer) footer)) (onscreen footer) (>= (width footer) 200))
-                (and (raw (ez.inside (ez.out footer) footer)) (=> (is-interactive a) (onscreen a)))))))
+            (=> (raw (ez.outside (ez.in footer) footer))
+                (onscreen footer)
+                (>= (width footer) 200)
+                (=> (is-interactive a) (onscreen a))))))
