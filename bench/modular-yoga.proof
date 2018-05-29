@@ -7,7 +7,7 @@
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
 
-(proof (yoga interactive-onscreen)
+(proof (yoga interactive-onscreen :w (between 800 1920) :h (between 600 1024) :fs (between 16 32))
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
