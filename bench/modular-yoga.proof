@@ -18,8 +18,6 @@
   (assert root (<= (raw (bottom-border header)) (raw (top-border body))
                    (raw (bottom-border body)) (raw (top-border footer))))
   (assert root (>= (width footer) 200))
-  (assert root (= (top root) 0.0))
-  (assert root (= (left root) 0.0))
   (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
 
   (spec header (raw (no-margins header)))
