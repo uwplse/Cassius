@@ -49,12 +49,12 @@ FWT_PATH=$(HOME)/src/fwt
 bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
 # Note that the "2-with-javascript" bit handles a special case for the childrensappwebsitetemplate
 	xvfb-run -a -s '-screen 0 1920x1080x24' \
-	    python2 get_bench.py --name fwt \
+	    python3 get_bench.py --name fwt \
 	        $(shell find $(wildcard $(FWT_PATH)/*/*) \
 	              -name 'index.html' -not -path '*2-with-javascript*' )
 
 reports/minimized.html: reports/fwt.json
-	xvfb-run -a -s '-screen 0 1920x1080x24' python2 minimize-all.py <reports/fwt.json >reports/minimized.html
+	xvfb-run -a -s '-screen 0 1920x1080x24' python3 minimize-all.py <reports/fwt.json >reports/minimized.html
 
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
@@ -77,4 +77,4 @@ reports/modular.html reports/modular.json: bench/modular-yoga.rkt
 
 # Joel on Software blog posts
 bench/joel.rkt: bench/joel/joel.js
-	python get_bench.py --name joel --prerun bench/joel/joel.js "https://www.joelonsoftware.com/2018/04/13/gamification/"
+	python3 get_bench.py --name joel --prerun bench/joel/joel.js "https://www.joelonsoftware.com/2018/04/13/gamification/"

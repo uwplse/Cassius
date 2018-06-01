@@ -30,16 +30,16 @@ if __name__ == "__main__":
     print('\t\t\t<th>Time (s)</th>')
     print('\t\t</tr>')
 
-    for fwt in data[u'problems']:
-        if fwt[u'status'] == u"fail":
-            sys.stderr.write("Running minimizer on {}".format(fwt[u'problem']))
+    for fwt in data['problems']:
+        if fwt['status'] == "fail":
+            sys.stderr.write("Running minimizer on {}".format(fwt['problem']))
             sys.stderr.flush()
             proc = subprocess.run(
-                ["python2", "minimize.py", fwt[u'problem'], fwt[u'url']]],
+                ["python2", "minimize.py", fwt['problem'], fwt['url']]],
                 stdout=subprocess.PIPE)
             result = json.loads(proc.stdout)
             print("<tr>")
-            print("\t<td>{}</td>".format(fwt[u'description']))
+            print("\t<td>{}</td>".format(fwt["description"]))
             print("\t<td>{}</td>".format(result["name"]))
             print("\t<td>{}</td>".format(result["before"]))
             print("\t<td>{}</td>".format(result["after"]))

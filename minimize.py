@@ -1,47 +1,29 @@
-#!/bin/python2.7
+#!/bin/python3.5
 
-"""
-Benchmark creator, for Cassius.
-
-Uses Selenium Webdriver to download new benchmarks for Casssius.
-Opens a page in Firefox, causes it to execute get_bench.js, and saves the result.
-"""
-
-import os, sys
-import warnings
-import collections
+import sys
 import argparse
 import subprocess
 import json
 import time
 
-STATISTICS=[]
+from get_bench import main as get_bench
+
+STATISTICS = []
 
 def run_accept(name, cache_name, backtracked, maxtime=600):
-    print("Running Cassius:", file=sys.stderr)
-    cassius = subprocess.Popen(["racket", "src/run.rkt", "minimize", "--cache", cache_name,
-                                "bench/"+name+".rkt",
-                                "doc-1", "[{}]".format(",".join(backtracked))], stdout=subprocess.PIPE)
-    i = 0
-
-    while cassius.poll() == None:
-        if (i >= maxtime):
-            print("Cassius timed out, backtracking...", file=sys.stderr)
-            cassius.terminate()
-            sys.stdout.flush()
+    try:
+        print("Running Cassius:", file=sys.stderr)
+        cassius = subprocess.run(["racket", "src/run.rkt", "minimize", "--cache", cache_name, "bench/"+name+".rkt", "doc-1", "[{}]".format(",".join(backtracked))], stdout=subprocess.PIPE, timeout=maxtime)
+    except subprocess.TimeoutExpired:
             return (True, False, [], -1)
-        time.sleep(5)
-        i += 5
 
-    result, _ = cassius.communicate()
+    result = cassius.stdout
 
     if "Accepted" in result:
         print("Cassius accepted the minimized version, backtracking...", file=sys.stderr)
-        sys.stdout.flush()
         return (True, False, [], -1)
     elif "Rejected" in result:
         print("Cassius rejected the minimized version, continuing...", file=sys.stderr)
-        sys.stdout.flush()
         lines = result.split()
         stats = json.loads(lines[1])
         STATISTICS.append((stats, i))
@@ -50,23 +32,16 @@ def run_accept(name, cache_name, backtracked, maxtime=600):
         print("Minimized!", file=sys.stderr)
         lines = result.split()
         remaining_boxes = int(lines[1])
-        sys.stdout.flush()
         return (False, True, [], remaining_boxes)
     elif "Error" in result:
         print("Cassius encountered an error, terminating", file=sys.stderr)
-        sys.stdout.flush()
         raise Exception()
 
     return (False, i)
 
 def get_minimized(url, elts, name):
-    p = subprocess.Popen(["python2", "get_bench.py", "--name", name, "--prerun", "-", url], stdin=subprocess.PIPE)
-    p.communicate('TAGLIST = [{}];'.format(",".join(elts)) +
-                  'for (i in TAGLIST) {' +
-                      'var tag = TAGLIST[i].tag;' +
-                      'var index = TAGLIST[i].index;' +
-                      'document.getElementsByTagName(tag)[index].remove();' +
-                  '}')
+    prerun = "; ".join(["document.getElementsByTagName({}.tag)[{}.index].remove()".format(elt, elt) for elt in elts])
+    get_bench(url, name=name, prerun=prerun)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
