@@ -6,48 +6,48 @@ import json
 
 if __name__ == "__main__":
     data = json.load(sys.stdin)
+    print('<!DOCTYPE html>')
+    print('<html>')
+    print('<style>')
+    print('\ttbody td, tbody th { padding: 0 0.5em 0.5em; text-align: left; }')
+    print('\ttd:nth-child(3), td:nth-child(4), td:nth-child(5) { text-align:right; }')
+    print('\tthead th { padding: 0 0.5em; text-align: center; }')
+    print('</style>')
+    print('<body>')
+    print('\t<table>')
+    print('\t\t<thead><tr>')
+    print('\t\t\t<th></th>')
+    print('\t\t\t<th></th>')
+    print('\t\t\t<th colspan="2"># Boxes</th>')
+    print('\t\t\t<th></th>')
+    print('\t\t</tr></thead>')
+    print('\t\t<tbody>')
+    print('\t\t<tr>')
+    print('\t\t\t<th>Website</th>')
+    print('\t\t\t<th>Problem</th>')
+    print('\t\t\t<th>Before</th>')
+    print('\t\t\t<th>After</th>')
+    print('\t\t\t<th>Time (s)</th>')
+    print('\t\t</tr>')
 
-    with open("reports/minimized.html", "w") as out:
-        out.write('<!DOCTYPE html>\n')
-        out.write('<html>\n')
-        out.write('<style>\n')
-        out.write('\ttbody td, tbody th { padding: 0 0.5em 0.5em; text-align: left; }\n')
-        out.write('\ttd:nth-child(3), td:nth-child(4), td:nth-child(5) { text-align:right; }\n')
-        out.write('\tthead th { padding: 0 0.5em; text-align: center; }\n')
-        out.write('</style>\n')
-        out.write('<body>\n')
-        out.write('\t<table>\n')
-        out.write('\t\t<thead><tr>\n')
-        out.write('\t\t\t<th></th>\n')
-        out.write('\t\t\t<th></th>\n')
-        out.write('\t\t\t<th colspan="2"># Boxes</th>\n')
-        out.write('\t\t\t<th></th>\n')
-        out.write('\t\t</tr></thead>\n')
-        out.write('\t\t<tbody>\n')
-        out.write('\t\t<tr>\n')
-        out.write('\t\t\t<th>Website</th>\n')
-        out.write('\t\t\t<th>Problem</th>\n')
-        out.write('\t\t\t<th>Before</th>\n')
-        out.write('\t\t\t<th>After</th>\n')
-        out.write('\t\t\t<th>Time (s)</th>\n')
-        out.write('\t\t</tr>\n')
+    for fwt in data[u'problems']:
+        if fwt[u'status'] == u"fail":
+            sys.stderr.write("Running minimizer on {}".format(fwt[u'problem']))
+            sys.stderr.flush()
+            proc = subprocess.run(
+                ["python2", "minimize.py", fwt[u'problem'], fwt[u'url'], "--website", fwt[u'description']],
+                stdout=subprocess.PIPE)
+            website, name, before, after, time = proc.stdout.split("\n")[-5:]
+            print("<tr>")
+            print("\t<td>{}</td>".format(website))
+            print("\t<td>{}</td>".format(name))
+            print("\t<td>{}</td>".format(before))
+            print("\t<td>{}</td>".format(after))
+            print("\t<td>{0:.2f}</td>".format(time))
+            print("</tr>")
 
-        for fwt in data[u'problems']:
-            if fwt[u'status'] == u"fail":
-                proc = subprocess.run(
-                    ["python2", "minimize.py", fwt[u'problem'], fwt[u'url'], "--website", fwt[u'description']],
-                    stdout=subprocess.PIPE)
-                website, name, before, after, time = proc.stdout.split("\n")[-5:]
-                out.write("<tr>\n")
-                out.write("\t<td>{}</td>\n".format(website))
-                out.write("\t<td>{}</td>\n".format(name))
-                out.write("\t<td>{}</td>\n".format(before))
-                out.write("\t<td>{}</td>\n".format(after))
-                out.write("\t<td>{0:.2f}</td>\n".format(time))
-                out.write("</tr>\n")
-
-        out.write('\t\t</tbody>\n')
-        out.write('\t</table>\n')
-        out.write('</body>\n')
-        out.write('</html>\n')
+    print('\t\t</tbody>')
+    print('\t</table>')
+    print('</body>')
+    print('</html>')
     
