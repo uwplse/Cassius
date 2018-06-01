@@ -129,5 +129,9 @@ if __name__ == "__main__":
         print('\nIn total, {0} boxes were removed in {1} iteration(s), taking {2:.2f} seconds.'.format(total_removed, iterations, total_time))
         print('A total of {0} boxes remained for a {1:.2f}% reduction overall.'.format(initial - total_removed, (total_removed * 100.0) / initial))
 
-        write_output(args.website, args.name, initial, initial - total_removed, total_time)
-        sys.stdout.flush()
+        print()
+        print(args.website)
+        print(args.name)
+        print(initial)
+        print(initial - total_removed)
+        print(total_time)

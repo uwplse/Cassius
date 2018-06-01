@@ -32,11 +32,20 @@ if __name__ == "__main__":
         out.write('\t\t\t<th>Time (s)</th>\n')
         out.write('\t\t</tr>\n')
 
-    for fwt in data[u'problems']:
-        if fwt[u'status'] == u"fail":
-            subprocess.run(["python2", "minimize.py", fwt[u'problem'], fwt[u'url'], "--website", fwt[u'description']])
+        for fwt in data[u'problems']:
+            if fwt[u'status'] == u"fail":
+                proc = subprocess.run(
+                    ["python2", "minimize.py", fwt[u'problem'], fwt[u'url'], "--website", fwt[u'description']],
+                    stdout=subprocess.PIPE)
+                website, name, before, after, time = proc.stdout.split("\n")[-5:]
+                out.write("<tr>\n")
+                out.write("\t<td>{}</td>\n".format(website))
+                out.write("\t<td>{}</td>\n".format(name))
+                out.write("\t<td>{}</td>\n".format(before))
+                out.write("\t<td>{}</td>\n".format(after))
+                out.write("\t<td>{0:.2f}</td>\n".format(time))
+                out.write("</tr>\n")
 
-    with open("reports/minimized.html", "a") as out:
         out.write('\t\t</tbody>\n')
         out.write('\t</table>\n')
         out.write('</body>\n')
