@@ -1,17 +1,6 @@
 #!/bin/python2.7
 
-"""
-Benchmark creator, for Cassius.
-
-Uses Selenium Webdriver to download new benchmarks for Casssius.
-Opens a page in Firefox, causes it to execute get_bench.js, and saves the result.
-"""
-
-from selenium import webdriver
 import os, sys
-import warnings
-import collections
-#import argparse
 import subprocess
 import json
 
