@@ -1,18 +1,12 @@
 #!/bin/python2.7
 
-import os, sys
+import sys
 import subprocess
 import json
 
 if __name__ == "__main__":
-    raw = sys.stdin.readline()
-    data = json.loads(raw)
+    data = json.load(sys.stdin)
 
-    failing = []
-
-    if os.path.isfile("reports/minimized.html"):
-        os.remove("reports/minimized.html")
-    
     with open("reports/minimized.html", "w") as out:
         out.write('<!DOCTYPE html>\n')
         out.write('<html>\n')
@@ -40,8 +34,7 @@ if __name__ == "__main__":
 
     for fwt in data[u'problems']:
         if fwt[u'status'] == u"fail":
-            #print("python2 minimize.py {} {}".format(fwt[u'problem'], fwt[u'url']))
-            os.system("python2 minimize.py {} {} --website=\"{}\"".format(fwt[u'problem'], fwt[u'url'], fwt[u'description']))
+            subprocess.run(["python2", "minimize.py", fwt[u'problem'], fwt[u'url'], "--website", fwt[u'description']])
 
     with open("reports/minimized.html", "a") as out:
         out.write('\t\t</tbody>\n')
