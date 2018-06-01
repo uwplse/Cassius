@@ -5,6 +5,8 @@ import subprocess
 import json
 
 if __name__ == "__main__":
+    args = sys.argv[1:]
+
     data = json.load(sys.stdin)
     print('<!DOCTYPE html>')
     print('<html>')
@@ -35,7 +37,7 @@ if __name__ == "__main__":
             sys.stderr.write("Running minimizer on {}".format(fwt['problem']))
             sys.stderr.flush()
             proc = subprocess.run(
-                ["python2", "minimize.py", fwt['problem'], fwt['url']]],
+                ["python2", "minimize.py"] + args + [fwt['problem'], fwt['url']]],
                 stdout=subprocess.PIPE)
             result = json.loads(proc.stdout)
             print("<tr>")
