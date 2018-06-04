@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/bin/python3.5
 
 import sys
 import argparse
@@ -17,15 +17,15 @@ def run_accept(name, cache_name, backtracked, maxtime=600):
     start = time.time()
     args = []
     if cache_name: args += ["--cache", cache_name]
-    json = "[{}]".format(",".join(backtracked))
+    elts = "[{}]".format(",".join(backtracked))
 
     try:
-        cassius = subprocess.run(["racket", "src/run.rkt", "minimize"] + args + ["bench/"+name+".rkt", "doc-1", json], stdout=subprocess.PIPE, timeout=maxtime)
+        cassius = subprocess.run(["racket", "src/run.rkt", "minimize"] + args + ["bench/"+name+".rkt", "doc-1", elts], stdout=subprocess.PIPE, timeout=maxtime)
     except subprocess.TimeoutExpired:
             return Backtrack()
     runtime = time.time() - start
 
-    result = cassius.stdout
+    result = cassius.stdout.decode("utf8")
 
     if "Accepted" in result:
         return Backtrack()
@@ -42,7 +42,7 @@ def run_accept(name, cache_name, backtracked, maxtime=600):
 
 def get_minimized(url, elts, name):
     prerun = "; ".join(["document.getElementsByTagName({}.tag)[{}.index].remove()".format(elt, elt) for elt in elts])
-    get_bench(url, name=name, prerun=prerun)
+    get_bench([url], name=name, prerun=prerun)
 
 if __name__ == "__main__":
     STATISTICS = []
@@ -69,21 +69,21 @@ if __name__ == "__main__":
         print("Running Cassius:", file=sys.stderr)
         get_minimized(args.urls, eliminated, name)
         res = run_accept(name, args.cache, backtracked, maxtime=args.timeout)
-        minimized = instanceof(res, Done)
-        if instanceof(res, Continue):
+        minimized = isinstance(res, Done)
+        if isinstance(res, Continue):
             print("Cassius rejected the minimized version, continuing...", file=sys.stderr)
             if initial is None: initial = res.stats["total"]
             size = res.stats["total"]
 
             eliminated.extend(res.elts)
             STATISTICS.append((res.stats, res.runtime))
-        elif instanceof(res, Backtrack):
+        elif isinstance(res, Backtrack):
             print("Cassius accepted the minimized version, backtracking...", file=sys.stderr)
             if iterations == 0:
                 raise Exception("Full FWT accepted")
             backtracked.append(eliminated.pop())
             STATISTICS.pop()
-        elif instanceof(res, Done):
+        elif isinstance(res, Done):
             print("Minimized!", file=sys.stderr)
             if initial is None: initial = res.size
             size = res.size
