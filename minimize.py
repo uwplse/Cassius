@@ -1,4 +1,4 @@
-#!/bin/python3.5
+#!/bin/python3
 
 import sys
 import argparse
@@ -11,7 +11,7 @@ from get_bench import main as get_bench
 
 Done = collections.namedtuple("Done", ["size"])
 Backtrack = collections.namedtuple("Backtrack", [])
-Continue = collection.namedtuple("Continue", ["stats", "runtime", "elts"])
+Continue = collections.namedtuple("Continue", ["stats", "runtime", "elts"])
 
 def run_accept(name, cache_name, backtracked, maxtime=600):
     start = time.time()
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     p.add_argument("name", type=str, help="File name under bench/.")
     p.add_argument("urls", metavar="URLs", type=str, help="URLs to dowload")
     p.add_argument("--timeout", default=600, type=int, help="Timeout for each running instance of Cassius/.")
-    p.add_argument("--json", default=False, type=bool, action="store_true", help="Use machine-readable JSON output")
+    p.add_argument("--json", action="store_true", help="Use machine-readable JSON output")
     p.add_argument("--cache", default=None, type=str, help="Cache file")
     args = p.parse_args()
 
