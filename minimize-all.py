@@ -37,7 +37,7 @@ if __name__ == "__main__":
             sys.stderr.write("Running minimizer on {}".format(fwt['problem']))
             sys.stderr.flush()
             proc = subprocess.run(
-                ["python3", "minimize.py"] + args + [fwt['problem'], fwt['url']],
+                ["python3", "minimize.py", "--json"] + args + [fwt['problem'], fwt['url']],
                 stdout=subprocess.PIPE)
             result = json.loads(proc.stdout.decode("utf-8"))
             print("<tr>")
