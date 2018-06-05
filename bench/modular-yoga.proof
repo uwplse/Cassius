@@ -6,6 +6,12 @@
 (define (onscreen b)
   (and (>= (top b) (top root)) (>= (left b) (left root))))
 
+(theorem (footer-no-floats b)
+  (=> (matches b (id footer)) (raw (ez.outside (ez.in b) b))))
+
+(proof (lem1 footer-no-floats :w (between 800 1920) :h (between 600 1024) :fs (between 16 32))
+  (assert root (forall (b) (=> (matches b (id footer)) (raw (ez.outside (ez.in b) b))))))
+
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
 
@@ -14,9 +20,6 @@
   (component body (id body))
   (component footer (id footer))
 
-  (assert root (raw (ez.outside (ez.in header) header)))
-  (assert root (raw (= (ez.out header) (ez.in body))))
-  (assert root (raw (= (ez.out body) (ez.in footer))))
   (assert root (<= (raw (bottom-border header)) (raw (top-border body))
                    (raw (bottom-border body)) (raw (top-border footer))))
   (assert root (>= (width footer) 200))
@@ -26,12 +29,10 @@
   (spec header (> (height header) 0))
   (spec header
     (forall (a)
-            (=> (and (raw (ez.outside (ez.in header) header)) (onscreen header))
-                (and (raw (ez.inside (ez.out header) header)) (=> (is-interactive a) (onscreen a))))))
+            (=> (onscreen header) (=> (is-interactive a) (onscreen a)))))
 
   (spec body (raw (non-negative-margins body)))
   (spec body (> (height body) 0))
-  (spec body (=> (raw (ez.outside (ez.in body) body)) (raw (ez.inside (ez.out body) body))))
 
   (spec footer (raw (no-margins footer)))
   (spec footer (> (height footer) 0))
@@ -41,4 +42,6 @@
             (=> (raw (ez.outside (ez.in footer) footer))
                 (onscreen footer)
                 (>= (width footer) 200)
-                (=> (is-interactive a) (onscreen a))))))
+                (=> (is-interactive a) (onscreen a)))))
+
+  (lemma (footer-no-floats footer)))

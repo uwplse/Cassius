@@ -5,7 +5,7 @@
 
 (provide read-proofs)
 
-(define (dom-run-proof problem tactics theorem props)
+(define (dom-run-proof problem tactics theorem theorems props)
   (define the-dom* (first (dict-ref problem ':documents)))
   (define ctx*
     (for/fold ([ctx (dom-properties the-dom*)]) ([(k v) (in-dict props)])
@@ -51,6 +51,14 @@
       [`(admit ,name ,assert)
        (define box (dict-ref box-context name))
        (node-add! box ':admit assert)]
+      [`(lemma (,thm ,boxes ...))
+       (define-values (vars body) (disassemble-forall (theorems thm)))       
+       (define-values (thvars thbody) (disassemble-forall theorem))
+       (set! theorem
+             `(forall ,thvars
+                      (=> (let (,@(map list vars boxes))
+                            ,body)
+                          ,thbody)))]
       [`(component ,name ,sel)
        (define selected-boxes
          (for/list ([box (in-tree boxes)] #:when (and (matcher box) (selector-matches? sel (matcher box))))
@@ -59,7 +67,7 @@
          (match selected-boxes
            [(list) (raise (format "Could not find any elements matching ~a" sel))]
            [(list box) box]
-           [(list boxes ...) (raise (format "~a matches multiple elements ~a" (string-join (map ~a boxes) ", ")))]))
+           [(list boxes ...) (raise (format "~a matches multiple elements ~a" sel (string-join (map ~a boxes) ", ")))]))
        (hash-set! box-context name box)
        (set! components (cons box components))
        (node-set! box ':name name)
@@ -97,6 +105,6 @@
           [`(proof (,name ,thmname ,attrs ...) ,subcmds ...)
            (define theorem (dict-ref theorem-context thmname))
            (define props (attributes->dict attrs))
-           (hash-set! proof-context name (curryr dom-run-proof subcmds theorem props))]))))
+           (hash-set! proof-context name (curryr dom-run-proof subcmds theorem (curry dict-ref theorem-context) props))]))))
   proof-context)
 
