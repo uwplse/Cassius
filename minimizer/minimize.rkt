@@ -11,6 +11,7 @@
 
 (define/contract (elt<->ptr-association old)
   (-> (listof dom?) (values any/c any/c))
+
   (define tagcounts (make-hash))
   (define tag&index->elt (make-hash))
   (define elt->tag&index (make-hash))

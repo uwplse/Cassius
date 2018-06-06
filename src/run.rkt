@@ -59,9 +59,8 @@
 (define (do-minimize problem backtracked)
   (define backtracked-elts
     (for/list ([node (string->jsexpr backtracked)])
-      (define tag&index
-        (cons (string->symbol (dict-ref node 'tag #f))
-              (dict-ref node 'index #f)))))
+      (cons (string->symbol (dict-ref node 'tag #f))
+            (dict-ref node 'index #f))))
 
   (match (solve-problem problem)
     [(success stylesheet trees doms test)
