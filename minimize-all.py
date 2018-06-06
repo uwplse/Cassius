@@ -34,8 +34,7 @@ if __name__ == "__main__":
 
     for fwt in data['problems']:
         if fwt['status'] == "fail":
-            sys.stderr.write("Running minimizer on {}".format(fwt['problem']))
-            sys.stderr.flush()
+            print("Running minimizer on {}".format(fwt['problem']), file=sys.stderr)
             proc = subprocess.run(
                 ["python3", "minimize.py", "--json"] + args + [fwt['problem'], fwt['url']],
                 stdout=subprocess.PIPE)
