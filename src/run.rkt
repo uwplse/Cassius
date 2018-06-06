@@ -57,28 +57,31 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-minimize problem backtracked)
+  (define backtracked-elts
+    (for/list ([node (string->jsexpr backtracked)])
+      (define tag&index
+        (cons (string->symbol (dict-ref node 'tag #f))
+              (dict-ref node 'index #f)))))
+
   (match (solve-problem problem)
     [(success stylesheet trees doms test)
      (printf "Accepted\n")]
     [(failure stylesheet trees)
-     (define to-remove (get-box-to-remove
-                       trees
-                       (dict-ref problem ':documents)
-                       backtracked))
-    (when to-remove
-      (printf "Rejected\n")
-      (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
-      ;; TODO: Make two JSON outputs into one JSON output
-      (write-json (make-hash (list (cons 'removed removed)
-                                   (cons 'total total)
-                                   (cons 'efficiency efficiency))))
-      (newline)
-      (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
-      (newline))
-    (unless to-remove
-      (printf "Minimized\n")
-      (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
-      (printf "~s\n" total-boxes))]
+     (match (get-box-to-remove trees (dict-ref problem ':documents) backtracked-elts)
+       [(list (cons tag index) removed total)
+        (printf "Rejected\n")
+        ;; TODO: Make two JSON outputs into one JSON output
+        (define efficiency (real->decimal-string (* (/ removed total) 100) 2))
+        (write-json (make-hash (list (cons 'removed removed)
+                                     (cons 'total total)
+                                     (cons 'efficiency efficiency))))
+        (newline)
+        (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+        (newline)]
+       [#f
+        (printf "Minimized\n")
+        (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
+        (printf "~s\n" total-boxes)])]
     [(list 'error e)
      (printf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break

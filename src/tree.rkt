@@ -3,7 +3,7 @@
 (provide parse-tree unparse-tree tree-copy tree=?
          node-stx? node? node-type node-parent node-children* node-children node-attrs
          node-get node-get* node-set! node-set*! node-add! node-remove!
-         node-prev node-next node-fchild node-lchild in-tree)
+         node-prev node-next node-fchild node-lchild in-ancestors in-tree)
 
 (define-by-match node-stx?
   (? string?)
@@ -69,6 +69,11 @@
 
 (define (node-lchild node)
   (if (null? (node-children node)) #f (last (node-children node))))
+
+(define (in-ancestors node)
+  (if node
+      (sequence-append (in-value node) (in-ancestors (node-parent node)))
+      empty-sequence))
 
 (define (in-tree node)
   (apply sequence-append (in-value node) (map in-tree (node-children node))))
