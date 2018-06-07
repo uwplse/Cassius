@@ -75,7 +75,7 @@
   (define new (map parse-tree new*))
 
   (define-values (ptr->elt elt->ptr) (elt<->ptr-association old))
-  (define backtracked-elts (map ptr->elt backtracked))
+  (define backtracked-elts (map (curry hash-ref ptr->elt) backtracked))
   (define-values (box->elt elt->box) (box-elt-index-association new old))
 
   (define failing
