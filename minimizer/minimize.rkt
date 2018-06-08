@@ -48,15 +48,20 @@
       [(list (list 'bad prop)) #t]
       [_ #f])))
 
-(define (removable-uncle node test)
+(define/contract (removable-uncle node test)
+  (-> node? (-> node? boolean?) node?)
   (define parent (node-parent node))
   (and parent
        (let ([fromparent (removable-uncle parent test)]
              [next (node-next node)]
              [prev (node-prev node)])
-         (or (test fromparent) (and next (test next)) (and prev (test prev))))))
+         (cond
+          [(test fromparent) fromparent]
+          [(and next (test next)) next]
+          [(and prev (test prev)) prev]))))
 
-(define (elt-to-remove node)
+(define/contract (elt-to-remove node)
+  (-> node? node?)
   (or
    (removable-uncle node (negate (curryr node-get ':bad)))
    (removable-uncle node (negate (curryr node-get ':dnr)))))
