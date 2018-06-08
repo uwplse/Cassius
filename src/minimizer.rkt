@@ -1,6 +1,6 @@
 #lang racket
 
-(require json "../src/common.rkt" "../src/tree.rkt" "../src/dom.rkt")
+(require json "common.rkt" "tree.rkt" "dom.rkt")
 
 (provide get-box-to-remove)
 
