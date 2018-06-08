@@ -56,7 +56,7 @@
              [next (node-next node)]
              [prev (node-prev node)])
          (cond
-          [(test fromparent) fromparent]
+          [(and fromparent (test fromparent)) fromparent]
           [(and next (test next)) next]
           [(and prev (test prev)) prev]))))
 
