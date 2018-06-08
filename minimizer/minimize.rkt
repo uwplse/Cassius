@@ -32,8 +32,8 @@
          [box (in-tree boxes)] [elt (in-elements dom)]
          #:when (and (node-get box ':elt) (node-get elt ':num))
          #:when (equal? (node-get box ':elt) (node-get elt ':num)))
-    (dict-set! box->elt (node-get box ':elt) elt)
-    (dict-set! elt->box (node-get elt ':num) box))
+    (dict-set! box->elt box elt)
+    (dict-set! elt->box elt box))
   (values box->elt elt->box))
 
 (define (mark-ancestors nodes mark value)
@@ -62,7 +62,7 @@
           [else false]))))
 
 (define/contract (elt-to-remove node)
-  (-> node? node?)
+  (-> node? (or/c node? false))
   (or
    (removable-uncle node (negate (curryr node-get ':bad)))
    (removable-uncle node (negate (curryr node-get ':dnr)))))
@@ -91,9 +91,10 @@
   (mark-ancestors backtracked-elts ':dnr #t)
 
   (define candidates
-    (for/list ([problem-box failing] #:when (get-elt-ancestor problem-box))
-      (elt-to-remove
-        (dict-ref box->elt (node-get (get-elt-ancestor problem-box) ':elt)))))
+    (filter identity
+            (for/list ([problem-box failing] #:when (get-elt-ancestor problem-box))
+              (elt-to-remove
+               (dict-ref box->elt (get-elt-ancestor problem-box))))))
 
   (match candidates
     ['() false]
@@ -105,6 +106,6 @@
      (define total-boxes
        (length (append-map (compose sequence->list in-boxes) old)))
 
-     (list (elt->ptr to-remove)
+     (list (dict-ref elt->ptr to-remove)
            removed-boxes
            total-boxes)]))

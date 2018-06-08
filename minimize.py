@@ -26,6 +26,8 @@ def run_accept(name, cache_name, backtracked, maxtime=600):
     runtime = time.time() - start
 
     result = cassius.stdout.decode("utf8")
+    if cassius.returncode > 0:
+        raise Exception("Cassius encountered an error")
 
     if "Accepted" in result:
         return Backtrack()
@@ -37,8 +39,8 @@ def run_accept(name, cache_name, backtracked, maxtime=600):
         lines = result.split()
         remaining_boxes = int(lines[1])
         return Done(remaining_boxes)
-    elif "Error" in result:
-        raise Exception("Cassius encountered an error:\n" + result)
+    else:
+        raise Exception("Unknown result from Cassius:\n"+result)
 
 def get_minimized(url, elts, name):
     prerun = "; ".join(["document.getElementsByTagName({}.tag)[{}.index].remove()".format(elt, elt) for elt in elts])
