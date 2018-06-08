@@ -54,7 +54,7 @@
        (let ([fromparent (removable-uncle parent test)]
              [next (node-next node)]
              [prev (node-prev node)])
-         (or (test fromparent) (test next) (test prev)))))
+         (or (test fromparent) (and next (test next)) (and prev (test prev))))))
 
 (define (elt-to-remove node)
   (or
