@@ -5,7 +5,7 @@
          "frontend.rkt" "solver.rkt" "modularize.rkt"
          "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
          "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
-         "minimize.rkt" "proofs.rkt")
+         "minimizer.rkt" "proofs.rkt")
 
 (provide dom-strip-positions dom-set-range)
 
