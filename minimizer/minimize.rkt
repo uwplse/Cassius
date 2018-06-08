@@ -49,7 +49,7 @@
       [_ #f])))
 
 (define/contract (removable-uncle node test)
-  (-> node? (-> node? boolean?) node?)
+  (-> node? (-> node? boolean?) (or/c node? false))
   (define parent (node-parent node))
   (and parent
        (let ([fromparent (removable-uncle parent test)]
@@ -58,7 +58,8 @@
          (cond
           [(and fromparent (test fromparent)) fromparent]
           [(and next (test next)) next]
-          [(and prev (test prev)) prev]))))
+          [(and prev (test prev)) prev]
+          [else false]))))
 
 (define/contract (elt-to-remove node)
   (-> node? node?)
