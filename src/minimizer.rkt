@@ -75,13 +75,15 @@
 (define elt-ptr? (cons/c symbol? integer?))
 
 (define/contract (get-box-to-remove new* old* backtracked) ; new and old unparsed
-  (-> (listof any/c #|trees|#) (listof any/c #|doms|#) (listof elt-ptr?) (list/c elt-ptr? integer? integer?))
+  (-> (listof any/c #|trees|#) (listof any/c #|doms|#) (listof elt-ptr?)
+      (or/c (list/c elt-ptr? integer? integer?) false))
 
   (define old (map parse-dom old*))
   (define new (map parse-tree new*))
 
   (define-values (ptr->elt elt->ptr) (elt<->ptr-association old))
-  (define backtracked-elts (map (curry hash-ref ptr->elt) backtracked))
+  ;; TODO: Why are the backtracked elements sometimes not present?
+  (define backtracked-elts (filter identity (map (λ (x) (hash-ref ptr->elt x #f)) backtracked)))
   (define-values (box->elt elt->box) (box-elt-index-association new old))
 
   (define failing

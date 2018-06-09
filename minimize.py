@@ -49,7 +49,7 @@ def get_minimized(url, elts, name):
 if __name__ == "__main__":
     STATISTICS = []
 
-    p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
+    p = argparse.ArgumentParser(description="Minimize a failing Cassius input")
     p.add_argument("name", type=str, help="File name under bench/.")
     p.add_argument("urls", metavar="URLs", type=str, help="URLs to dowload")
     p.add_argument("--timeout", default=600, type=int, help="Timeout for each running instance of Cassius/.")
