@@ -17,7 +17,7 @@ index:
 	bash infra/publish.sh download index upload
 
 clean:
-	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json
+	rm -f bench/css/*.rkt bench/fwt.rkt bench/fwt.working.rkt reports/*.html reports/*.json reports/*.cache
 
 deploy:
 	rsync -r www/ $(shell ~/uwplse/getdir)
@@ -49,12 +49,12 @@ FWT_PATH=$(HOME)/src/fwt
 bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
 # Note that the "2-with-javascript" bit handles a special case for the childrensappwebsitetemplate
 	xvfb-run -a -s '-screen 0 1920x1080x24' \
-	    python2 get_bench.py --name fwt \
+	    python3 get_bench.py --name fwt \
 	        $(shell find $(wildcard $(FWT_PATH)/*/*) \
 	              -name 'index.html' -not -path '*2-with-javascript*' )
 
 reports/minimized.html: reports/fwt.json
-	xvfb-run -a -s '-screen 0 1920x1080x24' <reports/fwt.json python2 minimize-all.py
+	xvfb-run -a -s '-screen 0 1920x1080x24' python3 minimize-all.py --cache reports/fwt.cache <reports/fwt.json >reports/minimized.html
 
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
@@ -64,17 +64,17 @@ bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	unzip -q $< -d /tmp/
 
 reports/fwt.html reports/fwt.json: bench/fwt.rkt
-	racket src/report.rkt regression $(FLAGS) --show-all --timeout 900 -o reports/fwt $^
+	racket src/report.rkt regression $(FLAGS) --cache reports/fwt.cache --show-all --timeout 900 -o reports/fwt $^
 
 reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
-	racket src/report.rkt assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
+	racket src/report.rkt assertions $(FLAGS) --cache reports/fwt.cache --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/vizassert bench/assertions/assertions.vizassert bench/fwt.working.rkt
 
 reports/specific.html reports/specific.json: bench/fwt.rkt bench/assertions/specific.sexp
-	racket src/report.rkt specific-assertions $(FLAGS) --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.rkt bench/assertions/specific.sexp
+	racket src/report.rkt specific-assertions $(FLAGS) --cache reports/fwt.cache --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.rkt bench/assertions/specific.sexp
 
 reports/modular.html reports/modular.json: bench/modular-yoga.rkt
 	racket src/report.rkt merify $(FLAGS) --show-all --timeout 600 -o reports/modular $^
 
 # Joel on Software blog posts
 bench/joel.rkt: bench/joel/joel.js
-	python get_bench.py --name joel --prerun bench/joel/joel.js "https://www.joelonsoftware.com/2018/04/13/gamification/"
+	python3 get_bench.py --name joel --prerun bench/joel/joel.js "https://www.joelonsoftware.com/2018/04/13/gamification/"

@@ -326,7 +326,7 @@
                          ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
                              `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
                                 ,spec)))
-                        :named ,(sformat "spec/~a/~a" (name 'box box) i)))))))
+                        :named ,(sformat "spec/~a/~a/~a" (name 'box box) (substring (~a field) 1) i)))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -454,6 +454,6 @@
     ,@(font-computation)
     ,@(boxref-definitions)
     ,@(for-render (layout-definitions))
-    ,@(per-box (curry spec-constraints (if render? '(:spec) '(:spec :assert))))
+    ,@(per-box (curry spec-constraints (if render? '(:spec) '(:spec :assert :admit))))
     ,@(for-render (per-box layout-constraints))
     ))

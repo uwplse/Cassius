@@ -103,23 +103,21 @@
   (reap [sow]
     (let loop ([tree (dom-boxes doc)])
       (define children* (map loop (rest tree)))
-      (if (or (set-member? (first tree) ':spec) (set-member? (first tree) ':assert))
+      (if (or (set-member? (first tree) ':spec) (set-member? (first tree) ':assert) (set-member? (first tree) ':admit))
           (let* ([component (parse-tree (cons (first tree) children*))]
                  [specs (node-get* component ':spec #:default '())]
                  [asserts (node-get* component ':assert #:default '())]
-                 [admit? (node-get* component ':admit #:default false)]
                  [ctx (dom-properties doc)])
             (node-remove! component ':spec)
             (node-remove! component ':assert)
             (node-remove! component ':admit)
             (define props
               (if (eq? tree (dom-boxes doc)) ctx (dict-set ctx ':component '())))
-            (unless admit?
-                (sow (cons (struct-copy dom doc
-                                        [name (node-get component ':name #:default false)]
-                                        [boxes (unparse-tree component)]
-                                        [properties props])
-                           (append specs asserts))))
+            (sow (cons (struct-copy dom doc
+                                    [name (node-get component ':name #:default false)]
+                                    [boxes (unparse-tree component)]
+                                    [properties props])
+                       (append specs asserts)))
             (unless (eq? tree (dom-boxes doc))
               (node-add! component ':component 'true))
             (node-set*! component ':spec specs)

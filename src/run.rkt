@@ -5,7 +5,7 @@
          "frontend.rkt" "solver.rkt" "modularize.rkt"
          "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
          "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
-         "../minimizer/minimize.rkt" "proofs.rkt")
+         "minimizer.rkt" "proofs.rkt")
 
 (provide dom-strip-positions dom-set-range)
 
@@ -57,32 +57,73 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-minimize problem backtracked)
+  (define backtracked-elts
+    (for/list ([node (string->jsexpr backtracked)])
+      (cons (string->symbol (dict-ref node 'tag #f))
+            (dict-ref node 'index #f))))
+
   (match (solve-problem problem)
     [(success stylesheet trees doms test)
      (printf "Accepted\n")]
     [(failure stylesheet trees)
-     (define to-remove (get-box-to-remove
-                       trees
-                       (dict-ref problem ':documents)
-                       backtracked))
-    (when to-remove
-      (printf "Rejected\n")
-      (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
-      ;; TODO: Make two JSON outputs into one JSON output
-      (write-json (make-hash (list (cons 'removed removed)
-                                   (cons 'total total)
-                                   (cons 'efficiency efficiency))))
-      (newline)
-      (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
-      (newline))
-    (unless to-remove
-      (printf "Minimized\n")
-      (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
-      (printf "~s\n" total-boxes))]
+     (match (get-box-to-remove trees (dict-ref problem ':documents) backtracked-elts)
+       [(list (cons tag index) removed total)
+        (printf "Rejected\n")
+        ;; TODO: Make two JSON outputs into one JSON output
+        (define efficiency (real->decimal-string (* (/ removed total) 100) 2))
+        (write-json (make-hash (list (cons 'removed removed)
+                                     (cons 'total total)
+                                     (cons 'efficiency efficiency))))
+        (newline)
+        (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+        (newline)]
+       [#f
+        (printf "Minimized\n")
+        (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
+        (printf "~s\n" total-boxes)])]
     [(list 'error e)
      (printf "Error\n") ((error-display-handler) (exn-message e) e)]
     ['break
      (printf "Terminated.\n")]))
+
+(define (do-minimize-assertion problem backtracked)
+  (define backtracked-elts
+    (for/list ([node (string->jsexpr backtracked)])
+      (cons (string->symbol (dict-ref node 'tag #f))
+            (dict-ref node 'index #f))))
+
+  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
+  (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
+    [(success stylesheet trees doms test)
+     ;(for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
+     ;(printf "\n\nConfiguration:\n")
+     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+       (eprintf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
+     (define to-remove (get-box-to-remove
+                        trees
+                        (dict-ref problem ':documents)
+                        backtracked-elts))
+     (match (get-box-to-remove trees (dict-ref problem ':documents) backtracked-elts)
+       [(list (cons tag index) removed total)
+        (printf "Rejected\n")
+        ;; TODO: Make two JSON outputs into one JSON output
+        (define efficiency (real->decimal-string (* (/ removed total) 100) 2))
+        (write-json (make-hash (list (cons 'removed removed)
+                                     (cons 'total total)
+                                     (cons 'efficiency efficiency))))
+        (newline)
+        (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
+        (newline)]
+       [#f
+        (printf "Minimized\n")
+        (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
+        (printf "~s\n" total-boxes)])]
+    [(failure stylesheet trees)
+     (printf "Verified.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
 
 (define (do-debug problem)
   (match (solve-problem problem)
@@ -166,40 +207,6 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-minimize-assertion problem backtracked)
-  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
-  (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
-    [(success stylesheet trees doms test)
-     ;(for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
-     ;(printf "\n\nConfiguration:\n")
-     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
-       (eprintf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
-     (define to-remove (get-box-to-remove
-                        trees
-                        (dict-ref problem ':documents)
-                        backtracked
-                        ':dnr))
-     (when to-remove
-       (printf "Rejected\n")
-       (match-define (cons (list removed total efficiency) (cons tag index)) to-remove)
-       ;; TODO: Make two JSON outputs into one JSON output
-       (write-json (make-hash (list (cons 'removed removed)
-                                    (cons 'total total)
-                                    (cons 'efficiency efficiency))))
-       (newline)
-       (write-json (make-hash (list (cons 'tag (symbol->string tag)) (cons 'index index))))
-       (newline))
-     (unless to-remove
-       (printf "Minimized\n")
-       (define total-boxes (length (append-map (compose sequence->list in-tree dom-boxes) (map parse-dom (dict-ref problem ':documents)))))
-       (printf "~s\n" total-boxes))]
-    [(failure stylesheet trees)
-     (printf "Verified.\n")]
-    [(list 'error e)
-     ((error-display-handler) (exn-message e) e)]
-    ['break
-     (eprintf "Terminated.\n")]))
-
 (define (do-verify/modular problem proof #:component [subcomponent #f])
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (define problem** (proof problem*))
@@ -229,7 +236,7 @@
     (match (parameterize ([*fuzz* #f]) (solve-problem check))
       [(success stylesheet trees doms test)
        (eprintf "Counterexample found in final check to ~a!\n" test)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert))))
+       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert :admit))))
        (printf "\n\nConfiguration:\n")
        (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
          (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]

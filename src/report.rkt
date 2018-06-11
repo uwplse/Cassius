@@ -484,10 +484,11 @@
    [("-x") name "Unset an option" (flags (cons (string->symbol name) (flags)))]
    [("--cache") file-name "Cache for Z3 results"
     (*cache-file* file-name)
-    (call-with-input-file file-name
-      (λ (p)
-        (for ([(k v) (in-dict (read p))])
-          (hash-set! *cache* k v))))]
+    (when (file-exists? file-name)
+      (call-with-input-file file-name
+        (λ (p)
+          (for ([(k v) (in-dict (read p))])
+            (hash-set! *cache* k v)))))]
 
    #:once-each
    [("-o" "--output") fname "File name for final CSS file"

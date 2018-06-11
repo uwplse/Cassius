@@ -1,62 +1,63 @@
-#!/bin/python2.7
+#!/bin/python3
 
-"""
-Benchmark creator, for Cassius.
-
-Uses Selenium Webdriver to download new benchmarks for Casssius.
-Opens a page in Firefox, causes it to execute get_bench.js, and saves the result.
-"""
-
-from selenium import webdriver
-import os, sys
-import warnings
-import collections
-#import argparse
+import sys
 import subprocess
+import argparse
 import json
 
 if __name__ == "__main__":
-    raw = sys.stdin.readline()
-    data = json.loads(raw)
+    p = argparse.ArgumentParser(description="Minimize all failing Cassius test cases")
+    p.add_argument("--cache", default=None, type=str, help="Cache file")
+    p.add_argument("json", type=argparse.FileType("r"), help="JSON input of a Cassius report")
+    p.add_argument("html", type=argparse.FileType("w"), help="HTML output of minimizer report")
+    args = p.parse_args()
 
-    failing = []
+    data = json.load(args.json)
+    print('<!DOCTYPE html>', file=args.html)
+    print('<html>', file=args.html)
+    print('<style>', file=args.html)
+    print('\ttbody td, tbody th { padding: 0 0.5em 0.5em; text-align: left; }', file=args.html)
+    print('\ttd:nth-child(3), td:nth-child(4), td:nth-child(5) { text-align:right; }', file=args.html)
+    print('\tthead th { padding: 0 0.5em; text-align: center; }', file=args.html)
+    print('</style>', file=args.html)
+    print('<body>', file=args.html)
+    print('\t<table>', file=args.html)
+    print('\t\t<thead><tr>', file=args.html)
+    print('\t\t\t<th></th>', file=args.html)
+    print('\t\t\t<th></th>', file=args.html)
+    print('\t\t\t<th colspan="2"># Boxes</th>', file=args.html)
+    print('\t\t\t<th></th>', file=args.html)
+    print('\t\t</tr></thead>', file=args.html)
+    print('\t\t<tbody>', file=args.html)
+    print('\t\t<tr>', file=args.html)
+    print('\t\t\t<th>Website</th>', file=args.html)
+    print('\t\t\t<th>Problem</th>', file=args.html)
+    print('\t\t\t<th>Before</th>', file=args.html)
+    print('\t\t\t<th>After</th>', file=args.html)
+    print('\t\t\t<th>Time (s)</th>', file=args.html)
+    print('\t\t</tr>', file=args.html)
 
-    if os.path.isfile("reports/minimized.html"):
-        os.remove("reports/minimized.html")
-    
-    with open("reports/minimized.html", "w") as out:
-        out.write('<!DOCTYPE html>\n')
-        out.write('<html>\n')
-        out.write('<style>\n')
-        out.write('\ttbody td, tbody th { padding: 0 0.5em 0.5em; text-align: left; }\n')
-        out.write('\ttd:nth-child(3), td:nth-child(4), td:nth-child(5) { text-align:right; }\n')
-        out.write('\tthead th { padding: 0 0.5em; text-align: center; }\n')
-        out.write('</style>\n')
-        out.write('<body>\n')
-        out.write('\t<table>\n')
-        out.write('\t\t<thead><tr>\n')
-        out.write('\t\t\t<th></th>\n')
-        out.write('\t\t\t<th></th>\n')
-        out.write('\t\t\t<th colspan="2"># Boxes</th>\n')
-        out.write('\t\t\t<th></th>\n')
-        out.write('\t\t</tr></thead>\n')
-        out.write('\t\t<tbody>\n')
-        out.write('\t\t<tr>\n')
-        out.write('\t\t\t<th>Website</th>\n')
-        out.write('\t\t\t<th>Problem</th>\n')
-        out.write('\t\t\t<th>Before</th>\n')
-        out.write('\t\t\t<th>After</th>\n')
-        out.write('\t\t\t<th>Time (s)</th>\n')
-        out.write('\t\t</tr>\n')
+    for fwt in data['problems']:
+        if fwt['status'] == "fail":
+            print("Running minimizer on {}".format(fwt['problem']), file=sys.stderr)
+            proc = subprocess.run(
+                ["python3", "minimize.py", "--json"] +
+                (["--cache", args.cache] if args.cache else []) +
+                [fwt['problem'], fwt['url']],
+                stdout=subprocess.PIPE)
+            if proc.returncode > 0:
+                raise Exception("Minimizer process failed!")
+            result = json.loads(proc.stdout.decode("utf-8"))
+            print("<tr>", file=args.html)
+            print("\t<td>{}</td>".format(fwt["description"]), file=args.html)
+            print("\t<td>{}</td>".format(result["name"]), file=args.html)
+            print("\t<td>{}</td>".format(result["before"]), file=args.html)
+            print("\t<td>{}</td>".format(result["after"]), file=args.html)
+            print("\t<td>{0:.2f}</td>".format(result["time"]), file=args.html)
+            print("</tr>", file=args.html)
 
-    for fwt in data[u'problems']:
-        if fwt[u'status'] == u"fail":
-            #print("python2 minimize.py {} {}".format(fwt[u'problem'], fwt[u'url']))
-            os.system("python2 minimize.py {} {} --website=\"{}\"".format(fwt[u'problem'], fwt[u'url'], fwt[u'description']))
-
-    with open("reports/minimized.html", "a") as out:
-        out.write('\t\t</tbody>\n')
-        out.write('\t</table>\n')
-        out.write('</body>\n')
-        out.write('</html>\n')
+    print('\t\t</tbody>', file=args.html)
+    print('\t</table>', file=args.html)
+    print('</body>', file=args.html)
+    print('</html>', file=args.html)
     

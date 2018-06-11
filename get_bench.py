@@ -56,8 +56,7 @@ def main(urls, prerun=None, name=None):
         for (netloc, urls) in sorted(site_to_pages.items()):
             fname = "bench/{}.rkt".format(netloc)
             with open(fname, "wb") as fi:
-                sys.stdout.write("Saving layout to {}: ".format(fname))
-                sys.stdout.flush()
+                print("Saving layout to {}:".format(fname), file=sys.stderr, end=" ")
                 for i, url in enumerate(urls):
                     id = str(i+1).rjust(len(str(len(urls))), "0")
                     try:
@@ -70,14 +69,12 @@ def main(urls, prerun=None, name=None):
                         fi.write(b"\n\n")
                         fi.write(text)
                         fi.write(b"\n\n")
-                        sys.stdout.write(str(id) + " ")
-                        sys.stdout.flush()
+                        print(id, file=sys.stderr, end=" ")
                     except:
                         import traceback
                         traceback.print_exc()
                         continue
-            sys.stdout.write("\n")
-            sys.stdout.flush()
+            print(file=sys.stderr)
     finally:
         browser.quit()
 
