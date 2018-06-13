@@ -81,7 +81,7 @@ Collecting Examples
 You can collect examples to run Cassius on from Firefox. If you have
 Firefox and the Selenium packages for Python installed, you can run
 
-    python2 get_bench.py URL
+    python3 get_bench.py URL
 
 to run Firefox on the URL in question and dump the resulting layout
 into a file somewhere in `bench/`.
