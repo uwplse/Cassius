@@ -10,7 +10,7 @@
   (=> (matches b (id footer)) (raw (ez.outside (ez.in b) b))))
 
 (proof (lem1 footer-no-floats :w (between 800 1920) :h (between 600 1024) :fs (between 16 32))
-  (assert root (forall (b) (=> (matches b (id footer)) (raw (ez.outside (ez.in b) b))))))
+ (assert root (forall (b) (=> (matches b (id footer)) (raw (ez.outside (ez.in b) b))))))
 
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
