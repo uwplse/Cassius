@@ -80,10 +80,10 @@
     (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez) (bottom-border b)))))
 
   (define-fun no-margins ((b Box)) Bool
-    (= (mtp b) (mtn b) (mbp b) (mbn b) (ml b) (mr b) 0.0))
+    (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0))
 
   (define-fun non-negative-margins ((b Box)) Bool
-    (and (>= (mtp b) (- (mtn b))) (>= (mbp b) (- (mbn b))) (>= (ml b) 0) (>= (mr b) 0))))
+    (and (>= (mtp b) (- (mtn b))) (>= (mbp b) (- (mbn b))))))
 
 (define-constraints layout-definitions
 
