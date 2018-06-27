@@ -56,7 +56,7 @@
        (define-values (thvars thbody) (disassemble-forall theorem))
        (set! theorem
              `(forall ,thvars
-                      (=> (let (,@(for/list ([var vars] [box boxes]) (list var (dict-ref box-context box))))
+                      (=> (let (,@(map list vars boxes))
                             ,body)
                           ,thbody)))]
       [`(component ,name ,sel)

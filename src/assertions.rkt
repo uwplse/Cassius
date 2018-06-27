@@ -117,5 +117,5 @@
 
       ;; Variables
       [(? symbol?)
-       (with-handlers ([exn:fail:contract? (λ (e) (raise-user-error 'visual-logic "Could not find ~a (context includes ~a)\n" expr (dict-keys ctx)))])
+       (with-handlers ([exn:fail:contract? (λ (e) (raise-user-error 'visual-logic "Could not find ~a (context includes ~a)\n\t~a\n" expr (dict-keys ctx) body))])
            (dict-ref ctx expr))])))

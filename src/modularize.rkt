@@ -125,14 +125,16 @@
           (cons (first tree) children*)))))
 
 (define (modularize problem)
-  (define sheets* (prune-sheets (dict-ref problem ':sheets) (map dom-elements (dict-ref problem ':documents))))
+  (define fonts (dict-ref problem ':fonts))
+  (define sheets (dict-ref problem ':sheets))
+  (define sheets* (prune-sheets sheets (map dom-elements (dict-ref problem ':documents))))
   (cons
    (dict-set (dict-set problem ':render false) ':sheets sheets*)
    (for/list ([(piece specs) (in-dict (append-map split-document (dict-ref problem ':documents)))])
      (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
      (define sheets** (prune-sheets sheets* (list elements*)))
      (define elements** (prune-classes elements* sheets** specs))
-     (define fonts* (prune-fonts (dict-ref problem ':fonts) sheets**))
+     (define fonts* (prune-fonts fonts sheets**))
      (dict-set* problem
                 ':documents (list (struct-copy dom piece [elements elements**]))
                 ':test specs

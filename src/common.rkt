@@ -49,6 +49,9 @@
   (error "Cannot find `z3` binary; please put a `z3` binary into your PATH."))
 
 (define *debug* (make-parameter false))
+(define *fuzz* (make-parameter '(/ 10 60)))
+(define *font-fuzz* (make-parameter  1))
+
 (define (debug-mode!)
   (*debug* true)
   (*fuzz* #f)
@@ -57,9 +60,6 @@
 (define *minimize* (make-parameter false))
 (define (minimize-mode!)
   (*minimize* true))
-
-(define *fuzz* (make-parameter '(/ 10 60)))
-(define *font-fuzz* (make-parameter 1))
 
 (define-syntax-rule (reap [sows ...] body ...)
   (let* ([sows (let ([store '()])

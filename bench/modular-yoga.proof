@@ -6,24 +6,31 @@
 (define (onscreen b)
   (and (>= (top b) (top root)) (>= (left b) (left root))))
 
-(theorem (footer-no-floats b)
-  (=> (matches b (id footer)) (raw (ez.outside (ez.in b) b))))
+(theorem (floats-reasonable b)
+  (=> (matches b (id header) (id body) (id footer))
+      (raw (ez.inside (ez.out b) b))))
 
-(proof (lem1 footer-no-floats :w (between 800 1920) :h (between 600 1024) :fs (between 16 32))
- (assert root (forall (b) (=> (matches b (id footer)) (raw (ez.outside (ez.in b) b))))))
+(proof (lem1 floats-reasonable :w (between 800 1920) :h (between 600 1024) :fs (between 16 32))
+ (assert root (forall (b) (=> (matches b (id footer)) (raw (ez.inside (ez.out b) b))))))
 
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
 
-(proof (yoga interactive-onscreen :w (between 800 1920) :h (between 600 1024) :fs (between 16 32))
+(proof (yoga interactive-onscreen :w (between 800 1920) :h (between 600 1280) :fs (between 16 32))
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
 
   (assert root (<= (raw (bottom-border header)) (raw (top-border body))
                    (raw (bottom-border body)) (raw (top-border footer))))
-  (assert root (>= (width footer) 200))
-  (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
+  (assert root (=> 
+                (raw (ez.inside (ez.out header) header))
+                (raw (ez.inside (ez.out body) body))
+                (>= (width footer) 200)))
+  (assert root (=> 
+                (raw (ez.inside (ez.out header) header))
+                (raw (ez.inside (ez.out body) body))
+                (and (onscreen header) (onscreen body) (onscreen footer))))
 
   (spec header (raw (no-margins header)))
   (spec header (> (height header) 0))
@@ -44,4 +51,8 @@
                 (>= (width footer) 200)
                 (=> (is-interactive a) (onscreen a)))))
 
-  (lemma (footer-no-floats footer)))
+  (assert root (=> (raw (ez.inside (ez.out body) body))
+                   (raw (ez.outside (ez.in footer) footer))))
+
+  (lemma (floats-reasonable header))
+  (lemma (floats-reasonable body)))
