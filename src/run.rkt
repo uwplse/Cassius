@@ -204,15 +204,15 @@
 (define (get-problem fname pname)
   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
-(define (get-proof fname pname)
-  (first
-   (hash-values
-    (hash-ref
-     (call-with-input-file fname
-       (λ (p) 
+(define (get-proof fname pname gname)
+  (hash-ref
+   (hash-ref
+    (call-with-input-file fname
+      (λ (p) 
          (parameterize ([current-directory (path-tail fname)])
            (read-proofs p))))
-     (string->symbol pname)))))
+    (string->symbol pname))
+   (string->symbol gname)))
 
 (module+ main
   (define debug '())
@@ -290,8 +290,8 @@
     #:once-each
     [("--component") component "Only verify a subcomponent (for debugging)"
      (set! subcomponent (or (string->number component) (string->symbol component)))]
-    #:args (proof-file proof-name)
-    (do-check-proof (get-proof proof-file proof-name) #:component subcomponent)]
+    #:args (proof-file proof-name page-name)
+    (do-check-proof (get-proof proof-file proof-name page-name) #:component subcomponent)]
    ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))

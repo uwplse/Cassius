@@ -1,6 +1,6 @@
 ;; -*- mode: scheme -*-
 
-(page index (load "fwt.rkt" doc-080)
+(page yoga (load "fwt.rkt" doc-080)
       :w (between 800 1920)
       :h (between 600 1024)
       :fs (between 16 32))
@@ -15,13 +15,13 @@
   (=> (matches b (id header) (id body) (id footer))
       (raw (ez.inside (ez.out b) b))))
 
-(proof (lem1 floats-reasonable index)
+(proof (lem1 floats-reasonable yoga)
  (assert root (forall (b) (=> (matches b (id footer)) (raw (ez.inside (ez.out b) b))))))
 
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
 
-(proof (yoga interactive-onscreen index)
+(proof (yoga interactive-onscreen yoga)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
@@ -62,5 +62,5 @@
   (lemma (floats-reasonable header))
   (lemma (floats-reasonable body)))
 
-(proof (trivial interactive-onscreen index)
+(proof (trivial interactive-onscreen yoga)
   (assert root (forall (b) (=> (is-interactive b) (onscreen b)))))
