@@ -32,19 +32,19 @@
                 (raw (ez.inside (ez.out body) body))
                 (and (onscreen header) (onscreen body) (onscreen footer))))
 
-  (spec header (raw (no-margins header)))
-  (spec header (> (height header) 0))
-  (spec header
+  (assert header (raw (no-margins header)))
+  (assert header (> (height header) 0))
+  (assert header
     (forall (a)
             (=> (onscreen header) (=> (is-interactive a) (onscreen a)))))
 
-  (spec body (raw (non-negative-margins body)))
-  (spec body (> (height body) 0))
+  (assert body (raw (non-negative-margins body)))
+  (assert body (> (height body) 0))
 
-  (spec footer (raw (no-margins footer)))
-  (spec footer (> (height footer) 0))
+  (assert footer (raw (no-margins footer)))
+  (assert footer (> (height footer) 0))
 
-  (spec footer
+  (assert footer
     (forall (a)
             (=> (raw (ez.outside (ez.in footer) footer))
                 (onscreen footer)

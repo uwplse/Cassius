@@ -40,8 +40,8 @@
   (admit sidebar (onscreen-plus sidebar-content 5))
   (admit sidebar (forall (b) (=> (onscreen ?) (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
   
-  (spec sidebar-title (raw (non-negative-margins sidebar-title)))
-  (spec sidebar-title (> (height sidebar-title) 0))
+  (assert sidebar-title (raw (non-negative-margins sidebar-title)))
+  (assert sidebar-title (> (height sidebar-title) 0))
 
   (assert! sidebar-description true)
   (admit sidebar-description (= (top sidebar-description) (bottom (prev sidebar-description))))

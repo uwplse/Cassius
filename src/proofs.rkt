@@ -5,6 +5,10 @@
 
 (provide read-proofs)
 
+(define (spec-or-assert assert)
+  (define-values (vars body) (disassemble-forall assert))
+  (if (null? vars) ':spec ':assert))
+
 (define (dom-run-proof problem tactics theorem theorems props)
   (define the-dom* (first (dict-ref problem ':documents)))
   (define ctx*
@@ -24,30 +28,18 @@
   (define components (hash-values box-context))
   (for ([cmd tactics])
     (match cmd
-      [`(spec * ,spec)
-       (for ([box components])
-         (node-add! box ':spec spec))]
-      [`(spec! * ,spec)
-       (for ([box components])
-         (node-set! box ':spec spec))]
-      [`(spec! ,name ,spec)
-       (define box (dict-ref box-context name))
-       (node-set! box ':spec spec)]
-      [`(spec ,name ,spec)
-       (define box (dict-ref box-context name))
-       (node-add! box ':spec spec)]
       [`(assert * ,assert)
        (for ([box components])
-         (node-add! box ':assert assert))]
+         (node-add! box (spec-or-assert assert) assert))]
       [`(assert! * ,assert)
        (for ([box components])
-         (node-set! box ':assert assert))]
+         (node-set! box (spec-or-assert assert) assert))]
       [`(assert! ,name ,assert)
        (define box (dict-ref box-context name))
-       (node-set! box ':assert assert)]
+       (node-set! box (spec-or-assert assert) assert)]
       [`(assert ,name ,assert)
        (define box (dict-ref box-context name))
-       (node-add! box ':assert assert)]
+       (node-add! box (spec-or-assert assert) assert)]
       [`(admit ,name ,assert)
        (define box (dict-ref box-context name))
        (node-add! box ':admit assert)]
