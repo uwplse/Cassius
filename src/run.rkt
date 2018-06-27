@@ -208,11 +208,11 @@
   (first
    (hash-values
     (hash-ref
-     (call-with-input-file proof-file
+     (call-with-input-file fname
        (λ (p) 
-         (parameterize ([current-directory (path-tail proof-file)])
+         (parameterize ([current-directory (path-tail fname)])
            (read-proofs p))))
-     (string->symbol proof-name)))))
+     (string->symbol pname)))))
 
 (module+ main
   (define debug '())
