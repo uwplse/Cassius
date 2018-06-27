@@ -246,7 +246,13 @@
     (or (>= y (ez.mark ez)) (not (ez.mark? ez))))
 
   (define-fun ez.in-rect? ((x Real) (y Real) (t Real) (r Real) (b Real) (l Real)) Bool
-    (and (<= t y b) (<= l x r))))
+    (and (<= t y b) (<= l x r)))
+
+  (define-fun ez.free-registers ((ez EZone)) Int
+    ,(for/fold ([expr 0]) ([i (in-range (*exclusion-zone-registers*))])
+       `(ite ,(line-exists? (- (*exclusion-zone-registers*) i 1))
+             ,expr
+             ,(+ i 1)))))
 
 (module+ test
   (require "test.rkt")
@@ -264,7 +270,8 @@
                       (ez.in? ez x y)
                       (ite (is-float/left dir)
                            (and (<= x r) (<= y b))
-                           (and (>= x l) (<= y b)))))))
+                           (and (>= x l) (<= y b))))))
+             '())
 
   (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)
                    (b . Real) (l . Real) (dir . Float) (ez . EZone))
@@ -272,23 +279,27 @@
                   (ez.out-inclusive? ez l b) (ez.out-inclusive? ez r b)
                   (ez.out-inclusive? ez l t) (ez.out-inclusive? ez r t)
                   
-                  (ez.valid? (ez.add (ez.advance ez t) dir t r b l))))
+                  (ez.valid? (ez.add (ez.advance ez t) dir t r b l)))
+             '())
   
   ;; ez.advance spec tests
   (check-sat #hash((x . Real) (y . Real) (h . Real) (ez . EZone))
              `(=> (ez.valid? ez)
                   (= (ez.in? (ez.advance ez h) x y)
-                     (or (ez.in? ez x y) (<= y h)))))
+                     (or (ez.in? ez x y) (<= y h))))
+             '())
 
   (check-sat #hash((x . Real) (y . Real) (h . Real) (ez . EZone))
-             `(=> (ez.valid? ez) (ez.valid? (ez.advance ez h))))
+             `(=> (ez.valid? ez) (ez.valid? (ez.advance ez h)))
+             '())
 
   ;; ez.level spec tests
 
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (dir . Float) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez)  (<= pl pr) (>= (- pr pl) width) (not (is-float/none dir))
                   (let ([y* (ez.level ez width pl pr y dir)])
-                    (<= width (- (ez.right-at ez y* pr) (ez.left-at ez y* pl))))))
+                    (<= width (- (ez.right-at ez y* pr) (ez.left-at ez y* pl)))))
+             '())
 
   ;; End to end standards tests
   ;; Rule 1
@@ -299,14 +310,16 @@
                     (let ([x* (ez.x ez y* dir pl pr)])
                      (ite (is-float/left dir)
                           (>= x* pl)
-                          (<= x* pr))))))
+                          (<= x* pr)))))
+             '())
   ;; Rule 2
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
                                (dir . Float) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (<= pl pr) (not (is-float/none dir))
                   (let ([y* (ez.level ez width pl pr y dir)])
                     (let ([x* (ez.x ez y* dir pl pr)])
-                      (ez.out-inclusive? ez x* y*)))))
+                      (ez.out-inclusive? ez x* y*))))
+             '())
 
   ;; Rule 3
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
@@ -317,7 +330,8 @@
                       (=> (>= width 0.0)
                           (ite (is-float/left dir)
                                (ez.out-inclusive? ez (+ x* width) y*)
-                               (ez.out-inclusive? ez (- x* width) y*)))))))
+                               (ez.out-inclusive? ez (- x* width) y*))))))
+             '())
 
   ;; Rule 7
   (check-sat #hash((pl . Real) (pr . Real) (width . Real) (height . Real)
@@ -327,7 +341,8 @@
                     (let ([x* (ez.x ez y* dir pl pr)])
                       (ite (is-float/left dir)
                            (=> (> (+ x* width) pr) (= x* pl))
-                           (=> (< (- x* width) pl) (= x* pr)))))))
+                           (=> (< (- x* width) pl) (= x* pr))))))
+             '())
 
   ;; ez.left-at
   (check-sat #hash((pl . Real) (width . Real) (height . Real) (y . Real) (mark . Real))
@@ -335,12 +350,14 @@
                   (let ([ez (ez.add (ez.init-at mark) float/left mark width height 0.0)])
                     (ite (>= y height)
                      (= (ez.left-at ez y pl) pl)
-                     (= (ez.left-at ez y pl) (max width pl))))))
+                     (= (ez.left-at ez y pl) (max width pl)))))
+             '())
 
   (check-sat #hash((pl . Real) (x . Real) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (>= y (ez.mark ez))
                   (< x (ez.left-at ez y pl))
-                  (or (ez.in? ez x y) (< x pl))))
+                  (or (ez.in? ez x y) (< x pl)))
+             '())
 
   ;; ez.right-at
   (check-sat #hash((pr . Real) (width . Real) (height . Real) (y . Real) (mark . Real))
@@ -348,20 +365,23 @@
                   (let ([ez (ez.add (ez.init-at mark) float/right mark 0.0 height width)])
                     (ite (>= y height)
                      (= (ez.right-at ez y pr) pr)
-                     (= (ez.right-at ez y pr) (min width pr))))))
+                     (= (ez.right-at ez y pr) (min width pr)))))
+             '())
 
   (check-sat #hash((pr . Real) (x . Real) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (>= y (ez.mark ez))
                   (> x (ez.right-at ez y pr))
 
-                  (or (ez.in? ez x y) (> x pr))))
+                  (or (ez.in? ez x y) (> x pr)))
+             '())
 
   ;; Both ez.left-at and ez.right-at
   (check-sat #hash((pl . Real) (pr . Real) (x . Real) (y . Real) (ez . EZone))
              `(=> (or (not (ez.mark? ez)) (>= y (ez.mark ez))) (ez.valid? ez) (<= pl pr)
                   (< (ez.left-at ez y pl) x (ez.right-at ez y pr))
 
-                  (ez.out-inclusive? ez x y)))
+                  (ez.out-inclusive? ez x y))
+             '())
 
   ;; Rule 8 & 9 together
   (check-sat #hash((pl . Real) (pr . Real) (y-normal . Real) (width . Real) (y . Real) (x . Real) (ez . EZone) (dir . Float))
@@ -383,17 +403,20 @@
                               (and (= y y*) ; or at least further from the side
                                    (ite (is-float/left dir)
                                         (>= x x*)
-                                        (<= x x*)))))))))
+                                        (<= x x*))))))))
+             '())
 
   ;; ez.left-max
   (check-sat #hash((pl . Real) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (>= y (ez.left-max ez))
-                  (= (ez.left-at ez y pl) pl)))
+                  (= (ez.left-at ez y pl) pl))
+             '())
 
   ;; ez.right-max
   (check-sat #hash((pr . Real) (y . Real) (ez . EZone))
              `(=> (ez.valid? ez) (>= y (ez.right-max ez))
-                  (= (ez.right-at ez y pr) pr)))
+                  (= (ez.right-at ez y pr) pr))
+             '())
 
   ;; Pavel's test
   (check-sat #hash((pl . Real) (pr . Real) (y-normal . Real) (width . Real) (ez . EZone) (dir . Float))
@@ -411,12 +434,30 @@
                                        (and (=> (ez.mark? ez)
                                              (>= y (ite (is-float/left dir) (ez.left-max ez) (ez.right-max ez))))
                                             (= x (ite (is-float/left dir) pl pr)))
-                                       (<= pl xo pr))))))))))
+                                       (<= pl xo pr)))))))))
+             '())
 
   ;; Regression test for floats-rule3-outside-left-001
   (check-sat #hash((y . Real))
              `(=> (= y (ez.level (ez.add (ez.init-at 8.0) float/right 8.0 508.0 308.0 458.0) 425.0 8.0 408.0 8.0 float/left))
-                  (= y 8.0))))
+                  (= y 8.0))
+             '())
+
+  ;; Testing for ez.free-registers
+  (check-sat #hash()
+             `(= (ez.free-registers ez.init) ,(*exclusion-zone-registers*))
+             '())
+
+  ;; Testing addition only ever adds a register
+  (check-sat #hash((dir . Float) (ez . EZone) (t . Real) (r . Real) (b . Real) (l . Real))
+             `(=> 
+               (not (is-float/none dir)) (ez.can-add ez b) (ez.valid? ez)
+               (ez.out-inclusive? ez l b) (ez.out-inclusive? ez r b)
+               (ez.out-inclusive? ez l t) (ez.out-inclusive? ez r t)
+               (<= (- (ez.free-registers ez) 1)
+                   (ez.free-registers (ez.add (ez.advance ez t) dir t r b l))))
+             '((ez.free-registers ez)
+               (ez.free-registers (ez.add (ez.advance ez t) dir t r b l)))))
 
 (define-constraints ez-fields
 

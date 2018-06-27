@@ -5,25 +5,32 @@
 (define z3-header (make-parameter '((set-option :produce-unsat-cores true))))
 (define (add-header! h) (z3-header (append (z3-header) h)))
 
-(define-check (check-sat vars expr)
+(define (z3-check constraints evals)
+  (define z3 (z3-process))
+  (z3-send z3 constraints)
+  (define out
+    (match (z3-check-sat z3)
+      [`(core ,_) #f]
+      [`(model ,model)
+       (cons model
+             (for/list ([eval evals])
+               (z3 (list 'eval eval))))]))
+  (z3-kill z3)
+  out)
+
+(define-check (check-sat vars expr to-print)
   (define constraints
      `(,@(z3-header)
        ,@(for/list ([(var type) (in-dict vars)])
            `(declare-const ,var ,type))
        (assert (not ,expr))))
-  #;(with-output-to-file
-      "test.z3"
-    #:exists 'replace
-      (lambda ()
-        (begin
-          (for ([constraint constraints])
-            (display constraint)
-            (newline))
-          (display "(check-sat)"))))
-  (match (z3-solve constraints)
-    [(list 'core _) (void)]
-    [(list 'model m)
+  (match (z3-check constraints to-print)
+    [#f (void)]
+    [(list m evals ...)
      (with-check-info*
-      (for/list ([(k v) (in-dict m)])
-        (make-check-info k v))
+      (append
+       (for/list ([(k v) (in-dict m)])
+         (make-check-info k v))
+       (for/list ([expr to-print] [result evals] [i (in-naturals)])
+         (make-check-info (string->symbol (format "expr ~a" i)) (list expr '-> result))))
       (λ () (fail-check)))]))

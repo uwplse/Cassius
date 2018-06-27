@@ -136,4 +136,5 @@
                (>= (width-outer b1) 0) (>= (width-outer b2) 0) (>= (width-outer b3) 0)
                (>= (height-outer b1) 0) (>= (height-outer b2) 0) (>= (height-outer b3) 0)
                (within-outer b1 b2) (overlaps-outer b1 b3)
-               (overlaps-outer b2 b3))))
+               (overlaps-outer b2 b3))
+             '()))
