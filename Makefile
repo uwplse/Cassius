@@ -72,9 +72,12 @@ reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
 reports/specific.html reports/specific.json: bench/fwt.rkt bench/assertions/specific.sexp
 	racket src/report.rkt specific-assertions $(FLAGS) --cache reports/fwt.cache --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.rkt bench/assertions/specific.sexp
 
-reports/modular.html reports/modular.json: bench/modular-yoga.rkt
-	racket src/report.rkt merify $(FLAGS) --show-all --timeout 600 -o reports/modular $^
+reports/modular.html reports/modular.json: bench/modular-yoga.rkt bench/joel/interactive-onscreen.rkt
+	racket src/report.rkt proofs $(FLAGS) --show-all --timeout 600 -o reports/modular $^
 
 # Joel on Software blog posts
 bench/joel.rkt: bench/joel/joel.js
-	python3 get_bench.py --name joel --prerun bench/joel/joel.js "https://www.joelonsoftware.com/2018/04/13/gamification/"
+	python3 get_bench.py --name joel --prerun bench/joel/joel.js \
+		"https://www.joelonsoftware.com/2018/04/13/gamification/" \
+		"https://www.joelonsoftware.com/2018/04/06/the-stack-overflow-age/" \
+		"https://preview.arraythemes.com/editor/2014/05/11/knobs-buttons-and-dials/"

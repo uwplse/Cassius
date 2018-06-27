@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
-         "assertions.rkt")
+         "assertions.rkt" "input.rkt")
 
 (provide read-proofs)
 
@@ -9,12 +9,8 @@
   (define-values (vars body) (disassemble-forall assert))
   (if (null? vars) ':spec ':assert))
 
-(define (dom-run-proof problem tactics theorem theorems props)
-  (define the-dom* (first (dict-ref problem ':documents)))
-  (define ctx*
-    (for/fold ([ctx (dom-properties the-dom*)]) ([(k v) (in-dict props)])
-      (dict-set ctx k v)))
-  (define the-dom (struct-copy dom the-dom* [properties ctx*]))
+(define (dom-run-proof problem tactics theorem theorems)
+  (define the-dom (first (dict-ref problem ':documents)))
   (define elts (parse-tree (dom-elements the-dom)))
   (define boxes (parse-tree (dom-boxes the-dom)))
 
@@ -79,24 +75,40 @@
   (define problem** (dict-set problem* ':test (list theorem)))
   problem**)
 
-(define (read-proofs proof-file)
+(define (read-proofs port)
+  (define problem-context (make-hash))
   (define theorem-context (make-hash))
   (define proof-context (make-hash))
-  (call-with-input-file proof-file
-    (λ (p)
-      (for ([cmd (in-port read p)])
-        (match cmd
-          [`(define (,name ,args ...) ,body)
-           (define helper
-             (procedure-reduce-arity
-              (λ vals (smt-replace-terms body (map cons args vals)))
-              (length args)))
-           (hash-set! assertion-helpers name helper)]
-          [`(theorem (,name ,args ...) ,body)
-           (hash-set! theorem-context name `(forall ,args ,body))]
-          [`(proof (,name ,thmname ,attrs ...) ,subcmds ...)
-           (define theorem (dict-ref theorem-context thmname))
-           (define props (attributes->dict attrs))
-           (hash-set! proof-context name (curryr dom-run-proof subcmds theorem (curry dict-ref theorem-context) props))]))))
+  (for ([cmd (in-port read port)])
+    (match cmd
+      [`(page ,name (load ,file ,pname) ,attrs ...)
+       (define problem (dict-ref (call-with-input-file file parse-file) pname))
+       (define the-dom* (first (dict-ref problem ':documents)))
+       (define ctx*
+         (for/fold ([ctx (dom-properties the-dom*)])
+             ([(k v) (in-dict (attributes->dict attrs))])
+           (dict-set ctx k v)))
+       (define problem*
+         (dict-set problem ':documents
+                   (map dom-strip-positions
+                        (cons (struct-copy dom the-dom* [properties ctx*])
+                              (cdr (dict-ref problem ':documents))))))
+       (hash-set! problem-context name problem*)]
+      [`(define (,name ,args ...) ,body)
+       (define helper
+         (procedure-reduce-arity
+          (λ vals (smt-replace-terms body (map cons args vals)))
+          (length args)))
+       (hash-set! assertion-helpers name helper)]
+      [`(theorem (,name ,args ...) ,body)
+       (hash-set! theorem-context name `(forall ,args ,body))]
+      [`(proof (,name ,thmname ,pages ...) ,subcmds ...)
+       (define theorem (dict-ref theorem-context thmname))
+       (hash-set! proof-context name
+                  (for/hash ([page pages])
+                    (values
+                     page
+                     (dom-run-proof (dict-ref problem-context page)
+                                    subcmds theorem (curry dict-ref theorem-context)))))]))
   proof-context)
 

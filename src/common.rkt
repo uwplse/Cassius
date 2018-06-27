@@ -16,7 +16,8 @@
  *debug* *fuzz* *font-fuzz*
  *version* *commit* *branch*
  *minimize*
- *cache-file* *cache*)
+ *cache-file* *cache*
+ path-tail)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -238,3 +239,7 @@
 (define *cache-file* (make-parameter #f))
 
 (define *cache* (make-hash))
+
+(define (path-tail p)
+  (define-values (base _1 _2) (split-path p))
+  base)

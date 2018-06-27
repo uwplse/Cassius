@@ -2,7 +2,7 @@
 
 (require racket/path racket/set racket/engine racket/cmdline)
 (require json (only-in xml write-xexpr))
-(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "run.rkt" "modularize.rkt" "tree.rkt")
+(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "modularize.rkt" "tree.rkt" "proofs.rkt")
 
 (define verbose (make-parameter false))
 (define timeout (make-parameter 60))
@@ -222,23 +222,23 @@
     (match-define (list assertion file pname prob index) rec)
     (test-assertions assertion file pname prob #:index index)))
 
-(define (run-merify-tests probs #:valid [valid? (const true)] #:index [index (hash)]
-                              #:threads [threads #f])
+(define (run-proofs-tests probs #:valid [valid? (const true)] #:index [index (hash)]
+                          #:threads [threads #f])
   (define inputs
-    (for/append ([(file x) (in-dict probs)] #:when (valid? (cdr x)))
-      (define parts (modularize (cdr x)))
+    (for/append ([(file x) (in-dict probs)] [n (in-naturals)] #:when (valid? (cdr x)))
+      (define parts (modularize (cddr x)))
       (for/list ([part parts])
         (define name
           (if (equal? part (car parts))
               "<check>"
               (node-get (parse-tree (dom-boxes (car (dict-ref part ':documents))))
-                        ':name #:default "<anon>")))
-        (list file name (car x) part index))))
+                        ':name #:default (~a n))))
+        (list file name (car x) (cadr x) part index))))
 
   (for/threads threads ([rec inputs])
-    (match-define (list file name pname prob index) rec)
-    (eprintf "~a\t~a\t~a\t" file pname name)
-    (define res (make-result file pname prob #:subproblem name #:index index))
+    (match-define (list file name pname pname2 prob index) rec)
+    (eprintf "~a\t~a\t~a\t~a\t" file pname pname2 name)
+    (define res (make-result pname2 pname prob #:subproblem name #:index index))
     (define-values (out runtime) (run-problem prob))
     (define status (get-status (list file pname) prob out #:invert true #:unsupported true))
     (eprintf "~a\n" status)
@@ -590,14 +590,22 @@
      #:output out-file
      (run-assertion-tests insts #:valid valid? #:index index #:threads threads))]
 
-   ["merify"
+   ["proofs"
     #:args fnames
     (write-report
      #:output out-file
      (let ([probs (for/append ([file (sort fnames string<?)])
-                              (define x (sort (hash->list (call-with-input-file file parse-file)) symbol<? #:key car))
+                              (define x (sort
+                                         (append-map
+                                          (λ (x) (map (curry cons (car x)) (dict->list (cdr x))))
+                                          (dict->list
+                                           (call-with-input-file file
+                                             (λ (p) 
+                                               (parameterize ([current-directory (path-tail file)])
+                                                 (read-proofs p))))))
+                                          symbol<? #:key car))
                               (map (curry cons file) x))])
-       (run-merify-tests probs #:valid valid? #:index index #:threads threads)))]
+       (run-proofs-tests probs #:valid valid? #:index index #:threads threads)))]
 
    ["rerender"
     #:args (json-file)

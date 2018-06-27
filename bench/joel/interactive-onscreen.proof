@@ -1,3 +1,8 @@
+;; -*- mode: scheme -*-
+
+(page joel1 (load "../joel.rkt" doc-2))
+(page joel2 (load "../joel.rkt" doc-3))
+(page other (load "../joel.rkt" doc-1))
 
 (define (onscreen-plus b delta)
   (and (>= (top b) (+ (top root) delta)) (>= (left b) (left root))))
@@ -5,7 +10,7 @@
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
 
-(proof (proof1 interactive-onscreen)
+(proof (proof1 interactive-onscreen joel1 joel2 other)
   (component sidebar (id masthead))
   (component sidebar-content (id tabs))
   (component sidebar-title (class site-title))

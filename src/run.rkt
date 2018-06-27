@@ -7,32 +7,6 @@
          "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
          "minimizer.rkt" "proofs.rkt")
 
-(provide dom-strip-positions dom-set-range)
-
-(define (dom-strip-positions d)
-  (define boxes*
-    (let loop ([tree (dom-boxes d)])
-      (match-define (list (list type cmds ...) children ...) tree)
-      (cons
-       (match type
-         [(or 'BLOCK 'INLINE 'VIEW 'LINE 'ANON)
-             (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y :w :h)) car) (attributes->dict cmds))))]
-         ['TEXT
-          (cons type (dict->attributes (filter (compose not (curry set-member? '(:x :y :h)) car) (attributes->dict cmds))))]
-         [_ (cons type cmds)])
-       (map loop children))))
-  (struct-copy dom d [boxes boxes*]))
-
-(define (dom-set-range d)
-  (define ctx*
-    (for/fold ([ctx (dom-properties d)])
-        ([(field value)
-          #hash([:w . ((between 1024 1920))]
-                [:h . ((between 800 1080))]
-                [:fs . ((between 16 32))])])
-      (dict-set ctx field value)))
-  (struct-copy dom d [properties ctx*]))
-
 (define (solve-problem problem)
   (with-handlers
       ([exn:break? (λ (e) 'break)]
@@ -189,10 +163,8 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-verify/modular problem proof #:component [subcomponent #f])
-  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
-  (define problem** (proof problem*))
-  (match-define (list check components ...) (modularize problem**))
+(define (do-check-proof proof #:component [subcomponent #f])
+  (match-define (list check components ...) (modularize proof))
   (for ([component components] [i (in-naturals 1)]
         #:when (or (not subcomponent)
                    (equal? subcomponent (or (dom-name (first (dict-ref component ':documents))) i))))
@@ -231,6 +203,16 @@
 
 (define (get-problem fname pname)
   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+
+(define (get-proof fname pname)
+  (first
+   (hash-values
+    (hash-ref
+     (call-with-input-file proof-file
+       (λ (p) 
+         (parameterize ([current-directory (path-tail proof-file)])
+           (read-proofs p))))
+     (string->symbol proof-name)))))
 
 (module+ main
   (define debug '())
@@ -308,9 +290,8 @@
     #:once-each
     [("--component") component "Only verify a subcomponent (for debugging)"
      (set! subcomponent (or (string->number component) (string->symbol component)))]
-    #:args (fname problem proof-file proof-name)
-    (define proof (dict-ref (read-proofs proof-file) (string->symbol proof-name)))
-    (do-verify/modular (get-problem fname problem) proof #:component subcomponent)]
+    #:args (proof-file proof-name)
+    (do-check-proof (get-proof proof-file proof-name) #:component subcomponent)]
    ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))
