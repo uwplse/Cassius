@@ -1,8 +1,8 @@
 ;; -*- mode: scheme -*-
 
-(page joel1 (load "../joel.rkt" doc-2))
-(page joel2 (load "../joel.rkt" doc-3))
-(page other (load "../joel.rkt" doc-1))
+(page joel1 (load "joel.rkt" doc-2))
+(page joel2 (load "joel.rkt" doc-3))
+(page other (load "joel.rkt" doc-1))
 
 (define (onscreen-plus b delta)
   (and (>= (top b) (+ (top root) delta)) (>= (left b) (left root))))
