@@ -91,10 +91,9 @@
 
 (define (extract-counterexample! smt-out bad-test)
   (define-values (bad-vars bad-body) (disassemble-forall bad-test))
-  (define cexes (for/set ([var bad-vars]) (sformat "cex~a" (name 'cex (cons var bad-test)))))
-  (for ([(name value) (in-hash smt-out)] #:when (set-member? cexes name))
-    (define node (by-name 'box (dict-ref (extract-box value) 'bid)))
-    (define var (car (by-name 'cex (string->number (substring (~a name) 3)))))
+  (for ([var bad-vars])
+    (define smt-var (sformat "cex~a" (name 'cex (cons var bad-test))))
+    (define node (by-name 'box (dict-ref (extract-box (dict-ref smt-out smt-var)) 'bid)))
     (node-add! node ':cex `(bad ,var))))
 
 (define (tree-constraints dom emit elt)
