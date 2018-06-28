@@ -10,7 +10,10 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
-(page park (load "fwt.rkt" doc-003))
+(page park (load "fwt.rkt" doc-003)
+      :w (between 800 1920)
+      :h (between 600 1280)
+      :fs (between 16 32))
 
 ;; The core theorem: links, inputs, and buttons are at least scrollable to
 
