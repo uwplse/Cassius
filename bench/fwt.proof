@@ -10,6 +10,7 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
+(page park (load "fwt.rkt" doc-003))
 
 ;; The core theorem: links, inputs, and buttons are at least scrollable to
 
@@ -24,7 +25,7 @@
 
 ;; This is a trivial proof of it, using a single component / whole page approach
 
-(proof (trivial interactive-onscreen yoga tourism)
+(proof (trivial interactive-onscreen yoga tourism park)
   (assert root (forall (b) (=> (is-interactive b) (onscreen b)))))
 
 ;; A proof that works for the yoga page
@@ -112,3 +113,40 @@
   (lemma (tourism-floats-reasonable footer))
   (lemma (tourism-floats-reasonable nav))
   (lemma (tourism-floats-reasonable home)))
+
+;; A proof that works for the amusement park page
+;; It is largely derived from the tourism proof
+
+(lemma (park-floats-reasonable b)
+  (=> (matches b (id header) (id figure) (id section) (id footer))
+      (and (> (raw (ez.free-registers (ez.in b))) 1) (raw (ez.outside (ez.in b) b)))))
+
+(proof (park-floats park-floats-reasonable park)
+  (assert root (forall (b) (=> (matches b (id header) (id figure) (id section) (id footer))
+                               (> (raw (ez.free-registers (ez.in b))) 1))))
+  (assert root (forall (b) (=> (matches b (id header) (id figure) (id section) (id footer))
+                               (raw (ez.outside (ez.in b) b))))))
+
+
+(proof (park interactive-onscreen park)
+  (component header (id header))
+  (component figure (id figure))
+  (component section (id section))
+  (component footer (id footer))
+
+  (assert * (forall (b) (=> (onscreen ?) (>= (width ?) 960)
+                            (> (raw (ez.free-registers (ez.in ?))) 1)
+                            (raw (ez.outside (ez.in ?) ?))
+                            (or (is-interactive b) (is-component b)) (onscreen b))))
+
+  (assert root (forall (b) (=> (is-component b) (= (width b) 960))))
+  (assert root (onscreen root))
+  (assert root (> (raw (ez.free-registers (ez.in root))) 1))
+  (assert root (raw (ez.outside (ez.in root) root)))
+
+  (assert * (raw (non-negative-margins ?)))
+
+  (lemma (park-floats-reasonable header))
+  (lemma (park-floats-reasonable figure))
+  (lemma (park-floats-reasonable section))
+  (lemma (park-floats-reasonable footer)))
