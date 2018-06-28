@@ -27,9 +27,6 @@
       [`(assert * ,assert)
        (for ([box components])
          (node-add! box (spec-or-assert assert) assert))]
-      [`(assert! * ,assert)
-       (for ([box components])
-         (node-set! box (spec-or-assert assert) assert))]
       [`(assert! ,name ,assert)
        (define box (dict-ref box-context name))
        (node-set! box (spec-or-assert assert) assert)]
@@ -100,7 +97,7 @@
           (λ vals (smt-replace-terms body (map cons args vals)))
           (length args)))
        (hash-set! assertion-helpers name helper)]
-      [`(theorem (,name ,args ...) ,body)
+      [`(,(or 'theorem 'lemma) (,name ,args ...) ,body)
        (hash-set! theorem-context name `(forall ,args ,body))]
       [`(proof (,name ,thmname ,pages ...) ,subcmds ...)
        (define theorem (dict-ref theorem-context thmname))

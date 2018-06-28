@@ -102,11 +102,12 @@
        (define doms* (map (curry extract-ctx! m) doms))
        (define sheet* (apply append sheets)) ; (extract-rules (car sheets) trees m)
        (success sheet* (map unparse-tree trees) doms* test)]
-      [else
+      [(not (ormap (curryr dom-context ':component) doms))
        (log-phase "Insufficient float registers, trying again with ~a"
                   (+ 1 (*exclusion-zone-registers*)))
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
-         (solve sheets docs fonts tests))])]
+         (solve sheets docs fonts tests))]
+      [(failure sheets dom-boxes)])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
      (define-values (stylesheet* trees*) (extract-core (apply append sheets) trees c))

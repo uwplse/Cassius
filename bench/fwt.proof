@@ -5,21 +5,33 @@
       :h (between 600 1024)
       :fs (between 16 32))
 
+(page tourism (load "fwt.rkt" doc-093))
+
+
+;; The core theorem: links, inputs, and buttons are at least scrollable to
+
 (define (is-interactive b)
   (matches b (tag a) (tag input) (tag button)))
 
 (define (onscreen b)
   (and (>= (top b) (top root)) (>= (left b) (left root))))
 
-(theorem (floats-reasonable b)
+(theorem (interactive-onscreen b)
+  (=> (is-interactive b) (onscreen b)))
+
+;; This is a trivial proof of it, using a single component / whole page approach
+
+(proof (trivial interactive-onscreen yoga tourism)
+  (assert root (forall (b) (=> (is-interactive b) (onscreen b)))))
+
+;; A proof that works for the yoga page
+
+(lemma (yoga-floats-reasonable b)
   (=> (matches b (id header) (id body) (id footer))
       (raw (ez.inside (ez.out b) b))))
 
-(proof (lem1 floats-reasonable yoga)
+(proof (yoga-floats yoga-floats-reasonable yoga)
  (assert root (forall (b) (=> (matches b (id footer)) (raw (ez.inside (ez.out b) b))))))
-
-(theorem (interactive-onscreen b)
-  (=> (is-interactive b) (onscreen b)))
 
 (proof (yoga interactive-onscreen yoga)
   (component header (id header))
@@ -59,8 +71,39 @@
   (assert root (=> (raw (ez.inside (ez.out body) body))
                    (raw (ez.outside (ez.in footer) footer))))
 
-  (lemma (floats-reasonable header))
-  (lemma (floats-reasonable body)))
+  (lemma (yoga-floats-reasonable header))
+  (lemma (yoga-floats-reasonable body)))
 
-(proof (trivial interactive-onscreen yoga)
-  (assert root (forall (b) (=> (is-interactive b) (onscreen b)))))
+;; A proof that works for the tourism page
+
+(lemma (tourism-floats-reasonable b)
+  (=> (matches b (id header) (id body) (id footer) (id navigation) (id home))
+      (and (> (raw (ez.free-registers (ez.in b))) 1) (raw (ez.outside (ez.in b) b)))))
+
+(proof (tourism-floats tourism-floats-reasonable tourism)
+  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation) (id home))
+                               (> (raw (ez.free-registers (ez.in b))) 1))))
+  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation) (id home))
+                               (raw (ez.outside (ez.in b) b))))))
+
+(proof (tourism interactive-onscreen tourism)
+  (component header (id header))
+  (component body (id body))
+  (component footer (id footer))
+  (component nav (id navigation))
+  (component home (id home))
+
+  (assert * (forall (b) (=> (onscreen ?) (> (raw (ez.free-registers (ez.in ?))) 1)
+                            (raw (ez.outside (ez.in ?) ?))
+                            (or (is-interactive b) (is-component b)) (onscreen b))))
+  (assert root (onscreen root))
+  (assert root (> (raw (ez.free-registers (ez.in root))) 1))
+  (assert root (raw (ez.outside (ez.in root) root)))
+
+  (assert * (raw (no-margins ?)))
+
+  (lemma (tourism-floats-reasonable header))
+  (lemma (tourism-floats-reasonable body))
+  (lemma (tourism-floats-reasonable footer))
+  (lemma (tourism-floats-reasonable nav))
+  (lemma (tourism-floats-reasonable home)))
