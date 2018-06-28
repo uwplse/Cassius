@@ -2,10 +2,13 @@
 
 (page yoga (load "fwt.rkt" doc-080)
       :w (between 800 1920)
-      :h (between 600 1024)
+      :h (between 600 1280)
       :fs (between 16 32))
 
-(page tourism (load "fwt.rkt" doc-093))
+(page tourism (load "fwt.rkt" doc-093)
+      :w (between 800 1920)
+      :h (between 600 1280)
+      :fs (between 16 32))
 
 
 ;; The core theorem: links, inputs, and buttons are at least scrollable to
@@ -31,7 +34,9 @@
       (raw (ez.inside (ez.out b) b))))
 
 (proof (yoga-floats yoga-floats-reasonable yoga)
- (assert root (forall (b) (=> (matches b (id footer)) (raw (ez.inside (ez.out b) b))))))
+ (assert root (forall (b)
+                      (=> (matches b (id header) (id body) (id footer))
+                          (raw (ez.inside (ez.out b) b))))))
 
 (proof (yoga interactive-onscreen yoga)
   (component header (id header))
@@ -77,13 +82,13 @@
 ;; A proof that works for the tourism page
 
 (lemma (tourism-floats-reasonable b)
-  (=> (matches b (id header) (id body) (id footer) (id navigation) (id home))
+  (=> (matches b (id header) (id body) (id footer) (id navigation))
       (and (> (raw (ez.free-registers (ez.in b))) 1) (raw (ez.outside (ez.in b) b)))))
 
 (proof (tourism-floats tourism-floats-reasonable tourism)
-  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation) (id home))
+  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation))
                                (> (raw (ez.free-registers (ez.in b))) 1))))
-  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation) (id home))
+  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation))
                                (raw (ez.outside (ez.in b) b))))))
 
 (proof (tourism interactive-onscreen tourism)
