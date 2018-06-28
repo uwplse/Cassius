@@ -4,6 +4,7 @@ papers/
 # Reports and benchmarks
 reports/*.html
 reports/*.json
+bench/joel
 bench/*.rkt
 geckodriver.log
 previous/
@@ -11,6 +12,7 @@ previous/
 # Racket junk
 src/compiled/
 compiled/
+__pycache__
 
 # Platform junk
 *.bak
