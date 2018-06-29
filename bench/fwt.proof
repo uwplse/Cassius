@@ -5,7 +5,7 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
-(page tourism (load "fwt.rkt" doc-093)
+(page surfing (load "fwt.rkt" doc-093)
       :w (between 800 1920)
       :h (between 600 1280)
       :fs (between 16 32))
@@ -28,7 +28,7 @@
 
 ;; This is a trivial proof of it, using a single component / whole page approach
 
-(proof (trivial interactive-onscreen yoga tourism park)
+(proof (trivial interactive-onscreen yoga surfing park)
   (assert root (forall (b) (=> (is-interactive b) (onscreen b)))))
 
 ;; A proof that works for the yoga page
@@ -83,19 +83,19 @@
   (lemma (yoga-floats-reasonable header))
   (lemma (yoga-floats-reasonable body)))
 
-;; A proof that works for the tourism page
+;; A proof that works for the surfing page
 
-(lemma (tourism-floats-reasonable b)
+(lemma (surfing-floats-reasonable b)
   (=> (matches b (id header) (id body) (id footer) (id navigation))
       (and (> (raw (ez.free-registers (ez.in b))) 1) (raw (ez.outside (ez.in b) b)))))
 
-(proof (tourism-floats tourism-floats-reasonable tourism)
+(proof (surfing-floats surfing-floats-reasonable surfing)
   (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation))
                                (> (raw (ez.free-registers (ez.in b))) 1))))
   (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation))
                                (raw (ez.outside (ez.in b) b))))))
 
-(proof (tourism interactive-onscreen tourism)
+(proof (surfing interactive-onscreen surfing)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
@@ -111,14 +111,14 @@
 
   (assert * (raw (no-margins ?)))
 
-  (lemma (tourism-floats-reasonable header))
-  (lemma (tourism-floats-reasonable body))
-  (lemma (tourism-floats-reasonable footer))
-  (lemma (tourism-floats-reasonable nav))
-  (lemma (tourism-floats-reasonable home)))
+  (lemma (surfing-floats-reasonable header))
+  (lemma (surfing-floats-reasonable body))
+  (lemma (surfing-floats-reasonable footer))
+  (lemma (surfing-floats-reasonable nav))
+  (lemma (surfing-floats-reasonable home)))
 
 ;; A proof that works for the amusement park page
-;; It is largely derived from the tourism proof
+;; It is largely derived from the surfing proof
 
 (lemma (park-floats-reasonable b)
   (=> (matches b (id header) (id figure) (id section) (id footer))
