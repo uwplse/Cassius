@@ -56,8 +56,9 @@
   (admit sidebar-description (forall (b) (=> (onscreen ?) (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
 
   (assert sidebar-content
-    (=> (onscreen-plus sidebar-content 5)
-        (onscreen-plus sidebar-title 5)))
+          (forall (_)
+                  (=> (onscreen-plus sidebar-content 5)
+                      (onscreen-plus sidebar-title 5))))
 
   (assert! sidebar-title
     (forall (b)
