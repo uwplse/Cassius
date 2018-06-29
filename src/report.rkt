@@ -237,8 +237,8 @@
 
   (for/threads threads ([rec inputs])
     (match-define (list file name pname pname2 prob index) rec)
-    (eprintf "~a\t~a\t~a\t~a\t" file pname pname2 name)
-    (define res (make-result pname2 pname prob #:subproblem name #:index index))
+    (eprintf "~a\t~a\t~a\t~a~a" file pname pname2 name (if (verbose) "\n" "\t"))
+    (define res (make-result (~a pname2) pname prob #:subproblem name #:index index))
     (define-values (out runtime) (run-problem prob))
     (define status (get-status (list file pname) prob out #:invert true #:unsupported true))
     (eprintf "~a\n" status)
