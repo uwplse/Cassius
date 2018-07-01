@@ -3,7 +3,7 @@
 """
 Benchmark creator, for Cassius.
 
-Uses Selenium Webdriver to download new benchmarks for Casssius.
+Uses Selenium Webdriver to download new benchmarks for Cassius.
 Opens a page in Firefox, causes it to execute get_bench.js, and saves the result.
 """
 

@@ -96,6 +96,7 @@
          (procedure-reduce-arity
           (λ vals (smt-replace-terms body (map cons args vals)))
           (length args)))
+       (hash-set! helper-dict (cons name args) body)
        (hash-set! assertion-helpers name helper)]
       [`(,(or 'theorem 'lemma) (,name ,args ...) ,body)
        (hash-set! theorem-context name `(forall ,args ,body))]

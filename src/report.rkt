@@ -2,7 +2,7 @@
 
 (require racket/path racket/set racket/engine racket/cmdline)
 (require json (only-in xml write-xexpr))
-(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "modularize.rkt" "tree.rkt" "proofs.rkt")
+(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "modularize.rkt" "tree.rkt" "proofs.rkt" "assertions.rkt" "smt.rkt")
 
 (define verbose (make-parameter false))
 (define timeout (make-parameter 60))
@@ -163,9 +163,16 @@
                 threads
                 (λ (i)
                   (place ch
-                         (match-define (list-rest verbose* timeout* expected-failures*) (place-channel-get ch))
+                         (match-define (list-rest hd* verbose* timeout* expected-failures*) (place-channel-get ch))
                          (verbose verbose*)
                          (timeout timeout*)
+                         (for ([(k v) (in-dict hd*)])
+                           (hash-set! helper-dict k v)
+                           (hash-set! assertion-helpers (car k)
+                                      (procedure-reduce-arity
+                                       (λ vals
+                                         (smt-replace-terms v (map cons (cdr k) vals)))
+                                       (length (cdr k)))))
                          (expected-failures expected-failures*)
                          (let loop ()
                            (match-define (cons self (cons id thing)) (place-channel-get ch))
@@ -175,7 +182,7 @@
                            (place-channel-put ch (cons self (cons id result)))
                            (loop)))))])
           (for ([worker workers])
-            (place-channel-put worker (list* (verbose) (timeout) (expected-failures))))
+            (place-channel-put worker (list* helper-dict (verbose) (timeout) (expected-failures))))
           (define to-send (map cons (range 0 (length inputs)) inputs))
           (for ([worker workers])
             (unless (null? to-send)

@@ -1,9 +1,17 @@
 #lang racket
 
 (require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt")
-(provide compile-assertion auxiliary-definitions assertion-helpers)
+(provide compile-assertion auxiliary-definitions assertion-helpers helper-dict)
 
 (define auxiliary-definitions (make-parameter '()))
+
+;; The strange duplication of `helper-dict` and `assertion-helpers` is
+;; temporary, waiting on a better way to define optional or variary
+;; arguments in `define` blocks. The main issue is that
+;; `assertion-helpers` contains functions, and thus can't easily be
+;; shipped to a different thread, while `helper-dict` has no optional
+;; argument mechanism.
+(define helper-dict (make-hash))
 
 (define assertion-helpers
   (make-hash
