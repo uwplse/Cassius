@@ -39,7 +39,7 @@
 
   (assert root (onscreen root))
 
-  (assert! sidebar true)
+  (assert! sidebar (forall (_) true))
   (admit sidebar (raw (not (box-in-flow sidebar))))
   (admit sidebar (onscreen sidebar))
   (admit sidebar (onscreen-plus sidebar-content 5))
@@ -48,7 +48,7 @@
   (assert sidebar-title (raw (non-negative-margins sidebar-title)))
   (assert sidebar-title (> (height sidebar-title) 0))
 
-  (assert! sidebar-description true)
+  (assert! sidebar-description (forall (_) true))
   (admit sidebar-description (= (top sidebar-description) (bottom (prev sidebar-description))))
   (admit sidebar-description (raw (non-negative-margins sidebar-description)))
   (admit sidebar-description (raw (= (yo sidebar-description) (xo sidebar-description) 0.0)))
