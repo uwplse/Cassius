@@ -87,7 +87,8 @@
                                [current-custodian custodian]
                                [*fuzz* fuzz?])
                   (solve-cached (dict-ref prob ':sheets) (dict-ref prob ':documents)
-                                (dict-ref prob ':fonts) (dict-ref prob ':test #f)))))))
+                                (dict-ref prob ':fonts) (dict-ref prob ':test #f)
+                                #:render? (equal? (dict-ref problem ':render 'true) 'true)))))))
 
   (define t (current-inexact-milliseconds))
   (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout))
