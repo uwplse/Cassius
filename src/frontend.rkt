@@ -2,12 +2,14 @@
 (require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
-(provide query solve (struct-out success) (struct-out failure) solve-cached)
+(provide query (struct-out success) (struct-out failure) solve-cached)
 
 (struct success (stylesheet elements doms test) #:prefab)
 (struct failure (stylesheet trees) #:prefab)
 
-(define (constraints log-phase sheets docs fonts [tests #f] #:render? [render? #t])
+(define (constraints log-phase sheets docs fonts
+                     #:tests [tests #f] #:render? [render? #t]
+                     #:component [cname #f])
   (define doms (map parse-dom docs))
   (log-phase "Read ~a documents with ~a elements, ~a boxes, ~a rules, and ~a fonts"
              (length doms)
@@ -55,7 +57,11 @@
   (when tests (set! query (add-test doms (append query (auxiliary-definitions))
                                     (if render?
                                         (append tests* `((forall () ,ms)))
-                                        tests*))))
+                                        tests*)
+                                    #:component
+                                    (and cname
+                                         (for/first ([dom doms] [box (in-boxes dom)])
+                                           (equal? (node-get box ':name) cname))))))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
 
@@ -69,13 +75,14 @@
   (values doms query))
 
 (define (query sheets docs fonts [tests #f])
-  (define-values (doms query) (constraints (make-log) sheets docs fonts tests))
+  (define-values (doms query) (constraints (make-log) sheets docs fonts #:tests tests))
   (append query (list cassius-check-sat)))
 
-(define (solve sheets docs fonts [tests #f] #:render? [render? #t])
+(define (solve sheets docs fonts #:tests [tests #f] #:render? [render? #t]
+               #:component [name #f])
   (define log-phase (make-log))
   (reset-names!)
-  (define-values (doms query) (constraints log-phase sheets docs fonts tests #:render? render?))
+  (define-values (doms query) (constraints log-phase sheets docs fonts #:tests tests #:render? render?))
 
   (define out
     (let ([z3 (z3-process)])
@@ -106,26 +113,27 @@
        (log-phase "Insufficient float registers, trying again with ~a"
                   (+ 1 (*exclusion-zone-registers*)))
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
-         (solve sheets docs fonts tests))]
+         (solve sheets docs fonts #:tests tests #:component name))]
       [(failure sheets dom-boxes)])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
      (define-values (stylesheet* trees*) (extract-core (apply append sheets) trees c))
      (failure stylesheet* (map unparse-tree trees*))]))
 
-(define (solve-cached sheets docs fonts [tests #f] #:render? [render? #t])
+(define (solve-cached sheets docs fonts [tests #f] #:render? [render? #t]
+                      #:component [name #f])
   (cond
    [(*cache-file*)
-    (define key (list sheets docs fonts tests render?))
+    (define key (list sheets docs fonts tests render? name))
     (define out
       (cond
        [(hash-has-key? *cache* key)
         ((make-log) "Retrieved result from cache")
         (hash-ref *cache* key)]
        [else
-        (solve sheets docs fonts tests #:render? render?)]))
+        (solve sheets docs fonts #:tests tests #:render? render? #:component name)]))
     (hash-set! *cache* key out)
     (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p)))
     out]
    [else
-    (solve sheets docs fonts tests #:render? render?)]))
+    (solve sheets docs fonts #:tests tests #:render? render? #:component name)]))

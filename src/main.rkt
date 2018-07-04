@@ -367,14 +367,18 @@
     (emit `(assert (! (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))
                    :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
 
-(define (add-test doms constraints tests)
+(define (add-test doms constraints tests #:component [component #f])
+  (define possible-boxes
+    (if component
+        (nodes-below component  '(:spec :assert :admit))
+        (for*/list ([dom doms] [box (in-boxes dom)]) box)))
   `(,@constraints
     (declare-const which-constraint Real)
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
         (sow `(declare-const ,var Box))
         (sow `(assert ,(apply smt-or
-                              (for*/list ([dom doms] [box (in-boxes dom)])
+                              (for/list ([box possible-boxes])
                                 `(= ,var ,(dump-box box)))))))
     (assert ,(apply smt-or
                     (for/list ([test tests] [i (in-naturals)])
