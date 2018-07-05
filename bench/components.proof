@@ -1,0 +1,27 @@
+(page amazon (load "amazon.rkt" doc-1))
+
+(theorem (true) true)
+
+(define (in-page b)
+  (and (>= (top b) 0) (>= (left b) 0)))
+
+(proof (amazon true amazon)
+  (component top (id nav-upnav))
+  (component header (tag header))
+
+  #;(assert top (= (raw (top-padding top)) 0))
+  (assert top
+    (forall (b)
+      (=> (matches b (class nav-spanAltText))
+          (= (top (raw (ppflow top)) padding) 0)
+          (= (raw (yo (ppflow top))) (raw (yo top)))
+          (< (top b) 0))))
+  (assert header (forall (b) (=> (in-page header) (is-interactive b) (in-page b)))))
+
+(page google (load "google.rkt" doc-1))
+
+(proof (google true google)
+  (component profile (and (class gb_xb) (class gb_fa) (class gb_g)))
+  (component stuff (class gb_Kb))
+
+  (assert profile (forall (b) (=> (in-page profile) (is-interactive b) (in-page b)))))
