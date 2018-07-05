@@ -769,6 +769,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
         features["invalid-selector"] = true
         return "";
     }
+    if (nodes.length == 0) return "";
 
     if (sel.indexOf(":after") !== -1 || sel.indexOf(":before") !== -1) {
         features["css:before-after"] = true;

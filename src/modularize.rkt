@@ -30,6 +30,7 @@
   (define elementss (map parse-tree elements-stxs))
   (for/list ([sheet sheets])
     (for/list ([rule sheet]
+               [i (in-naturals)]
                #:when (for*/or ([elements elementss] [elt (in-tree elements)])
                         (selector-matches? (car rule) elt)))
       rule)))
@@ -127,7 +128,7 @@
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))
   (define sheets (dict-ref problem ':sheets))
-  (define sheets* (prune-sheets sheets (map dom-elements (dict-ref problem ':documents))))
+  (define sheets* sheets #;(prune-sheets sheets (map dom-elements (dict-ref problem ':documents))))
   (cons
    (dict-set (dict-set problem ':render false) ':sheets sheets*)
    (for/list ([(piece specs) (in-dict (append-map split-document (dict-ref problem ':documents)))])
