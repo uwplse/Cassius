@@ -5,7 +5,7 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
-(page surfing (load "fwt.rkt" doc-093)
+(page surf (load "fwt.rkt" doc-093)
       :w (between 800 1920)
       :h (between 600 1280)
       :fs (between 16 32))
@@ -17,18 +17,15 @@
 
 ;; The core theorem: links, inputs, and buttons are at least scrollable to
 
-(define (is-interactive b)
-  (matches b (tag a) (tag input) (tag button)))
-
 (define (onscreen b)
-  (and (>= (top b) (top root)) (>= (left b) (left root))))
+  (and (>= (top b) 0) (>= (left b) 0)))
 
 (theorem (interactive-onscreen b)
-  (=> (is-interactive b) (onscreen b)))
+  (=> (matches b (tag a)) (onscreen b)))
 
 ;; This is a trivial proof of it, using a single component / whole page approach
 
-(proof (trivial interactive-onscreen yoga surfing park)
+(proof (trivial interactive-onscreen yoga surf park)
   (assert root (forall (b) (=> (is-interactive b) (onscreen b)))))
 
 ;; A proof that works for the yoga page
@@ -78,9 +75,9 @@
   (lemma (yoga-floats-reasonable body))
   (lemma (yoga-floats-reasonable footer)))
 
-;; A proof that works for the surfing page
+;; A proof that works for the surf page
 
-(proof (surfing interactive-onscreen surfing)
+(proof (surf interactive-onscreen surf)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
@@ -110,7 +107,7 @@
   (assert root (no-floats-enter root)))
 
 ;; A proof that works for the amusement park page
-;; It is largely derived from the surfing proof
+;; It is largely derived from the surf proof
 
 (proof (park interactive-onscreen park)
   (component header (id header))
