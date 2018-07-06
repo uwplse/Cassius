@@ -10,6 +10,7 @@ from selenium import webdriver
 import os, sys
 import warnings
 import random
+import itertools
 try:
     import urllib.parse as parse
 except:
@@ -25,6 +26,19 @@ def make_browser():
 def sample_range((mi, ma)):
     return random.randint(mi, ma)
 
+def all_params(params, num, exhaustive=False):
+    if not exhaustive:
+        for i in range(num):
+            w = sample_range(params.width)
+            h = sample_range(params.height)
+            fs = sample_range(params.font) / 16.
+            yield w, h, fs
+    else:
+        wi, wa = params.width
+        hi, ha = params.height
+        fi, fa = params.font
+        return itertools.product(range(wi, wa+1), range(hi, ha+1), range(fi, fa+1))
+
 def main(num, urls, code, params):
     browser = make_browser()
 
@@ -36,10 +50,7 @@ def main(num, urls, code, params):
     
         for url in urls:
             try:
-                for i in range(num):
-                    w = sample_range(params.width)
-                    h = sample_range(params.height)
-                    fs = sample_range(params.font) / 16.
+                for w, h, fs in all_params(params, args.num, args.exhaustive):
                     browser.set_window_size(w, h)
                     browser.profile.set_preference("layout.css.devPixelsPerPx", fs)
                     browser.profile.update_preferences()
@@ -60,8 +71,11 @@ def main(num, urls, code, params):
     sys.exit(0)
 
 def parse_range(s):
-    a, b = s.split("--", 1)
-    return (int(a), int(b))
+    if "--" in s:
+        a, b = s.split("--", 1)
+        return (int(a), int(b))
+    else:
+        return (int(s), int(s))
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Cassius random tester")
@@ -70,6 +84,7 @@ if __name__ == "__main__":
     p.add_argument("--width", type=parse_range, default=(1024,1920), help="The range of browser widths")
     p.add_argument("--height", type=parse_range, default=(800,1280), help="The range of browser heights")
     p.add_argument("--font", type=parse_range, default=(16,32), help="The range of browser font sizes")
+    p.add_argument("--exhaustive", action="store_true", help="Whether to test across all possible params")
     args = p.parse_args()
     code = sys.stdin.read()
     
