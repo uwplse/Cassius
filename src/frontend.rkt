@@ -114,7 +114,7 @@
                   (+ 1 (*exclusion-zone-registers*)))
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
          (solve sheets docs fonts #:tests tests #:component name))]
-      [(failure sheets dom-boxes)])]
+      [else (failure sheets (map unparse-tree trees))])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
      (define-values (stylesheet* trees*) (extract-core (apply append sheets) trees c))

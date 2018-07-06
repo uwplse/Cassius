@@ -31,7 +31,8 @@
                                         (for/list ([b bs] [b* (cdr bs)])
                                           `(raw (and (= (ez.out ,b) (ez.in ,b*))
                                                      (<= (bottom-border ,b) (top-border ,b*))))))))
-     (floats-tracked . ,(λ (b) `(raw (- (ez.free-registers ,b) ez.registers))))
+     (float-flow-skip . ,(λ (b) `(raw (= (ez.out ,b) (ez.in ,b)))))
+     (floats-tracked . ,(λ (b) `(raw (- (ez.free-registers (ez.in ,b)) ez.registers))))
      (non-negative-margins . ,(λ (b) `(raw (non-negative-margins ,b))))
 
      (luminance . ,(λ (color) `(let ([color ,color]) (raw (lum (color.rgb color))))))

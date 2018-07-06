@@ -80,16 +80,6 @@
 
 ;; A proof that works for the surfing page
 
-(lemma (surfing-floats-reasonable b)
-  (=> (matches b (id header) (id body) (id footer) (id navigation))
-      (and (> (raw (ez.free-registers (ez.in b))) 1) (raw (ez.outside (ez.in b) b)))))
-
-(proof (surfing-floats surfing-floats-reasonable surfing)
-  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation))
-                               (> (raw (ez.free-registers (ez.in b))) 1))))
-  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer) (id navigation))
-                               (raw (ez.outside (ez.in b) b))))))
-
 (proof (surfing interactive-onscreen surfing)
   (component header (id header))
   (component body (id body))
@@ -97,20 +87,27 @@
   (component nav (id navigation))
   (component home (id home))
 
-  (assert * (forall (b) (=> (onscreen ?) (> (raw (ez.free-registers (ez.in ?))) 1)
-                            (raw (ez.outside (ez.in ?) ?))
+  (assert * (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3) (no-floats-enter ?)
                             (or (is-interactive b) (is-component b)) (onscreen b))))
+  (assert! home (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3)
+                                (or (is-interactive b) (is-component b)) (onscreen b))))
+
   (assert root (onscreen root))
-  (assert root (> (raw (ez.free-registers (ez.in root))) 1))
-  (assert root (raw (ez.outside (ez.in root) root)))
+  (assert root (= (floats-tracked root) 0))
 
-  (assert * (raw (no-margins ?)))
+  (assert * (non-negative-margins ?))
 
-  (lemma (surfing-floats-reasonable header))
-  (lemma (surfing-floats-reasonable body))
-  (lemma (surfing-floats-reasonable footer))
-  (lemma (surfing-floats-reasonable nav))
-  (lemma (surfing-floats-reasonable home)))
+  (assert * (> (height ?) 0))
+  (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
+
+  (assert root (float-flow-in root header))
+  (assert root (float-flow-across header body footer))
+  (assert body (float-flow-skip body))
+
+  (assert body (forall (_) (no-floats-enter nav)))
+  (assert body (no-floats-exit body))
+
+  (assert root (no-floats-enter root)))
 
 ;; A proof that works for the amusement park page
 ;; It is largely derived from the surfing proof
