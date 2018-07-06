@@ -39,6 +39,8 @@
                (sow 'false)
                (sow 'false))))
 
+  (define-const ez.registers Int ,(*exclusion-zone-registers*))
+
   (define-fun ez.add ((ez EZone) (dir Float) (top Real) (right Real) (bottom Real) (left Real)) EZone
     ;; Only call if `ez` has already had `ez.advance` called on it.
     (let ([overwrites?

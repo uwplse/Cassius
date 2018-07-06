@@ -21,7 +21,22 @@
      (onscreen . ,(λ (b) `(and (>= (left ,b) (left root)) (>= (top ,b) (top root)))))
      (!= . ,(λ (a b) `(not (= ,a ,b))))
      (width . ,(λ (b [dir 'border]) `(- (right ,b ,dir) (left ,b ,dir))))
-     (height . ,(λ (b [dir 'border]) `(- (bottom ,b ,dir) (top ,b ,dir)))))))
+     (height . ,(λ (b [dir 'border]) `(- (bottom ,b ,dir) (top ,b ,dir))))
+
+     (no-floats-enter . ,(λ (b) `(raw (ez.outside (ez.in ,b) ,b))))
+     (no-floats-exit . ,(λ (b) `(raw (ez.inside (ez.out ,b) ,b))))
+     (float-flow-in . ,(λ (b1 b2) `(raw (and (= (ez.in ,b1) (ez.in ,b2)) (<= (top-border ,b1) (top-border ,b2))))))
+     (float-flow-out . ,(λ (b1 b2) `(raw (and (= (ez.out ,b2) (ez.out ,b1)) (<= (bottom-border ,b1) (bottom-border ,b2))))))
+     (float-flow-across . ,(λ bs (apply smt-and
+                                        (for/list ([b bs] [b* (cdr bs)])
+                                          `(raw (and (= (ez.out ,b) (ez.in ,b*))
+                                                     (<= (bottom-border ,b) (top-border ,b*))))))))
+     (floats-tracked . ,(λ (b) `(raw (- (ez.free-registers ,b) ez.registers))))
+     (non-negative-margins . ,(λ (b) `(raw (non-negative-margins ,b))))
+
+     (luminance . ,(λ (color) `(let ([color ,color]) (raw (lum (color.rgb color))))))
+     (overlaps . ,(λ (b1 b2) `(let ([b1 ,b1] [b2 ,b2]) (raw (overlaps b1 b2)))))
+     (within . ,(λ (b1 b2) `(let ([b1 ,b1] [b2 ,b2]) (raw (within-outer b1 b2))))))))
 
 (define (compile-assertion doms body ctx)
   (match-define (list dom) doms)

@@ -35,53 +35,48 @@
 
 (lemma (yoga-floats-reasonable b)
   (=> (matches b (id header) (id body) (id footer))
-      (raw (ez.inside (ez.out b) b))))
+      (and (no-floats-enter b) (no-floats-exit b))))
 
 (proof (yoga-floats yoga-floats-reasonable yoga)
- (assert root (forall (b)
-                      (=> (matches b (id header) (id body) (id footer))
-                          (raw (ez.inside (ez.out b) b))))))
+  (assert root (forall (b) (=> (matches b (id header) (id body) (id footer))
+                               (and (no-floats-enter b) (no-floats-exit b))))))
+
+(proof (yoga-floats-modular yoga-floats-reasonable yoga)
+  (component header (id header))
+  (component body (id body))
+  (component footer (id footer))
+
+  (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
+  (assert root (no-floats-enter root))
+  (assert root (float-flow-in root header))
+  (assert root (float-flow-across header body footer))
+  (assert * (non-negative-margins ?)))
 
 (proof (yoga interactive-onscreen yoga)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
 
-  (assert root (<= (raw (bottom-border header)) (raw (top-border body))
-                   (raw (bottom-border body)) (raw (top-border footer))))
-  (assert root (=> 
-                (raw (ez.inside (ez.out header) header))
-                (raw (ez.inside (ez.out body) body))
-                (>= (width footer) 200)))
-  (assert root (=> 
-                (raw (ez.inside (ez.out header) header))
-                (raw (ez.inside (ez.out body) body))
-                (and (onscreen header) (onscreen body) (onscreen footer))))
+  (assert * (non-negative-margins ?))
 
-  (assert header (raw (no-margins header)))
-  (assert header (> (height header) 0))
+  (assert root (=> (no-floats-exit body) (>= (width footer) 200)))
+  (assert root (=> (no-floats-exit header) (no-floats-exit body)
+                   (and (onscreen header) (onscreen body) (onscreen footer))))
+
   (assert header
     (forall (a)
-            (=> (onscreen header) (=> (is-interactive a) (onscreen a)))))
-
-  (assert body (raw (non-negative-margins body)))
-  (assert body (> (height body) 0))
-
-  (assert footer (raw (no-margins footer)))
-  (assert footer (> (height footer) 0))
+            (=> (onscreen header) (is-interactive a) (onscreen a))))
 
   (assert footer
     (forall (a)
-            (=> (raw (ez.outside (ez.in footer) footer))
-                (onscreen footer)
+            (=> (no-floats-enter footer)
                 (>= (width footer) 200)
+                (onscreen footer)
                 (=> (is-interactive a) (onscreen a)))))
 
-  (assert root (=> (raw (ez.inside (ez.out body) body))
-                   (raw (ez.outside (ez.in footer) footer))))
-
   (lemma (yoga-floats-reasonable header))
-  (lemma (yoga-floats-reasonable body)))
+  (lemma (yoga-floats-reasonable body))
+  (lemma (yoga-floats-reasonable footer)))
 
 ;; A proof that works for the surfing page
 
