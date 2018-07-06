@@ -112,17 +112,6 @@
 ;; A proof that works for the amusement park page
 ;; It is largely derived from the surfing proof
 
-(lemma (park-floats-reasonable b)
-  (=> (matches b (id header) (id figure) (id section) (id footer))
-      (and (> (raw (ez.free-registers (ez.in b))) 1) (raw (ez.outside (ez.in b) b)))))
-
-(proof (park-floats park-floats-reasonable park)
-  (assert root (forall (b) (=> (matches b (id header) (id figure) (id section) (id footer))
-                               (> (raw (ez.free-registers (ez.in b))) 1))))
-  (assert root (forall (b) (=> (matches b (id header) (id figure) (id section) (id footer))
-                               (raw (ez.outside (ez.in b) b))))))
-
-
 (proof (park interactive-onscreen park)
   (component header (id header))
   (component figure (id figure))
@@ -130,18 +119,19 @@
   (component footer (id footer))
 
   (assert * (forall (b) (=> (onscreen ?) (>= (width ?) 960)
-                            (> (raw (ez.free-registers (ez.in ?))) 1)
-                            (raw (ez.outside (ez.in ?) ?))
+                            (no-floats-enter ?)
                             (or (is-interactive b) (is-component b)) (onscreen b))))
 
   (assert root (forall (b) (=> (is-component b) (= (width b) 960))))
   (assert root (onscreen root))
-  (assert root (> (raw (ez.free-registers (ez.in root))) 1))
-  (assert root (raw (ez.outside (ez.in root) root)))
+  (assert root (no-floats-enter root))
 
-  (assert * (raw (non-negative-margins ?)))
+  (assert * (non-negative-margins ?))
 
-  (lemma (park-floats-reasonable header))
-  (lemma (park-floats-reasonable figure))
-  (lemma (park-floats-reasonable section))
-  (lemma (park-floats-reasonable footer)))
+  (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
+  (assert * (> (height ?) 0))
+  (assert * (float-flow-skip ?))
+
+  (assert root (no-floats-enter root))
+  (assert root (float-flow-in root header))
+  (assert root (float-flow-across header figure section footer)))
