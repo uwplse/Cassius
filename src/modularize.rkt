@@ -125,12 +125,18 @@
             (list (first (unparse-tree component))))
           (cons (first tree) children*)))))
 
+(define (rename-problem problem n)
+  (dict-set problem ':documents
+            (list-update (dict-ref problem ':documents #f) 0
+                         (λ (x)
+                           (struct-copy dom x [name n])))))
+
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))
   (define sheets (dict-ref problem ':sheets))
   (define sheets* sheets #;(prune-sheets sheets (map dom-elements (dict-ref problem ':documents))))
   (cons
-   (dict-set (dict-set problem ':render false) ':sheets sheets*)
+   (rename-problem (dict-set (dict-set problem ':render false) ':sheets sheets*) '<check>)
    (for/list ([(piece specs) (in-dict (append-map split-document (dict-ref problem ':documents)))])
      (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
      (define sheets** (prune-sheets sheets* (list elements*)))

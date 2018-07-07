@@ -2,7 +2,7 @@
 
 (require racket/cmdline (only-in xml write-xexpr) json
          "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
-         "frontend.rkt" "solver.rkt" "modularize.rkt"
+         "frontend.rkt" "solver.rkt"
          "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
          "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
          "minimizer.rkt" "proofs.rkt")
@@ -164,8 +164,7 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-check-proof proof #:component [subcomponent #f])
-  (match-define (list check components ...) (modularize proof))
-  (for ([component components] [i (in-naturals 1)]
+  (for ([component proof] [i (in-naturals 1)]
         #:when (or (not subcomponent)
                    (equal? subcomponent (or (dom-name (first (dict-ref component ':documents))) i))))
     (eprintf "Verifying ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))
@@ -184,22 +183,7 @@
        (exit 127)]
       ['break
        (eprintf "Terminated.\n")
-       (exit 127)]))
-  (when (or (not subcomponent) (equal? subcomponent '<check>))
-    (eprintf "Verifying proof correctness.\n")
-    (match (parameterize ([*fuzz* #f]) (solve-problem check))
-      [(success stylesheet trees doms test)
-       (eprintf "Counterexample found in final check to ~a!\n" test)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :name :spec :assert :admit))))
-       (printf "\n\nConfiguration:\n")
-       (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
-         (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
-      [(failure stylesheet trees)
-       (eprintf "Verified modularly.\n")]
-      [(list 'error e)
-       ((error-display-handler) (exn-message e) e)]
-      ['break
-       (eprintf "Terminated.\n")])))
+       (exit 127)])))
 
 (define (get-problem fname pname)
   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))

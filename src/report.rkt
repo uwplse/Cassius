@@ -2,7 +2,7 @@
 
 (require racket/path racket/set racket/engine racket/cmdline)
 (require json (only-in xml write-xexpr))
-(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "modularize.rkt" "tree.rkt" "proofs.rkt" "assertions.rkt" "smt.rkt")
+(require "common.rkt" "input.rkt" "frontend.rkt" "dom.rkt" "tree.rkt" "proofs.rkt" "assertions.rkt" "smt.rkt")
 
 (define verbose (make-parameter false))
 (define timeout (make-parameter 60))
@@ -234,13 +234,10 @@
                           #:threads [threads #f])
   (define inputs
     (for/append ([(file x) (in-dict probs)] [n (in-naturals)] #:when (valid? (cdr x)))
-      (define parts (modularize (cddr x)))
+      (define parts (cddr x))
       (for/list ([part parts])
         (define name
-          (if (equal? part (car parts))
-              "<check>"
-              (node-get (parse-tree (dom-boxes (car (dict-ref part ':documents))))
-                        ':name #:default (~a n))))
+          (dom-name (first (dict-ref part ':documents))))
         (list file name (car x) (cadr x) part index))))
 
   (for/threads threads ([rec inputs])

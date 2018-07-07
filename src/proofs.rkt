@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
-         "assertions.rkt" "input.rkt")
+         "assertions.rkt" "input.rkt" "modularize.rkt")
 
 (provide read-proofs)
 
@@ -70,7 +70,7 @@
          (set! components (cons box components)))]))
   (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
   (define problem** (dict-set problem* ':test (list theorem)))
-  problem**)
+  (modularize problem**))
 
 (define (read-proofs port)
   (define problem-context (make-hash))
