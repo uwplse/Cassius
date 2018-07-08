@@ -32,26 +32,17 @@
        (cons (first tree) children*)]))
   out)
 
-(define (rename-problem problem n)
-  (dict-set problem ':documents
-            (list-update (dict-ref problem ':documents #f) 0
-                         (λ (x)
-                           (struct-copy dom x [name n])))))
-
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))
   (define sheets (dict-ref problem ':sheets))
-  (define sheets* sheets #;(prune-sheets sheets (map dom-elements (dict-ref problem ':documents))))
-  (cons
-   (rename-problem (dict-set (dict-set problem ':render false) ':sheets sheets*) ':check)
-   (for*/list ([doc (dict-ref problem ':documents)] [(name thing) (split-document doc)])
-     (match-define (cons piece specs) thing)
-     (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
-     (define sheets** (prune-sheets sheets* (list elements*)))
-     (define elements** (prune-attrs elements* sheets** specs))
-     (define fonts* (prune-fonts fonts sheets**))
-     (dict-set* problem
-                ':documents (list (struct-copy dom piece [elements elements**]))
-                ':test specs
-                ':sheets sheets**
-                ':fonts fonts*))))
+  (for*/list ([doc (dict-ref problem ':documents)] [(name thing) (split-document doc)])
+    (match-define (cons piece specs) thing)
+    (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
+    (define sheets* (prune-sheets sheets (list elements*)))
+    (define elements** (prune-attrs elements* sheets* specs))
+    (define fonts* (prune-fonts fonts sheets*))
+    (dict-set* problem
+               ':documents (list (struct-copy dom piece [elements elements**]))
+               ':test specs
+               ':sheets sheets*
+               ':fonts fonts*)))

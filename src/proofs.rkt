@@ -21,6 +21,12 @@
       [`(and ,stx1 ,stx2)
        (set-intersect (loop stx1) (loop stx2))])))
 
+(define (rename-problem problem n)
+  (dict-set problem ':documents
+            (list-update (dict-ref problem ':documents #f) 0
+                         (λ (x)
+                           (struct-copy dom x [name n])))))
+
 (define (dom-run-proof problem tactics theorem theorems)
   (define the-dom (first (dict-ref problem ':documents)))
   (define elts (parse-tree (dom-elements the-dom)))
@@ -83,7 +89,7 @@
                           ,thbody)))]))
 
   (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
-  (define problem** (dict-set problem* ':test (list theorem)))
+  (define problem** (dict-set* problem* ':test (list theorem) ':tool (list 'assert)))
 
   (define cnt 0)
   (define extras
@@ -97,9 +103,12 @@
            (node-set! box ':name name)
            name]
           [name name]))
-      (dict-set* problem* ':component name ':test assert ':tool tool)))
+      (dict-set* problem* ':component (list name) ':test (list assert) ':tool (list tool))))
 
-  (append (modularize problem**) extras))
+  (append
+   (modularize problem**)
+   extras
+   (list (rename-problem (dict-set problem** ':tool '(modular)) ':check))))
 
 (define (read-proofs port)
   (define problem-context (make-hash))

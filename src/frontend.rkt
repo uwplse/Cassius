@@ -139,9 +139,26 @@
     (solve sheets docs fonts #:tests tests #:render? render? #:component name)]))
 
 (define (solve-problem problem)
-  (with-handlers
-      ([exn:break? (λ (e) 'break)]
-       [exn:fail? (λ (e) (list 'error e))])
-    (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
-                  (dict-ref problem ':fonts) (dict-ref problem ':test #f)
-                  #:render? (equal? (dict-ref problem ':render 'true) 'true))))
+  (match (dict-ref problem ':tool '(assert))
+    ['(assert)
+     (with-handlers
+         ([exn:break? (λ (e) 'break)]
+          [exn:fail? (λ (e) (list 'error e))])
+       (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
+                     (dict-ref problem ':fonts) (dict-ref problem ':test #f)))]
+    ['(admit)
+     (failure (dict-ref problem ':sheets) (map dom-boxes (dict-ref problem ':documents)))]
+    ['(modular)
+     (with-handlers
+         ([exn:break? (λ (e) 'break)]
+          [exn:fail? (λ (e) (list 'error e))])
+       (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
+                     (dict-ref problem ':fonts) (dict-ref problem ':test #f)
+                     #:render? false))]
+    ['(page)
+     (with-handlers
+         ([exn:break? (λ (e) 'break)]
+          [exn:fail? (λ (e) (list 'error e))])
+       (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
+                     (dict-ref problem ':fonts) (dict-ref problem ':test #f)
+                     #:component (first (dict-ref problem ':component))))]))
