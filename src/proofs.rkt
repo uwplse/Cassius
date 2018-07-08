@@ -103,12 +103,13 @@
            (node-set! box ':name name)
            name]
           [name name]))
-      (dict-set* problem* ':component (list name) ':test (list assert) ':tool (list tool))))
+      (dict-set* problem* ':name (list name) ':component (list name)
+                 ':test (list assert) ':tool (list tool))))
 
   (append
    (modularize problem**)
    extras
-   (list (rename-problem (dict-set problem** ':tool '(modular)) ':check))))
+   (list (dict-set* problem** ':tool '(modular) ':name (list ':check)))))
 
 (define (read-proofs port)
   (define problem-context (make-hash))

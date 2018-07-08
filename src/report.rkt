@@ -231,9 +231,8 @@
   (define inputs
     (for/append ([(file x) (in-dict probs)] [n (in-naturals)] #:when (valid? (cdr x)))
       (append
-       (for/list ([part (cddr x)])
-         (define name
-           (dom-name (first (dict-ref part ':documents))))
+       (for/list ([part (cddr x)] [i (in-naturals)])
+         (define name (first (dict-ref part ':name (list i))))
          (list file name (car x) (cadr x) part index)))))
 
   (for/threads threads ([rec inputs])

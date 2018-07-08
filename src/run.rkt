@@ -159,7 +159,9 @@
   (for ([component proof] [i (in-naturals 1)]
         #:when (or (not subcomponent)
                    (equal? subcomponent (or (dom-name (first (dict-ref component ':documents))) i))))
-    (eprintf "Verifying ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))
+    (eprintf "Verifying ~a with ~a.\n"
+             (first (dict-ref component ':name (list i)))
+             (first (dict-ref component ':tool '(assert))))
     (match (parameterize ([*fuzz* #f]) (solve-problem component))
       [(success stylesheet trees doms test)
        (eprintf "Counterexample found in component ~a to ~a!\n" (or (dom-name (first doms)) i) test)
@@ -169,7 +171,7 @@
          (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
        (exit i)]
       [(failure stylesheet trees)
-       (eprintf "Verified ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))]
+       (eprintf "Verified ~a.\n" (first (dict-ref component ':name (list i))))]
       [(list 'error e)
        ((error-display-handler) (exn-message e) e)
        (exit 127)]

@@ -43,6 +43,7 @@
     (define fonts* (prune-fonts fonts sheets*))
     (dict-set* problem
                ':documents (list (struct-copy dom piece [elements elements**]))
+               ':name (list (dom-name piece))
                ':test specs
                ':sheets sheets*
                ':fonts fonts*)))
