@@ -15,15 +15,42 @@
   (define boxes (parse-tree (dom-boxes the-dom)))
 
   (match (dom-context the-dom ':matched) ['(true) (void)])
-  (define matcher
+  (define get-by-selector
     (let ([linker (link-matched-elts-boxes #f elts boxes)])
-      (λ (x) (match (linker x) [#f #f] [(list a b c) a]))))
+      (λ (sel)
+        (for/list ([box (in-tree boxes)]
+                   #:when (linker box)
+                   #:when (selector-matches? sel (first (linker box))))
+          box))))
 
   (define box-context (make-hash (list (cons 'root boxes))))
+  (node-set! boxes ':split 0)
+
   (node-set! boxes ':name 'root)
   (define components (hash-values box-context))
+
   (for ([cmd tactics])
     (match cmd
+
+      [`(component ,name ,sel)
+       (define selected-boxes (get-by-selector sel))
+       (define box
+         (match selected-boxes
+           [(list) (raise (format "Could not find any elements matching ~a" sel))]
+           [(list box) box]
+           [(list boxes ...) (raise (format "~a matches multiple elements ~a" sel (string-join (map ~a boxes) ", ")))]))
+       (hash-set! box-context name box)
+       (node-set! box ':name name)
+       (node-set*! box ':spec (list))
+       (node-set! box ':split (length components))
+       (set! components (cons box components))]
+      [`(components ,sels ...)
+       (define selected-boxes (append-map get-by-selector sels))
+       (for ([box selected-boxes])
+         (node-set*! box ':spec (list))
+         (node-set! box ':split (length components))
+         (set! components (cons box components)))]
+
       [`(assert * ,assert)
        (for ([box components])
          (node-add! box (spec-or-assert assert) assert))]
@@ -43,31 +70,8 @@
              `(forall ,thvars
                       (=> (let (,@(map list vars boxes))
                             ,body)
-                          ,thbody)))]
-      [`(component ,name ,sel)
-       (define selected-boxes
-         (for/list ([box (in-tree boxes)] #:when (and (matcher box) (selector-matches? sel (matcher box))))
-           box))
-       (define box
-         (match selected-boxes
-           [(list) (raise (format "Could not find any elements matching ~a" sel))]
-           [(list box) box]
-           [(list boxes ...) (raise (format "~a matches multiple elements ~a" sel (string-join (map ~a boxes) ", ")))]))
-       (hash-set! box-context name box)
-       (set! components (cons box components))
-       (node-set! box ':name name)
-       (node-set*! box ':spec (list))]
-      [`(components ,sels ...)
-       (define selected-boxes
-         (filter identity
-                 (for/list ([box (in-tree boxes)] #:when (matcher box))
-                   (define elt (matcher box))
-                   (and elt (ormap (curryr selector-matches? elt) sels) box))))
-       (when (null? selected-boxes)
-         (eprintf "Warning: Could not find any elements matching ~a\n" (string-join (map ~a sels) ", ")))
-       (for ([box selected-boxes])
-         (node-set*! box ':spec (list))
-         (set! components (cons box components)))]))
+                          ,thbody)))]))
+
   (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
   (define problem** (dict-set problem* ':test (list theorem)))
   (modularize problem**))
