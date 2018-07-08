@@ -89,16 +89,17 @@
   (define extras
     (for/list ([thing extra-problems])
       (match-define (list tool box assert) thing)
-      (match (node-get box ':name)
-        [#f
-         (define name (sformat "anon-component-~a" cnt))
-         (set! cnt (+ 1 cnt))
-         (node-set! box ':name name)
-         (list tool name assert problem*)]
-        [name
-         (list tool name assert problem*)])))
+      (define name
+        (match (node-get box ':name)
+          [#f
+           (define name (sformat "anon-component-~a" cnt))
+           (set! cnt (+ 1 cnt))
+           (node-set! box ':name name)
+           name]
+          [name name]))
+      (dict-set* problem* ':component name ':test assert ':tool tool)))
 
-  (cons (modularize problem**) extras))
+  (append (modularize problem**) extras))
 
 (define (read-proofs port)
   (define problem-context (make-hash))

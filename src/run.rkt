@@ -7,14 +7,6 @@
          "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
          "minimizer.rkt" "proofs.rkt")
 
-(define (solve-problem problem)
-  (with-handlers
-      ([exn:break? (λ (e) 'break)]
-       [exn:fail? (λ (e) (list 'error e))])
-    (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
-                  (dict-ref problem ':fonts) (dict-ref problem ':test #f)
-                  #:render? (equal? (dict-ref problem ':render 'true) 'true))))
-
 (define (do-accept problem)
   (match (solve-problem problem)
     [(success stylesheet trees doms test)
@@ -164,7 +156,7 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-check-proof proof #:component [subcomponent #f])
-  (for ([component (car proof)] [i (in-naturals 1)]
+  (for ([component proof] [i (in-naturals 1)]
         #:when (or (not subcomponent)
                    (equal? subcomponent (or (dom-name (first (dict-ref component ':documents))) i))))
     (eprintf "Verifying ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))

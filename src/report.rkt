@@ -69,30 +69,26 @@
 (define (section<? s1 s2)
   (section-tuple<? (section->tuple s1) (section->tuple s2)))
 
+(define (if-verbose port)
+  (if (verbose) port (open-output-nowhere)))
+
 (define (run-problem prob #:fuzz [fuzz? '(/ 10 60)])
   (define custodian (make-custodian))
   (define eng
     (engine (λ (_)
-              (with-handlers
-                  ([exn:break? (λ (e) 'break)]
-                   [exn:fail? (λ (e)
-                                ((error-display-handler)
-                                 (exn-message e)
-                                 e)
-                                (list 'error e))])
-
-                (parameterize ([current-error-port (if (verbose) (current-error-port) (open-output-nowhere))]
-                               [current-output-port (if (verbose) (current-output-port) (open-output-nowhere))]
+                (parameterize ([current-error-port (if-verbose (current-error-port))]
+                               [current-output-port (if-verbose (current-output-port))]
                                [current-subprocess-custodian-mode 'kill]
                                [current-custodian custodian]
                                [*fuzz* fuzz?])
-                  (solve-cached (dict-ref prob ':sheets) (dict-ref prob ':documents)
-                                (dict-ref prob ':fonts) (dict-ref prob ':test #f)
-                                #:render? (equal? (dict-ref prob ':render 'true) 'true)))))))
+                  (solve-problem prob)))))
 
   (define t (current-inexact-milliseconds))
   (define res (if (engine-run (* 1000 (timeout)) eng) (engine-result eng) 'timeout))
   (define runtime (- (current-inexact-milliseconds) t))
+
+  (match res [(list 'error e) ((error-display-handler) (exn-message e) e)] [_ (void)])
+
   (engine-kill eng)
   (custodian-shutdown-all custodian)
   (values res runtime))
@@ -235,12 +231,10 @@
   (define inputs
     (for/append ([(file x) (in-dict probs)] [n (in-naturals)] #:when (valid? (cdr x)))
       (append
-       (for/list ([part (caddr x)])
+       (for/list ([part (cddr x)])
          (define name
            (dom-name (first (dict-ref part ':documents))))
-         (list file name (car x) (cadr x) part index))
-       #;(for/list ([extra (cdddr x)])
-         (list file (second extra) (car x) (cadr x) extra index)))))
+         (list file name (car x) (cadr x) part index)))))
 
   (for/threads threads ([rec inputs])
     (match-define (list file name pname pname2 prob index) rec)

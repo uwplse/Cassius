@@ -2,7 +2,7 @@
 (require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
-(provide query (struct-out success) (struct-out failure) solve-cached)
+(provide query (struct-out success) (struct-out failure) solve-problem)
 
 (struct success (stylesheet elements doms test) #:prefab)
 (struct failure (stylesheet trees) #:prefab)
@@ -137,3 +137,11 @@
     out]
    [else
     (solve sheets docs fonts #:tests tests #:render? render? #:component name)]))
+
+(define (solve-problem problem)
+  (with-handlers
+      ([exn:break? (λ (e) 'break)]
+       [exn:fail? (λ (e) (list 'error e))])
+    (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
+                  (dict-ref problem ':fonts) (dict-ref problem ':test #f)
+                  #:render? (equal? (dict-ref problem ':render 'true) 'true))))
