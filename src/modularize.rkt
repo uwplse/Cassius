@@ -43,7 +43,7 @@
   (define sheets (dict-ref problem ':sheets))
   (define sheets* sheets #;(prune-sheets sheets (map dom-elements (dict-ref problem ':documents))))
   (cons
-   (rename-problem (dict-set (dict-set problem ':render false) ':sheets sheets*) '<check>)
+   (rename-problem (dict-set (dict-set problem ':render false) ':sheets sheets*) ':check)
    (for*/list ([doc (dict-ref problem ':documents)] [(name thing) (split-document doc)])
      (match-define (cons piece specs) thing)
      (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))

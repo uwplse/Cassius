@@ -9,6 +9,18 @@
   (define-values (vars body) (disassemble-forall assert))
   (if (null? vars) ':spec ':assert))
 
+(define (box-set stx components ctx)
+  (let loop ([stx stx])
+    (match stx
+      ['* components]
+      [(? symbol?) (list (dict-ref ctx stx))]
+      [`(- ,stx1 ,stx2)
+       (set-subtract (loop stx1) (loop stx2))]
+      [`(or ,stx1 ,stx2)
+       (set-union (loop stx1) (loop stx2))]
+      [`(and ,stx1 ,stx2)
+       (set-intersect (loop stx1) (loop stx2))])))
+
 (define (dom-run-proof problem tactics theorem theorems)
   (define the-dom (first (dict-ref problem ':documents)))
   (define elts (parse-tree (dom-elements the-dom)))
@@ -51,15 +63,9 @@
          (node-set! box ':split (length components))
          (set! components (cons box components)))]
 
-      [`(assert * ,assert)
-       (for ([box components])
+      [`(assert ,boxes ,assert)
+       (for ([box (box-set boxes components box-context)])
          (node-add! box (spec-or-assert assert) assert))]
-      [`(assert! ,name ,assert)
-       (define box (dict-ref box-context name))
-       (node-set! box (spec-or-assert assert) assert)]
-      [`(assert ,name ,assert)
-       (define box (dict-ref box-context name))
-       (node-add! box (spec-or-assert assert) assert)]
       [`(admit ,name ,assert)
        (define box (dict-ref box-context name))
        (node-add! box ':admit assert)]

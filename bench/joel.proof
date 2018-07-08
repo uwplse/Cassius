@@ -1,11 +1,17 @@
 ;; -*- mode: scheme -*-
 
-(page joel1 (load "joel.rkt" doc-2))
+(page joel1 (load "joel.rkt" doc-2) :w (between 800 1920))
 (page joel2 (load "joel.rkt" doc-3))
 (page other (load "joel.rkt" doc-1))
 
+(define (is-interactive b)
+  (matches b (tag a)))
+
+(define (onscreen b)
+  (and (>= (top b) 0) (>= (left b) 0)))
+
 (define (onscreen-plus b delta)
-  (and (>= (top b) (+ (top root) delta)) (>= (left b) (left root))))
+  (and (>= (top b) delta) (>= (left b) 0)))
 
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
@@ -34,33 +40,27 @@
   (components (id respond))
 
   ;; I call this the "proof strategy"; if this were true, it would prove the theorem
-  (assert * (forall (b) (=> (onscreen ?)
-                            (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+  (assert
+   (- * (or sidebar sidebar-title))
+   (forall (b) (=> (onscreen ?)
+                   (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
 
   (assert root (onscreen root))
 
-  (assert! sidebar (forall (_) true))
-  (admit sidebar (raw (not (box-in-flow sidebar))))
-  (admit sidebar (onscreen sidebar))
-  (admit sidebar (onscreen-plus sidebar-content 5))
-  (admit sidebar (forall (b) (=> (onscreen ?) (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+  (assert sidebar (=> (onscreen ?) (onscreen-plus sidebar-content 5)))
+  (admit sidebar (forall (b) (=> (onscreen ?) (or (is-component b) (is-interactive b)) (onscreen b))))
 
-  (assert sidebar-title (raw (non-negative-margins sidebar-title)))
+  (assert sidebar-title (non-negative-margins sidebar-title))
   (assert sidebar-title (> (height sidebar-title) 0))
 
-  (assert! sidebar-description (forall (_) true))
-  (admit sidebar-description (= (top sidebar-description) (bottom (prev sidebar-description))))
-  (admit sidebar-description (raw (non-negative-margins sidebar-description)))
-  (admit sidebar-description (raw (= (yo sidebar-description) (xo sidebar-description) 0.0)))
-  (admit sidebar-description (= (left sidebar-description) (left (parent sidebar-description))))
-  (admit sidebar-description (forall (b) (=> (onscreen ?) (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+  (assert sidebar-description (non-negative-margins sidebar-description))
 
   (assert sidebar-content
           (forall (_)
                   (=> (onscreen-plus sidebar-content 5)
                       (onscreen-plus sidebar-title 5))))
 
-  (assert! sidebar-title
+  (assert sidebar-title
     (forall (b)
             (=> (onscreen-plus sidebar-title 5)
                 (is-interactive b) (onscreen b)))))
