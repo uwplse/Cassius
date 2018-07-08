@@ -16,7 +16,7 @@
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
 
-(proof (proof1 interactive-onscreen joel1 joel2 other)
+(proof (proof interactive-onscreen joel1 joel2 other)
   (component sidebar (id masthead))
   (component sidebar-content (id tabs))
   (component sidebar-title (class site-title))
@@ -47,8 +47,8 @@
 
   (assert root (onscreen root))
 
-  (assert sidebar (=> (onscreen ?) (onscreen-plus sidebar-content 5)))
-  (admit sidebar (forall (b) (=> (onscreen ?) (or (is-component b) (is-interactive b)) (onscreen b))))
+  (assert sidebar (forall (_) (=> (onscreen sidebar) (onscreen-plus sidebar-content 5))))
+  (admit sidebar (forall (b) (=> (onscreen sidebar) (or (is-component b) (is-interactive b)) (onscreen b))))
 
   (assert sidebar-title (non-negative-margins sidebar-title))
   (assert sidebar-title (> (height sidebar-title) 0))
