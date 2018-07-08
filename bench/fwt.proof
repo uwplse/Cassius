@@ -84,10 +84,11 @@
   (component nav (id navigation))
   (component home (id home))
 
-  (assert * (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3) (no-floats-enter ?)
-                            (or (is-interactive b) (is-component b)) (onscreen b))))
-  (assert! home (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3)
-                                (or (is-interactive b) (is-component b)) (onscreen b))))
+  (assert (- * home)
+          (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3) (no-floats-enter ?)
+                          (or (is-interactive b) (is-component b)) (onscreen b))))
+  (assert home (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3)
+                               (or (is-interactive b) (is-component b)) (onscreen b))))
 
   (assert root (onscreen root))
   (assert root (= (floats-tracked root) 0))
