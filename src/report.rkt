@@ -234,11 +234,13 @@
                           #:threads [threads #f])
   (define inputs
     (for/append ([(file x) (in-dict probs)] [n (in-naturals)] #:when (valid? (cdr x)))
-      (define parts (cddr x))
-      (for/list ([part parts])
-        (define name
-          (dom-name (first (dict-ref part ':documents))))
-        (list file name (car x) (cadr x) part index))))
+      (append
+       (for/list ([part (caddr x)])
+         (define name
+           (dom-name (first (dict-ref part ':documents))))
+         (list file name (car x) (cadr x) part index))
+       #;(for/list ([extra (cdddr x)])
+         (list file (second extra) (car x) (cadr x) extra index)))))
 
   (for/threads threads ([rec inputs])
     (match-define (list file name pname pname2 prob index) rec)

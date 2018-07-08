@@ -164,7 +164,7 @@
      (eprintf "Terminated.\n")]))
 
 (define (do-check-proof proof #:component [subcomponent #f])
-  (for ([component proof] [i (in-naturals 1)]
+  (for ([component (car proof)] [i (in-naturals 1)]
         #:when (or (not subcomponent)
                    (equal? subcomponent (or (dom-name (first (dict-ref component ':documents))) i))))
     (eprintf "Verifying ~a.\n" (or (dom-name (first (dict-ref component ':documents))) i))

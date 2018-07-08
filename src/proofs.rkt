@@ -41,6 +41,8 @@
   (node-set! boxes ':name 'root)
   (define components (hash-values box-context))
 
+  (define extra-problems (list))
+
   (for ([cmd tactics])
     (match cmd
 
@@ -63,12 +65,14 @@
          (node-set! box ':split (length components))
          (set! components (cons box components)))]
 
-      [`(assert ,boxes ,assert)
+      [`(,(and (or 'assert 'page 'random 'exhaustive 'admit) tool) ,boxes ,assert)
        (for ([box (box-set boxes components box-context)])
-         (node-add! box (spec-or-assert assert) assert))]
-      [`(admit ,name ,assert)
-       (define box (dict-ref box-context name))
-       (node-add! box ':admit assert)]
+         (if (equal? tool 'assert)
+             (node-add! box (spec-or-assert assert) assert)
+             (begin
+               (node-add! box ':admit assert)
+               (set! extra-problems
+                     (cons (list tool box assert) extra-problems)))))]
       [`(lemma (,thm ,boxes ...))
        (define-values (vars body) (disassemble-forall (theorems thm)))       
        (define-values (thvars thbody) (disassemble-forall theorem))
@@ -80,7 +84,21 @@
 
   (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
   (define problem** (dict-set problem* ':test (list theorem)))
-  (modularize problem**))
+
+  (define cnt 0)
+  (define extras
+    (for/list ([thing extra-problems])
+      (match-define (list tool box assert) thing)
+      (match (node-get box ':name)
+        [#f
+         (define name (sformat "anon-component-~a" cnt))
+         (set! cnt (+ 1 cnt))
+         (node-set! box ':name name)
+         (list tool name assert problem*)]
+        [name
+         (list tool name assert problem*)])))
+
+  (cons (modularize problem**) extras))
 
 (define (read-proofs port)
   (define problem-context (make-hash))
