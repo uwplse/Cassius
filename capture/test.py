@@ -34,7 +34,8 @@ def all_params(params, num, exhaustive=False):
         wi, wa = params.width
         hi, ha = params.height
         fi, fa = params.font
-        return itertools.product(range(wi, wa+1), range(hi, ha+1), range(fi, fa+1))
+        for i in itertools.product(range(wi, wa+1), range(hi, ha+1), range(fi, fa+1)):
+            yield i
 
 def main(num, urls, code, params):
     browser = make_browser()
