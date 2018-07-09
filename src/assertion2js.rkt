@@ -68,9 +68,9 @@
     (string-join
      `(,js-header
        ,@(for/list ([(name sel) (in-dict named-components)])
-           "~a = document.querySelector('~a')" (dict-ref components name) (selector->string sel))
+           (format "~a = document.querySelector('~a')" (dict-ref components name) (selector->string sel)))
        ,(format "function is_component(b) { return b.matches('~a'); }"
-                 (string-join (map selector->string (set-union anon-components (hash-values named-components))) ", "))
+                 (string-join (remove-duplicates (map selector->string (set-union anon-components (hash-values named-components)))) ", "))
        ,(format "function good_tuple(~a) { return ~a; }"
                 (string-join (map ~a vars) ", ")
                 (body->js body ctx))
@@ -176,7 +176,7 @@
       [`(anonymous? ,b)
        (format "(~a.nodeType !== document.ELEMENT_NODE)" (loop b ctx))]
       [`(matches ,b ,sels ...)
-       (format "~a.matches(~a)" (loop b ctx) (string-join (map selector->string sels) ", "))]
+       (format "~a.matches('~a')" (loop b ctx) (string-join (map selector->string sels) ", "))]
 
       ;; Extra syntax
       [`(if ,c ,t ,f)

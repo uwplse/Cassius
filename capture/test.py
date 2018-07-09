@@ -47,8 +47,8 @@ def main(num, urls, code, params):
                 warnings.warn("Only http and file scheme supported (not {})".format(scheme))
     
         for url in urls:
-            try:
-                for w, h, fs in all_params(params, args.num, args.exhaustive):
+            for w, h, fs in all_params(params, args.num, args.exhaustive):
+                try:
                     browser.set_window_size(w, h)
                     browser.profile.set_preference("layout.css.devPixelsPerPx", fs)
                     browser.profile.update_preferences()
@@ -59,10 +59,10 @@ def main(num, urls, code, params):
                         print(":h " + str(h))
                         print(":fs " + str(fs))
                         sys.exit(1)
-            except:
-                import traceback
-                traceback.print_exc()
-                continue
+                except:
+                    import traceback
+                    traceback.print_exc()
+                    continue
     finally:
         browser.quit()
 
