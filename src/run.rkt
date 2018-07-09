@@ -158,7 +158,7 @@
 (define (do-check-proof proof #:component [subcomponent #f])
   (for ([component proof] [i (in-naturals 1)]
         #:when (or (not subcomponent)
-                   (equal? subcomponent (or (dom-name (first (dict-ref component ':documents))) i))))
+                   (equal? subcomponent (or (first (dict-ref component ':name (list i))) i))))
     (eprintf "Verifying ~a with ~a.\n"
              (first (dict-ref component ':name (list i)))
              (first (dict-ref component ':tool '(assert))))

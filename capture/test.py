@@ -23,15 +23,12 @@ def make_browser():
     profile.set_preference("security.mixed_content.block_display_content", False)
     return webdriver.Firefox(firefox_profile=profile)
 
-def sample_range((mi, ma)):
-    return random.randint(mi, ma)
-
 def all_params(params, num, exhaustive=False):
     if not exhaustive:
         for i in range(num):
-            w = sample_range(params.width)
-            h = sample_range(params.height)
-            fs = sample_range(params.font) / 16.
+            w = random.randint(*params.width)
+            h = random.randint(*params.height)
+            fs = random.randint(*params.font) / 16.
             yield w, h, fs
     else:
         wi, wa = params.width
@@ -57,9 +54,9 @@ def main(num, urls, code, params):
                     browser.get(url)
                     if not browser.execute_script(code):
                         browser.quit()
-                        print(":width " + str(w))
-                        print(":height " + str(h))
-                        print(":font " + str(fs))
+                        print(":w " + str(w))
+                        print(":h " + str(h))
+                        print(":fs " + str(fs))
                         sys.exit(1)
             except:
                 import traceback

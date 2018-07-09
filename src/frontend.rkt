@@ -1,7 +1,8 @@
 #lang racket
 (require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
-         "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt")
+         "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt"
+         "assertion2js.rkt")
 (provide query (struct-out success) (struct-out failure) solve-problem)
 
 (struct success (stylesheet elements doms test) #:prefab)
@@ -47,7 +48,8 @@
          (for/hash ([var test-vars])
            (values var (sformat "cex~a" (name 'cex (cons var test)))))
          (hash '? (dump-box (dom-boxes (first doms))))
-         (for*/hash ([dom doms] [node (in-boxes dom)] #:when (node-get node ':name #:default false))
+         (for*/hash ([dom doms] [node (in-boxes dom)]
+                     #:when (node-get node ':name #:default false))
            (values (node-get node ':name) (dump-box node)))))
       (compile-assertion doms test-body ctx)))
 
@@ -120,45 +122,85 @@
      (define-values (stylesheet* trees*) (extract-core (apply append sheets) trees c))
      (failure stylesheet* (map unparse-tree trees*))]))
 
-(define (solve-cached sheets docs fonts [tests #f] #:render? [render? #t]
-                      #:component [name #f])
-  (cond
-   [(*cache-file*)
-    (define key (list sheets docs fonts tests render? name))
-    (define out
-      (cond
-       [(hash-has-key? *cache* key)
-        ((make-log) "Retrieved result from cache")
-        (hash-ref *cache* key)]
-       [else
-        (solve sheets docs fonts #:tests tests #:render? render? #:component name)]))
-    (hash-set! *cache* key out)
-    (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p)))
-    out]
-   [else
-    (solve sheets docs fonts #:tests tests #:render? render? #:component name)]))
-
-(define (solve-problem problem)
+(define (solve-problem* problem)
   (match (dict-ref problem ':tool '(assert))
     ['(assert)
      (with-handlers
          ([exn:break? (λ (e) 'break)]
           [exn:fail? (λ (e) (list 'error e))])
-       (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
-                     (dict-ref problem ':fonts) (dict-ref problem ':test #f)))]
+       (solve (dict-ref problem ':sheets) (dict-ref problem ':documents)
+              (dict-ref problem ':fonts)
+              #:tests (dict-ref problem ':test #f)))]
     ['(admit)
      (failure (dict-ref problem ':sheets) (map dom-boxes (dict-ref problem ':documents)))]
     ['(modular)
      (with-handlers
          ([exn:break? (λ (e) 'break)]
           [exn:fail? (λ (e) (list 'error e))])
-       (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
-                     (dict-ref problem ':fonts) (dict-ref problem ':test #f)
-                     #:render? false))]
+       (solve (dict-ref problem ':sheets) (dict-ref problem ':documents)
+              (dict-ref problem ':fonts)
+              #:tests (dict-ref problem ':test #f)
+              #:render? false))]
     ['(page)
      (with-handlers
          ([exn:break? (λ (e) 'break)]
           [exn:fail? (λ (e) (list 'error e))])
-       (solve-cached (dict-ref problem ':sheets) (dict-ref problem ':documents)
-                     (dict-ref problem ':fonts) (dict-ref problem ':test #f)
-                     #:component (first (dict-ref problem ':component))))]))
+       (solve (dict-ref problem ':sheets) (dict-ref problem ':documents)
+              (dict-ref problem ':fonts)
+              #:tests (dict-ref problem ':test #f)
+              #:component (first (dict-ref problem ':component))))]
+    [(list (and (or 'exhaustive (list 'random _)) tool))
+     (define log (make-log))
+     (define named-components (dict-ref problem ':named-selectors))
+     (define anon-components (dict-ref problem ':selectors))
+
+     (define num-samples
+       (match tool
+         ['exhaustive
+          (apply * (for/list ([f '(:w :h :fs)])
+                     (match (first (dom-context (first (dict-ref problem ':documents)) f))
+                       [(? number? n) 1]
+                       [`(between ,a ,b) (+ (- b a) 1)])))]
+         [(list 'random n)
+          n]))
+
+     (log "Launching Firefox to do ~a sample~a" num-samples (if (= num-samples 1) "" "s"))
+     (match (test-assertion (first (dict-ref problem ':url))
+                            (apply smt-and (dict-ref problem ':test))
+                            (if (equal? tool 'exhaustive) 0 num-samples)
+                            named-components
+                            anon-components
+                            (dom-properties (first (dict-ref problem ':documents))))
+       [`(counterexample ,props)
+        (log "Counterexample found")
+        (success (dict-ref problem ':sheets)
+                 (map dom-boxes (dict-ref problem ':documents))
+                 (dict-update problem ':documents
+                              (λ (x)
+                                (for/list ([doc x])
+                                  (define ctx*
+                                    (for/fold ([ctx (dom-properties doc)])
+                                        ([(k v) (in-dict props)])
+                                      (dict-set ctx k v)))
+                                  (struct-copy dom doc [properties ctx*]))))
+                  (apply smt-and (dict-ref problem ':test)))]
+       ['(success)
+        (log "No counterexamples found")
+         (failure (dict-ref problem ':sheets)
+                  (map dom-boxes (dict-ref problem ':documents)))])]))
+
+(define (solve-problem problem)
+  (cond
+   [(*cache-file*)
+    (define out
+      (cond
+       [(hash-has-key? *cache* problem)
+        ((make-log) "Retrieved result from cache")
+        (hash-ref *cache* problem)]
+       [else
+        (solve-problem* problem)]))
+    (hash-set! *cache* problem out)
+    (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p)))
+    out]
+   [else
+    (solve-problem* problem)]))

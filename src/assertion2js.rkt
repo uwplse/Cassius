@@ -4,8 +4,11 @@
 (require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt" "print/css.rkt"
          "assertions.rkt")
 
+(provide test-assertion)
+
 (define-runtime-path capture-path "../capture/")
 (define python-path (find-executable-path (match (system-type 'os) ['windows "python.exe"] [_ "python"])))
+(define xvfb-run-path (find-executable-path "xvfb-run"))
 
 (define js-header
   (string-join
@@ -33,15 +36,28 @@
               #:unless (set-member? vars (sformat "~a~a" head i)))
     (sformat "~a~a" head i)))
 
-(define (test-assertion url assertion num named-components anon-components)
+(define (run-python . args)
+  (match (system-type 'os)
+    [(or 'windows 'macosx)
+     (apply subprocess #f #f (current-error-port) python-path args)]
+    [_
+     (apply subprocess #f #f (current-error-port)
+            xvfb-run-path "-a" "-s" "-screen 0 1920x1080x24"
+            python-path args)]))
+
+(define (dump-range syntax)
+  (match (first syntax)
+    [(? number? n) (~a n)]
+    [`(between ,a ,b) (format "~a--~a" a b)]))
+
+(define (test-assertion url assertion num named-components anon-components ranges)
+  (define args
+    `(,@(if (> num 0) `("--num" ,(~a num)) `("--exhaustive"))
+      "--width" ,(dump-range (dict-ref ranges ':w))
+      "--height" ,(dump-range (dict-ref ranges ':h))
+      "--font" ,(dump-range (dict-ref ranges ':fs))))
   (define-values (proc procout procin _procerr)
-    (subprocess #f #f (current-error-port)
-                python-path (build-path capture-path "test.py")
-                "--num" (~a num)
-                "--width" (format "~a--~a" 1080 1920)
-                "--height" (format "~a--~a" 800 1280)
-                "--font" (format "~a--~a" 16 32)
-                url))
+    (apply run-python (build-path capture-path "test.py") url args))
   (define-values (vars body) (disassemble-forall assertion))
   (define components
     (for/hash ([(name sel) (in-dict named-components)] [i (in-naturals)])
@@ -68,10 +84,11 @@
   (begin0
       (match (subprocess-status proc)
         [0 '(success)]
-        [_ '(counterexample
+        [_ `(counterexample
              ,(for/hash ([line (in-port read-line procout)])
                 (match-define (list (app string->symbol key) (app string->number val))
-                              (string-split line))))])
+                              (string-split line))
+                (values key val)))])
     (close-input-port procout)))
 
 (define (body->js body ctx)
@@ -84,7 +101,7 @@
       [`(or ,parts ...)
        (format "(~a)" (string-join (map (curryr loop ctx) parts) " || "))]
       [`(=> ,as ... ,b)
-       (format "( ~a ? ~a : true)" (string-join (map (curry loop ctx) as) " && ") (loop b ctx))]
+       (format "( ~a ? ~a : true)" (string-join (map (curryr loop ctx) as) " && ") (loop b ctx))]
       [`(not ,part) (format "(! ~a)" (loop part ctx))]
 
       ;; Real numbers
@@ -159,7 +176,7 @@
       [`(anonymous? ,b)
        (format "(~a.nodeType !== document.ELEMENT_NODE)" (loop b ctx))]
       [`(matches ,b ,sels ...)
-       (format "~a.matches(~a)" (loop box ctx) (string-join (map selector->string sels) ", "))]
+       (format "~a.matches(~a)" (loop b ctx) (string-join (map selector->string sels) ", "))]
 
       ;; Extra syntax
       [`(if ,c ,t ,f)

@@ -1,8 +1,17 @@
 ;; -*- mode: scheme -*-
 
-(page joel1 (load "joel.rkt" doc-2) :w (between 800 1920))
-(page joel2 (load "joel.rkt" doc-3))
-(page other (load "joel.rkt" doc-1))
+(page joel1 (load "joel.rkt" doc-2)
+      :w (between 800 1920)
+      :h (between 600 1280)
+      :fs (between 16 32))
+(page joel2 (load "joel.rkt" doc-3)
+      :w (between 800 1920)
+      :h (between 600 1280)
+      :fs (between 16 32))
+(page other (load "joel.rkt" doc-1)
+      :w (between 800 1920)
+      :h (between 600 1280)
+      :fs (between 16 32))
 
 (define (is-interactive b)
   (matches b (tag a)))
@@ -48,7 +57,7 @@
   (assert root (onscreen root))
 
   (assert sidebar (forall (_) (=> (onscreen sidebar) (onscreen-plus sidebar-content 5))))
-  (admit sidebar (forall (b) (=> (onscreen sidebar) (or (is-component b) (is-interactive b)) (onscreen b))))
+  ((random 100) sidebar (forall (b) (=> (onscreen sidebar) (or (is-component b) (is-interactive b)) (onscreen b))))
 
   (assert sidebar-title (non-negative-margins sidebar-title))
   (assert sidebar-title (> (height sidebar-title) 0))

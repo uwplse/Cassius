@@ -49,6 +49,9 @@
 
   (define extra-problems (list))
 
+  (define selectors '())
+  (define named-selectors (make-hash))
+
   (for ([cmd tactics])
     (match cmd
 
@@ -63,15 +66,19 @@
        (node-set! box ':name name)
        (node-set*! box ':spec (list))
        (node-set! box ':split (length components))
+       (set! selectors (cons sel selectors))
+       (hash-set! named-selectors name sel)
        (set! components (cons box components))]
       [`(components ,sels ...)
        (define selected-boxes (append-map get-by-selector sels))
        (for ([box selected-boxes])
          (node-set*! box ':spec (list))
          (node-set! box ':split (length components))
+         (set! selectors (append sels selectors))
          (set! components (cons box components)))]
 
-      [`(,(and (or 'assert 'page 'random 'exhaustive 'admit) tool) ,boxes ,assert)
+      [`(,(and (or 'assert 'page (list 'random (? number?))
+                   'exhaustive 'admit) tool) ,boxes ,assert)
        (for ([box (box-set boxes components box-context)])
          (if (equal? tool 'assert)
              (node-add! box (spec-or-assert assert) assert)
@@ -104,6 +111,7 @@
            name]
           [name name]))
       (dict-set* problem* ':name (list name) ':component (list name)
+                 ':selectors selectors ':named-selectors named-selectors
                  ':test (list assert) ':tool (list tool))))
 
   (append
