@@ -166,7 +166,7 @@
 
      (log "Launching Firefox to do ~a sample~a" num-samples (if (= num-samples 1) "" "s"))
      (match (test-assertion (first (dict-ref problem ':url))
-                            (apply smt-and (dict-ref problem ':test))
+                            (apply and-assertions (dict-ref problem ':test))
                             (if (equal? tool 'exhaustive) 0 num-samples)
                             named-components
                             anon-components

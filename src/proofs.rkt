@@ -114,9 +114,14 @@
                  ':selectors selectors ':named-selectors named-selectors
                  ':test (list assert) ':tool (list tool))))
 
+  (define extras*
+    (for/list ([group (group-by (λ (x) (cons (dict-ref x ':component) (dict-ref x ':tool))) extras)])
+      (define asserts (append-map (curryr dict-ref ':test) group))
+      (dict-set (first group) ':test asserts)))
+
   (append
    (modularize problem**)
-   extras
+   extras*
    (list (dict-set* problem** ':tool '(modular) ':name (list ':check)))))
 
 (define (read-proofs port)
