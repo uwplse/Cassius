@@ -1,27 +1,33 @@
-(page amazon (load "amazon.rkt" doc-1))
+;; -*- mode: scheme -*-
 
-(theorem (true) true)
+(page amazon (load "amazon.rkt" doc-1)
+      :w (between 800 1920)
+      :h (between 600 1280)
+      :fs (between 16 32))
 
-(define (in-page b)
+(define (onscreen b)
   (and (>= (top b) 0) (>= (left b) 0)))
 
-(proof (amazon true amazon)
+(theorem (interactive-onscreen b)
+         (=> (is-interactive b) (onscreen b)))
+
+(proof (amazon interactive-onscreen amazon)
   (component top (id nav-upnav))
   (component header (tag header))
 
-  #;(assert top (= (raw (top-padding top)) 0))
-  (assert top
-    (forall (b)
-      (=> (matches b (class nav-spanAltText))
-          (= (top (raw (ppflow top)) padding) 0)
-          (= (raw (yo (ppflow top))) (raw (yo top)))
-          (< (top b) 0))))
-  (assert header (forall (b) (=> (in-page header) (is-interactive b) (in-page b)))))
+  (assert header (forall (b) (=> (onscreen header) (is-interactive b) (onscreen b))))
+  (admit (- * header) (forall (b) (=> (onscreen ?) (is-interactive b) (onscreen b))))
+  )
 
-(page google (load "google.rkt" doc-1))
+(page google (load "google.rkt" doc-1)
+      :w (between 800 1920)
+      :h (between 600 1280)
+      :fs (between 16 32))
 
-(proof (google true google)
+(proof (google interactive-onscreen google)
   (component profile (and (class gb_xb) (class gb_fa) (class gb_g)))
   (component stuff (class gb_Kb))
 
-  (assert profile (forall (b) (=> (in-page profile) (is-interactive b) (in-page b)))))
+  (assert profile (forall (b) (=> (onscreen profile) (or (is-interactive b) (is-component b)) (onscreen b))))
+  (admit root (onscreen root))
+  (admit (- * profile) (forall (b) (=> (onscreen ?) (or (is-interactive b) (is-component b)) (onscreen b)))))

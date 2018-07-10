@@ -20,15 +20,27 @@
 (define (onscreen b)
   (and (>= (top b) 0) (>= (left b) 0)))
 
+(define (is-interactive b)
+  (matches b (tag a)))
+
 (theorem (interactive-onscreen b)
-  (=> (matches b (tag a)) (onscreen b)))
+  (=> (is-interactive b) (onscreen b)))
 
 ;; This is a trivial proof of it, using a single component / whole page approach
 
 (proof (trivial interactive-onscreen yoga surf park)
   (assert root (forall (b) (=> (is-interactive b) (onscreen b)))))
 
-;; A proof that works for the yoga page
+;; A proof that we mention in the overview section
+
+(proof (yoga-page interactive-onscreen yoga)
+  (component header (id header))
+  (component body (id body))
+  (component footer (id footer))
+
+  (page * (forall (b) (=> (is-interactive b) (onscreen b)))))
+
+;; The final proof in the overview section
 
 (proof (yoga-simple interactive-onscreen yoga)
   (component header (id header))
@@ -53,6 +65,8 @@
                 (=> (is-interactive a) (onscreen a)))))
 
   (page root (and (no-floats-exit body) (no-floats-exit header) (no-floats-enter footer))))
+
+;; The fully-componentized proof of the yoga page
 
 (proof (yoga-full interactive-onscreen yoga)
   (component header (id header))
