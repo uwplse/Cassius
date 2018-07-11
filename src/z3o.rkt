@@ -486,32 +486,36 @@
          ['true (simpl b)]
          ['false (simpl c)]
          [expr (simpl1 `(ite ,expr ,(simpl b) ,(simpl c)))])]
-      [`(=> ,a ,b)
-       (match (simpl a)
+      [`(=> ,as ... ,b)
+       (match (simpl (cons 'and as))
          ['false 'true]
          [expr (simpl1 `(=> ,expr ,(simpl b)))])]
       [`(and ,exprs ...)
-       (let loop ([exprs exprs] [rest '()])
-         (if (null? exprs)
-             (match rest
-               ['() 'true]
-               [(list x) x]
-               [_ (cons 'and rest)])
-             (match (simpl (car exprs))
-               ['true (loop (cdr exprs) rest)]
-               ['false 'false]
-               [expr (loop (cdr exprs) (cons expr rest))])))]
+       (if (set-member? exprs 'false)
+           'false
+           (let loop ([exprs exprs] [rest '()])
+             (if (null? exprs)
+                 (match rest
+                   ['() 'true]
+                   [(list x) x]
+                   [_ (cons 'and rest)])
+                 (match (simpl (car exprs))
+                   ['true (loop (cdr exprs) rest)]
+                   ['false 'false]
+                   [expr (loop (cdr exprs) (cons expr rest))]))))]
       [`(or ,exprs ...)
-       (let loop ([exprs exprs] [rest '()])
-         (if (null? exprs)
-             (match rest
-               ['() 'false]
-               [(list x) x]
-               [_ (cons 'or rest)])
-             (match (simpl (car exprs))
-               ['true 'true]
-               ['false (loop (cdr exprs) rest)]
-               [expr (loop (cdr exprs) (cons expr rest))])))]
+       (if (set-member? exprs 'true)
+           'true
+           (let loop ([exprs exprs] [rest '()])
+             (if (null? exprs)
+                 (match rest
+                   ['() 'false]
+                   [(list x) x]
+                   [_ (cons 'or rest)])
+                 (match (simpl (car exprs))
+                   ['true 'true]
+                   ['false (loop (cdr exprs) rest)]
+                   [expr (loop (cdr exprs) (cons expr rest))]))))]
       [(? list?) (simpl1 (map simpl expr))]
       [_ expr]))
 
