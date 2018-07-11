@@ -37,11 +37,12 @@
     (sformat "~a~a" head i)))
 
 (define (run-python . args)
+  (define errp (if (file-stream-port? (current-error-port)) (current-error-port) #f))
   (match (system-type 'os)
     [(or 'windows 'macosx)
-     (apply subprocess #f #f (current-error-port) python-path args)]
+     (apply subprocess #f #f errp python-path args)]
     [_
-     (apply subprocess #f #f (current-error-port)
+     (apply subprocess #f #f errp
             xvfb-run-path "-a" "-s" "-screen 0 1920x1080x24"
             python-path args)]))
 
