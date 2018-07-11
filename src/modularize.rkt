@@ -35,7 +35,8 @@
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))
   (define sheets (dict-ref problem ':sheets))
-  (for*/list ([doc (dict-ref problem ':documents)] [(name thing) (split-document doc)])
+  (for*/list ([doc (dict-ref problem ':documents)] [(name thing) (split-document doc)]
+              #:unless (null? (cdr thing)))
     (match-define (cons piece specs) thing)
     (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
     (define sheets* (prune-sheets sheets (list elements*)))
@@ -45,5 +46,6 @@
                ':documents (list (struct-copy dom piece [elements elements**]))
                ':name (list (dom-name piece))
                ':test specs
+               ':tool '(assert)
                ':sheets sheets*
                ':fonts fonts*)))
