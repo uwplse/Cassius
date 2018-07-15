@@ -16,7 +16,8 @@
   (component header (tag header))
 
   (assert header (forall (b) (=> (onscreen header) (is-interactive b) (onscreen b))))
-  (admit (- * header) (forall (b) (=> (onscreen ?) (is-interactive b) (onscreen b))))
+  (admit (- * header) (forall (b) (=> (onscreen ?) (or (is-interactive b) (is-component b)) (onscreen b))))
+  (admit root (onscreen root))
   )
 
 (page google (load "google.rkt" doc-1)
