@@ -86,7 +86,7 @@
        height="33.500004"
        width="71.000008"
        id="rect4142"
-       style="opacity:1;fill:#dedd17;fill-opacity:1;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+       style="opacity:1;fill:#dce318;fill-opacity:1;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
     <rect
        transform="matrix(0,1,-1,0,0,0)"
        y="-92.000069"
@@ -152,24 +152,24 @@
     <text
        transform="rotate(-90)"
        id="text4188"
-       y="74.816505"
-       x="-1052.7794"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:54.99998093px;line-height:125%;font-family:cmmi10;-inkscape-font-specification:cmmi10;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       y="74.551048"
+       x="-1050.3735"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:49.99998474px;line-height:125%;font-family:cmmi10;-inkscape-font-specification:cmmi10;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:54.99998093px;line-height:125%;font-family:cmmi10;-inkscape-font-specification:cmmi10"
-         y="74.816505"
-         x="-1052.7794"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:49.99998474px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10"
+         y="74.551048"
+         x="-1050.3735"
          id="tspan4190"
          sodipodi:role="line">S</tspan></text>
     <text
        id="text4192"
-       y="996.21906"
-       x="57.033566"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:54.99998093px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       y="994.3609"
+       x="58.626293"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:49.99998474px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:54.99998093px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10"
-         y="996.21906"
-         x="57.033566"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:49.99998474px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10"
+         y="994.3609"
+         x="58.626293"
          id="tspan4194"
          sodipodi:role="line">S</tspan></text>
     <text
@@ -197,13 +197,13 @@
          sodipodi:role="line">u</tspan></text>
     <text
        id="text4204"
-       y="1033.6132"
-       x="94.478004"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:54.99998093px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       y="1032.0204"
+       x="96.336189"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:49.99998474px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:54.99998093px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10"
-         y="1033.6132"
-         x="94.478004"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:49.99998474px;line-height:125%;font-family:cmsy10;-inkscape-font-specification:cmsy10"
+         y="1032.0204"
+         x="96.336189"
          id="tspan4206"
          sodipodi:role="line">S</tspan></text>
   </g>
