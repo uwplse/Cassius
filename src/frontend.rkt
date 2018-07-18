@@ -71,12 +71,12 @@
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
 
-  (if (memq 'z3o (flags))
+  (if (set-member? (flags) 'z3o)
       (set! query (z3-prepare query))
       (set! query (z3-clean query)))
-  (when (memq 'debug (flags)) (set! query (z3-namelines query)))
+  (when (set-member? (flags) 'debug) (set! query (z3-namelines query)))
 
-    (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
+  (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
   
   (values doms query))
 
