@@ -73,11 +73,8 @@
   (component body (id body))
   (component footer (id footer))
 
-  (assert * (non-negative-margins ?))
-
-  (assert root (=> (no-floats-exit body) (>= (width footer) 200)))
-  (assert root (=> (no-floats-exit header) (no-floats-exit body)
-                   (and (onscreen header) (onscreen body) (onscreen footer))))
+  (assert root (>= (width footer) 200))
+  (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
 
   (assert header
     (forall (a)
