@@ -87,6 +87,12 @@
 
 (define-constraints layout-definitions
 
+  ,@(for/list ([field '(mtn mbn)])
+      `(assert (forall ((b Box)) (<= (,field b) 0.0))))
+
+  ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent
+      `(assert (forall ((b Box)) (>= (,field b) 0.0))))
+
   ;; Three additional pointers: to the previous floating box, the
   ;; parent block box, and the parent positioned box.
   (declare-fun ppflow (Box) Box)
