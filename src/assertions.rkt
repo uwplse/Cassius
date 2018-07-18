@@ -63,7 +63,6 @@
 
       ;; Boxes
       ['null 'no-box]
-      ['root `(rootbox ,(dump-box (dom-boxes dom)))]
       [(list (and (or 'parent 'next 'prev 'first 'last) field) box)
        (define function
          (match field ['parent 'pflow] ['next  'nflow] ['prev  'vflow] ['first 'fflow] ['last  'lflow]))

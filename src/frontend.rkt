@@ -48,9 +48,13 @@
          (for/hash ([var test-vars])
            (values var (sformat "cex~a" (name 'cex (cons var test)))))
          (hash '? (dump-box (dom-boxes (first doms))))
+         (if (andmap (curryr dom-context ':component) doms)
+             (hash)
+             (hash 'root (dump-box (dom-boxes (first doms)))))
          (for*/hash ([dom doms] [node (in-boxes dom)]
                      #:when (node-get node ':name #:default false))
-           (values (node-get node ':name) (dump-box node)))))
+           (values (node-get node ':name) (dump-box node)))
+         #:combine/key (λ (k a b) (if (equal? a b) a (raise "Different bindings for ~a: ~a and ~a" k a b)))))
       (compile-assertion doms test-body ctx)))
 
   (define query (all-constraints sheets matchers doms fonts #:render? render?))
