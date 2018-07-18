@@ -1,5 +1,7 @@
 #!/bin/python3
 
+from __future__ import print_function
+
 """
 Benchmark creator, for Cassius.
 
