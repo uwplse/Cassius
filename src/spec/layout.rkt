@@ -33,35 +33,10 @@
 
 (define-constraints boxref-definitions
 
-  (declare-fun nflow (Box) Box)
-  (assert
-   (forall ((b Box))
-           (= (nflow b)
-              (ite (is-no-box (nbox b))
-                   no-box
-                   (ite (box-in-flow (nbox b))
-                        (nbox b)
-                        (nflow (nbox b)))))))
-
   (declare-fun vflow (Box) Box)
-  (assert
-   (forall ((b Box))
-           (= (vflow b)
-              (ite (is-no-box (vbox b))
-                   no-box
-                   (ite (box-in-flow (vbox b))
-                        (vbox b)
-                        (vflow (vbox b)))))))
-
+  (declare-fun nflow (Box) Box)
   (declare-fun fflow (Box) Box)
-  (assert
-   (forall ((b Box))
-           (= (fflow b) (ite (=> (is-box (fbox b)) (box-in-flow (fbox b))) (fbox b) (nflow (fbox b))))))
-
   (declare-fun lflow (Box) Box)
-  (assert
-   (forall ((b Box))
-           (= (lflow b) (ite (=> (is-box (lbox b)) (box-in-flow (lbox b))) (lbox b) (vflow (lbox b))))))
 
 
   (define-fun ez.outside ((ez EZone) (b Box)) Bool
@@ -72,6 +47,39 @@
 
   (define-fun no-margins ((b Box)) Bool
     (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0))
+
+  (define-fun non-negative-margins ((b Box)) Bool
+    (and (>= (mtp b) (- (mtn b))) (>= (mbp b) (- (mbn b))))))
+
+(define-constraints layout-definitions
+
+  (assert
+   (forall ((b Box))
+           (= (nflow b)
+              (ite (is-no-box (nbox b))
+                   no-box
+                   (ite (box-in-flow (nbox b))
+                        (nbox b)
+                        (nflow (nbox b)))))))
+
+  (assert
+   (forall ((b Box))
+           (= (vflow b)
+              (ite (is-no-box (vbox b))
+                   no-box
+                   (ite (box-in-flow (vbox b))
+                        (vbox b)
+                        (vflow (vbox b)))))))
+
+  (assert
+   (forall ((b Box))
+           (= (fflow b) (ite (=> (is-box (fbox b)) (box-in-flow (fbox b))) (fbox b) (nflow (fbox b))))))
+
+  (assert
+   (forall ((b Box))
+           (= (lflow b) (ite (=> (is-box (lbox b)) (box-in-flow (lbox b))) (lbox b) (vflow (lbox b))))))
+
+
   (declare-fun rootbox (Box) Box)
   (assert
    (forall ((b Box))
@@ -80,11 +88,6 @@
                    b
                    (rootbox (pbox b))))))
   (assert (forall ((b Box)) (is-box (rootbox b))))
-
-  (define-fun non-negative-margins ((b Box)) Bool
-    (and (>= (mtp b) (- (mtn b))) (>= (mbp b) (- (mbn b))))))
-
-(define-constraints layout-definitions
 
   ,@(for/list ([field '(mtn mbn)])
       `(assert (forall ((b Box)) (<= (,field b) 0.0))))
