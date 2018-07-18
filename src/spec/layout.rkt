@@ -32,15 +32,6 @@
     out]))
 
 (define-constraints boxref-definitions
-  (declare-fun rootbox (Box) Box)
-  (assert
-   (forall ((b Box))
-           (= (rootbox b)
-              (ite (is-no-box (pbox b))
-                   b
-                   (rootbox (pbox b))))))
-
-  (assert (forall ((b Box)) (is-box (rootbox b))))
 
   (declare-fun nflow (Box) Box)
   (assert
@@ -81,6 +72,14 @@
 
   (define-fun no-margins ((b Box)) Bool
     (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0))
+  (declare-fun rootbox (Box) Box)
+  (assert
+   (forall ((b Box))
+           (= (rootbox b)
+              (ite (is-no-box (pbox b))
+                   b
+                   (rootbox (pbox b))))))
+  (assert (forall ((b Box)) (is-box (rootbox b))))
 
   (define-fun non-negative-margins ((b Box)) Bool
     (and (>= (mtp b) (- (mtn b))) (>= (mbp b) (- (mbn b))))))
