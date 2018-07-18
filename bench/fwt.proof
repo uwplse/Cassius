@@ -49,8 +49,8 @@
 
   (assert * (non-negative-margins ?))
 
-  (assert root (=> (no-floats-exit body) (>= (width footer) 200)))
-  (assert root (=> (no-floats-exit header) (no-floats-exit body)
+  (assert root (=> (no-floats-exit header) (>= (width footer) 200)))
+  (assert root (=> (no-floats-exit header)
                    (and (onscreen header) (onscreen body) (onscreen footer))))
 
   (assert header
@@ -64,7 +64,7 @@
                 (onscreen footer)
                 (=> (is-interactive a) (onscreen a)))))
 
-  (page root (and (no-floats-exit body) (no-floats-exit header) (no-floats-enter footer))))
+  (page root (and (no-floats-exit header) (no-floats-enter footer))))
 
 ;; The fully-componentized proof of the yoga page
 
