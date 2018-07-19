@@ -95,8 +95,7 @@
   ,@(for/list ([field '(bl br bt bb pr pb pt w h mtp mbp stfwidth)]) ; No pl because text-indent
       `(assert (forall ((b Box)) (>= (,field b) 0.0))))
 
-  ;; Three additional pointers: to the previous floating box, the
-  ;; parent block box, and the parent positioned box.
+  ;; Three additional pointers to the parent block box and the parent positioned box.
   (declare-fun ppflow (Box) Box)
   (assert
    (forall ((b Box))

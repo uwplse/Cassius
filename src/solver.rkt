@@ -6,8 +6,7 @@
   (append
    '(box-elt pelt pbox vbox nbox fbox lbox)
    '(fflow lflow vflow nflow)
-   '(ppflow pbflow rootbox)
-   '(fid)))
+   '(pbflow)))
 
 (define to-expand
   (append
