@@ -844,7 +844,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
 }
 
 function dump_media_query(media, features) {
-    var ors = media.mediaText.split(/\b,\s*\b/);
+    var ors = media.mediaText.split(/,\s*/);
     for (var i = 0; i < ors.length; i++) {
         var query = ors[i].trim();
         var words = query.split(/\s/, 2);
