@@ -73,3 +73,49 @@
     (forall (b)
             (=> (onscreen-plus sidebar-title 5)
                 (is-interactive b) (onscreen b)))))
+
+;; The same as above, but without breaking out the comments
+
+(proof (no-comment-proof interactive-onscreen other)
+  (component sidebar (id masthead))
+  (component sidebar-content (id tabs))
+  (component sidebar-title (class site-title))
+  (component sidebar-description (class site-description))
+  (components (id front-widgets))
+  (component content (id content))
+  (component heading (desc (id main) (tag header)))
+  (component linkbar (class entry-meta))
+  (component articletext (class entry-content))
+  (components (id post-footer-widgets))
+  (components (class author-info))
+  (component nav (class post-navigation))
+  (component colophon (id colophon))
+  (components (child (class entry-content) *))
+
+  (components (id site-navigation))
+  (components (desc (id site-navigation) (tag li)))
+
+  (assert
+   (- * (or sidebar sidebar-title))
+   (forall (b) (=> (onscreen ?)
+                   (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+
+  (assert root (onscreen root))
+
+  (assert sidebar (forall (_) (=> (onscreen sidebar) (onscreen-plus sidebar-content 5))))
+  (admit sidebar (forall (b) (=> (onscreen sidebar) (or (is-component b) (is-interactive b)) (onscreen b))))
+
+  (assert sidebar-title (non-negative-margins sidebar-title))
+  (assert sidebar-title (> (height sidebar-title) 0))
+
+  (assert sidebar-description (non-negative-margins sidebar-description))
+
+  (assert sidebar-content
+          (forall (_)
+                  (=> (onscreen-plus sidebar-content 5)
+                      (onscreen-plus sidebar-title 5))))
+
+  (assert sidebar-title
+    (forall (b)
+            (=> (onscreen-plus sidebar-title 5)
+                (is-interactive b) (onscreen b)))))
