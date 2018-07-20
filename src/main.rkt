@@ -275,6 +275,9 @@
          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 
+(define (is-component box)
+  (or (not (node-parent box)) (ormap (curry node-get* box) '(:split))))
+
 (define (box-link-constraints dom emit box)
   (define link-function
     (if (dom-context dom ':component)
@@ -282,8 +285,7 @@
         (if (node-get* box ':component)
             'link-box-magic
             'link-box)))
-  (define is-component (or (node-get* box ':component) (node-get* box ':spec)))
-  (emit `(assert (= (is-component ,(dump-box box)) ,(if is-component 'true 'false))))
+  (emit `(assert (= (is-component ,(dump-box box)) ,(if (is-component box) 'true 'false))))
   (emit `(assert (! (,link-function
                      ,(dump-box box)
                      ,(dump-box (node-parent box))
@@ -306,7 +308,23 @@
   (for/hash ([node nodes] #:when (node-get node ':name #:default false))
     (values (node-get node ':name) (dump-box node))))
 
-(define (spec-constraints fields dom emit box)
+(define (massage-body body ctx matcher)
+  (match body
+    [`(=> ,conds ... ,post)
+     (define conds* (map (curryr massage-body ctx matcher) conds))
+     (if (set-member? conds* 'false)
+         'true
+         `(=> ,@(map (curryr massage-body ctx matcher) conds) ,post))]
+    [`(or ,bits ...)
+     (apply smt-or (map (curryr massage-body ctx matcher) bits))]
+    [`(= (box-elt ,(? (curry dict-has-key? ctx) b)) ,elt)
+     (define rec (ormap (λ (f) (f (dict-ref ctx b))) matcher))
+     (if (equal? (dump-elt (if rec (car rec) #f)) elt) 'true 'false)]
+    [`(is-component ,(? (curry dict-has-key? ctx) b))
+     (if (is-component (dict-ref ctx b)) 'true 'false)]
+    [_ body]))
+
+(define (spec-constraints fields matcher dom emit box)
   (when (ormap (curry node-get* box) fields)
     (define nodes (nodes-below box (λ (x) (ormap (curry node-get* x) fields))))
 
@@ -320,11 +338,10 @@
          (get-node-names nodes)))
       (define spec (compile-assertion (list dom) body ctx))
 
-      (emit `(assert (! (and
-                         ,@(for/list ([vals (apply cartesian-product (map (const nodes) vars))])
-                             `(let ,(map (λ (v x) (list v (dump-box x))) vars vals)
-                                ,spec)))
-                        :named ,(sformat "spec/~a/~a/~a" (name 'box box) (substring (~a field) 1) i)))))))
+      (for ([vals (apply cartesian-product (map (const nodes) vars))] [j (in-naturals)])
+        (emit `(assert (! (let ,(map (λ (v x) (list v (dump-box x))) vars vals)
+                            ,(massage-body spec (map cons vars vals) matcher))
+                          :named ,(sformat "spec/~a/~a/~a/~a" (name 'box box) (substring (~a field) 1) i j))))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -456,6 +473,6 @@
     ,@(for-render font-computation)
     ,@(boxref-definitions)
     ,@(for-render layout-definitions)
-    ,@(per-box (curry spec-constraints (if render? '(:spec) '(:spec :assert :admit))))
+    ,@(per-box (curry spec-constraints (if render? '(:spec) '(:spec :assert :admit)) matcher))
     ,@(for-render per-box layout-constraints)
     ))
