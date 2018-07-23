@@ -276,7 +276,7 @@
                            :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
 
 (define (is-component box)
-  (or (not (node-parent box)) (ormap (curry node-get* box) '(:split))))
+  (node-get* box ':split))
 
 (define (box-link-constraints dom emit box)
   (define link-function

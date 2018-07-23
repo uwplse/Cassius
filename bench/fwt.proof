@@ -138,7 +138,7 @@
                             (no-floats-enter ?)
                             (or (is-interactive b) (is-component b)) (onscreen b))))
 
-  (assert root (forall (b) (=> (is-component b) (= (width b) 960))))
+  (assert root (forall (b) (=> (and (is-component b) (not (= b root))) (= (width b) 960))))
   (assert root (onscreen root))
   (assert root (no-floats-enter root))
 
