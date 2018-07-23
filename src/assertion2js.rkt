@@ -57,7 +57,7 @@
       "--width" ,(dump-range (dict-ref ranges ':w))
       "--height" ,(dump-range (dict-ref ranges ':h))
       "--font" ,(dump-range (dict-ref ranges ':fs))))
-  (define-values (proc procout procin _procerr)
+  (define-values (proc procout procin procerr)
     (apply run-python (build-path capture-path "test.py") url args))
   (define-values (vars body) (disassemble-forall assertion))
   (define components
@@ -81,6 +81,12 @@
      "\n"))
   (display code procin)
   (close-output-port procin)
+  ;; Avoid stuffed buffer for stderr. stdout can't be stuffed because we can only print a few lines to it
+  (when procerr
+    (for ([line (in-port read-line procerr)])
+      (display line (current-error-port))
+      (when (string-contains? line "Exception:")
+        (error 'assertion->js "~a" (string-trim line)))))
   (subprocess-wait proc)
   (begin0
       (match (subprocess-status proc)
