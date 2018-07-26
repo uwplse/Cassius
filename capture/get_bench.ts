@@ -2,23 +2,22 @@
 javascript:void((function(x){x.src = "http://localhost:8000/get_bench.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
-Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size font-family font-style font-weight text-indent clear color background-color line-height vertical-align".split(" ");
-BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
-BadTags = "img iframe input svg:svg button frame noframes".split(" ");
+var Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size font-family font-style font-weight text-indent clear color background-color line-height vertical-align".split(" ");
+var BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
+var BadTags = "img iframe input svg:svg button frame noframes".split(" ");
 
-Box = function(type, node, props) {
+var Box = function(type, node, props) {
     this.children = [];
     this.type = type; this.props = props; this.node = node;
-    return this;
 }
 function curry(f, arg) { return function(arg1, arg2) { return new f(arg, arg1, arg2) }}
-Block = curry(Box, "BLOCK");
-Line = curry(Box, "LINE")
-Inline = curry(Box, "INLINE")
-Page = curry(Box, "PAGE")
-Text = curry(Box, "TEXT")
-Magic = curry(Box, "MAGIC")
-Anon = curry(Box, "ANON")
+var Block = curry(Box, "BLOCK");
+var Line = curry(Box, "LINE")
+var Inline = curry(Box, "INLINE")
+var Page = curry(Box, "PAGE")
+var TextBox = curry(Box, "TEXT")
+var Magic = curry(Box, "MAGIC")
+var Anon = curry(Box, "ANON")
 
 function add_feature(box, feature) {
     var props = box.props["features"] || []
@@ -29,24 +28,25 @@ function add_feature(box, feature) {
 Box.prototype.toString = function() {
     var s = "[" + this.type;
     for (var i in this.props) {
-        val = this.props[i];
+        var val = this.props[i];
         s += " :" + i + " " + (typeof val === "number" ? f2r(val) : val);
     }
     return s + "]";
 }
 
-ERROR = false;
+var ERROR : (boolean | string) = false;
+var SKIP_NO_MATCH = false;
 
-LETTER = window.LETTER || "";
-ID = 0;
-PADDING = "0000";
+var LETTER = "";
+var ID = 0;
+var PADDING = "0000";
 function gensym() {
-    s = "" + (++ID);
+    var s = "" + (++ID);
     return "e" + LETTER + PADDING.substring(0, PADDING.length - s.length) + s;
 }
 
-APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
-DIVISORS = [];
+var APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
+var DIVISORS = [];
 
 for (var i = 1; i * i < APP_PIXEL_TO_PIXELS; i++) {
     if (APP_PIXEL_TO_PIXELS % i == 0) {
@@ -133,102 +133,105 @@ function dump_string(s) {
     return '"' + s.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + '"';
 }
 
-function cs(elt) {return window.getComputedStyle(elt);}
+function cs(elt, value) {return window.getComputedStyle(elt).getPropertyValue(value);}
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE || elt.nodeType == document.CDATA_SECTION_NODE;}
 function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
-function is_inline(elt) {return cs(elt).display == "inline";}
-function is_iblock(elt) {return cs(elt).display == "inline-block";}
+function is_inline(elt) {return cs(elt, "display") == "inline";}
+function is_iblock(elt) {return cs(elt, "display") == "inline-block";}
 function is_block(elt) {
-    return cs(elt).display == "block" ||
-        (cs(elt).display == "list-item" &&
-         (cs(elt).listStylePosition == "outside" ||
-          cs(elt).listStyleType == "none"));
+    return cs(elt, "display") == "block" ||
+        (cs(elt, "display") == "list-item" &&
+         (cs(elt, "list-style-position") == "outside" ||
+          cs(elt, "list-style-type") == "none"));
 }
-function is_visible(elt) {return cs(elt).display != "none";}
-function is_float(elt) {return elt.nodeType === document.ELEMENT_NODE && cs(elt).float != "none";}
+function is_visible(elt) {return cs(elt, "display") != "none";}
+function is_float(elt) {
+    return elt.nodeType === document.ELEMENT_NODE &&
+        cs(elt, "float") != "none";
+}
 
 function is_flow_block(elt) {
     return elt.nodeType == document.ELEMENT_NODE &&
-        cs(elt).float === "none" && ["static", "relative"].indexOf(cs(elt).position) !== -1;
+        cs(elt, "float") === "none" && ["static", "relative"].indexOf(cs(elt, "position")) !== -1;
 }
 
 function is_flowroot(elt) {
     // CSS3BOX §4.2
     // Block progression possibilities ignored, because block;-progression assumed to be `tb`
     return elt.nodeType == document.ELEMENT_NODE &&
-        (cs(elt).float !== "none" || cs(elt).overflow !== "visible" ||
-         ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt).display) !== -1 ||
-         ["static", "relative"].indexOf(cs(elt).position) === -1);
+        (cs(elt, "float") !== "none" || cs(elt, "overflow") !== "visible" ||
+         ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt, "display")) !== -1 ||
+         ["static", "relative"].indexOf(cs(elt, "position")) === -1);
 }
 
 function get_fontsize(elt) {
-    var fs = cs(elt.fontSize);
-    try { return val2px(fs) } catch (e) {}
-    try { return val2pct(fs) * get_fontsize(elt.parentNode) / 100 } catch (e) {}
-    try { return val2em(margin) * get_fontsize(elt.parentNode) } catch (e) {}
-    throw "Error weird font-size value"
+    var fs = cs(elt, "font-size");
+    try { return val2px(fs, {}) } catch (e) {}
+    try { return val2pct(fs, {}) * get_fontsize(elt.parentNode) / 100 } catch (e) {}
+    try { return val2em(fs, {}) * get_fontsize(elt.parentNode) } catch (e) {}
+    throw "Error weird font-size value " + fs;
 }
 
 function convert_margin(margin, elt) {
-    try { return val2px(margin) } catch (e) {}
-    try { return val2pct(margin) * elt.clientWidth } catch (e) {}
-    try { return val2em(margin) * get_fontsize(elt) } catch (e) {}
-    throw "Error weird margin value";
+    try { return val2px(margin, {}) } catch (e) {}
+    try { return val2pct(margin, {}) * elt.clientWidth } catch (e) {}
+    try { return val2em(margin, {}) * get_fontsize(elt) } catch (e) {}
+    throw "Error weird margin value `" + margin + "`";
 }
 
 function convert_offset(offset, elt) {
     if (offset == "auto") {
-        return false;
+        return 0;
     } else if (offset.match(/%$/)) {
-        return val2pct(offset) * elt.parentNode.clientHeight;
+        return val2pct(offset, {}) * elt.parentNode.clientHeight;
     } else {
-        return val2px(offset);
+        return val2px(offset, {});
     }
-    throw "Error weird offset value";
+    throw "Error weird offset value " + offset;
 }
 
 function get_margins(elt) {
     return {
-        top: convert_margin(cs(elt).marginTop, elt),
-        right: convert_margin(cs(elt).marginRight, elt),
-        bottom: convert_margin(cs(elt).marginBottom, elt),
-        left: convert_margin(cs(elt).marginLeft, elt)
+        top: convert_margin(cs(elt, "margin-top"), elt),
+        right: convert_margin(cs(elt, "margin-right"), elt),
+        bottom: convert_margin(cs(elt, "margin-bottom"), elt),
+        left: convert_margin(cs(elt, "margin-left"), elt)
     };
 }
 
 function get_relative_offset(elt) {
     return {
-        top: convert_offset(cs(elt).top, elt),
-        bottom: convert_offset(cs(elt).bottom, elt),
+        top: convert_offset(cs(elt, "top"), elt),
+        bottom: convert_offset(cs(elt, "bottom"), elt),
     }
 }
 
 function top_outer(elt) {
-    return elt.getBoundingClientRect().top - convert_margin(cs(elt).marginTop, elt);
+    return elt.getBoundingClientRect().top - convert_margin(cs(elt, "margin-top"), elt);
 }
 
 function top_content(elt) {
-    return elt.getBoundingClientRect().top + elt.clientTop + convert_margin(cs(elt).paddingTop, elt);
+    return elt.getBoundingClientRect().top + elt.clientTop + convert_margin(cs(elt, "padding-top"), elt);
 }
 
 function right_outer(elt) {
-    return elt.getBoundingClientRect().right - convert_margin(cs(elt).marginRight, elt);
+    return elt.getBoundingClientRect().right - convert_margin(cs(elt, "margin-right"), elt);
 }
 
 function right_content(elt) {
-    return elt.getBoundingClientRect().left + elt.clientLeft + elt.clientWidth - convert_margin(cs(elt).paddingRight, elt);
+    return elt.getBoundingClientRect().left + elt.clientLeft + elt.clientWidth - convert_margin(cs(elt, "padding-right"), elt);
 }
 
 function bottom_outer(elt) {
-    return elt.getBoundingClientRect().bottom + convert_margin(cs(elt).marginBottom, elt);
+    return elt.getBoundingClientRect().bottom + convert_margin(cs(elt, "margin-bottom"), elt);
 }
 
 function left_outer(elt) {
-    return elt.getBoundingClientRect().left - convert_margin(cs(elt).marginLeft, elt);
+    return elt.getBoundingClientRect().left - convert_margin(cs(elt, "margin-left"), elt);
 }
 
 function left_content(elt) {
-    return elt.getBoundingClientRect().left + elt.clientLeft + convert_margin(cs(elt).paddingLeft, elt);
+    return elt.getBoundingClientRect().left + elt.clientLeft + convert_margin(cs(elt, "padding-left"), elt);
 }
 
 function horizontally_adjacent(e1, e2) {
@@ -255,7 +258,7 @@ function find_first_break(txt, loff, roff) {
         else return loff + 2;
     }
 
-    mid = Math.round(loff + (roff - loff) / 2);
+    var mid = Math.round(loff + (roff - loff) / 2);
     var r2 = new Range();
     r2.setStart(txt, loff);
     r2.setEnd(txt, mid);
@@ -319,8 +322,8 @@ function infer_anons(inputs) {
     var bstack = [out];
     var block_mode = true;
 
-    function reenter() {
-        var b = Anon();
+    function reenter(estack) {
+        var b = Anon(null, {});
         bstack[0].push(b)
         bstack.push(b.children);
 
@@ -340,7 +343,7 @@ function infer_anons(inputs) {
                 if (block_mode) reenter(estack);
                 bstack[bstack.length - 1].push(e);
                 estack[estack.length - 1].shift();
-            } else if (e.type == "INLINE" && cs(e.node).display == "inline-block") {
+            } else if (e.type == "INLINE" && cs(e.node, "display") == "inline-block") {
                 if (block_mode) reenter(estack);
                 bstack[bstack.length - 1].push(e);
                 estack[estack.length - 1].shift();
@@ -465,7 +468,7 @@ function infer_lines(box, parent) {
                 go(child);
             }
             stackup(last_line() || new_line(), stack, sstack);
-            stack.pop(b);
+            stack.pop();
             sstack = sstack.slice(0, stack.length);
             if (b.node && b.node.tagName.toUpperCase() == "BR") {
                 new_line();
@@ -473,7 +476,7 @@ function infer_lines(box, parent) {
             }
         } else {
             console.warn("Unknown box type", b);
-            window.ERROR = "Unknown box type: " + b;
+            ERROR = "Unknown box type: " + b;
         }
     }
 
@@ -491,7 +494,7 @@ function extract_text(elt) {
         if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
         if (r.length < 1) continue;
         r = r[0];
-        var box = Text(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
+        var box = TextBox(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
         box.props.text = dump_string(ranges[i].toString().replace(/\s+/g, " "));
         outs.push(box);
     }
@@ -500,7 +503,6 @@ function extract_text(elt) {
 
 function extract_block(elt, children) {
     var r = elt.getBoundingClientRect();
-    var s = cs(elt);
 
     children = infer_anons(children);
     for (var i = 0; i < children.length; i++) {
@@ -519,7 +521,7 @@ function extract_block(elt, children) {
     var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
     box.children = children;
 
-    if (cs(elt).display == "list-item" && children.length == 0) {
+    if (cs(elt, "display") == "list-item" && children.length == 0) {
         children.push(Line(null, {}));
     }
 
@@ -540,7 +542,7 @@ function extract_inline(elt, children) {
 
 function extract_magic(elt, children) {
     var r = elt.getBoundingClientRect();
-    var s = cs(elt);
+    var s = cs(elt, "")
     var box = Magic(elt, {
         x: r.x, y: r.y, w: r.width, h: r.height
     });
@@ -563,21 +565,21 @@ function make_boxes(elt, styles, features) {
 
     if (elt.nodeType !== document.ELEMENT_NODE) {
         // ok
-    } else if (["none", "inline", "block"].indexOf(cs(elt).display) !== -1) {
+    } else if (["none", "inline", "block"].indexOf(cs(elt, "display")) !== -1) {
         // ok
-    } else if (cs(elt).display.startsWith("table")) {
+    } else if (cs(elt, "display").substr(0, 5) == "table") {
         features["display:table"] = true;
-    } else if (cs(elt).display == "inline-block") {
+    } else if (cs(elt, "display") == "inline-block") {
         features["display:inline-block"] = true;
-    } else if (cs(elt).display == "list-item") {
+    } else if (cs(elt, "display") == "list-item") {
         features["display:list-item"] = true;
     } else {
-        console.warn("Unclear element-like value, display: " + cs(elt).display, elt.nodeType, elt);
+        console.warn("Unclear element-like value, display: " + cs(elt, "display"), elt.nodeType, elt);
         features["display:unknown"] = true;
     }
 
     if (elt.nodeType == document.ELEMENT_NODE &&
-        cs(elt).display == "list-item" && cs(elt).listStylePosition == "inside" && cs(elt).listStyleType != "none") {
+        cs(elt, "display") == "list-item" && cs(elt, "list-style-position") == "inside" && cs(elt, "list-style-type") != "none") {
         features["list:inside"] = true;
     }
 
@@ -687,6 +689,7 @@ function dump_selector(sel) {
 }
 
 function dump_primitive_selector(sel) {
+    var match;
     if (match = sel.match(/^\.([\w-]+)$/)) {
         return "(class " + match[1] + ")";
     } else if (match = sel.match(/^:([\w-]+)$/)) {
@@ -745,6 +748,7 @@ function dump_length(val, features) {
 }
 
 function dump_color(val, features) {
+    var match
     if (match = val.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/)) {
         return "(rgb " + match[1] + " " + match[2] + " " + match[3] + ")";
     } else if (match = val.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/)) {
@@ -769,7 +773,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
         features["invalid-selector"] = true
         return "";
     }
-    if (window.SKIP_NO_MATCH) if (nodes.length == 0) return "";
+    if (SKIP_NO_MATCH) if (nodes.length == 0) return "";
 
     if (sel.indexOf(":after") !== -1 || sel.indexOf(":before") !== -1) {
         features["css:before-after"] = true;
@@ -806,7 +810,7 @@ function dump_rule(sel, style, features, is_from_style, media) {
                 val = dump_length(val, _features);
             } catch (e) {
                 console.warn(sel, e);
-                window.ERROR = e;
+                ERROR = e;
             }
         }
         
@@ -857,7 +861,7 @@ function dump_media_query(media, features) {
             var part = ands[j].trim();
             var match;
             if (match = part.match(/^\(\s*([a-zA-Z0-9\-]+)\s*:\s*(.*)\)$/)) {
-                ands[j] = "(" + match[1] + " " + dump_length(match[2]) + ")";
+                ands[j] = "(" + match[1] + " " + dump_length(match[2], features) + ")";
             } else if (match = part.match(/^\(\s*([a-zA-Z0-9\-]+)\s*\)$/)) {
                 ands[j] = "(" + match[1] + ")";
             } else if (match = part.match(/^([a-zA-Z0-9\-]+)$/)) {
@@ -942,9 +946,7 @@ function dump_stylesheet(ss, features, media) {
                 text += dump_stylesheet(r, features, r.media);
             } else if (r.type === CSSRule.STYLE_RULE) {
                 text += dump_rule(r.selectorText, r.style, features, false, media);
-            } else if (  r.type === CSSRule.MOZ_KEYFRAMES_RULE
-                     || r.type === CSSRule.MOZ_KEYFRAME_RULE
-                     || r.type === CSSRule.KEYFRAMES_RULE
+            } else if ( r.type === CSSRule.KEYFRAMES_RULE
                      || r.type === CSSRule.KEYFRAME_RULE
                      || r.type === CSSRule.FONT_FACE_RULE) {
                 // Don't need these...
@@ -954,14 +956,12 @@ function dump_stylesheet(ss, features, media) {
             }
         } catch (e) {
             console.warn(r, e);
-            window.ERROR = e;
+            ERROR = e;
             features["unknown-error"] = true;
         }
     }
     return text;
 }
-
-ELTS = []
 
 function get_inherent_size(e) {
     return {
@@ -970,7 +970,7 @@ function get_inherent_size(e) {
     };
 }
 
-RTL_CHARS = "\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC";
+var RTL_CHARS = "\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC";
 
 function is_replaced(elt) {
     return (["IMG", "OBJECT", "INPUT", "IFRAME", "TEXTAREA"].indexOf(elt.tagName.toUpperCase()) !== -1);
@@ -978,6 +978,7 @@ function is_replaced(elt) {
 
 function dump_document(features) {
     var elt = document.documentElement;
+    var ELTS = []
     
     function recurse(elt) {
         if (is_comment(elt)) {
@@ -1039,8 +1040,6 @@ function dump_document(features) {
     return s;
 }
 
-MAX = 0;
-
 function count_distinct(f, arr1, arr2) {
     var h = {};
     var c = 0;
@@ -1060,11 +1059,12 @@ function Ezone() {
     this.right = [];
     this.mark = 0;
     this.prev = null;
-    return this;
 }
 
+var MAX = 0;
+
 Ezone.prototype.add = function(box) {
-    var dir = cs(box).float;
+    var dir = cs(box, "float");
     var steps = this[dir];
     var x = (dir == "left" ? right_outer : left_outer)(box);
     var y = bottom_outer(box);
@@ -1151,6 +1151,7 @@ function annotate_box_elt(box) {
 }
 
 function page2text(name) {
+    LETTER = name;
     var features = {};
 
     var text = "";
@@ -1161,7 +1162,7 @@ function page2text(name) {
             text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
         } catch (e) {
             console.warn(document.styleSheets[sid], e);
-            window.ERROR = e;
+            ERROR = e;
             features["unknown-error"] = true;
         }
     }
@@ -1171,7 +1172,7 @@ function page2text(name) {
     var page = out.view;
     annotate_box_elt(page);
     
-    compute_flt_pointer(page, null);
+    compute_flt_pointer(page, null, null);
     features["float:" + MAX] = true;
     check_float_registers(page, features);
 
@@ -1182,7 +1183,7 @@ function page2text(name) {
     }
     text += ")\n\n";
 
-	text += dump_fonts(name);
+    text += dump_fonts(name, features);
 
     text += "\n\n(define-layout (" + name
     var props = {matched: "true", w: page.props.w, h: page.props.h, fs: 16, scrollw: out.scroll };
@@ -1203,11 +1204,11 @@ function page2text(name) {
     text += "\n  :title " + title;
     text += "\n  :url \""  + location;
     text += "\"\n  :sheets firefox " + name;
-	text += "\n  :fonts " + name;
+    text += "\n  :fonts " + name;
     text += "\n  :documents " + name;
     text += "\n  :layouts " + name;
-    if (window.ERROR) {
-        text += "\n  :error " + dump_string(window.ERROR + "");
+    if (ERROR) {
+        text += "\n  :error " + dump_string(ERROR + "");
         features["unknown-error"] = true;
     }
     text += "\n  :features " + dump_features(features) + ")";
@@ -1218,11 +1219,12 @@ function select_page_text(name) {
     var pre = document.createElement("pre");
     pre.id = "-x-cassius-output-block";
     pre.innerText = page2text(name);
-    with (pre.style) {
-        background = "white", color = "black";
-        position = "absolute", top = "0", left = "0";
-        zIndex = "1000000";
-    }
+    pre.style.background = "white";
+    pre.style.color = "black";
+    pre.style.position = "absolute";
+    pre.style.top = "0";
+    pre.style.left = "0";
+    pre.style.zIndex = "0";
 
     var root = document.querySelector("html");
     if (name) root.appendChild(pre);
@@ -1247,144 +1249,137 @@ function draw_rect(rect) {
 }
 
 function measure_font(font, size, weight, style, txt, baseline) {
-	var canvas = document.createElement("canvas");
-	canvas.font = font;
-	canvas.fontWeight = weight;
-	canvas.fontStyle = style;
-	var context = canvas.getContext("2d");
-	context.font = font;
-	context.fontWeight = weight;
-	context.fontStyle = style;
-	var width = context.measureText(txt).width;
-	canvas.width = width + 1;
-	canvas.height = size * 2;
-	context.font = font;
-	context.fontWeight = weight;
-	context.fontStyle = style;
-	context.fillStyle = "white";
-	context.fillRect(0,0,width + 1,size * 2);
-	context.fillStyle = "black";
-	context.textBaseline = baseline;
-	context.fillText(txt, 0, size);
+    var canvas = document.createElement("canvas");
+    var context = canvas.getContext("2d");
+    var width = context.measureText(txt).width;
+    canvas.width = width + 1;
+    canvas.height = size * 2;
+    context.font = font + " " + weight + style;
+    context.fillStyle = "white";
+    context.fillRect(0,0,width + 1,size * 2);
+    context.fillStyle = "black";
+    context.textBaseline = baseline;
+    context.fillText(txt, 0, size);
 
-	var pixelmap = context.getImageData(0, 0, width, size * 2);
+    var pixelmap = context.getImageData(0, 0, width, size * 2);
 
-	for (var i = 0; i < pixelmap.data.length; i += 4) {
-		var y = Math.floor(i / (width * 4));
-		if (pixelmap.data[i] !== 255) return y;
-	}
-	throw "Could not find any text in image!";
+    for (var i = 0; i < pixelmap.data.length; i += 4) {
+        var y = Math.floor(i / (width * 4));
+        if (pixelmap.data[i] !== 255) return y;
+    }
+    throw "Could not find any text in image!";
 }
 
 function get_font_lineheight(font, weight, style) {
-	var body = document.querySelector("body");
-	var div = document.createElement("CassiusBlock");
-	div.innerHTML = "Hxy";
-	body.appendChild(div);
+    var body = document.querySelector("body");
+    var div = document.createElement("CassiusBlock");
+    div.innerHTML = "Hxy";
+    body.appendChild(div);
 
-	// reset
-	div.style.borderTopStyle = "none";
-	div.style.borderBottomStyle = "none";
-	div.style.paddingTop = "0";
-	div.style.paddingBottom = "0";
-	div.style.height = "auto";
-	div.style.minHeight = "0";
-	div.style.maxHeight = "none";
-	div.style.display = "block";
-	div.style.overflow = "visible";
+    // reset
+    div.style.borderTopStyle = "none";
+    div.style.borderBottomStyle = "none";
+    div.style.paddingTop = "0";
+    div.style.paddingBottom = "0";
+    div.style.height = "auto";
+    div.style.minHeight = "0";
+    div.style.maxHeight = "none";
+    div.style.display = "block";
+    div.style.overflow = "visible";
         div.style.clear = "both";
 
-	div.style.font = font;
-	div.style.fontWeight = weight;
-	div.style.fontStyle = style;
-	div.style.lineHeight = "normal";
+    div.style.font = font;
+    div.style.fontWeight = weight;
+    div.style.fontStyle = style;
+    div.style.lineHeight = "normal";
 
-	var div_rect = div.getBoundingClientRect();
-	var lineheight = div_rect.height;
-	body.removeChild(div);
-	return lineheight;
+    var div_rect = div.getBoundingClientRect();
+    var lineheight = div_rect.height;
+    body.removeChild(div);
+    return lineheight;
 }
 
 function get_font_offsets(font, weight, style, A, D) {
-	var body = document.querySelector("body");
-	var div = document.createElement("CassiusBlock");
-	var span = document.createElement("CassiusInline");
-	span.innerHTML = "Hxy";
-	div.appendChild(span);
-	body.appendChild(div);
+    var body = document.querySelector("body");
+    var div = document.createElement("CassiusBlock");
+    var span = document.createElement("CassiusInline");
+    span.innerHTML = "Hxy";
+    div.appendChild(span);
+    body.appendChild(div);
 
-	// reset
-	div.style.borderTopStyle = "none";
-	div.style.borderBottomStyle = "none";
-	div.style.paddingTop = "0";
-	div.style.paddingBottom = "0";
-	div.style.height = "auto";
-	div.style.minHeight = "0";
-	div.style.maxHeight = "none";
-	div.style.display = "block";
-	div.style.overflow = "visible";
+    // reset
+    div.style.borderTopStyle = "none";
+    div.style.borderBottomStyle = "none";
+    div.style.paddingTop = "0";
+    div.style.paddingBottom = "0";
+    div.style.height = "auto";
+    div.style.minHeight = "0";
+    div.style.maxHeight = "none";
+    div.style.display = "block";
+    div.style.overflow = "visible";
         div.style.clear = "both";
-	span.style.borderTopStyle = "none";
-	span.style.borderBottomStyle = "none";
-	span.style.paddingTop = "0";
-	span.style.paddingBottom = "0";
-	span.style.height = "auto";
-	span.style.minHeight = "0";
-	span.style.maxHeight = "none";
-	span.style.display = "inline";
-	span.style.overflow = "visible";
+    span.style.borderTopStyle = "none";
+    span.style.borderBottomStyle = "none";
+    span.style.paddingTop = "0";
+    span.style.paddingBottom = "0";
+    span.style.height = "auto";
+    span.style.minHeight = "0";
+    span.style.maxHeight = "none";
+    span.style.display = "inline";
+    span.style.overflow = "visible";
 
-	div.style.font = font;
-	div.style.fontWeight = weight;
-	div.style.fontStyle = style;
-	div.style.lineHeight = "10px";
-	span.style.font = font;
-	span.style.fontWeight = weight;
-	span.style.fontStyle = style;
-	span.style.lineHeight = "10px";
+    div.style.font = font;
+    div.style.fontWeight = weight;
+    div.style.fontStyle = style;
+    div.style.lineHeight = "10px";
+    span.style.font = font;
+    span.style.fontWeight = weight;
+    span.style.fontStyle = style;
+    span.style.lineHeight = "10px";
 
-	var span_rect = span.getBoundingClientRect();
-	var div_rect = div.getBoundingClientRect();
+    var span_rect = span.getBoundingClientRect();
+    var div_rect = div.getBoundingClientRect();
 
-	var leading_top = (10 - (A + D))/2;
-	var baseline = div_rect.top + leading_top + A;
-	var top_offset = baseline - span_rect.top - A;
-	var bottom_offset = span_rect.height - (A + D) - top_offset;
+    var leading_top = (10 - (A + D))/2;
+    var baseline = div_rect.top + leading_top + A;
+    var top_offset = baseline - span_rect.top - A;
+    var bottom_offset = span_rect.height - (A + D) - top_offset;
 
-	body.removeChild(div);
+    body.removeChild(div);
 
-	return { top: top_offset, bottom: bottom_offset };
+    return { top: top_offset, bottom: bottom_offset };
 }
 
 function get_font_metrics(font, fname) {
-	if (font.size == 0) return [font.size, dump_string(font.family), font.weight,
-	                            font.style, 0, 0, 0, 0, 0];
-	var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
-	var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
-	var bb = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "bottom");
-	var descent = ba - bb;
-	var ascent = bt - ba;
-	var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
-	var lineheight = get_font_lineheight(font.name, font.weight, font.style);
-	
-	return [font.size, dump_string(font.family), font.weight, font.style,
+    if (font.size == 0) return [font.size, dump_string(font.family), font.weight,
+                                font.style, 0, 0, 0, 0, 0];
+    var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
+    var ba = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "alphabetic");
+    var bb = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "bottom");
+    var descent = ba - bb;
+    var ascent = bt - ba;
+    var offsets = get_font_offsets(font.name, font.weight, font.style, ascent, descent);
+    var lineheight = get_font_lineheight(font.name, font.weight, font.style);
+    
+    return [font.size, dump_string(font.family), font.weight, font.style,
             ascent, descent, offsets.top, offsets.bottom, lineheight];
 }
 
-function dump_fonts(name) {
-	var flist = [];
-	var fonts = Object();
-	var elt = document.documentElement;
-
-	function recurse(elt) {
+function dump_fonts(name, features) {
+    var flist = [];
+    var fonts = Object();
+    var elt = document.documentElement;
+    
+    function recurse(elt) {
         if (elt.nodeType === document.ELEMENT_NODE) {
-			var style = cs(elt);
-			var fname = [style.fontSize, style.fontFamily, style.fontWeight, style.fontStyle].join(" ");
-			var size = val2px(style.fontSize);
-			var font = {name: style.fontSize + " " + style.fontFamily, size: style.fontSize, family: style.fontFamily, size: size, weight: style.fontWeight, style: style.fontStyle};
-
-			if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
-
+            var fs = cs(elt, "font-size"), ff = cs(elt, "font-family")
+            var fw = cs(elt, "font-weight"), fy = cs(elt, "font-style")
+            var fname = [fs, ff, fw, fy].join(" ");
+            var font = { name: fs + " " + ff, size: val2px(fs, features),
+                         family: ff, weight: fw, style: fy };
+            
+        if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
+            
             for (var i = 0; i < elt.childNodes.length; i++) {
                 if (is_comment(elt.childNodes[i])) continue;
                 recurse(elt.childNodes[i]);
@@ -1396,14 +1391,14 @@ function dump_fonts(name) {
 
     var text = "(define-fonts " + name;
     for (var fname of flist) {
-		var font = fonts[fname];
+        var font = fonts[fname];
         var metrics = get_font_metrics(font, fname);
         for (var i = 1; i < metrics.length; i++) {
-	         if (typeof metrics[i] !== "string") {
-	             metrics[i] = f2r(metrics[i]);
-	         }
-		}
-	    text += "\n  [" + metrics.join(" ") + "]";
+             if (typeof metrics[i] !== "string") {
+                 metrics[i] = f2r(metrics[i]);
+             }
+        }
+        text += "\n  [" + metrics.join(" ") + "]";
     }
     text += ")";
 

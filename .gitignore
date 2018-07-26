@@ -19,3 +19,5 @@ __pycache__
 *.bak
 *~
 .DS_Store
+
+capture/*.js

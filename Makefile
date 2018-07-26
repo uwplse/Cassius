@@ -26,12 +26,18 @@ nightly:
 	bash infra/test.sh
 	$(MAKE) publish
 
+# General typescript nonsense
+%.js: %.ts
+	tsc $<
+
 # CSSWG test suite
 
 CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2
 
-bench/css/%.rkt: get_bench.py get_bench.js
-	@ sh bench/css/get.sh $* $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/$*/*.xht))
+bench/css/%.rkt: capture/capture.py capture/get_bench.js
+	@ xvfb-run -a -s '-screen 0 1920x1080x24' \
+	    python3 capture/capture.py --output bench/css/$*.rkt \
+		$(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/$*/*.xht))
 
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
 	racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg $^
@@ -46,10 +52,10 @@ bench/css/index.json:
 
 FWT_PATH=$(HOME)/src/fwt
 
-bench/fwt.rkt: get_bench.py get_bench.js $(wildcard $(FWT_PATH)/*/*/)
+bench/fwt.rkt: capture/capture.py capture/get_bench.js $(wildcard $(FWT_PATH)/*/*/)
 # Note that the "2-with-javascript" bit handles a special case for the childrensappwebsitetemplate
 	xvfb-run -a -s '-screen 0 1920x1080x24' \
-	    python3 get_bench.py --name fwt \
+	    python3 capture/capture.py --output bench/fwt.rkt \
 	        $(shell find $(wildcard $(FWT_PATH)/*/*) \
 	              -name 'index.html' -not -path '*2-with-javascript*' )
 
@@ -77,7 +83,7 @@ reports/modular.html reports/modular.json: bench/fwt.proof bench/joel.proof benc
 
 # Joel on Software blog posts
 bench/joel.rkt: bench/joel/joel.js
-	python3 get_bench.py --name joel --prerun bench/joel/joel.js \
+	python3 capture/capture.py --output bench/joel.rkt --prerun bench/joel/joel.js \
 		"https://www.joelonsoftware.com/2018/04/13/gamification/" \
 		"https://www.joelonsoftware.com/2018/04/06/the-stack-overflow-age/" \
 		"https://preview.arraythemes.com/editor/2014/05/11/knobs-buttons-and-dials/"
