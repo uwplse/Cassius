@@ -187,7 +187,6 @@ function convert_offset(offset, elt) {
     } else {
         return val2px(offset, {});
     }
-    throw "Error weird offset value " + offset;
 }
 
 function get_margins(elt) {
