@@ -30,11 +30,15 @@ nightly:
 %.js: %.ts
 	tsc $<
 
+# We do not exactly need Rollup or Webpack here...
+capture/all.js: $(filter-out capture/all.js, $(wildcard capture/*.js))
+	echo "exports = window; function require() { return window; }" | cat - $^ > $@
+
 # CSSWG test suite
 
 CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2
 
-bench/css/%.rkt: capture/capture.py capture/get_bench.js
+bench/css/%.rkt: capture/capture.py capture/all.js
 	@ xvfb-run -a -s '-screen 0 1920x1080x24' \
 	    python3 capture/capture.py --output bench/css/$*.rkt \
 		$(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/$*/*.xht))
@@ -52,7 +56,7 @@ bench/css/index.json:
 
 FWT_PATH=$(HOME)/src/fwt
 
-bench/fwt.rkt: capture/capture.py capture/get_bench.js $(wildcard $(FWT_PATH)/*/*/)
+bench/fwt.rkt: capture/capture.py capture/all.js $(wildcard $(FWT_PATH)/*/*/)
 # Note that the "2-with-javascript" bit handles a special case for the childrensappwebsitetemplate
 	xvfb-run -a -s '-screen 0 1920x1080x24' \
 	    python3 capture/capture.py --output bench/fwt.rkt \
@@ -82,7 +86,7 @@ reports/modular.html reports/modular.json: bench/fwt.proof bench/joel.proof benc
 	racket src/report.rkt proofs $(FLAGS) --show-all --timeout 600 -o reports/modular $^
 
 # Joel on Software blog posts
-bench/joel.rkt: bench/joel/joel.js
+bench/joel.rkt: bench/joel/joel.js capture/all.js
 	python3 capture/capture.py --output bench/joel.rkt --prerun bench/joel/joel.js \
 		"https://www.joelonsoftware.com/2018/04/13/gamification/" \
 		"https://www.joelonsoftware.com/2018/04/06/the-stack-overflow-age/" \

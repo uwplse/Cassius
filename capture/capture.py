@@ -51,7 +51,7 @@ def main(urls, prerun=None, fd=None):
             try:
                 browser.get(url)
                 if prerun: browser.execute_script(prerun)
-                text = browser.execute_script(jsfile("get_bench.js") + "; return page2text(arguments[0]);", "doc-" + id).encode("utf8")
+                text = browser.execute_script(jsfile("all.js") + "; return page2text(arguments[0]);", "doc-" + id).encode("utf8")
                 fd.write(";; From ")
                 fd.write(url)
                 fd.write("\n\n")

@@ -1053,89 +1053,6 @@ function count_distinct(f, arr1, arr2) {
     return c;
 }
 
-function Ezone() {
-    this.left = [];
-    this.right = [];
-    this.mark = 0;
-    this.prev = null;
-}
-
-var MAX = 0;
-
-Ezone.prototype.add = function(box) {
-    var dir = cs(box, "float");
-    var steps = this[dir];
-    var x = (dir == "left" ? right_outer : left_outer)(box);
-    var y = bottom_outer(box);
-    var mark = top_outer(box);
-    for (var i = 0; i < steps.length; i++) {
-        if (!steps[i]) continue;
-        if (bottom_outer(steps[i]) < mark) {
-            steps[i] = null;
-            continue;
-        }
-        if (bottom_outer(steps[i]) == y) {
-            steps[i] = null;
-            continue;
-        }
-    }
-    var i = 0;
-    while (i < steps.length) {
-        if (steps[i]) i++
-        else steps.splice(i, 1);
-    }
-    steps.push(box);
-    this.mark = Math.max(this.mark, mark);
-    this.prev = box;
-
-    MAX = Math.max(count_distinct(function(x) {return bottom_outer(x)}, this.left, this.right), MAX);
-}
-
-Ezone.prototype.clone = function() {
-    var x = new Ezone();
-    x.left = this.left.slice();
-    x.right = this.right.slice();
-    x.mark = this.mark;
-    x.prev = this.prev;
-    return x;
-}
-
-function compute_flt_pointer(box, prev, vbox) {
-    box.flt = prev || new Ezone();
-    box.vbox = vbox;
-    if (box.node && is_float(box.node)) {
-        prev = null;
-        vbox = null;
-        for (var i = 0; i < box.children.length; i++) {
-            prev = compute_flt_pointer(box.children[i], prev, vbox);
-            vbox = box;
-        }
-        var out = box.flt.clone();
-        out.add(box.node);
-        return out;
-    } else {
-        vbox = null;
-        for (var i = 0; i < box.children.length; i++) {
-            prev = compute_flt_pointer(box.children[i], prev, vbox);
-            vbox = box;
-        }
-        return prev;
-    }
-}
-
-function check_float_registers(box, features) {
-    if (box.type === "TEXT") {
-        if (box.props.y < box.flt.mark) {
-            add_feature(box, "exclusion-zone");
-            features["exclusion-zone"] = true;
-        }
-    }
-
-    for (var i = 0; i < box.children.length; i++) {
-        check_float_registers(box.children[i], features);
-    }
-}
-
 function annotate_box_elt(box) {
 
     if (box.node && box.node.nodeType === document.ELEMENT_NODE) {
@@ -1148,6 +1065,8 @@ function annotate_box_elt(box) {
         annotate_box_elt(box.children[i]);
     }
 }
+
+import { MAX, compute_flt_pointer, check_float_registers } from "./ezone"
 
 function page2text(name) {
     LETTER = name;
