@@ -106,6 +106,22 @@
   (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))))
   (call-with-output-file output #:exists 'replace (curry displayln out)))
 
+(define (do-verify problem)
+  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
+  (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
+    [(success stylesheet trees doms test)
+     (eprintf "Counterexample found to ~a!\n" test)
+     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
+     (printf "\n\nConfiguration:\n")
+     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
+       (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
+    [(failure stylesheet trees)
+     (eprintf "Verified.\n")]
+    [(list 'error e)
+     ((error-display-handler) (exn-message e) e)]
+    ['break
+     (eprintf "Terminated.\n")]))
+
 (define (do-minimize-assertion problem cache)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (parameterize ([*fuzz* #f]) (solve-problem problem*))

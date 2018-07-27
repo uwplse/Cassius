@@ -62,13 +62,14 @@ def main(urls, prerun=None, fd=None):
                 import traceback
                 traceback.print_exc()
                 continue
+        print(file=sys.stderr)
     finally:
         browser.quit()
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
-    p.add_argument("--output", type=argparse.FileType('w'), help="File name under bench/.")
+    p.add_argument("--output", type=argparse.FileType('w'), default=sys.stdout, help="File name under bench/.")
     p.add_argument("--prerun", type=argparse.FileType('r'), help="JS file to run before capturing.")
     args = p.parse_args()
     
