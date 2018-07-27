@@ -52,18 +52,6 @@
     ['break
      (printf "Terminated.\n")]))
 
-(define (do-debug problem)
-  (match (solve-problem problem)
-    [(success stylesheet trees doms test)
-     (eprintf "Different renderings possible.\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs))))]
-    [(failure stylesheet trees)
-     (displayln (stylesheet->string stylesheet))]
-    [(list 'error e)
-     ((error-display-handler) (exn-message e) e)]
-    ['break
-     (eprintf "Terminated.\n")]))
-
 (define (do-dump problem #:screenshot [screenshot #f])
   (match-define (list (dom _ _ _ tree)) (dict-ref problem ':documents))
   (define w (node-get tree ':w))
@@ -117,22 +105,6 @@
     (set! problem (dict-update problem ':documents (curry map dom-strip-positions))))
   (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))))
   (call-with-output-file output #:exists 'replace (curry displayln out)))
-
-(define (do-verify problem)
-  (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
-  (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
-    [(success stylesheet trees doms test)
-     (eprintf "Counterexample found to ~a!\n" test)
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
-     (printf "\n\nConfiguration:\n")
-     (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
-       (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
-    [(failure stylesheet trees)
-     (eprintf "Verified.\n")]
-    [(list 'error e)
-     ((error-display-handler) (exn-message e) e)]
-    ['break
-     (eprintf "Terminated.\n")]))
 
 (define (do-minimize-assertion problem cache)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
@@ -196,9 +168,7 @@
   components)
 
 (module+ main
-  (define debug '())
   (define screenshot #f)
-
   (define render? #f)
 
   (multi-command-line
@@ -242,15 +212,12 @@
       (dict-set prob ':documents documents)
       ':test (list (dict-ref assertions (string->symbol assertion))))
      cache)]
-   ["debug"
-    #:args (fname problem)
-    (do-debug (get-problem fname problem))]
    ["dump"
     #:once-each
     [("--screenshot") sname "File with a web page screenshot"
      (set! screenshot sname)]
     #:args (fname problem)
-    (do-debug (get-problem fname problem))]
+    (do-dump (get-problem fname problem) #:screenshot screenshot)]
    ["render"
     #:args (fname problem)
     (do-render (get-problem fname problem))]
@@ -263,9 +230,6 @@
      (set! render? #t)]
     #:args (fname problem output)
     (do-smt2 (get-problem fname problem) output #:render? render?)]
-   ["verify"
-    #:args (fname problem)
-    (do-verify (get-problem fname problem))]
    ["check-proof"
     #:args (proof-file [proof-name #f] [page-name #f] [component-name #f])
     (do-check-proof
