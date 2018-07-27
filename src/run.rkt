@@ -155,10 +155,8 @@
     ['break
      (eprintf "Terminated.\n")]))
 
-(define (do-check-proof proof #:component [subcomponent #f])
-  (for ([component proof] [i (in-naturals 1)]
-        #:when (or (not subcomponent)
-                   (equal? subcomponent (or (first (dict-ref component ':name (list i))) i))))
+(define (do-check-proof proof)
+  (for ([component proof] [i (in-naturals 1)])
     (eprintf "Verifying ~a with ~a.\n"
              (first (dict-ref component ':name (list i)))
              (first (dict-ref component ':tool '(assert))))
@@ -182,21 +180,25 @@
 (define (get-problem fname pname)
   (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
 
-(define (get-proof fname pname gname)
-  (hash-ref
-   (hash-ref
+(define (get-proof fname pname gname cname)
+  (define files
     (call-with-input-file fname
       (λ (p) 
-         (parameterize ([current-directory (path-tail fname)])
-           (read-proofs p))))
-    (string->symbol pname))
-   (string->symbol gname)))
+        (parameterize ([current-directory (path-tail fname)])
+          (list (read-proofs p))))))
+  (define proofs (append-map (if pname (compose list (curryr hash-ref pname)) hash-values) files))
+  (define pages (append-map (if gname (compose list (curryr hash-ref gname)) hash-values) proofs))
+  (define components
+    (for/list ([page pages] #:when true
+               [c page] [i (in-naturals 1)]
+               #:when (or (not cname) (equal? (list cname) (dict-ref c ':name (list i)))))
+      c))
+  components)
 
 (module+ main
   (define debug '())
   (define screenshot #f)
 
-  (define subcomponent #f)
   (define render? #f)
 
   (multi-command-line
@@ -265,11 +267,12 @@
     #:args (fname problem)
     (do-verify (get-problem fname problem))]
    ["check-proof"
-    #:once-each
-    [("--component") component "Only verify a subcomponent (for debugging)"
-     (set! subcomponent (or (string->number component) (string->symbol component)))]
-    #:args (proof-file proof-name page-name)
-    (do-check-proof (get-proof proof-file proof-name page-name) #:component subcomponent)]
+    #:args (proof-file [proof-name #f] [page-name #f] [component-name #f])
+    (do-check-proof
+     (get-proof proof-file
+                (and proof-name (string->symbol proof-name))
+                (and page-name (string->symbol page-name))
+                (and component-name (or (string->number component-name) (string->symbol component-name)))))]
    ["assertion"
     #:args (aname assertion fname problem)
     (define prob (get-problem fname problem))
