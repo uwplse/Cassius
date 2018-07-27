@@ -26,13 +26,11 @@ nightly:
 	bash infra/test.sh
 	$(MAKE) publish
 
-# General typescript nonsense
-%.js: %.ts
-	tsc $<
-
 # We do not exactly need Rollup or Webpack here...
-capture/all.js: $(filter-out capture/all.js, $(wildcard capture/*.js))
-	echo "exports = window; function require() { return window; }" | cat - $^ > $@
+capture/all.js:
+	tsc --project capture/
+	echo "exports = window; function require() { return window; }" | \
+	    cat - $(filter-out capture/all.js, $(wildcard capture/*.js)) > $@
 
 # CSSWG test suite
 

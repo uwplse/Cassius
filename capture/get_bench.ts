@@ -6,9 +6,16 @@ var Props = "width height margin-top margin-right margin-bottom margin-left padd
 var BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
 var BadTags = "img iframe input svg:svg button frame noframes".split(" ");
 
-var Box = function(type, node, props) {
-    this.children = [];
-    this.type = type; this.props = props; this.node = node;
+class Box {
+    children : Box[];
+    type : string;
+    props : any;
+    node : Node;
+
+    constructor(type, node, props) {
+        this.children = [];
+        this.type = type; this.props = props; this.node = node;
+    }
 }
 function curry(f, arg) { return function(arg1, arg2) { return new f(arg, arg1, arg2) }}
 var Block = curry(Box, "BLOCK");
@@ -18,12 +25,6 @@ var Page = curry(Box, "PAGE")
 var TextBox = curry(Box, "TEXT")
 var Magic = curry(Box, "MAGIC")
 var Anon = curry(Box, "ANON")
-
-function add_feature(box, feature) {
-    var props = box.props["features"] || []
-    props.push(feature)
-    box.props["features"] = props;
-}
 
 Box.prototype.toString = function() {
     var s = "[" + this.type;
@@ -46,7 +47,7 @@ function gensym() {
 }
 
 var APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
-var DIVISORS = [];
+var DIVISORS : number[] = [];
 
 for (var i = 1; i * i < APP_PIXEL_TO_PIXELS; i++) {
     if (APP_PIXEL_TO_PIXELS % i == 0) {
@@ -78,6 +79,8 @@ function f2q(x) {
             return { num: xm / div, denom: APP_PIXEL_TO_PIXELS / div };
         }
     }
+
+    throw "Insufficiently many divisors!";
 }
 
 function val2px(val, features) {
@@ -106,8 +109,7 @@ function val2px(val, features) {
     }
 }
 
-function val2pct(val, features) {
-    var match;
+function val2pct(val : string, _) {
     if (val.match(/^[-+0-9.e]+%$/)) {
         return +val.substr(0, val.length - 1);
     } else {
@@ -116,7 +118,6 @@ function val2pct(val, features) {
 }
 
 function val2em(val, features) {
-    var match;
     if (val.match(/^[-+0-9.e]+em$/)) {
         return +val.substr(0, val.length - 2);
     } else if (val.match(/^[-+0-9.e]+rem$/)) {
@@ -145,23 +146,10 @@ function is_block(elt) {
           cs(elt, "list-style-type") == "none"));
 }
 function is_visible(elt) {return cs(elt, "display") != "none";}
-function is_float(elt) {
-    return elt.nodeType === document.ELEMENT_NODE &&
-        cs(elt, "float") != "none";
-}
 
 function is_flow_block(elt) {
     return elt.nodeType == document.ELEMENT_NODE &&
         cs(elt, "float") === "none" && ["static", "relative"].indexOf(cs(elt, "position")) !== -1;
-}
-
-function is_flowroot(elt) {
-    // CSS3BOX §4.2
-    // Block progression possibilities ignored, because block;-progression assumed to be `tb`
-    return elt.nodeType == document.ELEMENT_NODE &&
-        (cs(elt, "float") !== "none" || cs(elt, "overflow") !== "visible" ||
-         ["table-cell", "table-caption", "inline-block;", "inline-table"].indexOf(cs(elt, "display")) !== -1 ||
-         ["static", "relative"].indexOf(cs(elt, "position")) === -1);
 }
 
 function get_fontsize(elt) {
@@ -205,47 +193,6 @@ function get_relative_offset(elt) {
     }
 }
 
-function top_outer(elt) {
-    return elt.getBoundingClientRect().top - convert_margin(cs(elt, "margin-top"), elt);
-}
-
-function top_content(elt) {
-    return elt.getBoundingClientRect().top + elt.clientTop + convert_margin(cs(elt, "padding-top"), elt);
-}
-
-function right_outer(elt) {
-    return elt.getBoundingClientRect().right - convert_margin(cs(elt, "margin-right"), elt);
-}
-
-function right_content(elt) {
-    return elt.getBoundingClientRect().left + elt.clientLeft + elt.clientWidth - convert_margin(cs(elt, "padding-right"), elt);
-}
-
-function bottom_outer(elt) {
-    return elt.getBoundingClientRect().bottom + convert_margin(cs(elt, "margin-bottom"), elt);
-}
-
-function left_outer(elt) {
-    return elt.getBoundingClientRect().left - convert_margin(cs(elt, "margin-left"), elt);
-}
-
-function left_content(elt) {
-    return elt.getBoundingClientRect().left + elt.clientLeft + convert_margin(cs(elt, "padding-left"), elt);
-}
-
-function horizontally_adjacent(e1, e2) {
-    var b1 = bottom_outer(e1), t1 = top_outer(e1), b2 = bottom_outer(e2), t2 = top_outer(e2);
-    if (b1 >= t2 && t2 >= t1 || b2 >= t1 && t1 >= t2) {
-        if (t1 == t2 && b1 == b2) {
-            return t1 != b2;
-        } else {
-            return true;
-        }
-    } else {
-        return false;
-    }
-}
-
 function find_first_break(txt, loff, roff) {
     if (loff !== loff || roff !== roff) throw "Error";
     if (roff - loff < 2) return roff;
@@ -270,7 +217,7 @@ function find_first_break(txt, loff, roff) {
 }
 
 function get_lines(txt) {
-    var ranges = [];
+    var ranges : Range[] = [];
     var cursor = 0;
     var r =  new Range();
     r.selectNode(txt);
@@ -288,36 +235,9 @@ function get_lines(txt) {
     return ranges;
 }
 
-function is_text_container(elt) {
-    var has_inline = false, has_block = false, has_text = false;
-    for (var i = 0; i < elt.childNodes.length; i++) {
-        var child = elt.childNodes[i];
-        if (is_comment(child)) continue
-        else if (is_text(child) && child.textContent.search(/^\s+$/) === -1) has_text = true;
-        else if (is_text(child)) continue;
-        else if (is_block(child)) has_block = true;
-        else if (is_inline(child)) has_inline = true;
-        else continue;
-    }
-    return (has_inline || has_text) && !has_block;
-}
-
-function contains_text(elt) {
-    var has_inline = false, has_nf_block = false, has_text = false;
-    for (var i = 0; i < elt.childNodes.length; i++) {
-        var child = elt.childNodes[i];
-        if (is_comment(child)) continue
-        else if (is_text(child) && child.textContent.search(/^\s+$/) === -1) has_text = true;
-        else if (is_text(child)) continue;
-        else if (is_inline(child)) has_inline = true;
-        else continue;
-    }
-    return has_inline || has_text;
-}
-
 function infer_anons(inputs) {
     var estack = [inputs];
-    var out = [];
+    var out : Box[] = [];
     var bstack = [out];
     var block_mode = true;
 
@@ -445,8 +365,8 @@ function infer_lines(box, parent) {
         }
     }
 
-    var stack = [];
-    var sstack = [];
+    var stack : Box[] = [];
+    var sstack : Box[] = [];
     var last = false;
     function go(b) {
         if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
@@ -485,14 +405,20 @@ function infer_lines(box, parent) {
     }
 }
 
+declare global {
+    interface ClientRect {
+        x: number; y: number; top: number; right: number; bottom: number; left: number;
+    }
+}
+
 function extract_text(elt) {
-    var outs = [];
+    var outs : Box[] = [];
     var ranges = get_lines(elt);
     for (var i = 0; i < ranges.length; i++) {
-        var r = ranges[i].getClientRects();
-        if (r.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
-        if (r.length < 1) continue;
-        r = r[0];
+        var rs = ranges[i].getClientRects();
+        if (rs.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
+        if (rs.length < 1) continue;
+        var r = rs[0];
         var box = TextBox(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
         box.props.text = dump_string(ranges[i].toString().replace(/\s+/g, " "));
         outs.push(box);
@@ -541,7 +467,6 @@ function extract_inline(elt, children) {
 
 function extract_magic(elt, children) {
     var r = elt.getBoundingClientRect();
-    var s = cs(elt, "")
     var box = Magic(elt, {
         x: r.x, y: r.y, w: r.width, h: r.height
     });
@@ -582,7 +507,7 @@ function make_boxes(elt, styles, features) {
         features["list:inside"] = true;
     }
 
-    var children = [];
+    var children : Box[] = [];
     for (var i = 0; i < elt.childNodes.length; i++) {
         children = children.concat(make_boxes(elt.childNodes[i], styles, features));
     }
@@ -714,7 +639,7 @@ function dump_primitive_selector(sel) {
 
 function rescue_selector(sel) {
     var matched = document.querySelectorAll(sel);
-    var ids = [];
+    var ids : string[] = [];
     for (var i = 0; i < matched.length; i++) {
         if (matched[i].id) {
             ids.push(matched[i].id);
@@ -757,9 +682,11 @@ function dump_color(val, features) {
             return "transparent";
         } else {
             features["color:rgba"] = true;
+            return "(rgba " + match[1] + " " + match[2] + " " + match[3] + " " + match[4] + ")";
         }
     } else {
         features["color:" + val.split("(", 1)[0]] = true;
+        throw "Invalid color " + val;
     }
 }
 
@@ -779,8 +706,6 @@ function dump_rule(sel, style, features, is_from_style, media) {
     }
     var text = "";
     var has_good_prop = false;
-
-    var em2px = null;
 
     for (var i = 0; i < style.length; i++) {
         var sname = style[i];
@@ -969,7 +894,7 @@ function get_inherent_size(e) {
     };
 }
 
-var RTL_CHARS = "\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC";
+var RTL_CHARS = /[\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC]/;
 
 function is_replaced(elt) {
     return (["IMG", "OBJECT", "INPUT", "IFRAME", "TEXTAREA"].indexOf(elt.tagName.toUpperCase()) !== -1);
@@ -977,13 +902,13 @@ function is_replaced(elt) {
 
 function dump_document(features) {
     var elt = document.documentElement;
-    var ELTS = []
+    var ELTS : Node[] = []
     
     function recurse(elt) {
         if (is_comment(elt)) {
             return false;
         } else if (is_text(elt)) {
-            if (/[\u0591-\u07FF\uFB1d-\uFDFD\uFE70-\uFEFC]/.test(elt.textContent)) {
+            if (RTL_CHARS.test(elt.textContent)) {
                 features["unicode:rtl"] = true;
             }
             var r = new Range();
@@ -1039,20 +964,6 @@ function dump_document(features) {
     return s;
 }
 
-function count_distinct(f, arr1, arr2) {
-    var h = {};
-    var c = 0;
-    for (var i = 0; i < arr1.length; i++) {
-        if (!h[f(arr1[i])]) c++;
-        h[f(arr1[i])] = true;
-    }
-    for (var i = 0; i < arr2.length; i++) {
-        if (!h[f(arr2[i])]) c++;
-        h[f(arr2[i])] = true;
-    }
-    return c;
-}
-
 function annotate_box_elt(box) {
 
     if (box.node && box.node.nodeType === document.ELEMENT_NODE) {
@@ -1068,7 +979,7 @@ function annotate_box_elt(box) {
 
 import { MAX, compute_flt_pointer, check_float_registers } from "./ezone"
 
-function page2text(name) {
+export function page2text(name) {
     LETTER = name;
     var features = {};
 
@@ -1133,42 +1044,10 @@ function page2text(name) {
     return text;
 }
 
-function select_page_text(name) {
-    var pre = document.createElement("pre");
-    pre.id = "-x-cassius-output-block";
-    pre.innerText = page2text(name);
-    pre.style.background = "white";
-    pre.style.color = "black";
-    pre.style.position = "absolute";
-    pre.style.top = "0";
-    pre.style.left = "0";
-    pre.style.zIndex = "0";
-
-    var root = document.querySelector("html");
-    if (name) root.appendChild(pre);
-
-    var r = document.createRange();
-    r.selectNodeContents(pre);
-
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(r);
-}
-
-function draw_rect(rect) {
-    var d = document.createElement("CassiusRect");
-    d.style.position = "absolute";
-    d.style.top = rect.top + "px";
-    d.style.left = rect.left + "px";
-    d.style.width = rect.width + "px";
-    d.style.height = rect.height + "px";
-    d.style.outline = "1px solid red";
-    document.querySelector("html").appendChild(d);
-}
-
 function measure_font(font, size, weight, style, txt, baseline) {
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
+    if (!context) throw "Could not create 2D canvas context"
     var width = context.measureText(txt).width;
     canvas.width = width + 1;
     canvas.height = size * 2;
@@ -1190,6 +1069,7 @@ function measure_font(font, size, weight, style, txt, baseline) {
 
 function get_font_lineheight(font, weight, style) {
     var body = document.querySelector("body");
+    if (!body) throw "No body element??"
     var div = document.createElement("CassiusBlock");
     div.innerHTML = "Hxy";
     body.appendChild(div);
@@ -1219,6 +1099,7 @@ function get_font_lineheight(font, weight, style) {
 
 function get_font_offsets(font, weight, style, A, D) {
     var body = document.querySelector("body");
+    if (!body) throw "No body element??"
     var div = document.createElement("CassiusBlock");
     var span = document.createElement("CassiusInline");
     span.innerHTML = "Hxy";
@@ -1268,7 +1149,7 @@ function get_font_offsets(font, weight, style, A, D) {
     return { top: top_offset, bottom: bottom_offset };
 }
 
-function get_font_metrics(font, fname) {
+function get_font_metrics(font) {
     if (font.size == 0) return [font.size, dump_string(font.family), font.weight,
                                 font.style, 0, 0, 0, 0, 0];
     var bt = measure_font(font.name, font.size, font.weight, font.style, "Hxy", "top");
@@ -1284,7 +1165,7 @@ function get_font_metrics(font, fname) {
 }
 
 function dump_fonts(name, features) {
-    var flist = [];
+    var flist : string[] = [];
     var fonts = Object();
     var elt = document.documentElement;
     
@@ -1310,7 +1191,7 @@ function dump_fonts(name, features) {
     var text = "(define-fonts " + name;
     for (var fname of flist) {
         var font = fonts[fname];
-        var metrics = get_font_metrics(font, fname);
+        var metrics = get_font_metrics(font);
         for (var i = 1; i < metrics.length; i++) {
              if (typeof metrics[i] !== "string") {
                  metrics[i] = f2r(metrics[i]);
