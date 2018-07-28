@@ -26,13 +26,24 @@ def measure_scrollbar(browser):
     browser.get("about:blank");
     browser.execute_script(jsfile("scrollbar.js") + "; estimate_scrollbar()");
 
-def make_browser():
-    profile = webdriver.FirefoxProfile()
-    profile.set_preference("security.mixed_content.block_active_content", False)
-    profile.set_preference("security.mixed_content.block_display_content", False)
-    return webdriver.Firefox(firefox_profile=profile)
+def make_browser(browser):
+    if browser == "firefox":
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference("security.mixed_content.block_active_content", False)
+        profile.set_preference("security.mixed_content.block_display_content", False)
+        return webdriver.Firefox(firefox_profile=profile)
+    elif browser == "chrome":
+        from selenium.webdriver.chrome.options import Options
+        opts = Options()
+        opts.add_argument("--disable-web-security")
+        opts.add_argument("--start-maximized")
+        opts.add_argument("--allow-running-insecure-content")
+        opts.add_argument('--headless')
+        return webdriver.Chrome(chrome_options=opts)
+    else:
+        raise ValueError("Unknown browser" + browser)
 
-def main(urls, prerun=None, fd=None):
+def main(urls, prerun=None, fd=None, browser="firefox"):
     urls = sorted([url if "://" in url else "file://" + os.path.abspath(url)
                    for url in urls])
 
@@ -42,16 +53,20 @@ def main(urls, prerun=None, fd=None):
             warnings.warn("Only http and file scheme supported (not {})".format(scheme))
     
     try:
-        browser = make_browser()
-        measure_scrollbar(browser)
+        client = make_browser(browser)
+        measure_scrollbar(client)
     
         print("Saving layout to {}:".format(fd.name), file=sys.stderr, end=" ")
         for i, url in enumerate(urls):
             id = str(i+1).rjust(len(str(len(urls))), "0")
             try:
-                browser.get(url)
-                if prerun: browser.execute_script(prerun)
-                text = browser.execute_script(jsfile("all.js") + "; return page2text(arguments[0]);", "doc-" + id).encode("utf8")
+                client.get(url)
+                if prerun: client.execute_script(prerun)
+                out = client.execute_script(jsfile("all.js") + "; try { return page2text(arguments[0], arguments[1]); } catch (e) { return e }", "doc-" + id, browser)
+                if isinstance(out, str):
+                    text = out.encode("utf8")
+                else:
+                    raise Exception(out["msg"])
                 fd.write(";; From ")
                 fd.write(url)
                 fd.write("\n\n")
@@ -64,14 +79,15 @@ def main(urls, prerun=None, fd=None):
                 continue
         print(file=sys.stderr)
     finally:
-        browser.quit()
+        client.quit()
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Download a website as Cassius test cases")
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
+    p.add_argument("--browser", default="firefox", help="Which browser to use")
     p.add_argument("--output", type=argparse.FileType('w'), default=sys.stdout, help="File name under bench/.")
     p.add_argument("--prerun", type=argparse.FileType('r'), help="JS file to run before capturing.")
     args = p.parse_args()
     
     prerun = args.prerun.read() if args.prerun else None
-    main(args.urls, prerun=prerun, fd=args.output)
+    main(args.urls, prerun=prerun, fd=args.output, browser=args.browser)

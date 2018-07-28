@@ -26,6 +26,13 @@ var TextBox = curry(Box, "TEXT")
 var Magic = curry(Box, "MAGIC")
 var Anon = curry(Box, "ANON")
 
+class Exception {
+    msg : string;
+    constructor(msg) {
+        this.msg = msg;
+    }
+}
+
 Box.prototype.toString = function() {
     var s = "[" + this.type;
     for (var i in this.props) {
@@ -80,7 +87,7 @@ function f2q(x) {
         }
     }
 
-    throw "Insufficiently many divisors!";
+    throw new Exception("Insufficiently many divisors!");
 }
 
 function val2px(val, features) {
@@ -103,9 +110,9 @@ function val2px(val, features) {
         return +val.substr(0, val.length - 2)*96;
     } else if (match = val.match(/^([-+0-9.e]+)([a-z]+)$/)) {
         features["unit:" + match[2]] = true;
-        throw "Error, " + val + " is not a known unit";
+        throw new Exception("Error, " + val + " is not a known unit");
     } else {
-        throw "Error, " + val + " is not a pixel quantity."
+        throw new Exception("Error, " + val + " is not a pixel quantity.");
     }
 }
 
@@ -113,7 +120,7 @@ function val2pct(val : string, _) {
     if (val.match(/^[-+0-9.e]+%$/)) {
         return +val.substr(0, val.length - 1);
     } else {
-        throw "Error, " + val + " is not a percentage quantity."
+        throw new Exception("Error, " + val + " is not a percentage quantity.")
     }
 }
 
@@ -126,7 +133,7 @@ function val2em(val, features) {
         features["unit:ex"] = true;
         return +val.substr(0, val.length - 2) / 16 * 9;
     } else {
-        throw "Error, " + val + " is not a em quantity."
+        throw new Exception("Error, " + val + " is not a em quantity.")
     }
 }
 
@@ -157,14 +164,14 @@ function get_fontsize(elt) {
     try { return val2px(fs, {}) } catch (e) {}
     try { return val2pct(fs, {}) * get_fontsize(elt.parentNode) / 100 } catch (e) {}
     try { return val2em(fs, {}) * get_fontsize(elt.parentNode) } catch (e) {}
-    throw "Error weird font-size value " + fs;
+    throw new Exception("Error weird font-size value " + fs);
 }
 
 function convert_margin(margin, elt) {
     try { return val2px(margin, {}) } catch (e) {}
     try { return val2pct(margin, {}) * elt.clientWidth } catch (e) {}
     try { return val2em(margin, {}) * get_fontsize(elt) } catch (e) {}
-    throw "Error weird margin value `" + margin + "`";
+    throw new Exception("Error weird margin value `" + margin + "`");
 }
 
 function convert_offset(offset, elt) {
@@ -194,7 +201,7 @@ function get_relative_offset(elt) {
 }
 
 function find_first_break(txt, loff, roff) {
-    if (loff !== loff || roff !== roff) throw "Error";
+    if (loff !== loff || roff !== roff) throw new Exception("Error");
     if (roff - loff < 2) return roff;
     if (roff - loff == 2) {
         var r2 = new Range();
@@ -205,14 +212,19 @@ function find_first_break(txt, loff, roff) {
     }
 
     var mid = Math.round(loff + (roff - loff) / 2);
+    var r1 = new Range();
+    r1.setStart(txt, loff);
+    r1.setEnd(txt, mid);
     var r2 = new Range();
-    r2.setStart(txt, loff);
-    r2.setEnd(txt, mid);
+    r2.setStart(txt, mid);
+    r2.setEnd(txt, roff);
 
-    if (r2.getClientRects().length > 1) {
+    if (r1.getClientRects().length > 1) {
         return find_first_break(txt, loff, mid);
-    } else {
+    } else if (r2.getClientRects().length > 1) {
         return find_first_break(txt, mid - 1, roff);
+    } else {
+        return mid;
     }
 }
 
@@ -281,7 +293,7 @@ function infer_anons(inputs) {
                 bstack[bstack.length - 1].push(e);
                 estack[estack.length - 1].shift();
             } else {
-                throw "What happened? " + e;
+                throw new Exception("What happened? " + e);
             }
         } else {
             if (!block_mode) bstack.pop();
@@ -416,7 +428,7 @@ function extract_text(elt) {
     var ranges = get_lines(elt);
     for (var i = 0; i < ranges.length; i++) {
         var rs = ranges[i].getClientRects();
-        if (rs.length > 1) throw "Error, multiple lines in one line: "+ranges[i].toString();
+        if (rs.length > 1) throw new Exception("Error, multiple lines in one line: "+ranges[i].toString());
         if (rs.length < 1) continue;
         var r = rs[0];
         var box = TextBox(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
@@ -686,7 +698,7 @@ function dump_color(val, features) {
         }
     } else {
         features["color:" + val.split("(", 1)[0]] = true;
-        throw "Invalid color " + val;
+        throw new Exception("Invalid color " + val);
     }
 }
 
@@ -979,14 +991,13 @@ function annotate_box_elt(box) {
 
 import { MAX, compute_flt_pointer, check_float_registers } from "./ezone"
 
-export function page2text(name) {
+export function page2text(name, browser) {
     LETTER = name;
     var features = {};
 
     var text = "";
     text += "(define-stylesheet " + name;
     for (var sid in document.styleSheets) {
-        console.log("Reading", sid, document.styleSheets[sid]);
         try {
             text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
         } catch (e) {
@@ -1032,7 +1043,7 @@ export function page2text(name) {
     text += "(define-problem " + name;
     text += "\n  :title " + title;
     text += "\n  :url \""  + location;
-    text += "\"\n  :sheets firefox " + name;
+    text += "\"\n  :sheets " + browser + " " + name;
     text += "\n  :fonts " + name;
     text += "\n  :documents " + name;
     text += "\n  :layouts " + name;
@@ -1047,7 +1058,7 @@ export function page2text(name) {
 function measure_font(font, size, weight, style, txt, baseline) {
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
-    if (!context) throw "Could not create 2D canvas context"
+    if (!context) throw new Exception("Could not create 2D canvas context");
     var width = context.measureText(txt).width;
     canvas.width = width + 1;
     canvas.height = size * 2;
@@ -1064,12 +1075,12 @@ function measure_font(font, size, weight, style, txt, baseline) {
         var y = Math.floor(i / (width * 4));
         if (pixelmap.data[i] !== 255) return y;
     }
-    throw "Could not find any text in image!";
+    throw new Exception("Could not find any text in image!");
 }
 
 function get_font_lineheight(font, weight, style) {
     var body = document.querySelector("body");
-    if (!body) throw "No body element??"
+    if (!body) throw new Exception("No body element??");
     var div = document.createElement("CassiusBlock");
     div.innerHTML = "Hxy";
     body.appendChild(div);
@@ -1099,7 +1110,7 @@ function get_font_lineheight(font, weight, style) {
 
 function get_font_offsets(font, weight, style, A, D) {
     var body = document.querySelector("body");
-    if (!body) throw "No body element??"
+    if (!body) throw new Exception("No body element??");
     var div = document.createElement("CassiusBlock");
     var span = document.createElement("CassiusInline");
     span.innerHTML = "Hxy";
