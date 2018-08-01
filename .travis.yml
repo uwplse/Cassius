@@ -1,4 +1,4 @@
-language: c
+language: node_js
 env:
   global:
     - RACKET_DIR=~/racket
@@ -10,6 +10,8 @@ before_install:
   - cat ../travis-racket/install-racket.sh | bash
   - curl -L -O https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_DISTRIB}.zip
   - unzip ${Z3_DISTRIB}.zip
+  - npm install typescript@2.7.1
   - export PATH="${RACKET_DIR}/bin:${PWD}/${Z3_DISTRIB}/bin:${PATH}"
 script:
+  - make -B capture/all.js
   - make test
