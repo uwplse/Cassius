@@ -7,6 +7,7 @@
   (define problems (make-hash))
   (define fonts (make-hash))
   (define sheets (make-hash (list (cons 'firefox firefox-sheet)
+                                  (cons 'chrome chrome-sheet)
                                   (cons 'baseline baseline-sheet))))
   (define docs (make-hash))
   (define layouts (make-hash))

@@ -56,7 +56,7 @@ def main(urls, prerun=None, fd=None, browser="firefox"):
         client = make_browser(browser)
         measure_scrollbar(client)
     
-        print("Saving layout to {}:".format(fd.name), file=sys.stderr, end=" ")
+        print("Saving {} layout to {}:".format(browser, fd.name), file=sys.stderr, end=" ")
         for i, url in enumerate(urls):
             id = str(i+1).rjust(len(str(len(urls))), "0")
             try:

@@ -1,6 +1,6 @@
 #lang racket
 
-(provide baseline-sheet firefox-sheet)
+(provide baseline-sheet firefox-sheet chrome-sheet)
 
 (define default-displays
   #hash([inline
@@ -348,3 +348,5 @@
      [border-left-width (px 2)]
      [border-left-style inset]
      [text-indent (px 0)])))
+
+(define chrome-sheet firefox-sheet)
