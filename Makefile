@@ -1,6 +1,6 @@
 TIME=$(shell date +%s)
 FLAGS=
-CFLAGS=
+CFLAGS=--browser chrome
 
 .PHONY: deploy test nightly publish index clean
 
