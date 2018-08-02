@@ -28,7 +28,7 @@ nightly:
 	$(MAKE) publish
 
 # We do not exactly need Rollup or Webpack here...
-capture/all.js:
+capture/all.js: $(filter-out capture/all.js, $(wildcard capture/*.js)) $(wildcard capture/*.ts) capture/tsconfig.json
 	tsc --project capture/
 	echo "exports = window; function require() { return window; }" | \
 	    cat - $(filter-out capture/all.js, $(wildcard capture/*.js)) > $@
