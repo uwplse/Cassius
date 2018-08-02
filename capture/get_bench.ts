@@ -211,6 +211,12 @@ function find_first_break(txt, loff, roff) {
         else return loff + 2;
     }
 
+    var r = new Range();
+    r.setStart(txt, loff);
+    r.setEnd(txt, roff);
+
+    if (r.getClientRects().length <= 1) return roff;
+
     var mid = Math.round(loff + (roff - loff) / 2);
     var r1 = new Range();
     r1.setStart(txt, loff);
@@ -221,7 +227,7 @@ function find_first_break(txt, loff, roff) {
 
     if (r1.getClientRects().length > 1) {
         return find_first_break(txt, loff, mid);
-    } else if (r2.getClientRects().length > 1) {
+    } else if (r2.getClientRects().length == r.getClientRects().length) {
         return find_first_break(txt, mid - 1, roff);
     } else {
         return mid;
