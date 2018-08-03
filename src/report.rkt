@@ -367,7 +367,7 @@
      (body
       (p (b "Cassius") " version " (kbd ,(~a *version*)) " branch " (kbd ,(~a *branch*)) " commit " (kbd ,(~a *commit*)))
       (p (b "Time") " total " ,(print-time total-time) " for " ,(~a (length results)) " tests.")
-      (table ((id "sections") (rules "groups"))
+      (table ((id "sections") (rules "groups") (class "numbers"))
        (thead
         ,(row #:cell 'th "" "Pass" "Fail" "Error" "Time" "Skip" "")
         ,(apply row `(strong "Total") (append (set->results results) '(""))))
@@ -386,7 +386,7 @@
       ,@(if (ormap (λ (r) (set-member? '(unsupported) (result-status r))) results)
             `((section
                (h2 "Feature totals")
-               (table
+               (table ([class "numbers"])
                 (thead ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
                 (tbody
                        ,@(let ([bad-results
@@ -398,15 +398,14 @@
       ,@(if minimizer
             `((section
                (h2 "Minimizer results")
-               (table
-                ([class "minimizer-results"])
-                (thead ,(row #:cell 'th "Problem" "Link" "Before" "After" "Time"))
-                ,@(for/list ([row minimizer])
-                    (row (dict-ref row 'name)
-                         `(a ([href ,(dict-ref row 'path)]) ,(dict-ref row 'path))
-                         (dict-ref row 'initial)
-                         (dict-ref row 'final)
-                         (print-time (dict-ref row 'time)))))))
+               (table ([class "numbers"])
+                (thead ,(row #:cell 'th "Problem" "Iterations" "Before" "After" "Time"))
+                ,@(for/list ([(name rec) minimizer])
+                    (row `(a ([href ,(dict-ref rec 'path)]) ,(~a name))
+                         (~a (dict-ref rec 'iterations))
+                         (~a (dict-ref rec 'initial))
+                         (~a (dict-ref rec 'final))
+                         (print-time (dict-ref rec 'time)))))))
             "")
       (section
        (h2 ,(if (show-success) "Tests" "Failing tests"))

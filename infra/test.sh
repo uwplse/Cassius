@@ -48,5 +48,7 @@ make FWT_PATH="$FWT_PATH" FLAGS="--verbose --threads $THREADS --cache reports/ru
 
 mkdir -p reports/rkt/
 mkdir -p reports/json/
+mkdir -p reports/bench/
 cp bench/fwt.rkt bench/css/*.rkt reports/rkt/
+cp bench/*-minimized.rkt reports/bench/
 mv reports/*.json reports/json/

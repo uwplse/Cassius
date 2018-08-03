@@ -9,8 +9,8 @@ td, th { padding: 0; overflow: hidden; white-space: nowrap; }
 .success {background-color: #0bd318;}
 .timeout {background-color: #ff9500;}
 .unsupported {background-color: #8e8e93;}
-#sections td, #sections th { padding: .25em; min-width: 3em; text-align: right; }
-#sections td:first-child, #sections td:last-child { text-align: left; }
-#sections td:last-child { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 600px;}
+table.numbers td, table.numbers th { padding: .25em; min-width: 3em; text-align: right; }
+table.numbers td:first-child, table.numbers th:first-child { text-align: left; }
+#sections td:last-child { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 520px;}
 #sections td:last-child a { margin: .5ex; }
 th { text-align: left; }
