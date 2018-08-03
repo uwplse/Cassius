@@ -30,7 +30,15 @@ def make_browser():
     profile = webdriver.FirefoxProfile()
     profile.set_preference("security.mixed_content.block_active_content", False)
     profile.set_preference("security.mixed_content.block_display_content", False)
-    return webdriver.Firefox(firefox_profile=profile)
+    browser = webdriver.Firefox(firefox_profile=profile)
+    measure_scrollbar(browser)
+    return browser
+
+def capture(browser, url, id, prerun=None):
+    browser.get(url)
+    if prerun: browser.execute_script(prerun)
+    text = browser.execute_script(jsfile("all.js") + "; return page2text(arguments[0]);", id)
+    return ";; From {}\n\n{}\n\n".format(url, text)
 
 def main(urls, prerun=None, fd=None):
     urls = sorted([url if "://" in url else "file://" + os.path.abspath(url)
@@ -43,20 +51,12 @@ def main(urls, prerun=None, fd=None):
     
     try:
         browser = make_browser()
-        measure_scrollbar(browser)
     
         print("Saving layout to {}:".format(fd.name), file=sys.stderr, end=" ")
         for i, url in enumerate(urls):
             id = str(i+1).rjust(len(str(len(urls))), "0")
             try:
-                browser.get(url)
-                if prerun: browser.execute_script(prerun)
-                text = browser.execute_script(jsfile("all.js") + "; return page2text(arguments[0]);", "doc-" + id).encode("utf8")
-                fd.write(";; From ")
-                fd.write(url)
-                fd.write("\n\n")
-                fd.write(text.decode("latin1")) # Latin1 will always succeed
-                fd.write("\n\n")
+                fd.write(capture(browser, url, "doc-" + id, prerun=prerun))
                 print(id, file=sys.stderr, end=" ")
             except:
                 import traceback
