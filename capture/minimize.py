@@ -51,7 +51,7 @@ def get_minimized(url, elts, filename):
         f.write(capture.capture(browser, url, "doc-1", prerun=prerun))
     browser.quit()
 
-def minimize(filename, url, cache=None, timeout=None):
+def minimize(name, url, cache=None, timeout=None):
     STATISTICS = []
 
     start = time.time()
@@ -64,10 +64,10 @@ def minimize(filename, url, cache=None, timeout=None):
     size = None
 
     while not minimized:
-        name = "bench/{}-{}-minimized.rkt".format(args.name, iterations)
+        filename = "bench/{}-{}-minimized.rkt".format(name, iterations)
         print("Running Cassius:", file=sys.stderr)
-        get_minimized(url, eliminated, name)
-        res = run_accept(name, args.cache, backtracked, maxtime=args.timeout)
+        get_minimized(url, eliminated, filename)
+        res = run_accept(filename, args.cache, backtracked, maxtime=args.timeout)
         minimized = isinstance(res, Done)
         if isinstance(res, Continue):
             print("Cassius rejected the minimized version, continuing...", file=sys.stderr)
@@ -90,13 +90,13 @@ def minimize(filename, url, cache=None, timeout=None):
 
     total_time = time.time() - start
     return {
-        "path": "bench/" + name + ".rkt"
+        "path": filename
         "stats": STATISTICS,
         "initial": initial,
         "final": size,
         "time": total_time,
         "iterations": iterations,
-        "file": name,
+        "name": name,
     }
 
 if __name__ == "__main__":
@@ -113,6 +113,7 @@ if __name__ == "__main__":
         if fwt["status"] = 'fail':
             name, url = fwt["problem"], fwt["url"]
             results[name] = minimize(name, url, cache=args.cache, timeout=args.timeout)
-            fwt["minimized"] = results[name]["file"]
+            fwt["minimized"] = results[name]["path"]
+            print("{name:>9} {initial:<4} -> {final:<4} in {time: 8.2f}".format(**results[name]))
 
     with open(args.json, "w") as f: json.dump(data, f)
