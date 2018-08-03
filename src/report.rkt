@@ -383,30 +383,30 @@
                  ,@(for/list ([r sresults] #:when (member (result-status r) '(error fail)))
                      `(a ((href ,(result-url r)))
                          ,(format "~a:~a" (file-name-stem (result-file r)) (result-problem r)))))))))))
-      ,@(if (ormap (λ (r) (set-member? '(unsupported) (result-status r))) results)
-            `((section
-               (h2 "Feature totals")
-               (table ([class "numbers"])
-                (thead ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
-                (tbody
-                       ,@(let ([bad-results
-                                (for/list ([r results] #:when (not (set-member? '(success expected) (result-status r))))
-                                  r)])
-                           (for/list ([data (sort-features (map (curryr feature-row bad-results) unsupported-features))])
-                             (apply row (map ~a data))))))))
-            '())
-      ,@(if minimizer
-            `((section
-               (h2 "Minimizer results")
-               (table ([class "numbers"])
-                (thead ,(row #:cell 'th "Problem" "Iterations" "Before" "After" "Time"))
-                ,@(for/list ([(name rec) minimizer])
-                    (row `(a ([href ,(dict-ref rec 'path)]) ,(~a name))
-                         (~a (dict-ref rec 'iterations))
-                         (~a (dict-ref rec 'initial))
-                         (~a (dict-ref rec 'final))
-                         (print-time (dict-ref rec 'time)))))))
-            "")
+      ,(if (ormap (λ (r) (set-member? '(unsupported) (result-status r))) results)
+           `(section
+              (h2 "Feature totals")
+              (table ([class "numbers"])
+               (thead ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
+               (tbody
+                      ,@(let ([bad-results
+                               (for/list ([r results] #:when (not (set-member? '(success expected) (result-status r))))
+                                 r)])
+                          (for/list ([data (sort-features (map (curryr feature-row bad-results) unsupported-features))])
+                            (apply row (map ~a data)))))))
+           "")
+      ,(if minimizer
+           `(section
+             (h2 "Minimizer results")
+             (table ([class "numbers"])
+              (thead ,(row #:cell 'th "Problem" "Iterations" "Before" "After" "Time"))
+              ,@(for/list ([(name rec) minimizer])
+                  (row `(a ([href ,(dict-ref rec 'path)]) ,(~a name))
+                       (~a (dict-ref rec 'iterations))
+                       (~a (dict-ref rec 'initial))
+                       (~a (dict-ref rec 'final))
+                       (print-time (dict-ref rec 'time))))))
+           "")
       (section
        (h2 ,(if (show-success) "Tests" "Failing tests"))
        (table
