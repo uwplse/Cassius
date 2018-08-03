@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
     data["minimized"] = results = {}
     for fwt in data["problems"]:
-        if fwt["status"] = 'fail':
+        if fwt["status"] == "fail":
             name, url = fwt["problem"], fwt["url"]
             results[name] = minimize(name, url, cache=args.cache, timeout=args.timeout)
             fwt["minimized"] = results[name]["path"]
