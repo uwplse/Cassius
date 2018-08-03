@@ -118,7 +118,10 @@
         (emit `(declare-const ,propname ,type))
         (emit `(declare-const ,(sformat "~a?" propname) Bool))]
        [else
-        (emit `(define-const ,propname ,type ,(dump-value type (car (dict-ref (filter list? props) prop)))))
+        (emit `(define-const ,propname ,type
+                 ,(if (equal? (car (dict-ref (filter list? props) prop)) 'initial)
+                      (dump-value type default)
+                      (dump-value type (car (dict-ref (filter list? props) prop))))))
         (emit `(define-const ,(sformat "~a?" propname) Bool true))])))
 
   (define elt-classes ; Can replace `(map list elts)` below. Speeds up generating constraints, slows down solving them
@@ -445,7 +448,6 @@
     (define-const font-size/larger Font-Size (font-size/em (/ 3.0 2.0)))
     (define-const font-weight/normal Font-Weight (font-weight/num 400))
     (define-const font-weight/bold Font-Weight (font-weight/num 700))
-    (define-const color/undefined Color color/transparent)
     ,@(for-render make-font-table fonts)
     ,@(for-render (compose list make-get-font) fonts)
     ,@(for/list ([(name value) color-table])
