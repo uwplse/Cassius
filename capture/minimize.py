@@ -90,7 +90,7 @@ def minimize(name, url, cache=None, timeout=None):
 
     total_time = time.time() - start
     return {
-        "path": filename
+        "path": filename,
         "stats": STATISTICS,
         "initial": initial,
         "final": size,
