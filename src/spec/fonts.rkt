@@ -35,12 +35,12 @@
                (and
                 (<= 0 (font.ascent ,var))
                 (<= 0 (font.descent ,var))
-                ,(fuzzy-=-constraint `(+ (font.ascent ,var) (font.descent ,var)) (+ a* d*) *font-fuzz*)
+                #;,(fuzzy-=-constraint `(+ (font.ascent ,var) (font.descent ,var)) (+ a* d*) *font-fuzz*)
                 ;; These are commented out because Firefox does not get the metrics correctly
                 #;,(fuzzy-=-constraint `(font.ascent ,var) a* *font-fuzz*)
                 #;,(fuzzy-=-constraint `(font.descent ,var) d* *font-fuzz*)
-                ,(fuzzy-=-constraint `(font.topoffset ,var) t*)
-                ,(fuzzy-=-constraint `(font.bottomoffset ,var) b*)
+                #;,(fuzzy-=-constraint `(font.topoffset ,var) t*)
+                #;,(fuzzy-=-constraint `(font.bottomoffset ,var) b*)
                 ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a* d* t* b*))
                 ,(fuzzy-=-constraint `(font.line-height ,var) l)))))))
 
