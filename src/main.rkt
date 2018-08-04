@@ -452,6 +452,7 @@
     ,@(for-render (compose list make-get-font) fonts)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))
+    (define-const font-family/-browser-default Font-Family ,(dump-value 'Font-Family "\"Times New Roman\""))
     ,@(common-definitions)
     ,@(exclusion-zones)
     ,@(tree-types)

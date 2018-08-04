@@ -97,7 +97,7 @@
 
 ; Font Family is a string so should never make it to Z3
 (define-css-type (Font-Family (num Real))
-  [font-family "serif"])
+  [font-family -browser-default])
 
 (define-css-type (Font-Weight bolder lighter (num Real) initial)
   [font-weight 400])
