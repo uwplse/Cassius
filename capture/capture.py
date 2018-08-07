@@ -29,7 +29,7 @@ def measure_scrollbar(browser):
 def make_browser():
     from selenium.webdriver.firefox.options import Options
     options = Options()
-    options.add_argument("--headless")
+    options.set_headless(True)
     profile = webdriver.FirefoxProfile()
     profile.set_preference("security.mixed_content.block_active_content", False)
     profile.set_preference("security.mixed_content.block_display_content", False)
