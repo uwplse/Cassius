@@ -27,13 +27,10 @@ def measure_scrollbar(browser):
     browser.execute_script(jsfile("scrollbar.js") + "; estimate_scrollbar()");
 
 def make_browser():
-    from selenium.webdriver.firefox.options import Options
-    options = Options()
-    options.set_headless(True)
     profile = webdriver.FirefoxProfile()
     profile.set_preference("security.mixed_content.block_active_content", False)
     profile.set_preference("security.mixed_content.block_display_content", False)
-    browser = webdriver.Firefox(firefox_profile=profile, firefox_options=options)
+    browser = webdriver.Firefox(firefox_profile=profile)
     measure_scrollbar(browser)
     return browser
 
