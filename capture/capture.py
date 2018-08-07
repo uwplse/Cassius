@@ -31,7 +31,9 @@ def make_browser(browser):
         profile = webdriver.FirefoxProfile()
         profile.set_preference("security.mixed_content.block_active_content", False)
         profile.set_preference("security.mixed_content.block_display_content", False)
-        return webdriver.Firefox(firefox_profile=profile)
+        client = webdriver.Firefox(firefox_profile=profile)
+        measure_scrollbar(client)
+        return client
     elif browser == "chrome":
         from selenium.webdriver.chrome.options import Options
         opts = Options()
@@ -42,6 +44,12 @@ def make_browser(browser):
         return webdriver.Chrome(chrome_options=opts)
     else:
         raise ValueError("Unknown browser" + browser)
+
+def capture(browser, url, id, prerun=None):
+    browser.get(url)
+    if prerun: browser.execute_script(prerun)
+    text = browser.execute_script(jsfile("all.js") + "; return page2text(arguments[0]);", id)
+    return ";; From {}\n\n{}\n\n".format(url, text)
 
 def main(urls, prerun=None, fd=None, browser="firefox"):
     urls = sorted([url if "://" in url else "file://" + os.path.abspath(url)
@@ -54,24 +62,12 @@ def main(urls, prerun=None, fd=None, browser="firefox"):
     
     try:
         client = make_browser(browser)
-        measure_scrollbar(client)
     
         print("Saving {} layout to {}:".format(browser, fd.name), file=sys.stderr, end=" ")
         for i, url in enumerate(urls):
             id = str(i+1).rjust(len(str(len(urls))), "0")
             try:
-                client.get(url)
-                if prerun: client.execute_script(prerun)
-                out = client.execute_script(jsfile("all.js") + "; try { return page2text(arguments[0], arguments[1]); } catch (e) { return e }", "doc-" + id, browser)
-                if isinstance(out, str):
-                    text = out.encode("utf8")
-                else:
-                    raise Exception(out["msg"])
-                fd.write(";; From ")
-                fd.write(url)
-                fd.write("\n\n")
-                fd.write(text.decode("latin1")) # Latin1 will always succeed
-                fd.write("\n\n")
+                fd.write(capture(client, url, "doc-" + id, prerun=prerun))
                 print(id, file=sys.stderr, end=" ")
             except:
                 import traceback

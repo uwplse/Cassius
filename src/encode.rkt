@@ -63,6 +63,9 @@
     [(list 'px n) (list (sformat "~a/px" prefix) (number->z3 n))]
     [(list '% n) (list (sformat "~a/%" prefix) (number->z3 n))]
     [(list 'rgb r g b) `(color/rgb (color ,r ,g ,b ,(gamma-correction r) ,(gamma-correction g) ,(gamma-correction b)))]
+    [(list 'rgba r g b a)
+     (warn "Colors with alpha values not supported" "Encoding " type " " value)
+     (dump-value type (list 'rgb r g b))]
     [0 (dump-value type '(px 0))]))
 
 (define (extract-value value)

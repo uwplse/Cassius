@@ -262,23 +262,25 @@
 
 (define (load-results file)
   (define data (call-with-input-file file read-json))
-  (for/list ([rec data])
-    (define (get field [convert identity]) (convert (dict-ref rec field)))
-    (result (get 'file) (get 'problem string->symbol) (and (get 'subproblem) (get 'subproblem string->symbol))
-            (get 'test string->symbol) (get 'section)
-            (match (get 'status string->symbol)
-              [(or 'fail 'unsupported 'expected)
-               (cond
-                [(apply expected? (get 'file) (get 'problem string->symbol)
-                        (if (get 'subproblem)
-                            (list (get 'subproblem string->symbol))
-                            (list)))
-                 'expected]
-                [(not (subset? (get 'features (curry map string->symbol)) (supported-features)))
-                 'unsupported]
-                [else 'fail])]
-              [s s])
-            (get 'description) (get 'features (curry map string->symbol)) (get 'time) (get 'url))))
+  (values
+   (for/list ([rec (dict-ref data 'problems)])
+     (define (get field [convert identity]) (convert (dict-ref rec field)))
+     (result (get 'file) (get 'problem string->symbol) (and (get 'subproblem) (get 'subproblem string->symbol))
+             (get 'test string->symbol) (get 'section)
+             (match (get 'status string->symbol)
+               [(or 'fail 'unsupported 'expected)
+                (cond
+                 [(apply expected? (get 'file) (get 'problem string->symbol)
+                         (if (get 'subproblem)
+                             (list (get 'subproblem string->symbol))
+                             (list)))
+                  'expected]
+                 [(not (subset? (get 'features (curry map string->symbol)) (supported-features)))
+                  'unsupported]
+                 [else 'fail])]
+               [s s])
+             (get 'description) (get 'features (curry map string->symbol)) (get 'time) (get 'url)))
+   (dict-ref data 'minimized #f)))
 
 (define (shorten-filename name)
   (string-join (drop-right (string-split (~a (file-name-from-path name)) ".") 1) "."))
@@ -322,7 +324,9 @@
 
 (define (write-report results #:output [outname #f])
   (write-json* results #:output outname)
+  (write-report* results #f #:output outname))
 
+(define (write-report* results minimizer #:output [outname #f])
   (define total-time
     (apply + (map result-time results)))
 
@@ -363,7 +367,7 @@
      (body
       (p (b "Cassius") " version " (kbd ,(~a *version*)) " branch " (kbd ,(~a *branch*)) " commit " (kbd ,(~a *commit*)))
       (p (b "Time") " total " ,(print-time total-time) " for " ,(~a (length results)) " tests.")
-      (table ((id "sections") (rules "groups"))
+      (table ((id "sections") (rules "groups") (class "numbers"))
        (thead
         ,(row #:cell 'th "" "Pass" "Fail" "Error" "Time" "Skip" "")
         ,(apply row `(strong "Total") (append (set->results results) '(""))))
@@ -379,18 +383,30 @@
                  ,@(for/list ([r sresults] #:when (member (result-status r) '(error fail)))
                      `(a ((href ,(result-url r)))
                          ,(format "~a:~a" (file-name-stem (result-file r)) (result-problem r)))))))))))
-      ,@(if (ormap (λ (r) (set-member? '(unsupported) (result-status r))) results)
-            `((section
-               (h2 "Feature totals")
-               (table
-                (thead ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
-                (tbody
-                       ,@(let ([bad-results
-                                (for/list ([r results] #:when (not (set-member? '(success expected) (result-status r))))
-                                  r)])
-                           (for/list ([data (sort-features (map (curryr feature-row bad-results) unsupported-features))])
-                             (apply row (map ~a data))))))))
-            '())
+      ,(if (ormap (λ (r) (set-member? '(unsupported) (result-status r))) results)
+           `(section
+              (h2 "Feature totals")
+              (table ([class "numbers"])
+               (thead ,(row #:cell 'th "Unsupported Feature" "# Blocking" "# Necessary"))
+               (tbody
+                      ,@(let ([bad-results
+                               (for/list ([r results] #:when (not (set-member? '(success expected) (result-status r))))
+                                 r)])
+                          (for/list ([data (sort-features (map (curryr feature-row bad-results) unsupported-features))])
+                            (apply row (map ~a data)))))))
+           "")
+      ,(if minimizer
+           `(section
+             (h2 "Minimizer results")
+             (table ([class "numbers"])
+              (thead ,(row #:cell 'th "Problem" "Iterations" "Before" "After" "Time"))
+              ,@(for/list ([(name rec) minimizer])
+                  (row `(a ([href ,(dict-ref rec 'path)]) ,(~a name))
+                       (~a (dict-ref rec 'iterations))
+                       (~a (dict-ref rec 'initial))
+                       (~a (dict-ref rec 'final))
+                       (print-time (dict-ref rec 'time))))))
+           "")
       (section
        (h2 ,(if (show-success) "Tests" "Failing tests"))
        (table
@@ -609,4 +625,5 @@
 
    ["rerender"
     #:args (json-file)
-    (write-report #:output out-file (load-results json-file))]))
+    (define-values (results minimizer) (load-results json-file))
+    (write-report* #:output out-file results minimizer)]))
