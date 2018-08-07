@@ -17,7 +17,8 @@
  *version* *commit* *branch*
  *minimize*
  *cache-file* *cache*
- path-tail)
+ path-tail
+ warn)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -243,3 +244,10 @@
 (define (path-tail p)
   (define-values (base _1 _2) (split-path p))
   base)
+
+(define *warnings-seen* (mutable-set))
+
+(define (warn message . data)
+  (unless (set-member? *warnings-seen* message)
+    (eprintf "WARNING: ~a\n" (string-join (map ~a data) ""))
+    (set-add! *warnings-seen* message)))
