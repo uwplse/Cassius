@@ -8,7 +8,6 @@
 
 (define-runtime-path capture-path "../capture/")
 (define python-path (find-executable-path (match (system-type 'os) ['windows "python.exe"] [_ "python"])))
-(define xvfb-run-path (find-executable-path "xvfb-run"))
 
 (define js-header
   (string-join
@@ -38,13 +37,7 @@
 
 (define (run-python . args)
   (define errp (if (file-stream-port? (current-error-port)) (current-error-port) #f))
-  (match (system-type 'os)
-    [(or 'windows 'macosx)
-     (apply subprocess #f #f errp python-path args)]
-    [_
-     (apply subprocess #f #f errp
-            xvfb-run-path "-a" "-s" "-screen 0 1920x1080x24"
-            python-path args)]))
+  (apply subprocess #f #f errp python-path args))
 
 (define (dump-range syntax)
   (match (first syntax)

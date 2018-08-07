@@ -37,9 +37,7 @@ capture/all.js:
 CSSWG_PATH=$(HOME)/src/web-platform-tests/css/CSS2
 
 bench/css/%.rkt: capture/capture.py capture/all.js
-	@ xvfb-run -a -s '-screen 0 1920x1080x24' \
-	    python3 capture/capture.py --output bench/css/$*.rkt \
-		$(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/$*/*.xht))
+	@ python3 capture/capture.py --output bench/css/$*.rkt $(patsubst %,file://%,$(wildcard $(CSSWG_PATH)/$*/*.xht))
 
 reports/csswg.html reports/csswg.json: $(wildcard bench/css/*.rkt)
 	racket src/report.rkt regression $(FLAGS) --index bench/css/index.json --expected bench/css/expected.sexp -o reports/csswg $^
@@ -56,13 +54,12 @@ FWT_PATH=$(HOME)/src/fwt
 
 bench/fwt.rkt: capture/capture.py capture/all.js $(wildcard $(FWT_PATH)/*/*/)
 # Note that the "2-with-javascript" bit handles a special case for the childrensappwebsitetemplate
-	xvfb-run -a -s '-screen 0 1920x1080x24' \
-	    python3 capture/capture.py --output bench/fwt.rkt \
-	        $(shell find $(wildcard $(FWT_PATH)/*/*) \
-	              -name 'index.html' -not -path '*2-with-javascript*' )
+	python3 capture/capture.py --output bench/fwt.rkt \
+	    $(shell find $(wildcard $(FWT_PATH)/*/*) \
+	          -name 'index.html' -not -path '*2-with-javascript*' )
 
 reports/minimized.html: reports/fwt.json
-	xvfb-run -a -s '-screen 0 1920x1080x24' python3 minimize-all.py --cache reports/fwt.cache reports/fwt.json reports/minimized.html
+	python3 minimize-all.py --cache reports/fwt.cache reports/fwt.json reports/minimized.html
 
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
@@ -73,7 +70,7 @@ bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 
 reports/fwt.html reports/fwt.json: bench/fwt.rkt
 	racket src/report.rkt regression $(FLAGS) --cache reports/fwt.cache --show-all --timeout 900 -o reports/fwt $^
-	xvfb-run -a -s '-screen 0 1920x1080x24' python3 capture/minimize.py --cache reports/fwt.cache reports/fwt.json
+	python3 capture/minimize.py --cache reports/fwt.cache reports/fwt.json
 	racket src/report.rkt rerender --show-all -o reports/fwt reports/fwt.json
 
 reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt

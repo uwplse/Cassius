@@ -52,13 +52,6 @@ Some pages need to be modified before being captured. The `--prerun
 [js-file]` flag allows you to specify a file of JavaScript to be run
 before capturing the page.
 
-*Note*: The capture script starts a full web browser, so may take a
-while to complete. It also creates a visible browser window. Do not
-interact with this window! On Linux machines, it is convenient to use
-the `xvfb-run` command to hide this window, like so:
-
-    xvfb-run -a python3 capture/capture.py [urls ...] --output [file]
-
 Testing if a Web Page is Supported
 ----------------------------------
 
