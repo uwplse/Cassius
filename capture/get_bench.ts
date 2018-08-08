@@ -1068,7 +1068,7 @@ function measure_font(font, size, weight, style, txt, baseline) {
     var width = context.measureText(txt).width;
     canvas.width = width + 1;
     canvas.height = size * 2;
-    context.font = font + " " + weight + style;
+    context.font = weight + " " + style + " " + font;
     context.fillStyle = "white";
     context.fillRect(0,0,width + 1,size * 2);
     context.fillStyle = "black";
