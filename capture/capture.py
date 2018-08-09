@@ -45,10 +45,10 @@ def make_browser(browser):
     else:
         raise ValueError("Unknown browser" + browser)
 
-def capture(browser, url, id, prerun=None):
-    browser.get(url)
-    if prerun: browser.execute_script(prerun)
-    text = browser.execute_script(jsfile("all.js") + "; return page2text(arguments[0]);", id)
+def capture(client, browser, url, id, prerun=None):
+    client.get(url)
+    if prerun: client.execute_script(prerun)
+    text = client.execute_script(jsfile("all.js") + "; return page2text(arguments[0], arguments[1]);", id, browser)
     return ";; From {}\n\n{}\n\n".format(url, text)
 
 def main(urls, prerun=None, fd=None, browser="firefox"):
@@ -67,7 +67,7 @@ def main(urls, prerun=None, fd=None, browser="firefox"):
         for i, url in enumerate(urls):
             id = str(i+1).rjust(len(str(len(urls))), "0")
             try:
-                fd.write(capture(client, url, "doc-" + id, prerun=prerun))
+                fd.write(capture(client, browser, url, "doc-" + id, prerun=prerun))
                 print(id, file=sys.stderr, end=" ")
             except:
                 import traceback
