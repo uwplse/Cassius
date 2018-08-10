@@ -64,6 +64,8 @@
                                     (if render?
                                         (append tests* `((forall () ,ms)))
                                         tests*)
+                                    #:render? render?
+                                    #:matcher matchers
                                     #:component
                                     (and cname
                                          (for/first ([dom doms] [box (in-boxes dom)])

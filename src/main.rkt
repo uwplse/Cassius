@@ -389,7 +389,7 @@
     (emit `(assert (! (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))
                    :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
 
-(define (add-test doms constraints tests #:component [component #f])
+(define (add-test doms constraints tests #:component [component #f] #:render? [render? true] #:matcher [matcher #f])
   (define possible-boxes
     (if component
         (nodes-below component  '(:spec :assert :admit))
@@ -404,7 +404,10 @@
                                 `(= ,var ,(dump-box box)))))))
     (assert ,(apply smt-or
                     (for/list ([test tests] [i (in-naturals)])
-                      `(and (not ,test) (= which-constraint ,i)))))))
+                      `(and (not ,test) (= which-constraint ,i)))))
+    ,@(reap [sow]
+         (for* ([dom doms] [box (in-boxes dom)])
+           (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) matcher dom sow box)))))
 
 (define (sheet-constraints doms eqcls)
   (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
@@ -478,6 +481,5 @@
     ,@(for-render font-computation)
     ,@(boxref-definitions)
     ,@(for-render layout-definitions)
-    ,@(per-box (curry spec-constraints (if render? '(:spec) '(:spec :assert :admit)) matcher))
     ,@(for-render per-box layout-constraints)
     ))
