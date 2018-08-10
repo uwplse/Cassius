@@ -87,7 +87,9 @@
     (when (and elt-model (list? elt-model)) (extract-elt! elt-model elt))))
 
 (define (extract-test smt-out tests)
-  (list-ref tests (hash-ref smt-out 'which-constraint)))
+  (define which (hash-ref smt-out 'which-constraint))
+  ;; Test needed for case where the bad test is a model insufficiency
+  (if (< which (length tests)) (list-ref tests which) false))
 
 (define (extract-counterexample! smt-out bad-test)
   (define-values (bad-vars bad-body) (disassemble-forall bad-test))

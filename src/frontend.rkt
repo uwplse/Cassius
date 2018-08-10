@@ -100,27 +100,28 @@
   (define trees (map dom-boxes doms))
   (match out
     [(list 'model m)
-       (log-phase "Found model with ~a variables" (dict-count m))
+     (log-phase "Found model with ~a variables" (dict-count m))
      (cond
-      [(or (not render?) (extract-model-sufficiency m trees))
+      [(or (not render?) ; Don't do loop in proof checking
+           (ormap (curryr dom-context ':component) doms) ; Don't do loop for components
+           (extract-model-sufficiency m trees))
        (unless (extract-model-lookback m trees)
          (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)
        (define test
          (if tests
              (let ([bad-test (extract-test m tests)])
-               (extract-counterexample! m bad-test)
+               (when bad-test (extract-counterexample! m bad-test))
                bad-test)
              #f))
        (define doms* (map (curry extract-ctx! m) doms))
        (define sheet* (apply append sheets)) ; (extract-rules (car sheets) trees m)
        (success sheet* (map unparse-tree trees) doms* test)]
-      [(not (ormap (curryr dom-context ':component) doms))
+      [else
        (log-phase "Insufficient float registers, trying again with ~a"
                   (+ 1 (*exclusion-zone-registers*)))
        (parameterize ([*exclusion-zone-registers* (+ 1 (*exclusion-zone-registers*))])
-         (solve sheets docs fonts #:tests tests #:component name))]
-      [else (failure sheets (map unparse-tree trees))])]
+         (solve sheets docs fonts #:tests tests #:component name))])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
      (define-values (stylesheet* trees*) (extract-core (apply append sheets) trees c))
