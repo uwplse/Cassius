@@ -20,7 +20,7 @@
            (if (eq? tree (dom-boxes doc)) ctx (dict-set ctx ':component '())))
          (hash-set! out name
                     (cons (struct-copy dom doc
-                                       [name (node-get component ':name #:default false)]
+                                       [name (node-get component ':name #:default name)]
                                        [boxes (unparse-tree component)]
                                        [properties props])
                           (append specs asserts)))
