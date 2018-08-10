@@ -74,7 +74,7 @@ bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 
 reports/fwt.html reports/fwt.json: bench/fwt.rkt
 	racket src/report.rkt regression $(FLAGS) --cache reports/fwt.cache --show-all --timeout 900 -o reports/fwt $^
-	xvfb-run -a -s '-screen 0 1920x1080x24' python3 capture/minimize.py --cache reports/fwt.cache reports/fwt.json
+	xvfb-run -a -s '-screen 0 1920x1080x24' python3 capture/minimize.py $(CFLAGS) --cache reports/fwt.cache reports/fwt.json
 	racket src/report.rkt rerender --show-all -o reports/fwt reports/fwt.json
 
 reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt

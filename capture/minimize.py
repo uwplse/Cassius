@@ -43,15 +43,15 @@ def run_accept(filename, cache_name, backtracked, maxtime=600):
     else:
         raise Exception("Unknown result from Cassius:\n"+result)
 
-def get_minimized(url, elts, filename):
+def get_minimized(browser, url, elts, filename):
     # Sadly, something seems to go wrong if the browser is cached between calls
-    browser = capture.make_browser()
+    client = capture.make_browser(browser)
     prerun = "; ".join(["document.getElementsByTagName({}.tag)[{}.index].remove()".format(elt, elt) for elt in elts])
     with open(filename, "w") as f:
-        f.write(capture.capture(browser, url, "doc-1", prerun=prerun))
-    browser.quit()
+        f.write(capture.capture(client, url, "doc-1", prerun=prerun))
+    client.quit()
 
-def minimize(name, url, cache=None, timeout=None):
+def minimize(name, url, browser="firefox", cache=None, timeout=None):
     STATISTICS = []
 
     start = time.time()
@@ -66,7 +66,7 @@ def minimize(name, url, cache=None, timeout=None):
     while not minimized:
         filename = "bench/{}-{}-minimized.rkt".format(name, iterations)
         print("Running Cassius:", file=sys.stderr)
-        get_minimized(url, eliminated, filename)
+        get_minimized(browser, url, eliminated, filename)
         res = run_accept(filename, args.cache, backtracked, maxtime=args.timeout)
         minimized = isinstance(res, Done)
         if isinstance(res, Continue):
@@ -104,6 +104,7 @@ if __name__ == "__main__":
     p.add_argument("json", type=str, help="JSON input of a Cassius report")
     p.add_argument("--timeout", default=600, type=int, help="Timeout for each running instance of Cassius/.")
     p.add_argument("--cache", default=None, type=str, help="Cache file")
+    p.add_argument("--browser", default="firefox", help="Which browser to use")
     args = p.parse_args()
 
     with open(args.json) as f: data = json.load(f)
@@ -112,7 +113,7 @@ if __name__ == "__main__":
     for fwt in data["problems"]:
         if fwt["status"] == "fail":
             name, url = fwt["problem"], fwt["url"]
-            results[name] = minimize(name, url, cache=args.cache, timeout=args.timeout)
+            results[name] = minimize(name, url, browser=args.browser, cache=args.cache, timeout=args.timeout)
             fwt["minimized"] = results[name]["path"]
             print("{name:>9} {initial:<4} -> {final:<4} in {time: 8.2f}".format(**results[name]))
 
