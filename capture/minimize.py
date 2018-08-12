@@ -48,7 +48,7 @@ def get_minimized(browser, url, elts, filename):
     client = capture.make_browser(browser)
     prerun = "; ".join(["document.getElementsByTagName({}.tag)[{}.index].remove()".format(elt, elt) for elt in elts])
     with open(filename, "w") as f:
-        f.write(capture.capture(client, url, "doc-1", prerun=prerun))
+        f.write(capture.capture(client, browser, url, "doc-1", prerun=prerun))
     client.quit()
 
 def minimize(name, url, browser="firefox", cache=None, timeout=None):
