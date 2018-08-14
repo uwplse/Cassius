@@ -239,6 +239,7 @@ Supposed to fail
            (and (= (top b1 outer) (top b2 outer))
                 (<= (right b1 outer) (left b2 outer))))))
   (admit root (no-floats-enter footer))
+  ; Needs some work to get the floats stuff right
   #;(assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
   #;(assert root (float-flow-across featured home footer))
   #;(assert root (float-flow-in root featured))
@@ -261,8 +262,9 @@ Supposed to fail
   (assert bg (forall (b2) (=> (>= (width bg) 940) (has-type b2 text) (<= (right b2) (- (right bg content) 300)))))
   (assert root (>= (width bg) 940)))
 
-; line width
+;; A theorem about line width, from the VizAssert paper
 
+; We restrict the range of widths because of media queries---for later
 (page yoga-restricted (load "fwt.rkt" doc-080)
       :w (between 1280 1920)
       :h (between 800 1280)
