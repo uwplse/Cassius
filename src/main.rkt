@@ -479,4 +479,6 @@
     ,@(boxref-definitions)
     ,@(for-render layout-definitions)
     ,@(for-render per-box layout-constraints)
+    ;; Handle invalid initial EZones for component verification
+    ,@(if render? (for/list ([dom doms]) `(assert (ez.valid? (ez.in ,(dump-box (dom-boxes dom)))))) '())
     ))

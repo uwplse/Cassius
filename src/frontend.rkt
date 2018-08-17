@@ -60,10 +60,21 @@
   (define query (all-constraints sheets matchers doms fonts #:render? render?))
 
   (define ms (model-sufficiency doms))
-  (when tests (set! query (add-test doms (append query (auxiliary-definitions))
-                                    (if render?
-                                        (append tests* `((forall () ,ms)))
-                                        tests*)
+
+  (when tests
+    (define tests**
+      (for/list ([test tests*])
+        (let loop ([expr test])
+          (match expr
+            [`(forall ,vars ,body)
+             `(forall ,vars ,(loop body))]
+            [`(=> ,as ... ,body)
+             `(=> ,@as ,(loop body))]
+            [body
+             (if render?
+                 `(and ,ms ,body)
+                 body)]))))
+    (set! query (add-test doms (append query (auxiliary-definitions)) tests**
                                     #:render? render?
                                     #:matcher matchers
                                     #:component

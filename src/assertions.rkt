@@ -33,7 +33,7 @@
                                           `(raw (and (= (ez.out ,b) (ez.in ,b*))
                                                      (<= (bottom-border ,b) (top-border ,b*))))))))
      (float-flow-skip . ,(λ (b) `(raw (= (ez.out ,b) (ez.in ,b)))))
-     (floats-tracked . ,(λ (b) `(raw (- (ez.free-registers (ez.in ,b)) ez.registers))))
+     (floats-tracked . ,(λ (b) `(raw (- ez.registers (ez.free-registers (ez.in ,b))))))
      (non-negative-margins . ,(λ (b) `(raw (non-negative-margins ,b))))
 
      (luminance . ,(λ (color) `(let ([color ,color]) (raw (lum (color.rgb color))))))

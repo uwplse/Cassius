@@ -104,6 +104,7 @@
 
   (assert (- * home)
           (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3) (no-floats-enter ?)
+                          (raw (ez.valid? (ez.in ?)))
                           (or (is-interactive b) (is-component b)) (onscreen b))))
   (assert home (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3)
                                (or (is-interactive b) (is-component b)) (onscreen b))))
@@ -111,10 +112,10 @@
   (assert root (onscreen root))
   (assert root (= (floats-tracked root) 0))
 
-  (assert * (non-negative-margins ?))
+  (assert * (=> (< (floats-tracked ?) 3) (non-negative-margins ?)))
 
-  (assert * (> (height ?) 0))
-  (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
+  (assert * (=> (< (floats-tracked ?) 3) (> (height ?) 0)))
+  (assert * (=> (< (floats-tracked ?) 3) (=> (no-floats-enter ?) (no-floats-exit ?))))
 
   (assert root (float-flow-in root header))
   (assert root (float-flow-across header body footer))
