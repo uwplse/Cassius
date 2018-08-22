@@ -263,6 +263,8 @@
   (add-header! (common-definitions))
   (add-header! (exclusion-zones))
 
+  (check-sat #hash() `(ez.valid? ez.init) `())
+
   ;; ez.add spec tests
   (check-sat #hash((x . Real) (y . Real) (t . Real) (r . Real)
                    (b . Real) (l . Real) (dir . Float) (ez . EZone))
@@ -465,7 +467,10 @@
 
   ;; The "in" and "out" EZones track EZones in-order through the tree
   (declare-fun ez.in (Box) EZone)
-  (declare-fun ez.out (Box) EZone))
+  (declare-fun ez.out (Box) EZone)
+
+  (assert (forall ((b Box)) (ez.valid? (ez.in b))))
+  (assert (forall ((b Box)) (ez.valid? (ez.out b)))))
 
 (define-constraints ez-field-compute
   (assert

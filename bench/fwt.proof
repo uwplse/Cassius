@@ -102,27 +102,36 @@
   (component nav (id navigation))
   (component home (id home))
 
-  (assert (- * home)
-          (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3) (no-floats-enter ?)
-                          (raw (ez.valid? (ez.in ?)))
+  ;; TODO: it would be helpful if there were a "pre" command that set
+  ;; a common precondition for `home` and `nav`, instead of having to
+  ;; duplicate it everywhere.
+
+  (assert (- * home nav)
+          (forall (b) (=> (onscreen ?) (no-floats-enter ?)
                           (or (is-interactive b) (is-component b)) (onscreen b))))
-  (assert home (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 3)
+  (assert nav (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 2)
+                              (or (is-interactive b) (is-component b)) (onscreen b))))
+  (assert home (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 2)
                                (or (is-interactive b) (is-component b)) (onscreen b))))
 
   (assert root (onscreen root))
   (assert root (= (floats-tracked root) 0))
 
-  (assert * (=> (< (floats-tracked ?) 3) (non-negative-margins ?)))
+  (assert (- * home nav) (non-negative-margins ?))
+  (assert (or home nav) (=> (< (floats-tracked ?) 2) (non-negative-margins ?)))
 
-  (assert * (=> (< (floats-tracked ?) 3) (> (height ?) 0)))
-  (assert * (=> (< (floats-tracked ?) 3) (=> (no-floats-enter ?) (no-floats-exit ?))))
+  (assert (- * home nav) (> (height ?) 0))
+  (assert (or home nav) (=> (< (floats-tracked ?) 2) (non-negative-margins ?)))
+  (assert (- * home nav) (=> (no-floats-enter ?) (no-floats-exit ?)))
+  (assert (or home nav) (=> (< (floats-tracked ?) 2) (non-negative-margins ?)))
 
   (assert root (float-flow-in root header))
   (assert root (float-flow-across header body footer))
   (assert body (float-flow-skip body))
 
-  (assert body (forall (_) (no-floats-enter nav)))
-  (assert body (no-floats-exit body))
+  (assert body (forall (_) (< (floats-tracked nav) 2)))
+  (assert body (forall (_) (< (floats-tracked home) 2)))
+  (assert body (=> (no-floats-enter body) (no-floats-exit body)))
 
   (assert root (no-floats-enter root)))
 
