@@ -14,12 +14,12 @@
     (match stx
       ['* components]
       [(? symbol?) (list (dict-ref ctx stx))]
-      [`(- ,stx1 ,stx2)
-       (set-subtract (loop stx1) (loop stx2))]
-      [`(or ,stx1 ,stx2)
-       (set-union (loop stx1) (loop stx2))]
-      [`(and ,stx1 ,stx2)
-       (set-intersect (loop stx1) (loop stx2))])))
+      [`(- ,stx1 ,stx2s ...)
+       (apply set-subtract (loop stx1) (map loop stx2s))]
+      [`(or ,stx1 ,stx2s ...)
+       (apply set-union (loop stx1) (map loop stx2s))]
+      [`(and ,stx1 ,stx2s ...)
+       (apply set-intersect (loop stx1) (map loop stx2s))])))
 
 (define (rename-problem problem n)
   (dict-set problem ':documents
