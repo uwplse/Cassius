@@ -48,7 +48,7 @@
       [(or 'true 'false) expr]
       [`(and ,parts ...) `(and ,@(map (curryr loop ctx) parts))]
       [`(or ,parts ...) `(or ,@(map (curryr loop ctx) parts))]
-      [`(=> ,as ... ,b)
+      [`(,(or '=> '=>*) ,as ... ,b)
        `(=> ,@(map (curryr loop ctx) as) ,(loop b ctx))]
       [`(not ,part) `(not ,(loop part ctx))]
 

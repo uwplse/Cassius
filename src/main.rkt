@@ -89,7 +89,12 @@
 (define (extract-test smt-out tests)
   (define which (hash-ref smt-out 'which-constraint))
   ;; Test needed for case where the bad test is a model insufficiency
-  (if (< which (length tests)) (list-ref tests which) false))
+  (define test (if (< which (length tests)) (list-ref tests which) false))
+  (let loop ([test test])
+    (match test
+      [`(=>* ,_ ... ,b)
+       (loop b)]
+      [_ test])))
 
 (define (extract-counterexample! smt-out bad-test)
   (define-values (bad-vars bad-body) (disassemble-forall bad-test))

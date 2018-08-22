@@ -91,9 +91,9 @@
        (define-values (thvars thbody) (disassemble-forall theorem))
        (set! theorem
              `(forall ,thvars
-                      (=> (let (,@(map list vars boxes))
-                            ,body)
-                          ,thbody)))]))
+                      (=>* (let (,@(map list vars boxes))
+                             ,body)
+                           ,thbody)))]))
 
   (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
   (define problem** (dict-set* problem* ':test (list theorem) ':tool (list 'assert)))
