@@ -49,10 +49,7 @@ def main(urls, prerun=None, fd=None):
         if scheme not in ["http", "https", "file"]:
             warnings.warn("Only http and file scheme supported (not {})".format(scheme))
     
-    try:
-        browser = make_browser()
-    else:
-        raise
+    browser = make_browser()
     
     try:
         print("Saving layout to {}:".format(fd.name), file=sys.stderr, end=" ")
