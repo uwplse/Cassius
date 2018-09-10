@@ -51,7 +51,10 @@ def main(urls, prerun=None, fd=None):
     
     try:
         browser = make_browser()
+    else:
+        raise
     
+    try:
         print("Saving layout to {}:".format(fd.name), file=sys.stderr, end=" ")
         for i, url in enumerate(urls):
             id = str(i+1).rjust(len(str(len(urls))), "0")
