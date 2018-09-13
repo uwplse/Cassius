@@ -25,7 +25,7 @@
 (theorem (interactive-onscreen b)
   (=> (is-interactive b) (onscreen b)))
 
-(proof (proof interactive-onscreen joel1 joel2 other)
+(proof (interactive-onscreen interactive-onscreen joel1 joel2 other)
   (component sidebar (id masthead))
   (component sidebar-content (id tabs))
   (component sidebar-title (class site-title))
@@ -131,7 +131,7 @@
       (!= (first (line b)) null)
       (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))
 
-(proof (proof2 line-width joel1 joel2 other)
+(proof (line-width line-width joel1 joel2 other)
   (component sidebar (id masthead))
   (component sidebar-content (id tabs))
   (component sidebar-title (class site-title))
