@@ -119,3 +119,43 @@
     (forall (b)
             (=> (onscreen-plus sidebar-title 5)
                 (is-interactive b) (onscreen b)))))
+
+(define (line b)
+  (ancestor b (has-type ? line)))
+
+(define (width-line b)
+  (- (right (last b)) (left (first b))))
+
+(theorem (line-width b)
+  (=> (has-type b text) (has-contents b)
+      (!= (first (line b)) null)
+      (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))
+
+(proof (proof2 line-width joel1 joel2 other)
+  (component sidebar (id masthead))
+  (component sidebar-content (id tabs))
+  (component sidebar-title (class site-title))
+  (component sidebar-description (class site-description))
+  (components (id front-widgets))
+  (component content (id content))
+  (component heading (desc (id main) (tag header)))
+  (component linkbar (class entry-meta))
+  (component articletext (class entry-content))
+  (components (id post-footer-widgets))
+  (components (class author-info))
+  (component nav (class post-navigation))
+  (component colophon (id colophon))
+  (components (child (class entry-content) *))
+
+  (components (id site-navigation))
+  (components (desc (id site-navigation) (tag li)))
+
+  (assert * (forall (b) (=> (has-type b text) (has-contents b)
+                            (!= (first (line b)) null)
+                            (not (matches ? (id post-footer-widgets)))
+                            (<= (width-line (line b)) (* 80 (/ 10 19) (height b))))))
+
+  (admit * (forall (b) (=> (matches ? (id post-footer-widgets))
+                           (has-type b text) (has-contents b)
+                           (!= (first (line b)) null)
+                           (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))))

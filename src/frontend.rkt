@@ -217,7 +217,7 @@
         (hash-ref *cache* problem)]
        [else
         (solve-problem* problem)]))
-    (unless (and (list? out) (pair? out) (equal? (car out) 'error))
+    (unless (match out [(list 'error _) true] ['break true] [_ false])
       (hash-set! *cache* problem out)
       (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p))))
     out]
