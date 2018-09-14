@@ -13,7 +13,8 @@
 ;; Does tagging of bad
 (define (extract-core! core)
   (for ([name core] #:when (set-member? '(box-x box-y box-width box-height) (first (split-line-name name))))
-    (define field-name (match (first (split-line-name name)) ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]))
+    (match-define (list accessor box-name) (first (split-line-name name)))
+    (define field-name (match accessor ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]))
     (define box (by-name 'box box-name))
     (node-set! box field-name `(bad ,(node-get box field-name)))))
 
