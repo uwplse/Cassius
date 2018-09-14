@@ -73,7 +73,7 @@
       (and (dict-has-key? props prop)
            (not (null? (dict-ref props prop))))))
 
-(define (selector*-constraints media-params emit elts rules)
+(define (selector-constraints media-params emit elts rules)
   (define ml (rule-matchlist rules elts))
 
   (for ([rm ml])
@@ -121,29 +121,6 @@
       (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) ,style)
                                          ,(dump-value type (if inheritable? 'inherit default))))
                         :named ,(sformat "value/none/~a^~a" prop (dump-elt elt))))))))
-
-(define (selector-constraints emit eqs)
-  (emit '(echo "Generating selector constraints"))
-  (for ([(prop type default) (in-css-properties)])
-    (match-define (cons class-hash value-hash) (dict-ref eqs prop))
-    (for ([(class value) (in-dict value-hash)])
-      (define const (sformat "value/~a/~a" prop (or class 'none)))
-      (if (eq? value '?)
-          (emit `(declare-const ,const ,type))
-          (emit `(define-const ,const ,type ,(dump-value type value))))
-      (define elts (for/list ([(elt class*) (in-dict class-hash)] #:when (equal? class class*)) elt))
-      (when (eq? value '?)
-        ;; Generates N^2 constraints, so only done when value unknown
-        ;; When value known, these constraints would be trivial anyway, and never used
-        (for* ([elt1 elts] [elt2 elts] #:when (< (name 'elt elt1) (name 'elt elt2)))
-          (define assertname (sformat "~a^elt~a^elt~a" const (name 'elt elt1) (name 'elt elt2)))
-          (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt1)))
-                               (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt2))))
-                            :named ,assertname)))))
-      (for ([elt elts])
-        (define assertname (sformat "~a^elt~a" const (name 'elt elt)))
-        (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,const)
-                          :named ,assertname)))))))
 
 (define (box-element-constraints matchers doms)
   (reap [emit]
@@ -356,12 +333,8 @@
          (for* ([dom doms] [box (in-boxes dom)])
            (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) matcher dom sow box)))))
 
-(define (sheet-constraints doms eqcls)
-  (define elts (for*/list ([dom doms] [elt (in-elements dom)]) elt))
-  (reap [emit] (selector-constraints emit eqcls)))
-
-(define (sheet*-constraints params doms rules)
-  (reap [emit] (for ([dom doms]) (selector*-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
+(define (sheet-constraints params doms rules)
+  (reap [emit] (for ([dom doms]) (selector-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
 (define (all-constraints sheets matcher doms fonts #:render? [render? true])
   (define (global f) (reap [sow] (f doms sow)))
@@ -414,7 +387,7 @@
     ,@(utility-definitions)
     ,@(link-definitions)
     ,@(for-render style-computation)
-    ,@(for-render sheet*-constraints media-params doms (apply append sheets))
+    ,@(for-render sheet-constraints media-params doms (apply append sheets))
     ,@(per-element tree-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-box box-constraints)
