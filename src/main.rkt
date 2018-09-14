@@ -10,23 +10,6 @@
 (provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback extract-test)
 
-(define (css-normalize-body body)
-  (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
-    (if (andmap (curry dict-has-key? body) parts)
-        (dict-set
-         (for/fold ([body body]) ([part parts])
-           (dict-remove body part))
-         prop
-         (for/list ([part parts]) (car (dict-ref body part))))
-        body)))
-
-(define (css-denormalize-body body)
-  (for/fold ([body body]) ([(prop parts) (in-dict css-shorthand-properties)])
-    (if (dict-has-key? body prop)
-        (for/fold ([body (dict-remove body prop)]) ([part parts] [value (dict-ref body prop)])
-           (dict-set body part (list value)))
-        body)))
-
 ;; Does tagging of bad
 (define (extract-core stylesheet trees vars)
   (define stylesheet* (make-hash))
@@ -38,14 +21,6 @@
            ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
        (define box (by-name 'box box-name))
        (node-set! box field-name `(bad ,(node-get box field-name)))]
-      [`((style ,elt-name ,prop) ,_ ...)
-       (define elt (by-name 'elt elt-name))
-       (define old-style (css-denormalize-body (node-get elt ':style '())))
-       (node-set! elt ':style
-                     (css-normalize-body
-                      (if (dict-has-key? old-style prop)
-                          (dict-update old-style prop (λ (x) (list `(bad ,(car x)))))
-                          (dict-set old-style prop '((bad))))))]
       [_ (void)]))
   (values (hash-values stylesheet*) trees))
 
@@ -67,8 +42,7 @@
   (node-set! box ':bg (data 'bg-color)))
 
 (define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style is-replaced is-image intrinsic-width font) result)
-  (node-set! elt ':style (extract-style spec-style)))
+  (match-define (list 'elt spec-style comp-style is-replaced is-image intrinsic-width font) result))
 
 (define (extract-ctx! model d)
   (define ctx*
@@ -267,21 +241,6 @@
 
     (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (name 'box elt)))))))
 
-(define (style-constraints dom emit elt)
-  (when (node-get elt ':style)
-    (define style (css-denormalize-body (node-get elt ':style)))
-    (for ([(prop type default) (in-css-properties)])
-      (match (dict-ref style prop #f)
-        ['(?) (void)]
-        [(list val)
-         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt)))
-                              ,(dump-value type val))
-                           :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))]
-        [#f
-         (define value (dump-value type (if (and (css-inheritable? prop) (node-parent elt)) 'inherit default)))
-         (emit `(assert (! (= (,(sformat "style.~a" prop) (specified-style ,(dump-elt elt))) ,value)
-                           :named ,(sformat "style/~a/~a" (name 'elt elt) prop))))])))) 
-
 (define (is-component box)
   (or (not (node-parent box)) (node-get* box ':split)))
 
@@ -474,7 +433,6 @@
     ,@(per-box box-link-constraints)
     ,@(per-box box-constraints)
     ,@(box-element-constraints matcher doms)
-    ,@(for-render per-element style-constraints)
     ,@(ez-fields)
     ,@(for-render ez-field-compute)
     ,@(for-render per-element compute-style-constraints)
