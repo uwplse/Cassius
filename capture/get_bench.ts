@@ -1,5 +1,5 @@
 /*
-javascript:void((function(x){x.src = "http://localhost:8000/all.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
+javascript:void((function(x){x.src = "http://localhost:8000/capture/all.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
 
 var Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size font-family font-style font-weight text-indent clear color background-color line-height vertical-align".split(" ");
@@ -190,6 +190,8 @@ function get_relative_offset(elt) {
     return {
         top: convert_offset(cs(elt, "top"), elt),
         bottom: convert_offset(cs(elt, "bottom"), elt),
+        left: convert_offset(cs(elt, "left"), elt),
+        right: convert_offset(cs(elt, "right"), elt),
     }
 }
 
@@ -329,6 +331,8 @@ function infer_lines(box, parent) {
         if (!prev) return true;
         var ph = prev.props.h;
         var py = prev.props.y;
+        var px = prev.props.x;
+        var pw = prev.props.w;
         if (prev.type == "INLINE" && has_positions(prev)) {
             var m = get_margins(prev.node);
             ph += m.top + m.bottom;
@@ -336,10 +340,13 @@ function infer_lines(box, parent) {
             var pos = get_relative_offset(prev.node);
             if (pos.top) py -= pos.top;
             else if (pos.bottom) py += pos.bottom;
+            if (pos.left) px -= pos.left;
+            else if (pos.right) px += pos.right;
         }
 
         var th = txt.props.h;
         var ty = txt.props.y;
+        var tx = txt.props.x;
         if (txt.type == "INLINE" && has_positions(prev)) {
             var m = get_margins(txt.node);
             th += m.top + m.bottom;
@@ -347,12 +354,14 @@ function infer_lines(box, parent) {
             var pos = get_relative_offset(txt.node);
             if (pos.top) ty -= pos.top;
             else if (pos.bottom) ty += pos.bottom;
+            if (pos.left) tx -= pos.left;
+            else if (pos.right) tx += pos.right;
         }
 
         var horiz_adj = (ty + th >= py && py >= ty || py + ph >= ty && ty >= py)
 
         // Note fuzziness
-        return horiz_adj && txt.props.x >= prev.props.x + prev.props.w - 1/APP_PIXEL_TO_PIXELS;
+        return horiz_adj && tx >= px + pw - 1/APP_PIXEL_TO_PIXELS;
     }
 
     function stackup(l, stack, sstack) {
