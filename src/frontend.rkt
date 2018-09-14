@@ -137,8 +137,8 @@
          (solve sheets docs fonts #:tests tests #:component name))])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
-     (define-values (stylesheet* trees*) (extract-core (apply append sheets) trees c))
-     (failure stylesheet* (map unparse-tree trees*))]))
+     (extract-core! c)
+     (failure '() (map unparse-tree trees))]))
 
 (define (solve-problem* problem)
   (match (dict-ref problem ':tool '(assert))

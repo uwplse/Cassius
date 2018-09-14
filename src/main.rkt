@@ -11,18 +11,11 @@
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback extract-test)
 
 ;; Does tagging of bad
-(define (extract-core stylesheet trees vars)
-  (define stylesheet* (make-hash))
-  (for ([name vars])
-    (match (split-line-name name)
-      [`((,(and (or 'box-x 'box-y 'box-width 'box-height 'mt 'mr 'mb 'ml) field) ,box-name) ,_ ...)
-       (define field-name
-         (match field ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]
-           ['mt ':mt] ['mr ':mr] ['mb ':mb] ['ml ':ml]))
-       (define box (by-name 'box box-name))
-       (node-set! box field-name `(bad ,(node-get box field-name)))]
-      [_ (void)]))
-  (values (hash-values stylesheet*) trees))
+(define (extract-core! core)
+  (for ([name core] #:when (set-member? '(box-x box-y box-width box-height) (first (split-line-name name))))
+    (define field-name (match (first (split-line-name name)) ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]))
+    (define box (by-name 'box box-name))
+    (node-set! box field-name `(bad ,(node-get box field-name)))))
 
 (define (extract-model-sufficiency smt-out trees)
   (for*/and ([tree trees] [elt (in-tree tree)])
@@ -31,18 +24,6 @@
 (define (extract-model-lookback smt-out trees)
   (for*/and ([tree trees] [elt (in-tree tree)])
     (dict-ref (extract-box (dict-ref smt-out (dump-box elt) #f)) 'ez.lookback)))
-
-(define (extract-box! z3-box box)
-  (define data (curry dict-ref (extract-box z3-box)))
-  (node-set! box ':x (+ (data 'x) (data 'xo)))
-  (node-set! box ':y (+ (data 'y) (data 'yo)))
-  (node-set! box ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'scroll-y) (data 'br)))
-  (node-set! box ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'scroll-x) (data 'bb)))
-  (node-set! box ':fg (data 'fg-color))
-  (node-set! box ':bg (data 'bg-color)))
-
-(define (extract-elt! result elt)
-  (match-define (list 'elt spec-style comp-style is-replaced is-image intrinsic-width font) result))
 
 (define (extract-ctx! model d)
   (define ctx*
@@ -56,9 +37,14 @@
 (define (extract-tree! tree smt-out)
   (for ([elt (in-tree tree)])
     (define box-model (dict-ref smt-out (dump-box elt) #f))
-    (when (and box-model (list? box-model)) (extract-box! box-model elt))
-    (define elt-model (dict-ref smt-out (dump-elt elt) #f))
-    (when (and elt-model (list? elt-model)) (extract-elt! elt-model elt))))
+    (when (and box-model (list? box-model))
+      (define data (curry dict-ref (extract-box box-model)))
+      (node-set! elt ':x (+ (data 'x) (data 'xo)))
+      (node-set! elt ':y (+ (data 'y) (data 'yo)))
+      (node-set! elt ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'scroll-y) (data 'br)))
+      (node-set! elt ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'scroll-x) (data 'bb)))
+      (node-set! elt ':fg (data 'fg-color))
+      (node-set! elt ':bg (data 'bg-color)))))
 
 (define (extract-test smt-out tests)
   (define which (hash-ref smt-out 'which-constraint))
