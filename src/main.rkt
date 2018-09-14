@@ -7,7 +7,7 @@
          "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
          "spec/media-query.rkt" "assertions.rkt")
 (module+ test (require rackunit))
-(provide all-constraints add-test selector-constraints extract-core extract-counterexample! extract-tree!
+(provide all-constraints add-test selector-constraints extract-core! extract-counterexample! extract-tree!
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback extract-test)
 
 ;; Does tagging of bad
