@@ -1,12 +1,9 @@
 #lang racket
-(require racket/hash
-         "common.rkt" "dom.rkt" "smt.rkt" "z3.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "dom.rkt"
-         "selectors.rkt" "match.rkt" "solver.rkt")
-(require "spec/css-properties.rkt" "spec/browser-style.rkt" "spec/tree.rkt"
-         "spec/compute-style.rkt" "spec/layout.rkt" "spec/percentages.rkt"
-         "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
+(require racket/hash)
+(require "common.rkt" "dom.rkt" "smt.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "selectors.rkt")
+(require "spec/css-properties.rkt" "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt"
+         "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
          "spec/media-query.rkt" "assertions.rkt")
-(module+ test (require rackunit))
 (provide all-constraints add-test selector-constraints extract-core! extract-counterexample! extract-tree!
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback extract-test)
 
