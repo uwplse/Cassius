@@ -1,6 +1,6 @@
 #lang racket
 
-(require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
+(require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt"
          "assertions.rkt" "input.rkt" "modularize.rkt")
 
 (provide read-proofs)
@@ -28,18 +28,15 @@
                            (struct-copy dom x [name n])))))
 
 (define (dom-run-proof problem tactics theorem theorems)
-  (define the-dom (first (dict-ref problem ':documents)))
-  (define elts (parse-tree (dom-elements the-dom)))
-  (define boxes (parse-tree (dom-boxes the-dom)))
+  (define the-dom (parse-dom (first (dict-ref problem ':documents))))
+  (define elts (dom-elements the-dom))
+  (define boxes (dom-boxes the-dom))
 
-  (match (dom-context the-dom ':matched) ['(true) (void)])
-  (define get-by-selector
-    (let ([linker (link-matched-elts-boxes #f elts boxes)])
-      (λ (sel)
-        (for/list ([box (in-tree boxes)]
-                   #:when (linker box)
-                   #:when (selector-matches? sel (first (linker box))))
-          box))))
+  (define (get-by-selector sel)
+    (for/list ([box (in-tree boxes)]
+               #:when (dom-box->elt the-dom box)
+               #:when (selector-matches? sel (dom-box->elt the-dom box)))
+      box))
 
   (define box-context (make-hash (list (cons 'root boxes))))
   (node-set! boxes ':split 0)
@@ -95,7 +92,7 @@
                              ,body)
                            ,thbody)))]))
 
-  (define problem* (dict-set problem ':documents (list (struct-copy dom the-dom [boxes (unparse-tree boxes)]))))
+  (define problem* (dict-set problem ':documents (list (unparse-dom the-dom))))
   (define problem** (dict-set* problem* ':test (list theorem) ':tool (list 'assert)))
 
   (define cnt 0)

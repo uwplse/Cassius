@@ -120,17 +120,17 @@
                                          ,(dump-value type (if inheritable? 'inherit default))))
                         :named ,(sformat "value/none/~a^~a" prop (dump-elt elt))))))))
 
-(define (box-element-constraints matchers doms)
+(define (box-element-constraints doms)
   (reap [emit]
-    (for ([dom doms] [matcher matchers]
-          #:when true [box (in-boxes dom)])
-      (match (matcher box)
-        [#f
-         (emit `(assert (! (match-anon-box ,(dump-box box))
-                           :named ,(sformat "box-element/~a" (dump-box box)))))]
-        [(list elt first? last?)
-         (emit `(assert (! (match-element-box ,(dump-elt elt) ,(dump-box box) ,(if first? 'true 'false) ,(if last? 'true 'false))
-                           :named ,(sformat "box-element/~a" (dump-box box)))))]))))
+    (for* ([dom doms] [box (in-boxes dom)])
+      (if (dom-box->elt dom box)
+          (emit `(assert (! (match-element-box ,(dump-elt (dom-box->elt dom box))
+                                               ,(dump-box box)
+                                               ,(if (dom-first-box? dom box) 'true 'false)
+                                               ,(if (dom-last-box? dom box) 'true 'false))
+                            :named ,(sformat "box-element/~a" (dump-box box)))))
+          (emit `(assert (! (match-anon-box ,(dump-box box))
+                            :named ,(sformat "box-element/~a" (dump-box box)))))))))
 
 (define (model-sufficiency doms)
   (apply smt-and
@@ -235,23 +235,23 @@
   (for/hash ([node nodes] #:when (node-get node ':name #:default false))
     (values (node-get node ':name) (dump-box node))))
 
-(define (massage-body body ctx matcher)
+(define (massage-body body ctx dom)
   (match body
     [`(=> ,conds ... ,post)
-     (define conds* (map (curryr massage-body ctx matcher) conds))
+     (define conds* (map (curryr massage-body ctx dom) conds))
      (if (set-member? conds* 'false)
          'true
-         `(=> ,@(map (curryr massage-body ctx matcher) conds) ,post))]
+         `(=> ,@(map (curryr massage-body ctx dom) conds) ,post))]
     [`(or ,bits ...)
-     (apply smt-or (map (curryr massage-body ctx matcher) bits))]
+     (apply smt-or (map (curryr massage-body ctx dom) bits))]
     [`(= (box-elt ,(? (curry dict-has-key? ctx) b)) ,elt)
-     (define rec (ormap (λ (f) (f (dict-ref ctx b))) matcher))
-     (if (equal? (dump-elt (if rec (car rec) #f)) elt) 'true 'false)]
+     (define rec (dom-box->elt dom (dict-ref ctx b)))
+     (if (equal? (dump-elt rec) elt) 'true 'false)]
     [`(is-component ,(? (curry dict-has-key? ctx) b))
      (if (is-component (dict-ref ctx b)) 'true 'false)]
     [_ body]))
 
-(define (spec-constraints fields matcher dom emit box)
+(define (spec-constraints fields dom emit box)
   (when (ormap (curry node-get* box) fields)
     (define nodes (nodes-below box (λ (x) (ormap (curry node-get* x) fields))))
 
@@ -267,7 +267,7 @@
 
       (for ([vals (apply cartesian-product (map (const nodes) vars))] [j (in-naturals)])
         (emit `(assert (! (let ,(map (λ (v x) (list v (dump-box x))) vars vals)
-                            ,(massage-body spec (map cons vars vals) matcher))
+                            ,(massage-body spec (map cons vars vals) dom))
                           :named ,(sformat "spec/~a/~a/~a/~a" (name 'box box) (substring (~a field) 1) i j))))))))
 
 (define (layout-constraints dom emit elt)
@@ -311,7 +311,7 @@
     (emit `(assert (! (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))
                    :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
 
-(define (add-test doms constraints tests #:component [component #f] #:render? [render? true] #:matcher [matcher #f])
+(define (add-test doms constraints tests #:component [component #f] #:render? [render? true])
   (define possible-boxes
     (if component
         (nodes-below component  '(:spec :assert :admit))
@@ -329,12 +329,12 @@
                       `(and (not ,test) (= which-constraint ,i)))))
     ,@(reap [sow]
          (for* ([dom doms] [box (in-boxes dom)])
-           (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) matcher dom sow box)))))
+           (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) dom sow box)))))
 
 (define (sheet-constraints params doms rules)
   (reap [emit] (for ([dom doms]) (selector-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
-(define (all-constraints sheets matcher doms fonts #:render? [render? true])
+(define (all-constraints sheets doms fonts #:render? [render? true])
   (define (global f) (reap [sow] (f doms sow)))
   (define (per-element f)
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
@@ -389,7 +389,7 @@
     ,@(per-element tree-constraints)
     ,@(per-box box-link-constraints)
     ,@(per-box box-constraints)
-    ,@(box-element-constraints matcher doms)
+    ,@(box-element-constraints doms)
     ,@(ez-fields)
     ,@(for-render ez-field-compute)
     ,@(for-render per-element compute-style-constraints)

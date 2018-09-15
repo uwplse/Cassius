@@ -49,7 +49,7 @@
      (printf "Terminated.\n")]))
 
 (define (do-dump problem #:screenshot [screenshot #f])
-  (match-define (list (dom _ _ _ tree)) (dict-ref problem ':documents))
+  (match-define (list (dom _ _ _ tree _)) (dict-ref problem ':documents))
   (define w (node-get tree ':w))
   (write-xexpr
    `(html ()

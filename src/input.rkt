@@ -26,7 +26,7 @@
          (dict-set! fonts name rules)]
         [`(define-layout (,name ,rest ...) ,tree)
          (define properties (attributes->dict rest))
-         (dict-set! layouts name (dom name properties tree tree))]
+         (dict-set! layouts name (dom name properties tree tree #f))]
         [`(define-document ,name ,tree)
          (dict-set! docs name tree)]
         [`(define-action ,name ,target ,evt (,froms ,tos) ...)
@@ -57,7 +57,7 @@
            (define layouts*
              (for/list ([doc (dict-ref properties ':documents)]
                         [layout (dict-ref properties ':layouts)])
-               (dom (dom-name layout) (dom-properties layout) doc (dom-boxes layout))))
+               (dom (dom-name layout) (dom-properties layout) doc (dom-boxes layout) #f)))
            (set! properties (dict-set properties ':documents layouts*)))
 
          (dict-set! problems name properties)])))

@@ -1,10 +1,11 @@
 #lang racket
 (require "common.rkt" "tree.rkt")
 
-(provide (struct-out dom) dom-context in-elements in-boxes elements-difference parse-dom
+(provide (struct-out dom) dom-context in-elements in-boxes parse-dom unparse-dom
+         dom-box->elt dom-first-box? dom-last-box?
          dom-strip-positions dom-set-range)
 
-(struct dom (name properties elements boxes) #:prefab)
+(struct dom (name properties elements boxes match) #:prefab)
 (struct element (type attrs parent* children)
         #:mutable
         #:methods gen:custom-write
@@ -19,23 +20,44 @@
 (define in-elements (compose in-tree dom-elements))
 (define in-boxes    (compose in-tree dom-boxes))
 
-(define (elements-difference from to)
-  (let/ec return
-    (let loop ([from from] [to to])
-      (for ([cls (set-subtract (node-get to ':class #:default '()) (node-get from ':class #:default '()))])
-        (return (list 'add-class from cls)))
-      (for ([cls (set-subtract (node-get from ':class #:default '()) (node-get to ':class #:default '()))])
-        (return (list 'remove-class from cls)))
-      (unless (equal? (node-get from ':id) (node-get to ':id))
-        (return (list 'set-id from (node-get to ':id))))
-      (unless (= (length (node-children from)) (length (node-children to)))
-        (return (list 'children from to)))
-      (for-each loop (node-children from) (node-children to)))
-    (return #f)))
-
 (define (parse-dom doc)
-  (match-define (dom name ctx elts boxes) doc)
-  (dom name ctx (parse-tree elts) (parse-tree boxes)))
+  (define elts* (parse-tree (dom-elements doc)))
+  (define boxes* (parse-tree (dom-boxes doc)))
+  (unless (dom-context doc ':matched)
+    (error "Unmatched trees (without :elt and :num) no longer supported"))
+  (struct-copy dom doc [elements elts*] [boxes boxes*] [match (build-match elts* boxes*)]))
+
+(define (unparse-dom doc)
+  (struct-copy dom doc
+               [elements (unparse-tree (dom-elements doc))]
+               [boxes (unparse-tree (dom-boxes doc))]
+               [match #f]))
+
+(define (build-match elts boxes)
+  (define num->elt (make-hasheq))
+  (define box->elt (make-hasheq))
+  (define first-box (make-hasheq))
+  (define last-box (make-hasheq))
+  (for ([elt (in-tree elts)] #:when (node-get elt ':num))
+    (dict-set! num->elt (node-get elt ':num) elt))
+  (for ([box (in-tree boxes)] #:when (node-get box ':elt))
+    (define elt (dict-ref num->elt (node-get box ':elt)))
+    (dict-set! box->elt box elt)
+    (unless (dict-has-key? first-box elt)
+      (dict-set! first-box elt box))
+    (dict-set! last-box elt box))
+  (list box->elt first-box last-box))
+
+(define (dom-box->elt dom box)
+  (dict-ref (first (dom-match dom)) box #f))
+
+(define (dom-first-box? dom box)
+  (define elt (dict-ref (first (dom-match dom)) box #f))
+  (and elt (equal? box (dict-ref (second (dom-match dom)) elt #f))))
+
+(define (dom-last-box? dom box)
+  (define elt (dict-ref (first (dom-match dom)) box #f))
+  (and elt (equal? box (dict-ref (second (dom-match dom)) elt #f))))
 
 (define (dom-strip-positions d)
   (define boxes*

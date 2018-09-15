@@ -13,7 +13,7 @@
   (set-member? (expected-failures) info))
 
 (define (dom-not-something d)
-  (match-define (dom name ctx elts boxes) d)
+  (match-define (dom name ctx elts boxes _) d)
   
   (define constraints 0)
 
@@ -26,24 +26,25 @@
   (set! constraints 0)
 
   ;; Not my fault
-  (dom name ctx elts
-       (let loop ([tree boxes])
-         (cond
-          [(> constraints idx) tree]
-          [(member (caar tree) '(LINE BLOCK INLINE))
-           (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree))))
-           (cons (cons (caar tree)
-                       (let loop2 ([n (- constraints idx)] [props (cdar tree)])
-                         (cond
-                          [(null? props) props]
-                          [(and (= n 1) (member (car props) '(:x :y :w :h)))
-                           (list* (car props) `(not ,(cadr props)) (cddr props))]
-                          [(and (member (car props) '(:x :y :w :h)))
-                           (list* (car props) (cadr props) (loop2 (- n 1) (cddr props)))]
-                          [else
-                           (list* (car props) (cadr props) (loop2 n (cddr props)))])))
-                 (map loop (cdr tree)))]
-          [else (cons (car tree) (map loop (cdr tree)))]))))
+  (struct-copy dom d
+               [boxes
+                (let loop ([tree boxes])
+                  (cond
+                   [(> constraints idx) tree]
+                   [(member (caar tree) '(LINE BLOCK INLINE))
+                    (set! constraints (+ constraints (count (curryr member '(:x :y :w :h)) (cdar tree))))
+                    (cons (cons (caar tree)
+                                (let loop2 ([n (- constraints idx)] [props (cdar tree)])
+                                  (cond
+                                   [(null? props) props]
+                                   [(and (= n 1) (member (car props) '(:x :y :w :h)))
+                                    (list* (car props) `(not ,(cadr props)) (cddr props))]
+                                   [(and (member (car props) '(:x :y :w :h)))
+                                    (list* (car props) (cadr props) (loop2 (- n 1) (cddr props)))]
+                                   [else
+                                    (list* (car props) (cadr props) (loop2 n (cddr props)))])))
+                          (map loop (cdr tree)))]
+                   [else (cons (car tree) (map loop (cdr tree)))]))]))
 
 (define (section->tuple s)
   (if (string=? (substring s 0 1) "s")

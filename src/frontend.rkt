@@ -1,6 +1,6 @@
 #lang racket
 (require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
-         "selectors.rkt" "encode.rkt" "match.rkt" "smt.rkt" "spec/tree.rkt"
+         "selectors.rkt" "encode.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt"
          "assertion2js.rkt")
 (provide query (struct-out success) (struct-out failure) solve-problem)
@@ -32,14 +32,6 @@
                 [_ (void)])))))
   (*%* (set-union (*%*) %s))
 
-  (define matchers
-    (for/list ([dom doms])
-      (define linker
-        (if (dom-context dom ':matched)
-            link-matched-elts-boxes
-            link-elts-boxes))
-      (linker (apply append sheets) (dom-elements dom) (dom-boxes dom))))
-
   (define tests*
     (for/list ([test (or tests '())])
       (define-values (test-vars test-body) (disassemble-forall test))
@@ -57,7 +49,7 @@
          #:combine/key (λ (k a b) (if (equal? a b) a (raise "Different bindings for ~a: ~a and ~a" k a b)))))
       (compile-assertion doms test-body ctx)))
 
-  (define query (all-constraints sheets matchers doms fonts #:render? render?))
+  (define query (all-constraints sheets doms fonts #:render? render?))
 
   (define ms (model-sufficiency doms))
 
@@ -76,7 +68,6 @@
                  body)]))))
     (set! query (add-test doms (append query (auxiliary-definitions)) tests**
                                     #:render? render?
-                                    #:matcher matchers
                                     #:component
                                     (and cname
                                          (for/first ([dom doms] [box (in-boxes dom)])
