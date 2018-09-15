@@ -1,11 +1,8 @@
 #lang racket
 
-(require racket/cmdline (only-in xml write-xexpr) json
-         "common.rkt" "input.rkt" "tree.rkt" "dom.rkt"
-         "frontend.rkt" "solver.rkt"
-         "print/tree.rkt" "print/css.rkt" "print/smt.rkt"
-         "assertions.rkt" "smt.rkt" "selectors.rkt" "match.rkt"
-         "minimizer.rkt" "proofs.rkt")
+(require racket/cmdline (only-in xml write-xexpr) json)
+(require "common.rkt" "input.rkt" "tree.rkt" "dom.rkt" "frontend.rkt"
+         "print/tree.rkt" "assertions.rkt" "minimizer.rkt" "proofs.rkt")
 
 (define (do-accept problem)
   (match (solve-problem problem)
@@ -14,7 +11,6 @@
        (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt)))))
      (eprintf "Accepted!\n")]
     [(failure stylesheet trees)
-     (displayln (stylesheet->string stylesheet))
      (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt :style))))
      (eprintf "Rejected.\n")]
     [(list 'error e)
@@ -89,22 +85,16 @@
     ['break
      (eprintf "Rendering terminated.\n")]))
 
-(define (do-sketch problem)
-  (match (solve-problem problem)
-    [(success stylesheet trees doms test)
-     (displayln (stylesheet->string stylesheet))]
-    [(failure stylesheet trees)
-     (eprintf "Rejected.\n")]
-    [(list 'error e)
-     ((error-display-handler) (exn-message e) e)]
-    ['break
-     (eprintf "Terminated.\n")]))
-
 (define (do-smt2 problem output #:render? [render? false])
   (when render?
     (set! problem (dict-update problem ':documents (curry map dom-strip-positions))))
-  (define out (smt->string (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts))))
-  (call-with-output-file output #:exists 'replace (curry displayln out)))
+  (define smt (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts)))
+  (call-with-output-file output #:exists 'replace
+                         (λ (p)
+                           (for ([cmd smt])
+                             (match cmd
+                               [(list 'echo comment) (fprintf p "; ~a\n" comment)]
+                               [_ (fprintf p "~a\n" cmd)])))))
 
 (define (do-verify problem)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
@@ -237,9 +227,6 @@
    ["render"
     #:args (fname problem)
     (do-render (get-problem fname problem))]
-   ["sketch"
-    #:args (fname problem)
-    (do-sketch (get-problem fname problem))]
    ["smt2"
     #:once-each
     [("--render") "Dumps the SMT-LIB2 for the `render` action"
