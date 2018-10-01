@@ -18,19 +18,24 @@ ul { padding-left: 1.4em; }
 a {color: #2A6496; text-decoration: none}
 a:hover {text-decoration: underline; color: #295785}
 
-header { margin: 1em 0 2em 0; height: 125px; padding: 1em 0; }
+header { margin: 1em 0 2em 0; height: 125px; padding: 0; }
 header img { float: left; margin-right: 2em; height: 100%; }
 header h1 { margin: .5em 0 0 0; clear: right; }
 header p { margin: .5em 0 0 0; }
 header ul { margin: 0 0; list-style: none inside none; padding: 0; }
 header li { float: left; margin: .5em 2em .5em 0; }
+header li:last-child { margin-right: 0; }
 
-@media (max-width: 600px) {
-    header { height: auto; margin: 0; padding: 0; }
+@media (max-width: 500px) {
+    header { height: auto; margin: 0; }
     header img { margin-right: 1em; }
     header h1 { margin-top: .25em }
-    header ul { clear: both; overflow: auto; display: flex; justify-content: space-around; }
+    header ul { display: flex; justify-content: space-around; }
     header li { float: none; margin: .75em 0; }
+}
+
+@media (max-width: 430px) {
+    header ul { overflow: auto; clear: both; }
 }
 
 #news { list-style: none inside; padding: 0; position: relative; }
