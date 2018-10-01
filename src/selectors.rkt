@@ -60,7 +60,7 @@
         [(equal? (slower (node-type sib)) (slower (node-type elt)))
          false]
         [else (loop (node-next sib))]))]
-    [`(pseudo-class hover) false] ; We assume not hovering
+    [`(pseudo-class hover) (node-get* elt ':hover #:default #f)]
     [`(type ,type)
      (and (node-get elt ':type) (equal? (node-get elt ':type) type))]
     [`(media ,query ,sel)

@@ -23,8 +23,8 @@
      (width . ,(λ (b [dir 'border]) `(- (right ,b ,dir) (left ,b ,dir))))
      (height . ,(λ (b [dir 'border]) `(- (bottom ,b ,dir) (top ,b ,dir))))
 
-     (no-floats-enter . ,(λ (b) `(raw (ez.outside (ez.in ,b) ,b))))
-     (no-floats-exit . ,(λ (b) `(raw (ez.inside (ez.out ,b) ,b))))
+     (no-floats-enter . ,(λ (b) `(let ([b ,b]) (raw (ez.outside (ez.in b) b)))))
+     (no-floats-exit . ,(λ (b) `(let ([b ,b]) (raw (ez.inside (ez.out b) b)))))
 
      (float-flow-in . ,(λ (b1 b2) `(raw (and (= (ez.in ,b1) (ez.in ,b2)) (<= (top-border ,b1) (top-border ,b2))))))
      (float-flow-out . ,(λ (b1 b2) `(raw (and (= (ez.out ,b2) (ez.out ,b1)) (<= (bottom-border ,b1) (bottom-border ,b2))))))
