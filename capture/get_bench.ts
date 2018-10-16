@@ -757,6 +757,10 @@ function dump_rule(sel, style, features, is_from_style, media) {
         } else {
             text += "\n   #;[" + sname + " " + val + "]";
         }
+
+        if ((sname == "overflow-x" || sname == "overflow-y") && val == "auto") {
+            features["overflow:auto"] = true;
+        }
     }
 
     if (!has_good_prop) return "";
