@@ -178,6 +178,7 @@ function convert_offset(offset, elt) {
 }
 
 function get_margins(elt) {
+    while (elt.nodeType !== document.ELEMENT_NODE) elt = elt.parentNode;
     return {
         top: convert_margin(cs(elt, "margin-top"), elt),
         right: convert_margin(cs(elt, "margin-right"), elt),
@@ -187,6 +188,7 @@ function get_margins(elt) {
 }
 
 function get_relative_offset(elt) {
+    while (elt.nodeType !== document.ELEMENT_NODE) elt = elt.parentNode;
     return {
         top: convert_offset(cs(elt, "top"), elt),
         bottom: convert_offset(cs(elt, "bottom"), elt),
@@ -333,30 +335,26 @@ function infer_lines(box, parent) {
         var py = prev.props.y;
         var px = prev.props.x;
         var pw = prev.props.w;
-        if (prev.type == "INLINE" && has_positions(prev)) {
-            var m = get_margins(prev.node);
-            ph += m.top + m.bottom;
-            py -= m.top;
-            var pos = get_relative_offset(prev.node);
-            if (pos.top) py -= pos.top;
-            else if (pos.bottom) py += pos.bottom;
-            if (pos.left) px -= pos.left;
-            else if (pos.right) px += pos.right;
-        }
+        var m = get_margins(prev.node);
+        ph += m.top + m.bottom;
+        py -= m.top;
+        var pos = get_relative_offset(prev.node);
+        if (pos.top) py -= pos.top;
+        else if (pos.bottom) py += pos.bottom;
+        if (pos.left) px -= pos.left;
+        else if (pos.right) px += pos.right;
 
         var th = txt.props.h;
         var ty = txt.props.y;
         var tx = txt.props.x;
-        if (txt.type == "INLINE" && has_positions(prev)) {
-            var m = get_margins(txt.node);
-            th += m.top + m.bottom;
-            ty -= m.top;
-            var pos = get_relative_offset(txt.node);
-            if (pos.top) ty -= pos.top;
-            else if (pos.bottom) ty += pos.bottom;
-            if (pos.left) tx -= pos.left;
-            else if (pos.right) tx += pos.right;
-        }
+        var m = get_margins(txt.node);
+        th += m.top + m.bottom;
+        ty -= m.top;
+        var pos = get_relative_offset(txt.node);
+        if (pos.top) ty -= pos.top;
+        else if (pos.bottom) ty += pos.bottom;
+        if (pos.left) tx -= pos.left;
+        else if (pos.right) tx += pos.right;
 
         var horiz_adj = (ty + th >= py && py >= ty || py + ph >= ty && ty >= py)
 
