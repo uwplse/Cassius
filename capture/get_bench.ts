@@ -451,6 +451,7 @@ function extract_block(elt, children) {
     }
 
     var box = Block(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
+    if (elt.tagName.toUpperCase() == "OPTION") box.props.x -= 1;
     box.children = children;
 
     if (cs(elt, "display") == "list-item" && children.length == 0) {
