@@ -348,7 +348,7 @@
     (echo "Basic definitions")
     ,(make-%of)
     ,@(colors)
-    ,@(make-font-datatype)
+    ,@(font-datatype)
     (declare-datatypes
      ()
      (,@(for/list ([(type decl) (in-css-types)]) (cons type decl))
@@ -372,8 +372,7 @@
     (define-const font-weight/normal Font-Weight (font-weight/num 400))
     (define-const font-weight/bold Font-Weight (font-weight/num 700))
     (define-const color/undefined Color color/transparent)
-    ,@(for-render make-font-table fonts)
-    ,@(for-render (compose list make-get-font) fonts)
+    ,@(for-render make-get-font fonts)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(sformat "color/~a" name) Color ,(dump-value 'Color value)))
     ,@(common-definitions)

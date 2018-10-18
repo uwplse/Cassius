@@ -1,65 +1,65 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "../encode.rkt" "../registry.rkt")
-(provide make-font-datatype make-font-table make-get-font font-computation)
-
-(define-constraints make-font-datatype
-  (declare-datatypes () ((Font-Metric (font-metric (font.ascent Real) (font.descent Real) (font.topoffset Real)
-                                                   (font.bottomoffset Real) (font.line-height Real) (font.selection-height Real))))))
+(provide font-datatype make-get-font font-computation)
 
 (define-by-match font-info?
-  (list size n s w a d t b lh))
+  (list size name weight style ascent descent top-offset bottom-offset line-height))
+; Ascent varies from 8% to 150%
+; Descent varies from -50% to 30%
+; Top-offset varies from 0% to 55%, with outlier -19%
+; Bottom-offset varies from 0% to 55%, with outlier -80% and -5%
+; Line-height varies from 100% to 180%, with 0 outlier
+; Ascent + descent varies from 10% to 110%
+; Selection height varies from 100% to 180%, with 0 outlier
 
-(define (fuzzy-=-constraint var val [fuzz *fuzz*])
+(define (fuzzy= var val [fuzz *fuzz*])
   (if (fuzz)
       `(< (- ,val ,(fuzz)) ,var (+ ,val ,(fuzz)))
       `(= ,val ,var)))
 
-(define/contract (make-font-mapping fonts)
-  (-> (listof font-info?) any/c)
-  (define/contract font-map (hash/c (list/c string? (or/c symbol? number?) symbol?) (listof (cons/c number? symbol?))) (make-hash))
-  (for ([font fonts])
-    (match-define (list size n w s a d t b l) font)
-    (define font-name (list n w s))
-    (define font-list (dict-ref! font-map font-name '()))
-    (dict-set! font-map font-name (cons (cons size (sformat "font~a-~a" (name 'font font-name) (name 'fs size))) font-list)))
-  font-map)
-
-(define/contract (make-font-table fonts)
-  (-> (listof font-info?) any/c)
-  `(,@(for/reap [sow] ([font fonts])
-        (match-define (list size n s w a d t b l) font)
-        (match-define (list a* d* t* b*) (list (z3->number a) (z3->number d) (z3->number t) (z3->number b)))
-        (define var (sformat "font~a-~a" (name 'font (list n s w)) (name 'fs size)))
-        (sow `(declare-const ,var Font-Metric))
-        (sow `(assert
-               (and
-                (<= 0 (font.ascent ,var))
-                (<= 0 (font.descent ,var))
-                ,(fuzzy-=-constraint `(+ (font.ascent ,var) (font.descent ,var)) (+ a* d*) *font-fuzz*)
-                ;; These are commented out because Firefox does not get the metrics correctly
-                #;,(fuzzy-=-constraint `(font.ascent ,var) a* *font-fuzz*)
-                #;,(fuzzy-=-constraint `(font.descent ,var) d* *font-fuzz*)
-                ,(fuzzy-=-constraint `(font.topoffset ,var) t*)
-                ,(fuzzy-=-constraint `(font.bottomoffset ,var) b*)
-                ,(fuzzy-=-constraint `(font.selection-height ,var) (+ a* d* t* b*))
-                ,(fuzzy-=-constraint `(font.line-height ,var) l)))))))
-
 (define/contract (make-get-font fonts)
   (-> (listof font-info?) any/c)
-  (define font-map (make-font-mapping fonts))
-  `(define-fun get-font ((family Font-Family) (weight Font-Weight) (style Font-Style) (font-size Real)) Font-Metric
-     ,(for/fold ([outer `(font-metric 0 0 0 0 0 0)]) ([font (dict-keys font-map)])
-        (for/fold ([inner outer]) ([size->metric (dict-ref font-map font)])
-          (match-define (list family weight style) font)
-          (match-define (cons size metric) size->metric)
-          `(ite (and (= family ,(dump-value 'font-family family))
-                     (= weight  ,(if (number? weight) `(font-weight/num ,weight) (sformat "font-weight/~a" weight)))
-                     (= style ,(sformat "font-style/~a" style))
-                     ,(fuzzy-=-constraint 'font-size size *fuzz*))
-                ,metric
-                ,inner)))))
+  (reap [sow]
+        (sow `(declare-fun get-font (Font-Family Font-Weight Font-Style Real) Font-Metric))
+        (for* ([font (in-list fonts)])
+          (match-define (list size family weight style a d t b l) font)
+          (match-define (list a* d* t* b* l*) (map z3->number (list a d t b l)))
+          (define var (sformat "font~a-~a" (name 'font (list family weight style)) (z3->number size)))
+          (sow `(declare-const ,var Font-Metric))
+          (sow `(assert (<= 0 (font.ascent ,var))))
+          (sow `(assert (<= 0 (font.descent ,var))))
+          (sow `(assert ,(fuzzy= `(+ (font.ascent ,var) (font.descent ,var)) (+ a* d*) *font-fuzz*)))
+          (sow `(assert ,(fuzzy= `(font.topoffset ,var) t*)))
+          (sow `(assert ,(fuzzy= `(font.bottomoffset ,var) b*)))
+          ;; These are commented out because Firefox does not get the metrics correctly
+          #;(sow `(assert ,(fuzzy= `(font.ascent ,var) a* *font-fuzz*)))
+          #;(sow `(assert ,(fuzzy= `(font.descent ,var) d* *font-fuzz*)))
+          (sow `(assert ,(fuzzy= `(font.selection-height ,var) (+ a* d* t* b*))))
+          (sow `(assert ,(fuzzy= `(font.line-height ,var) l)))
+          (sow `(assert (= (get-font ,(dump-value 'font-family family)
+                                     ,(dump-value 'font-weight weight)
+                                     ,(dump-value 'font-style style)
+                                     ,size) ,var))))))
 
-(define-constraints font-computation
+(define-constraints (font-datatype)
+  (declare-datatypes ()
+   ((Font-Metric
+     (font-metric
+      (font.ascent Real) (font.descent Real)
+      (font.topoffset Real) (font.bottomoffset Real)
+      (font.line-height Real) (font.selection-height Real)))))
+
+  (define-fun font.valid? ((fm Font-Metric) (x Real)) Bool
+    ;; Is `fm` a valid font at font-size `x`? Most real fonts satisfy the below,
+    ;; but it cannot be asserted of all results to `get-font` because Z3 cannot
+    ;; prove that such a font always exists.
+    (and (<= (* .1 x) (+ (font.ascent fm) (font.descent fm)) (* 1.1 x))
+         (<= 0 (font.topoffset fm) (* .6 x))
+         (<= 0 (font.bottomoffset fm) (* .6 x))
+         (<= x (font.line-height fm) (* 1.8 x))
+         (<= x (font.selection-height fm) (* 1.8 x)))))
+
+(define-constraints (font-computation)
   (declare-fun font-info (Box) Font-Metric)
 
   (define-fun font ((e Element)) Font-Metric
@@ -75,7 +75,7 @@
                           (font (box-elt b))
                           (ite (is-box (pbox b))
                                (font-info (pbox b))
-                               (font-metric 0 0 0 0 0 0)))))) ; TODO: should be default font
+                               (font-info (fbox b)))))))
 
   (define-fun height-text ((b Box)) Real
     (+ (font.ascent (font-info b)) (font.descent (font-info b))))

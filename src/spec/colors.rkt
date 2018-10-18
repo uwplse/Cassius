@@ -153,7 +153,7 @@
         (yellowgreen . (rgb 154 205 50))
         ))
 
-(define-constraints colors
+(define-constraints (colors)
   (declare-datatypes () ((RGBColor (color (color.r Real) (color.g Real) (color.b Real)
                                           (color.r-corr Real) (color.g-corr Real) (color.b-corr Real)))))
 

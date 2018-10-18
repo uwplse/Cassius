@@ -31,7 +31,7 @@
    [else
     out]))
 
-(define-constraints boxref-definitions
+(define-constraints (boxref-definitions)
 
   (declare-fun vflow (Box) Box)
   (declare-fun nflow (Box) Box)
@@ -51,7 +51,7 @@
   (define-fun non-negative-margins ((b Box)) Bool
     (and (>= (mtp b) (- (mtn b))) (>= (mbp b) (- (mbn b))))))
 
-(define-constraints layout-definitions
+(define-constraints (layout-definitions)
 
   (assert
    (forall ((b Box))

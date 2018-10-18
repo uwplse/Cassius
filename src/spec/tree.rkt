@@ -6,8 +6,7 @@
 ;; encoding of CSS. It defines the Element and Box classes, and
 ;; functions to properly establish the pointers each holds.
 
-(define-constraints link-definitions
-
+(define-constraints (link-definitions)
 
   ;; Helper functions for some basic primitives
   (define-fun float ((b Box)) Float

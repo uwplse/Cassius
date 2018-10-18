@@ -73,7 +73,7 @@
           (font-size.px (style.font-size (computed-style ,elt)))))
         (,(sformat "style.~a" prop) (specified-style ,elt))))
 
-(define-constraints style-computation
+(define-constraints (style-computation)
   (define-fun rem2px ((rem Real)) Real
     (%of rem ,(fs-name)))
 

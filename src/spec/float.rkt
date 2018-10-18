@@ -11,7 +11,7 @@
 (define (line-exists? i)
   `(or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez)))
 
-(define-constraints exclusion-zones
+(define-constraints (exclusion-zones)
   (declare-datatypes ()
      ((EZone (ezone (ez.mark Real) (ez.mark? Bool)
                     ,@(for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])
@@ -463,7 +463,7 @@
              '((ez.free-registers ez)
                (ez.free-registers (ez.add (ez.advance ez t) dir t r b l)))))
 
-(define-constraints ez-fields
+(define-constraints (ez-fields)
 
   ;; The "in" and "out" EZones track EZones in-order through the tree
   (declare-fun ez.in (Box) EZone)
@@ -472,7 +472,7 @@
   (assert (forall ((b Box)) (ez.valid? (ez.in b))))
   (assert (forall ((b Box)) (ez.valid? (ez.out b)))))
 
-(define-constraints ez-field-compute
+(define-constraints (ez-field-compute)
   (assert
    (forall ((b Box))
            (= (ez.in b)

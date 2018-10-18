@@ -18,7 +18,7 @@
      `(ite test (and body ...) ,(smt-cond rest ...))]))
 
 (define-syntax-rule (define-constraints name body ...)
-  (define (name) `(body ...)))
+  (define name `(body ...)))
 
 (define-syntax-rule (smt-let bindings constraints ...)
   `(let bindings (and constraints ...)))

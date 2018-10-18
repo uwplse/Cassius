@@ -2,7 +2,7 @@
 (require "../common.rkt" "../smt.rkt")
 (provide common-definitions tree-types utility-definitions)
 
-(define-constraints common-definitions
+(define-constraints (common-definitions)
   (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
   (define-fun min ((x Real) (y Real)) Real (ite (< x y) x y))
   (define-fun max-if ((x Real) (y? Bool) (y Real)) Real (ite (and y? (< x y)) y x))
@@ -10,7 +10,7 @@
   (define-fun between ((x Real) (y Real) (z Real)) Bool
     (or (<= x y z) (>= x y z))))
 
-(define-constraints tree-types
+(define-constraints (tree-types)
   (declare-datatypes ()
      ((Box no-box
            (box (bid Int) (type BoxType)
@@ -36,7 +36,7 @@
            (elt (eid Int) (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real))))))
 
-(define-constraints utility-definitions
+(define-constraints (utility-definitions)
   ;; Elements only need parents
   (declare-fun pelt (Element) Element)
 
