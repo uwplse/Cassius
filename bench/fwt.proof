@@ -274,12 +274,6 @@ Supposed to fail
 
 ;; A theorem about line width, from the VizAssert paper
 
-; We restrict the range of widths because of media queries---for later
-(page yoga-restricted (load "fwt.rkt" doc-080)
-      :w (between 1280 1920)
-      :h (between 800 1280)
-      :fs (between 16 32))
-
 (define (line b)
   (ancestor b (has-type ? line)))
 
@@ -291,7 +285,7 @@ Supposed to fail
       (!= (first (line b)) null)
       (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))
 
-(proof (line-width line-width yoga-restricted)
+(proof (line-width line-width yoga)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))

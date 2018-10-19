@@ -69,6 +69,8 @@
                 (style.font-style style)
                 (font-size.px (style.font-size style)))))
 
+  (assert (forall ((e Element)) (font.valid? (font e) (font-size.px (style.font-size (computed-style e))))))
+
   (assert (forall ((b Box))
                   (= (font-info b)
                      (ite (is-elt (box-elt b))
