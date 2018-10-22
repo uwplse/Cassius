@@ -248,12 +248,11 @@ Supposed to fail
            (matches b2 (desc (id footer) (class last)))
            (and (= (top b1 outer) (top b2 outer))
                 (<= (right b1 outer) (left b2 outer))))))
-  (admit root (no-floats-enter footer))
-  ; Needs some work to get the floats stuff right
-  #;(assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
-  #;(assert root (float-flow-across featured home footer))
-  #;(assert root (float-flow-in root featured))
-  #;(assert root (no-floats-enter root))
+  (assert * (non-negative-margins ?))
+  (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
+  (assert root (float-flow-across featured home footer))
+  (assert root (float-flow-in root featured))
+  (assert root (no-floats-enter root))
   (assert root (and (= (width featured) 950) (= (width home) 940) (= (width footer) 940))))
 
 (page puppy (load "fwt.rkt" doc-079)
