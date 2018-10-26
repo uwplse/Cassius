@@ -693,7 +693,9 @@
                 ;; narrower than `(w p)`, because we don't know the
                 ;; shape of the exclusion zone when `(not (ez.lookback
                 ;; b))`.
-                (and (>= (left-outer b) (left-content p)) (<= (right-outer b) (right-content p))))
+                (and
+                 (= (+ (ml b) (box-width b) (mr b)) (w p))
+                 (>= (left-outer b) (left-content p)) (<= (right-outer b) (right-content p))))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
                    (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))))
