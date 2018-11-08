@@ -12,6 +12,7 @@
        (let* ([component (parse-tree (cons (first tree) children*))]
               [specs (node-get* component ':spec #:default '())]
               [asserts (node-get* component ':assert #:default '())]
+              [pres (node-get* component ':pre #:default '())]
               [ctx (dom-properties doc)])
          (node-remove! component ':spec)
          (node-remove! component ':assert)
@@ -23,7 +24,9 @@
                                        [name (node-get component ':name #:default name)]
                                        [boxes (unparse-tree component)]
                                        [properties props])
-                          (append specs asserts)))
+                          (for/list ([p (append specs asserts)])
+                            (define-values (vars body) (disassemble-forall p))
+                            `(forall (,@vars) (=> ,@pres ,body)))))
          (unless (eq? tree (dom-boxes doc))
            (node-add! component ':component 'true))
          (node-set*! component ':spec specs)

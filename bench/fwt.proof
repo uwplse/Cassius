@@ -20,16 +20,16 @@
 (define (onscreen b)
   (and (>= (top b) 0) (>= (left b) 0)))
 
-(define (is-interactive b)
+(define (is-link b)
   (matches b (tag a)))
 
 (theorem (interactive-onscreen b)
-  (=> (is-interactive b) (onscreen b)))
+  (=> (is-link b) (onscreen b)))
 
 ;; This is a trivial proof of it, using a single component / whole page approach
 
 (proof (trivial interactive-onscreen yoga surf park)
-  (assert root (forall (b) (=> (is-interactive b) (onscreen b)))))
+  (assert root (forall (b) (=> (is-link b) (onscreen b)))))
 
 ;; A proof that we mention in the overview section
 
@@ -38,7 +38,7 @@
   (component body (id body))
   (component footer (id footer))
 
-  (page * (forall (b) (=> (is-interactive b) (onscreen b)))))
+  (page * (forall (b) (=> (is-link b) (onscreen b)))))
 
 ;; The final proof in the overview section
 
@@ -47,24 +47,19 @@
   (component body (id body))
   (component footer (id footer))
 
+  ; The generic abstraction
+  (assert (or header footer) (forall (a) (=> (onscreen header) (is-link a) (onscreen a))))
+
   (assert * (non-negative-margins ?))
 
-  (assert root (=> (no-floats-exit header) (>= (width footer) 200)))
-  (assert root (=> (no-floats-exit header)
-                   (and (onscreen header) (onscreen body) (onscreen footer))))
+  (assert root (>= (width footer) 200))
+  (pre footer (>= (width footer) 200))
+  (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
 
-  (assert header
-    (forall (a)
-            (=> (onscreen header) (is-interactive a) (onscreen a))))
-
-  (assert footer
-    (forall (a)
-            (=> (no-floats-enter footer)
-                (>= (width footer) 200)
-                (onscreen footer)
-                (=> (is-interactive a) (onscreen a)))))
-
-  (page root (and (no-floats-exit header) (no-floats-enter footer))))
+  (pre root (no-floats-exit header))
+  (page root (no-floats-exit header))
+  (pre footer (no-floats-enter footer))
+  (page root (no-floats-enter footer)))
 
 ;; The fully-componentized proof of the yoga page
 
@@ -73,20 +68,15 @@
   (component body (id body))
   (component footer (id footer))
 
+  (assert (or header footer)
+    (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
+
+  (pre footer (>= (width footer) 200))
   (assert root (>= (width footer) 200))
+
   (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
 
-  (assert header
-    (forall (a)
-            (=> (onscreen header) (is-interactive a) (onscreen a))))
-
-  (assert footer
-    (forall (a)
-            (=> (no-floats-enter footer)
-                (>= (width footer) 200)
-                (onscreen footer)
-                (=> (is-interactive a) (onscreen a)))))
-
+  (pre footer (no-floats-enter footer))
   (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
   (assert root (no-floats-enter root))
   (assert root (float-flow-in root header))
@@ -94,7 +84,6 @@
   (assert * (non-negative-margins ?)))
 
 ;; A proof that works for the surf page
-
 (proof (surf interactive-onscreen surf)
   (component header (id header))
   (component body (id body))
@@ -102,36 +91,26 @@
   (component nav (id navigation))
   (component home (id home))
 
-  ;; TODO: it would be helpful if there were a "pre" command that set
-  ;; a common precondition for `home` and `nav`, instead of having to
-  ;; duplicate it everywhere.
-
-  (assert (- * home nav)
-          (forall (b) (=> (onscreen ?) (no-floats-enter ?)
-                          (or (is-interactive b) (is-component b)) (onscreen b))))
-  (assert nav (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 2)
-                              (or (is-interactive b) (is-component b)) (onscreen b))))
-  (assert home (forall (b) (=> (onscreen ?) (< (floats-tracked ?) 2)
-                               (or (is-interactive b) (is-component b)) (onscreen b))))
+  (assert (- * nav home)
+          (forall (b) (=> (no-floats-enter ?)
+                          (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
+  (assert (or nav home)
+          (forall (b) (=> (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
 
   (assert root (onscreen root))
   (assert root (= (floats-tracked root) 0))
 
-  (assert (- * home nav) (non-negative-margins ?))
-  (assert (or home nav) (=> (< (floats-tracked ?) 2) (non-negative-margins ?)))
+  (assert * (non-negative-margins ?))
+  (assert * (> (height ?) 0))
 
-  (assert (- * home nav) (> (height ?) 0))
-  (assert (or home nav) (=> (< (floats-tracked ?) 2) (non-negative-margins ?)))
-  (assert (- * home nav) (=> (no-floats-enter ?) (no-floats-exit ?)))
-  (assert (or home nav) (=> (< (floats-tracked ?) 2) (non-negative-margins ?)))
+  (pre (or nav home) (< (floats-tracked ?) 2))
+  (assert body (forall (_) (< (floats-tracked nav) 2)))
+  (assert body (forall (_) (< (floats-tracked home) 2)))
 
+  (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
   (assert root (float-flow-in root header))
   (assert root (float-flow-across header body footer))
   (assert body (float-flow-skip body))
-
-  (assert body (forall (_) (< (floats-tracked nav) 2)))
-  (assert body (forall (_) (< (floats-tracked home) 2)))
-  (assert body (=> (no-floats-enter body) (no-floats-exit body)))
 
   (assert root (no-floats-enter root)))
 
@@ -144,12 +123,11 @@
   (component section (id section))
   (component footer (id footer))
 
-  (assert * (forall (b) (=> (onscreen ?) (>= (width ?) 960)
-                            (no-floats-enter ?)
-                            (or (is-interactive b) (is-component b)) (onscreen b))))
+  (pre (- * root) (>= (width ?) 960))
+  (assert * (forall (b) (=> (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
 
-  (assert root (forall (b) (=> (and (is-component b) (not (= b root))) (= (width b) 960))))
-  (assert root (forall (b) (=> (or (is-interactive b) (is-component b)) (onscreen b))))
+  (pre (- * root) (no-floats-enter ?))
+  (assert root (= (width header) (width figure) (width section) (width footer) 960))
   (assert root (onscreen root))
   (assert root (no-floats-enter root))
 
@@ -170,14 +148,15 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
+(define (carshop-button b)
+  (matches b (child (desc (id body) (class body) (tag div)) (tag a))))
+
 (theorem (button-large b)
-  (=> (matches b (child (desc (id body) (class body) (tag div)) (tag a)))
-      (and (>= (height b) 24) (>= (width b) 72))))
+  (=> (carshop-button b) (and (>= (height b) 24) (>= (width b) 72))))
 
 (proof (button-large button-large carshop)
   (component body (desc (id body) (class body)))
-  (assert body (forall (b) (=> (matches b (child (desc (id body) (class body) (tag div)) (tag a)))
-                               (and (>= (height b) 24) (>= (width b) 72))))))
+  (assert body (forall (b) (=> (button-large b) (and (>= (height b) 24) (>= (width b) 72))))))
 
 #|
 Supposed to fail
@@ -200,60 +179,54 @@ Supposed to fail
       :h (between 600 1280)
       :fs (between 16 32))
 
+(define (col1 b1 b2)
+  (=> (matches b1 (child (id featured) (class first) (tag div)))
+      (matches b2 (child (id featured) (class first) (tag span)))
+      (and (= (top b1 outer) (top b2 outer))
+           (<= (right b1 outer) (left b2 outer)))))
+(define (col2 b1 b2)
+  (=> (matches b1 (child (id featured) (class first) (tag span)))
+      (matches b2 (child (id featured) (class last)))
+      (and (= (top b1 outer) (top b2 outer))
+           (<= (right b1 outer) (left b2 outer)))))
+(define (col3 b1 b2)
+  (=> (matches b1 (child (id home) (class section)))
+      (matches b2 (child (id home) (class sidebar)))
+      (and (= (top b1 outer) (top b2 outer))
+           (<= (right b1 outer) (left b2 outer)))))
+(define (col4 b1 b2)
+  (=> (matches b1 (desc (id footer) (class first)))
+      (matches b2 (desc (id footer) (class last)))
+      (and (= (top b1 outer) (top b2 outer))
+           (<= (right b1 outer) (left b2 outer)))))
+
 (theorem (three-column b1 b2)
   (and
-   (=> (matches b1 (child (id featured) (class first) (tag div)))
-       (matches b2 (child (id featured) (class first) (tag span)))
-       (and (= (top b1 outer) (top b2 outer))
-            (<= (right b1 outer) (left b2 outer))))
-   (=> (matches b1 (child (id featured) (class first) (tag span)))
-       (matches b2 (child (id featured) (class last)))
-       (and (= (top b1 outer) (top b2 outer))
-            (<= (right b1 outer) (left b2 outer))))
-   (=> (matches b1 (child (id home) (class section)))
-       (matches b2 (child (id home) (class sidebar)))
-       (and (= (top b1 outer) (top b2 outer))
-            (<= (right b1 outer) (left b2 outer))))
-   (=> (matches b1 (desc (id footer) (class first)))
-       (matches b2 (desc (id footer) (class last)))
-       (and (= (top b1 outer) (top b2 outer))
-            (<= (right b1 outer) (left b2 outer))))))
+   (col1 b1 b2)
+   (col2 b1 b2)
+   (col3 b1 b2)
+   (col4 b1 b2)))
 
 (proof (three-column three-column tailorshop)
   (component featured (id featured))
   (component home (id home))
   (component footer (id footer))
-  (assert featured (forall (b1 b2)
-       (=> (= (width featured) 950)
-           (matches b1 (child (id featured) (class first) (tag div)))
-           (matches b2 (child (id featured) (class first) (tag span)))
-           (and (= (top b1 outer) (top b2 outer))
-                (<= (right b1 outer) (left b2 outer))))))
-  (assert featured (forall (b1 b2)
-       (=> (= (width featured) 950)
-           (matches b1 (child (id featured) (class first) (tag span)))
-           (matches b2 (child (id featured) (class last)))
-           (and (= (top b1 outer) (top b2 outer))
-                (<= (right b1 outer) (left b2 outer))))))
-  (assert home (forall (b1 b2)
-       (=> (= (width home) 940)
-           (matches b1 (child (id home) (class section)))
-           (matches b2 (child (id home) (class sidebar)))
-           (and (= (top b1 outer) (top b2 outer))
-                (<= (right b1 outer) (left b2 outer))))))
-  (assert footer (forall (b1 b2)
-       (=> (= (width footer) 940)
-           (no-floats-enter footer)
-           (matches b1 (desc (id footer) (class first)))
-           (matches b2 (desc (id footer) (class last)))
-           (and (= (top b1 outer) (top b2 outer))
-                (<= (right b1 outer) (left b2 outer))))))
+  (assert featured (forall (b1 b2) (col1 b1 b2)))
+  (assert featured (forall (b1 b2) (col2 b1 b2)))
+  (assert home (forall (b1 b2) (col3 b1 b2)))
+  (assert footer (forall (b1 b2) (col4 b1 b2)))
+
+  (assert root (and (= (width featured) 950) (= (width home) 940) (= (width footer) 940)))
+  (pre featured (= (width featured) 950))
+  (pre home (= (width home) 940))
+  (pre footer (= (width footer) 940))
+
+  (pre footer (no-floats-enter footer))
   (assert * (non-negative-margins ?))
   (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
   (assert root (float-flow-across featured home footer))
   (assert root (float-flow-in root featured))
-  (assert root (no-floats-enter root))
-  (assert root (and (= (width featured) 950) (= (width home) 940) (= (width footer) 940))))
+  (assert root (no-floats-enter root)))
 
 (page puppy (load "fwt.rkt" doc-079)
       :w (between 800 1920)
@@ -268,7 +241,8 @@ Supposed to fail
 
 (proof (no-text-on-picture no-text-on-picture puppy)
   (component bg (child (id background) (tag div)))
-  (assert bg (forall (b2) (=> (>= (width bg) 940) (has-type b2 text) (<= (right b2) (- (right bg content) 300)))))
+  (assert bg (forall (b2) (=> (has-type b2 text) (<= (right b2) (- (right bg content) 300)))))
+  (pre bg (>= (width bg) 940))
   (assert root (>= (width bg) 940)))
 
 ;; A theorem about line width, from the VizAssert paper
@@ -284,17 +258,18 @@ Supposed to fail
       (!= (first (line b)) null)
       (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))
 
+(define (14-px-text b)
+  (raw (= (font-size.px (style.font-size (computed-style (box-elt b)))) 14)))
+
 (proof (line-width line-width yoga)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
-  (assert * (forall (b) (=> (raw (= (font-size.px (style.font-size (computed-style (box-elt ?)))) 14))
-                            (has-type b text) (has-contents b)
+  (assert * (forall (b) (=> (has-type b text) (has-contents b)
                             (!= (first (line b)) null)
                             (<= (width-line (line b)) (* 80 (/ 10 19) (height b))))))
-  (assert root (raw (= (font-size.px (style.font-size (computed-style (box-elt header)))) 14)))
-  (assert root (raw (= (font-size.px (style.font-size (computed-style (box-elt body)))) 14)))
-  (assert root (raw (= (font-size.px (style.font-size (computed-style (box-elt footer)))) 14))))
+  (pre (or header body footer) (14-px-text ?))
+  (assert root (or (14-px-text header) (14-px-text body) (14-px-text footer))))
 
 
 (define (social-button b)

@@ -254,6 +254,7 @@
 (define (spec-constraints fields dom emit box)
   (when (ormap (curry node-get* box) fields)
     (define nodes (nodes-below box (λ (x) (ormap (curry node-get* x) fields))))
+    (define pres (node-get* box ':pre #:default '()))
 
     (for ([field fields] #:when (node-get* box field) [test (node-get* box field)] [i (in-naturals)])
       (define-values (vars body) (disassemble-forall test))
@@ -263,7 +264,7 @@
          (for/hash ([var vars]) (values var var))
          (hash '? (dump-box box))
          (get-node-names nodes)))
-      (define spec (compile-assertion (list dom) body ctx))
+      (define spec (compile-assertion (list dom) `(=> ,@pres ,body) ctx))
 
       (for ([vals (apply cartesian-product (map (const nodes) vars))] [j (in-naturals)])
         (emit `(assert (! (let ,(map (λ (v x) (list v (dump-box x))) vars vals)
@@ -314,7 +315,7 @@
 (define (add-test doms constraints tests #:component [component #f] #:render? [render? true])
   (define possible-boxes
     (if component
-        (nodes-below component  '(:spec :assert :admit))
+        (nodes-below component  '(:pre :spec :assert :admit))
         (for*/list ([dom doms] [box (in-boxes dom)]) box)))
   `(,@constraints
     (declare-const which-constraint Real)

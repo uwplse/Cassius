@@ -83,6 +83,9 @@
                (node-add! box ':admit assert)
                (set! extra-problems
                      (cons (list tool box assert) extra-problems)))))]
+      [`(pre ,boxes ,assert)
+       (for ([box (box-set boxes components box-context)])
+         (node-add! box ':pre assert))]
       [`(lemma (,thm ,boxes ...))
        (define-values (vars body) (disassemble-forall (theorems thm)))       
        (define-values (thvars thbody) (disassemble-forall theorem))
