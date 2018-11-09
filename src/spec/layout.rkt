@@ -38,12 +38,18 @@
   (declare-fun fflow (Box) Box)
   (declare-fun lflow (Box) Box)
 
+  (declare-fun box-collapsed-through (Box) Bool)
+
+  (declare-fun firstish-box (Box) Bool)
 
   (define-fun ez.outside ((ez EZone) (b Box)) Bool
     (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez) (top-border b)))))
 
   (define-fun ez.inside ((ez EZone) (b Box)) Bool
-    (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez) (bottom-border b)))))
+    (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez)
+                                              (ite (box-collapsed-through b)
+                                                   (top-outer b)
+                                                   (bottom-border b))))))
 
   (define-fun no-margins ((b Box)) Bool
     (= (mtp b) (mtn b) (mbp b) (mbn b) 0.0))
@@ -123,8 +129,6 @@
                            (> (w b) 0) (and (is-elt e) (is-replaced e))
                            (and (is-box v) (contains-content v)) (and (is-box l) (contains-content l)))))))
 
-  (declare-fun box-collapsed-through (Box) Bool)
-
   (assert
    (forall ((b Box))
            (= (box-collapsed-through b)
@@ -203,8 +207,6 @@
              (ite (is-flow-root (pbox b))
                   no-box
                   (ancestor-line (pbox b)))))))
-
-  (declare-fun firstish-box (Box) Bool)
 
   (define-fun vertical-position-for-flow-boxes ((b Box)) Real
     (let ([p (pflow b)] [v (vflow b)])

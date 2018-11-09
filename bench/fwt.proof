@@ -278,23 +278,42 @@ Supposed to fail
 (define (viewable b)
   (and (> (right b) 0) (> (bottom b) 0)))
 
+(define (accessibility-text b)
+  (and (has-type b text) (social-button (ancestor b (not (anonymous? ?))))))
+
 (theorem (accessible-offscreen b)
-  (=> (has-type b text) (social-button (ancestor b (not (anonymous? ?))))
-      (not (viewable b))))
+  (=> (accessibility-text b) (not (viewable b))))
 
 (proof (accessible-offscreen accessible-offscreen yoga)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
-  (assert root (=> (raw (ez.lookback footer)) (<= (left footer) 9000)))
-  (assert footer (forall (b)
-    (=> (<= (left footer) 9000) (<= 0 (let ([p (parent footer)]) (raw (w p))) 2000)
-        (!= (parent footer) null) (raw (ez.lookback footer))
-        (has-type b text) (social-button (ancestor b (not (anonymous? ?))))
-        (not (viewable b)))))
-  (assert root (<= 0 (let ([p (parent footer)]) (raw (w p))) 2000))
-  (admit root (raw (ez.lookback footer)))
-  (assert footer (=> (raw (ez.lookback footer)) (!= (parent footer) null) (let ([p (parent footer)]) (raw (>= (w p) 0)))
-                     (<= (width footer) (let ([p (parent footer)]) (raw (w p))))))
-  (assert footer (=> (<= (let ([p (parent footer)]) (raw (w p))) 2000)
-                     (raw (ez.lookback footer)) (<= (raw (ml footer)) 1000))))
+
+  (assert footer (forall (b) (=> (accessibility-text b) (not (viewable b)))))
+
+  (assert footer (<= (width footer) 2000))
+  (assert footer (<= (raw (ml footer)) 1000))
+
+  (pre footer (<= (left footer) 9000))
+  (assert root (<= (left footer) 9000))
+
+  (pre footer (<= 0 (width (parent footer) content) 2000))
+  (assert root (<= 0 (width (parent footer) content) 2000))
+
+  (pre footer (!= (prev footer) null))
+  (pre footer (!= (parent footer) null))
+  (pre footer (no-floats-exit (prev footer)))
+  (pre footer (non-negative-margins (prev footer)))
+  (pre footer (> (height (prev footer)) 0))
+  (pre footer (raw (not (firstish-box footer))))
+  (pre footer (= (raw (ez.out (vflow footer))) (raw (ez.in footer))))
+
+  (assert root (= (prev footer) body))
+  (assert root (raw (not (firstish-box footer))))
+  (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
+  (assert root (no-floats-enter root))
+  (assert root (float-flow-in root header))
+  (assert root (float-flow-across header body footer))
+  (assert * (non-negative-margins ?))
+  (assert * (> (height ?) 0)))
+
