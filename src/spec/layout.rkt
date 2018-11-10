@@ -46,6 +46,9 @@
     (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez) (top-border b)))))
 
   (define-fun ez.inside ((ez EZone) (b Box)) Bool
+    (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez) (bottom-border b)))))
+
+  (define-fun ez.inside* ((ez EZone) (b Box)) Bool
     (and (ez.valid? ez) (=> (ez.mark? ez) (<= (ez.max ez)
                                               (ite (box-collapsed-through b)
                                                    (top-outer b)

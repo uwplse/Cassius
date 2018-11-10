@@ -48,7 +48,7 @@
   (component footer (id footer))
 
   ; The generic abstraction
-  (assert (or header footer) (forall (a) (=> (onscreen header) (is-link a) (onscreen a))))
+  (assert (or header footer) (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
 
   (assert * (non-negative-margins ?))
 
@@ -56,7 +56,7 @@
   (pre footer (>= (width footer) 200))
   (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
 
-  (pre root (no-floats-exit header))
+  (pre header (no-floats-exit header))
   (page root (no-floats-exit header))
   (pre footer (no-floats-enter footer))
   (page root (no-floats-enter footer)))
@@ -156,7 +156,7 @@
 
 (proof (button-large button-large carshop)
   (component body (desc (id body) (class body)))
-  (assert body (forall (b) (=> (button-large b) (and (>= (height b) 24) (>= (width b) 72))))))
+  (assert body (forall (b) (=> (carshop-button b) (and (>= (height b) 24) (>= (width b) 72))))))
 
 #|
 Supposed to fail
@@ -302,7 +302,7 @@ Supposed to fail
 
   (pre footer (!= (prev footer) null))
   (pre footer (!= (parent footer) null))
-  (pre footer (no-floats-exit (prev footer)))
+  (pre footer (no-floats-exit* (prev footer)))
   (pre footer (non-negative-margins (prev footer)))
   (pre footer (> (height (prev footer)) 0))
   (pre footer (raw (not (firstish-box footer))))
@@ -310,7 +310,7 @@ Supposed to fail
 
   (assert root (= (prev footer) body))
   (assert root (raw (not (firstish-box footer))))
-  (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
+  (assert * (=> (no-floats-enter ?) (no-floats-exit* ?)))
   (assert root (no-floats-enter root))
   (assert root (float-flow-in root header))
   (assert root (float-flow-across header body footer))
