@@ -47,19 +47,20 @@
   (component body (id body))
   (component footer (id footer))
 
-  ; The generic abstraction
-  (assert (or header footer) (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
+  (assert * (forall (a) (=> (onscreen ?) (is-interactive a) (onscreen a))))
 
+  (assert root (onscreen header))
+  (assert root (onscreen footer))
   (assert * (non-negative-margins ?))
 
-  (assert root (>= (width footer) 200))
-  (pre footer (>= (width footer) 200))
-  (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
-
-  (pre header (no-floats-exit header))
-  (page root (no-floats-exit header))
   (pre footer (no-floats-enter footer))
-  (page root (no-floats-enter footer)))
+  (page root (no-floats-enter footer))
+
+  (pre footer (>= (width footer) 200))
+  (assert root (>= (width footer) 200))
+
+  (pre root (no-floats-exit header))
+  (page header (no-floats-exit header)))
 
 ;; The fully-componentized proof of the yoga page
 
@@ -211,6 +212,7 @@ Supposed to fail
   (component featured (id featured))
   (component home (id home))
   (component footer (id footer))
+
   (assert featured (forall (b1 b2) (col1 b1 b2)))
   (assert featured (forall (b1 b2) (col2 b1 b2)))
   (assert home (forall (b1 b2) (col3 b1 b2)))
