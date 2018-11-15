@@ -102,7 +102,7 @@
 
   (assert root (onscreen root))
 
-  (assert sidebar (forall (_) (=> (onscreen sidebar) (onscreen-plus sidebar-content 5))))
+  (admit sidebar (forall (_) (=> (onscreen sidebar) (onscreen-plus sidebar-content 3.5))))
   (admit sidebar (forall (b) (=> (onscreen sidebar) (or (is-component b) (is-interactive b)) (onscreen b))))
 
   (assert sidebar-title (non-negative-margins sidebar-title))
@@ -112,12 +112,12 @@
 
   (assert sidebar-content
           (forall (_)
-                  (=> (onscreen-plus sidebar-content 5)
-                      (onscreen-plus sidebar-title 5))))
+                  (=> (onscreen-plus sidebar-content 3.5)
+                      (onscreen-plus sidebar-title 3.5))))
 
   (assert sidebar-title
     (forall (b)
-            (=> (onscreen-plus sidebar-title 5)
+            (=> (onscreen-plus sidebar-title 3.5)
                 (is-interactive b) (onscreen b)))))
 
 (define (line b)
@@ -149,6 +149,10 @@
 
   (components (id site-navigation))
   (components (desc (id site-navigation) (tag li)))
+
+  (components (id comments))
+  (components (desc (id comments) (tag li)))
+  (components (id respond))
 
   (assert * (forall (b) (=> (has-type b text) (has-contents b)
                             (!= (first (line b)) null)

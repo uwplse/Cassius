@@ -29,7 +29,7 @@
 ;; This is a trivial proof of it, using a single component / whole page approach
 
 (proof (trivial interactive-onscreen yoga surf park)
-  (assert root (forall (b) (=> (is-link b) (onscreen b)))))
+  (page root (forall (b) (=> (is-link b) (onscreen b)))))
 
 ;; A proof that we mention in the overview section
 
@@ -47,11 +47,10 @@
   (component body (id body))
   (component footer (id footer))
 
-  (assert * (forall (a) (=> (onscreen ?) (is-interactive a) (onscreen a))))
-
+  (assert (or header footer)
+          (forall (a) (=> (onscreen ?) (is-interactive a) (onscreen a))))
   (assert root (onscreen header))
   (assert root (onscreen footer))
-  (assert * (non-negative-margins ?))
 
   (pre footer (no-floats-enter footer))
   (page root (no-floats-enter footer))
@@ -60,6 +59,7 @@
   (assert root (>= (width footer) 200))
 
   (pre root (no-floats-exit header))
+  (assert * (non-negative-margins ?))
   (page header (no-floats-exit header)))
 
 ;; The fully-componentized proof of the yoga page
@@ -71,11 +71,10 @@
 
   (assert (or header footer)
     (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
+  (assert root (and (onscreen header) (onscreen footer)))
 
   (pre footer (>= (width footer) 200))
   (assert root (>= (width footer) 200))
-
-  (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
 
   (pre footer (no-floats-enter footer))
   (assert * (=> (no-floats-enter ?) (no-floats-exit ?)))
