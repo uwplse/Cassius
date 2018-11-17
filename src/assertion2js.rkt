@@ -7,25 +7,19 @@
 (provide test-assertion)
 
 (define-runtime-path capture-path "../capture/")
-(define python-path (find-executable-path (match (system-type 'os) ['windows "python.exe"] [_ "python"])))
+(define python-path (find-executable-path (match (system-type 'os) ['windows "python3.exe"] [_ "python3"])))
 (define xvfb-run-path (find-executable-path "xvfb-run"))
 
 (define js-header
   (string-join
    '("function last(r) { return r[r.length - 1]; }"
      "function ancestor(b, c) { var v = b; while (v && ! c(v)) { v = v.parentNode; }; return v; }"
-     "function allelts() {
-  var out = [];
-  var cn, ni = document.createNodeIterator(document.documentElement, NodeFilter.SHOW_ELEMENT);
-  while(cn = ni.nextNode()) out.push(cn);
-  return out;
-}"
-     "function nprod(base, n, f, tail) {
-  if (n == 0) { return f.apply(this, tail); }
+     "function nprod(base, i, f, tail) {
+  if (n.length >= i) { return f.apply(this, tail); }
   else {
     var out = true;
-    for (var i = 0; out && i < base.length; i++) {
-      out = out && nprod(base, n - 1, f, [base[i]].concat(tail));
+    for (var j = 0; out && j < base[i].length; i++) {
+      out = out && nprod(base, j + 1, f, [base[j][i]].concat(tail));
     }
     return out;
   }}")
@@ -51,6 +45,23 @@
     [(? number? n) (~a n)]
     [`(between ,a ,b) (format "~a--~a" a b)]))
 
+(define (all-preconditions body)
+  (match body
+    [`(=> ,as ... ,b)
+     (append
+      (for/append ([a as]) (match a [`(and ,xs ...) xs] [_ (list a)]))
+      (all-preconditions b))]
+    [_ '()]))
+
+(define (find-selectors body)
+  (define pres (all-preconditions body))
+  (filter
+   identity
+   (for/list ([pre pres])
+     (match pre
+       [`(matches ,(? symbol? var) ,sels ...) (cons var sels)]
+       [_ false]))))
+
 (define (test-assertion url assertion num named-components anon-components ranges)
   (define args
     `(,@(if (> num 0) `("--num" ,(~a num)) `("--exhaustive"))
@@ -65,9 +76,16 @@
       (values name (format "window.component~a" i))))
   (define ctx
     (hash-union components (for/hash ([var vars]) (values var (~a var)))))
+  (define selectors (find-selectors body))
+  (define eltsets
+    (for/list ([var vars])
+      (define sels (dict-ref selectors var '(*)))
+      (format "[].slice.call(document.querySelectorAll('~a'))" (loop b ctx) (string-join (map selector->string sels) ", "))))
   (define code
     (string-join
      `(,js-header
+       ,(format "function allelts() { return [ ~a ]; }"
+                (string-join eltsets ", "))
        ,@(for/list ([(name sel) (in-dict named-components)])
            (format "~a = document.querySelector('~a')" (dict-ref components name) (selector->string sel)))
        ,(format "function is_component(b) { return b.matches('~a'); }"
@@ -75,10 +93,11 @@
        ,(format "function good_tuple(~a) { return ~a; }"
                 (string-join (map ~a vars) ", ")
                 (body->js body ctx))
-       ,(format "function testall() { return nprod(allelts(), ~a, good_tuple, []); }"
+       ,(format "function testall() { return nprod(allelts(), 0, good_tuple, []); }"
                 (length vars))
        "return testall();")
      "\n"))
+  (eprintf "~a" code)
   (display code procin)
   (close-output-port procin)
   ;; Avoid stuffed buffer for stderr. stdout can't be stuffed because we can only print a few lines to it
