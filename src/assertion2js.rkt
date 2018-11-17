@@ -80,7 +80,7 @@
   (define eltsets
     (for/list ([var vars])
       (define sels (dict-ref selectors var '(*)))
-      (format "[].slice.call(document.querySelectorAll('~a'))" (loop b ctx) (string-join (map selector->string sels) ", "))))
+      (format "[].slice.call(document.querySelectorAll('~a'))" (string-join (map selector->string sels) ", "))))
   (define code
     (string-join
      `(,js-header
