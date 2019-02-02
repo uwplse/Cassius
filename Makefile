@@ -1,7 +1,7 @@
 TIME=$(shell date +%s)
 FLAGS=
 
-.PHONY: deploy test nightly publish index clean
+.PHONY: deploy test nightly publish index clean setup
 
 test:
 	raco test src
@@ -25,6 +25,8 @@ deploy:
 nightly:
 	bash infra/test.sh
 	$(MAKE) publish
+
+setup: capture/all.js
 
 # We do not exactly need Rollup or Webpack here...
 capture/all.js: $(filter-out capture/all.js, $(wildcard capture/*.js) $(wildcard capture/*.ts))

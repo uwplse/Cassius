@@ -24,7 +24,11 @@ To run Cassius on the captured web pages, you will need:
 Geckodriver, Typescript, and Z3 are in your path, and Selenium is in
 your Python path.
 
-Test out your Cassius installation by running, from the top-level directory,
+First, set up Cassius with:
+
+    make setup
+
+Then, test out your Cassius installation by running, from the top-level directory,
 
     python3 capture/capture.py http://example.com --output bench/example.rkt
     racket src/run.rkt accept bench/example.rkt doc-1
