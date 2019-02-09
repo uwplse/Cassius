@@ -39,11 +39,11 @@ header li:last-child { margin-right: 0; }
 }
 
 #news { list-style: none inside; padding: 0; position: relative; }
-#news li { margin-bottom: 12px; margin-left: 70px; }
+#news li { margin-bottom: 12px; margin-left: 90px; }
 #news time {
     font-weight: 600; text-align: right;
     position: absolute; left: 0;
-    display: block; width: 60px;
+    display: block; width: 80px;
 }
 
 .abstract { margin: .5em 1em; }
