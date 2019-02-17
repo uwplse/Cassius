@@ -744,8 +744,7 @@
                (resolve-clear b (vertical-position-for-flow-roots b))]
               [y* (ez.level ez w (left-content (pbflow b)) (right-content (pbflow b)) y-normal (style.float r))]
               [x* (ez.x ez y* (style.float r) (left-content (pbflow b)) (right-content (pbflow b)))]
-              [x (ite (is-float/left (style.float r)) x* (- x* w))]
-              [ez* (ez.advance ez y*)])
+              [x (ite (is-float/left (style.float r)) x* (- x* w))])
          (and
           (= (top-outer b) y*)
           (= (left-outer b) x)

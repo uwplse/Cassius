@@ -11,15 +11,22 @@
 (define (line-exists? i)
   `(or (,(sformat "ez.l~a?" i) ez) (,(sformat "ez.r~a?" i) ez)))
 
+(define (register-names i)
+  (list
+   (sformat "ez.y~a" i)
+   (sformat "ez.l~a" i)
+   (sformat "ez.r~a" i)
+   (sformat "ez.l~a?" i)
+   (sformat "ez.r~a?" i)))
+
+(define (registers i)
+  (map (curryr list 'ez) (register-names i)))
+
 (define-constraints (exclusion-zones)
   (declare-datatypes ()
      ((EZone (ezone (ez.mark Real) (ez.mark? Bool)
                     ,@(for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])
-                        (sow (list (sformat "ez.y~a" i) 'Real))
-                        (sow (list (sformat "ez.l~a" i) 'Real))
-                        (sow (list (sformat "ez.r~a" i) 'Real))
-                        (sow (list (sformat "ez.l~a?" i) 'Bool))
-                        (sow (list (sformat "ez.r~a?" i) 'Bool)))))))
+                        (map sow (map list (register-names i) '(Real Real Real Bool Bool))))))))
 
   (define-fun ez.init () EZone
     (ezone 0.0 false
@@ -45,11 +52,12 @@
     ;; Only call if `ez` has already had `ez.advance` called on it.
     (let ([overwrites?
            (or
+            (>= top bottom)
             (and (ez.mark? ez) (>= (ez.mark ez) bottom))
             ,@(for/list ([i (in-range (*exclusion-zone-registers*))])
                 `(and ,(line-exists? i) (= (,(sformat "ez.y~a" i) ez) bottom))))])
       (ezone
-       (ez.mark ez) (ez.mark? ez)
+       (ite (ez.mark? ez) (max (ez.mark ez) top) top) true
        ,@(for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])
            (define (copy-register tpl #:merge merge #:new new)
              (smt-cond
@@ -97,23 +105,15 @@
                                              (<= (,(sformat "ez.y~a" i) ez) bottom)))))))))
 
   (define-fun ez.advance ((ez EZone) (y Real)) EZone
-    (ezone
-     (ite (ez.mark? ez) (max (ez.mark ez) y) y)
-     true
-     ,@(let ([transfer (λ (i tpl default)
-                   (for/fold ([expr `(,(sformat tpl i) ez)])
-                       ([j (in-range (*exclusion-zone-registers*))])
-                     `(ite (and (<= (,(sformat "ez.y~a" j) ez) y) ,(line-exists? j))
-                          ,(if (< (+ i j 1) (*exclusion-zone-registers*))
-                               `(,(sformat tpl (+ i j 1)) ez)
-                               default)
-                          ,expr)))])
-         (for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])
-           (sow (transfer i "ez.y~a" 0.0))
-           (sow (transfer i "ez.l~a" 0.0))
-           (sow (transfer i "ez.r~a" 0.0))
-           (sow (transfer i "ez.l~a?" 'false))
-           (sow (transfer i "ez.r~a?" 'false))))))
+    ,(for/fold ([expr 'ez])
+         ([j (in-range (*exclusion-zone-registers*))])
+       `(ite (and ,(line-exists? j) (<= (,(sformat "ez.y~a" j) ez) y))
+             (ezone (ez.mark ez) (ez.mark? ez)
+                    ,@(for/reap [sow] ([i (in-range (*exclusion-zone-registers*))])
+                        (if (< (+ i j 1) (*exclusion-zone-registers*))
+                            (map sow (registers (+ i j 1)))
+                            (map sow (list 0.0 0.0 0.0 'false 'false)))))
+             ,expr)))
 
   (define-fun ez.left-at ((ez EZone) (y Real) (pl Real)) Real
     ,(for/fold ([expr `pl]) ([i (in-range (- (*exclusion-zone-registers*) 1) -1 -1)])
@@ -272,6 +272,7 @@
                   (= (ez.in? (ez.add ez dir t r b l) x y)
                      (or 
                       (ez.in? ez x y)
+                      (<= y t)
                       (ite (is-float/left dir)
                            (and (<= x r) (<= y b))
                            (and (>= x l) (<= y b))))))
@@ -289,7 +290,7 @@
   ;; ez.advance spec tests
   (check-sat #hash((x . Real) (y . Real) (h . Real) (ez . EZone))
              `(=> (ez.valid? ez)
-                  (= (ez.in? (ez.advance ez h) x y)
+                  (= (or (ez.in? (ez.advance ez h) x y) (<= y h))
                      (or (ez.in? ez x y) (<= y h))))
              '())
 
