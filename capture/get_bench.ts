@@ -567,7 +567,6 @@ function get_boxes(features) {
 }
 
 function dump_selector(sel) {
-    var match;
     sel = sel.trim();
     if (sel.indexOf(",") !== -1) {
         var sub = sel.split(",").map(dump_selector);
@@ -609,7 +608,7 @@ function dump_selector(sel) {
         var sub = sel.split(/\s+/).map(dump_selector);
         if (sub.indexOf(false) !== -1) return false;
         return "(desc " + sub.join(" ") + ")";
-    } else if (match = sel.match(/^([\w-]+|\*)?((::?|\.|\#)[\w-]+|\[type=\"[\w-]+\"\])*$/)) {
+    } else if (sel.match(/^([\w-]+|\*)?((::?|\.|\#)[\w-]+|\[type=\"[\w-]+\"\])*$/)) {
         var sub = sel.replace(/\[|\.|\#|::?/g, "\0$&").split("\0");
         if (sub[0] === "") sub.shift();
         sub = sub.map(dump_primitive_selector);
