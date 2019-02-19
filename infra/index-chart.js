@@ -126,7 +126,7 @@ function draw(node, data) {
     for (var i in data) {
         if (!data.hasOwnProperty(i)) continue;
         var class_data = data[i].filter(relevant_data);
-        if (class_data.length > 1) {
+        if (class_data.length > 0) {
             draw_class(node.append("section").attr("data-suite", i), i, class_data);
         }
     }
