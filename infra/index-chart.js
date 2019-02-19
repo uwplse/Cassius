@@ -125,7 +125,7 @@ function relevant_data(data) {
 function draw(node, data) {
     for (var i in data) {
         if (!data.hasOwnProperty(i)) continue;
-        var class_data = data[i].filter(relevant_data);
+        var class_data = data[i].sort((a, b) => b[":time"] - a[":time"]).slice(0, 30);
         if (class_data.length > 0) {
             draw_class(node.append("section").attr("data-suite", i), i, class_data);
         }
