@@ -63,7 +63,7 @@ def minimize(name, url, cache=None, timeout=None):
     initial = None
     size = None
 
-    while not minimized:
+    while not minimized and iterations < 25:
         filename = "bench/{}-{}-minimized.rkt".format(name, iterations)
         print("Running Cassius:", file=sys.stderr)
         get_minimized(url, eliminated, filename)
