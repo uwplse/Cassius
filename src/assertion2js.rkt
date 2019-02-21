@@ -93,7 +93,7 @@
        ,(format "function good_tuple(~a) { return ~a; }"
                 (string-join (map ~a vars) ", ")
                 (body->js body ctx))
-       ,(format "function testall() { return nprod(allelts(), 0, good_tuple, []); }"
+       ,(format "function testall() { return nprod(allelts(), ~a, good_tuple, []); }"
                 (length vars))
        "return testall();")
      "\n"))
