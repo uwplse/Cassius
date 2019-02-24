@@ -41,7 +41,7 @@ This should churn for a few seconds and say, "Accepted".
 
 If you receive a Selenium / JavaScript error, it often helps to:
 
-   make -B capture/all.js
+    make -B capture/all.js
 
 Capturing Web Pages
 -------------------
