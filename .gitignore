@@ -5,19 +5,17 @@ papers/
 reports/*.html
 reports/*.json
 bench/joel
-bench/*.rkt
 bench/pages/
 geckodriver.log
 previous/
 
-# Racket junk
+# Racket and TypeScript junk
 src/compiled/
-compiled/
 __pycache__
+capture/*.js
 
 # Platform junk
 *.bak
 *~
 .DS_Store
 
-capture/*.js
