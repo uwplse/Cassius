@@ -10,19 +10,23 @@ Installing
 ----------
 
 To capture web pages (needed to use Cassius) you will need:
-- Python 3 <https://www.python.org/getit/>
-- Firefox <https://www.mozilla.org/en-US/firefox/new/>
-- Geckodriver <https://github.com/mozilla/geckodriver/releases>
-- Selenium Webdriver (version 3 or later) <https://pypi.org/project/selenium/>
-- Typescript (version 2 or later) <https://www.typescriptlang.org/#download-links>
+
+- Python 3: <https://www.python.org/getit/>
+- Firefox: <https://www.mozilla.org/en-US/firefox/new/>
+- Geckodriver: <https://github.com/mozilla/geckodriver/releases>
+- Selenium Webdriver: <https://pypi.org/project/selenium/> (version 3 or later)
+- Typescript: <https://www.typescriptlang.org/#download-links> (version 2 or later)
+
 Note that Firefox, Geckodriver, and Selenium must have compatible
 versions.
 
 To run Cassius on the captured web pages, you will need:
-- Racket (version 6.9 or later) <http://racket-lang.org>
-- Z3 (version 4.5 or later) <https://github.com/Z3Prover/z3> Make sure
-Geckodriver, Typescript, and Z3 are in your path, and Selenium is in
-your Python path.
+
+- Racket: <http://racket-lang.org> (version 7.0 or later)
+- Z3: <https://github.com/Z3Prover/z3> (version 4.5 or later)
+
+Make sure Geckodriver, Typescript, and Z3 are in your path, and
+Selenium is in your Python path.
 
 First, set up Cassius with:
 
@@ -35,6 +39,10 @@ Then, test out your Cassius installation by running, from the top-level director
 
 This should churn for a few seconds and say, "Accepted".
 
+If you receive a Selenium / JavaScript error, it often helps to:
+
+   make -B capture/all.js
+
 Capturing Web Pages
 -------------------
 
@@ -45,7 +53,7 @@ into Cassius's input format. To capture a web page, run:
 
 The URLs may be web pages, accessed through the `http://` or
 `https://` protocols, or local files, given either by a `file://` URL
-or by a page.
+or by a path.
 
 The output `file` is created or overwritten by this command, and
 stores one web pages for each given URL. They are named `doc-00N`, for
@@ -117,6 +125,24 @@ from common accessibility and usability guidelines, including:
 
 The chosen assertion will be run on the chosen instance, and if the
 assertion is false, a counterexample render tree will be printed.
+
+Proving Assertions with VizAssert
+---------------------------------
+
+VizAssert can also check modular proofs of web pages. Write the proof
+to a file and run:
+
+    racket src/run.rkt check-proof [proof-file]
+
+See `bench/fwt.proof` for an example of the syntax of proof files.
+That file contains several proofs of the `interactive-onscreen`
+property for various pages, and several proofs of various other
+properties.
+
+Optional arguments can be added to the above command to name a proof,
+a page to use that proof for, or even a componentin that page, to
+check. You can also pass the `--threads N` argument to check the proof
+in parallel and the `--cache [file]` argument to use a proof cache.
 
 Current Status
 --------------
