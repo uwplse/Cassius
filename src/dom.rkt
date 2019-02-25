@@ -57,7 +57,7 @@
 
 (define (dom-last-box? dom box)
   (define elt (dict-ref (first (dom-match dom)) box #f))
-  (and elt (equal? box (dict-ref (second (dom-match dom)) elt #f))))
+  (and elt (equal? box (dict-ref (third (dom-match dom)) elt #f))))
 
 (define (dom-strip-positions d)
   (define boxes*

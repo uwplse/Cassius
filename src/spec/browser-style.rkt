@@ -347,4 +347,11 @@
      [border-bottom-style inset]
      [border-left-width (px 2)]
      [border-left-style inset]
-     [text-indent (px 0)])))
+     [text-indent (px 0)])
+    ((child (tag select) (tag option))
+     [padding-top (px 0)]
+     [padding-right (px 5)]
+     [padding-bottom (px 0)]
+     [padding-left (px 3)])
+    ((child (tag optgroup) (tag option))
+     [padding-left (px 20)])))
