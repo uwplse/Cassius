@@ -142,10 +142,15 @@
                        (box-collapsed-through (lflow b)))))))
 
   (define-fun min-max-width ((val Real) (b Box)) Real
-    (max (ite (is-elt (box-elt b)) ,(get-px-or-% 'min-width '(w (pflow b)) 'b) 0.0)
-         (ite (or (is-no-elt (box-elt b)) (is-max-width/none (style.max-width (computed-style (box-elt b)))))
-              val
-              (min val ,(get-px-or-% 'max-width '(w (pflow b)) 'b)))))
+    (ite (is-elt (box-elt b))
+         (max ,(get-px-or-% 'min-width '(w (pflow b)) 'b)
+              (min-if
+               (min-if val
+                       (not (is-width/auto (style.width (computed-style (box-elt b)))))
+                       ,(get-px-or-% 'width '(w (pflow b)) 'b))
+               (not (is-max-width/none (style.max-width (computed-style (box-elt b)))))
+               ,(get-px-or-% 'max-width '(w (pflow b)) 'b)))
+         val))
 
   (define-fun min-max-height ((val Real) (b Box)) Real
     (max (ite (is-elt (box-elt b)) ,(get-px-or-% 'min-height '(h (pflow b)) 'b) 0.0)
@@ -674,7 +679,8 @@
        (margins-collapse b)
        (= (stfmax b) (max-if (min-max-width (compute-stfmax b) b) (is-box (vbox b)) (stfmax (vbox b))))
        (= (float-stfmax b)
-          (+ (min-max-width (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0) b)
+          (+ (ite (is-flow-root b) 0.0
+                  (min-max-width (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0) b))
              (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
 
        (let ([y* (resolve-clear b (vertical-position-for-flow-boxes b))])

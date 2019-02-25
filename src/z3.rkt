@@ -67,7 +67,7 @@
      (define text (string-join parts ": "))
      (match-define (list "line" (app string->number line) "column" (app string->number column))
                    (string-split line/col))
-     (raise-syntax-error 'Z3 (format "Z3 error (~a:~a)" line column) text)]
+     (raise-syntax-error 'Z3 (format "~a (~a:~a)" text line column))]
     ['unsupported
      (error "Z3 unsupported:" input)]
     [`(model ,entries ...)
