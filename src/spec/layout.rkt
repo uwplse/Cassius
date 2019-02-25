@@ -145,9 +145,7 @@
     (ite (is-elt (box-elt b))
          (max ,(get-px-or-% 'min-width '(w (pflow b)) 'b)
               (min-if
-               (min-if val
-                       (not (is-width/auto (style.width (computed-style (box-elt b)))))
-                       ,(get-px-or-% 'width '(w (pflow b)) 'b))
+               val
                (not (is-max-width/none (style.max-width (computed-style (box-elt b)))))
                ,(get-px-or-% 'max-width '(w (pflow b)) 'b)))
          val))
