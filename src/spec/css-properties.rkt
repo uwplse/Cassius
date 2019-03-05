@@ -1,6 +1,8 @@
 #lang racket
 (require "../common.rkt")
-(provide in-css-properties in-css-types css-shorthand-properties css-type css-properties css-types css-default css-inheritable?)
+(provide
+ in-css-properties in-css-types css-constants
+ css-shorthand-properties css-type css-properties css-types css-default css-inheritable?)
 
 ;; The CSS properties and data types Cassius supports. The file is in
 ;; three parts: helper macros, type and property definitions, and
@@ -157,3 +159,12 @@
 
 (define (in-css-types)
   (in-hash css-types-hash))
+
+(define css-constants
+  #hash((Border . #hash((thin . (px 1)) (medium . (px 3)) (thick . (px 5))))
+        (Min-Height . #hash((auto . 0)))
+        (Text-Align . #hash((start . left) (end . right)))
+        (Font-Size . #hash((xx-small . (px 9)) (x-small . (px 10)) (small . (px 13))
+                           (medium . (px 16)) (smaller . (em 2/3)) (larger . (em 3/2))
+                           (large . (px 18)) (x-large . (px 24)) (xx-large . (px 32))))
+        (Color . #hash((undefined . transparent)))))

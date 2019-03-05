@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt" "../encode.rkt" "utils.rkt")
-(provide link-definitions)
+(provide link-definitions link-common)
 
 ;; This file defines the tree structures used in Cassius's SMT
 ;; encoding of CSS. It defines the Element and Box classes, and
@@ -41,6 +41,19 @@
              (not (is-overflow/visible (style.overflow-x (computed-style (box-elt b)))))
              (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b))))))))
 
+  (assert
+   (forall (b)
+           (ite (is-elt (box-elt b))
+                (let ([s (computed-style (box-elt b))])
+                  (and (= (bg-color b) (style.background-color s))
+                       (= (fg-color b) (style.color s))))
+                (and (= (bg-color b) color/transparent)
+                     (= (fg-color b)
+                        (ite (is-box (pflow b))
+                             (fg-color (pflow b))
+                             color/black)))))))
+
+(define-constraints (link-common)
   ;; The boxes in each direction in the flow tree
   (define-fun pflow ((box Box)) Box (pbox box))
 
@@ -58,23 +71,8 @@
   ;; `match-anon-element` and `match-anon-box` do the same for
   ;; elements and boxes without links on the other side.
   (define-fun match-element-box ((e Element) (b Box) (first? Bool) (last? Bool)) Bool
-    (and
-     (= (box-elt b) e)
-     (= (first-box? b) first?)
-     (= (last-box? b) last?)
-     (= (fg-color b)
-        (style.color (computed-style e)))
-     (= (bg-color b)
-        (style.background-color (computed-style e)))))
+    (and (= (box-elt b) e) (= (first-box? b) first?) (= (last-box? b) last?)))
 
   (define-fun match-anon-box ((b Box)) Bool
-    (and
-     (= (box-elt b) no-elt)
-     (= (first-box? b) true)
-     (= (last-box? b) true)
-     (= (fg-color b)
-        (ite (is-no-box (pflow b))
-             color/black
-             (fg-color (pflow b))))
-     (= (bg-color b) color/transparent))))
+    (and (= (box-elt b) no-elt) (= (first-box? b) true) (= (last-box? b) true))))
 
