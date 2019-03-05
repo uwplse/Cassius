@@ -167,4 +167,5 @@
         (Font-Size . #hash((xx-small . (px 9)) (x-small . (px 10)) (small . (px 13))
                            (medium . (px 16)) (smaller . (em 2/3)) (larger . (em 3/2))
                            (large . (px 18)) (x-large . (px 24)) (xx-large . (px 32))))
+        (Font-Weight . #hash((normal . 400) (bold . 700)))
         (Color . #hash((undefined . transparent)))))

@@ -42,7 +42,7 @@
              (not (is-overflow/visible (style.overflow-y (computed-style (box-elt b))))))))
 
   (assert
-   (forall (b)
+   (forall ((b Box))
            (ite (is-elt (box-elt b))
                 (let ([s (computed-style (box-elt b))])
                   (and (= (bg-color b) (style.background-color s))

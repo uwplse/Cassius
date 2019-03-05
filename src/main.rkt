@@ -400,7 +400,7 @@
     ,@(if render?
           (for*/list ([(type consts) (in-dict css-constants)]
                       [(name value) (in-dict consts)])
-            `(define-const ,(dump-value type name) type ,(dump-value type value)))
+            `(define-const ,(dump-value type name) ,type ,(dump-value type value)))
           `())
     ,@(for-render make-get-font fonts)
     ,@(for/list ([(name value) color-table])
