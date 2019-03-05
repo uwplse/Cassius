@@ -48,7 +48,7 @@
   (component footer (id footer))
 
   (assert (or header footer)
-          (forall (a) (=> (onscreen ?) (is-interactive a) (onscreen a))))
+          (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
   (assert root (onscreen header))
   (assert root (onscreen footer))
 

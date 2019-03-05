@@ -235,13 +235,45 @@
   (for/hash ([node nodes] #:when (node-get node ':name #:default false))
     (values (node-get node ':name) (dump-box node))))
 
+(define (trivially-true body ctx dom)
+  (match body
+    [`(=> ,conds ... ,post)
+     (or (ormap (curryr trivially-false ctx dom) conds)
+         (trivially-true post ctx dom))]
+    [`(or ,bits ...)
+     (ormap (curryr trivially-true ctx dom) bits)]
+    [`(= (box-elt ,(? (curry dict-has-key? ctx) b)) ,elt)
+     (equal? (dump-elt (dom-box->elt dom (dict-ref ctx b))) elt)]
+    [`(is-component ,(? (curry dict-has-key? ctx) b))
+     (is-component (dict-ref ctx b))]
+    ['true true]
+    [_ false]))
+
+(define (trivially-false body ctx dom)
+  (match body
+    [`(=> ,conds ... ,post)
+     (and (andmap (curryr trivially-true ctx dom) conds)
+          (trivially-false post ctx dom))]
+    [`(or ,bits ...)
+     (andmap (curryr trivially-false ctx dom) bits)]
+    [`(= (box-elt ,(? (curry dict-has-key? ctx) b)) ,elt)
+     (and (by-name 'elt elt)
+          (not (equal? (dom-box->elt dom (dict-ref ctx b)) (by-name 'elt elt))))]
+    [`(is-component ,(? (curry dict-has-key? ctx) b))
+     (not (is-component (dict-ref ctx b)))]
+    ['false true]
+    [_ false]))
+
 (define (massage-body body ctx dom)
   (match body
     [`(=> ,conds ... ,post)
-     (define conds* (map (curryr massage-body ctx dom) conds))
-     (if (set-member? conds* 'false)
-         'true
-         `(=> ,@(map (curryr massage-body ctx dom) conds) ,post))]
+     (define conds*
+       (filter (λ (x) (not (equal? x 'true)))
+               (map (curryr massage-body ctx dom) conds)))
+     (cond
+      [(set-member? conds* 'false) 'true]
+      [(null? conds*) (massage-body post ctx dom)]
+      [else `(=> ,@conds* ,(massage-body post ctx dom))])]
     [`(or ,bits ...)
      (apply smt-or (map (curryr massage-body ctx dom) bits))]
     [`(= (box-elt ,(? (curry dict-has-key? ctx) b)) ,elt)
@@ -267,9 +299,10 @@
       (define spec (compile-assertion (list dom) `(=> ,@pres ,body) ctx))
 
       (for ([vals (apply cartesian-product (map (const nodes) vars))] [j (in-naturals)])
-        (emit `(assert (! (let ,(map (λ (v x) (list v (dump-box x))) vars vals)
-                            ,(massage-body spec (map cons vars vals) dom))
-                          :named ,(sformat "spec/~a/~a/~a/~a" (name 'box box) (substring (~a field) 1) i j))))))))
+        (define body* (massage-body spec (map cons vars vals) dom))
+        (unless (equal? body* 'true)
+          (emit `(assert (! (let ,(map (λ (v x) (list v (dump-box x))) vars vals) ,body*)
+                            :named ,(sformat "spec/~a/~a/~a/~a" (name 'box box) (substring (~a field) 1) i j)))))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -313,23 +346,27 @@
                    :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
 
 (define (add-test doms constraints tests #:component [component #f] #:render? [render? true])
+  (match-define (list dom) doms)
   (define possible-boxes
     (if component
         (nodes-below component  '(:pre :spec :assert :admit))
-        (for*/list ([dom doms] [box (in-boxes dom)]) box)))
+        (for/list ([box (in-boxes dom)]) box)))
   `(,@constraints
     (declare-const which-constraint Real)
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
         (sow `(declare-const ,var Box))
         (sow `(assert ,(apply smt-or
-                              (for/list ([box possible-boxes])
+                              (for*/list ([box possible-boxes]
+                                          #:unless (for/and ([test tests])
+                                                     (trivially-true
+                                                      test (list (cons var box)) dom)))
                                 `(= ,var ,(dump-box box)))))))
     (assert ,(apply smt-or
                     (for/list ([test tests] [i (in-naturals)])
                       `(and (not ,test) (= which-constraint ,i)))))
     ,@(reap [sow]
-         (for* ([dom doms] [box (in-boxes dom)])
+         (for ([box (in-boxes dom)])
            (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) dom sow box)))))
 
 (define (sheet-constraints params doms rules)
@@ -353,7 +390,7 @@
     (declare-datatypes
      ()
      (,@(for/list ([(type decl) (in-css-types)]
-                   #:unless (and render? (not (set-member? '(Color Float) type))))
+                   #:when (or render? (set-member? '(Color Float) type)))
           (cons type decl))
       (Style 
        ,(if render?
