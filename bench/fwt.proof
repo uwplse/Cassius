@@ -260,7 +260,8 @@ Supposed to fail
       (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))
 
 (define (14-px-text b)
-  (raw (= (font-size.px (style.font-size (computed-style (box-elt b)))) 14)))
+  (<= 13 (text-height b) 15)
+  #;(raw (= (font-size.px (style.font-size (computed-style (box-elt b)))) 14)))
 
 (proof (line-width line-width yoga)
   (component header (id header))
