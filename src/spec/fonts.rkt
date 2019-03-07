@@ -48,6 +48,11 @@
       (font.ascent Real) (font.descent Real)
       (font.topoffset Real) (font.bottomoffset Real)
       (font.line-height Real) (font.selection-height Real)))))
+   
+  (declare-fun font-info (Box) Font-Metric)
+
+  (define-fun height-text ((b Box)) Real
+    (+ (font.ascent (font-info b)) (font.descent (font-info b))))
 
   (define-fun font.valid? ((fm Font-Metric) (x Real)) Bool
     ;; Is `fm` a valid font at font-size `x`? Most real fonts satisfy the below,
@@ -60,8 +65,6 @@
          (<= x (font.selection-height fm) (* 1.8 x)))))
 
 (define-constraints (font-computation)
-  (declare-fun font-info (Box) Font-Metric)
-
   (define-fun font ((e Element)) Font-Metric
     (let ([style (computed-style e)])
       (get-font (style.font-family style)
@@ -78,9 +81,6 @@
                           (ite (is-box (pbox b))
                                (font-info (pbox b))
                                (font-info (fbox b)))))))
-
-  (define-fun height-text ((b Box)) Real
-    (+ (font.ascent (font-info b)) (font.descent (font-info b))))
 
   (define-fun horizontally-overlapping ((box1 Box) (box2 Box)) Bool
     (let ([m1 (font-info box1)]

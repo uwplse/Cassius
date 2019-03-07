@@ -386,7 +386,6 @@
     (echo "Basic definitions")
     ,@(for-render make-%of)
     ,@(colors)
-    ,@(for-render font-datatype)
     (declare-datatypes
      ()
      (,@(for/list ([(type decl) (in-css-types)]
@@ -408,6 +407,7 @@
     ,@(common-definitions)
     ,@(exclusion-zones)
     ,@(tree-types)
+    ,@(font-datatype)
     ,@(global dom-define-elements)
     ,@(global dom-define-boxes)
     ,@(global (curry configuration-constraints media-params))
