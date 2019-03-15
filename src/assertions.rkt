@@ -108,13 +108,19 @@
 
       ;; Elements
       [`(anonymous? ,b)
-       `(is-no-elt (box-elt ,(loop b ctx)))]
+       (define b* (loop b ctx))
+       (apply smt-or
+              (for*/list ([dom doms] [box (in-boxes dom)]
+                          #:unless (dom-box->elt dom box))
+                `(= ,b* ,(dump-box box))))]
       [`(matches ,b ,sels ...)
        (define b* (loop b ctx))
        (apply smt-or
-              (for*/list ([dom doms] [elt (in-elements dom)]
-                          #:when (ormap (curryr selector-matches? elt) sels))
-                `(= (box-elt ,b*) ,(dump-elt elt))))]
+              (for*/list ([dom doms] [box (in-boxes dom)])
+                (define elt (dom-box->elt dom box))
+                (if (and elt (ormap (curryr selector-matches? elt) sels))
+                    `(= ,b* ,(dump-box box))
+                    'false)))]
 
       ;; Extra syntax
       [`(if ,c ,t ,f)

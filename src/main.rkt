@@ -355,13 +355,14 @@
     (declare-const which-constraint Real)
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
+        (define var-values
+          (for*/list ([box possible-boxes]
+                      #:unless (for/and ([test tests])
+                                 (trivially-true
+                                  test (list (cons var box)) dom)))
+            box))
         (sow `(declare-const ,var Box))
-        (sow `(assert ,(apply smt-or
-                              (for*/list ([box possible-boxes]
-                                          #:unless (for/and ([test tests])
-                                                     (trivially-true
-                                                      test (list (cons var box)) dom)))
-                                `(= ,var ,(dump-box box)))))))
+        (sow `(assert ,(apply smt-or (for/list ([box var-values]) `(= ,var ,(dump-box box)))))))
     (assert ,(apply smt-or
                     (for/list ([test tests] [i (in-naturals)])
                       `(and (not ,test) (= which-constraint ,i)))))

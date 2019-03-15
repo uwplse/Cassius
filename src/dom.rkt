@@ -2,7 +2,7 @@
 (require "common.rkt" "tree.rkt")
 
 (provide (struct-out dom) dom-context in-elements in-boxes parse-dom unparse-dom
-         dom-box->elt dom-first-box? dom-last-box?
+         dom-box->elt dom-elt->box dom-first-box? dom-last-box?
          dom-strip-positions dom-set-range)
 
 (struct dom (name properties elements boxes match) #:prefab)
@@ -36,6 +36,7 @@
 (define (build-match elts boxes)
   (define num->elt (make-hasheq))
   (define box->elt (make-hasheq))
+  (define elt->box (make-hasheq))
   (define first-box (make-hasheq))
   (define last-box (make-hasheq))
   (for ([elt (in-tree elts)] #:when (node-get elt ':num))
@@ -43,21 +44,25 @@
   (for ([box (in-tree boxes)] #:when (node-get box ':elt))
     (define elt (dict-ref num->elt (node-get box ':elt)))
     (dict-set! box->elt box elt)
+    (dict-update! elt->box elt (curry cons box) '())
     (unless (dict-has-key? first-box elt)
       (dict-set! first-box elt box))
     (dict-set! last-box elt box))
-  (list box->elt first-box last-box))
+  (list box->elt elt->box first-box last-box))
 
 (define (dom-box->elt dom box)
   (dict-ref (first (dom-match dom)) box #f))
 
+(define (dom-elt->box dom elt)
+  (dict-ref (second (dom-match dom)) elt #f))
+
 (define (dom-first-box? dom box)
   (define elt (dict-ref (first (dom-match dom)) box #f))
-  (and elt (equal? box (dict-ref (second (dom-match dom)) elt #f))))
+  (and elt (equal? box (dict-ref (third (dom-match dom)) elt #f))))
 
 (define (dom-last-box? dom box)
   (define elt (dict-ref (first (dom-match dom)) box #f))
-  (and elt (equal? box (dict-ref (third (dom-match dom)) elt #f))))
+  (and elt (equal? box (dict-ref (fourth (dom-match dom)) elt #f))))
 
 (define (dom-strip-positions d)
   (define boxes*
