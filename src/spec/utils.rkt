@@ -1,6 +1,6 @@
 #lang racket
 (require "../common.rkt" "../smt.rkt")
-(provide common-definitions tree-types utility-definitions)
+(provide common-definitions tree-types element-definitions utility-definitions)
 
 (define-constraints (common-definitions)
   (define-fun max ((x Real) (y Real)) Real (ite (< x y) y x))
@@ -36,11 +36,16 @@
            (elt (eid Int) (specified-style Style) (computed-style Style) ; see compute-style.rkt
                 (is-replaced Bool) (is-image Bool) (intrinsic-width Real) (intrinsic-height Real))))))
 
-(define-constraints (utility-definitions)
+(define-constraints (element-definitions)
   ;; Elements only need parents
   (declare-fun pelt (Element) Element)
 
-  ;; The boxes in each direction in the box tree
+  ;; From boxes to elements
+  (declare-fun box-elt (Box) Element)
+  (assert (is-no-elt (box-elt no-box))))
+
+(define-constraints (utility-definitions)
+   ;; The boxes in each direction in the box tree
   (declare-fun pbox (Box) Box)
   (declare-fun fbox (Box) Box)
   (declare-fun lbox (Box) Box)
@@ -49,10 +54,6 @@
 
   ,@(for/list ([field '(pbox vbox nbox fbox lbox)])
       `(assert (= (,field no-box) no-box)))
-
-  ;; From boxes to elements
-  (declare-fun box-elt (Box) Element)
-  (assert (is-no-elt (box-elt no-box)))
 
   ;; Box model helpers
   (define-fun left-outer ((box Box)) Real (- (x box) (ml box)))

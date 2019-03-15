@@ -65,14 +65,5 @@
          (= (fbox box) f) (= (lbox box) l)))
 
   (define-fun link-box-magic ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
-    (and (=> (is-box p) (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n)))))
-
-  ;; `match-element-box` matchs elements and boxes together.
-  ;; `match-anon-element` and `match-anon-box` do the same for
-  ;; elements and boxes without links on the other side.
-  (define-fun match-element-box ((e Element) (b Box) (first? Bool) (last? Bool)) Bool
-    (and (= (box-elt b) e) (= (first-box? b) first?) (= (last-box? b) last?)))
-
-  (define-fun match-anon-box ((b Box)) Bool
-    (and (= (box-elt b) no-elt) (= (first-box? b) true) (= (last-box? b) true))))
+    (and (=> (is-box p) (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n))))))
 
