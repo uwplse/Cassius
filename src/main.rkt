@@ -242,8 +242,9 @@
          (trivially-true post ctx dom))]
     [`(or ,bits ...)
      (ormap (curryr trivially-true ctx dom) bits)]
-    [`(= (box-elt ,(? (curry dict-has-key? ctx) b)) ,elt)
-     (equal? (dump-elt (dom-box->elt dom (dict-ref ctx b))) elt)]
+    [`(= ,(? (curry dict-has-key? ctx) b)
+         ,(app ~a (regexp #rx"^box([0-9]+)$" (list bname _))))
+     (equal? (~a (dump-box (dict-ref ctx b))) bname)]
     [`(is-component ,(? (curry dict-has-key? ctx) b))
      (is-component (dict-ref ctx b))]
     ['true true]
@@ -256,9 +257,9 @@
           (trivially-false post ctx dom))]
     [`(or ,bits ...)
      (andmap (curryr trivially-false ctx dom) bits)]
-    [`(= (box-elt ,(? (curry dict-has-key? ctx) b)) ,elt)
-     (and (by-name 'elt elt)
-          (not (equal? (dom-box->elt dom (dict-ref ctx b)) (by-name 'elt elt))))]
+    [`(= ,(? (curry dict-has-key? ctx) b)
+         ,(app ~a (regexp #rx"^box([0-9]+)$" (list _ (app string->number bid)))))
+     (and (by-name 'box bid) (not (equal? (dict-ref ctx b) (by-name 'box bid))))]
     [`(is-component ,(? (curry dict-has-key? ctx) b))
      (not (is-component (dict-ref ctx b)))]
     ['false true]
@@ -276,9 +277,10 @@
       [else `(=> ,@conds* ,(massage-body post ctx dom))])]
     [`(or ,bits ...)
      (apply smt-or (map (curryr massage-body ctx dom) bits))]
-    [`(= (box-elt ,(? (curry dict-has-key? ctx) b)) ,elt)
-     (define rec (dom-box->elt dom (dict-ref ctx b)))
-     (if (equal? (dump-elt rec) elt) 'true 'false)]
+    [`(= ,(? (curry dict-has-key? ctx) b)
+         ,(app ~a (regexp #rx"^box([0-9]+)$" (list bname _))))
+     (define rec (dict-ref ctx b))
+     (if (equal? (~a (dump-box rec)) bname) 'true 'false)]
     [`(is-component ,(? (curry dict-has-key? ctx) b))
      (if (is-component (dict-ref ctx b)) 'true 'false)]
     [_ body]))
