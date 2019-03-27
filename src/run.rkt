@@ -85,17 +85,6 @@
     ['break
      (eprintf "Rendering terminated.\n")]))
 
-(define (do-smt2 problem output #:render? [render? false])
-  (when render?
-    (set! problem (dict-update problem ':documents (curry map dom-strip-positions))))
-  (define smt (query (dict-ref problem ':sheets) (dict-ref problem ':documents) (dict-ref problem ':fonts)))
-  (call-with-output-file output #:exists 'replace
-                         (λ (p)
-                           (for ([cmd smt])
-                             (match cmd
-                               [(list 'echo comment) (fprintf p "; ~a\n" comment)]
-                               [_ (fprintf p "~a\n" cmd)])))))
-
 (define (do-verify problem)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
@@ -238,12 +227,6 @@
    ["render"
     #:args (fname problem)
     (do-render (get-problem fname problem))]
-   ["smt2"
-    #:once-each
-    [("--render") "Dumps the SMT-LIB2 for the `render` action"
-     (set! render? #t)]
-    #:args (fname problem output)
-    (do-smt2 (get-problem fname problem) output #:render? render?)]
    ["check-proof"
     #:args (proof-file [proof-name #f] [page-name #f] [component-name #f])
     (do-check-proof

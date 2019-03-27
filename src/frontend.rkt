@@ -3,7 +3,7 @@
          "selectors.rkt" "encode.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt"
          "assertion2js.rkt")
-(provide query (struct-out success) (struct-out failure) solve-problem *exit-early*)
+(provide (struct-out success) (struct-out failure) solve-problem *exit-early*)
 
 (define *exit-early* (make-parameter #f))
 
