@@ -193,6 +193,17 @@
           (define cache (read p))
           (for ([(k v) (in-hash cache)])
             (hash-set! *cache* k v)))))]
+   [("--smt2") file-name "Instead of solving SMT2 query, write it to a file and exit"
+     (*exit-early*
+      (λ (query)
+        (call-with-output-file
+            file-name #:exists 'replace
+            (λ (p)
+              (for ([cmd query])
+                (match cmd
+                  [(list 'echo comment) (fprintf p "; ~a\n" comment)]
+                  [_ (fprintf p "~a\n" cmd)]))))
+        (exit)))]
 
    #:subcommands
    ["accept"

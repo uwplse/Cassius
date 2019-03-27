@@ -3,7 +3,9 @@
          "selectors.rkt" "encode.rkt" "smt.rkt" "spec/tree.rkt"
          "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt"
          "assertion2js.rkt")
-(provide query (struct-out success) (struct-out failure) solve-problem)
+(provide query (struct-out success) (struct-out failure) solve-problem *exit-early*)
+
+(define *exit-early* (make-parameter #f))
 
 (struct success (stylesheet elements doms test) #:prefab)
 (struct failure (stylesheet trees) #:prefab)
@@ -93,6 +95,9 @@
   (define log-phase (make-log))
   (reset-names!)
   (define-values (doms query) (constraints log-phase sheets docs fonts #:tests tests #:render? render?))
+
+  (when (*exit-early*)
+    ((*exit-early*) (append query (list cassius-check-sat))))
 
   (define out
     (let ([z3 (z3-process)])
