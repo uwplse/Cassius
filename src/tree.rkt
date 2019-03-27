@@ -1,7 +1,7 @@
 #lang racket
 (require "common.rkt")
 (provide parse-tree unparse-tree tree-copy tree=?
-         node-stx? node? node-type node-parent node-children* node-children node-attrs
+         node-stx? node? node-type node-id node-parent node-children* node-children node-attrs
          node-get node-get* node-set! node-set*! node-add! node-remove!
          node-prev node-next node-fchild node-lchild in-ancestors in-tree)
 
@@ -9,10 +9,13 @@
   (? string?)
   (list (list (? symbol?) _ ...) (? node-stx?) ...))
 
-(struct node (type attrs parent children*) #:mutable
+(struct node (type id attrs parent children*) #:mutable
         #:methods gen:custom-write
         [(define (write-proc node port mode)
            (fprintf port "[~a ~a]" (node-type node) (string-join (map ~a (dict->attributes (node-attrs node))) " ")))])
+
+(define node-counter 0)
+(on-reset! (λ () (set! node-counter 0)))
 
 (define (node-children node)
   (filter node? (node-children* node)))
@@ -27,7 +30,8 @@
 (define (parse-tree tree)
   (let loop ([tree tree] [parent #f])
     (match-define `([,type ,attrs ...] ,subtrees ...) tree)
-    (define n (node type (attributes->dict attrs) parent (void)))
+    (define n (node type node-counter (attributes->dict attrs) parent (void)))
+    (set! node-counter (+ 1 node-counter))
     (set-node-children*! n (for/list ([k subtrees]) (if (list? k) (loop k n) k)))
     n))
 

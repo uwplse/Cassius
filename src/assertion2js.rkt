@@ -1,7 +1,7 @@
 #lang racket
 
 (require racket/runtime-path racket/hash)
-(require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt" "print/css.rkt"
+(require "common.rkt" "dom.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt" "print/css.rkt"
          "assertions.rkt")
 
 (provide test-assertion)

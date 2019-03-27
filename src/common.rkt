@@ -18,7 +18,8 @@
  *minimize*
  *cache-file* *cache*
  path-tail
- warn)
+ warn
+ reset! on-reset!)
 
 (define flags (make-parameter '(z3o rules selectors)))
 (define all-flags '(opt float z3o details rules selectors))
@@ -251,3 +252,9 @@
   (unless (set-member? *warnings-seen* message)
     (eprintf "WARNING: ~a\n" (string-join (map ~a data) ""))
     (set-add! *warnings-seen* message)))
+
+(define on-reset-handlers '())
+(define (reset!)
+  (for ([fn on-reset-handlers]) (fn)))
+(define (on-reset! fn)
+  (set! on-reset-handlers (cons fn on-reset-handlers)))

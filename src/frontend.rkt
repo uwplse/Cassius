@@ -1,7 +1,7 @@
 #lang racket
 (require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
          "selectors.rkt" "encode.rkt" "smt.rkt" "spec/tree.rkt"
-         "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt" "registry.rkt"
+         "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt"
          "assertion2js.rkt")
 (provide (struct-out success) (struct-out failure) solve-problem *exit-early*)
 
@@ -35,12 +35,12 @@
   (*%* (set-union (*%*) %s))
 
   (define tests*
-    (for/list ([test (or tests '())])
+    (for/list ([test (or tests '())] [id (in-naturals)])
       (define-values (test-vars test-body) (disassemble-forall test))
       (define ctx
         (hash-union
          (for/hash ([var test-vars])
-           (values var (sformat "cex~a" (name 'cex (cons var test)))))
+           (values var (sformat "cex~a~a" id var)))
          (hash '? (dump-box (dom-boxes (first doms))))
          (if (andmap (curryr dom-context ':component) doms)
              (hash)
@@ -86,14 +86,10 @@
   
   (values doms query))
 
-(define (query sheets docs fonts [tests #f])
-  (define-values (doms query) (constraints (make-log) sheets docs fonts #:tests tests))
-  (append query (list cassius-check-sat)))
-
 (define (solve sheets docs fonts #:tests [tests #f] #:render? [render? #t]
                #:component [name #f])
   (define log-phase (make-log))
-  (reset-names!)
+  (reset!)
   (define-values (doms query) (constraints log-phase sheets docs fonts #:tests tests #:render? render?))
 
   (when (*exit-early*)
@@ -120,7 +116,7 @@
        (define test
          (if tests
              (let ([bad-test (extract-test m tests)])
-               (when bad-test (extract-counterexample! m bad-test))
+               (when bad-test (extract-counterexample! m doms bad-test))
                bad-test)
              #f))
        (define doms* (map (curry extract-ctx! m) doms))
@@ -133,7 +129,7 @@
          (solve sheets docs fonts #:tests tests #:component name))])]
     [(list 'core c)
      (log-phase "Found core with ~a constraints" (length c))
-     (extract-core! c)
+     (extract-core! c doms)
      (failure '() (map unparse-tree trees))]))
 
 (define (solve-problem* problem)

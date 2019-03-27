@@ -1,9 +1,10 @@
 #lang racket
 
-(require "common.rkt" "dom.rkt" "registry.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt")
+(require "common.rkt" "dom.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt")
 (provide compile-assertion auxiliary-definitions assertion-helpers helper-dict)
 
 (define auxiliary-definitions (make-parameter '()))
+(define auxiliary-defs (make-hash))
 
 ;; The strange duplication of `helper-dict` and `assertion-helpers` is
 ;; temporary, waiting on a better way to define optional or variary
@@ -70,13 +71,14 @@
        `(,function ,(loop box ctx))]
       [`(ancestor ,box ,cond*)
        (define cond (loop cond* #hash((? . b))))
-       (define aux (sformat "aux~a" (name 'aux cond)))
+       (define id (hash-ref! auxiliary-defs cond (hash-count auxiliary-defs)))
+       (define fun-name (sformat "aux~a" id))
        (define aux-def
-         `((declare-fun ,aux (Box) Box)
-           (assert (forall ((b Box)) (= (,aux b) (ite ,cond b (,aux (pflow b))))))
-           (assert (= (,aux no-box) no-box))))
+         `((declare-fun ,fun-name (Box) Box)
+           (assert (forall ((b Box)) (= (,fun-name b) (ite ,cond b (,fun-name (pflow b))))))
+           (assert (= (,fun-name no-box) no-box))))
        (auxiliary-definitions (remove-duplicates (append (auxiliary-definitions) aux-def)))
-       `(,aux ,(loop box ctx))]
+       `(,fun-name ,(loop box ctx))]
       [`(has-contents ,box) `(has-contents ,(loop box ctx))]
       [`(is-component ,box) `(is-component ,(loop box ctx))]
       [`(has-type ,box ,(and (or 'root 'text 'inline 'block 'line) boxtype))

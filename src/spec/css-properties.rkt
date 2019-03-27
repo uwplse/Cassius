@@ -97,8 +97,8 @@
 (define-css-type (Font-Size (px Real) (% Real) (em Real))
   [font-size (em 1)])
 
-; Font Family is a string so should never make it to Z3
-(define-css-type (Font-Family (num Real))
+; Font Family is a string so Z3 thinks of it as an integer
+(define-css-type (Font-Family (string Real))
   [font-family "serif"])
 
 (define-css-type (Font-Weight bolder lighter (num Real) initial)

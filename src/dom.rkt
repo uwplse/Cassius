@@ -1,5 +1,5 @@
 #lang racket
-(require "common.rkt" "tree.rkt" "registry.rkt")
+(require "common.rkt" "tree.rkt")
 
 (provide (struct-out dom) dom-context in-elements in-boxes parse-dom unparse-dom
          dom-box->elt dom-elt->box dom-first-box? dom-last-box?
@@ -23,8 +23,6 @@
 (define (parse-dom doc)
   (define elts* (parse-tree (dom-elements doc)))
   (define boxes* (parse-tree (dom-boxes doc)))
-  (for ([elt (in-tree elts*)]) (name 'elt elt))
-  (for ([box (in-tree boxes*)]) (name 'box box))
   (unless (dom-context doc ':matched)
     (error "Unmatched trees (without :elt and :num) no longer supported"))
   (struct-copy dom doc [elements elts*] [boxes boxes*] [match (build-match elts* boxes*)]))

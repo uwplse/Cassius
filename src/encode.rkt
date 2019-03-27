@@ -1,5 +1,6 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "spec/css-properties.rkt" "registry.rkt" "spec/percentages.rkt" "spec/utils.rkt")
+(require "common.rkt" "dom.rkt" "tree.rkt"
+         "spec/css-properties.rkt" "spec/percentages.rkt" "spec/utils.rkt")
 
 (provide dump-tag extract-tag dump-id extract-id
          dump-elt dump-box extract-box extract-style
@@ -25,12 +26,12 @@
 
 (define (dump-elt elt)
   (if elt
-      (sformat "elt~a" (name 'elt elt))
+      (sformat "elt~a" (node-id elt))
       'no-elt))
 
 (define (dump-box box)
   (if box
-      (sformat "box~a" (name 'box box))
+      (sformat "box~a" (node-id box))
       'no-box))
 
 (define (extract-style style-expr)
@@ -50,12 +51,17 @@
         corrected
         0)))
 
+(define all-strings (make-hash))
+
 (define (dump-value type value)
   (define prefix (slower type))
   (match value
     [(? symbol?) (sformat "~a/~a" prefix value)]
-    [(? string?) (let ([str (if (equal? value "-moz-field") "Sans" value)])
-                   (list (sformat "~a/num" prefix) (name 'type str)))] ;; TODO: Default input font instead of "Sans"
+    [(? string?)
+     ;; TODO: Default input font instead of "Sans"
+     (define value* (if (equal? value "-moz-field") "Sans" value))
+     (list (sformat "~a/string" prefix)
+           (hash-ref! all-strings value* (hash-count all-strings)))]
     [0 (list (sformat "~a/px" prefix) 0)]
     [(? number?) (list (sformat "~a/num" prefix) (number->z3 value))]
     [(list 'em n) (list (sformat "~a/em" prefix) (number->z3 n))]

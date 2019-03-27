@@ -2,7 +2,7 @@
 
 (require "common.rkt")
 (provide define-constraints smt? smt-cond smt-let smt-let* smt-not smt-and smt-or smt-replace smt-replace-terms
-         and-assertions disassemble-forall)
+         and-assertions disassemble-forall forall-variables)
 
 (define smt? any/c)
 
@@ -80,6 +80,10 @@
    (values vars body)]
   [(body)
    (values '() body)])
+
+(define (forall-variables a)
+  (define-values (vars body) (disassemble-forall a))
+  vars)
 
 (define (and-assertions . as)
   (define-values (vars body)

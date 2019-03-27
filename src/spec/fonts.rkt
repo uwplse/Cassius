@@ -1,5 +1,5 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt" "../encode.rkt" "../registry.rkt")
+(require "../common.rkt" "../smt.rkt" "../encode.rkt")
 (provide font-datatype make-get-font font-computation)
 
 (define-by-match font-info?
@@ -21,10 +21,10 @@
   (-> (listof font-info?) any/c)
   (reap [sow]
         (sow `(declare-fun get-font (Font-Family Font-Weight Font-Style Real) Font-Metric))
-        (for* ([font (in-list fonts)])
-          (match-define (list size family weight style a d t b l) font)
+        (for* ([font (in-list fonts)] [id (in-naturals)])
+          (match-define (list size* family weight style a d t b l) font)
           (match-define (list a* d* t* b* l*) (map z3->number (list a d t b l)))
-          (define var (sformat "font~a-~a" (name 'font (list family weight style)) (z3->number size)))
+          (define var (sformat "font~a-~a" id (z3->number size*)))
           (sow `(declare-const ,var Font-Metric))
           (sow `(assert (<= 0 (font.ascent ,var))))
           (sow `(assert (<= 0 (font.descent ,var))))
@@ -39,7 +39,7 @@
           (sow `(assert (= (get-font ,(dump-value 'font-family family)
                                      ,(dump-value 'font-weight weight)
                                      ,(dump-value 'font-style style)
-                                     ,size) ,var))))))
+                                     ,size*) ,var))))))
 
 (define-constraints (font-datatype)
   (declare-datatypes ()

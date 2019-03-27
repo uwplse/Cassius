@@ -1,6 +1,6 @@
 #lang racket
 (require racket/hash)
-(require "common.rkt" "dom.rkt" "smt.rkt" "encode.rkt" "registry.rkt" "tree.rkt" "selectors.rkt")
+(require "common.rkt" "dom.rkt" "smt.rkt" "encode.rkt" "tree.rkt" "selectors.rkt")
 (require "spec/css-properties.rkt" "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt"
          "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
          "spec/media-query.rkt" "assertions.rkt")
@@ -8,12 +8,17 @@
          extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback extract-test)
 
 ;; Does tagging of bad
-(define (extract-core! core)
+(define (extract-core! core doms)
+  (define fields (make-hash))
   (for ([name core] #:when (set-member? '(box-x box-y box-width box-height) (caar (split-line-name name))))
     (match-define (list accessor box-name) (first (split-line-name name)))
     (define field-name (match accessor ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]))
-    (define box (by-name 'box box-name))
-    (node-set! box field-name `(bad ,(node-get box field-name)))))
+    (hash-update! fields box-name (curry cons field-name) '()))
+
+  (for* ([dom doms] [box (in-boxes dom)])
+    (define bad-fields (hash-ref fields (sformat "box~a" (node-id box)) '()))
+    (for ([field-name bad-fields])
+      (node-set! box field-name `(bad ,(node-get box field-name))))))
 
 (define (extract-model-sufficiency smt-out trees)
   (for*/and ([tree trees] [elt (in-tree tree)])
@@ -26,7 +31,7 @@
 (define (extract-ctx! model d)
   (define ctx*
     (for/fold ([ctx (dom-properties d)]) ([(attr varname) #hash((:w . w) (:h . h) (:fs . font-size))])
-      (define var (sformat "config/~a/~a" (name 'dom d) varname))
+      (define var (sformat "config/~a/~a" (dom-name d) varname))
       (if (dict-has-key? model var)
           (dict-set ctx attr (list (dict-ref model var)))
           ctx)))
@@ -54,12 +59,15 @@
        (loop b)]
       [_ test])))
 
-(define (extract-counterexample! smt-out bad-test)
+(define (extract-counterexample! smt-out doms bad-test)
+  (define id (hash-ref smt-out 'which-constraint))
   (define-values (bad-vars bad-body) (disassemble-forall bad-test))
   (for ([var bad-vars])
-    (define smt-var (sformat "cex~a" (name 'cex (cons var bad-test))))
-    (define node (by-name 'box (dict-ref (extract-box (dict-ref smt-out smt-var)) 'bid)))
-    (node-add! node ':cex `(bad ,var))))
+    (define smt-var (sformat "cex~a~a" id var))
+    (define bid (dict-ref (extract-box (dict-ref smt-out smt-var)) 'bid))
+    (for/first ([dom doms] #:when true
+                [box (in-boxes dom)] #:when (equal? (node-id box) bid))
+      (node-add! box ':cex `(bad ,var)))))
 
 (define (tree-constraints dom emit elt)
   (emit `(assert (! (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt)))
@@ -144,13 +152,13 @@
 (define (dom-define-elements doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
     (emit `(declare-const ,(dump-elt elt) Element))
-    (emit `(assert (= (eid ,(dump-elt elt)) ,(name 'elt elt))))
+    (emit `(assert (= (eid ,(dump-elt elt)) ,(node-id elt))))
     (emit `(assert (is-elt ,(dump-elt elt))))))
 
 (define (dom-define-boxes doms emit)
   (for* ([dom doms] [box (in-boxes dom)])
     (emit `(declare-const ,(dump-box box) Box))
-    (emit `(assert (= (bid ,(dump-box box)) ,(name 'box box))))
+    (emit `(assert (= (bid ,(dump-box box)) ,(node-id box))))
     (emit `(assert (is-box ,(dump-box box))))))
 
 (define (configuration-constraints params doms emit)
@@ -160,7 +168,7 @@
     (define fs (car (dom-context dom ':fs #:default '(?))))
     (define scrollw (car (dom-context dom ':scrollw #:default '(?))))
 
-    (define (param var) (sformat "config/~a/~a" (name 'dom dom) var))
+    (define (param var) (sformat "config/~a/~a" (dom-name dom) var))
     (define (emit-const name type value)
       (match value
         [(? number*?)
@@ -204,7 +212,7 @@
         [`(not ,(? number*? value)) `(not (= ,expr ,(number->z3 value)))]
         [`(between ,(? number*? min) ,(? number*? max)) `(<= ,(number->z3 min) ,expr ,(number->z3 max))]))
 
-    (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (name 'box elt)))))))
+    (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (node-id elt)))))))
 
 (define (is-component box)
   (or (not (node-parent box)) (node-get* box ':split)))
@@ -224,7 +232,7 @@
                      ,(dump-box (node-next box))
                      ,(dump-box (node-fchild box))
                      ,(dump-box (node-lchild box)))
-                    :named ,(sformat "link-box/~a" (name 'box box))))))
+                    :named ,(sformat "link-box/~a" (node-id box))))))
 
 (define (nodes-below node stop?)
   (reap [sow]
@@ -259,8 +267,8 @@
     [`(or ,bits ...)
      (apply my-set-union (map (curryr not-false-inputs ctx dom) bits))]
     [`(= ,(? (curry set-member? ctx) b)
-         ,(app ~a (regexp #rx"^box([0-9]+)$" (list _ (app string->number bid)))))
-     (and (by-name 'box bid) (list (cons b (by-name 'box bid))))]
+         ,(app ~a (regexp #rx"^box([0-9]+)$" (list bname _))))
+     (list (cons b bname))]
     [_ #f]))
 
 (define (massage-body body ctx dom)
@@ -302,7 +310,7 @@
         (define body* (massage-body spec (map cons vars vals) dom))
         (unless (equal? body* 'true)
           (emit `(assert (! (let ,(map (λ (v x) (list v (dump-box x))) vars vals) ,body*)
-                            :named ,(sformat "spec/~a/~a/~a/~a" (name 'box box) (substring (~a field) 1) i j)))))))))
+                            :named ,(sformat "spec/~a/~a/~a/~a" (node-id box) (substring (~a field) 1) i j)))))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -316,11 +324,11 @@
       ['TEXT 'a-text-box]))
   (when cns
     (emit `(assert (! (,cns ,(dump-box elt))
-                      :named ,(sformat "box/~a/~a" (slower (node-type elt)) (name 'box elt)))))))
+                      :named ,(sformat "box/~a/~a" (slower (node-type elt)) (node-id elt)))))))
 
 (define (compute-style-constraints dom emit elt)
   (emit `(assert (! (compute-style ,(dump-elt elt))
-                    :named ,(sformat "compute-style/~a" (name 'elt elt))))))
+                    :named ,(sformat "compute-style/~a" (node-id elt))))))
 
 (define (contents-constraints dom emit box)
   (if (set-member? '(#f " " "") (node-get box ':text))
@@ -331,19 +339,19 @@
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
   (if replaced?
-      (emit `(assert (! (is-replaced ,(dump-elt elt)) :named ,(sformat "replaced/~a" (name 'elt elt)))))
-      (emit `(assert (! (not (is-replaced ,(dump-elt elt))) :named ,(sformat "not-replaced/~a" (name 'elt elt))))))
+      (emit `(assert (! (is-replaced ,(dump-elt elt)) :named ,(sformat "replaced/~a" (node-id elt)))))
+      (emit `(assert (! (not (is-replaced ,(dump-elt elt))) :named ,(sformat "not-replaced/~a" (node-id elt))))))
   (when (equal? (slower (node-type elt)) 'br)
     (emit `(assert (= (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt)) 0))))
   (if (equal? (slower (node-type elt)) 'img)
-      (emit `(assert (! (is-image ,(dump-elt elt)) :named ,(sformat "image/~a" (name 'elt elt)))))
-      (emit `(assert (! (not (is-image ,(dump-elt elt))) :named ,(sformat "not-image/~a" (name 'elt elt))))))
+      (emit `(assert (! (is-image ,(dump-elt elt)) :named ,(sformat "image/~a" (node-id elt)))))
+      (emit `(assert (! (not (is-image ,(dump-elt elt))) :named ,(sformat "not-image/~a" (node-id))))))
   (when (node-get elt ':w)
     (emit `(assert (! (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w))
-                   :named ,(sformat "intrinsic-width/~a" (name 'elt elt))))))
+                   :named ,(sformat "intrinsic-width/~a" (node-id elt))))))
   (when (node-get elt ':h)
     (emit `(assert (! (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))
-                   :named ,(sformat "intrinsic-height/~a" (name 'elt elt)))))))
+                   :named ,(sformat "intrinsic-height/~a" (node-id elt)))))))
 
 (define (add-test doms constraints tests #:component [component #f] #:render? [render? true])
   (match-define (list dom) doms)
@@ -353,14 +361,16 @@
         (for/list ([box (in-boxes dom)]) box)))
   `(,@constraints
     (declare-const which-constraint Real)
-    ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
-        (define var (sformat "cex~a" value))
+    ,@(for/reap [sow] ([test tests] [id (in-naturals)]
+                       #:when true
+                       [var (forall-variables test)])
+        (define var (sformat "cex~a~a" id var))
         (define var-values
           (or (apply my-set-union
                      (for/list ([test tests]) (not-true-inputs test (list var) dom)))
-              possible-boxes))
+              (map dump-box possible-boxes)))
         (sow `(declare-const ,var Box))
-        (sow `(assert ,(apply smt-or (for/list ([box var-values]) `(= ,var ,(dump-box box)))))))
+        (sow `(assert ,(apply smt-or (for/list ([boxvar var-values]) `(= ,var ,boxvar))))))
     (assert ,(apply smt-or
                     (for/list ([test tests] [i (in-naturals)])
                       `(and (not ,test) (= which-constraint ,i)))))
