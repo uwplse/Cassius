@@ -239,35 +239,29 @@
   (for/hash ([node nodes] #:when (node-get node ':name #:default false))
     (values (node-get node ':name) (dump-box node))))
 
-(define (trivially-true body ctx dom)
-  (match body
-    [`(=> ,conds ... ,post)
-     (or (ormap (curryr trivially-false ctx dom) conds)
-         (trivially-true post ctx dom))]
-    [`(or ,bits ...)
-     (ormap (curryr trivially-true ctx dom) bits)]
-    [`(= ,(? (curry dict-has-key? ctx) b)
-         ,(app ~a (regexp #rx"^box([0-9]+)$" (list bname _))))
-     (equal? (~a (dump-box (dict-ref ctx b))) bname)]
-    [`(is-component ,(? (curry dict-has-key? ctx) b))
-     (is-component (dict-ref ctx b))]
-    ['true true]
-    [_ false]))
+(define (my-set-intersect . as)
+  (foldl (λ (set acc) (if set (if acc (set-intersect set acc) set) acc)) #f as))
 
-(define (trivially-false body ctx dom)
+(define (my-set-union . as)
+  (foldl (λ (set acc) (if set (if acc (set-union set acc) #f) #f)) '() as))
+
+(define (not-true-inputs body ctx dom)
   (match body
     [`(=> ,conds ... ,post)
-     (and (andmap (curryr trivially-true ctx dom) conds)
-          (trivially-false post ctx dom))]
+     (apply my-set-union (not-true-inputs post ctx dom)
+            (map (curryr not-false-inputs ctx dom) conds))]
+    [`(and ,bits ...)
+     (apply my-set-union (map (curryr not-true-inputs ctx dom) bits))]
+    [_ '()]))
+
+(define (not-false-inputs body ctx dom)
+  (match body
     [`(or ,bits ...)
-     (andmap (curryr trivially-false ctx dom) bits)]
-    [`(= ,(? (curry dict-has-key? ctx) b)
+     (apply my-set-union (map (curryr not-false-inputs ctx dom) bits))]
+    [`(= ,(? (curry set-member? ctx) b)
          ,(app ~a (regexp #rx"^box([0-9]+)$" (list _ (app string->number bid)))))
-     (and (by-name 'box bid) (not (equal? (dict-ref ctx b) (by-name 'box bid))))]
-    [`(is-component ,(? (curry dict-has-key? ctx) b))
-     (not (is-component (dict-ref ctx b)))]
-    ['false true]
-    [_ false]))
+     (and (by-name 'box bid) (list (cons b (by-name 'box bid))))]
+    [_ #f]))
 
 (define (massage-body body ctx dom)
   (match body
@@ -362,11 +356,9 @@
     ,@(for/reap [sow] ([(id value) (in-dict (all-by-name 'cex))])
         (define var (sformat "cex~a" value))
         (define var-values
-          (for*/list ([box possible-boxes]
-                      #:unless (for/and ([test tests])
-                                 (trivially-true
-                                  test (list (cons var box)) dom)))
-            box))
+          (or (apply my-set-union
+                     (for/list ([test tests]) (not-true-inputs test (list var) dom)))
+              possible-boxes))
         (sow `(declare-const ,var Box))
         (sow `(assert ,(apply smt-or (for/list ([box var-values]) `(= ,var ,(dump-box box)))))))
     (assert ,(apply smt-or
