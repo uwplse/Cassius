@@ -76,11 +76,7 @@
                                            (equal? (node-get box ':name) cname))))))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
-
-  (if (set-member? (flags) 'z3o)
-      (set! query (z3-prepare query))
-      (set! query (z3-clean query)))
-  (when (set-member? (flags) 'debug) (set! query (z3-namelines query)))
+  (set! query (z3-prepare query))
 
   (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
   

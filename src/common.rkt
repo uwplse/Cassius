@@ -4,7 +4,7 @@
 (provide
  reap for/reap for*/reap for/append
  sformat slower indent tree-size snoc dict-remove*
- flags all-flags supported-features support-features!
+ supported-features support-features!
  xor ->number z3-path value=?
  attribute? attributes->dict dict->attributes
  split-symbol split-line-name
@@ -20,9 +20,6 @@
  path-tail
  warn
  reset! on-reset!)
-
-(define flags (make-parameter '(z3o rules selectors)))
-(define all-flags '(opt float z3o details rules selectors))
 
 (define supported-features
   (make-parameter

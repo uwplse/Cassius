@@ -129,9 +129,7 @@
       (hash-set! problems expr (cons (cons i line) (hash-ref problems expr '()))))
     body ...
     (for ([(key vals) (in-hash problems)])
-      (eprintf "Z3: ~a in ~a on ~a lines\n" name key (length vals))
-      (when (memq 'details (flags))
-        (eprintf "  line ~a: ~a\n" (caar vals) (cdar vals))))))
+      (eprintf "Z3: ~a in ~a on ~a lines\n" name key (length vals)))))
 
 (define (z3-check-fields cmds)
   "Check that no fields of a function output are taken (fields of fields allowed)."

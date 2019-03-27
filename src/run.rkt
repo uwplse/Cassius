@@ -170,10 +170,7 @@
    #:program "cassius"
 
    #:multi
-   [("-d" "--debug") "Turn on debug mode"
-    (debug-mode!)]
-   [("+x") name "Set an option" (flags (set-add (flags) (string->symbol name)))]
-   [("-x") name "Unset an option" (flags (set-remove (flags) (string->symbol name)))]
+   [("-d" "--debug") "Turn on debug mode" (debug-mode!)]
    [("--cache") file-name "Cache for Z3 results"
     (*cache-file* file-name)
     (when (file-exists? file-name)

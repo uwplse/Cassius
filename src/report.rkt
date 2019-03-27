@@ -495,10 +495,7 @@
    #:program "report"
 
    #:multi
-   [("-d" "--debug") "Turn on debug mode"
-    (debug-mode!)]
-   [("+x") name "Set an option" (flags (cons (string->symbol name) (flags)))]
-   [("-x") name "Unset an option" (flags (cons (string->symbol name) (flags)))]
+   [("-d" "--debug") "Turn on debug mode" (debug-mode!)]
    [("--cache") file-name "Cache for Z3 results"
     (*cache-file* file-name)
     (when (file-exists? file-name)
