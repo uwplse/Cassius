@@ -363,17 +363,15 @@
     (declare-const which-constraint Real)
     ,@(for/reap [sow] ([test tests] [id (in-naturals)]
                        #:when true
-                       [var (forall-variables test)])
-        (define var (sformat "cex~a~a" id var))
+                       [(var cexvar) (in-dict (car test))])
         (define var-values
-          (or (apply my-set-union
-                     (for/list ([test tests]) (not-true-inputs test (list var) dom)))
+          (or (not-true-inputs (cdr test) (list var) dom)
               (map dump-box possible-boxes)))
-        (sow `(declare-const ,var Box))
-        (sow `(assert ,(apply smt-or (for/list ([boxvar var-values]) `(= ,var ,boxvar))))))
+        (sow `(declare-const ,cexvar Box))
+        (sow `(assert ,(apply smt-or (for/list ([boxvar var-values]) `(= ,cexvar ,boxvar))))))
     (assert ,(apply smt-or
                     (for/list ([test tests] [i (in-naturals)])
-                      `(and (not ,test) (= which-constraint ,i)))))
+                      `(and (not ,(cdr test)) (= which-constraint ,i)))))
     ,@(reap [sow]
          (for ([box (in-boxes dom)])
            (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) dom sow box)))))
