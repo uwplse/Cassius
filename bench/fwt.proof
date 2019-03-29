@@ -17,40 +17,40 @@
 
 ;; The core theorem: links, inputs, and buttons are at least scrollable to
 
-(define (onscreen b)
+(define (scrollable b)
   (and (>= (top b) 0) (>= (left b) 0)))
 
 (define (is-link b)
   (matches b (tag a)))
 
-(theorem (interactive-onscreen b)
-  (=> (is-link b) (onscreen b)))
+(theorem (interactive-scrollable b)
+  (=> (is-link b) (scrollable b)))
 
 ;; This is a trivial proof of it, using a single component / whole page approach
 
-(proof (trivial interactive-onscreen yoga surf park)
-  (page root (forall (b) (=> (is-link b) (onscreen b)))))
+(proof (trivial interactive-scrollable yoga surf park)
+  (page root (forall (b) (=> (is-link b) (scrollable b)))))
 
 ;; A proof that we mention in the overview section
 
-(proof (yoga-page interactive-onscreen yoga)
+(proof (yoga-page interactive-scrollable yoga)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
 
-  (page * (forall (b) (=> (is-link b) (onscreen b)))))
+  (page * (forall (b) (=> (is-link b) (scrollable b)))))
 
 ;; The final proof in the overview section
 
-(proof (yoga-simple interactive-onscreen yoga)
+(proof (yoga-simple interactive-scrollable yoga)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
 
   (assert (or header footer)
-          (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
-  (assert root (onscreen header))
-  (assert root (onscreen footer))
+          (forall (a) (=> (scrollable ?) (is-link a) (scrollable a))))
+  (assert root (scrollable header))
+  (assert root (scrollable footer))
 
   (pre footer (no-floats-enter footer))
   (page root (no-floats-enter footer))
@@ -64,14 +64,14 @@
 
 ;; The fully-componentized proof of the yoga page
 
-(proof (yoga-full interactive-onscreen yoga)
+(proof (yoga-full interactive-scrollable yoga)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
 
   (assert (or header footer)
-    (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
-  (assert root (and (onscreen header) (onscreen footer)))
+    (forall (a) (=> (scrollable ?) (is-link a) (scrollable a))))
+  (assert root (and (scrollable header) (scrollable footer)))
 
   (pre footer (>= (width footer) 200))
   (assert root (>= (width footer) 200))
@@ -84,7 +84,7 @@
   (assert * (non-negative-margins ?)))
 
 ;; A proof that works for the surf page
-(proof (surf interactive-onscreen surf)
+(proof (surf interactive-scrollable surf)
   (component header (id header))
   (component body (id body))
   (component footer (id footer))
@@ -93,11 +93,11 @@
 
   (assert (- * nav home)
           (forall (b) (=> (no-floats-enter ?)
-                          (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
+                          (scrollable ?) (or (is-link b) (is-component b)) (scrollable b))))
   (assert (or nav home)
-          (forall (b) (=> (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
+          (forall (b) (=> (scrollable ?) (or (is-link b) (is-component b)) (scrollable b))))
 
-  (assert root (onscreen root))
+  (assert root (scrollable root))
   (assert root (= (floats-tracked root) 0))
 
   (assert * (non-negative-margins ?))
@@ -117,18 +117,18 @@
 ;; A proof that works for the amusement park page
 ;; It is largely derived from the surf proof
 
-(proof (park interactive-onscreen park)
+(proof (park interactive-scrollable park)
   (component header (id header))
   (component figure (id figure))
   (component section (id section))
   (component footer (id footer))
 
   (pre (- * root) (>= (width ?) 960))
-  (assert * (forall (b) (=> (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
+  (assert * (forall (b) (=> (scrollable ?) (or (is-link b) (is-component b)) (scrollable b))))
 
   (pre (- * root) (no-floats-enter ?))
   (assert root (= (width header) (width figure) (width section) (width footer) 960))
-  (assert root (onscreen root))
+  (assert root (scrollable root))
   (assert root (no-floats-enter root))
 
   (assert * (non-negative-margins ?))
