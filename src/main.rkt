@@ -345,7 +345,7 @@
     (emit `(assert (= (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt)) 0))))
   (if (equal? (slower (node-type elt)) 'img)
       (emit `(assert (! (is-image ,(dump-elt elt)) :named ,(sformat "image/~a" (node-id elt)))))
-      (emit `(assert (! (not (is-image ,(dump-elt elt))) :named ,(sformat "not-image/~a" (node-id))))))
+      (emit `(assert (! (not (is-image ,(dump-elt elt))) :named ,(sformat "not-image/~a" (node-id elt))))))
   (when (node-get elt ':w)
     (emit `(assert (! (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w))
                    :named ,(sformat "intrinsic-width/~a" (node-id elt))))))
