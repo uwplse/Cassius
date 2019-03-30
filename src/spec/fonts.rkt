@@ -21,7 +21,7 @@
   (-> (listof font-info?) any/c)
   (reap [sow]
         (sow `(declare-fun get-font (Font-Family Font-Weight Font-Style Real) Font-Metric))
-        (for* ([font (in-list fonts)] [id (in-naturals)])
+        (for ([font (in-list fonts)] [id (in-naturals)])
           (match-define (list size* family weight style a d t b l) font)
           (match-define (list a* d* t* b* l*) (map z3->number (list a d t b l)))
           (define var (sformat "font~a-~a" id (z3->number size*)))
