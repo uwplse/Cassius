@@ -54,6 +54,6 @@
                ':tool '(assert)
                ':sheets sheets*
                ':fonts fonts*
-               ':title "[removed for caching]"
-               ':url "[removed for caching]"
+               ':title ("[removed for caching]")
+               ':url ("[removed for caching]")
                ':features '())))
