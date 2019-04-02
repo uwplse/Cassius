@@ -57,7 +57,7 @@
   (assert root (onscreen root))
 
   (assert sidebar (forall (_) (=> (onscreen sidebar) (onscreen-plus sidebar-content 5))))
-  ((random 100) sidebar (forall (b) (=> (onscreen sidebar) (or (is-component b) (is-interactive b)) (onscreen b))))
+  (admit sidebar (forall (b) (=> (onscreen sidebar) (or (is-component b) (is-interactive b)) (onscreen b))))
 
   (assert sidebar-title (non-negative-margins sidebar-title))
   (assert sidebar-title (> (height sidebar-title) 0))
@@ -120,6 +120,9 @@
             (=> (onscreen-plus sidebar-title 5)
                 (is-interactive b) (onscreen b)))))
 
+(define (viewable b)
+  (and (> (right b) 0) (> (bottom b) 0)))
+
 (define (line b)
   (ancestor b (has-type ? line)))
 
@@ -127,7 +130,7 @@
   (- (right (last b)) (left (first b))))
 
 (theorem (line-width b)
-  (=> (has-type b text) (has-contents b)
+  (=> (has-type b text) (has-contents b) (viewable b)
       (!= (first (line b)) null)
       (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))
 
