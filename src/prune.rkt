@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt" "assertions.rkt")
-(provide prune-elements prune-sheets prune-attrs prune-fonts)
+(provide prune-elements prune-sheets prune-attrs prune-fonts prune-renumber)
 
 (define/contract (prune-elements box-stx elts-stx) ; TODO: kind of weird here with the unparsing
   (-> node-stx? node-stx? node-stx?)
@@ -77,6 +77,16 @@
     (when (and old-id (not (set-member? used-ids old-id)))
       (node-remove! elt ':id)))
   (unparse-tree elts))
+
+(define (prune-renumber boxes-stx elts-stx)
+  (define boxes (parse-tree boxes-stx))
+  (define elts (parse-tree elts-stx))
+  (define mapping (make-hash))
+  (for ([box (in-tree boxes)] #:when (node-get box ':elt))
+    (node-set! box ':elt (hash-ref! mapping (node-get box ':elt) (hash-count mapping))))
+  (for ([elt (in-tree elts)] #:when (node-get elt ':num))
+    (node-set! elt ':num (hash-ref! mapping (node-get elt ':num) (hash-count mapping))))
+  (values (unparse-tree boxes) (unparse-tree elts)))
 
 (define (prune-fonts fonts sheets)
   (define-values (families weights styles)

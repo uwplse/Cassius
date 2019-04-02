@@ -46,8 +46,9 @@
     (define sheets* (prune-sheets sheets (list elements*)))
     (define elements** (prune-attrs elements* sheets* specs))
     (define fonts* (prune-fonts fonts sheets*))
+    (define-values (boxes* elements***) (prune-renumber (dom-boxes piece) elements**))
     (dict-set* problem
-               ':documents (list (struct-copy dom piece [elements elements**]))
+               ':documents (list (struct-copy dom piece [elements elements***] [boxes boxes*]))
                ':name (list (dom-name piece))
                ':test specs
                ':tool '(assert)
