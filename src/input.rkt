@@ -58,7 +58,7 @@
              (for/list ([doc (dict-ref properties ':documents)]
                         [layout (dict-ref properties ':layouts)])
                (dom (dom-name layout) (dom-properties layout) doc (dom-boxes layout) #f)))
-           (set! properties (dict-set properties ':documents layouts*)))
+           (set! properties (dict-remove (dict-set properties ':documents layouts*) ':layouts)))
 
          (dict-set! problems name properties)])))
 

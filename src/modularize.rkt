@@ -30,6 +30,7 @@
          (unless (eq? tree (dom-boxes doc))
            (node-add! component ':component 'true))
          (node-set*! component ':spec specs)
+         (node-remove! component ':split)
          (list (first (unparse-tree component))))]
       [_
        (cons (first tree) children*)]))
@@ -51,4 +52,7 @@
                ':test specs
                ':tool '(assert)
                ':sheets sheets*
-               ':fonts fonts*)))
+               ':fonts fonts*
+               ':title "[removed for caching]"
+               ':url "[removed for caching]"
+               ':features '())))
