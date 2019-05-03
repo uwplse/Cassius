@@ -8,13 +8,17 @@
   `(and ,(? media-query?) ...)
   `(only ,(? media-query?))
   `(not ,(? media-query?))
-  `(min-width (px ,(? number?)))
-  `(max-width (px ,(? number?)))
-  `(min-height (px ,(? number?)))
-  `(max-height (px ,(? number?)))
+  `(min-width  ,(? length?))
+  `(max-width  ,(? length?))
+  `(min-height ,(? length?))
+  `(max-height ,(? length?))
   `(orientation landscape)
   `(orientation portrait)
   (or 'all 'screen 'print 'handheld 'projection 'tty 'tv))
+
+(define-by-match length?
+  `(px ,(? number?))
+  `(em ,(? number?)))
 
 (define (media-parameters? p)
   (and (dict? p)
@@ -27,6 +31,11 @@
 
 (define/contract (media-matches? params query)
   (-> media-parameters? media-query? smt?)
+  (define (mk-length l)
+    (match l
+      [`(px ,l) l]
+      [`(em ,l) `(%of (* 100 ,l) ,(dict-ref params ':fs))]))
+
   (let loop ([query query])
     (match query
       [`(or ,qs ...)
@@ -44,7 +53,7 @@
        `(< ,(dict-ref params ':w) ,(dict-ref params ':h))]
       ['(orientation portrait)
        `(< ,(dict-ref params ':h) ,(dict-ref params ':w))]
-      [`(max-width (px ,mw)) `(<= ,(dict-ref params ':w) ,mw)]
-      [`(min-width (px ,mw)) `(>= ,(dict-ref params ':w) ,mw)]
-      [`(min-height (px ,mh)) `(<= ,(dict-ref params ':h) ,mh)]
-      [`(max-height (px ,mh)) `(>= ,(dict-ref params ':h) ,mh)])))
+      [`(max-width l) `(<= ,(dict-ref params ':w) ,(mk-length l))]
+      [`(min-width l) `(>= ,(dict-ref params ':w) ,(mk-length l))]
+      [`(min-height l) `(<= ,(dict-ref params ':h) ,(mk-length l))]
+      [`(max-height l) `(>= ,(dict-ref params ':h) ,(mk-length l))])))
