@@ -53,7 +53,7 @@
        `(< ,(dict-ref params ':w) ,(dict-ref params ':h))]
       ['(orientation portrait)
        `(< ,(dict-ref params ':h) ,(dict-ref params ':w))]
-      [`(max-width l) `(<= ,(dict-ref params ':w) ,(mk-length l))]
-      [`(min-width l) `(>= ,(dict-ref params ':w) ,(mk-length l))]
-      [`(min-height l) `(<= ,(dict-ref params ':h) ,(mk-length l))]
-      [`(max-height l) `(>= ,(dict-ref params ':h) ,(mk-length l))])))
+      [`(max-width  ,l) `(<= ,(dict-ref params ':w) ,(mk-length l))]
+      [`(min-width  ,l) `(>= ,(dict-ref params ':w) ,(mk-length l))]
+      [`(min-height ,l) `(<= ,(dict-ref params ':h) ,(mk-length l))]
+      [`(max-height ,l) `(>= ,(dict-ref params ':h) ,(mk-length l))])))
