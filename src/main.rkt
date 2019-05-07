@@ -16,7 +16,7 @@
     (hash-update! fields box-name (curry cons field-name) '()))
 
   (for* ([dom doms] [box (in-boxes dom)])
-    (define bad-fields (hash-ref fields (sformat "box~a" (node-id box)) '()))
+    (define bad-fields (hash-ref fields (node-id box) '()))
     (for ([field-name bad-fields])
       (node-set! box field-name `(bad ,(node-get box field-name))))))
 
