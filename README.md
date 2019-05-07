@@ -102,7 +102,7 @@ Testing Assertions with VizAssert
 To test some assertions on a web page, write the assertion into a
 file and run:
 
-    racket src/run.rkt assertions [assertion-file] [assertion-name] [file] [instance]
+    racket src/run.rkt assertion [assertion-file] [assertion-name] [file] [instance]
 
 See `bench/assertions/assertions.vizassert` for an example of the
 syntax of assertion files. That file contains several assertions drawn
