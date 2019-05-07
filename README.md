@@ -78,6 +78,9 @@ To determine whether Cassius supports a given web page, run
 
     racket src/run.rkt accept [file] [instance]
 
+where `[instance]` is usually `doc-1`, or maybe `doc-2` or similar if
+you passed several URLs to the `capture.py` script.
+
 This will churn for a while and output either "Accepted" or
 "Rejected". If "Accepted" is produced, that means that Cassius's
 formalization of browser rendering accepts to rendering produced by
