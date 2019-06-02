@@ -109,7 +109,7 @@
       [(or (not render?) ; Don't do loop in proof checking
            (ormap (curryr dom-context ':component) doms) ; Don't do loop for components
            (extract-model-sufficiency m trees))
-       (unless (extract-model-lookback m trees)
+       (when (extract-model-lookback m trees)
          (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)
        (define test

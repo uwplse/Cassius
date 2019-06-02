@@ -685,30 +685,33 @@
        (let ([y* (resolve-clear b (vertical-position-for-flow-boxes b))])
          (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
               (and
-               (= (ez.lookback b) (ez.test (ez.in b) y*))
-               (ite (ez.lookback b)
+               (= (ez.lookback b) (not (ez.test (ez.in b) y*)))
+               (ite (not (ez.lookback b))
                     (= (y b)
                        (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
                                  (left-content p) (right-content p) y* float/left))
                     (>= (y b) y*)))
               (and
-               (= (ez.lookback b) true)
+               (= (ez.lookback b) false)
                (= (y b) y*))))
 
        (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
-           (ite (ez.lookback b)
-                (flow-horizontal-layout b (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
-                                             (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))))
-                ;; `lookback-overflow-width` is a black box that is
-                ;; narrower than `(w p)`, because we don't know the
-                ;; shape of the exclusion zone when `(not (ez.lookback
-                ;; b))`.
-                (and
-                 (>= (left-outer b) (left-content p))
-                 (<= (right-outer b) (right-content p))))
+            (flow-horizontal-layout
+             b 
+             (ite (not (ez.lookback b))
+                (- (ez.x (ez.in b) (y b) float/right (left-content p) (right-content p))
+                   (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)))
+                (lookback-overflow-width b)))
            (flow-horizontal-layout b (w p)))
        (= (x b) (+ (ml b)
                    (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))))
+
+
+  ;; `lookback-overflow-width` is a black box that is narrower than
+  ;; `(w p)`, used when we don't know the shape of the exclusion zone
+  ;; because `(ez.lookback b)`.
+  (declare-fun lookback-overflow-width ((b Box)) Real)
+  (assert (forall ((b Box)) (<= (lookback-overflow-width b) (w (pbox b)))))
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
@@ -753,7 +756,7 @@
          (and
           (= (top-outer b) y*)
           (= (left-outer b) x)
-          (= (ez.lookback b) true)))))
+          (= (ez.lookback b) false)))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     (and
@@ -764,7 +767,7 @@
       (= (float-stfmax b)
          (+ (min-max-width (ite (is-box (lbox b)) (float-stfmax (lbox b)) 0.0) b)
             (ite (is-box (vbox b)) (float-stfmax (vbox b)) 0.0)))
-      (= (ez.lookback b) true)))
+      (= (ez.lookback b) false)))
 
   (define-fun a-block-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))] [p (pflow b)])
@@ -896,7 +899,7 @@
 
        (=> (is-box v) (= (left-outer b) (right-outer v)))
 
-       (= (ez.lookback b) true)))
+       (= (ez.lookback b) false)))
 
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)]
@@ -931,7 +934,7 @@
        (= (ml b) (ite (and (is-no-box v) (is-box/line (type p)) (is-no-box (vflow p))) (text-indent p) 0.0))
 
        (=> (is-box v) (= (x b) (right-outer v))) ; Otherwise set by the line box
-       (= (ez.lookback b) true)))
+       (= (ez.lookback b) false)))
   
   (declare-fun ancestor-elt (Box) Element)
   (assert
@@ -951,8 +954,8 @@
        (let ([y-normal (resolve-clear b (ite (is-no-box v) (top-content p) (bottom-border v)))]
              [ez (ez.line-up (lbox b))])
          (and
-          (= (ez.lookback b) (ez.test (ez.in b) y-normal)) ;; Key float restriction
-          (ite (ez.lookback b)
+          (= (ez.lookback b) (not (ez.test (ez.in b) y-normal))) ;; Key float restriction
+          (ite (not (ez.lookback b))
                (and
                 ;; Here we use (stfmax (lbox b)) because that ignores floats on future lines
                 (= (y b) (ez.level ez (stfwidth (lbox b)) (left-content p) (right-content p) y-normal float/left))
@@ -1011,13 +1014,13 @@
      (= (xo b) (yo b) 0.0)
      (= (box-width b) ,(view-width-name))
      (= (box-height b) ,(view-height-name))
-     (= (ez.lookback b) true)
+     (= (ez.lookback b) false)
      (= (text-indent b) 0.0)))
 
   (define-fun a-magic-box ((b Box)) Bool
     (and
      (or (is-box/block (type b)) (is-box/inline (type b)))
-     (ez.lookback b)))
+     (not (ez.lookback b))))
 
   (define-fun an-anon-block-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)] [l (lflow b)])
@@ -1036,7 +1039,7 @@
        (not (w-from-stfwidth b))
        (= (y b) (vertical-position-for-flow-boxes b))
        (= (x b) (left-content p))
-       (= (ez.lookback b) true)))
+       (= (ez.lookback b) false)))
 
   ;; In some cases either the x or y scrollbar can be shown but not both;
   ;; in this case only the y scrollbar is ever shown
