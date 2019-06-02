@@ -10,10 +10,9 @@
 (struct success (stylesheet elements doms test) #:prefab)
 (struct failure (stylesheet trees) #:prefab)
 
-(define (constraints log-phase sheets docs fonts
+(define (constraints log-phase sheets doms fonts
                      #:tests [tests #f] #:render? [render? #t]
                      #:component [cname #f])
-  (define doms (map parse-dom docs))
   (log-phase "Read ~a documents with ~a elements, ~a boxes, ~a rules, and ~a fonts"
              (length doms)
              (length (append-map (compose sequence->list in-tree dom-elements) doms))
@@ -21,19 +20,7 @@
              (length (apply append sheets))
              (length fonts))
 
-  (define %s
-    (reap [sow]
-          (for* ([sheet sheets] [rule sheet])
-            (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
-            (for ([(prop value) (in-dict props)])
-              (match (car value)
-                [(list 'rem v) (sow (* 100 (z3->number v)))]
-                [(list 'em v) (sow (* 100 (z3->number v)))]
-                [(list '% v) (sow (z3->number v))]
-                [(? number? v) (sow (* v 100))]
-                [_ (void)])))))
-  (*%* (set-union (*%*) %s))
-
+  (*%* (set-union (*%*) (gather-percentages sheets)))
   (define query (all-constraints sheets doms fonts #:render? render?))
 
   (when tests
@@ -77,16 +64,15 @@
                                               (equal? (node-get box ':name) cname)))))))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
-  (set! query (z3-prepare query))
-  (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
-  
-  (values doms query))
+  (begin0 (z3-prepare query)
+    (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))))
 
 (define (solve sheets docs fonts #:tests [tests #f] #:render? [render? #t]
                #:component [name #f])
   (define log-phase (make-log))
+  (define doms (map parse-dom docs))
   (reset!)
-  (define-values (doms query) (constraints log-phase sheets docs fonts #:tests tests #:render? render?))
+  (define query (constraints log-phase sheets doms fonts #:tests tests #:render? render?))
 
   (when (*exit-early*)
     ((*exit-early*) (append query (list cassius-check-sat))))

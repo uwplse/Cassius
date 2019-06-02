@@ -1,7 +1,20 @@
 #lang racket
-(provide *%* make-%of)
+(require "../common.rkt" "../encode.rkt")
+(provide *%* make-%of gather-percentages)
 
 (define *%* (make-parameter '(0 10 20 30 40 50 60 70 80 90 100 150 200/3)))
+
+(define (gather-percentages sheets)
+  (reap [sow]
+        (for* ([sheet sheets] [rule sheet])
+          (match-define (list _ (? attribute?) ... (? list? props) ...) rule)
+          (for ([(prop value) (in-dict props)])
+            (match (car value)
+              [(list 'rem v) (sow (* 100 (z3->number v)))]
+              [(list 'em v) (sow (* 100 (z3->number v)))]
+              [(list '% v) (sow (z3->number v))]
+              [(? number? v) (sow (* v 100))]
+              [_ (void)])))))
 
 (define (make-%of)
   `((define-fun %of ((% Real) (base Real)) Real
