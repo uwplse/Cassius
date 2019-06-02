@@ -3,7 +3,7 @@
 (require "common.rkt" "dom.rkt" "smt.rkt" "encode.rkt" "tree.rkt" "selectors.rkt")
 (require "spec/css-properties.rkt" "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt"
          "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
-         "spec/media-query.rkt" "assertions.rkt")
+         "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt")
 (provide all-constraints add-test selector-constraints extract-core! extract-counterexample! extract-tree!
          extract-ctx! model-sufficiency extract-field extract-test)
 
@@ -321,29 +321,23 @@
       (emit `(assert (has-contents ,(dump-box box))))))
 
 (define (replaced-constraints dom emit elt)
-  (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
+  (emit `(assert (= (is-replaced ,(dump-elt elt)) ,(if (element-replaced elt?) 'true 'false))))
+  (emit `(assert (= (is-image ,(dump-elt elt)) ,(if (element-image elt?) 'true 'false))))
 
-  (if replaced?
-      (emit `(assert (is-replaced ,(dump-elt elt))))
-      (emit `(assert (not (is-replaced ,(dump-elt elt))))))
-  (when (equal? (slower (node-type elt)) 'br)
-    (emit `(assert (= (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt)) 0))))
-  (if (equal? (slower (node-type elt)) 'img)
-      (emit `(assert (is-image ,(dump-elt elt))))
-      (emit `(assert (not (is-image ,(dump-elt elt))))))
+  (when (element-br? elt)
+    (emit `(assert (= 0 (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt))))))
   (when (node-get elt ':w)
     (emit `(assert (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w)))))
   (when (node-get elt ':h)
     (emit `(assert (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))))))
 
-(define (add-test doms constraints tests #:component [component #f] #:render? [render? true])
+(define (add-test doms tests #:component [component #f] #:render? [render? true])
   (match-define (list dom) doms)
   (define possible-boxes
     (if component
         (nodes-below component  '(:pre :spec :assert :admit))
         (for/list ([box (in-boxes dom)]) box)))
-  `(,@constraints
-    (declare-const which-constraint Real)
+  `((declare-const which-constraint Real)
     ,@(for/reap [sow] ([test tests] [id (in-naturals)]
                        #:when true
                        [(var cexvar) (in-dict (car test))])

@@ -34,34 +34,30 @@
                 [_ (void)])))))
   (*%* (set-union (*%*) %s))
 
-  (define tests*
-    (for/list ([test (or tests '())] [id (in-naturals)])
-      (define-values (test-vars test-body) (disassemble-forall test))
-      (define varmap
-        (for/hash ([var test-vars])
-          (values var (sformat "cex~a~a" id var))))
-      (define ctx
-        (hash-union
-         varmap
-         (hash '? (dump-box (dom-boxes (first doms))))
-         (if (andmap (curryr dom-context ':component) doms)
-             (hash)
-             (hash 'root (dump-box (dom-boxes (first doms)))))
-         (for*/hash ([dom doms] [node (in-boxes dom)]
-                     #:when (node-get node ':name #:default false))
-           (values (node-get node ':name) (dump-box node)))
-         #:combine/key (λ (k a b) (if (equal? a b) a (raise "Different bindings for ~a: ~a and ~a" k a b)))))
-      (cons varmap (compile-assertion doms test-body ctx))))
-
   (define query (all-constraints sheets doms fonts #:render? render?))
 
-  (define ms (model-sufficiency doms))
-
   (when tests
-    (define tests**
-      (for/list ([test tests*])
-        (cons (car test)
-              (let loop ([expr (cdr test)])
+    (define ms (model-sufficiency doms))
+
+    (define tests*
+      (for/list ([test tests] [id (in-naturals)])
+        (define-values (test-vars test-body) (disassemble-forall test))
+        (define varmap
+          (for/hash ([var test-vars])
+            (values var (sformat "cex~a~a" id var))))
+        (define ctx
+          (hash-union
+           varmap
+           (hash '? (dump-box (dom-boxes (first doms))))
+           (if (andmap (curryr dom-context ':component) doms)
+               (hash)
+               (hash 'root (dump-box (dom-boxes (first doms)))))
+           (for*/hash ([dom doms] [node (in-boxes dom)]
+                       #:when (node-get node ':name #:default false))
+             (values (node-get node ':name) (dump-box node)))
+           #:combine/key (λ (k a b) (if (equal? a b) a (raise "Different bindings for ~a: ~a and ~a" k a b)))))
+        (cons varmap
+              (let loop ([expr (compile-assertion doms test-body ctx)])
                 (match expr
                   [`(forall ,vars ,body)
                    `(forall ,vars ,(loop body))]
@@ -71,16 +67,17 @@
                    (if render?
                        `(and ,ms ,body)
                        body)])))))
-    (set! query (add-test doms (append query (auxiliary-definitions)) tests**
-                          #:render? render?
-                          #:component
-                          (and cname
-                               (for/first ([dom doms] [box (in-boxes dom)])
-                                 (equal? (node-get box ':name) cname))))))
+
+    (set! query
+          (append
+           query
+           (auxiliary-definitions)
+           (add-test doms tests* #:render? render?
+                     #:component (and cname (for/first ([dom doms] [box (in-boxes dom)])
+                                              (equal? (node-get box ':name) cname)))))))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
   (set! query (z3-prepare query))
-
   (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
   
   (values doms query))
