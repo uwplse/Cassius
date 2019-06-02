@@ -1,8 +1,8 @@
 #lang racket
-(require racket/hash "common.rkt" "z3.rkt" "main.rkt" "dom.rkt" "tree.rkt" "solver.rkt"
-         "selectors.rkt" "encode.rkt" "smt.rkt" "spec/tree.rkt"
-         "spec/percentages.rkt" "spec/float.rkt" "assertions.rkt"
-         "assertion2js.rkt")
+(require racket/hash)
+(require "common.rkt" "z3.rkt" "dom.rkt" "tree.rkt" "solver.rkt" "encode.rkt" "smt.rkt")
+(require "main.rkt" "spec/tree.rkt" "spec/percentages.rkt" "spec/float.rkt")
+(require "assertions.rkt" "assertion2js.rkt")
 (provide (struct-out success) (struct-out failure) solve-problem *exit-early*)
 
 (define *exit-early* (make-parameter #f))
