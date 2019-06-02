@@ -1,6 +1,5 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "tree.rkt"
-         "spec/css-properties.rkt" "spec/percentages.rkt" "spec/utils.rkt")
+(require "common.rkt" "dom.rkt" "tree.rkt" "spec/css-properties.rkt" "spec/utils.rkt")
 
 (provide dump-tag extract-tag dump-id extract-id
          dump-elt dump-box extract-box extract-style
@@ -80,10 +79,7 @@
     [(list (app split-symbol (list _ ... 'px)) x) (list 'px x)]
     [(list (app split-symbol (list _ ... 'num)) x) x]
     [(list (app split-symbol (list _ ... 'em)) x) (list 'em x)]
-    [(list (app split-symbol (list _ ... '%)) x)
-     (if (ormap (curry = x) (*%*)) ; Percentages that aren't in the list are its first element
-         (list '% x)
-         (list '% (car (*%*))))]
+    [(list (app split-symbol (list _ ... '%)) x) (list '% x)]
     [(? symbol?) (last (split-symbol value))]))
 
 (define (dump-selector selector)

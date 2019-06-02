@@ -1,5 +1,5 @@
 #lang racket
-(require "../tree.rkt")
+(require "../common.rkt" "../tree.rkt")
 (provide element-replaced? element-image? element-br?)
 
 (define (element-replaced? elt)

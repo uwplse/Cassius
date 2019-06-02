@@ -187,7 +187,7 @@
     [`(/ ,(? number*?) ,(? number*?)) #t]
     [_ #f]))
 
-(define (layout-constraints dom emit elt)
+(define (position-constraints dom emit elt)
   (for ([cmd '(:x :y :w :h)] #:when (node-get* elt cmd #:default #f))
     (define arg (node-get elt cmd))
     (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
@@ -321,8 +321,8 @@
       (emit `(assert (has-contents ,(dump-box box))))))
 
 (define (replaced-constraints dom emit elt)
-  (emit `(assert (= (is-replaced ,(dump-elt elt)) ,(if (element-replaced elt?) 'true 'false))))
-  (emit `(assert (= (is-image ,(dump-elt elt)) ,(if (element-image elt?) 'true 'false))))
+  (emit `(assert (= (is-replaced ,(dump-elt elt)) ,(if (element-replaced? elt) 'true 'false))))
+  (emit `(assert (= (is-image ,(dump-elt elt)) ,(if (element-image? elt) 'true 'false))))
 
   (when (element-br? elt)
     (emit `(assert (= 0 (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt))))))
@@ -403,7 +403,7 @@
     ,@(for-render sheet-constraints media-params doms (apply append sheets))
     ,@(for-render per-element tree-constraints)
     ,@(per-box box-tree-constraints)
-    ,@(per-box layout-constraints)
+    ,@(per-box position-constraints)
     ,@(for-render box-element-constraints doms)
     ,@(box-first-last-constraints doms)
     ,@(ez-fields)

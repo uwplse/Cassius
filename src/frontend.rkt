@@ -91,9 +91,8 @@
      (cond
       [(or (not render?) ; Don't do loop in proof checking
            (ormap (curryr dom-context ':component) doms) ; Don't do loop for components
-           (for/and ([tree trees] [box (in-tree tree)]) (extract-field m box 'ez.sufficient))
-           (extract-model-sufficiency m trees))
-       (when (for/or ([tree trees] [box (in-tree tree)]) (extract-field m box 'ez.lookback))
+           (for*/and ([tree trees] [box (in-tree tree)]) (extract-field m box 'ez.sufficient)))
+       (when (for*/or ([tree trees] [box (in-tree tree)]) (extract-field m box 'ez.lookback))
          (log-phase "Found violation of float restrictions"))
        (for-each (curryr extract-tree! m) trees)
        (define test
