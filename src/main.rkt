@@ -187,7 +187,7 @@
     [`(/ ,(? number*?) ,(? number*?)) #t]
     [_ #f]))
 
-(define (box-constraints dom emit elt)
+(define (layout-constraints dom emit elt)
   (for ([cmd '(:x :y :w :h)] #:when (node-get* elt cmd #:default #f))
     (define arg (node-get elt cmd))
     (define fun (dict-ref '((:x . box-x) (:y . box-y) (:h . box-height) (:w . box-width)) cmd))
@@ -206,7 +206,7 @@
 (define (is-component box)
   (or (not (node-parent box)) (node-get* box ':split)))
 
-(define (box-link-constraints dom emit box)
+(define (box-tree-constraints dom emit box)
   (define link-function
     (if (dom-context dom ':component)
         'link-box-component
@@ -408,8 +408,8 @@
     ,@(for-render style-computation)
     ,@(for-render sheet-constraints media-params doms (apply append sheets))
     ,@(for-render per-element tree-constraints)
-    ,@(per-box box-link-constraints)
-    ,@(per-box box-constraints)
+    ,@(per-box box-tree-constraints)
+    ,@(per-box layout-constraints)
     ,@(for-render box-element-constraints doms)
     ,@(box-first-last-constraints doms)
     ,@(ez-fields)
