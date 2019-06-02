@@ -5,7 +5,7 @@
          "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
          "spec/media-query.rkt" "assertions.rkt")
 (provide all-constraints add-test selector-constraints extract-core! extract-counterexample! extract-tree!
-         extract-ctx! model-sufficiency extract-model-sufficiency extract-model-lookback extract-test)
+         extract-ctx! model-sufficiency extract-field extract-test)
 
 ;; Does tagging of bad
 (define (extract-core! core doms)
@@ -20,13 +20,8 @@
     (for ([field-name bad-fields])
       (node-set! box field-name `(bad ,(node-get box field-name))))))
 
-(define (extract-model-sufficiency smt-out trees)
-  (for*/and ([tree trees] [elt (in-tree tree)])
-    (dict-ref (extract-box (dict-ref smt-out (dump-box elt) #f)) 'ez.sufficient)))
-
-(define (extract-model-lookback smt-out trees)
-  (for*/and ([tree trees] [elt (in-tree tree)])
-    (dict-ref (extract-box (dict-ref smt-out (dump-box elt) #f)) 'ez.lookback)))
+(define (extract-field smt-out box field)
+  (dict-ref (extract-box (dict-ref smt-out (dump-box box) #f)) field))
 
 (define (extract-ctx! model d)
   (define ctx*
