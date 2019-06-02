@@ -65,8 +65,7 @@
       (node-add! box ':cex `(bad ,var)))))
 
 (define (tree-constraints dom emit elt)
-  (emit `(assert (! (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt)))
-                    :named ,(sformat "tree/~a" (dump-elt elt))))))
+  (emit `(assert (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt))))))
 
 (define (rule-allows-property? rule prop)
   (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
@@ -113,31 +112,26 @@
             [`(media ,(? media-query? mq) ,_)
              (set! propname? `(and ,propname? ,(media-matches? media-params mq)))]
             [_ (void)])
-          (emit `(assert (! (=> (and ,no-match-so-far ,propname?)
-                                (= (,(sformat "style.~a" prop) ,style) ,propname))
-                            :named ,(sformat "~a^~a" propname (dump-elt elt)))))
+          (emit `(assert (=> (and ,no-match-so-far ,propname?)
+                             (= (,(sformat "style.~a" prop) ,style) ,propname))))
           `(and ,no-match-so-far (not ,propname?))))
 
       (define inheritable? (and (css-inheritable? prop) (node-parent elt)))
-      (emit `(assert (! (=> ,nonecond (= (,(sformat "style.~a" prop) ,style)
-                                         ,(dump-value type (if inheritable? 'inherit default))))
-                        :named ,(sformat "value/none/~a^~a" prop (dump-elt elt))))))))
+      (emit `(assert (=> ,nonecond (= (,(sformat "style.~a" prop) ,style)
+                                      ,(dump-value type (if inheritable? 'inherit default)))))))))
 
 (define (box-element-constraints doms)
   (reap [emit]
     (for* ([dom doms] [box (in-boxes dom)])
-      (emit `(assert (! (= (box-elt ,(dump-box box)) ,(dump-elt (dom-box->elt dom box)))
-                            :named ,(sformat "box-element/~a" (dump-box box))))))))
+      (emit `(assert (= (box-elt ,(dump-box box)) ,(dump-elt (dom-box->elt dom box))))))))
 
 (define (box-first-last-constraints doms)
   (reap [emit]
     (for* ([dom doms] [box (in-boxes dom)])
-      (emit `(assert (! (= (first-box? ,(dump-box box))
-                           ,(if (dom-first-box? dom box) 'true 'false))
-                        :name ,(sformat "box-first/~a" (dump-box box)))))
-      (emit `(assert (! (= (last-box? ,(dump-box box))
-                           ,(if (dom-last-box? dom box) 'true 'false))
-                        :name ,(sformat "box-last/~a" (dump-box box))))))))
+      (emit `(assert (= (first-box? ,(dump-box box))
+                           ,(if (dom-first-box? dom box) 'true 'false))))
+      (emit `(assert (= (last-box? ,(dump-box box))
+                           ,(if (dom-last-box? dom box) 'true 'false)))))))
 
 (define (model-sufficiency doms)
   (apply smt-and
@@ -220,14 +214,13 @@
             'link-box-magic
             'link-box)))
   (emit `(assert (= (is-component ,(dump-box box)) ,(if (is-component box) 'true 'false))))
-  (emit `(assert (! (,link-function
-                     ,(dump-box box)
-                     ,(dump-box (node-parent box))
-                     ,(dump-box (node-prev box))
-                     ,(dump-box (node-next box))
-                     ,(dump-box (node-fchild box))
-                     ,(dump-box (node-lchild box)))
-                    :named ,(sformat "link-box/~a" (node-id box))))))
+  (emit `(assert (,link-function
+                  ,(dump-box box)
+                  ,(dump-box (node-parent box))
+                  ,(dump-box (node-prev box))
+                  ,(dump-box (node-next box))
+                  ,(dump-box (node-fchild box))
+                  ,(dump-box (node-lchild box))))))
 
 (define (nodes-below node stop?)
   (reap [sow]
@@ -304,8 +297,7 @@
       (for ([vals (apply cartesian-product (map (const nodes) vars))] [j (in-naturals)])
         (define body* (massage-body spec (map cons vars vals) dom))
         (unless (equal? body* 'true)
-          (emit `(assert (! (let ,(map (λ (v x) (list v (dump-box x))) vars vals) ,body*)
-                            :named ,(sformat "spec/~a/~a/~a/~a" (node-id box) (substring (~a field) 1) i j)))))))))
+          (emit `(assert (let ,(map (λ (v x) (list v (dump-box x))) vars vals) ,body*))))))))
 
 (define (layout-constraints dom emit elt)
   (define cns
@@ -318,12 +310,10 @@
       ['INLINE 'an-inline-box]
       ['TEXT 'a-text-box]))
   (when cns
-    (emit `(assert (! (,cns ,(dump-box elt))
-                      :named ,(sformat "box/~a/~a" (slower (node-type elt)) (node-id elt)))))))
+    (emit `(assert (,cns ,(dump-box elt))))))
 
 (define (compute-style-constraints dom emit elt)
-  (emit `(assert (! (compute-style ,(dump-elt elt))
-                    :named ,(sformat "compute-style/~a" (node-id elt))))))
+  (emit `(assert (compute-style ,(dump-elt elt)))))
 
 (define (contents-constraints dom emit box)
   (if (set-member? '(#f " " "") (node-get box ':text))
@@ -334,19 +324,17 @@
   (define replaced? (set-member? '(img input iframe object textarea br) (node-type elt)))
 
   (if replaced?
-      (emit `(assert (! (is-replaced ,(dump-elt elt)) :named ,(sformat "replaced/~a" (node-id elt)))))
-      (emit `(assert (! (not (is-replaced ,(dump-elt elt))) :named ,(sformat "not-replaced/~a" (node-id elt))))))
+      (emit `(assert (is-replaced ,(dump-elt elt))))
+      (emit `(assert (not (is-replaced ,(dump-elt elt))))))
   (when (equal? (slower (node-type elt)) 'br)
     (emit `(assert (= (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt)) 0))))
   (if (equal? (slower (node-type elt)) 'img)
-      (emit `(assert (! (is-image ,(dump-elt elt)) :named ,(sformat "image/~a" (node-id elt)))))
-      (emit `(assert (! (not (is-image ,(dump-elt elt))) :named ,(sformat "not-image/~a" (node-id elt))))))
+      (emit `(assert (is-image ,(dump-elt elt))))
+      (emit `(assert (not (is-image ,(dump-elt elt))))))
   (when (node-get elt ':w)
-    (emit `(assert (! (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w))
-                   :named ,(sformat "intrinsic-width/~a" (node-id elt))))))
+    (emit `(assert (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w)))))
   (when (node-get elt ':h)
-    (emit `(assert (! (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))
-                   :named ,(sformat "intrinsic-height/~a" (node-id elt)))))))
+    (emit `(assert (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))))))
 
 (define (add-test doms constraints tests #:component [component #f] #:render? [render? true])
   (match-define (list dom) doms)
