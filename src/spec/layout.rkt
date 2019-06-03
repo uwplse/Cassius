@@ -470,6 +470,12 @@
               [else
                (= (ml b) (mr b))])]))))
 
+  ;; `lookback-overflow-width` is a black box that is narrower than
+  ;; `(w p)`, used when we don't know the shape of the exclusion zone
+  ;; because `(ez.lookback b)`.
+  (declare-fun lookback-overflow-width (Box) Real)
+  (assert (forall ((b Box)) (<= (lookback-overflow-width b) (w (pbox b)))))
+
   (define-fun available-width ((b Box)) Real
     (- (w (pbox b)) (ml b) (bl b) (pl b) (pr b) (br b) (mr b)))
 
@@ -663,6 +669,7 @@
                  (and (is-elt e) (is-padding/% (style.padding-right r)))
                  (and (is-elt e) (is-width/% (style.width r))))))))
 
+
   (define-fun a-block-flow-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
                [p (pflow b)] [vb (vflow b)] [fb (fflow b)] [lb (lflow b)])
@@ -706,12 +713,6 @@
        (= (x b) (+ (ml b)
                    (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))))
 
-
-  ;; `lookback-overflow-width` is a black box that is narrower than
-  ;; `(w p)`, used when we don't know the shape of the exclusion zone
-  ;; because `(ez.lookback b)`.
-  (declare-fun lookback-overflow-width ((b Box)) Real)
-  (assert (forall ((b Box)) (<= (lookback-overflow-width b) (w (pbox b)))))
 
   (define-fun a-block-float-box ((b Box)) Bool
     ,(smt-let ([e (box-elt b)] [r (computed-style (box-elt b))]
