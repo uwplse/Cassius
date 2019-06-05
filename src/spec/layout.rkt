@@ -474,7 +474,7 @@
   ;; `(w p)`, used when we don't know the shape of the exclusion zone
   ;; because `(ez.lookback b)`.
   (declare-fun lookback-overflow-width (Box) Real)
-  (assert (forall ((b Box)) (<= (lookback-overflow-width b) (w (pbox b)))))
+  (assert (forall ((b Box)) (<= 0 (lookback-overflow-width b) (w (pbox b)))))
 
   (define-fun available-width ((b Box)) Real
     (- (w (pbox b)) (ml b) (bl b) (pl b) (pr b) (br b) (mr b)))
@@ -692,7 +692,7 @@
        (let ([y* (resolve-clear b (vertical-position-for-flow-boxes b))])
          (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
               (and
-               (= (ez.lookback b) (not (ez.test (ez.in b) y*)))
+               (= (ez.lookback b) (not (ez.test (ez.in b) (y b))))
                (ite (not (ez.lookback b))
                     (= (y b)
                        (ez.level (ez.in b) (+ (bl b) (pl b) (min-w b) (pr b) (br b))
@@ -710,8 +710,11 @@
                    (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)))
                 (lookback-overflow-width b)))
            (flow-horizontal-layout b (w p)))
-       (= (x b) (+ (ml b)
-                   (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e))) (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p)) (left-content p))))))
+       (=> (not (ez.lookback b))
+           (= (x b) (+ (ml b)
+                       (ite (or (is-flow-root b) (and (is-elt e) (is-replaced e)))
+                            (ez.x (ez.in b) (y b) float/left (left-content p) (right-content p))
+                            (left-content p)))))))
 
 
   (define-fun a-block-float-box ((b Box)) Bool
