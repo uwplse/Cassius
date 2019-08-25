@@ -19,7 +19,8 @@
  *cache-file* *cache*
  path-tail
  warn
- reset! on-reset!)
+ reset! on-reset!
+ raise-cassius-error)
 
 (define supported-features
   (make-parameter
@@ -255,3 +256,9 @@
   (for ([fn on-reset-handlers]) (fn)))
 (define (on-reset! fn)
   (set! on-reset-handlers (cons fn on-reset-handlers)))
+
+(struct exn:bad-input exn:fail:user ()
+        #:extra-constructor-name make-exn:bad-input)
+
+(define (raise-cassius-error message . args)
+  (raise (make-exn:bad-input (apply format (concat "Error: " message) args) (current-continuation-marks))))
