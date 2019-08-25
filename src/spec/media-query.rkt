@@ -14,6 +14,7 @@
   `(max-height ,(? length?))
   `(orientation landscape)
   `(orientation portrait)
+  `(-webkit-min-device-pixel-ratio ,_)
   (or 'all 'screen 'print 'handheld 'projection 'tty 'tv))
 
 (define-by-match length?
@@ -53,6 +54,7 @@
        `(< ,(dict-ref params ':w) ,(dict-ref params ':h))]
       ['(orientation portrait)
        `(< ,(dict-ref params ':h) ,(dict-ref params ':w))]
+      [`(-webkit-min-device-pixel-ratio ,_) 'true]
       [`(max-width  ,l) `(<= ,(dict-ref params ':w) ,(mk-length l))]
       [`(min-width  ,l) `(>= ,(dict-ref params ':w) ,(mk-length l))]
       [`(min-height ,l) `(<= ,(dict-ref params ':h) ,(mk-length l))]
