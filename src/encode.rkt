@@ -46,9 +46,8 @@
 
 (define (gamma-correction x)
   (let ([corrected (expt (/ x 255) 2.2)])
-    (if (> corrected 0.0001)
-        corrected
-        0)))
+    ;; Print as fraction to avoid exponential notation
+    (/ (inexact->exact (round (* corrected 10000))) 10000)))
 
 (define all-strings (make-hash))
 
