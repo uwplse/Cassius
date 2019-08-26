@@ -1,5 +1,5 @@
 #lang racket
-(require "../common.rkt")
+(require "../common.rkt" racket/hash)
 (provide
  in-css-properties in-css-types css-constants
  css-shorthand-properties css-type css-properties css-types css-default css-inheritable?)
@@ -101,10 +101,10 @@
 (define-css-type (Font-Family (string Real))
   [font-family "serif"])
 
-(define-css-type (Font-Weight bolder lighter (num Real) initial)
+(define-css-type (Font-Weight bolder lighter (num Real))
   [font-weight 400])
 
-(define-css-type (Font-Style normal italic oblique initial)
+(define-css-type (Font-Style normal italic oblique)
   [font-style normal])
 
 (define-css-type (Text-Indent (px Real) (% Real) (em Real))
@@ -161,11 +161,17 @@
   (in-hash css-types-hash))
 
 (define css-constants
-  #hash((Border . #hash((thin . (px 1)) (medium . (px 3)) (thick . (px 5))))
-        (Min-Height . #hash((auto . 0)))
-        (Text-Align . #hash((start . left) (end . right)))
-        (Font-Size . #hash((xx-small . (px 9)) (x-small . (px 10)) (small . (px 13))
-                           (medium . (px 16)) (smaller . (em 2/3)) (larger . (em 3/2))
-                           (large . (px 18)) (x-large . (px 24)) (xx-large . (px 32))))
-        (Font-Weight . #hash((normal . 400) (bold . 700)))
-        (Color . #hash((undefined . transparent)))))
+  (hash-union
+   (for/hash ([(prop type default) (in-css-properties)] #:unless (equal? type 'Color))
+     ;; TODO: The #:unless handles the fact that different `Color`
+     ;; properties have different defaults. Need to do this better.
+     (values type (hash 'initial default)))
+   #hash((Border . #hash((thin . (px 1)) (medium . (px 3)) (thick . (px 5))))
+         (Min-Height . #hash((auto . 0)))
+         (Text-Align . #hash((start . left) (end . right)))
+         (Font-Size . #hash((xx-small . (px 9)) (x-small . (px 10)) (small . (px 13))
+                            (medium . (px 16)) (smaller . (em 2/3)) (larger . (em 3/2))
+                            (large . (px 18)) (x-large . (px 24)) (xx-large . (px 32))))
+         (Font-Weight . #hash((normal . 400) (bold . 700)))
+         (Color . #hash((undefined . transparent))))
+   #:combine hash-union))
