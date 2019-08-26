@@ -261,4 +261,4 @@
         #:extra-constructor-name make-exn:bad-input)
 
 (define (raise-cassius-error message . args)
-  (raise (make-exn:bad-input (apply format (concat "Error: " message) args) (current-continuation-marks))))
+  (raise (make-exn:bad-input (apply format (string-append "Error: " message) args) (current-continuation-marks))))
