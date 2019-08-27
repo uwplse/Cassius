@@ -141,22 +141,6 @@
     (border border-width border-style border-color)
     (overflow overflow-x overflow-y)))
 
-(define css-constants
-  (hash-union
-   #hash((Border . #hash((thin . (px 1)) (medium . (px 3)) (thick . (px 5))))
-         (Min-Height . #hash((auto . 0)))
-         (Text-Align . #hash((start . left) (end . right)))
-         (Font-Size . #hash((xx-small . (px 9)) (x-small . (px 10)) (small . (px 13))
-                            (medium . (px 16)) (smaller . (em 2/3)) (larger . (em 3/2))
-                            (large . (px 18)) (x-large . (px 24)) (xx-large . (px 32))))
-         (Font-Weight . #hash((normal . 400) (bold . 700)))
-         (Color . #hash((undefined . transparent))))
-   (for/hash ([(prop type default) (in-css-properties)] #:unless (equal? type 'Color))
-     ;; TODO: The #:unless handles the fact that different `Color`
-     ;; properties have different defaults. Need to do this better.
-     (values type (hash 'initial default)))
-   #:combine hash-union))
-
 ;; Helper Functions
 
 (define (css-properties)
@@ -181,3 +165,19 @@
 
 (define (in-css-types)
   (in-hash css-types-hash))
+
+(define css-constants
+  (hash-union
+   #hash((Border . #hash((thin . (px 1)) (medium . (px 3)) (thick . (px 5))))
+         (Min-Height . #hash((auto . 0)))
+         (Text-Align . #hash((start . left) (end . right)))
+         (Font-Size . #hash((xx-small . (px 9)) (x-small . (px 10)) (small . (px 13))
+                            (medium . (px 16)) (smaller . (em 2/3)) (larger . (em 3/2))
+                            (large . (px 18)) (x-large . (px 24)) (xx-large . (px 32))))
+         (Font-Weight . #hash((normal . 400) (bold . 700)))
+         (Color . #hash((undefined . transparent))))
+   (for/hash ([(prop type default) (in-css-properties)] #:unless (equal? type 'Color))
+     ;; TODO: The #:unless handles the fact that different `Color`
+     ;; properties have different defaults. Need to do this better.
+     (values type (hash 'initial default)))
+   #:combine hash-union))
