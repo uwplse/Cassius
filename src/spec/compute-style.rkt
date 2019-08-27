@@ -24,6 +24,7 @@
   ;; These are properties whose computed style is just directly their specified style
   (append
    '(border-top-style border-right-style border-bottom-style border-left-style)
+   '(border-top-color border-right-color border-bottom-color border-left-color)
    '(text-align overflow-x overflow-y position color background-color)
    '(clear display box-sizing font-weight font-style font-family)))
 
