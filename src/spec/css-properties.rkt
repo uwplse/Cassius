@@ -115,6 +115,10 @@
 
 (define-css-type (Color transparent (rgb RGBColor))
   [color (rgb 0 0 0)]
+  [border-top-color (rgb 0 0 0)]
+  [border-right-color (rgb 0 0 0)]
+  [border-bottom-color (rgb 0 0 0)]
+  [border-left-color (rgb 0 0 0)]
   [background-color transparent])
 
 (define-css-type (Line-Height (px Real) (% Real) (em Real) (num Real) normal)
@@ -129,11 +133,29 @@
     (padding padding-top padding-right padding-bottom padding-left)
     (border-width border-top-width border-right-width border-bottom-width border-left-width)
     (border-style border-top-style border-right-style border-bottom-style border-left-style)
+    (border-color border-top-color border-right-color border-bottom-color border-left-color)
     (border-top border-top-width border-top-style)
     (border-right border-right-width border-right-style)
     (border-bottom border-bottom-width border-bottom-style)
     (border-left border-left-width border-left-style)
+    (border border-width border-style border-color)
     (overflow overflow-x overflow-y)))
+
+(define css-constants
+  (hash-union
+   #hash((Border . #hash((thin . (px 1)) (medium . (px 3)) (thick . (px 5))))
+         (Min-Height . #hash((auto . 0)))
+         (Text-Align . #hash((start . left) (end . right)))
+         (Font-Size . #hash((xx-small . (px 9)) (x-small . (px 10)) (small . (px 13))
+                            (medium . (px 16)) (smaller . (em 2/3)) (larger . (em 3/2))
+                            (large . (px 18)) (x-large . (px 24)) (xx-large . (px 32))))
+         (Font-Weight . #hash((normal . 400) (bold . 700)))
+         (Color . #hash((undefined . transparent))))
+   (for/hash ([(prop type default) (in-css-properties)] #:unless (equal? type 'Color))
+     ;; TODO: The #:unless handles the fact that different `Color`
+     ;; properties have different defaults. Need to do this better.
+     (values type (hash 'initial default)))
+   #:combine hash-union))
 
 ;; Helper Functions
 
@@ -159,19 +181,3 @@
 
 (define (in-css-types)
   (in-hash css-types-hash))
-
-(define css-constants
-  (hash-union
-   (for/hash ([(prop type default) (in-css-properties)] #:unless (equal? type 'Color))
-     ;; TODO: The #:unless handles the fact that different `Color`
-     ;; properties have different defaults. Need to do this better.
-     (values type (hash 'initial default)))
-   #hash((Border . #hash((thin . (px 1)) (medium . (px 3)) (thick . (px 5))))
-         (Min-Height . #hash((auto . 0)))
-         (Text-Align . #hash((start . left) (end . right)))
-         (Font-Size . #hash((xx-small . (px 9)) (x-small . (px 10)) (small . (px 13))
-                            (medium . (px 16)) (smaller . (em 2/3)) (larger . (em 3/2))
-                            (large . (px 18)) (x-large . (px 24)) (xx-large . (px 32))))
-         (Font-Weight . #hash((normal . 400) (bold . 700)))
-         (Color . #hash((undefined . transparent))))
-   #:combine hash-union))

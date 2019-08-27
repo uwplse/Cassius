@@ -353,6 +353,21 @@
          (for ([box (in-boxes dom)])
            (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) dom sow box)))))
 
+(define (declare-constants)
+  (reap [sow]
+    (for ([(type consts*) (in-dict css-constants)])
+      ;; The CSS constants can use other constants, so we do a little loop here
+      (define consts (hash-copy consts*))
+      (let loop ()
+        (unless (hash-empty? consts)
+          (define to-do
+            (for/list ([(const value) (in-hash consts)] #:unless (hash-has-key? consts value))
+              const))
+          (for ([(const value) (in-hash consts)] #:when (set-member? to-do const))
+            (sow `(define-const ,(dump-value type const) ,type ,(dump-value type value))))
+          (for ([key to-do]) (hash-remove! consts key))
+          (loop))))))
+
 (define (sheet-constraints params doms rules)
   (reap [emit] (for ([dom doms]) (selector-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
@@ -380,11 +395,7 @@
             `(style ,@(for/list ([(prop type default) (in-css-properties)])
                         `(,(sformat "style.~a" prop) ,type)))
             'style))))
-    ,@(if render?
-          (for*/list ([(type consts) (in-dict css-constants)]
-                      [(name value) (in-dict consts)])
-            `(define-const ,(dump-value type name) ,type ,(dump-value type value)))
-          `())
+    ,@(for-render declare-constants)
     ,@(for/list ([(name value) color-table])
         `(define-const ,(dump-value 'Color name) Color ,(dump-value 'Color value)))
     ,@(common-definitions)
