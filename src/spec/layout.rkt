@@ -137,6 +137,7 @@
            (= (box-collapsed-through b)
               (and (= (box-height b) 0.0)
                    (=> (is-elt (box-elt b)) (not (is-replaced (box-elt b))))
+                   (not (is-flow-root b))
                    (or (and (is-box/line (type b))
                             (=> (is-box (lflow b)) (not (contains-content (lflow b)))))
                        (is-no-box (lflow b))
