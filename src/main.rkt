@@ -4,23 +4,18 @@
 (require "spec/css-properties.rkt" "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt"
          "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
          "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt")
-(provide all-constraints add-test selector-constraints model-sufficiency)
+(provide all-constraints add-test model-sufficiency)
 
 (define (tree-constraints dom emit elt)
   (emit `(assert (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt))))))
-
-(define (rule-allows-property? rule prop)
-  (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
-  (or (set-member? props '?)
-      (and (dict-has-key? props prop)
-           (not (null? (dict-ref props prop))))))
 
 (define (selector-constraints media-params emit elts rules)
   (define ml (rule-matchlist rules elts))
 
   (for ([rm ml])
     (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) (rulematch-rule rm))
-    (for ([(prop type default) (in-css-properties)] #:when (rule-allows-property? (rulematch-rule rm) prop))
+    (for ([(prop type default) (in-css-properties)]
+          #:when (rule-allows-property? (rulematch-rule rm) prop))
       (define propname (sformat "value/~a/~a" (rulematch-idx rm) prop))
       (cond
        [(equal? '? (car (dict-ref (filter list? props) prop '(?))))
