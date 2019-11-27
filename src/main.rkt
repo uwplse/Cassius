@@ -4,65 +4,7 @@
 (require "spec/css-properties.rkt" "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt"
          "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
          "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt")
-(provide all-constraints add-test selector-constraints extract-core! extract-counterexample! extract-tree!
-         extract-ctx! model-sufficiency extract-field extract-test)
-
-;; Does tagging of bad
-(define (extract-core! core doms)
-  (define fields (make-hash))
-  (for ([name core] #:when (set-member? '(box-x box-y box-width box-height) (caar (split-line-name name))))
-    (match-define (list accessor box-name) (first (split-line-name name)))
-    (define field-name (match accessor ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]))
-    (hash-update! fields box-name (curry cons field-name) '()))
-
-  (for* ([dom doms] [box (in-boxes dom)])
-    (define bad-fields (hash-ref fields (node-id box) '()))
-    (for ([field-name bad-fields])
-      (node-set! box field-name `(bad ,(node-get box field-name))))))
-
-(define (extract-field smt-out box field)
-  (dict-ref (extract-box (dict-ref smt-out (dump-box box) #f)) field))
-
-(define (extract-ctx! model d)
-  (define ctx*
-    (for/fold ([ctx (dom-properties d)]) ([(attr varname) #hash((:w . w) (:h . h) (:fs . font-size))])
-      (define var (sformat "config/~a/~a" (dom-name d) varname))
-      (if (dict-has-key? model var)
-          (dict-set ctx attr (list (dict-ref model var)))
-          ctx)))
-  (struct-copy dom d [properties ctx*]))
-
-(define (extract-tree! tree smt-out)
-  (for ([elt (in-tree tree)])
-    (define box-model (dict-ref smt-out (dump-box elt) #f))
-    (when (and box-model (list? box-model))
-      (define data (curry dict-ref (extract-box box-model)))
-      (node-set! elt ':x (+ (data 'x) (data 'xo)))
-      (node-set! elt ':y (+ (data 'y) (data 'yo)))
-      (node-set! elt ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'scroll-y) (data 'br)))
-      (node-set! elt ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'scroll-x) (data 'bb)))
-      (node-set! elt ':fg (data 'fg-color))
-      (node-set! elt ':bg (data 'bg-color)))))
-
-(define (extract-test smt-out tests)
-  (define which (hash-ref smt-out 'which-constraint))
-  ;; Test needed for case where the bad test is a model insufficiency
-  (define test (if (< which (length tests)) (list-ref tests which) false))
-  (let loop ([test test])
-    (match test
-      [`(=>* ,_ ... ,b)
-       (loop b)]
-      [_ test])))
-
-(define (extract-counterexample! smt-out doms bad-test)
-  (define id (hash-ref smt-out 'which-constraint))
-  (define-values (bad-vars bad-body) (disassemble-forall bad-test))
-  (for ([var bad-vars])
-    (define smt-var (sformat "cex~a~a" id var))
-    (define bid (dict-ref (extract-box (dict-ref smt-out smt-var)) 'bid))
-    (for/first ([dom doms] #:when true
-                [box (in-boxes dom)] #:when (equal? (node-id box) bid))
-      (node-add! box ':cex `(bad ,var)))))
+(provide all-constraints add-test selector-constraints model-sufficiency)
 
 (define (tree-constraints dom emit elt)
   (emit `(assert (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt))))))
