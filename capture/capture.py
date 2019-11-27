@@ -40,6 +40,17 @@ def capture(browser, url, id, prerun=None):
     text = browser.execute_script(jsfile("all.js") + "; return page2text(arguments[0]);", id)
     return ";; From {}\n\n{}\n\n".format(url, text)
 
+def name(urls):
+    fns = [url.rsplit("/", 1)[1].rsplit(".", 1)[0] for url in urls]
+    if len(fns) == len(set(fns)):
+        return zip(fns, urls)
+    else:
+        out = []
+        for i, url in enumerate(urls):
+            id = str(i+1).rjust(len(str(len(urls))), "0")
+            out.append("doc-" + id, url)
+        return out
+
 def main(urls, prerun=None, fd=None):
     urls = sorted([url if "://" in url else "file://" + os.path.abspath(url)
                    for url in urls])
@@ -53,11 +64,10 @@ def main(urls, prerun=None, fd=None):
     
     try:
         print("Saving layout to {}:".format(fd.name), file=sys.stderr, end=" ")
-        for i, url in enumerate(urls):
-            id = str(i+1).rjust(len(str(len(urls))), "0")
+        for n, url in name(urls):
             try:
-                fd.write(capture(browser, url, "doc-" + id, prerun=prerun))
-                print(id, file=sys.stderr, end=" ")
+                fd.write(capture(browser, url, n, prerun=prerun))
+                print(n, file=sys.stderr, end=" ")
             except:
                 import traceback
                 traceback.print_exc()
