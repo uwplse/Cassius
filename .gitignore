@@ -7,6 +7,7 @@ reports/*.json
 bench/joel
 bench/pages/
 bench/fwt.rkt
+bench/bugs.rkt
 geckodriver.log
 previous/
 
