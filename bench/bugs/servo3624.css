@@ -1,0 +1,21 @@
+#outer {
+    display: block;
+    width: 300px;
+}
+
+#inner {
+    display: inline-block;
+    width: 300px;
+}
+
+#c1 {
+    width: 20px;
+    height: 20px;
+    background: red;
+}
+
+#c2 {
+    width: 20px;
+    height: 20px;
+    background: blue;
+}

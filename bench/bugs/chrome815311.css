@@ -1,0 +1,21 @@
+#container {
+    width: 300px;
+    /* border: 1px solid black; */
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+}
+
+#left {
+    width: 20px;
+    height: 20px;
+    float: left;
+    background: blue;
+}
+
+#right {
+    width: 20px;
+    height: 20px;
+    float: right;
+    background: yellow;
+}

@@ -1,0 +1,22 @@
+div {
+    width: 30px;
+    height: 90px;
+    background: blue;
+}
+
+#d0 {
+    position: absolute;
+}
+
+#d1 {
+    float: left;
+}
+
+#d2 {
+    display: inline-block;
+}
+
+#d3 {
+    float: left;
+}
+

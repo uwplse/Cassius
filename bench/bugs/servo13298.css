@@ -1,0 +1,20 @@
+body {
+    margin: 0px;
+}
+
+.scrollbox {
+    margin: 50px;
+    width: 200px;
+    height: 200px;
+    overflow: auto;
+    background: red;
+}
+
+.overlay {
+    position: absolute;
+    left: 50px;
+    top: 50px;
+    width: 200px;
+    height: 200px;
+    background: lime;
+}

@@ -1,0 +1,31 @@
+body {
+    margin: 0px;
+}
+
+.float {
+    float: left;
+    width: 50px;
+    height: 100px;
+    background: green;
+}
+
+.content {
+    overflow: hidden;
+    margin-top: -100px;
+    width: 50px;
+    height: 100px;
+    background: green;
+}
+
+.container {
+    width: 100px;
+    background: red;
+}
+
+.absolute {
+    position: absolute;
+}
+
+br {
+    clear: both;
+}

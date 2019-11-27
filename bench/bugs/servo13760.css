@@ -1,0 +1,9 @@
+#a {
+    height: 200px;
+    width: 600px;
+    background: gold;
+}
+#b {
+    position: relative;
+    top: 100px;
+}

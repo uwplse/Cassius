@@ -1,0 +1,14 @@
+#A{
+    background: #3D7FAF;
+    height: 36px;
+}
+
+#d1 {
+    overflow: hidden;
+}
+#d2 {
+    width: 10px;
+    height: 10px;
+    background: red;
+    margin: 8px;
+}

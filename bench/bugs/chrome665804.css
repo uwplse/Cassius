@@ -1,0 +1,31 @@
+#container {
+    width: 100px;
+}
+
+#s1 {
+    display: inline-block;
+    width: 40px;
+    height: 10px;
+    background-color: green;
+}
+
+#d1 {
+    float: left;
+    width: 40px;
+    height:40px;
+    background-color: yellow;
+}
+
+#d2 {
+    float: left;
+    width: 100px;
+    height: 100px;
+    background-color: blue;
+}
+
+#d3 {
+    float: left;
+    width: 40px;
+    height: 40px;
+    background-color: hotpink;
+}

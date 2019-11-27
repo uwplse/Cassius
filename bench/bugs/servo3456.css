@@ -1,0 +1,13 @@
+#first {
+    float: left;
+    width: 10px;
+    height: 10px;
+    background: blue;
+}
+
+#second {
+    overflow: hidden;
+    width: 10px;
+    height: 10px;
+    background: red;
+}

@@ -1,0 +1,17 @@
+#container {
+    width: 0px;
+}
+
+#breadcrumbs {
+  float: left;
+  height: 20px;
+  width: 20px;
+  background: red;
+}
+
+#content {
+  float: left;
+  height: 20px;
+  width: 20px;
+  background: blue;
+}

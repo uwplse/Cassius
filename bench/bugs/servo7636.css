@@ -1,0 +1,26 @@
+body {
+    float: right;
+}
+
+#first {
+    margin-left: 10px;
+    display: block; /* property from attribute rule */
+    background-color: red;
+    height: 50px;
+    width: 100px;
+}
+
+#second {
+    display: inline-block; /* rule from style block of document */
+    display: block; /* property from style attribute of element */
+    background-color: red;
+    height: 50px;
+    width: 100px;
+}
+
+#third {
+    display: inline-block;
+    background-color: blue;
+    height: 50px;
+    width: 100px;
+}

@@ -1,0 +1,41 @@
+* {
+  display: block;
+  margin: 0px;
+  padding: 0px;
+}
+
+html {
+  width: 600px;
+  margin: auto;
+  padding: 10px;
+}
+
+head {
+  display: none;
+}
+
+div {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #000000;
+}
+
+.float {
+  float: left;
+  height: 100px;
+  width: 100px;
+}
+
+#upper {
+  background-color: #0000ff;
+}
+
+#middle {
+  height: 85px;
+  margin-bottom: 20px;
+  background-color: #00ff00;
+}
+
+#lower {
+  background-color: #ff0000;
+}

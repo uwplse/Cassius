@@ -1,0 +1,25 @@
+#div1 {
+  /* display: flow-root; */
+  overflow: auto;
+}
+
+#div2 {
+  float: left;
+  width: 100px;
+  height: 50px;
+  background-color: #0000ff;
+}
+
+#div3 {
+  clear: both;
+  width: 100px;
+  height: 50px;
+}
+
+#div4 {
+  position: absolute;
+  display: inline;
+  width: 100px;
+  height: 50px;
+  background: blue;
+}

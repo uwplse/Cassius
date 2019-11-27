@@ -1,0 +1,17 @@
+div {
+    height: 20px;
+    width: 100px;
+}
+
+
+#c1 {
+    background: yellow;
+}
+
+#c2 {
+    background:blue;
+}
+
+#c3 {
+    background:red;
+}

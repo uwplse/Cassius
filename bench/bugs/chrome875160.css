@@ -1,0 +1,15 @@
+float {
+    float: left;
+    width: 100px;
+    height: 100px;
+}
+
+#f1 {
+    background: orange;
+    width: 100px;
+}
+
+#f2 {
+    background: blue;
+    margin-top: -80px;
+}

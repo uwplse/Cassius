@@ -1,0 +1,17 @@
+div {
+    width: 100px;
+    height: 100px;
+}
+
+#a {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: red;
+}
+
+#b {
+    float: left;
+    position: relative;
+    background: green;
+}

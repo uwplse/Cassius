@@ -1,0 +1,10 @@
+.right{
+    float: right;
+    width: 700px;
+    background: lightblue;
+}
+.content{
+    overflow: auto;
+    width: 700px;
+    background: lightgrey;
+}

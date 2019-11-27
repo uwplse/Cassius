@@ -1,0 +1,19 @@
+#margin-box {
+    background-color:blue;
+    width: 100px;
+    height: 10px;
+    margin-bottom: 50px;
+}
+
+#reference-overlapped-red {
+    position: absolute;
+    background-color: red;
+    width: 100px;
+    height: 100px;
+}
+
+#test-overlapping-green {
+    background-color: green;
+    width: 100px;
+    height: 100px;
+}

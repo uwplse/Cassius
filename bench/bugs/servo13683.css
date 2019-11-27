@@ -1,0 +1,10 @@
+div {
+    float: left;
+    width: 40px;
+    height: 40px;
+    background: red;
+}
+
+span {
+    color: black;
+}

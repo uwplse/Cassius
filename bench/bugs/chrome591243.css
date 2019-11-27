@@ -1,0 +1,40 @@
+body {
+  width: 100px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: red;
+}
+
+#div-first-child {
+  float: right;
+  height: 30px;
+  width: 30px;
+  background: blue;
+}
+
+em {
+  display: block;
+  clear: both;
+  width: 16px;
+  height: 16px;
+}
+
+#em-before {
+  display: block;
+  width: 16px;
+  height: 0px;
+  overflow: hidden;
+  clear: both;
+}
+
+#em-after {
+  margin-top: -30px;
+  /* line-height: 0px; */
+}
+
+#div-child {
+  display: inline-block;
+  width: 50px;
+  height: 30px;
+  background: yellow;
+}
