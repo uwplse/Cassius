@@ -50,7 +50,7 @@ def name(urls):
         out = []
         for i, url in enumerate(urls):
             id = str(i+1).rjust(len(str(len(urls))), "0")
-            out.append("doc-" + id, url)
+            out.append(("doc-" + id, url))
         return out
 
 def main(urls, prerun=None, fd=None):
