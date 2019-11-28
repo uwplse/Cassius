@@ -30,7 +30,9 @@ def make_browser():
     profile = webdriver.FirefoxProfile()
     profile.set_preference("security.mixed_content.block_active_content", False)
     profile.set_preference("security.mixed_content.block_display_content", False)
-    browser = webdriver.Firefox(firefox_profile=profile)
+    options = webdriver.firefox.options.Options()
+    options.headless = True
+    browser = webdriver.Firefox(options=options, firefox_profile=profile)
     measure_scrollbar(browser)
     return browser
 
