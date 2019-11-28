@@ -185,8 +185,8 @@
   (match-define (list (? selector? selector) (? attribute? attrs) ...
                       (list (? property? properties) values (? attribute? propattrs) ...) ...) rule)
   (define-values (important unimportant)
-    (partition (λ (x) (set-member? (third x) ':important))
-               (map list properties values propattrs)))
+    (partition (λ (x) (set-member? (cddr x) ':important))
+               (map list* properties values propattrs)))
   (list
    (if (null? important) #f `(,selector ,@attrs ,@important))
    (if (null? unimportant) #f `(,selector ,@attrs ,@unimportant))))
