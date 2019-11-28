@@ -6,6 +6,60 @@
          "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt")
 (provide all-constraints add-test model-sufficiency)
 
+;; Is the model valid?
+
+(define (model-sufficiency doms)
+  (apply smt-and
+         (for*/list ([dom doms] [box (in-boxes dom)])
+           `(ez.sufficient ,(dump-box box)))))
+
+;; Adding assertions to the constraints
+
+(define (add-test doms tests #:component [component #f] #:render? [render? true])
+  (match-define (list dom) doms)
+  (define possible-boxes
+    (if component
+        (nodes-below component  '(:pre :spec :assert :admit))
+        (for/list ([box (in-boxes dom)]) box)))
+  `((declare-const which-constraint Real)
+    ,@(for/reap [sow] ([test tests] [id (in-naturals)]
+                       #:when true
+                       [(var cexvar) (in-dict (car test))])
+        (define var-values
+          (or (not-true-inputs (cdr test) (list var) dom)
+              (map dump-box possible-boxes)))
+        (sow `(declare-const ,cexvar Box))
+        (sow `(assert ,(apply smt-or (for/list ([boxvar var-values]) `(= ,cexvar ,boxvar))))))
+    (assert ,(apply smt-or
+                    (for/list ([test tests] [i (in-naturals)])
+                      `(and (not ,(cdr test)) (= which-constraint ,i)))))
+    ,@(reap [sow]
+         (for ([box (in-boxes dom)])
+           (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) dom sow box)))))
+
+(define (spec-constraints fields dom emit box)
+  (when (ormap (curry node-get* box) fields)
+    (define nodes (nodes-below box (λ (x) (ormap (curry node-get* x) fields))))
+    (define pres (node-get* box ':pre #:default '()))
+
+    (for ([field fields] #:when (node-get* box field) [test (node-get* box field)] [i (in-naturals)])
+      (define-values (vars body) (disassemble-forall test))
+
+      (define ctx
+        (hash-union
+         (for/hash ([var vars]) (values var var))
+         (hash '? (dump-box box))
+         (get-node-names nodes)))
+      (define spec (compile-assertion (list dom) `(=> ,@pres ,body) ctx))
+
+      (for ([vals (apply cartesian-product (map (const nodes) vars))] [j (in-naturals)])
+        (define body* (massage-body spec (map cons vars vals) dom))
+        (unless (equal? body* 'true)
+          (emit `(assert (let ,(map (λ (v x) (list v (dump-box x))) vars vals) ,body*))))))))
+
+
+;; The constraints
+
 (define (tree-constraints dom emit elt)
   (emit `(assert (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt))))))
 
@@ -30,7 +84,7 @@
                 ;; The `node-parent` here is for inheritable properties
                 (cons (not (node-parent elt))
                       (for/list ([rm ml]) (set-member? (rulematch-elts rm) elt)))) elts))
-  
+
   (for ([cls (map list elts)])
     (define elt (car cls))
     (define style `(specified-style ,(dump-elt elt)))
@@ -69,11 +123,6 @@
                            ,(if (dom-first-box? dom box) 'true 'false))))
       (emit `(assert (= (last-box? ,(dump-box box))
                            ,(if (dom-last-box? dom box) 'true 'false)))))))
-
-(define (model-sufficiency doms)
-  (apply smt-and
-         (for*/list ([dom doms] [box (in-boxes dom)])
-           `(ez.sufficient ,(dump-box box)))))
 
 (define (dom-define-elements doms emit)
   (for* ([dom doms] [elt (in-elements dom)])
@@ -216,26 +265,6 @@
      (if (is-component (dict-ref ctx b)) 'true 'false)]
     [_ body]))
 
-(define (spec-constraints fields dom emit box)
-  (when (ormap (curry node-get* box) fields)
-    (define nodes (nodes-below box (λ (x) (ormap (curry node-get* x) fields))))
-    (define pres (node-get* box ':pre #:default '()))
-
-    (for ([field fields] #:when (node-get* box field) [test (node-get* box field)] [i (in-naturals)])
-      (define-values (vars body) (disassemble-forall test))
-
-      (define ctx
-        (hash-union
-         (for/hash ([var vars]) (values var var))
-         (hash '? (dump-box box))
-         (get-node-names nodes)))
-      (define spec (compile-assertion (list dom) `(=> ,@pres ,body) ctx))
-
-      (for ([vals (apply cartesian-product (map (const nodes) vars))] [j (in-naturals)])
-        (define body* (massage-body spec (map cons vars vals) dom))
-        (unless (equal? body* 'true)
-          (emit `(assert (let ,(map (λ (v x) (list v (dump-box x))) vars vals) ,body*))))))))
-
 (define (layout-constraints dom emit elt)
   (define cns
     (match (node-type elt)
@@ -267,28 +296,6 @@
     (emit `(assert (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w)))))
   (when (node-get elt ':h)
     (emit `(assert (= (intrinsic-height ,(dump-elt elt)) ,(node-get elt ':h))))))
-
-(define (add-test doms tests #:component [component #f] #:render? [render? true])
-  (match-define (list dom) doms)
-  (define possible-boxes
-    (if component
-        (nodes-below component  '(:pre :spec :assert :admit))
-        (for/list ([box (in-boxes dom)]) box)))
-  `((declare-const which-constraint Real)
-    ,@(for/reap [sow] ([test tests] [id (in-naturals)]
-                       #:when true
-                       [(var cexvar) (in-dict (car test))])
-        (define var-values
-          (or (not-true-inputs (cdr test) (list var) dom)
-              (map dump-box possible-boxes)))
-        (sow `(declare-const ,cexvar Box))
-        (sow `(assert ,(apply smt-or (for/list ([boxvar var-values]) `(= ,cexvar ,boxvar))))))
-    (assert ,(apply smt-or
-                    (for/list ([test tests] [i (in-naturals)])
-                      `(and (not ,(cdr test)) (= which-constraint ,i)))))
-    ,@(reap [sow]
-         (for ([box (in-boxes dom)])
-           (spec-constraints (if render? '(:spec) '(:spec :assert :admit)) dom sow box)))))
 
 (define (declare-constants)
   (reap [sow]
