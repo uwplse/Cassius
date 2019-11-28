@@ -44,7 +44,7 @@ done | xargs make -j$THREADS bench/fwt.rkt
 
 make FWT_PATH="$FWT_PATH" FLAGS="--verbose --threads $THREADS --cache reports/run.cache" \
      reports/fwt.html reports/vizassert.html reports/csswg.html reports/specific.html \
-     reports/modular.html
+     reports/modular.html reports/bugs.html
 
 mkdir -p reports/rkt/
 mkdir -p reports/json/

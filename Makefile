@@ -71,11 +71,6 @@ reports/minimized.html: reports/fwt.json
 bench/fwt.working.rkt bench/fwt.broken.rkt: bench/fwt.rkt reports/fwt.json
 	<bench/fwt.rkt racket infra/filter-working.rkt reports/fwt.json bench/fwt.working.rkt bench/fwt.broken.rkt
 
-# IAG test suite
-
-bench/bugs.rkt: capture/capture.py capture/all.js $(wildcard bench/bugs/*)
-	@ $(CAPTURE) --output "$@" $(wildcard bench/bugs/*.html)
-
 # Debugging aid
 /tmp/%/: $(FWT_PATH)/%.zip
 	unzip -q $< -d /tmp/
@@ -100,3 +95,11 @@ bench/joel.rkt: bench/joel/joel.js capture/all.js
 		"https://www.joelonsoftware.com/2018/04/13/gamification/" \
 		"https://www.joelonsoftware.com/2018/04/06/the-stack-overflow-age/" \
 		"https://preview.arraythemes.com/editor/2014/05/11/knobs-buttons-and-dials/"
+
+# IAG test suite
+
+bench/bugs.rkt: capture/capture.py capture/all.js $(wildcard bench/bugs/*)
+	@ $(CAPTURE) --output "$@" $(wildcard bench/bugs/*.html)
+
+reports/bugs.html: bench/bugs.rkt
+	racket src/report.rkt regression $(FLAGS) -o reports/bugs $^
