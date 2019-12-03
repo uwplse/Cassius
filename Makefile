@@ -31,10 +31,8 @@ nightly:
 setup: capture/all.js
 
 # We do not exactly need Rollup or Webpack here...
-capture/all.js: $(filter-out capture/all.js, $(wildcard capture/*.js) $(wildcard capture/*.ts))
-	tsc --project capture/
-	echo "exports = window; function require() { return window; }" | \
-	    cat - $(filter-out capture/all.js, $(wildcard capture/*.js)) > $@
+capture/all.js: $(wildcard capture/*.ts) capture/tsconfig.json capture/shim.js
+	tsc --project capture/ && cat capture/shim.js >> $@
 
 # CSSWG test suite
 

@@ -2,7 +2,7 @@
 (require racket/hash)
 (require "common.rkt" "z3.rkt" "dom.rkt" "tree.rkt" "solver.rkt" "encode.rkt" "smt.rkt")
 (require "main.rkt" "spec/tree.rkt" "spec/percentages.rkt" "spec/float.rkt")
-(require "assertions.rkt" "assertion2js.rkt")
+(require "assertions.rkt" "verify.rkt" "assertion2js.rkt")
 (provide (struct-out success) (struct-out failure) solve-problem *exit-early*)
 
 (define *exit-early* (make-parameter #f))
@@ -24,7 +24,7 @@
   (define query (all-constraints sheets doms fonts #:render? render?))
 
   (when tests
-    (define ms (model-sufficiency doms))
+    (define ms (model-valid/z3 doms))
 
     (define tests*
       (for/list ([test tests] [id (in-naturals)])
@@ -91,9 +91,7 @@
      (cond
       [(or (not render?) ; Don't do loop in proof checking
            (ormap (curryr dom-context ':component) doms) ; Don't do loop for components
-           (for*/and ([tree trees] [box (in-tree tree)]) (extract-field m box 'ez.sufficient)))
-       (when (for*/or ([tree trees] [box (in-tree tree)]) (extract-field m box 'ez.lookback))
-         (log-phase "Found violation of float restrictions"))
+           (model-valid? doms m))
        (for-each (curryr extract-tree! m) trees)
        (define test
          (if tests

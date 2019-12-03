@@ -14,7 +14,7 @@ previous/
 # Racket and TypeScript junk
 src/compiled/
 __pycache__
-capture/*.js
+capture/all.js
 
 # Platform junk
 *.bak

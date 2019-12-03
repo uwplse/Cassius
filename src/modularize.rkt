@@ -1,7 +1,10 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "prune.rkt")
-(provide modularize)
+(provide modularize is-component)
+
+(define (is-component box)
+  (or (not (node-parent box)) (node-get* box ':split)))
 
 (define (split-document doc)
   (define out (make-hash))

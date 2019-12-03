@@ -3,7 +3,7 @@
 (require "common.rkt" "tree.rkt" "spec/css-properties.rkt" "spec/media-query.rkt")
 (module+ test (require rackunit))
 (provide equivalence-classes selector-matches?
-         rule-matchlist (struct-out rulematch))
+         rule-matchlist (struct-out rulematch) rule-allows-property?)
 
 
 
@@ -29,6 +29,13 @@
 
 (define-by-match partial-rule?
   (list (? selector?) (? attribute?) ... (or (list (? property?) _ (? attribute?) ...) '?) ...))
+
+(define/contract (rule-allows-property? rule prop)
+  (-> partial-rule? property? boolean?)
+  (match-define (list selector (? attribute? attrs) ... (and (or (? list?) '?) props) ...) rule)
+  (or (set-member? props '?)
+      (and (dict-has-key? props prop)
+           (not (null? (dict-ref props prop))))))
 
 (define/contract (selector-matches? sel elt)
   (-> selector? node? boolean?)
@@ -178,8 +185,8 @@
   (match-define (list (? selector? selector) (? attribute? attrs) ...
                       (list (? property? properties) values (? attribute? propattrs) ...) ...) rule)
   (define-values (important unimportant)
-    (partition (λ (x) (set-member? (third x) ':important))
-               (map list properties values propattrs)))
+    (partition (λ (x) (set-member? (cddr x) ':important))
+               (map list* properties values propattrs)))
   (list
    (if (null? important) #f `(,selector ,@attrs ,@important))
    (if (null? unimportant) #f `(,selector ,@attrs ,@unimportant))))

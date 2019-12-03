@@ -34,14 +34,10 @@ First, set up Cassius with:
 
 Then, test out your Cassius installation by running, from the top-level directory,
 
-    python3 capture/capture.py http://example.com --output bench/example.rkt
+    python3 capture/capture.py http://example.com/ --output bench/example.rkt
     racket src/run.rkt accept bench/example.rkt doc-1
 
 This should churn for a few seconds and say, "Accepted".
-
-If you receive a Selenium / JavaScript error, it often helps to:
-
-    make -B capture/all.js
 
 Capturing Web Pages
 -------------------
@@ -61,15 +57,8 @@ stores one web pages for each given URL. They are named `doc-00N`, for
 (these names are referred to as "instances").
 
 Some pages need to be modified before being captured. The `--prerun
-[js-file]` flag allows you to specify a file of JavaScript to be run
-before capturing the page.
-
-*Note*: The capture script starts a full web browser, so may take a
-while to complete. It also creates a visible browser window. Do not
-interact with this window! On Linux machines, it is convenient to use
-the `xvfb-run` command to hide this window, like so:
-
-    xvfb-run -a python3 capture/capture.py [urls ...] --output [file]
+[js-file]` flag allows you to run a JavaScript file before capturing
+the page.
 
 Testing if a Web Page is Supported
 ----------------------------------
@@ -83,7 +72,7 @@ you passed several URLs to the `capture.py` script.
 
 This will churn for a while and output either "Accepted" or
 "Rejected". If "Accepted" is produced, that means that Cassius's
-formalization of browser rendering accepts to rendering produced by
+formalization of browser rendering accepts the rendering produced by
 Firefox, a good proxy for whether Cassius supports your web page.
 
 Cassius currently supports a fragment of CSS 2.1:

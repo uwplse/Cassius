@@ -1,10 +1,11 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "tree.rkt" "spec/css-properties.rkt" "spec/utils.rkt")
+(require "common.rkt" "dom.rkt" "tree.rkt" "spec/css-properties.rkt" "spec/utils.rkt" "smt.rkt")
 
 (provide dump-tag extract-tag dump-id extract-id
          dump-elt dump-box extract-box extract-style
          dump-value extract-value dump-selector extract-selector
-         z3->number number->z3)
+         z3->number number->z3 extract-field extract-test
+         extract-ctx! extract-core! extract-tree! extract-counterexample!)
 
 (define (dump-tag tag)
   (if tag
@@ -119,11 +120,63 @@
                (match type
                  [(or 'Color 'Line-Height 'Text-Align) (extract-value field)]
                  ['BoxType (second (split-symbol field))]
-                 ['RealOpt (extract-realopt field)]
                  [(or 'Real 'Int 'Bool) field]
                  ['EZone field])))])) ; TODO
 
-(define (extract-realopt val)
-  (match val
-    [`(realopt ,x #t) x]
-    [`(realopt ,_ #f) #f]))
+(define (extract-tree! tree smt-out)
+  (for ([elt (in-tree tree)])
+    (define box-model (dict-ref smt-out (dump-box elt) #f))
+    (when (and box-model (list? box-model))
+      (define data (curry dict-ref (extract-box box-model)))
+      (node-set! elt ':x (+ (data 'x) (data 'xo)))
+      (node-set! elt ':y (+ (data 'y) (data 'yo)))
+      (node-set! elt ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'scroll-y) (data 'br)))
+      (node-set! elt ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'scroll-x) (data 'bb)))
+      (node-set! elt ':fg (data 'fg-color))
+      (node-set! elt ':bg (data 'bg-color)))))
+
+
+(define (extract-field smt-out box field)
+  (dict-ref (extract-box (dict-ref smt-out (dump-box box) #f)) field))
+
+(define (extract-test smt-out tests)
+  (define which (hash-ref smt-out 'which-constraint))
+  ;; Test needed for case where the bad test is a model insufficiency
+  (define test (if (< which (length tests)) (list-ref tests which) false))
+  (let loop ([test test])
+    (match test
+      [`(=>* ,_ ... ,b)
+       (loop b)]
+      [_ test])))
+
+(define (extract-ctx! model d)
+  (define ctx*
+    (for/fold ([ctx (dom-properties d)]) ([(attr varname) #hash((:w . w) (:h . h) (:fs . font-size))])
+      (define var (sformat "config/~a/~a" (dom-name d) varname))
+      (if (dict-has-key? model var)
+          (dict-set ctx attr (list (dict-ref model var)))
+          ctx)))
+  (struct-copy dom d [properties ctx*]))
+
+;; Does tagging of bad
+(define (extract-core! core doms)
+  (define fields (make-hash))
+  (for ([name core] #:when (set-member? '(box-x box-y box-width box-height) (caar (split-line-name name))))
+    (match-define (list accessor box-name) (first (split-line-name name)))
+    (define field-name (match accessor ['box-x ':x] ['box-y ':y] ['box-width ':w] ['box-height ':h]))
+    (hash-update! fields box-name (curry cons field-name) '()))
+
+  (for* ([dom doms] [box (in-boxes dom)])
+    (define bad-fields (hash-ref fields (node-id box) '()))
+    (for ([field-name bad-fields])
+      (node-set! box field-name `(bad ,(node-get box field-name))))))
+
+(define (extract-counterexample! smt-out doms bad-test)
+  (define id (hash-ref smt-out 'which-constraint))
+  (define-values (bad-vars bad-body) (disassemble-forall bad-test))
+  (for ([var bad-vars])
+    (define smt-var (sformat "cex~a~a" id var))
+    (define bid (dict-ref (extract-box (dict-ref smt-out smt-var)) 'bid))
+    (for/first ([dom doms] #:when true
+                [box (in-boxes dom)] #:when (equal? (node-id box) bid))
+      (node-add! box ':cex `(bad ,var)))))
