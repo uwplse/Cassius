@@ -365,7 +365,8 @@ function infer_lines(box, parent) {
     function stackup(l, stack, sstack) {
         for (var i = 0; i < stack.length; i++) {
             if (!sstack[i]) {
-                var sselt = new Box(stack[i].type, stack[i].node, stack[i].props);
+                var newprops = Object.assign({}, stack[i].props);
+                var sselt = new Box(stack[i].type, stack[i].node, newprops);
                 (i == 0 ? l : sstack[i - 1]).children.push(sselt);
                 sstack.push(sselt);
             }
@@ -458,17 +459,48 @@ function extract_block(elt, children) {
         children.push(Line(null, {}));
     }
 
+    annotate_inlines(box);
     return box;
 }
 
-function extract_inline(elt, children) {
-    var r = elt.getClientRects();
-    var box;
-    if (r.length == 1 && is_replaced(elt)) { // TODO: enable in all cases
-        box = Inline(elt, {x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
-    } else {
-        box = Inline(elt, {});
+function annotate_inlines(box) {
+    var elements : Element[] = [];
+    var boxes : Box[][] = [];
+    function collect_by_elt(b) {
+        for (var i = 0; i < b.children.length; i++) {
+            // Skip blocks that we've already gone and annotated
+            if (b.children[i].type == "BLOCK") continue;
+            collect_by_elt(b.children[i]);
+        }
+        if (!b.node) return;
+        if (b.type != "INLINE") return;
+        var idx = elements.indexOf(b.node);
+        if (idx === -1) {
+            idx = elements.length;
+            elements.push(b.node);
+            boxes.push([]);
+        }
+        boxes[idx].push(b);
     }
+    collect_by_elt(box);
+    for (var i = 0; i < elements.length; i++) {
+        var rects = elements[i].getClientRects();
+        if (rects.length !== boxes[i].length) {
+            throw "Rect/box invariant does not hold for #" + elements[i].id + 
+                " " + rects.length + " " + boxes[i].length;
+        }
+        for (var j = 0; j < boxes[i].length; j++) {
+            var p = boxes[i][j].props;
+            var r = rects[j];
+            if (p.x || p.y || p.w || p.h) throw "Inline already " + Object.keys(p)
+            Object.assign(p, {x: r.x, y: r.y, w: r.width, h: r.height});
+        }
+    }
+}
+
+function extract_inline(elt, children) {
+    // Inline sizes are handled by annotate_inlines after line breaking
+    var box = Inline(elt, {});
     box.children = children;
     return box;
 }

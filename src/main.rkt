@@ -180,7 +180,8 @@
   (emit `(assert (= (is-image ,(dump-elt elt)) ,(if (element-image? elt) 'true 'false))))
 
   (when (element-br? elt)
-    (emit `(assert (= 0 (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt))))))
+    ;; The height is drawn from font information but we ignore that here
+    (emit `(assert (= (/ 1 60) (intrinsic-width ,(dump-elt elt))))))
   (when (node-get elt ':w)
     (emit `(assert (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w)))))
   (when (node-get elt ':h)
