@@ -434,7 +434,7 @@ function extract_text(elt) {
     return outs;
 }
 
-function extract_block(elt, children) {
+function extract_block(elt, children, features) {
     var r = elt.getBoundingClientRect();
 
     children = infer_anons(children);
@@ -459,7 +459,11 @@ function extract_block(elt, children) {
         children.push(Line(null, {}));
     }
 
-    annotate_inlines(box);
+    try {
+        annotate_inlines(box);
+    } catch {
+        features["inlines:weird"] = true;
+    }
     return box;
 }
 
@@ -564,7 +568,7 @@ function make_boxes(elt, styles, features) {
     } else if (!is_visible(elt)) {
         return [];
     } else if ((is_block(elt) || is_iblock(elt))) {
-        var box = extract_block(elt, children);
+        var box = extract_block(elt, children, features);
         if (is_iblock(elt)) box.type = "INLINE";
         return [box];
     } else if (is_inline(elt)) {
