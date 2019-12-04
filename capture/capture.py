@@ -71,8 +71,9 @@ def main(urls, prerun=None, fd=None):
                 fd.write(capture(browser, url, n, prerun=prerun))
                 print(n, file=sys.stderr, end=" ")
             except selenium.common.exceptions.JavascriptException as e:
-                print("JS Exception: ", e)
+                print("JS Exception in {}: {}".format(n, e.msg))
             except:
+                print("Exception in {}:".format(n))
                 import traceback
                 traceback.print_exc()
                 continue
