@@ -331,6 +331,7 @@ function infer_lines(box, parent) {
         if (prev.type == "LINE" || prev.type == "INLINE") return true;
         */
         if (!prev) return true;
+        if (prev.props.br === "") return false;
         var ph = prev.props.h;
         var py = prev.props.y;
         var px = prev.props.x;
@@ -430,6 +431,9 @@ function extract_text(elt) {
         var box = TextBox(elt, {x: r.x, y: r.y, w: r.width, h: r.height});
         box.props.text = dump_string(ranges[i].toString().replace(/\s+/g, " "));
         outs.push(box);
+    }
+    for (var i = 0; i < outs.length - 1; i++) {
+        outs[i].props.br = "";
     }
     return outs;
 }
