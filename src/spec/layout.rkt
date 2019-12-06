@@ -979,10 +979,13 @@
 
        (=> (is-box l)
            (= (baseline b)
-              (+ (y b) (max-if
-                        (above-baseline l)
-                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                        (+ (font.ascent metrics) (* 0.5 leading))))))
+              (+ (y b)
+                 (ite (contains-content l)
+                      (max-if
+                       (above-baseline l)
+                       (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
+                       (+ (font.ascent metrics) (* 0.5 leading)))
+                      0.0))))
        (=> (is-box l)
            (= (h b)
               (ite (contains-content l)
