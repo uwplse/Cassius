@@ -499,15 +499,21 @@ function annotate_inlines(box) {
         for (var j = 0; j < boxes[i].length; j++) {
             var p = boxes[i][j].props;
             var r = rects[j];
-            if (p.x || p.y || p.w || p.h) throw "Inline already " + Object.keys(p)
+            // For replaced elements, this overwrites existing values
             Object.assign(p, {x: r.x, y: r.y, w: r.width, h: r.height});
         }
     }
 }
 
 function extract_inline(elt, children) {
-    // Inline sizes are handled by annotate_inlines after line breaking
-    var box = Inline(elt, {});
+    // Inline sizes are handled by annotate_inlines after line breaking;
+    // however, for replaced elements we need sizes for line breaking.
+    var rects = elt.getClientRects();
+    var props = {};
+    if (rects.length == 1) {
+        props = { x: rects[0].x, y: rects[0].y, w: rects[0].width, h: rects[0].height };
+    }
+    var box = Inline(elt, props);
     box.children = children;
     return box;
 }
