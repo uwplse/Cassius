@@ -297,11 +297,6 @@ function infer_anons(inputs) {
     return out;
 }
 
-function has_positions(b) {
-    return typeof b.props.w === "number" && typeof b.props.h === "number" &&
-        typeof b.props.x === "number" && typeof b.props.y === "number";
-}
-
 function infer_lines(box, parent) {
     function last_line() {
         if (parent.children.length === 0 || parent.children[parent.children.length - 1].type !== "LINE") {
@@ -376,19 +371,23 @@ function infer_lines(box, parent) {
 
     var stack : Box[] = [];
     var sstack : Box[] = [];
-    var last = false;
+    var last = false; // Handles last in-flow element; skips floats/positioned
     function go(b) {
-        if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
-            (b.type == "INLINE" && has_positions(b))) {
-            // TODO: does not handle case where previous elt is floating BLOCK
+        if (b.type == "BLOCK") {
+            // Handles case of floating block
             var l = last_line() || new_line();
-            if (b.type !== "BLOCK" && !fits(b, last)) {
+            stackup(l, stack, sstack);
+            (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
+        } else if (b.type == "TEXT" || b.type == "MAGIC" ||
+                   (b.type == "INLINE" && b.node && is_replaced(b.node))) {
+            var l = last_line() || new_line();
+            if (!fits(b, last)) {
                 l = new_line();
                 sstack = [];
             }
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
-            if (b.type !== "BLOCK") last = b;
+            last = b;
         } else if (b.type == "INLINE") {
             stack.push(b);
             for (var i = 0; i < b.children.length; i++) {
