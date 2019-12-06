@@ -65,19 +65,19 @@ def main(urls, prerun=None, fd=None):
     browser = make_browser()
     
     try:
-        print("Saving layout to {}:".format(fd.name), file=sys.stderr, end=" ")
+        captured = 0
         for n, url in name(urls):
             try:
                 fd.write(capture(browser, url, n, prerun=prerun))
-                print(n, file=sys.stderr, end=" ")
             except selenium.common.exceptions.JavascriptException as e:
                 print("JS Exception in {}: {}".format(n, e.msg))
             except:
                 print("Exception in {}:".format(n))
                 import traceback
                 traceback.print_exc()
-                continue
-        print(file=sys.stderr)
+            else:
+                captured += 1
+        print("Captured {} layouts to {}".format(captured, fd.name), file=sys.stderr)
     finally:
         browser.quit()
 
