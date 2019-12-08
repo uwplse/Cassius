@@ -95,8 +95,7 @@ function measure_font(font, txt, baseline) {
 }
 
 function get_font_lineheight(font) {
-    var body = document.querySelector("body");
-    if (!body) throw "No body element??"
+    var body = document.body;
     var div = document.createElement("CassiusBlock");
     div.innerHTML = "Hxy";
     body.appendChild(div);
@@ -125,8 +124,7 @@ function get_font_lineheight(font) {
 }
 
 function get_font_offsets(font) {
-    var body = document.querySelector("body");
-    if (!body) throw "No body element??"
+    var body = document.body;
     var div = document.createElement("CassiusBlock");
     var span = document.createElement("CassiusInline");
     span.innerHTML = "Hxy";
@@ -201,7 +199,7 @@ export function dump_fonts(name, features) {
             var font = { name: fs + " " + ff, size: val2px(fs, features),
                          family: ff, weight: fw, style: fy };
             
-        if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
+            if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
             
             for (var i = 0; i < elt.childNodes.length; i++) {
                 if (is_comment(elt.childNodes[i])) continue;

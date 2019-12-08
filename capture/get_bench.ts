@@ -379,7 +379,7 @@ function infer_lines(box, parent) {
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
         } else if (b.type == "TEXT" || b.type == "MAGIC" ||
-                   (b.type == "INLINE" && b.node && is_replaced(b.node))) {
+                   (b.type == "INLINE" && b.node && (is_replaced(b.node) || is_iblock(b.node)))) {
             var l = last_line() || new_line();
             if (!fits(b, last)) {
                 l = new_line();
