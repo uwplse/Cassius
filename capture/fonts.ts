@@ -74,7 +74,6 @@ function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function get_font_metrics(font) {
     var body = document.body;
     var div = document.createElement("CassiusBlock");
-    div.innerHTML = "Hxy";
     var img = document.createElement("img");
     div.appendChild(img);
     body.appendChild(div);
@@ -108,6 +107,7 @@ function get_font_metrics(font) {
 
     var descent = div.getBoundingClientRect().height - font.size * 2;
     div.removeChild(img);
+    div.innerHTML = "H";
     var ascent = div.getBoundingClientRect().height - descent;
     body.removeChild(div);
     return { a: ascent, d: descent};
