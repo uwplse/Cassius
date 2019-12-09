@@ -71,27 +71,45 @@ function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 
 // Start of real stuff
 
-function measure_font(font, txt, baseline) {
-    var canvas = document.createElement("canvas");
-    var context = canvas.getContext("2d");
-    if (!context) throw "Could not create 2D canvas context"
-    var width = context.measureText(txt).width;
-    canvas.width = width + 1;
-    canvas.height = font.size * 2;
-    context.font = font.weight + " " + font.style + " " + font.name;
-    context.fillStyle = "white";
-    context.fillRect(0,0,width + 1, font.size * 2);
-    context.fillStyle = "black";
-    context.textBaseline = baseline;
-    context.fillText(txt, 0, font.size);
+function get_font_metrics(font) {
+    var body = document.body;
+    var div = document.createElement("CassiusBlock");
+    div.innerHTML = "Hxy";
+    var img = document.createElement("img");
+    div.appendChild(img);
+    body.appendChild(div);
 
-    var pixelmap = context.getImageData(0, 0, width, font.size * 2);
+    // reset
+    div.style.borderTopStyle = "none";
+    div.style.borderBottomStyle = "none";
+    div.style.paddingTop = "0";
+    div.style.paddingBottom = "0";
+    div.style.height = "auto";
+    div.style.minHeight = "0";
+    div.style.maxHeight = "none";
+    div.style.display = "block";
+    div.style.overflow = "visible";
+        div.style.clear = "both";
 
-    for (var i = 0; i < pixelmap.data.length; i += 4) {
-        var y = Math.floor(i / (width * 4));
-        if (pixelmap.data[i] !== 255) return y;
-    }
-    throw "Could not find any text in image!";
+    div.style.fontFamily = font.family;
+    div.style.fontSize = font.size + "px";
+    div.style.fontWeight = font.weight;
+    div.style.fontStyle = font.style;
+    div.style.lineHeight = font.size + "px";
+
+    img.style.height = font.size*2 + "px";
+    img.style.width = "1px";
+    img.style.borderTopStyle = "none";
+    img.style.borderBottomStyle = "none";
+    img.style.verticalAlign = "baseline";
+    img.style.lineHeight = "normal";
+
+    var descent = div.getBoundingClientRect().height - font.size * 2;
+    div.removeChild(img);
+    var ascent = div.getBoundingClientRect().height - descent;
+    div.appendChild(img);
+    //body.removeChild(div);
+    return { a: ascent, d: descent};
 }
 
 function get_font_lineheight(font) {
@@ -112,7 +130,8 @@ function get_font_lineheight(font) {
     div.style.overflow = "visible";
         div.style.clear = "both";
 
-    div.style.font = font.name;
+    div.style.fontFamily = font.family;
+    div.style.fontSize = font.size + "px";
     div.style.fontWeight = font.weight;
     div.style.fontStyle = font.style;
     div.style.lineHeight = "normal";
@@ -152,11 +171,13 @@ function get_font_offsets(font) {
     span.style.display = "inline";
     span.style.overflow = "visible";
 
-    div.style.font = font.name;
+    div.style.fontFamily = font.family;
+    div.style.fontSize = font.size + "px";
     div.style.fontWeight = font.weight;
     div.style.fontStyle = font.style;
     div.style.lineHeight = "10px";
-    span.style.font = font.name;
+    span.style.fontFamily = font.family;
+    span.style.fontSize = font.size + "px";
     span.style.fontWeight = font.weight;
     span.style.fontStyle = font.style;
     span.style.lineHeight = "10px";
@@ -169,18 +190,14 @@ function get_font_offsets(font) {
 }
 
 function get_font_metrics(font) {
-    if (font.size == 0) return [font.size, dump_string(font.family), font.weight,
-                                font.style, 0, 0, 0, 0, 0];
-    var bt = measure_font(font, "Hxy", "top");
-    var ba = measure_font(font, "Hxy", "alphabetic");
-    var bb = measure_font(font, "Hxy", "bottom");
-    var descent = ba - bb, ascent = bt - ba;
+    if (font.size == 0) return [font.size, font.family, font.weight, font.style, 0, 0, 0, 0, 0];
+    var metrics = get_font_metrics(font);
+    var offsets = get_font_offsets(font);
+    var lineheight = get_font_lineheight(font);
+    var offset_const = (10 - (metrics.a + metrics.b))/2;
 
-    var offsets = get_font_offsets(font), lineheight = get_font_lineheight(font);
-    var offset_const = (10 - (ascent + descent))/2;
-
-    return [font.size, dump_string(font.family), font.weight, font.style,
-            ascent, descent,
+    return [font.size, font.family, font.weight, font.style,
+            metrics.a, metrics.b,
             offset_const + offsets.top,
             offset_const + offsets.bottom - 10,
             lineheight];
@@ -196,7 +213,7 @@ export function dump_fonts(name, features) {
             var fs = cs(elt, "font-size"), ff = cs(elt, "font-family")
             var fw = cs(elt, "font-weight"), fy = cs(elt, "font-style")
             var fname = [fs, ff, fw, fy].join(" ");
-            var font = { name: fs + " " + ff, size: val2px(fs, features),
+            var font = { size: val2px(fs, features),
                          family: ff, weight: fw, style: fy };
             
             if (!fonts[fname]) { flist.push(fname); fonts[fname] = font; }
@@ -217,6 +234,8 @@ export function dump_fonts(name, features) {
         for (var i = 1; i < metrics.length; i++) {
              if (typeof metrics[i] !== "string") {
                  metrics[i] = f2r(metrics[i]);
+             } else {
+                 metrics[i] = dump_string(metrics[i]);
              }
         }
         text += "\n  [" + metrics.join(" ") + "]";
