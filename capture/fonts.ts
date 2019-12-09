@@ -232,6 +232,7 @@ export function dump_fonts(name, features) {
     for (var fname of flist) {
         var font = fonts[fname];
         var struct = get_font(font);
+        if (struct[4] < 0) features["font:bad-metrics"] = true;
         for (var i = 1; i < struct.length; i++) {
             if (typeof struct[i] !== "string") {
                  struct[i] = f2r(struct[i]);
