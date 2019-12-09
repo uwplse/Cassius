@@ -386,8 +386,24 @@
      (= (mbp b) (max (mb b) 0.0))
      (= (mbn b) (min (mb b) 0.0))))
 
+  (declare-fun ancestor-block (Box) Box)
+  (assert
+   (forall ((b Box))
+     (= (ancestor-block b)
+        (ite (is-box/block (type b))
+             b
+             (ite (is-flow-root (pbox b))
+                  no-box
+                  (ancestor-block (pbox b)))))))
+
+  (define-fun relative-position-parent ((b Box)) Box
+    (let ([r (computed-style (box-elt b))])
+      (ite (and (is-elt (box-elt b)) (not (is-float/none (style.float r))))
+           (ancestor-block (pflow b))
+           (pflow b))))
+
   (define-fun relatively-positioned ((b Box)) Bool
-    ,(smt-let ([r (computed-style (box-elt b))] [p (pflow b)])
+    ,(smt-let ([r (computed-style (box-elt b))] [p (relative-position-parent b)])
        (=> (is-offset/px (style.left r))
            (= (xo b) (+ (offset.px (style.left r)) (xo p))))
        (=> (is-offset/% (style.left r))
@@ -410,7 +426,7 @@
            (= (yo b) (yo p)))))
 
   (define-fun no-relative-offset ((b Box)) Bool
-    ,(smt-let ([r (computed-style (box-elt b))] [p (pflow b)])
+    ,(smt-let ([r (computed-style (box-elt b))] [p (relative-position-parent b)])
        (= (xo b) (xo p))
        (= (yo b) (yo p))))
 
