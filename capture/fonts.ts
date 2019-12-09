@@ -103,12 +103,13 @@ function get_font_metrics(font) {
     img.style.borderBottomStyle = "none";
     img.style.verticalAlign = "baseline";
     img.style.lineHeight = "normal";
+    img.style.float = "none";
+    img.style.position = "static";
 
     var descent = div.getBoundingClientRect().height - font.size * 2;
     div.removeChild(img);
     var ascent = div.getBoundingClientRect().height - descent;
-    div.appendChild(img);
-    //body.removeChild(div);
+    body.removeChild(div);
     return { a: ascent, d: descent};
 }
 
