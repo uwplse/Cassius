@@ -13,7 +13,7 @@
  define-by-match
  list-intersect multi-command-line debug-mode!
  minimize-mode!
- *debug* *fuzz* *font-fuzz*
+ *debug* *fuzz*
  *version* *commit* *branch*
  *minimize*
  *cache-file* *cache*
@@ -51,12 +51,10 @@
 
 (define *debug* (make-parameter false))
 (define *fuzz* (make-parameter '(/ 10 60)))
-(define *font-fuzz* (make-parameter  1))
 
 (define (debug-mode!)
   (*debug* true)
-  (*fuzz* #f)
-  (*font-fuzz* #f))
+  (*fuzz* #f))
 
 (define *minimize* (make-parameter false))
 (define (minimize-mode!)
