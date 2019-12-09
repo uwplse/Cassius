@@ -189,15 +189,15 @@ function get_font_offsets(font) {
     return { top: div_rect.top - span_rect.top, bottom: span_rect.bottom - div_rect.top };
 }
 
-function get_font_metrics(font) {
+function get_font(font) {
     if (font.size == 0) return [font.size, font.family, font.weight, font.style, 0, 0, 0, 0, 0];
     var metrics = get_font_metrics(font);
     var offsets = get_font_offsets(font);
     var lineheight = get_font_lineheight(font);
-    var offset_const = (10 - (metrics.a + metrics.b))/2;
+    var offset_const = (10 - (metrics.a + metrics.d))/2;
 
     return [font.size, font.family, font.weight, font.style,
-            metrics.a, metrics.b,
+            metrics.a, metrics.d,
             offset_const + offsets.top,
             offset_const + offsets.bottom - 10,
             lineheight];
@@ -230,15 +230,15 @@ export function dump_fonts(name, features) {
     var text = "(define-fonts " + name;
     for (var fname of flist) {
         var font = fonts[fname];
-        var metrics = get_font_metrics(font);
-        for (var i = 1; i < metrics.length; i++) {
-             if (typeof metrics[i] !== "string") {
-                 metrics[i] = f2r(metrics[i]);
-             } else {
-                 metrics[i] = dump_string(metrics[i]);
-             }
+        var struct = get_font(font);
+        for (var i = 1; i < struct.length; i++) {
+            if (typeof struct[i] !== "string") {
+                 struct[i] = f2r(struct[i]);
+            }
         }
-        text += "\n  [" + metrics.join(" ") + "]";
+        // Only string-dump the family
+        struct[1] = dump_string(struct[1]);
+        text += "\n  [" + struct.join(" ") + "]";
     }
     text += ")";
 
