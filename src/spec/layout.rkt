@@ -877,11 +877,11 @@
 
        (= (baseline b) (baseline p))
 
-       (=> (and (is-elt e) (is-image e)) (= (inline-block-offset b) 1))
+       (=> (and (is-elt e) (is-image e)) (= (inline-block-offset b) 0))
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-display/inline-block (style.display r)))
            (and
-            (< 0 (inline-block-offset b) (max (height-outer b) (font.descent metrics)))
+            (<= 0 (inline-block-offset b) (max (height-outer b) (font.descent metrics)))
             (= (above-baseline b)
                (max-if (- (height-outer b) (inline-block-offset b))
                        (is-box v) (above-baseline v)))
