@@ -457,7 +457,7 @@
           (count (λ (prob) (not (subset? (dict-ref prob ':features '()) (supported-features)))) problems)))
 
 (define-syntax-rule (and! var function)
-  (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
+  (set! var (let ([fn function] [test var]) (λ (x) (and (fn x) (test x))))))
 
 (define (read-index iname)
   (for*/hash ([sec (call-with-input-file iname read-json)]
@@ -478,7 +478,7 @@
 
 (define (read-failed-tests jname)
   (define failed-tests
-    (for/list ([rec (call-with-input-file jname read-json)]
+    (for/list ([rec (hash-ref (call-with-input-file jname read-json) 'problems)]
                #:unless (equal? (dict-ref rec 'status) "success"))
       (dict-ref rec 'test)))
 
