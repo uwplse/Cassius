@@ -646,10 +646,18 @@
   (declare-fun ez.line (Box) EZone)
   (declare-fun ez.line-up (Box) EZone)
 
+  (define-fun float-affects-own-line ((b Box)) Bool
+    ;; PRECONDITION: (is-flow-root b)
+    (let ([l (ancestor-line b)])
+      (and
+       (is-box l)
+       (or (< (top-outer b) (bottom-outer l))
+           ;; Special case for zero-height (empty) lines
+           (= (top-outer b) (top-outer l) (bottom-outer l))))))
+
   (assert (forall ((b Box))
                   (= (ez.line-up b)
-                     (ite (and (is-flow-root b) (is-box (ancestor-line b))
-                               (< (top-outer b) (bottom-outer (ancestor-line b))))
+                     (ite (and (is-flow-root b) (float-affects-own-line b))
                           (ez.line b)
                           (ite (is-box (lbox b))
                                (ez.line-up (lbox b))
@@ -657,8 +665,7 @@
   (assert
    (forall ((b Box))
      (= (ez.line b)
-        (ite (and (is-flow-root b) (is-box (ancestor-line b))
-                  (< (top-outer b) (bottom-outer (ancestor-line b))))
+        (ite (and (is-flow-root b) (float-affects-own-line b))
              (ez.out b)
              (ite (is-box (vbox b))
                   (ez.line-up (vbox b))
