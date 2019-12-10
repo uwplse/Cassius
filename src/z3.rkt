@@ -97,7 +97,8 @@
 (define (z3-check-sat process #:strategy [strategy '(check-sat)])
   (match (process strategy)
     ['unsat `(core ,(process '(get-unsat-core)))]
-    [(or 'sat (list 'objectives _)) `(model ,(process '(get-model)))]))
+    [(or 'sat (list 'objectives _)) `(model ,(process '(get-model)))]
+    ['unknown (error "Z3 returned 'unknown'")]))
 
 (define (z3-kill process)
   (z3-send process '((kill)))

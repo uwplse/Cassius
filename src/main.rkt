@@ -3,7 +3,7 @@
 (require "common.rkt" "dom.rkt" "smt.rkt" "encode.rkt" "tree.rkt" "selectors.rkt")
 (require "spec/css-properties.rkt" "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt"
          "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
-         "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt" "modularize.rkt")
+         "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt" "spec/browser.rkt" "modularize.rkt")
 (provide all-constraints)
 
 ;; The constraints
@@ -86,34 +86,19 @@
 
 (define (configuration-constraints params doms emit)
   (for ([dom doms])
-    (define w (car (dom-context dom ':w #:default '(?))))
-    (define h (car (dom-context dom ':h #:default '(?))))
-    (define fs (car (dom-context dom ':fs #:default '(?))))
-    (define scrollw (car (dom-context dom ':scrollw #:default '(?))))
-
-    (define (param var) (sformat "config/~a/~a" (dom-name dom) var))
-    (define (emit-const name type value)
-      (match value
-        [(? number*?)
-         (emit `(define-const ,name ,type ,(number->z3 value)))]
+    (define browser (sformat "browser/~a" (dom-name dom)))
+    (the-browser browser)
+    (emit `(declare-const ,browser Browser))
+    (for ([(key field) (in-hash browser-fields)])
+      (define const `(,(sformat "browser.~a" field) ,browser))
+      (dict-set! params key const)
+      (match (car (dom-context dom key #:default '(?)))
+        [(? number*? value)
+         (emit `(assert (= ,const ,(number->z3 value))))]
         ['?
-         (emit `(declare-const ,name ,type))]
+         (void)]
         [`(between ,(? number*? min) ,(? number*? max))
-          (emit `(declare-const ,name ,type))
-          (emit `(assert (<= ,(number->z3 min) ,name ,(number->z3 max))))]))
-
-    (emit-const (param 'w) 'Real w)
-    (emit-const (param 'h) 'Real h)
-    (emit-const (param 'font-size) 'Real fs)
-    (emit-const (param 'scrollbar-width) 'Real scrollw)
-    (fs-name (param 'font-size))
-    (view-width-name (param 'w))
-    (view-height-name (param 'h))
-    (scroll-width-name (param 'scrollbar-width))
-    (dict-set! params ':fs (param 'font-size))
-    (dict-set! params ':scrollbar-width (param 'scrollbar-width))
-    (dict-set! params ':w (param 'w))
-    (dict-set! params ':h (param 'h))))
+          (emit `(assert (<= ,(number->z3 min) ,const ,(number->z3 max))))]))))
 
 (define (number*? x)
   (match x
@@ -218,6 +203,7 @@
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
     ,@(for-render make-%of)
+    ,@(browser-definition)
     ,@(colors)
     (declare-datatypes
      ()

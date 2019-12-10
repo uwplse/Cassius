@@ -1,10 +1,6 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt" "css-properties.rkt")
-(provide layout-definitions view-width-name view-height-name boxref-definitions scroll-width-name)
-
-(define view-width-name (make-parameter false))
-(define view-height-name (make-parameter false))
-(define scroll-width-name (make-parameter false))
+(require "../common.rkt" "../smt.rkt" "css-properties.rkt" "browser.rkt")
+(provide layout-definitions boxref-definitions)
 
 (define (get-px-or-% prop wrt b)
   (define r `(computed-style (box-elt ,b)))
@@ -1052,8 +1048,8 @@
      (zero-box-model b)
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
-     (= (box-width b) ,(view-width-name))
-     (= (box-height b) ,(view-height-name))
+     (= (box-width b) (browser.w ,(the-browser)))
+     (= (box-height b) (browser.h ,(the-browser)))
      (= (ez.lookback b) false)
      (= (text-indent b) 0.0)))
 
@@ -1097,11 +1093,13 @@
                  (is-elt (box-elt b))
                  (is-elt (pelt (box-elt b)))
                  (is-overflow/scroll (style.overflow-x (computed-style (box-elt b)))))
-                ,(scroll-width-name)
+                (browser.scrollbar-width ,(the-browser))
                 0))
             (and
              (is-no-box (pbox b))
-             (or (= (scroll-x b) 0) (= (scroll-x b) ,(scroll-width-name))))))) ; The root box is weird in several ways
+             (or (= (scroll-x b) 0) (= (scroll-x b)
+                                       (browser.scrollbar-width ,(the-browser))
+                                       )))))) ; The root box is weird in several ways
 
   (assert
    (forall ((b Box))
@@ -1114,8 +1112,8 @@
                  (is-elt (box-elt b))
                  (is-elt (pelt (box-elt b)))
                  (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
-                ,(scroll-width-name)
+                (browser.scrollbar-width ,(the-browser))
                 0))
             (and
              (is-no-box (pbox b))
-             (or (= (scroll-y b) 0) (= (scroll-y b) ,(scroll-width-name))))))))
+             (or (= (scroll-y b) 0) (= (scroll-y b) (browser.scrollbar-width ,(the-browser)))))))))
