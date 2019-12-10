@@ -11,7 +11,7 @@
 (define (tree-constraints dom emit elt)
   (emit `(assert (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt))))))
 
-(define (selector-constraints media-params emit elts rules)
+(define (selector-constraints emit elts rules)
   (define ml (rule-matchlist rules elts))
 
   (for ([rm ml])
@@ -49,7 +49,7 @@
 
           (match (car (rulematch-rule rm))
             [`(media ,(? media-query? mq) ,_)
-             (set! propname? `(and ,propname? ,(media-matches? media-params mq)))]
+             (set! propname? `(and ,propname? ,(media-matches? 'screen mq)))]
             [_ (void)])
           (emit `(assert (=> (and ,no-match-so-far ,propname?)
                              (= (,(sformat "style.~a" prop) ,style) ,propname))))
@@ -84,14 +84,13 @@
     (emit `(assert (= (bid ,(dump-box box)) ,(node-id box))))
     (emit `(assert (is-box ,(dump-box box))))))
 
-(define (configuration-constraints params doms emit)
+(define (configuration-constraints doms emit)
   (for ([dom doms])
     (define browser (sformat "browser/~a" (dom-name dom)))
     (the-browser browser)
     (emit `(declare-const ,browser Browser))
     (for ([(key field) (in-hash browser-fields)])
       (define const `(,(sformat "browser.~a" field) ,browser))
-      (dict-set! params key const)
       (match (car (dom-context dom key #:default '(?)))
         [(? number*? value)
          (emit `(assert (= ,const ,(number->z3 value))))]
@@ -187,8 +186,10 @@
           (for ([key to-do]) (hash-remove! consts key))
           (loop))))))
 
-(define (sheet-constraints params doms rules)
-  (reap [emit] (for ([dom doms]) (selector-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
+(define (sheet-constraints doms rules)
+  (reap [emit]
+        (for ([dom doms])
+          (selector-constraints emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
 (define (all-constraints sheets doms fonts #:render? [render? true])
   (define (global f) (reap [sow] (f doms sow)))
@@ -196,7 +197,6 @@
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
-  (define media-params (make-hash '((:type . screen))))
   (define (for-render f . args) (if render? (apply f args) '()))
 
   `((set-option :produce-unsat-cores true)
@@ -225,13 +225,13 @@
     ,@(for-render make-get-font fonts)
     ,@(for-render global dom-define-elements)
     ,@(global dom-define-boxes)
-    ,@(global (curry configuration-constraints media-params))
+    ,@(global configuration-constraints)
     ,@(for-render element-definitions)
     ,@(utility-definitions)
     ,@(link-common)
     ,@(for-render link-definitions)
     ,@(for-render style-computation)
-    ,@(for-render sheet-constraints media-params doms (apply append sheets))
+    ,@(for-render sheet-constraints doms (apply append sheets))
     ,@(for-render per-element tree-constraints)
     ,@(per-box box-tree-constraints)
     ,@(per-box position-constraints)
