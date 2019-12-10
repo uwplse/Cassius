@@ -930,7 +930,7 @@ function annotate_box_elt(box) {
 
 import { MAX, compute_flt_pointer, check_float_registers } from "./ezone";
 import { dump_fonts } from "./fonts";
-import { browser_info } from "./browser";
+import { dump_browser } from "./browser";
 
 export function page2text(name) {
     LETTER = name;
@@ -964,29 +964,23 @@ export function page2text(name) {
     }
     text += ")\n\n";
 
-    text += dump_fonts(name, features);
+    text += dump_fonts(name, features) + "\n";
+    text += dump_browser(name, features) + "\n";
 
-    text += "\n\n(define-layout (" + name
-    var props = browser_info(features);
-    for (var prop in props) {
-        if (typeof props[prop] !== "undefined") {
-            text += " :" + prop + " " + props[prop];
-        }
-    }
-    text += ")\n ([VIEW :w " + page.props.w + "]";
-    text += dump_tree(page.children[0]);
-    text += "))\n\n";
     text += "(define-document " + name;
     text += dump_tree(doc);
     text += ")\n\n";
 
-    var title = dump_string(document.title);
+    text += "(define-layout " + name + " (" + name + " " + name + ")\n";
+    text += " ([VIEW :w " + page.props.w + "]";
+    text += dump_tree(page.children[0]);
+    text += "))\n\n";
+
     text += "(define-problem " + name;
-    text += "\n  :title " + title;
-    text += "\n  :url \""  + location;
-    text += "\"\n  :sheets firefox " + name;
+    text += "\n  :title " + dump_string(document.title);
+    text += "\n  :url "  + dump_string("" + location);
+    text += "\n  :sheets firefox " + name;
     text += "\n  :fonts " + name;
-    text += "\n  :documents " + name;
     text += "\n  :layouts " + name;
     if (ERROR) {
         text += "\n  :error " + dump_string(ERROR + "");

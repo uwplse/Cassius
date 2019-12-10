@@ -25,7 +25,7 @@ function default_font_size(family, features) {
     return val2px(cs(div, "font-size"), features);
 }
 
-export function browser_info(features) {
+function browser_info(features) {
     return {
         matched: "true",
         w: window.innerWidth,
@@ -34,4 +34,15 @@ export function browser_info(features) {
         fsm:  default_font_size("monospace", features),
         scrollw: compute_scrollbar_width(),
     };
+}
+
+export function dump_browser(name, features) {
+    var info = browser_info(features);
+    var out = "(define-browser " + name
+    for (var field in info) {
+        if (!info.hasOwnProperty(field)) return;
+        out += "\n  :" + field + " " + info[field];
+    }
+    out += ")\n";
+    return out;
 }

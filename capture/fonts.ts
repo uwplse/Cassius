@@ -173,7 +173,7 @@ export function dump_fonts(name, features) {
         struct[1] = dump_string(struct[1]);
         text += "\n  [" + struct.join(" ") + "]";
     }
-    text += ")";
+    text += ")\n";
 
     return text;
 }
