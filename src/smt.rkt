@@ -25,6 +25,8 @@
 
 (define-syntax smt-let*
   (syntax-rules ()
+    [(smt-let* () constraint)
+     `constraint]
     [(smt-let* () constraints ...)
      `(and constraints ...)]
     [(smt-let* ([a b] rest ...) constraints ...)
