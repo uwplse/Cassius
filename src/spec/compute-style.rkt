@@ -87,19 +87,24 @@
      (is-font-size/px (style.font-size (computed-style elt)))
 
      (= (style.font-size (computed-style elt))
-        (let ([fs (style.font-size (specified-style elt))]
-              [pfs (ite (is-elt (pelt elt))
-                        (font-size.px (style.font-size (computed-style (pelt elt))))
-                        ,(fs-name))])
-          ,(smt-cond
-            [(is-font-size/inherit fs)
-             (font-size/px pfs)]
-            [(is-font-size/% fs)
-             (font-size/px (%of (font-size.% fs) pfs))]
-            [(is-font-size/em fs)
-             (font-size/px (%of (* 100 (font-size.em fs)) pfs))]
-            [else
-             fs])))
+        ,(smt-let* ([fs (style.font-size (specified-style elt))]
+                    [pfs (ite (is-elt (pelt elt))
+                              (font-size.px (style.font-size (computed-style (pelt elt))))
+                              ,(fs-name))]
+                    ;; "monospace" text in particular has a default font size of 12 or 13px!
+                    [pfs* (ite (= (style.font-family (specified-style elt))
+                                  ,(dump-value 'Font-Family "monospace"))
+                               (* pfs (/ 12.0 16.0))
+                               pfs)])
+           ,(smt-cond
+             [(is-font-size/inherit fs)
+              (font-size/px pfs*)]
+             [(is-font-size/% fs)
+              (font-size/px (%of (font-size.% fs) pfs*))]
+             [(is-font-size/em fs)
+              (font-size/px (%of (* 100 (font-size.em fs)) pfs*))]
+             [else
+              fs])))
 
      (= (style.line-height (computed-style elt))
         (ite (is-line-height/inherit (style.line-height (specified-style elt)))
