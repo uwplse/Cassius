@@ -46,97 +46,9 @@ function gensym() {
     return "e" + LETTER + PADDING.substring(0, PADDING.length - s.length) + s;
 }
 
-var APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
-var DIVISORS : number[] = [];
+import { f2r, MIN_LENGTH, val2px, val2pct, val2em, cs, dump_string, is_comment } from "./util";
 
-for (var i = 1; i * i < APP_PIXEL_TO_PIXELS; i++) {
-    if (APP_PIXEL_TO_PIXELS % i == 0) {
-        DIVISORS.push(i);
-        DIVISORS.push(APP_PIXEL_TO_PIXELS / i);
-    }
-}
-
-DIVISORS.sort(function(a, b) { return a - b; });
-DIVISORS.reverse();
-
-function f2r(x) {
-    var out = f2q(x);
-    if (out.denom == 1) {
-        return "" + out.num;
-    } else if (out.denom == 2 || out.denom == 5 || out.denom == 10) {
-        return "" + (out.num / out.denom);
-    } else {
-        return "(/ " + out.num + " " + out.denom + ")";
-    }
-}
-
-function f2q(x) {
-    var xm = Math.round(x * APP_PIXEL_TO_PIXELS);
-        
-    for (var i = 0; i < DIVISORS.length; i++) {
-        var div = DIVISORS[i];
-        if (xm % div == 0) {
-            return { num: xm / div, denom: APP_PIXEL_TO_PIXELS / div };
-        }
-    }
-
-    throw "Insufficiently many divisors!";
-}
-
-function val2px(val, features) {
-    var match;
-    if (val == "0") {
-        return 0;
-    } else if (val.match(/^-?0[^0-9.]+/)) {
-        return 0;
-    } else if (val.match(/^[-+0-9.e]+px$/)) {
-        return +val.substr(0, val.length - 2);
-    } else if (val.match(/^[-+0-9.e]+pt$/)) {
-        return +val.substr(0, val.length - 2)*96/72;
-    } else if (val.match(/^[-+0-9.e]+pc$/)) {
-        return +val.substr(0, val.length - 2)*12*96/72;
-    } else if (val.match(/^[-+0-9.e]+mm$/)) {
-        return +val.substr(0, val.length - 2)*96/25.4;
-    } else if (val.match(/^[-+0-9.e]+cm$/)) {
-        return +val.substr(0, val.length - 2)*96/2.54;
-    } else if (val.match(/^[-+0-9.e]+in$/)) {
-        return +val.substr(0, val.length - 2)*96;
-    } else if (match = val.match(/^([-+0-9.e]+)([a-z]+)$/)) {
-        features["unit:" + match[2]] = true;
-        throw "Error, " + val + " is not a known unit";
-    } else {
-        throw "Error, " + val + " is not a pixel quantity."
-    }
-}
-
-function val2pct(val : string, _) {
-    if (val.match(/^[-+0-9.e]+%$/)) {
-        return +val.substr(0, val.length - 1);
-    } else {
-        throw "Error, " + val + " is not a percentage quantity."
-    }
-}
-
-function val2em(val, features) {
-    if (val.match(/^[-+0-9.e]+em$/)) {
-        return +val.substr(0, val.length - 2);
-    } else if (val.match(/^[-+0-9.e]+rem$/)) {
-        return +val.substr(0, val.length - 3);
-    } else if (val.match(/^-?[-+0-9.e]+ex$/)) {
-        features["unit:ex"] = true;
-        return +val.substr(0, val.length - 2) / 16 * 9;
-    } else {
-        throw "Error, " + val + " is not a em quantity."
-    }
-}
-
-function dump_string(s) {
-    return '"' + s.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + '"';
-}
-
-function cs(elt, value) {return window.getComputedStyle(elt).getPropertyValue(value);}
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE || elt.nodeType == document.CDATA_SECTION_NODE;}
-function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt, "display") == "inline";}
 function is_iblock(elt) {return cs(elt, "display") == "inline-block";}
 function is_block(elt) {
@@ -355,7 +267,7 @@ function infer_lines(box, parent) {
         var horiz_adj = (ty + th >= py && py >= ty || py + ph >= ty && ty >= py)
 
         // Note fuzziness
-        return horiz_adj && tx >= px + pw - 1/APP_PIXEL_TO_PIXELS;
+        return horiz_adj && tx >= px + pw - MIN_LENGTH;
     }
 
     function stackup(l, stack, sstack) {
@@ -587,28 +499,11 @@ function make_boxes(elt, styles, features) {
     }
 }
 
-// Inspired by https://stackoverflow.com/questions/13382516/getting-scroll-bar-width-using-javascript
-function compute_scrollbar_width() {
-    var outer = document.createElement("CassiusBlock");
-    var inner = document.createElement("CassiusBlock");
-    outer.style.display = "block";
-    outer.style.overflow = "scroll";
-    outer.style.borderLeftStyle = "none";
-    outer.style.borderRightStyle = "none";
-    outer.style.position = "absolute";
-    outer.appendChild(inner);
-    document.body.appendChild(outer);
-    var out = outer.offsetWidth - outer.clientWidth;
-    document.body.removeChild(outer)
-    return out;
-}
-
-function get_boxes(features) {
+function get_boxes(style, features) {
     window.scrollTo(0, 0);
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
-    var style = {};
     view.children = make_boxes(document.documentElement, style, features);
-    return {view: view, style: style, scroll: compute_scrollbar_width()};
+    return view;
 }
 
 function dump_selector(sel) {
@@ -1033,8 +928,9 @@ function annotate_box_elt(box) {
     }
 }
 
-import { MAX, compute_flt_pointer, check_float_registers } from "./ezone"
-import { dump_fonts } from "./fonts"
+import { MAX, compute_flt_pointer, check_float_registers } from "./ezone";
+import { dump_fonts } from "./fonts";
+import { browser_info } from "./browser";
 
 export function page2text(name) {
     LETTER = name;
@@ -1053,16 +949,15 @@ export function page2text(name) {
         }
     }
 
-    var out = get_boxes(features);
+    var style = {}
+    var page = get_boxes(style, features);
     var doc = dump_document(features);
-    var page = out.view;
     annotate_box_elt(page);
     
     compute_flt_pointer(page, null, null);
     features["float:" + MAX] = true;
     check_float_registers(page, features);
 
-    var style = out.style;
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
         text += dump_rule("#" + eid, style[eid], features, true, false);
@@ -1072,7 +967,7 @@ export function page2text(name) {
     text += dump_fonts(name, features);
 
     text += "\n\n(define-layout (" + name
-    var props = {matched: "true", w: page.props.w, h: page.props.h, fs: 16, scrollw: out.scroll };
+    var props = browser_info(features);
     for (var prop in props) {
         if (typeof props[prop] !== "undefined") {
             text += " :" + prop + " " + props[prop];
