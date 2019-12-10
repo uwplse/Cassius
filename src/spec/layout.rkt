@@ -819,7 +819,7 @@
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
 
        (= (text-indent b)
-          (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
+          (ite (is-elt e) ,(get-px-or-% 'text-indent '(w b) 'b) 0.0))
 
        ,(smt-cond
          [(or (is-position/absolute (position b)) (is-position/fixed (position b)))
