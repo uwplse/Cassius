@@ -22,6 +22,9 @@ function default_font_size(family, features) {
     var div = document.createElement("CassiusBlock");
     body.appendChild(div);
     div.style.fontFamily = family;
+    div.style.fontSize = "1rem";
+    div.style.fontWeight = "400";
+    div.style.fontStyle = "normal";
     return val2px(cs(div, "font-size"), features);
 }
 
