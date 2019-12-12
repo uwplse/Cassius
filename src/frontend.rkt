@@ -1,7 +1,7 @@
 #lang racket
 (require racket/hash)
 (require "common.rkt" "z3.rkt" "dom.rkt" "tree.rkt" "solver.rkt" "encode.rkt" "smt.rkt")
-(require "main.rkt" "spec/tree.rkt" "spec/percentages.rkt" "spec/float.rkt")
+(require "main.rkt" "spec/float.rkt")
 (require "assertions.rkt" "verify.rkt" "assertion2js.rkt")
 (provide (struct-out success) (struct-out failure) solve-problem *exit-early*)
 
@@ -20,48 +20,12 @@
              (length (apply append sheets))
              (length fonts))
 
-  (*%* (set-union (*%*) (gather-percentages sheets)))
-  (define query (all-constraints sheets doms fonts #:render? render?))
-
-  (when tests
-    (define ms (model-valid/z3 doms))
-
-    (define tests*
-      (for/list ([test tests] [id (in-naturals)])
-        (define-values (test-vars test-body) (disassemble-forall test))
-        (define varmap
-          (for/hash ([var test-vars])
-            (values var (sformat "cex~a~a" id var))))
-        (define ctx
-          (hash-union
-           varmap
-           (hash '? (dump-box (dom-boxes (first doms))))
-           (if (andmap (curryr dom-context ':component) doms)
-               (hash)
-               (hash 'root (dump-box (dom-boxes (first doms)))))
-           (for*/hash ([dom doms] [node (in-boxes dom)]
-                       #:when (node-get node ':name #:default false))
-             (values (node-get node ':name) (dump-box node)))
-           #:combine/key (λ (k a b) (if (equal? a b) a (raise "Different bindings for ~a: ~a and ~a" k a b)))))
-        (cons varmap
-              (let loop ([expr (compile-assertion doms test-body ctx)])
-                (match expr
-                  [`(forall ,vars ,body)
-                   `(forall ,vars ,(loop body))]
-                  [`(=> ,as ... ,body)
-                   `(=> ,@as ,(loop body))]
-                  [body
-                   (if render?
-                       `(and ,ms ,body)
-                       body)])))))
-
-    (set! query
-          (append
-           query
-           (auxiliary-definitions)
-           (add-test doms tests* #:render? render?
-                     #:component (and cname (for/first ([dom doms] [box (in-boxes dom)])
-                                              (equal? (node-get box ':name) cname)))))))
+  (define layout (all-constraints sheets doms fonts #:render? render?))
+  (define verify 
+    (add-test doms tests #:render? render?
+              #:component (and cname (for/first ([dom doms] [box (in-boxes dom)])
+                                       (equal? (node-get box ':name) cname)))))
+  (define query (append layout verify))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
   (begin0 (z3-prepare query)

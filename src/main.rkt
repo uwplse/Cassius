@@ -199,6 +199,8 @@
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
   (define (for-render f . args) (if render? (apply f args) '()))
 
+  (*%* (set-union (*%*) (gather-percentages sheets)))
+
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
