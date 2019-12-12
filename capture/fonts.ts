@@ -35,6 +35,8 @@ function get_font_metrics(font) {
     img.style.lineHeight = "normal";
     img.style.float = "none";
     img.style.position = "static";
+    img.style.marginTop = "0";
+    img.style.marginBottom = "0";
 
     var descent = div.getBoundingClientRect().height - font.size * 2;
     div.removeChild(img);
@@ -164,6 +166,7 @@ export function dump_fonts(name, features) {
         var font = fonts[fname];
         var struct = get_font(font);
         if (struct[4] < 0) features["font:bad-metrics"] = true;
+        if (struct[5] < 0) features["font:bad-metrics"] = true;
         for (var i = 1; i < struct.length; i++) {
             if (typeof struct[i] !== "string") {
                  struct[i] = f2r(struct[i]);
