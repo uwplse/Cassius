@@ -6,17 +6,15 @@
 (define (add-header! h) (z3-header (append (z3-header) h)))
 
 (define (z3-check constraints evals)
-  (define z3 (z3-process))
-  (z3-send z3 constraints)
-  (define out
-    (match (z3-check-sat z3)
-      [`(core ,_) #f]
-      [`(model ,model)
-       (cons model
-             (for/list ([eval evals])
-               (z3 (list 'eval eval))))]))
-  (z3-kill z3)
-  out)
+  (call-with-z3
+   (λ (z3)
+     (z3-send z3 constraints)
+     (match (z3 '(check-sat))
+       [`(core ,_) #f]
+       [`(model ,model)
+        (cons model
+              (for/list ([eval evals])
+                (z3 (list 'eval eval))))]))))
 
 (define-check (check-sat vars expr to-print)
   (define constraints

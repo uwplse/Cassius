@@ -3,7 +3,7 @@
 
 (provide
  reap for/reap for*/reap for/append
- sformat slower indent tree-size snoc dict-remove*
+ sformat slower indent tree-size snoc dict-remove* dict-ref-define
  supported-features support-features!
  xor ->number z3-path value=?
  attribute? attributes->dict dict->attributes
@@ -144,6 +144,11 @@
 (define (dict-remove* dict keys)
   (for/fold ([dict dict]) ([key keys])
     (dict-remove dict key)))
+
+(define-syntax-rule (dict-ref-define dict-expr [var key] ...)
+  (begin
+    (define dict dict-expr)
+    (define var (dict-ref dict key)) ...))
 
 (define (make-log)
   (define time-start (current-inexact-milliseconds))

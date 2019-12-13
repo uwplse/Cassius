@@ -1,5 +1,5 @@
 #lang racket
-(require "../common.rkt" "../encode.rkt" "../smt.rkt")
+(require "../common.rkt" "../smt.rkt")
 (provide browser-fields browser-definition the-browser)
 
 (define browser-fields

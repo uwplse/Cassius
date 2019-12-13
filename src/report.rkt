@@ -109,8 +109,8 @@
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees doms test) (if invert? 'fail 'success)]
-      [(failure stylesheet trees) (if invert? 'success 'fail)]))
+      [(success doms test) (if invert? 'fail 'success)]
+      [(failure doms) (if invert? 'success 'fail)]))
   (cond
    [(not (equal? out 'fail))
     out]

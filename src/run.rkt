@@ -6,12 +6,13 @@
 
 (define (do-accept problem)
   (match (solve-problem problem)
-    [(success stylesheet trees doms test)
+    [(success doms test)
      (when (*debug*)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt)))))
+       (for ([tree (map dom-boxes doms)])
+         (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt)))))
      (eprintf "Accepted!\n")]
-    [(failure stylesheet trees)
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt :style))))
+    [(failure doms)
+     (for ([tree (map dom-boxes doms)]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt :style))))
      (eprintf "Rejected.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
@@ -25,10 +26,10 @@
             (dict-ref node 'index #f))))
 
   (match (solve-problem problem)
-    [(success stylesheet trees doms test)
+    [(success doms test)
      (printf "Accepted\n")]
-    [(failure stylesheet trees)
-     (match (get-box-to-remove trees (dict-ref problem ':documents) backtracked-elts)
+    [(failure doms)
+     (match (get-box-to-remove (map dom-boxes doms) (dict-ref problem ':documents) backtracked-elts)
        [(list (cons tag index) removed total)
         (printf "Rejected\n")
         ;; TODO: Make two JSON outputs into one JSON output
@@ -75,10 +76,11 @@
 (define (do-render problem)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (solve-problem problem*)
-    [(success stylesheet trees doms test)
+    [(success doms test)
      (eprintf "Rendered the following layout:\n")
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt))))]
-    [(failure stylesheet trees)
+     (for ([tree (map dom-boxes doms)])
+       (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt))))]
+    [(failure doms)
      (eprintf "Unable to render.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
@@ -88,13 +90,14 @@
 (define (do-verify problem)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
-    [(success stylesheet trees doms test)
+    [(success doms test)
      (eprintf "Counterexample found to ~a!\n" test)
-     (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
+     (for ([tree (map dom-boxes doms)])
+       (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
      (printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))]
-    [(failure stylesheet trees)
+    [(failure doms)
      (eprintf "Verified.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
@@ -104,18 +107,16 @@
 (define (do-minimize-assertion problem cache)
   (define problem* (dict-update problem ':documents (curry map dom-strip-positions)))
   (match (parameterize ([*fuzz* #f]) (solve-problem problem*))
-    [(success stylesheet trees doms test)
+    [(success doms test)
      (eprintf "Counterexample found!\n")
-     ;(for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt))))
-     ;(printf "\n\nConfiguration:\n")
      (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
        (eprintf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
      (with-output-to-file cache #:exists 'replace
        (lambda ()
-         (printf "(define-tree ~s)\n" trees)
+         (printf "(define-tree ~s)\n" (map dom-boxes doms))
          (printf "(define-document ~s)\n" (dict-ref problem ':documents))
          (printf "(define-config ~s)\n" (dom-properties (apply append doms)))))]
-    [(failure stylesheet trees)
+    [(failure doms)
      (eprintf "Verified.\n")]
     [(list 'error e)
      ((error-display-handler) (exn-message e) e)]
@@ -128,14 +129,15 @@
              (first (dict-ref component ':name (list i)))
              (first (dict-ref component ':tool '(assert))))
     (match (parameterize ([*fuzz* #f]) (solve-problem component))
-      [(success stylesheet trees doms test)
+      [(success doms test)
        (eprintf "Counterexample found in component ~a to ~a!\n" (or (dom-name (first doms)) i) test)
-       (for ([tree trees]) (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :component :spec :name))))
+       (for ([tree (map dom-boxes doms)])
+         (displayln (tree->string tree #:attrs '(:x :y :w :h :cex :fs :elt :component :spec :name))))
        (printf "\n\nConfiguration:\n")
        (for* ([dom doms] [(k v) (in-dict (dom-properties dom))])
          (printf "\t~a:\t~a\n" k (string-join (map ~a v) " ")))
        (exit i)]
-      [(failure stylesheet trees)
+      [(failure doms)
        (eprintf "Verified ~a.\n" (first (dict-ref component ':name (list i))))]
       [(list 'error e)
        ((error-display-handler) (exn-message e) e)

@@ -3,7 +3,7 @@
 (require racket/runtime-path racket/path)
 (require "common.rkt" "smt.rkt")
 
-(provide make-z3 z3-process z3-send z3-check-sat z3-kill z3-solve z3-try-solve)
+(provide call-with-z3 z3-send z3-check-sat z3-solve)
 
 (define (z3-process #:flags [flags '("-st")])
   (define-values (process z3-out z3-in z3-err)
@@ -80,22 +80,26 @@
      (error "Z3 error: premature EOF received")]
     [_ msg]))
 
+(define (call-with-z3 fn)
+  (let ([proc (z3-process)])
+    (with-handlers ([(const true) (λ (e) (z3-kill proc) (raise e))])
+      (begin0 (fn proc)
+        (z3-kill proc)))))
+
+(define (z3-solve encoding #:check [check '(check-sat)])
+  (call-with-z3
+   (λ (z3)
+     (z3-send z3 encoding)
+     (z3-check-sat z3 (z3 check)))))
+
 (define (z3-send process cmds)
   (for ([line cmds])
     (define out (process line))
     (unless (equal? 'success out)
       (raise (make-exn:fail (format "~a;\n  ~a" out line) (current-continuation-marks))))))
 
-(define (z3-try-solve process cmds #:strategy [strategy '(check-sat)])
-  (z3-send process '((push)))
-  (z3-send process cmds)
-  (let ([out (z3-check-sat process #:strategy strategy)])
-    (when (equal? (first out) 'core)
-      (z3-send process '((pop))))
-    out))
-
-(define (z3-check-sat process #:strategy [strategy '(check-sat)])
-  (match (process strategy)
+(define (z3-check-sat process result)
+  (match result
     ['unsat `(core ,(process '(get-unsat-core)))]
     [(or 'sat (list 'objectives _)) `(model ,(process '(get-model)))]
     ['unknown (error "Z3 returned 'unknown'")]))
@@ -103,13 +107,6 @@
 (define (z3-kill process)
   (z3-send process '((kill)))
   (void))
-
-(define (z3-solve encoding)
-  (define z3 (z3-process))
-  (z3-send z3 encoding)
-  (define out (z3-check-sat z3))
-  (z3-kill z3)
-  out)
 
 (define (deserialize v)
   (match v
