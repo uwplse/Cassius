@@ -22,10 +22,10 @@
 
   (define layout (all-constraints sheets doms fonts #:render? render?))
   (define verify 
-    (add-test doms tests #:render? render?
+    (add-test doms (or tests '()) #:render? render?
               #:component (and cname (for/first ([dom doms] [box (in-boxes dom)])
                                        (equal? (node-get box ':name) cname)))))
-  (define query (append layout verify))
+  (define query (if tests (append layout verify) layout))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
   (begin0 (z3-prepare query)
