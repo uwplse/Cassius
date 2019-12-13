@@ -7,9 +7,10 @@
 
 (define *exit-early* (make-parameter void))
 
-(define (constraints log-phase sheets doms fonts
-                     #:tests [tests #f] #:render? [render? #t]
-                     #:component [cname #f])
+(define (solve sheets doms fonts #:tests [tests #f] #:render? [render? #t]
+               #:component [name #f])
+  (define log-phase (make-log))
+  (reset!)
   (log-phase "Read ~a documents with ~a elements, ~a boxes, ~a rules, and ~a fonts"
              (length doms)
              (length (append-map (compose sequence->list in-tree dom-elements) doms))
@@ -20,19 +21,14 @@
   (define layout (all-constraints sheets doms fonts #:render? render?))
   (define verify 
     (add-test doms (or tests '()) #:render? render?
-              #:component (and cname (for/first ([dom doms] [box (in-boxes dom)])
-                                       (equal? (node-get box ':name) cname)))))
-  (define query (if tests (append layout verify) layout))
+              #:component (and name (for/first ([dom doms] [box (in-boxes dom)])
+                                      (equal? (node-get box ':name) name)))))
+  (define raw-query (if tests (append layout verify) layout))
 
   (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
-  (begin0 (z3-prepare query)
-    (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))))
+  (define query (z3-prepare query))
+  (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
 
-(define (solve sheets doms fonts #:tests [tests #f] #:render? [render? #t]
-               #:component [name #f])
-  (define log-phase (make-log))
-  (reset!)
-  (define query (constraints log-phase sheets doms fonts #:tests tests #:render? render?))
   ((*exit-early*) (append query (list cassius-check-sat)))
 
   (with-handlers
