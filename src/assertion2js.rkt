@@ -4,7 +4,7 @@
 (require "common.rkt" "dom.rkt" "selectors.rkt" "encode.rkt" "smt.rkt" "spec/utils.rkt" "print/css.rkt"
          "assertions.rkt")
 
-(provide test-assertion)
+(provide test-problem)
 
 (define-runtime-path capture-path "../capture/")
 (define python-path (find-executable-path (match (system-type 'os) ['windows "python3.exe"] [_ "python3"])))
@@ -62,15 +62,31 @@
        [`(matches ,(? symbol? var) ,sels ...) (cons var sels)]
        [_ false]))))
 
-(define (test-assertion url assertion num named-components anon-components ranges)
+(define (test-problem problem #:samples [n #f])
+  (define log (make-log))
+  (define named-components (dict-ref problem ':named-selectors))
+  (define anon-components (dict-ref problem ':selectors))
+  (define tests (dict-ref problem ':tests))
+  (define docs (dict-ref problem ':documents))
+  (define ranges (dom-properties (first (dict-ref problem ':documents))))
+
+  (define num-samples
+    (or n
+        (apply * (for/list ([f '(:w :h :fs)])
+                   (match (first (dom-context (first docs) f))
+                     [(? number? n) 1]
+                     [`(between ,a ,b) (+ (- b a) 1)])))))
+
+  (log "Launching Firefox to take ~a samples" num-samples)
   (define args
-    `(,@(if (> num 0) `("--num" ,(~a num)) `("--exhaustive"))
+    `(,@(if n `("--num" ,(~a n)) `("--exhaustive"))
       "--width" ,(dump-range (dict-ref ranges ':w))
       "--height" ,(dump-range (dict-ref ranges ':h))
       "--font" ,(dump-range (dict-ref ranges ':fs))))
   (define-values (proc procout procin procerr)
-    (apply run-python (build-path capture-path "test.py") url args))
-  (define-values (vars body) (disassemble-forall assertion))
+    (apply run-python (build-path capture-path "test.py") (first (dict-ref problem ':url)) args))
+
+  (define-values (vars body) (disassemble-forall (apply and-assertions tests)))
   (define components
     (for/hash ([(name sel) (in-dict named-components)] [i (in-naturals)])
       (values name (format "window.component~a" i))))
@@ -81,25 +97,24 @@
     (for/list ([var vars])
       (define sels (dict-ref selectors var '(*)))
       (format "[].slice.call(document.querySelectorAll('~a'))" (string-join (map selector->string sels) ", "))))
-  (define code
-    (string-join
-     `(,js-header
-       ,(format "function allelts() { return [ ~a ]; }"
-                (string-join eltsets ", "))
-       ,@(for/list ([(name sel) (in-dict named-components)])
-           (format "~a = document.querySelector('~a')" (dict-ref components name) (selector->string sel)))
-       ,(format "function is_component(b) { return b.matches('~a'); }"
-                 (string-join (remove-duplicates (map selector->string (set-union anon-components (hash-values named-components)))) ", "))
-       ,(format "function good_tuple(~a) { return ~a; }"
-                (string-join (map ~a vars) ", ")
-                (body->js body ctx))
-       ,(format "function testall() { return nprod(allelts(), ~a, good_tuple, []); }"
-                (length vars))
-       "return testall();")
-     "\n"))
-  (eprintf "~a" code)
-  (display code procin)
+  (define lines
+    `(,js-header
+      ,(format "function allelts() { return [ ~a ]; }"
+               (string-join eltsets ", "))
+      ,@(for/list ([(name sel) (in-dict named-components)])
+          (format "~a = document.querySelector('~a')" (dict-ref components name) (selector->string sel)))
+      ,(format "function is_component(b) { return b.matches('~a'); }"
+               (string-join (remove-duplicates (map selector->string (set-union anon-components (hash-values named-components)))) ", "))
+      ,(format "function good_tuple(~a) { return ~a; }"
+               (string-join (map ~a vars) ", ")
+               (body->js body ctx))
+      ,(format "function testall() { return nprod(allelts(), ~a, good_tuple, []); }"
+               (length vars))
+      "return testall();"))
+  (log "Executing ~a lines of JavaScript" (length lines))
+  (display (string-join lines "\n") procin)
   (close-output-port procin)
+
   ;; Avoid stuffed buffer for stderr. stdout can't be stuffed because we can only print a few lines to it
   (when procerr
     (for ([line (in-port read-line procerr)])
@@ -109,8 +124,12 @@
   (subprocess-wait proc)
   (begin0
       (match (subprocess-status proc)
-        [0 '(success)]
-        [_ `(counterexample
+        [0
+         (log "No counterexamples found")
+         '(success)]
+        [_
+         (log "Counterexample found")
+         `(counterexample
              ,(for/hash ([line (in-port read-line procout)])
                 (match-define (list (app string->symbol key) (app string->number val))
                               (string-split line))

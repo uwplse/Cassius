@@ -58,7 +58,7 @@
 (struct success (doms test) #:prefab)
 (struct failure (doms) #:prefab)
 
-(define (parse-result doms tests out)
+(define (parse-solve-result doms tests out)
   (match out
     [(list 'model m)
      (for ([dom doms]) (extract-tree! (dom-boxes dom) m))
@@ -77,56 +77,38 @@
      (list 'error e)]
     ['break 'break]))
 
+(define (parse-check-result doms tests out)
+  (match out
+    [(list 'counterexample props)
+     (define doms
+       (for/list ([doc doms])
+         (define ctx*
+           (for/fold ([ctx (dom-properties doc)])
+               ([(k v) (in-dict props)])
+             (dict-set ctx k v)))
+         (struct-copy dom doc [properties ctx*])))
+     (success (map unparse-dom doms) (apply and-assertions tests))]
+    [(list 'success)
+     (failure (map unparse-dom doms))]))
+
 (define (solve-problem* problem)
   (dict-ref-define problem [sheets ':sheets] [docs ':documents] [fonts ':fonts])
   (define tests (dict-ref problem ':tests #f))
   (define doms (map parse-dom docs))
   (match (dict-ref problem ':tool '(assert))
     ['(assert)
-     (parse-result doms tests (solve sheets doms fonts #:tests tests))]
+     (parse-solve-result doms tests (solve sheets doms fonts #:tests tests))]
     ['(admit)
      (failure docs)]
     ['(modular)
-     (parse-result doms tests (solve sheets doms fonts #:tests tests #:render? false))]
+     (parse-solve-result doms tests (solve sheets doms fonts #:tests tests #:render? false))]
     ['(page)
-     (parse-result doms tests (solve sheets doms fonts #:tests tests
+     (parse-solve-result doms tests (solve sheets doms fonts #:tests tests
                                      #:component (first (dict-ref problem ':component))))]
-    [(list (and (or 'exhaustive (list 'random _)) tool))
-     (define log (make-log))
-     (define named-components (dict-ref problem ':named-selectors))
-     (define anon-components (dict-ref problem ':selectors))
-
-     (define num-samples
-       (match tool
-         ['exhaustive
-          (apply * (for/list ([f '(:w :h :fs)])
-                     (match (first (dom-context (first docs) f))
-                       [(? number? n) 1]
-                       [`(between ,a ,b) (+ (- b a) 1)])))]
-         [(list 'random n)
-          n]))
-
-     (log "Launching Firefox to do ~a sample~a" num-samples (if (= num-samples 1) "" "s"))
-     (match (test-assertion (first (dict-ref problem ':url))
-                            (apply and-assertions tests)
-                            (if (equal? tool 'exhaustive) 0 num-samples)
-                            named-components
-                            anon-components
-                            (dom-properties (first docs)))
-       [`(counterexample ,props)
-        (log "Counterexample found")
-        (define ctxs
-          (for/list ([doc docs])
-            (define ctx*
-              (for/fold ([ctx (dom-properties doc)])
-                  ([(k v) (in-dict props)])
-                (dict-set ctx k v)))
-            (struct-copy dom doc [properties ctx*])))
-        (success (dict-set problem ':documents ctxs)
-                 (apply smt-and (dict-ref problem ':test)))]
-       ['(success)
-        (log "No counterexamples found")
-        (failure (dict-ref problem ':documents))])]))
+    ['(exhaustive)
+     (parse-check-result doms tests (test-problem problem))]
+    [`((random ,n))
+     (parse-check-result doms tests (test-problem problem #:samples n))]))
 
 (define (solve-problem problem)
   (cond
