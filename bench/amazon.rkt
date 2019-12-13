@@ -7065,3141 +7065,7 @@
   [15 "arial, sans-serif" 700 normal 12 3 1 1 17]
   [10 "arial, sans-serif" 400 normal 8 2 0.5 0.5 11])
 
-(define-layout (doc-1 :matched true :w 1920 :h 980 :fs 16 :scrollw 12)
- ([VIEW :w 1920]
-  ([BLOCK :x 0 :y 0 :w 1908 :h (/ 78088 15) :elt 0]
-   ([BLOCK :x 0 :y 0 :w 1908 :h (/ 78088 15) :elt 64]
-    ([ANON]
-     ([LINE]
-      ([INLINE :x 0 :y 10 :w 304 :h 4 :elt 65])))
-    ([BLOCK :x 0 :y 19 :w 1908 :h (/ 77518 15) :elt 66]
-     ([ANON]
-      ([LINE]
-       ([INLINE :elt 79])))
-     ([BLOCK :x 0 :y 19 :w 1908 :h 55 :elt 81]
-      ([BLOCK :x 0 :y 19 :w 1908 :h 55 :elt 82]
-       ([BLOCK :x 0 :y -10000 :w 1 :h 1 :elt 83]
-        ([LINE]
-         ([TEXT :x 0 :y -9998 :w 61 :h 15 :text "Interesting " :features exclusion-zone]))
-        ([LINE]
-         ([TEXT :x 0 :y -9979 :w 32 :h 15 :text "Finds " :features exclusion-zone]))
-        ([LINE]
-         ([TEXT :x 0 :y -9960 :w 48 :h 15 :text "Updated " :features exclusion-zone]))
-        ([LINE]
-         ([TEXT :x 0 :y -9941 :w 29 :h 15 :text "Daily" :features exclusion-zone])))))
-     ([BLOCK :x 0 :y 74 :w 1908 :h 99 :elt 86]
-      ([BLOCK :x 0 :y 74 :w 1908 :h 99 :elt 87]
-       ([BLOCK :x 0 :y 74 :w 1908 :h 39 :elt 88]
-        ([BLOCK :x 0 :y 74 :w 192 :h 39 :elt 89]
-         ([BLOCK :x 0 :y 74 :w 192 :h 39 :elt 93]
-          ([LINE]
-           ([INLINE :x 27 :y 87 :w 97 :h 30 :elt 94]
-            ([BLOCK :x 27 :y 87 :w 97 :h 30 :elt 95]
-             ([LINE]
-              ([TEXT :x -473 :y 79 :w 52 :h 16 :text "Amazon"]))))
-           ([TEXT :x 124 :y 104 :w 0 :h 16 :text " "])
-           ([BLOCK :x 92 :y 106 :w 45 :h 17 :elt 98]))))
-        ([BLOCK :x 1508 :y 74 :w 400 :h 39 :elt 100]
-         ([ANON]
-          ([LINE]
-           ([INLINE :elt 102])))
-         ([BLOCK :x 1508 :y 83 :w 400 :h 39 :elt 103]
-          ([BLOCK :x 1508 :y 83 :w 400 :h 39 :elt 104]
-           ([LINE]
-            ([INLINE :x 1508 :y 83 :w 400 :h 39 :elt 105])))))
-        ([BLOCK :x 0 :y 74 :w 1908 :h 39 :elt 107]
-         ([BLOCK :x 192 :y 74 :w 1316 :h 46 :elt 109]
-          ([BLOCK :x 192 :y 85 :w 1291 :h 0 :elt 110])
-          ([BLOCK :x 192 :y 85 :w 1291 :h 35 :elt 111]
-           ([BLOCK :x 192 :y 85 :w 47 :h 35 :elt 112]
-            ([BLOCK :x 192 :y 85 :w 47 :h 35 :elt 113]
-             ([BLOCK :x 198 :y 87 :w 40 :h 33 :elt 114]
-              ([BLOCK :x 203 :y 87 :w 14 :h 33 :elt 115]
-               ([LINE]
-                ([TEXT :x 203 :y 96.5 :w 14 :h 14 :text "All"])))
-              ([BLOCK :x 222 :y 101 :w 8 :h 4 :elt 116]))
-             ([BLOCK :x 193 :y 85 :w 221 :h 35 :elt 118]
-              ([BLOCK :x 195 :y 86 :w 221 :h 16 :elt 119]
-               ([LINE]
-                ([TEXT :x 198 :y 86 :w 101 :h 16 :text "All Departments" :features exclusion-zone])))
-              ([BLOCK :x 195 :y 102 :w 221 :h 16 :elt 120]
-               ([LINE]
-                ([TEXT :x 198 :y 102 :w 71 :h 16 :text "Alexa Skills"])))
-              ([BLOCK :x 195 :y 118 :w 221 :h 16 :elt 121]
-               ([LINE]
-                ([TEXT :x 198 :y 118 :w 106 :h 16 :text "Amazon Devices"])))
-              ([BLOCK :x 195 :y 134 :w 221 :h 16 :elt 122]
-               ([LINE]
-                ([TEXT :x 198 :y 134 :w 93 :h 16 :text "Amazon Fresh"])))
-              ([BLOCK :x 195 :y 150 :w 221 :h 16 :elt 123]
-               ([LINE]
-                ([TEXT :x 198 :y 150 :w 128 :h 16 :text "Amazon Warehouse"])))
-              ([BLOCK :x 195 :y 166 :w 221 :h 16 :elt 124]
-               ([LINE]
-                ([TEXT :x 198 :y 166 :w 69 :h 16 :text "Appliances"])))
-              ([BLOCK :x 195 :y 182 :w 221 :h 16 :elt 125]
-               ([LINE]
-                ([TEXT :x 198 :y 182 :w 95 :h 16 :text "Apps & Games"])))
-              ([BLOCK :x 195 :y 198 :w 221 :h 16 :elt 126]
-               ([LINE]
-                ([TEXT :x 198 :y 198 :w 134 :h 16 :text "Arts, Crafts & Sewing"])))
-              ([BLOCK :x 195 :y 214 :w 221 :h 16 :elt 127]
-               ([LINE]
-                ([TEXT :x 198 :y 214 :w 201 :h 16 :text "Automotive Parts & Accessories"])))
-              ([BLOCK :x 195 :y 230 :w 221 :h 16 :elt 128]
-               ([LINE]
-                ([TEXT :x 198 :y 230 :w 32 :h 16 :text "Baby"])))
-              ([BLOCK :x 195 :y 246 :w 221 :h 16 :elt 129]
-               ([LINE]
-                ([TEXT :x 198 :y 246 :w 152 :h 16 :text "Beauty & Personal Care"])))
-              ([BLOCK :x 195 :y 262 :w 221 :h 16 :elt 130]
-               ([LINE]
-                ([TEXT :x 198 :y 262 :w 39 :h 16 :text "Books"])))
-              ([BLOCK :x 195 :y 278 :w 221 :h 16 :elt 131]
-               ([LINE]
-                ([TEXT :x 198 :y 278 :w 74 :h 16 :text "CDs & Vinyl"])))
-              ([BLOCK :x 195 :y 294 :w 221 :h 16 :elt 132]
-               ([LINE]
-                ([TEXT :x 198 :y 294 :w 169 :h 16 :text "Cell Phones & Accessories"])))
-              ([BLOCK :x 195 :y 310 :w 221 :h 16 :elt 133]
-               ([LINE]
-                ([TEXT :x 198 :y 310 :w 165 :h 16 :text "Clothing, Shoes & Jewelry"])))
-              ([BLOCK :x 195 :y 326 :w 221 :h 16 :elt 134]
-               ([LINE]
-                ([TEXT :x 198 :y 326 :w 61 :h 16 :text " Women"])))
-              ([BLOCK :x 195 :y 342 :w 221 :h 16 :elt 135]
-               ([LINE]
-                ([TEXT :x 198 :y 342 :w 40 :h 16 :text " Men"])))
-              ([BLOCK :x 195 :y 358 :w 221 :h 16 :elt 136]
-               ([LINE]
-                ([TEXT :x 198 :y 358 :w 41 :h 16 :text " Girls"])))
-              ([BLOCK :x 195 :y 374 :w 221 :h 16 :elt 137]
-               ([LINE]
-                ([TEXT :x 198 :y 374 :w 43 :h 16 :text " Boys"])))
-              ([BLOCK :x 195 :y 390 :w 221 :h 16 :elt 138]
-               ([LINE]
-                ([TEXT :x 198 :y 390 :w 44 :h 16 :text " Baby"])))
-              ([BLOCK :x 195 :y 406 :w 221 :h 16 :elt 139]
-               ([LINE]
-                ([TEXT :x 198 :y 406 :w 139 :h 16 :text "Collectibles & Fine Art"])))
-              ([BLOCK :x 195 :y 422 :w 221 :h 16 :elt 140]
-               ([LINE]
-                ([TEXT :x 198 :y 422 :w 70 :h 16 :text "Computers"])))
-              ([BLOCK :x 195 :y 438 :w 221 :h 16 :elt 141]
-               ([LINE]
-                ([TEXT :x 198 :y 438 :w 53 :h 16 :text "Courses"])))
-              ([BLOCK :x 195 :y 454 :w 221 :h 16 :elt 142]
-               ([LINE]
-                ([TEXT :x 198 :y 454 :w 168 :h 16 :text "Credit and Payment Cards"])))
-              ([BLOCK :x 195 :y 470 :w 221 :h 16 :elt 143]
-               ([LINE]
-                ([TEXT :x 198 :y 470 :w 80 :h 16 :text "Digital Music"])))
-              ([BLOCK :x 195 :y 486 :w 221 :h 16 :elt 144]
-               ([LINE]
-                ([TEXT :x 198 :y 486 :w 69 :h 16 :text "Electronics"])))
-              ([BLOCK :x 195 :y 502 :w 221 :h 16 :elt 145]
-               ([LINE]
-                ([TEXT :x 198 :y 502 :w 117 :h 16 :text "Garden & Outdoor"])))
-              ([BLOCK :x 195 :y 518 :w 221 :h 16 :elt 146]
-               ([LINE]
-                ([TEXT :x 198 :y 518 :w 64 :h 16 :text "Gift Cards"])))
-              ([BLOCK :x 195 :y 534 :w 221 :h 16 :elt 147]
-               ([LINE]
-                ([TEXT :x 198 :y 534 :w 161 :h 16 :text "Grocery & Gourmet Food"])))
-              ([BLOCK :x 195 :y 550 :w 221 :h 16 :elt 148]
-               ([LINE]
-                ([TEXT :x 198 :y 550 :w 70 :h 16 :text "Handmade"])))
-              ([BLOCK :x 195 :y 566 :w 221 :h 16 :elt 149]
-               ([LINE]
-                ([TEXT :x 198 :y 566 :w 201 :h 16 :text "Health, Household & Baby Care"])))
-              ([BLOCK :x 195 :y 582 :w 221 :h 16 :elt 150]
-               ([LINE]
-                ([TEXT :x 198 :y 582 :w 170 :h 16 :text "Home & Business Services"])))
-              ([BLOCK :x 195 :y 598 :w 221 :h 16 :elt 151]
-               ([LINE]
-                ([TEXT :x 198 :y 598 :w 102 :h 16 :text "Home & Kitchen"])))
-              ([BLOCK :x 195 :y 614 :w 221 :h 16 :elt 152]
-               ([LINE]
-                ([TEXT :x 198 :y 614 :w 131 :h 16 :text "Industrial & Scientific"])))
-              ([BLOCK :x 195 :y 630 :w 221 :h 16 :elt 153]
-               ([LINE]
-                ([TEXT :x 198 :y 630 :w 77 :h 16 :text "Kindle Store"])))
-              ([BLOCK :x 195 :y 646 :w 221 :h 16 :elt 154]
-               ([LINE]
-                ([TEXT :x 198 :y 646 :w 148 :h 16 :text "Luggage & Travel Gear"])))
-              ([BLOCK :x 195 :y 662 :w 221 :h 16 :elt 155]
-               ([LINE]
-                ([TEXT :x 198 :y 662 :w 91 :h 16 :text "Luxury Beauty"])))
-              ([BLOCK :x 195 :y 678 :w 221 :h 16 :elt 156]
-               ([LINE]
-                ([TEXT :x 198 :y 678 :w 151 :h 16 :text "Magazine Subscriptions"])))
-              ([BLOCK :x 195 :y 694 :w 221 :h 16 :elt 157]
-               ([LINE]
-                ([TEXT :x 198 :y 694 :w 80 :h 16 :text "Movies & TV"])))
-              ([BLOCK :x 195 :y 710 :w 221 :h 16 :elt 158]
-               ([LINE]
-                ([TEXT :x 198 :y 710 :w 127 :h 16 :text "Musical Instruments"])))
-              ([BLOCK :x 195 :y 726 :w 221 :h 16 :elt 159]
-               ([LINE]
-                ([TEXT :x 198 :y 726 :w 97 :h 16 :text "Office Products"])))
-              ([BLOCK :x 195 :y 742 :w 221 :h 16 :elt 160]
-               ([LINE]
-                ([TEXT :x 198 :y 742 :w 79 :h 16 :text "Pet Supplies"])))
-              ([BLOCK :x 195 :y 758 :w 221 :h 16 :elt 161]
-               ([LINE]
-                ([TEXT :x 198 :y 758 :w 154 :h 16 :text "Prime Exclusive Savings"])))
-              ([BLOCK :x 195 :y 774 :w 221 :h 16 :elt 162]
-               ([LINE]
-                ([TEXT :x 198 :y 774 :w 82 :h 16 :text "Prime Pantry"])))
-              ([BLOCK :x 195 :y 790 :w 221 :h 16 :elt 163]
-               ([LINE]
-                ([TEXT :x 198 :y 790 :w 77 :h 16 :text "Prime Video"])))
-              ([BLOCK :x 195 :y 806 :w 221 :h 16 :elt 164]
-               ([LINE]
-                ([TEXT :x 198 :y 806 :w 56 :h 16 :text "Software"])))
-              ([BLOCK :x 195 :y 822 :w 221 :h 16 :elt 165]
-               ([LINE]
-                ([TEXT :x 198 :y 822 :w 117 :h 16 :text "Sports & Outdoors"])))
-              ([BLOCK :x 195 :y 838 :w 221 :h 16 :elt 166]
-               ([LINE]
-                ([TEXT :x 198 :y 838 :w 176 :h 16 :text "Tools & Home Improvement"])))
-              ([BLOCK :x 195 :y 854 :w 221 :h 16 :elt 167]
-               ([LINE]
-                ([TEXT :x 198 :y 854 :w 92 :h 16 :text "Toys & Games"])))
-              ([BLOCK :x 195 :y 870 :w 221 :h 16 :elt 168]
-               ([LINE]
-                ([TEXT :x 198 :y 870 :w 52 :h 16 :text "Vehicles"])))
-              ([BLOCK :x 195 :y 886 :w 221 :h 16 :elt 169]
-               ([LINE]
-                ([TEXT :x 198 :y 886 :w 86 :h 16 :text "Video Games"]))))))
-           ([BLOCK :x 1438 :y 85 :w 45 :h 35 :elt 170]
-            ([BLOCK :x 1438 :y 85 :w 45 :h 35 :elt 171]
-             ([BLOCK :x 1450 :y 92 :w 21 :h 21 :elt 172]
-              ([LINE]
-               ([TEXT :x 1201.5 :y 91 :w 18 :h 15 :text "Go"])))
-             ([BLOCK :x 1438 :y 85 :w 45 :h 35 :elt 173])))
-           ([BLOCK :x 239 :y 85 :w 1199 :h 35 :elt 174]
-            ([BLOCK :x 239 :y 85 :w 1199 :h 35 :elt 175]
-             ([BLOCK :x 239 :y 97 :w 55 :h 24 :elt 176]
-              ([LINE]
-               ([TEXT :x 239 :y 106.5 :w 45 :h 16 :text " Search "])))
-             ([BLOCK :x 239 :y 86 :w 1199 :h 33 :elt 177]))
-            ([BLOCK :x 239 :y 120 :w 1199 :h 0 :elt 178])))))
-        ([BLOCK :x 0 :y 113 :w 1908 :h 0 :elt 180])
-        ([BLOCK :x 0 :y 113 :w 1908 :h 0 :elt 1288])
-        ([BLOCK :x 0 :y 113 :w 1908 :h 0 :elt 1291])
-        ([BLOCK :x 0 :y 113 :w 1908 :h 0 :elt 1320]))
-       ([BLOCK :x 0 :y 113 :w 1908 :h 60 :elt 1323]
-        ([BLOCK :x 0 :y 118 :w 192 :h 55 :elt 1324]
-         ([BLOCK :x 0 :y 120 :w 192 :h 50 :elt 1325]
-          ([LINE]
-           ([INLINE :elt 1326]
-            ([BLOCK :x 11 :y 127 :w 129 :h 44 :elt 1327]
-             ([BLOCK :x 13 :y 140 :w 22 :h 22 :elt 1328])
-             ([BLOCK :x 38 :y 127 :w 102 :h 0 :elt 1329]
-              ([BLOCK :x 38 :y 136 :w 97 :h 14 :elt 1330]
-               ([LINE]
-                ([TEXT :x 38 :y 136 :w 86 :h 14 :text "Deliver to Pavel"])))
-              ([BLOCK :x 38 :y 150 :w 102 :h 20 :elt 1331]
-               ([LINE]
-                ([TEXT :x 38 :y 149.5 :w 91 :h 16 :text "Seattle 98122‌"])))))))))
-        ([BLOCK :x 1436 :y 118 :w 472 :h 55 :elt 1334]
-         ([BLOCK :x 1436 :y 120 :w 472 :h 50 :elt 1336]
-          ([BLOCK :x 1469 :y 127 :w 51 :h 44 :elt 1337]
-           ([LINE]
-            ([INLINE :x 1462 :y 127 :w 54 :h 43 :elt 1338]
-             ([BLOCK :x 1462 :y 136 :w 43 :h 14 :elt 1339]
-              ([LINE]
-               ([INLINE :x 1486 :y 151 :w 14 :h 14 :elt 1340]))
-              ([LINE]
-               ([TEXT :x 1476 :y 139 :w 3 :h 14 :text " "])
-               ([INLINE :elt 1341]
-                ([TEXT :x 1484 :y 136 :w 17 :h 14 :text "EN"]))))
-             ([BLOCK :x 1455 :y 150 :w 30 :h 20 :elt 1342]
-              ([LINE]
-               ([TEXT :x 1455 :y 149.5 :w 8 :h 16 :text " "])
-               ([INLINE :x 1506 :y 156.5 :w 8 :h 4 :elt 1343]))))
-            ([TEXT :x 1516 :y 159 :w 3 :h 14 :text " "])
-            ([INLINE :x 1519 :y 136 :w 1 :h 29 :elt 1344])))
-          ([BLOCK :x 1522 :y 127 :w 141 :h 44 :elt 1345]
-           ([BLOCK :x 1522 :y 136 :w 141 :h 14 :elt 1346]
-            ([LINE]
-             ([TEXT :x 1532 :y 136 :w 66 :h 14 :text "Hello, Pavel"])))
-           ([BLOCK :x 1531 :y 127 :w 132 :h 43 :elt 1347]
-            ([LINE]
-             ([TEXT :x 1531 :y 149.5 :w 110 :h 16 :text "Account & Lists"])
-             ([INLINE :x 1646 :y 156.5 :w 8 :h 4 :elt 1348]))))
-          ([BLOCK :x -8564 :y 126 :w 1 :h 1 :elt 1351]
-           ([LINE]
-            ([TEXT :x -8564 :y 125 :w 19 :h 14 :text "Not " :features exclusion-zone]))
-           ([LINE]
-            ([TEXT :x -8564 :y 137 :w 38 :h 14 :text "Pavel? "]))
-           ([LINE]
-            ([TEXT :x -8564 :y 149 :w 25 :h 14 :text "Sign "]))
-           ([LINE]
-            ([TEXT :x -8564 :y 161 :w 19 :h 14 :text "Out "])))
-          ([BLOCK :x 1665 :y 145 :w 64 :h 26 :elt 1352]
-           ([BLOCK :x 1674 :y 150 :w 9 :h 0 :elt 1353])
-           ([BLOCK :x 1674 :y 150 :w 55 :h 20 :elt 1354]
-            ([LINE]
-             ([TEXT :x 1674 :y 149.5 :w 46 :h 16 :text "Orders"]))))
-          ([BLOCK :x 1731 :y 145 :w 69 :h 26 :elt 1355]
-           ([BLOCK :x 1740 :y 150 :w 9 :h 0 :elt 1356])
-           ([BLOCK :x 1740 :y 150 :w 60 :h 20 :elt 1357]
-            ([LINE]
-             ([TEXT :x 1740 :y 149.5 :w 38 :h 16 :text "Prime"])
-             ([INLINE :x 1783 :y 156.5 :w 8 :h 4 :elt 1358]))))
-          ([BLOCK :x 1802 :y 127 :w 98 :h 44 :elt 1359]
-           ([BLOCK :x 1850 :y 136 :w 9 :h 14 :elt 1360])
-           ([BLOCK :x 1850 :y 150 :w 50 :h 20 :elt 1361]
-            ([LINE]
-             ([TEXT :x 1850 :y 149.5 :w 28 :h 16 :text "Cart"])
-             ([INLINE :x 1883 :y 156.5 :w 8 :h 4 :elt 1362])))
-           ([BLOCK :x 1812 :y 138 :w 38 :h 26 :elt 1363])
-           ([BLOCK :x 1825 :y 134 :w 19 :h 16 :elt 1364]
-            ([LINE]
-             ([TEXT :x 1830 :y 133.5 :w 9 :h 17 :text "0" :features exclusion-zone]))))))
-        ([BLOCK :x 192 :y 118 :w 1244 :h 55 :elt 1366]
-         ([BLOCK :x 192 :y 120 :w 142 :h 48 :elt 1367]
-          ([BLOCK :x 193 :y 143 :w 125 :h 26 :elt 1368]
-           ([BLOCK :x 193 :y 148 :w 25 :h 0 :elt 1369])
-           ([BLOCK :x 193 :y 148 :w 125 :h 20 :elt 1370]
-            ([LINE]
-             ([TEXT :x 206 :y 147.5 :w 87 :h 16 :text "Departments"])
-             ([INLINE :x 298 :y 154.5 :w 8 :h 4 :elt 1371])))))
-         ([BLOCK :x 192 :y 118 :w 1244 :h 71 :elt 1372]
-          ([BLOCK :x 334 :y 152 :w 1102 :h 37 :elt 1373]
-           ([BLOCK :x 334 :y 152 :w 120 :h 17 :elt 1375]
-            ([LINE]
-             ([TEXT :x 334 :y 150.5 :w 98 :h 15 :text "Browsing History"])
-             ([INLINE :x 437 :y 156.5 :w 8 :h 4 :elt 1376])))
-           ([BLOCK :x 454 :y 152 :w 141 :h 12.5 :elt 1377]
-            ([LINE]
-             ([INLINE :x 463 :y 152 :w 123 :h 12.5 :elt 1378]
-              ([LINE]
-               ([INLINE :x 463 :y 152 :w 33 :h 12.5 :elt 1379]
-                ([LINE]
-                 ([TEXT :x 463 :y 150.5 :w 33 :h 15 :text "Pavel"])))
-               ([TEXT :x 496 :y 150.5 :w 90 :h 15 :text "'s Amazon.com"])))))
-           ([BLOCK :x 595 :y 152 :w 99 :h 12 :elt 1380]
-            ([LINE]
-             ([TEXT :x 604 :y 150.5 :w 81 :h 15 :text "Today's Deals"])))
-           ([BLOCK :x 694 :y 152 :w 77 :h 12 :elt 1381]
-            ([LINE]
-             ([TEXT :x 703 :y 150.5 :w 59 :h 15 :text "Gift Cards"])))
-           ([BLOCK :x 771 :y 152 :w 66 :h 12 :elt 1382]
-            ([LINE]
-             ([TEXT :x 780 :y 150.5 :w 48 :h 15 :text "Registry"])))
-           ([BLOCK :x 837 :y 152 :w 40 :h 12 :elt 1383]
-            ([LINE]
-             ([TEXT :x 846 :y 150.5 :w 22 :h 15 :text "Sell"])))
-           ([BLOCK :x 877 :y 152 :w 106 :h 12 :elt 1384]
-            ([LINE]
-             ([TEXT :x 886 :y 150.5 :w 88 :h 15 :text "Treasure Truck"])))
-           ([BLOCK :x 983 :y 152 :w 44 :h 12 :elt 1385]
-            ([LINE]
-             ([TEXT :x 992 :y 150.5 :w 26 :h 15 :text "Help"])))
-           ([BLOCK :x -10000 :y 152 :w 1 :h 1 :elt 1386]
-            ([LINE]
-             ([TEXT :x -10000 :y 151 :w 152 :h 14 :text "Disability Customer Support " :features exclusion-zone])))))))
-       ([BLOCK :x 0 :y 173 :w 1908 :h 0 :elt 1388])))
-     ([BLOCK :x 204 :y 173 :w 1500 :h (/ 61483 15) :elt 1401]
-      ([ANON]
-       ([LINE]
-        ([INLINE :elt 1402])
-        ([BLOCK :x 0 :y -500 :w 1 :h 1 :elt 1404]
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -498 :w 54 :h 15 :text "Welcome " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -479 :w 11 :h 15 :text "to " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -460 :w 81 :h 15 :text "Amazon.com. " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -441 :w 8 :h 15 :text "If " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -422 :w 21 :h 15 :text "you " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -403 :w 33 :h 15 :text "prefer " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -384 :w 7 :h 15 :text "a " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -365 :w 55 :h 15 :text "simplified " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -346 :w 52 :h 15 :text "shopping " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -327 :w 67 :h 15 :text "experience, " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -308 :w 15 :h 15 :text "try " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -289 :w 18 :h 15 :text "the " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -270 :w 38 :h 15 :text "mobile " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -251 :w 23 :h 15 :text "web " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -232 :w 42 :h 15 :text "version " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -213 :w 11 :h 15 :text "of " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -194 :w 48 :h 15 :text "Amazon " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -175 :w 11 :h 15 :text "at " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -156 :w 155 :h 15 :text "www.amazon.com/access. " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -137 :w 22 :h 15 :text "The " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -118 :w 38 :h 15 :text "mobile " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -99 :w 23 :h 15 :text "web " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -80 :w 42 :h 15 :text "version " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -61 :w 10 :h 15 :text "is " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -42 :w 38 :h 15 :text "similar " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -23 :w 11 :h 15 :text "to " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y -4 :w 18 :h 15 :text "the " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 15 :w 38 :h 15 :text "mobile " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 34 :w 25 :h 15 :text "app. " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 53 :w 27 :h 15 :text "Stay " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 72 :w 14 :h 15 :text "on " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 91 :w 77 :h 15 :text "Amazon.com " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 110 :w 15 :h 15 :text "for " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 129 :w 42 :h 15 :text "access " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 148 :w 11 :h 15 :text "to " :features exclusion-zone])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 167 :w 13 :h 15 :text "all "])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 186 :w 18 :h 15 :text "the "])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 205 :w 47 :h 15 :text "features "])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 224 :w 11 :h 15 :text "of "])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 243 :w 18 :h 15 :text "the "])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 262 :w 28 :h 15 :text "main "])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 281 :w 48 :h 15 :text "Amazon "])))
-         ([LINE]
-          ([INLINE :elt 1405]
-           ([TEXT :x 0 :y 300 :w 48 :h 15 :text "website."]))))))
-      ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1406]
-       ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1408]
-        ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1409]
-         ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1411]
-          ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1412]
-           ([BLOCK :x 204 :y 173 :w 80 :h 300 :elt 1413]
-            ([BLOCK :x 204 :y 173 :w 80 :h 300 :elt 1414]
-             ([BLOCK :x 227 :y 297 :w 34 :h 52 :elt 1415]
-              ([BLOCK :x -9772 :y 297 :w 1 :h 1 :elt 1416]
-               ([LINE]
-                ([TEXT :x -9772 :y 297 :w 6 :h 1 :text "Previous "]))
-               ([LINE]
-                ([TEXT :x -9772 :y 298 :w 4 :h 1 :text "page"]))))))
-           ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1417]
-            ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1418]
-             ([BLOCK :x -4296 :y 173 :w 10500 :h 300 :elt 1419]
-              ([LINE]
-               ([INLINE :x -4296 :y 173 :w 1500 :h 300 :elt 1420]
-                ([BLOCK :x -4296 :y 173 :w 1500 :h 300 :elt 1421]
-                 ([BLOCK :x -4296 :y 173 :w 1500 :h 300 :elt 1422]
-                  ([BLOCK :x -4296 :y 173 :w 1500 :h 300 :elt 1423]
-                   ([BLOCK :x -7296 :y 173 :w 7500 :h 300 :elt 1424]
-                    ([LINE]
-                     ([INLINE :x -4296 :y 173 :w 1500 :h 300 :elt 1425]
-                      ([ANON]
-                       ([LINE]
-                        ([INLINE :x -4296 :y 173 :w 1500 :h 300 :elt 1426]
-                         ([LINE]
-                          ([INLINE :x -4296 :y 173 :w 1500 :h 300 :elt 1427])))))
-                      ([BLOCK :x -4296 :y 473 :w 1500 :h 0 :elt 1428]))))))))
-               ([INLINE :x -2796 :y 173 :w 1500 :h 300 :elt 1429]
-                ([BLOCK :x -2796 :y 173 :w 1500 :h 300 :elt 1430]
-                 ([BLOCK :x -2796 :y 173 :w 1500 :h 300 :elt 1431]
-                  ([BLOCK :x -2796 :y 173 :w 1500 :h 300 :elt 1432]
-                   ([BLOCK :x -5796 :y 173 :w 7500 :h 300 :elt 1433]
-                    ([LINE]
-                     ([INLINE :x -2796 :y 173 :w 1500 :h 300 :elt 1434]
-                      ([ANON]
-                       ([LINE]
-                        ([INLINE :x -2796 :y 173 :w 1500 :h 300 :elt 1435]
-                         ([LINE]
-                          ([INLINE :x -2796 :y 173 :w 1500 :h 300 :elt 1436])))))
-                      ([BLOCK :x -2796 :y 473 :w 1500 :h 0 :elt 1437]))))))))
-               ([INLINE :x -1296 :y 173 :w 1500 :h 300 :elt 1438]
-                ([BLOCK :x -1296 :y 173 :w 1500 :h 300 :elt 1439]
-                 ([BLOCK :x -1296 :y 173 :w 1500 :h 300 :elt 1440]
-                  ([BLOCK :x -1296 :y 173 :w 1500 :h 300 :elt 1442]
-                   ([BLOCK :x -4296 :y 173 :w 7500 :h 300 :elt 1443]
-                    ([LINE]
-                     ([INLINE :x -1296 :y 173 :w 1500 :h 300 :elt 1444]
-                      ([ANON]
-                       ([LINE]
-                        ([INLINE :x -1296 :y 173 :w 1500 :h 300 :elt 1445]
-                         ([LINE]
-                          ([INLINE :x -1296 :y 173 :w 1500 :h 300 :elt 1446])))))
-                      ([BLOCK :x -1296 :y 473 :w 1500 :h 0 :elt 1447]))))))))
-               ([INLINE :x 204 :y 173 :w 1500 :h 300 :elt 1449]
-                ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1450]
-                 ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1451]
-                  ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1452]
-                   ([BLOCK :x -2796 :y 173 :w 7500 :h 300 :elt 1453]
-                    ([LINE]
-                     ([INLINE :x 204 :y 173 :w 1500 :h 300 :elt 1454]
-                      ([ANON]
-                       ([LINE]
-                        ([INLINE :x 204 :y 173 :w 1500 :h 300 :elt 1455]
-                         ([LINE]
-                          ([INLINE :x 204 :y 173 :w 1500 :h 300 :elt 1456])))))
-                      ([BLOCK :x 204 :y 473 :w 1500 :h 0 :elt 1457]))))))))
-               ([INLINE :x 1704 :y 173 :w 1500 :h 300 :elt 1458]
-                ([BLOCK :x 1704 :y 173 :w 1500 :h 300 :elt 1459]
-                 ([BLOCK :x 1704 :y 173 :w 1500 :h 300 :elt 1460]
-                  ([BLOCK :x 1704 :y 173 :w 1500 :h 300 :elt 1461]
-                   ([BLOCK :x -1296 :y 173 :w 7500 :h 300 :elt 1462]
-                    ([LINE]
-                     ([INLINE :x 1704 :y 173 :w 1500 :h 300 :elt 1463]
-                      ([ANON]
-                       ([LINE]
-                        ([INLINE :x 1704 :y 173 :w 1500 :h 300 :elt 1464]
-                         ([LINE]
-                          ([INLINE :x 1704 :y 173 :w 1500 :h 300 :elt 1465])))))
-                      ([BLOCK :x 1704 :y 473 :w 1500 :h 0 :elt 1466]))))))))
-               ([INLINE :x 3204 :y 173 :w 1500 :h 300 :elt 1467]
-                ([BLOCK :x 3204 :y 173 :w 1500 :h 300 :elt 1468]
-                 ([BLOCK :x 3204 :y 173 :w 1500 :h 300 :elt 1469]
-                  ([BLOCK :x 3204 :y 173 :w 1500 :h 300 :elt 1470]
-                   ([BLOCK :x 204 :y 173 :w 7500 :h 300 :elt 1471]
-                    ([LINE]
-                     ([INLINE :x 3204 :y 173 :w 1500 :h 300 :elt 1472]
-                      ([ANON]
-                       ([LINE]
-                        ([INLINE :x 3204 :y 173 :w 1500 :h 300 :elt 1473]
-                         ([LINE]
-                          ([INLINE :x 3204 :y 173 :w 1500 :h 300 :elt 1474])))))
-                      ([BLOCK :x 3204 :y 473 :w 1500 :h 0 :elt 1475]))))))))
-               ([INLINE :x 4704 :y 173 :w 1500 :h 300 :elt 1476]
-                ([BLOCK :x 4704 :y 173 :w 1500 :h 300 :elt 1477]
-                 ([BLOCK :x 4704 :y 173 :w 1500 :h 300 :elt 1478]
-                  ([BLOCK :x 4704 :y 173 :w 1500 :h 300 :elt 1479]
-                   ([BLOCK :x 1704 :y 173 :w 7500 :h 300 :elt 1480]
-                    ([LINE]
-                     ([INLINE :x 4704 :y 173 :w 1500 :h 300 :elt 1481]
-                      ([ANON]
-                       ([LINE]
-                        ([INLINE :x 4704 :y 173 :w 1500 :h 300 :elt 1482]
-                         ([LINE]
-                          ([INLINE :x 4704 :y 173 :w 1500 :h 300 :elt 1483])))))
-                      ([BLOCK :x 4704 :y 473 :w 1500 :h 0 :elt 1484]))))))))))))
-           ([BLOCK :x 1624 :y 173 :w 80 :h 300 :elt 1485]
-            ([BLOCK :x 1624 :y 173 :w 80 :h 300 :elt 1486]
-             ([BLOCK :x 1647 :y 297 :w 34 :h 52 :elt 1487]
-              ([BLOCK :x -8352 :y 297 :w 1 :h 1 :elt 1488]
-               ([LINE]
-                ([TEXT :x -8352 :y 297 :w 3 :h 1 :text "Next "]))
-               ([LINE]
-                ([TEXT :x -8352 :y 298 :w 4 :h 1 :text "page"])))))))))))
-      ([BLOCK :x 204 :y 473 :w 1500 :h 300 :elt 1491]
-       ([BLOCK :x 204 :y 473 :w 1500 :h 300 :elt 1493]
-        ([BLOCK :x 204 :y 473 :w 1500 :h 300 :elt 1494]
-         ([BLOCK :x 208 :y 473 :w 1486 :h 300 :elt 1495]
-          ([BLOCK :x 208 :y 742.7 :w 252 :h 31.3 :elt 1496]
-           ([LINE]
-            ([TEXT :x 208 :y (/ 14897 20) :w 252 :h 23 :text " Your Amazon Dashboard "])))
-          ([ANON]
-           ([LINE]
-            ([INLINE :x 208 :y 473 :w 1996 :h 300 :elt 1497]
-             ([LINE]
-              ([INLINE :x 214 :y 483 :w 240 :h 280 :elt 1498]
-               ([BLOCK :x 214 :y 483 :w 240 :h 216 :elt 1500]
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :x 229 :y 495 :w 224 :h 45 :elt 1501]
-                   ([LINE]
-                    ([INLINE :x 229 :y 495 :w 45 :h 45 :elt 1502]
-                     ([LINE]
-                      ([INLINE :elt 1503]
-                       ([INLINE :x 229 :y 495 :w 45 :h 45 :elt 1504])
-                       ([TEXT :x 274 :y 497 :w 0 :h 15 :text " "]))))
-                    ([TEXT :x 274 :y 497 :w 4 :h 15 :text " "])
-                    ([INLINE :x 278 :y 495 :w 175 :h 45 :elt 1505]
-                     ([BLOCK :x 293 :y 495 :w 160 :h 24 :elt 1506]
-                      ([LINE]
-                       ([TEXT :x 293 :y 496.5 :w 72 :h 20 :text "Hi, Pavel"])))
-                     ([BLOCK :x 293 :y 519 :w 160 :h 23 :elt 1507]
-                      ([LINE]
-                       ([TEXT :x 293 :y 523 :w 149 :h 15 :text "CUSTOMER SINCE 2011"]))))))))
-                ([BLOCK :x 229 :y 555 :w 45 :h 0 :elt 1508])
-                ([BLOCK :x 229 :y 555 :w 210 :h 19 :elt 1509]
-                 ([LINE]
-                  ([TEXT :x 229 :y 557 :w 96 :h 15 :text "YOUR ORDERS"])))
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :elt 1510]
-                   ([TEXT :x 229 :y 576 :w 80 :h 15 :text "1 recent order"]))))
-                ([BLOCK :x 229 :y 608 :w 45 :h 0 :elt 1511])
-                ([BLOCK :x 229 :y 608 :w 210 :h 19 :elt 1512]
-                 ([LINE]
-                  ([TEXT :x 229 :y 610 :w 179 :h 15 :text "TOP CATEGORIES FOR YOU"])))
-                ([BLOCK :x 229 :y 627 :w 210 :h 19 :elt 1513]
-                 ([BLOCK :x 229 :y 627 :w 214 :h 19 :elt 1514]
-                  ([LINE]
-                   ([TEXT :x 229 :y 629 :w 115 :h 15 :text "Health & Household"]))))
-                ([BLOCK :x 229 :y 646 :w 210 :h 19 :elt 1515]
-                 ([BLOCK :x 229 :y 646 :w 214 :h 19 :elt 1516]
-                  ([LINE]
-                   ([TEXT :x 229 :y 648 :w 159 :h 15 :text "Cell Phones & Accessories"]))))
-                ([BLOCK :x 229 :y 665 :w 210 :h 19 :elt 1517]
-                 ([BLOCK :x 229 :y 665 :w 214 :h 19 :elt 1518]
-                  ([LINE]
-                   ([TEXT :x 229 :y 667 :w 65 :h 15 :text "Electronics"]))))))
-              ([TEXT :x 454 :y 475 :w 4 :h 15 :text " "])
-              ([INLINE :x 464 :y 483 :w 240 :h 280 :elt 1519]
-               ([BLOCK :x 464 :y 483 :w 240 :h 280 :elt 1521]
-                ([BLOCK :x 479 :y 498 :w 210 :h 19 :elt 1522]
-                 ([LINE]
-                  ([INLINE :elt 1523]
-                   ([TEXT :x 479 :y 494 :w 76 :h 27 :text "PRIME"]))))
-                ([BLOCK :x 479 :y 522 :w 210 :h 5 :elt 1524])
-                ([BLOCK :x 479 :y 537 :w 210 :h 38 :elt 1525]
-                 ([BLOCK :x 479 :y 537 :w 210 :h 38 :elt 1526]
-                  ([LINE]
-                   ([TEXT :x 479 :y 538 :w 178 :h 17 :text "Prime Day starts July 16 at "]))
-                  ([LINE]
-                   ([TEXT :x 479 :y 557 :w 137 :h 17 :text "3pm ET. Learn more."]))))
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :elt 1527]
-                   ([INLINE :x 479 :y 590 :w 210 :h 150 :elt 1528])
-                   ([TEXT :x 689 :y 577 :w 0 :h 15 :text " "]))))))
-              ([TEXT :x 704 :y 475 :w 4 :h 15 :text " "])
-              ([INLINE :x 714 :y 483 :w 240 :h 280 :elt 1531]
-               ([BLOCK :x 714 :y 483 :w 240 :h 280 :elt 1533]
-                ([BLOCK :x 729 :y 498 :w 210 :h 19 :elt 1534]
-                 ([LINE]
-                  ([INLINE :elt 1535]
-                   ([TEXT :x 729 :y 494 :w 81 :h 27 :text "FRESH"]))))
-                ([BLOCK :x 729 :y 522 :w 210 :h 5 :elt 1536])
-                ([BLOCK :x 729 :y 537 :w 210 :h 38 :elt 1537]
-                 ([BLOCK :x 729 :y 537 :w 210 :h 38 :elt 1538]
-                  ([LINE]
-                   ([TEXT :x 729 :y 538 :w 187 :h 17 :text "Start your FREE trial: $25 off "]))
-                  ([LINE]
-                   ([TEXT :x 729 :y 557 :w 95 :h 17 :text "your first order"]))))
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :elt 1539]
-                   ([INLINE :x 729 :y 590 :w 210 :h 150 :elt 1540])
-                   ([TEXT :x 939 :y 577 :w 0 :h 15 :text " "]))))))
-              ([TEXT :x 954 :y 475 :w 4 :h 15 :text " "])
-              ([INLINE :x 964 :y 483 :w 240 :h 280 :elt 1543]
-               ([BLOCK :x 964 :y 483 :w 240 :h 280 :elt 1544]
-                ([BLOCK :x 979 :y 498 :w 210 :h 19 :elt 1545]
-                 ([LINE]
-                  ([INLINE :elt 1546]
-                   ([TEXT :x 979 :y 494 :w 75 :h 27 :text "VIDEO"]))))
-                ([BLOCK :x 979 :y 522 :w 210 :h 5 :elt 1547])
-                ([BLOCK :x 979 :y 537 :w 210 :h 36 :elt 1548]
-                 ([BLOCK :x 979 :y 537 :w 210 :h 19 :elt 1549]
-                  ([LINE]
-                   ([TEXT :x 979 :y 538 :w 154 :h 17 :text "Recommended for you:"])))
-                 ([BLOCK :x 979 :y 554 :w 210 :h 19 :elt 1550]
-                  ([LINE]
-                   ([TEXT :x 979 :y 555 :w 121 :h 17 :text "Goliath - Season 1"]))))
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :x 979 :y 573 :w 200 :h 170 :elt 1551]
-                   ([LINE]
-                    ([INLINE :elt 1552]
-                     ([INLINE :x 979 :y 588 :w 200 :h 150 :elt 1553])
-                     ([TEXT :x 1179 :y 575 :w 0 :h 15 :text " "]))))
-                  ([TEXT :x 1179 :y 575 :w 0 :h 15 :text " "])))))
-              ([TEXT :x 1204 :y 475 :w 4 :h 15 :text " "])
-              ([INLINE :x 1214 :y 483 :w 240 :h 280 :elt 1556]
-               ([BLOCK :x 1214 :y 483 :w 240 :h 280 :elt 1557]
-                ([BLOCK :x 1229 :y 498 :w 210 :h 19 :elt 1558]
-                 ([LINE]
-                  ([INLINE :elt 1559]
-                   ([TEXT :x 1229 :y 494 :w 77 :h 27 :text "MUSIC"]))))
-                ([BLOCK :x 1229 :y 522 :w 210 :h 5 :elt 1560])
-                ([BLOCK :x 1229 :y 537 :w 210 :h 36 :elt 1561]
-                 ([BLOCK :x 1229 :y 537 :w 210 :h 19 :elt 1562]
-                  ([LINE]
-                   ([TEXT :x 1229 :y 538 :w 154 :h 17 :text "Recommended for you:"])))
-                 ([BLOCK :x 1229 :y 554 :w 210 :h 19 :elt 1563]
-                  ([LINE]
-                   ([TEXT :x 1229 :y 555 :w 149 :h 17 :text "Wanted! - The Outlaws"]))))
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :x 1229 :y 573 :w 145 :h 170 :elt 1564]
-                   ([LINE]
-                    ([INLINE :elt 1565]
-                     ([INLINE :x 1229 :y 588 :w 145 :h 150 :elt 1566])
-                     ([TEXT :x 1374 :y 575 :w 0 :h 15 :text " "]))))
-                  ([TEXT :x 1374 :y 575 :w 0 :h 15 :text " "])))))
-              ([TEXT :x 1454 :y 475 :w 4 :h 15 :text " "])
-              ([INLINE :x 1464 :y 483 :w 240 :h 280 :elt 1569]
-               ([BLOCK :x 1464 :y 483 :w 240 :h 280 :elt 1571]
-                ([BLOCK :x 1479 :y 498 :w 210 :h 19 :elt 1572]
-                 ([LINE]
-                  ([INLINE :elt 1573]
-                   ([TEXT :x 1479 :y 494 :w 151 :h 27 :text "MEET ALEXA"]))))
-                ([BLOCK :x 1479 :y 522 :w 210 :h 5 :elt 1574])
-                ([BLOCK :x 1479 :y 537 :w 210 :h 36 :elt 1575]
-                 ([BLOCK :x 1479 :y 537 :w 210 :h 19 :elt 1576]
-                  ([LINE]
-                   ([TEXT :x 1479 :y 538 :w 186 :h 17 :text "Voice control your world with"])))
-                 ([BLOCK :x 1479 :y 554 :w 210 :h 19 :elt 1577]
-                  ([LINE]
-                   ([TEXT :x 1479 :y 555 :w 144 :h 17 :text "Echo & Alexa devices"]))))
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :elt 1578]
-                   ([INLINE :x 1479 :y 588 :w 210 :h 150 :elt 1579])
-                   ([TEXT :x 1689 :y 575 :w 0 :h 15 :text " "]))))))
-              ([TEXT :x 1704 :y 475 :w 4 :h 15 :text " "])
-              ([INLINE :x 1714 :y 483 :w 240 :h 280 :elt 1582]
-               ([BLOCK :x 1714 :y 483 :w 240 :h 280 :elt 1584]
-                ([BLOCK :x 1729 :y 498 :w 210 :h 19 :elt 1585]
-                 ([LINE]
-                  ([INLINE :elt 1586]
-                   ([TEXT :x 1729 :y 494 :w 102 :h 27 :text "AUDIBLE"]))))
-                ([BLOCK :x 1729 :y 522 :w 210 :h 5 :elt 1587])
-                ([BLOCK :x 1729 :y 537 :w 210 :h 62 :elt 1588]
-                 ([BLOCK :x 1729 :y 537 :w 210 :h 19 :elt 1589]
-                  ([LINE]
-                   ([TEXT :x 1729 :y 538 :w 187 :h 17 :text "Get any 2 audiobooks FREE"])))
-                 ([MAGIC :x 1729 :y 561 :w 210 :h 38 :elt 1590]
-                  ([TEXT :x 1729 :y 562 :w 184 :h 17 :text "Start with one we think you'll "])
-                  ([TEXT :x 1729 :y 581 :w 31 :h 17 :text "love:"])))
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :elt 1591]
-                   ([INLINE :x 1729 :y 609 :w 130 :h 130 :elt 1592])
-                   ([TEXT :x 1859 :y 601 :w 0 :h 15 :text " "]))))))
-              ([TEXT :x 1954 :y 475 :w 4 :h 15 :text " "])
-              ([INLINE :x 1964 :y 483 :w 240 :h 280 :elt 1593]
-               ([BLOCK :x 1964 :y 483 :w 240 :h 280 :elt 1595]
-                ([BLOCK :x 1979 :y 498 :w 210 :h 19 :elt 1596]
-                 ([LINE]
-                  ([INLINE :elt 1597]
-                   ([TEXT :x 1979 :y 494 :w 183 :h 27 :text "RECENT VIEWS"]))))
-                ([BLOCK :x 1979 :y 522 :w 210 :h 5 :elt 1598])
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :elt 1599]
-                   ([TEXT :x 1979 :y 538 :w 176 :h 17 :text "View your browsing history"]))))
-                ([BLOCK :x 1979 :y 562 :w 210 :h 110 :elt 1600]
-                 ([LINE]
-                  ([INLINE :elt 1601]
-                   ([INLINE :x 1979 :y 562 :w 210 :h 110 :elt 1602])
-                   ([TEXT :x 2189 :y 564 :w 0 :h 15 :text " "]))))
-                ([BLOCK :x 1979 :y 677 :w 210 :h 80 :elt 1603]
-                 ([LINE]
-                  ([INLINE :x 1979 :y 677 :w 70 :h 75 :elt 1604]
-                   ([BLOCK :x 1979 :y 682 :w 70 :h 70 :elt 1605]
-                    ([LINE]
-                     ([INLINE :elt 1606]
-                      ([INLINE :x 1979 :y 682 :w 70 :h 70 :elt 1607])
-                      ([TEXT :x 2049 :y 684 :w 0 :h 15 :text " "])))))
-                  ([TEXT :x 2049 :y 740 :w 4 :h 15 :text " "])
-                  ([INLINE :x 2053 :y 677 :w 70 :h 75 :elt 1608]
-                   ([BLOCK :x 2053 :y 682 :w 70 :h 70 :elt 1609]
-                    ([LINE]
-                     ([INLINE :elt 1610]
-                      ([INLINE :x 2053 :y 682 :w 70 :h 70 :elt 1611])
-                      ([TEXT :x 2123 :y 684 :w 0 :h 15 :text " "])))))
-                  ([TEXT :x 2123 :y 740 :w 4 :h 15 :text " "])
-                  ([INLINE :x 2127 :y 677 :w 70 :h 75 :elt 1612]
-                   ([BLOCK :x 2127 :y 682 :w 70 :h 70 :elt 1613]
-                    ([LINE]
-                     ([INLINE :elt 1614]
-                      ([INLINE :x 2127 :y 682 :w 70 :h 70 :elt 1615])
-                      ([TEXT :x 2197 :y 684 :w 0 :h 15 :text " "])))))))))
-              ([TEXT :x 2204 :y 475 :w 0 :h 15 :text " "]))))))
-         ([BLOCK :x 1649 :y 563 :w 45 :h 100 :elt 1618]
-          ([LINE]
-           ([INLINE :x 1667.5 :y 602 :w 13 :h 22 :elt 1619]))))))
-      ([BLOCK :x 204 :y 773 :w 1500 :h (/ 52721 30) :elt 1622]
-       ([BLOCK :x 204 :y 773 :w 1500 :h (/ 52721 30) :elt 1623]
-        ([BLOCK :x 204 :y 773 :w 1190 :h (/ 52721 30) :elt 1624]
-         ([BLOCK :x 204 :y 773 :w 1190 :h (/ 52721 30) :elt 1625]
-          ([BLOCK :x 224 :y 778 :w 1150 :h 286.5 :elt 1626]
-           ([BLOCK :x 224 :y 778 :w 1150 :h 286.5 :elt 1627]
-            ([BLOCK :x 244 :y 798 :w 1110 :h 31.5 :elt 1628]
-             ([BLOCK :x 244 :y 798 :w 341 :h 31.5 :elt 1629]
-              ([LINE]
-               ([INLINE :elt 1630]
-                ([TEXT :x 244 :y (/ 3209 4) :w 341 :h 23 :text "Recommendations for you in Books"]))))
-             ([BLOCK :x 585 :y 798 :w 15 :h 0 :elt 1631]))
-            ([BLOCK :x 244 :y 829.5 :w 1110 :h 220 :elt 1632]
-             ([BLOCK :x 244 :y 829.5 :w 1110 :h 220 :elt 1633]
-              ([LINE]
-               ([INLINE :x 244 :y 829.5 :w 2551 :h 200 :elt 1634]
-                ([LINE]
-                 ([INLINE :x 244 :y 829.5 :w 145 :h 200 :elt 1635]
-                  ([LINE]
-                   ([INLINE :x 244 :y 829.5 :w 145 :h 200 :elt 1636]
-                    ([LINE]
-                     ([INLINE :x 250.5 :y 829.5 :w 132 :h 200 :elt 1637]
-                      ([LINE]
-                       ([INLINE :x 250.5 :y 829.5 :w 132 :h 200 :elt 1638])))))))
-                 ([TEXT :x 399 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 403 :y 829.5 :w 145 :h 200 :elt 1639]
-                  ([LINE]
-                   ([INLINE :x 403 :y 829.5 :w 145 :h 200 :elt 1640]
-                    ([LINE]
-                     ([INLINE :x 409.5 :y 829.5 :w 132 :h 200 :elt 1641]
-                      ([LINE]
-                       ([INLINE :x 409.5 :y 829.5 :w 132 :h 200 :elt 1642])))))))
-                 ([TEXT :x 558 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 562 :y 829.5 :w 145 :h 200 :elt 1643]
-                  ([LINE]
-                   ([INLINE :x 562 :y 829.5 :w 145 :h 200 :elt 1644]
-                    ([LINE]
-                     ([INLINE :x 569 :y 829.5 :w 131 :h 200 :elt 1645]
-                      ([LINE]
-                       ([INLINE :x 569 :y 829.5 :w 131 :h 200 :elt 1646])))))))
-                 ([TEXT :x 717 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 721 :y 829.5 :w 145 :h 200 :elt 1647]
-                  ([LINE]
-                   ([INLINE :x 721 :y 829.5 :w 145 :h 200 :elt 1648]
-                    ([LINE]
-                     ([INLINE :x 725.5 :y 829.5 :w 136 :h 200 :elt 1649]
-                      ([LINE]
-                       ([INLINE :x 725.5 :y 829.5 :w 136 :h 200 :elt 1650])))))))
-                 ([TEXT :x 876 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 880 :y 829.5 :w 145 :h 200 :elt 1651]
-                  ([LINE]
-                   ([INLINE :x 880 :y 829.5 :w 145 :h 200 :elt 1652]
-                    ([LINE]
-                     ([INLINE :x 886 :y 829.5 :w 133 :h 200 :elt 1653]
-                      ([LINE]
-                       ([INLINE :x 886 :y 829.5 :w 133 :h 200 :elt 1654])))))))
-                 ([TEXT :x 1035 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1039 :y 829.5 :w 145 :h 200 :elt 1655]
-                  ([LINE]
-                   ([INLINE :x 1039 :y 829.5 :w 145 :h 200 :elt 1656]
-                    ([LINE]
-                     ([INLINE :x 1046.5 :y 829.5 :w 130 :h 200 :elt 1657]
-                      ([LINE]
-                       ([INLINE :x 1046.5 :y 829.5 :w 130 :h 200 :elt 1658])))))))
-                 ([TEXT :x 1194 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1198 :y 829.5 :w 145 :h 200 :elt 1659]
-                  ([LINE]
-                   ([INLINE :x 1198 :y 829.5 :w 145 :h 200 :elt 1660]
-                    ([LINE]
-                     ([INLINE :x 1205 :y 829.5 :w 131 :h 200 :elt 1661]
-                      ([LINE]
-                       ([INLINE :x 1205 :y 829.5 :w 131 :h 200 :elt 1662])))))))
-                 ([TEXT :x 1353 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1357 :y 829.5 :w 145 :h 200 :elt 1663]
-                  ([LINE]
-                   ([INLINE :x 1357 :y 829.5 :w 145 :h 200 :elt 1664]
-                    ([LINE]
-                     ([INLINE :x 1363.5 :y 829.5 :w 132 :h 200 :elt 1665]
-                      ([LINE]
-                       ([INLINE :x 1363.5 :y 829.5 :w 132 :h 200 :elt 1666])))))))
-                 ([TEXT :x 1512 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1516 :y 829.5 :w 145 :h 200 :elt 1667]
-                  ([LINE]
-                   ([INLINE :x 1516 :y 829.5 :w 145 :h 200 :elt 1668]
-                    ([LINE]
-                     ([INLINE :x 1522.5 :y 829.5 :w 132 :h 200 :elt 1669]
-                      ([LINE]
-                       ([INLINE :x 1522.5 :y 829.5 :w 132 :h 200 :elt 1670])))))))
-                 ([TEXT :x 1671 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1675 :y 829.5 :w 145 :h 200 :elt 1671]
-                  ([LINE]
-                   ([INLINE :x 1675 :y 829.5 :w 145 :h 200 :elt 1672]
-                    ([LINE]
-                     ([INLINE :x 1681 :y 829.5 :w 133 :h 200 :elt 1673]
-                      ([LINE]
-                       ([INLINE :x 1681 :y 829.5 :w 133 :h 200 :elt 1674])))))))
-                 ([TEXT :x 1830 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1834 :y 829.5 :w 162 :h 200 :elt 1675]
-                  ([LINE]
-                   ([INLINE :x 1834 :y 829.5 :w 162 :h 200 :elt 1676]
-                    ([LINE]
-                     ([INLINE :x 1834 :y 829.5 :w 162 :h 200 :elt 1677]
-                      ([LINE]
-                       ([INLINE :x 1834 :y 829.5 :w 162 :h 200 :elt 1678])))))))
-                 ([TEXT :x 2006 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2010 :y 829.5 :w 145 :h 200 :elt 1679]
-                  ([LINE]
-                   ([INLINE :x 2010 :y 829.5 :w 145 :h 200 :elt 1680]
-                    ([LINE]
-                     ([INLINE :x 2016 :y 829.5 :w 133 :h 200 :elt 1681]
-                      ([LINE]
-                       ([INLINE :x 2016 :y 829.5 :w 133 :h 200 :elt 1682])))))))
-                 ([TEXT :x 2165 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2169 :y 829.5 :w 145 :h 200 :elt 1683]
-                  ([LINE]
-                   ([INLINE :x 2169 :y 829.5 :w 145 :h 200 :elt 1684]
-                    ([LINE]
-                     ([INLINE :x 2173.5 :y 829.5 :w 136 :h 200 :elt 1685]
-                      ([LINE]
-                       ([INLINE :x 2173.5 :y 829.5 :w 136 :h 200 :elt 1686])))))))
-                 ([TEXT :x 2324 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2328 :y 829.5 :w 149 :h 200 :elt 1687]
-                  ([LINE]
-                   ([INLINE :x 2328 :y 829.5 :w 149 :h 200 :elt 1688]
-                    ([LINE]
-                     ([INLINE :x 2328 :y 829.5 :w 149 :h 200 :elt 1689]
-                      ([LINE]
-                       ([INLINE :x 2328 :y 829.5 :w 149 :h 200 :elt 1690])))))))
-                 ([TEXT :x 2487 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2491 :y 829.5 :w 145 :h 200 :elt 1691]
-                  ([LINE]
-                   ([INLINE :x 2491 :y 829.5 :w 145 :h 200 :elt 1692]
-                    ([LINE]
-                     ([INLINE :x 2496.5 :y 829.5 :w 134 :h 200 :elt 1693]
-                      ([LINE]
-                       ([INLINE :x 2496.5 :y 829.5 :w 134 :h 200 :elt 1694])))))))
-                 ([TEXT :x 2646 :y 831.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2650 :y 829.5 :w 145 :h 200 :elt 1695]
-                  ([LINE]
-                   ([INLINE :x 2650 :y 829.5 :w 145 :h 200 :elt 1696]
-                    ([LINE]
-                     ([INLINE :x 2657.5 :y 829.5 :w 130 :h 200 :elt 1697]
-                      ([LINE]
-                       ([INLINE :x 2657.5 :y 829.5 :w 130 :h 200 :elt 1698])))))))))
-               ([TEXT :x 2795 :y 831.5 :w 0 :h 15 :text " "])))
-             ([BLOCK :x 244 :y 1043.5 :w 1110 :h 6 :elt 1705]
-              ([BLOCK :x 244 :y 1045.5 :w 1110 :h 1 :elt 1706])))))
-          ([BLOCK :x 224 :y 1064.5 :w 1150 :h 290 :elt 1712]
-           ([BLOCK :x 224 :y 1064.5 :w 1150 :h 290 :elt 1713]
-            ([BLOCK :x 244 :y 1084.5 :w 1110 :h 35 :elt 1714]
-             ([BLOCK :x 244 :y 1084.5 :w 299 :h 31.5 :elt 1715]
-              ([LINE]
-               ([INLINE :elt 1716]
-                ([TEXT :x 244 :y (/ 4355 4) :w 299 :h 23 :text "More recommendations for you"]))))
-             ([BLOCK :x 543 :y 1084.5 :w 77 :h 35 :elt 1717]
-              ([LINE]
-               ([INLINE :elt 1718]
-                ([TEXT :x 558 :y 1094 :w 62 :h 16 :text "See more"])))))
-            ([BLOCK :x 244 :y 1119.5 :w 1110 :h 220 :elt 1719]
-             ([BLOCK :x 244 :y 1119.5 :w 1110 :h 220 :elt 1720]
-              ([LINE]
-               ([INLINE :x 244 :y 1119.5 :w 2283 :h 200 :elt 1721]
-                ([LINE]
-                 ([INLINE :x 244 :y 1119.5 :w 145 :h 200 :elt 1722]
-                  ([LINE]
-                   ([INLINE :x 244 :y 1119.5 :w 145 :h 200 :elt 1723]
-                    ([LINE]
-                     ([INLINE :x 264.5 :y 1119.5 :w 104 :h 200 :elt 1724]
-                      ([LINE]
-                       ([INLINE :x 264.5 :y 1119.5 :w 104 :h 200 :elt 1725])))))))
-                 ([TEXT :x 399 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 403 :y 1119.5 :w 145 :h 200 :elt 1726]
-                  ([LINE]
-                   ([INLINE :x 403 :y 1119.5 :w 145 :h 200 :elt 1727]
-                    ([LINE]
-                     ([INLINE :x 431.5 :y 1119.5 :w 88 :h 200 :elt 1728]
-                      ([LINE]
-                       ([INLINE :x 431.5 :y 1119.5 :w 88 :h 200 :elt 1729])))))))
-                 ([TEXT :x 558 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 562 :y 1119.5 :w 200 :h 200 :elt 1730]
-                  ([LINE]
-                   ([INLINE :x 562 :y 1119.5 :w 200 :h 200 :elt 1731]
-                    ([LINE]
-                     ([INLINE :x 562 :y 1119.5 :w 200 :h 200 :elt 1732]
-                      ([LINE]
-                       ([INLINE :x 562 :y 1119.5 :w 200 :h 200 :elt 1733])))))))
-                 ([TEXT :x 772 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 776 :y 1119.5 :w 200 :h 200 :elt 1734]
-                  ([LINE]
-                   ([INLINE :x 776 :y 1119.5 :w 200 :h 200 :elt 1735]
-                    ([LINE]
-                     ([INLINE :x 776 :y 1119.5 :w 200 :h 200 :elt 1736]
-                      ([LINE]
-                       ([INLINE :x 776 :y 1119.5 :w 200 :h 200 :elt 1737])))))))
-                 ([TEXT :x 986 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 990 :y 1119.5 :w 194 :h 200 :elt 1738]
-                  ([LINE]
-                   ([INLINE :x 990 :y 1119.5 :w 194 :h 200 :elt 1739]
-                    ([LINE]
-                     ([INLINE :x 990 :y 1119.5 :w 194 :h 200 :elt 1740]
-                      ([LINE]
-                       ([INLINE :x 990 :y 1119.5 :w 194 :h 200 :elt 1741])))))))
-                 ([TEXT :x 1194 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1198 :y 1119.5 :w 270 :h 200 :elt 1742]
-                  ([LINE]
-                   ([INLINE :x 1198 :y (/ 35581 30) :w 270 :h (/ 1339 20) :elt 1743]
-                    ([LINE]
-                     ([INLINE :x 1198 :y (/ 35581 30) :w 270 :h (/ 1339 20) :elt 1744]
-                      ([LINE]
-                       ([INLINE :x 1198 :y (/ 35581 30) :w 270 :h (/ 1339 20) :elt 1745])))))))
-                 ([TEXT :x 1478 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1482 :y 1119.5 :w 224 :h 200 :elt 1746]
-                  ([LINE]
-                   ([INLINE :x 1482 :y 1119.5 :w 224 :h 200 :elt 1747]
-                    ([LINE]
-                     ([INLINE :x 1482 :y 1119.5 :w 224 :h 200 :elt 1748]
-                      ([LINE]
-                       ([INLINE :x 1482 :y 1119.5 :w 224 :h 200 :elt 1749])))))))
-                 ([TEXT :x 1716 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1720 :y 1119.5 :w 270 :h 200 :elt 1750]
-                  ([LINE]
-                   ([INLINE :x 1720 :y 1180.6 :w 270 :h 77.8 :elt 1751]
-                    ([LINE]
-                     ([INLINE :x 1720 :y 1180.6 :w 270 :h 77.8 :elt 1752]
-                      ([LINE]
-                       ([INLINE :x 1720 :y 1180.6 :w 270 :h 77.8 :elt 1753])))))))
-                 ([TEXT :x 2000 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2004 :y 1119.5 :w 153 :h 200 :elt 1754]
-                  ([LINE]
-                   ([INLINE :x 2004 :y 1119.5 :w 153 :h 200 :elt 1755]
-                    ([LINE]
-                     ([INLINE :x 2004 :y 1119.5 :w 153 :h 200 :elt 1756]
-                      ([LINE]
-                       ([INLINE :x 2004 :y 1119.5 :w 153 :h 200 :elt 1757])))))))
-                 ([TEXT :x 2167 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2171 :y 1119.5 :w 145 :h 200 :elt 1758]
-                  ([LINE]
-                   ([INLINE :x 2171 :y 1119.5 :w 145 :h 200 :elt 1759]
-                    ([LINE]
-                     ([INLINE :x 2196 :y 1119.5 :w 95 :h 200 :elt 1760]
-                      ([LINE]
-                       ([INLINE :x 2196 :y 1119.5 :w 95 :h 200 :elt 1761])))))))
-                 ([TEXT :x 2326 :y 1121.5 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2330 :y 1119.5 :w 197 :h 200 :elt 1762]
-                  ([LINE]
-                   ([INLINE :x 2330 :y 1119.5 :w 197 :h 200 :elt 1763]
-                    ([LINE]
-                     ([INLINE :x 2330 :y 1119.5 :w 197 :h 200 :elt 1764]
-                      ([LINE]
-                       ([INLINE :x 2330 :y 1119.5 :w 197 :h 200 :elt 1765])))))))))
-               ([TEXT :x 2527 :y 1121.5 :w 0 :h 15 :text " "])))
-             ([BLOCK :x 244 :y 1333.5 :w 1110 :h 6 :elt 1772]
-              ([BLOCK :x 244 :y 1335.5 :w 1110 :h 1 :elt 1773])))))
-          ([BLOCK :x 224 :y 1354.5 :w 1150 :h 239 :elt 1781]
-           ([BLOCK :x 224 :y 1366.5 :w 1150 :h 200 :elt 1782]
-            ([BLOCK :x 224 :y 1366.5 :w 562.9 :h 200 :elt 1783]
-             ([LINE]
-              ([INLINE :x 224 :y 1366.5 :w 562.9 :h 200 :elt 1784]
-               ([BLOCK :x 234 :y 1366.5 :w 542.9 :h 200 :elt 1785]
-                ([BLOCK :x (/ 5709 20) :y 1366.5 :w 440 :h 200 :elt 1787]
-                 ([LINE]
-                  ([INLINE :x (/ 5709 20) :y 1366.5 :w 440 :h 200 :elt 1788])))))))
-            ([BLOCK :x 811.1 :y 1366.5 :w 562.9 :h 200 :elt 1790]
-             ([LINE]
-              ([INLINE :x 811.1 :y 1366.5 :w 562.9 :h 200 :elt 1791]
-               ([BLOCK :x 821.1 :y 1366.5 :w 542.9 :h 200 :elt 1792]
-                ([BLOCK :x (/ 17451 20) :y 1366.5 :w 440 :h 200 :elt 1794]
-                 ([LINE]
-                  ([INLINE :x (/ 17451 20) :y 1366.5 :w 440 :h 200 :elt 1795])))))))))
-          ([BLOCK :x 224 :y 1593.5 :w 1150 :h 1 :elt 1797])
-          ([BLOCK :x 224 :y 1614.5 :w 1150 :h 286.5 :elt 1798]
-           ([BLOCK :x 224 :y 1614.5 :w 1150 :h 286.5 :elt 1799]
-            ([BLOCK :x 244 :y 1634.5 :w 1110 :h 31.5 :elt 1800]
-             ([BLOCK :x 244 :y 1634.5 :w 472 :h 31.5 :elt 1801]
-              ([LINE]
-               ([INLINE :elt 1802]
-                ([TEXT :x 244 :y (/ 6555 4) :w 472 :h 23 :text "Recommendations for you in Health & Household"]))))
-             ([BLOCK :x 716 :y 1634.5 :w 15 :h 0 :elt 1803]))
-            ([BLOCK :x 244 :y 1666 :w 1110 :h 220 :elt 1804]
-             ([BLOCK :x 244 :y 1666 :w 1110 :h 220 :elt 1805]
-              ([LINE]
-               ([INLINE :x 244 :y 1666 :w 4156 :h 200 :elt 1806]
-                ([LINE]
-                 ([INLINE :x 244 :y 1666 :w 145 :h 200 :elt 1807]
-                  ([LINE]
-                   ([INLINE :x 244 :y 1666 :w 145 :h 200 :elt 1808]
-                    ([LINE]
-                     ([INLINE :x 270.5 :y 1666 :w 92 :h 200 :elt 1809]
-                      ([LINE]
-                       ([INLINE :x 270.5 :y 1666 :w 92 :h 200 :elt 1810])))))))
-                 ([TEXT :x 399 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 403 :y 1666 :w 176 :h 200 :elt 1811]
-                  ([LINE]
-                   ([INLINE :x 403 :y 1666 :w 176 :h 200 :elt 1812]
-                    ([LINE]
-                     ([INLINE :x 403 :y 1666 :w 176 :h 200 :elt 1813]
-                      ([LINE]
-                       ([INLINE :x 403 :y 1666 :w 176 :h 200 :elt 1814])))))))
-                 ([TEXT :x 589 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 593 :y 1666 :w 167 :h 200 :elt 1815]
-                  ([LINE]
-                   ([INLINE :x 593 :y 1666 :w 167 :h 200 :elt 1816]
-                    ([LINE]
-                     ([INLINE :x 593 :y 1666 :w 167 :h 200 :elt 1817]
-                      ([LINE]
-                       ([INLINE :x 593 :y 1666 :w 167 :h 200 :elt 1818])))))))
-                 ([TEXT :x 770 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 774 :y 1666 :w 145 :h 200 :elt 1819]
-                  ([LINE]
-                   ([INLINE :x 774 :y 1666 :w 145 :h 200 :elt 1820]
-                    ([LINE]
-                     ([INLINE :x 783.5 :y 1666 :w 126 :h 200 :elt 1821]
-                      ([LINE]
-                       ([INLINE :x 783.5 :y 1666 :w 126 :h 200 :elt 1822])))))))
-                 ([TEXT :x 929 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 933 :y 1666 :w 197 :h 200 :elt 1823]
-                  ([LINE]
-                   ([INLINE :x 933 :y 1666 :w 197 :h 200 :elt 1824]
-                    ([LINE]
-                     ([INLINE :x 933 :y 1666 :w 197 :h 200 :elt 1825]
-                      ([LINE]
-                       ([INLINE :x 933 :y 1666 :w 197 :h 200 :elt 1826])))))))
-                 ([TEXT :x 1140 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1144 :y 1666 :w 225 :h 200 :elt 1827]
-                  ([LINE]
-                   ([INLINE :x 1144 :y 1666 :w 225 :h 200 :elt 1828]
-                    ([LINE]
-                     ([INLINE :x 1144 :y 1666 :w 225 :h 200 :elt 1829]
-                      ([LINE]
-                       ([INLINE :x 1144 :y 1666 :w 225 :h 200 :elt 1830])))))))
-                 ([TEXT :x 1379 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1383 :y 1666 :w 208 :h 200 :elt 1831]
-                  ([LINE]
-                   ([INLINE :x 1383 :y 1666 :w 208 :h 200 :elt 1832]
-                    ([LINE]
-                     ([INLINE :x 1383 :y 1666 :w 208 :h 200 :elt 1833]
-                      ([LINE]
-                       ([INLINE :x 1383 :y 1666 :w 208 :h 200 :elt 1834])))))))
-                 ([TEXT :x 1601 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1605 :y 1666 :w 270 :h 200 :elt 1835]
-                  ([LINE]
-                   ([INLINE :x 1605 :y (/ 10045 6) :w 270 :h (/ 551 3) :elt 1836]
-                    ([LINE]
-                     ([INLINE :x 1605 :y (/ 10045 6) :w 270 :h (/ 551 3) :elt 1837]
-                      ([LINE]
-                       ([INLINE :x 1605 :y (/ 10045 6) :w 270 :h (/ 551 3) :elt 1838])))))))
-                 ([TEXT :x 1885 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 1889 :y 1666 :w 215 :h 200 :elt 1839]
-                  ([LINE]
-                   ([INLINE :x 1889 :y 1666 :w 215 :h 200 :elt 1840]
-                    ([LINE]
-                     ([INLINE :x 1889 :y 1666 :w 215 :h 200 :elt 1841]
-                      ([LINE]
-                       ([INLINE :x 1889 :y 1666 :w 215 :h 200 :elt 1842])))))))
-                 ([TEXT :x 2114 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2118 :y 1666 :w 251 :h 200 :elt 1843]
-                  ([LINE]
-                   ([INLINE :x 2118 :y 1666 :w 251 :h 200 :elt 1844]
-                    ([LINE]
-                     ([INLINE :x 2118 :y 1666 :w 251 :h 200 :elt 1845]
-                      ([LINE]
-                       ([INLINE :x 2118 :y 1666 :w 251 :h 200 :elt 1846])))))))
-                 ([TEXT :x 2379 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2383 :y 1666 :w 270 :h 200 :elt 1847]
-                  ([LINE]
-                   ([INLINE :x 2383 :y (/ 20039 12) :w 270 :h (/ 1153 6) :elt 1848]
-                    ([LINE]
-                     ([INLINE :x 2383 :y (/ 20039 12) :w 270 :h (/ 1153 6) :elt 1849]
-                      ([LINE]
-                       ([INLINE :x 2383 :y (/ 20039 12) :w 270 :h (/ 1153 6) :elt 1850])))))))
-                 ([TEXT :x 2663 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2667 :y 1666 :w 176 :h 200 :elt 1851]
-                  ([LINE]
-                   ([INLINE :x 2667 :y 1666 :w 176 :h 200 :elt 1852]
-                    ([LINE]
-                     ([INLINE :x 2667 :y 1666 :w 176 :h 200 :elt 1853]
-                      ([LINE]
-                       ([INLINE :x 2667 :y 1666 :w 176 :h 200 :elt 1854])))))))
-                 ([TEXT :x 2853 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 2857 :y 1666 :w 145 :h 200 :elt 1855]
-                  ([LINE]
-                   ([INLINE :x 2857 :y 1666 :w 145 :h 200 :elt 1856]
-                    ([LINE]
-                     ([INLINE :x 2875 :y 1666 :w 109 :h 200 :elt 1857]
-                      ([LINE]
-                       ([INLINE :x 2875 :y 1666 :w 109 :h 200 :elt 1858])))))))
-                 ([TEXT :x 3012 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 3016 :y 1666 :w 145 :h 200 :elt 1859]
-                  ([LINE]
-                   ([INLINE :x 3016 :y 1666 :w 145 :h 200 :elt 1860]
-                    ([LINE]
-                     ([INLINE :x 3026.5 :y 1666 :w 124 :h 200 :elt 1861]
-                      ([LINE]
-                       ([INLINE :x 3026.5 :y 1666 :w 124 :h 200 :elt 1862])))))))
-                 ([TEXT :x 3171 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 3175 :y 1666 :w 176 :h 200 :elt 1863]
-                  ([LINE]
-                   ([INLINE :x 3175 :y 1666 :w 176 :h 200 :elt 1864]
-                    ([LINE]
-                     ([INLINE :x 3175 :y 1666 :w 176 :h 200 :elt 1865]
-                      ([LINE]
-                       ([INLINE :x 3175 :y 1666 :w 176 :h 200 :elt 1866])))))))
-                 ([TEXT :x 3361 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 3365 :y 1666 :w 213 :h 200 :elt 1867]
-                  ([LINE]
-                   ([INLINE :x 3365 :y 1666 :w 213 :h 200 :elt 1868]
-                    ([LINE]
-                     ([INLINE :x 3365 :y 1666 :w 213 :h 200 :elt 1869]
-                      ([LINE]
-                       ([INLINE :x 3365 :y 1666 :w 213 :h 200 :elt 1870])))))))
-                 ([TEXT :x 3588 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 3592 :y 1666 :w 209 :h 200 :elt 1871]
-                  ([LINE]
-                   ([INLINE :x 3592 :y 1666 :w 209 :h 200 :elt 1872]
-                    ([LINE]
-                     ([INLINE :x 3592 :y 1666 :w 209 :h 200 :elt 1873]
-                      ([LINE]
-                       ([INLINE :x 3592 :y 1666 :w 209 :h 200 :elt 1874])))))))
-                 ([TEXT :x 3811 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 3815 :y 1666 :w 194 :h 200 :elt 1875]
-                  ([LINE]
-                   ([INLINE :x 3815 :y 1666 :w 194 :h 200 :elt 1876]
-                    ([LINE]
-                     ([INLINE :x 3815 :y 1666 :w 194 :h 200 :elt 1877]
-                      ([LINE]
-                       ([INLINE :x 3815 :y 1666 :w 194 :h 200 :elt 1878])))))))
-                 ([TEXT :x 4019 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 4023 :y 1666 :w 208 :h 200 :elt 1879]
-                  ([LINE]
-                   ([INLINE :x 4023 :y 1666 :w 208 :h 200 :elt 1880]
-                    ([LINE]
-                     ([INLINE :x 4023 :y 1666 :w 208 :h 200 :elt 1881]
-                      ([LINE]
-                       ([INLINE :x 4023 :y 1666 :w 208 :h 200 :elt 1882])))))))
-                 ([TEXT :x 4241 :y 1668 :w 4 :h 15 :text " "])
-                 ([INLINE :x 4245 :y 1666 :w 145 :h 200 :elt 1883]
-                  ([LINE]
-                   ([INLINE :x 4245 :y 1666 :w 145 :h 200 :elt 1884]
-                    ([LINE]
-                     ([INLINE :x 4265 :y 1666 :w 105 :h 200 :elt 1885]
-                      ([LINE]
-                       ([INLINE :x 4265 :y 1666 :w 105 :h 200 :elt 1886])))))))))
-               ([TEXT :x 4400 :y 1668 :w 0 :h 15 :text " "])))
-             ([BLOCK :x 244 :y 1880 :w 1110 :h 6 :elt 1893]
-              ([BLOCK :x 244 :y 1882 :w 1110 :h 1 :elt 1894])))))
-          ([ANON]
-           ([LINE]
-            ([INLINE :x 224 :y 1901 :w 1150 :h (/ 10181 30) :elt 1900]
-             ([BLOCK :x 234 :y 1901 :w 1130 :h (/ 9521 30) :elt 1901]
-              ([LINE]
-               ([INLINE :x 234 :y 1901 :w 1130 :h (/ 9521 30) :elt 1903]
-                ([LINE]
-                 ([INLINE :x 234 :y 1901 :w 1130 :h (/ 9521 30) :elt 1904]))))))))
-          ([BLOCK :x 224 :y (/ 67211 30) :w 1150 :h 290 :elt 1906]
-           ([BLOCK :x 224 :y (/ 67211 30) :w 1150 :h 290 :elt 1907]
-            ([BLOCK :x 244 :y (/ 67811 30) :w 1110 :h 35 :elt 1908]
-             ([BLOCK :x 244 :y (/ 67811 30) :w 515 :h 31.5 :elt 1909]
-              ([LINE]
-               ([INLINE :elt 1910]
-                ([TEXT :x 244 :y (/ 135877 60) :w 515 :h 23 :text "Popular movies included with your Prime membership"]))))
-             ([BLOCK :x 759 :y (/ 67811 30) :w 77 :h 35 :elt 1911]
-              ([LINE]
-               ([INLINE :elt 1912]
-                ([TEXT :x 774 :y (/ 34048 15) :w 62 :h 16 :text "See more"])))))
-            ([BLOCK :x 244 :y (/ 68861 30) :w 1110 :h 220 :elt 1913]
-             ([BLOCK :x 244 :y (/ 68861 30) :w 1110 :h 220 :elt 1914]
-              ([LINE]
-               ([INLINE :x 244 :y (/ 68861 30) :w 3247 :h 200 :elt 1915]
-                ([LINE]
-                 ([INLINE :x 244 :y (/ 68861 30) :w 146 :h 200 :elt 1916]
-                  ([LINE]
-                   ([INLINE :x 244 :y (/ 68861 30) :w 146 :h 200 :elt 1917]
-                    ([LINE]
-                     ([INLINE :x 244 :y (/ 68861 30) :w 146 :h 200 :elt 1918]
-                      ([LINE]
-                       ([INLINE :x 244 :y (/ 68861 30) :w 146 :h 200 :elt 1919])))))))
-                 ([TEXT :x 400 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 404 :y (/ 68861 30) :w 150 :h 200 :elt 1920]
-                  ([LINE]
-                   ([INLINE :x 404 :y (/ 68861 30) :w 150 :h 200 :elt 1921]
-                    ([LINE]
-                     ([INLINE :x 404 :y (/ 68861 30) :w 150 :h 200 :elt 1922]
-                      ([LINE]
-                       ([INLINE :x 404 :y (/ 68861 30) :w 150 :h 200 :elt 1923])))))))
-                 ([TEXT :x 564 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 568 :y (/ 68861 30) :w 150 :h 200 :elt 1924]
-                  ([LINE]
-                   ([INLINE :x 568 :y (/ 68861 30) :w 150 :h 200 :elt 1925]
-                    ([LINE]
-                     ([INLINE :x 568 :y (/ 68861 30) :w 150 :h 200 :elt 1926]
-                      ([LINE]
-                       ([INLINE :x 568 :y (/ 68861 30) :w 150 :h 200 :elt 1927])))))))
-                 ([TEXT :x 728 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 732 :y (/ 68861 30) :w 150 :h 200 :elt 1928]
-                  ([LINE]
-                   ([INLINE :x 732 :y (/ 68861 30) :w 150 :h 200 :elt 1929]
-                    ([LINE]
-                     ([INLINE :x 732 :y (/ 68861 30) :w 150 :h 200 :elt 1930]
-                      ([LINE]
-                       ([INLINE :x 732 :y (/ 68861 30) :w 150 :h 200 :elt 1931])))))))
-                 ([TEXT :x 892 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 896 :y (/ 68861 30) :w 150 :h 200 :elt 1932]
-                  ([LINE]
-                   ([INLINE :x 896 :y (/ 68861 30) :w 150 :h 200 :elt 1933]
-                    ([LINE]
-                     ([INLINE :x 896 :y (/ 68861 30) :w 150 :h 200 :elt 1934]
-                      ([LINE]
-                       ([INLINE :x 896 :y (/ 68861 30) :w 150 :h 200 :elt 1935])))))))
-                 ([TEXT :x 1056 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 1060 :y (/ 68861 30) :w 150 :h 200 :elt 1936]
-                  ([LINE]
-                   ([INLINE :x 1060 :y (/ 68861 30) :w 150 :h 200 :elt 1937]
-                    ([LINE]
-                     ([INLINE :x 1060 :y (/ 68861 30) :w 150 :h 200 :elt 1938]
-                      ([LINE]
-                       ([INLINE :x 1060 :y (/ 68861 30) :w 150 :h 200 :elt 1939])))))))
-                 ([TEXT :x 1220 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 1224 :y (/ 68861 30) :w 145 :h 200 :elt 1940]
-                  ([LINE]
-                   ([INLINE :x 1224 :y (/ 68861 30) :w 145 :h 200 :elt 1941]
-                    ([LINE]
-                     ([INLINE :x 1230 :y (/ 68861 30) :w 133 :h 200 :elt 1942]
-                      ([LINE]
-                       ([INLINE :x 1230 :y (/ 68861 30) :w 133 :h 200 :elt 1943])))))))
-                 ([TEXT :x 1379 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 1383 :y (/ 68861 30) :w 150 :h 200 :elt 1944]
-                  ([LINE]
-                   ([INLINE :x 1383 :y (/ 68861 30) :w 150 :h 200 :elt 1945]
-                    ([LINE]
-                     ([INLINE :x 1383 :y (/ 68861 30) :w 150 :h 200 :elt 1946]
-                      ([LINE]
-                       ([INLINE :x 1383 :y (/ 68861 30) :w 150 :h 200 :elt 1947])))))))
-                 ([TEXT :x 1543 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 1547 :y (/ 68861 30) :w 150 :h 200 :elt 1948]
-                  ([LINE]
-                   ([INLINE :x 1547 :y (/ 68861 30) :w 150 :h 200 :elt 1949]
-                    ([LINE]
-                     ([INLINE :x 1547 :y (/ 68861 30) :w 150 :h 200 :elt 1950]
-                      ([LINE]
-                       ([INLINE :x 1547 :y (/ 68861 30) :w 150 :h 200 :elt 1951])))))))
-                 ([TEXT :x 1707 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 1711 :y (/ 68861 30) :w 150 :h 200 :elt 1952]
-                  ([LINE]
-                   ([INLINE :x 1711 :y (/ 68861 30) :w 150 :h 200 :elt 1953]
-                    ([LINE]
-                     ([INLINE :x 1711 :y (/ 68861 30) :w 150 :h 200 :elt 1954]
-                      ([LINE]
-                       ([INLINE :x 1711 :y (/ 68861 30) :w 150 :h 200 :elt 1955])))))))
-                 ([TEXT :x 1871 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 1875 :y (/ 68861 30) :w 150 :h 200 :elt 1956]
-                  ([LINE]
-                   ([INLINE :x 1875 :y (/ 68861 30) :w 150 :h 200 :elt 1957]
-                    ([LINE]
-                     ([INLINE :x 1875 :y (/ 68861 30) :w 150 :h 200 :elt 1958]
-                      ([LINE]
-                       ([INLINE :x 1875 :y (/ 68861 30) :w 150 :h 200 :elt 1959])))))))
-                 ([TEXT :x 2035 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 2039 :y (/ 68861 30) :w 150 :h 200 :elt 1960]
-                  ([LINE]
-                   ([INLINE :x 2039 :y (/ 68861 30) :w 150 :h 200 :elt 1961]
-                    ([LINE]
-                     ([INLINE :x 2039 :y (/ 68861 30) :w 150 :h 200 :elt 1962]
-                      ([LINE]
-                       ([INLINE :x 2039 :y (/ 68861 30) :w 150 :h 200 :elt 1963])))))))
-                 ([TEXT :x 2199 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 2203 :y (/ 68861 30) :w 150 :h 200 :elt 1964]
-                  ([LINE]
-                   ([INLINE :x 2203 :y (/ 68861 30) :w 150 :h 200 :elt 1965]
-                    ([LINE]
-                     ([INLINE :x 2203 :y (/ 68861 30) :w 150 :h 200 :elt 1966]
-                      ([LINE]
-                       ([INLINE :x 2203 :y (/ 68861 30) :w 150 :h 200 :elt 1967])))))))
-                 ([TEXT :x 2363 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 2367 :y (/ 68861 30) :w 145 :h 200 :elt 1968]
-                  ([LINE]
-                   ([INLINE :x 2367 :y (/ 68861 30) :w 145 :h 200 :elt 1969]
-                    ([LINE]
-                     ([INLINE :x 2373 :y (/ 68861 30) :w 133 :h 200 :elt 1970]
-                      ([LINE]
-                       ([INLINE :x 2373 :y (/ 68861 30) :w 133 :h 200 :elt 1971])))))))
-                 ([TEXT :x 2522 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 2526 :y (/ 68861 30) :w 150 :h 200 :elt 1972]
-                  ([LINE]
-                   ([INLINE :x 2526 :y (/ 68861 30) :w 150 :h 200 :elt 1973]
-                    ([LINE]
-                     ([INLINE :x 2526 :y (/ 68861 30) :w 150 :h 200 :elt 1974]
-                      ([LINE]
-                       ([INLINE :x 2526 :y (/ 68861 30) :w 150 :h 200 :elt 1975])))))))
-                 ([TEXT :x 2686 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 2690 :y (/ 68861 30) :w 145 :h 200 :elt 1976]
-                  ([LINE]
-                   ([INLINE :x 2690 :y (/ 68861 30) :w 145 :h 200 :elt 1977]
-                    ([LINE]
-                     ([INLINE :x 2693 :y (/ 68861 30) :w 139 :h 200 :elt 1978]
-                      ([LINE]
-                       ([INLINE :x 2693 :y (/ 68861 30) :w 139 :h 200 :elt 1979])))))))
-                 ([TEXT :x 2845 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 2849 :y (/ 68861 30) :w 145 :h 200 :elt 1980]
-                  ([LINE]
-                   ([INLINE :x 2849 :y (/ 68861 30) :w 145 :h 200 :elt 1981]
-                    ([LINE]
-                     ([INLINE :x 2849.5 :y (/ 68861 30) :w 144 :h 200 :elt 1982]
-                      ([LINE]
-                       ([INLINE :x 2849.5 :y (/ 68861 30) :w 144 :h 200 :elt 1983])))))))
-                 ([TEXT :x 3004 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 3008 :y (/ 68861 30) :w 150 :h 200 :elt 1984]
-                  ([LINE]
-                   ([INLINE :x 3008 :y (/ 68861 30) :w 150 :h 200 :elt 1985]
-                    ([LINE]
-                     ([INLINE :x 3008 :y (/ 68861 30) :w 150 :h 200 :elt 1986]
-                      ([LINE]
-                       ([INLINE :x 3008 :y (/ 68861 30) :w 150 :h 200 :elt 1987])))))))
-                 ([TEXT :x 3168 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 3172 :y (/ 68861 30) :w 150 :h 200 :elt 1988]
-                  ([LINE]
-                   ([INLINE :x 3172 :y (/ 68861 30) :w 150 :h 200 :elt 1989]
-                    ([LINE]
-                     ([INLINE :x 3172 :y (/ 68861 30) :w 150 :h 200 :elt 1990]
-                      ([LINE]
-                       ([INLINE :x 3172 :y (/ 68861 30) :w 150 :h 200 :elt 1991])))))))
-                 ([TEXT :x 3332 :y (/ 68921 30) :w 4 :h 15 :text " "])
-                 ([INLINE :x 3336 :y (/ 68861 30) :w 145 :h 200 :elt 1992]
-                  ([LINE]
-                   ([INLINE :x 3336 :y (/ 68861 30) :w 145 :h 200 :elt 1993]
-                    ([LINE]
-                     ([INLINE :x 3342 :y (/ 68861 30) :w 133 :h 200 :elt 1994]
-                      ([LINE]
-                       ([INLINE :x 3342 :y (/ 68861 30) :w 133 :h 200 :elt 1995])))))))))
-               ([TEXT :x 3491 :y (/ 68921 30) :w 0 :h 15 :text " "])))
-             ([BLOCK :x 244 :y (/ 75281 30) :w 1110 :h 6 :elt 2002]
-              ([BLOCK :x 244 :y (/ 75341 30) :w 1110 :h 1 :elt 2003])))))))
-        ([BLOCK :x 1394 :y 773 :w 310 :h 1596.7 :elt 2009]
-         ([BLOCK :x 1399 :y 783 :w 300 :h 277 :elt 2010]
-          ([BLOCK :x 1399 :y 788 :w 300 :h 272 :elt 2013]
-           ([ANON]
-            ([LINE]
-             ([INLINE :x 1399 :y 788 :w 300 :h 250 :elt 2014])))
-           ([BLOCK :x 1399 :y 1041 :w 300 :h 20 :elt 2016]
-            ([BLOCK :x 1621 :y 1041 :w 78 :h 14 :elt 2017]
-             ([LINE]
-              ([INLINE :elt 2018]
-               ([TEXT :x 1621 :y 1041 :w 64 :h 12 :text " Ad feedback "])
-               ([INLINE :x 1685 :y 1042 :w 14 :h 12 :elt 2019])))))))
-         ([BLOCK :x 1417 :y 1060 :w 264 :h 1 :elt 2023])
-         ([BLOCK :x 1417 :y 1076 :w 264 :h 864.7 :elt 2024]
-          ([BLOCK :x 1394 :y 1076 :w 310 :h 864.7 :elt 2027]
-           ([BLOCK :x 1394 :y 1076 :w 310 :h 56.3 :elt 2028]
-            ([BLOCK :x 1417 :y 1076 :w 264 :h 37.3 :elt 2029]
-             ([BLOCK :x 1417 :y 1076 :w 264 :h 37.3 :elt 2030]
-              ([BLOCK :x 1417 :y 1076 :w 264 :h 27.3 :elt 2031]
-               ([LINE]
-                ([TEXT :x 1446 :y (/ 21563 20) :w 206 :h 23 :text " Tap Below to Reorder "])))))
-            ([BLOCK :x 1417 :y 1113.3 :w 264 :h 19 :elt 2032]
-             ([BLOCK :x 1417 :y 1113.3 :w (/ 7753 60) :h 19 :elt 2033]
-              ([LINE]
-               ([INLINE :elt 2034]
-                ([TEXT :x 1417 :y 1115.3 :w 109 :h 15 :text " Your Dash Buttons "]))))
-             ([BLOCK :x (/ 93107 60) :y 1113.3 :w (/ 7753 60) :h 19 :elt 2035]
-              ([LINE]
-               ([INLINE :elt 2036]
-                ([INLINE :elt 2037]
-                 ([TEXT :x 1616 :y 1115.3 :w 65 :h 15 :text " Learn more "])))))))
-           ([BLOCK :x 1394 :y 1142.3 :w 310 :h 0 :elt 2038])
-           ([BLOCK :x 1394 :y 1147.3 :w 310 :h 1 :elt 2039])
-           ([BLOCK :x 1394 :y 1163.3 :w 310 :h 777.4 :elt 2040]
-            ([BLOCK :x 1394 :y 1163.3 :w 310 :h 116.4 :elt 2041]
-             ([MAGIC :x 1394 :y 1164.3 :w 620 :h 114.4 :elt 2042]
-              ([MAGIC :x 1394 :y 1164.3 :w 310 :h 114.4 :elt 2043]
-               ([INLINE :elt 2045]
-                ([INLINE :x 1417 :y 1164.3 :w 264 :h 114.4 :elt 2046]
-                 ([BLOCK :x 1417 :y 1164.3 :w 264 :h 115.1 :elt 2047]
-                  ([BLOCK :x 1422 :y 1169.3 :w 254 :h 105.1 :elt 2048]
-                   ([LINE]
-                    ([INLINE :elt 2049]
-                     ([INLINE :elt 2050]
-                      ([MAGIC :x 1460.1 :y 1169.3 :w 101.6 :h 105.1 :elt 2051]
-                       ([MAGIC :x 1460.1 :y 1169.3 :w 101.6 :h 105.1 :elt 2052]
-                        ([INLINE :elt 2053]
-                         ([INLINE :elt 2054])
-                         ([INLINE :x 1460.1 :y (/ 24557 20) :w 0 :h 0 :elt 2055])
-                         ([INLINE :elt 2056])))))
-                     ([BLOCK :x 1422 :y (/ 75017 60) :w (/ 508 3) :h (/ 1447 60) :elt 2057]
-                      ([LINE]
-                       ([TEXT :x 1462 :y (/ 3769 3) :w 113 :h 12 :text "Super Ad…(Chocolate)"]))))
-                    ([BLOCK :x 1574.4 :y 1169.3 :w 101.6 :h 105.1 :elt 2058]
-                     ([BLOCK :x (/ 4733 3) :y (/ 7063 6) :w (/ 268 3) :h (/ 268 3) :elt 2059]
-                      ([BLOCK :x (/ 4733 3) :y (/ 7063 6) :w (/ 268 3) :h (/ 268 3) :elt 2060]
-                       ([BLOCK :x (/ 4772 3) :y (/ 3613 3) :w (/ 190 3) :h 23 :elt 2061]
-                        ([LINE]
-                         ([INLINE :elt 2062]
-                          ([BLOCK :x (/ 9599 6) :y (/ 3547 3) :w 54 :h 46 :elt 2063]
-                           ([LINE]
-                            ([TEXT :x (/ 9629 6) :y (/ 3547 3) :w 44 :h 23 :text "USD "]))
-                           ([LINE]
-                            ([TEXT :x (/ 9599 6) :y (/ 3616 3) :w 54 :h 23 :text "18.68"])))
-                          ([INLINE :elt 2064]
-                           ([INLINE :elt 2065]
-                            ([TEXT :x (/ 9599 6) :y (/ 3619 3) :w 7 :h 14 :text "$"]))
-                           ([INLINE :elt 2066]
-                            ([TEXT :x (/ 9641 6) :y (/ 3613 3) :w 24 :h 23 :text "18"])
-                            ([BLOCK :x (/ 9785 6) :y (/ 3613 3) :w 6 :h 23 :elt 2067]
-                             ([LINE]
-                              ([TEXT :x (/ 9785 6) :y (/ 3613 3) :w 6 :h 23 :text "."]))))
-                           ([INLINE :elt 2068]
-                            ([TEXT :x (/ 9785 6) :y (/ 3619 3) :w 14 :h 14 :text "68"]))))))
-                       ([ANON]
-                        ([LINE]
-                         ([INLINE :elt 2069]
-                          ([TEXT :x (/ 4804 3) :y (/ 3682 3) :w 42 :h 12 :text "Buy now"]))))))))))
-                 ([MAGIC :x 1394 :y (/ 23699 20) :w 80 :h (/ 4387 60) :elt 2085]
-                  ([MAGIC :x 1394 :y (/ 23699 20) :w 80 :h (/ 4387 60) :elt 2086]
-                   ([MAGIC :x 1394 :y (/ 23699 20) :w 80 :h (/ 4387 60) :elt 2090]
-                    ([BLOCK :x 1408 :y (/ 23899 20) :w 52 :h (/ 3187 60) :elt 2091]
-                     ([BLOCK :x 1408 :y (/ 23899 20) :w 52 :h 18 :elt 2092]
-                      ([LINE]
-                       ([TEXT :x 1415 :y (/ 23939 20) :w 38 :h 14 :text "Arrives"])))
-                     ([BLOCK :x 1408 :y (/ 24259 20) :w 52 :h 19 :elt 2093]
-                      ([LINE]
-                       ([TEXT :x 1415.5 :y (/ 24299 20) :w 37 :h 15 :text "Jul 16"])))
-                     ([ANON]
-                      ([LINE]
-                       ([INLINE :elt 2094]
-                        ([TEXT :x 1408 :y 1234 :w 52 :h 12 :text "View order"])))))))))
-                ([TEXT :x 1681 :y 1266.7 :w 0 :h 15 :text " "])))
-              ([MAGIC :x 1704 :y 1164.3 :w 310 :h 114.4 :elt 2196]
-               ([BLOCK :x 1704 :y (/ 24157 20) :w 310 :h 27.3 :elt 2197]
-                ([LINE]
-                 ([INLINE :x 1704 :y (/ 24157 20) :w 176 :h 27.3 :elt 2198]
-                  ([LINE]
-                   ([INLINE :elt 2199]
-                    ([INLINE :elt 2200]
-                     ([TEXT :x 1708 :y 1210 :w 168 :h 23 :text "Delete this button"]))))))))))
-            ([BLOCK :x 1394 :y 1289.7 :w 310 :h 116.4 :elt 2213]
-             ([MAGIC :x 1394 :y 1290.7 :w 620 :h 114.4 :elt 2214]
-              ([MAGIC :x 1394 :y 1290.7 :w 310 :h 114.4 :elt 2215]
-               ([INLINE :elt 2216]
-                ([INLINE :x 1417 :y 1290.7 :w 264 :h 114.4 :elt 2217]
-                 ([BLOCK :x 1417 :y 1290.7 :w 264 :h 115.1 :elt 2218]
-                  ([BLOCK :x 1422 :y 1295.7 :w 254 :h 105.1 :elt 2219]
-                   ([LINE]
-                    ([INLINE :elt 2220]
-                     ([INLINE :elt 2221]
-                      ([MAGIC :x 1460.1 :y 1295.7 :w 101.6 :h 105.1 :elt 2222]
-                       ([MAGIC :x 1460.1 :y 1295.7 :w 101.6 :h 105.1 :elt 2223]
-                        ([INLINE :elt 2224]
-                         ([INLINE :elt 2225])
-                         ([INLINE :x 1460.1 :y (/ 5417 4) :w 0 :h 0 :elt 2226])
-                         ([INLINE :elt 2227])))))
-                     ([BLOCK :x 1422 :y (/ 82601 60) :w 165 :h (/ 1447 60) :elt 2228]
-                      ([LINE]
-                       ([TEXT :x 1462 :y (/ 20741 15) :w 105 :h 12 :text "8 Cartridges, Regul…"]))))
-                    ([BLOCK :x 1574.4 :y 1295.7 :w 101.6 :h 105.1 :elt 2229]
-                     ([BLOCK :x (/ 4733 3) :y (/ 39107 30) :w (/ 268 3) :h (/ 268 3) :elt 2230]
-                      ([BLOCK :x (/ 4733 3) :y (/ 39107 30) :w (/ 268 3) :h (/ 268 3) :elt 2231]
-                       ([BLOCK :x (/ 4772 3) :y (/ 19961 15) :w (/ 190 3) :h 23 :elt 2232]
-                        ([LINE]
-                         ([INLINE :elt 2233]
-                          ([BLOCK :x (/ 9599 6) :y (/ 19631 15) :w 54 :h 46 :elt 2234]
-                           ([LINE]
-                            ([TEXT :x (/ 9629 6) :y (/ 19631 15) :w 44 :h 23 :text "USD "]))
-                           ([LINE]
-                            ([TEXT :x (/ 9599 6) :y (/ 19976 15) :w 54 :h 23 :text "19.23"])))
-                          ([INLINE :elt 2235]
-                           ([INLINE :elt 2236]
-                            ([TEXT :x (/ 9599 6) :y (/ 19991 15) :w 7 :h 14 :text "$"]))
-                           ([INLINE :elt 2237]
-                            ([TEXT :x (/ 9641 6) :y (/ 19961 15) :w 24 :h 23 :text "19"])
-                            ([BLOCK :x (/ 9785 6) :y (/ 19961 15) :w 6 :h 23 :elt 2238]
-                             ([LINE]
-                              ([TEXT :x (/ 9785 6) :y (/ 19961 15) :w 6 :h 23 :text "."]))))
-                           ([INLINE :elt 2239]
-                            ([TEXT :x (/ 9785 6) :y (/ 19991 15) :w 14 :h 14 :text "23"]))))))
-                       ([ANON]
-                        ([LINE]
-                         ([INLINE :elt 2240]
-                          ([TEXT :x (/ 4804 3) :y (/ 20306 15) :w 42 :h 12 :text "Buy now"]))))))))))
-                 ([MAGIC :x 1294 :y (/ 26417 20) :w 80 :h (/ 3247 60) :elt 2256]
-                  ([MAGIC :x 1294 :y (/ 26417 20) :w 80 :h (/ 3247 60) :elt 2257]
-                   ([MAGIC :x 1294 :y (/ 26417 20) :w 80 :h (/ 3247 60) :elt 2261]
-                    ([BLOCK :x 1308 :y (/ 26617 20) :w 52 :h (/ 2047 60) :elt 2262]
-                     ([BLOCK :x 1308 :y (/ 26617 20) :w 52 :h 18 :elt 2263]
-                      ([LINE]
-                       ([TEXT :x 1315 :y (/ 26657 20) :w 38 :h 14 :text "Arrives"])))
-                     ([BLOCK :x 1308 :y (/ 26977 20) :w 52 :h 0 :elt 2264])
-                     ([ANON]
-                      ([LINE]
-                       ([INLINE :elt 2265]
-                        ([TEXT :x 1308 :y 1350.9 :w 52 :h 12 :text "View order"])))))))))
-                ([TEXT :x 1681 :y 1393.1 :w 0 :h 15 :text " "])))
-              ([MAGIC :x 1704 :y 1290.7 :w 310 :h 114.4 :elt 2271]
-               ([BLOCK :x 1704 :y (/ 5337 4) :w 310 :h 27.3 :elt 2272]
-                ([LINE]
-                 ([INLINE :x 1704 :y (/ 5337 4) :w 176 :h 27.3 :elt 2273]
-                  ([LINE]
-                   ([INLINE :elt 2274]
-                    ([INLINE :elt 2275]
-                     ([TEXT :x 1708 :y 1336.4 :w 168 :h 23 :text "Delete this button"]))))))))))
-            ([BLOCK :x 1394 :y 1416.1 :w 310 :h 116.4 :elt 2288]
-             ([MAGIC :x 1394 :y 1417.1 :w 620 :h 114.4 :elt 2289]
-              ([MAGIC :x 1394 :y 1417.1 :w 310 :h 114.4 :elt 2290]
-               ([INLINE :elt 2291]
-                ([INLINE :x 1417 :y 1417.1 :w 264 :h 114.4 :elt 2292]
-                 ([BLOCK :x 1417 :y 1417.1 :w 264 :h 115.1 :elt 2293]
-                  ([BLOCK :x 1422 :y 1422.1 :w 254 :h 105.1 :elt 2294]
-                   ([LINE]
-                    ([INLINE :elt 2295]
-                     ([INLINE :elt 2296]
-                      ([MAGIC :x 1460.1 :y 1422.1 :w 101.6 :h 105.1 :elt 2297]
-                       ([MAGIC :x 1460.1 :y 1422.1 :w 101.6 :h 105.1 :elt 2298]
-                        ([INLINE :elt 2299]
-                         ([INLINE :elt 2300])
-                         ([INLINE :x 1460.1 :y (/ 29613 20) :w 0 :h 0 :elt 2301])
-                         ([INLINE :elt 2302]))))))
-                    ([BLOCK :x 1574.4 :y 1422.1 :w 101.6 :h 105.1 :elt 2304]
-                     ([BLOCK :x (/ 4733 3) :y (/ 42899 30) :w (/ 268 3) :h (/ 268 3) :elt 2305]
-                      ([BLOCK :x (/ 4733 3) :y (/ 42899 30) :w (/ 268 3) :h (/ 268 3) :elt 2306]
-                       ([BLOCK :x (/ 4772 3) :y (/ 21857 15) :w (/ 190 3) :h 23 :elt 2307]
-                        ([LINE]
-                         ([INLINE :elt 2308]
-                          ([BLOCK :x (/ 9599 6) :y (/ 21527 15) :w 54 :h 46 :elt 2309]
-                           ([LINE]
-                            ([TEXT :x (/ 9629 6) :y (/ 21527 15) :w 44 :h 23 :text "USD "]))
-                           ([LINE]
-                            ([TEXT :x (/ 9599 6) :y (/ 21872 15) :w 54 :h 23 :text "25.99"])))
-                          ([INLINE :elt 2310]
-                           ([INLINE :elt 2311]
-                            ([TEXT :x (/ 9599 6) :y (/ 21887 15) :w 7 :h 14 :text "$"]))
-                           ([INLINE :elt 2312]
-                            ([TEXT :x (/ 9641 6) :y (/ 21857 15) :w 24 :h 23 :text "25"])
-                            ([BLOCK :x (/ 9785 6) :y (/ 21857 15) :w 6 :h 23 :elt 2313]
-                             ([LINE]
-                              ([TEXT :x (/ 9785 6) :y (/ 21857 15) :w 6 :h 23 :text "."]))))
-                           ([INLINE :elt 2314]
-                            ([TEXT :x (/ 9785 6) :y (/ 21887 15) :w 14 :h 14 :text "99"]))))))
-                       ([ANON]
-                        ([LINE]
-                         ([INLINE :elt 2315]
-                          ([TEXT :x (/ 4804 3) :y (/ 22202 15) :w 42 :h 12 :text "Buy now"]))))))))))
-                 ([MAGIC :x 1294 :y (/ 5789 4) :w 80 :h (/ 3247 60) :elt 2331]
-                  ([MAGIC :x 1294 :y (/ 5789 4) :w 80 :h (/ 3247 60) :elt 2332]
-                   ([MAGIC :x 1294 :y (/ 5789 4) :w 80 :h (/ 3247 60) :elt 2336]
-                    ([BLOCK :x 1308 :y (/ 5829 4) :w 52 :h (/ 2047 60) :elt 2337]
-                     ([BLOCK :x 1308 :y (/ 5829 4) :w 52 :h 18 :elt 2338]
-                      ([LINE]
-                       ([TEXT :x 1315 :y (/ 5837 4) :w 38 :h 14 :text "Arrives"])))
-                     ([BLOCK :x 1308 :y (/ 5901 4) :w 52 :h 0 :elt 2339])
-                     ([ANON]
-                      ([LINE]
-                       ([INLINE :elt 2340]
-                        ([TEXT :x 1308 :y 1477.3 :w 52 :h 12 :text "View order"])))))))))
-                ([TEXT :x 1681 :y 1519.5 :w 0 :h 15 :text " "])))
-              ([MAGIC :x 1704 :y 1417.1 :w 310 :h 114.4 :elt 2346]
-               ([BLOCK :x 1704 :y (/ 29213 20) :w 310 :h 27.3 :elt 2347]
-                ([LINE]
-                 ([INLINE :x 1704 :y (/ 29213 20) :w 176 :h 27.3 :elt 2348]
-                  ([LINE]
-                   ([INLINE :elt 2349]
-                    ([INLINE :elt 2350]
-                     ([TEXT :x 1708 :y 1462.8 :w 168 :h 23 :text "Delete this button"]))))))))))
-            ([BLOCK :x 1394 :y 1542.5 :w 310 :h 116.4 :elt 2363]
-             ([MAGIC :x 1394 :y 1543.5 :w 620 :h 114.4 :elt 2364]
-              ([MAGIC :x 1394 :y 1543.5 :w 310 :h 114.4 :elt 2365]
-               ([INLINE :elt 2366]
-                ([INLINE :x 1417 :y 1543.5 :w 264 :h 114.4 :elt 2367]
-                 ([BLOCK :x 1417 :y 1543.5 :w 264 :h 115.1 :elt 2368]
-                  ([BLOCK :x 1422 :y 1548.5 :w 254 :h 105.1 :elt 2369]
-                   ([LINE]
-                    ([INLINE :elt 2370]
-                     ([INLINE :elt 2371]
-                      ([MAGIC :x 1460.1 :y 1548.5 :w 101.6 :h 105.1 :elt 2372]
-                       ([MAGIC :x 1460.1 :y 1548.5 :w 101.6 :h 105.1 :elt 2373]
-                        ([INLINE :elt 2374]
-                         ([INLINE :elt 2375])
-                         ([INLINE :x 1460.1 :y (/ 32141 20) :w 0 :h 0 :elt 2376])
-                         ([INLINE :elt 2377])))))
-                     ([BLOCK :x 1422 :y (/ 97769 60) :w 166 :h (/ 1447 60) :elt 2378]
-                      ([LINE]
-                       ([TEXT :x 1462 :y (/ 24533 15) :w 106 :h 12 :text "Super Adva…(Vanilla)"]))))
-                    ([BLOCK :x 1574.4 :y 1548.5 :w 101.6 :h 105.1 :elt 2379]
-                     ([BLOCK :x (/ 4733 3) :y (/ 46691 30) :w (/ 268 3) :h (/ 268 3) :elt 2380]
-                      ([BLOCK :x (/ 4733 3) :y (/ 46691 30) :w (/ 268 3) :h (/ 268 3) :elt 2381]
-                       ([BLOCK :x (/ 4772 3) :y (/ 23753 15) :w (/ 190 3) :h 23 :elt 2382]
-                        ([LINE]
-                         ([INLINE :elt 2383]
-                          ([BLOCK :x (/ 9599 6) :y (/ 23423 15) :w 54 :h 46 :elt 2384]
-                           ([LINE]
-                            ([TEXT :x (/ 9629 6) :y (/ 23423 15) :w 44 :h 23 :text "USD "]))
-                           ([LINE]
-                            ([TEXT :x (/ 9599 6) :y (/ 23768 15) :w 54 :h 23 :text "22.45"])))
-                          ([INLINE :elt 2385]
-                           ([INLINE :elt 2386]
-                            ([TEXT :x (/ 9599 6) :y (/ 23783 15) :w 7 :h 14 :text "$"]))
-                           ([INLINE :elt 2387]
-                            ([TEXT :x (/ 9641 6) :y (/ 23753 15) :w 24 :h 23 :text "22"])
-                            ([BLOCK :x (/ 9785 6) :y (/ 23753 15) :w 6 :h 23 :elt 2388]
-                             ([LINE]
-                              ([TEXT :x (/ 9785 6) :y (/ 23753 15) :w 6 :h 23 :text "."]))))
-                           ([INLINE :elt 2389]
-                            ([TEXT :x (/ 9785 6) :y (/ 23783 15) :w 14 :h 14 :text "45"]))))))
-                       ([ANON]
-                        ([LINE]
-                         ([INLINE :elt 2390]
-                          ([TEXT :x (/ 4804 3) :y (/ 24098 15) :w 42 :h 12 :text "Buy now"]))))))))))
-                 ([MAGIC :x 1294 :y (/ 31473 20) :w 80 :h (/ 3247 60) :elt 2406]
-                  ([MAGIC :x 1294 :y (/ 31473 20) :w 80 :h (/ 3247 60) :elt 2407]
-                   ([MAGIC :x 1294 :y (/ 31473 20) :w 80 :h (/ 3247 60) :elt 2411]
-                    ([BLOCK :x 1308 :y (/ 31673 20) :w 52 :h (/ 2047 60) :elt 2412]
-                     ([BLOCK :x 1308 :y (/ 31673 20) :w 52 :h 18 :elt 2413]
-                      ([LINE]
-                       ([TEXT :x 1315 :y (/ 31713 20) :w 38 :h 14 :text "Arrives"])))
-                     ([BLOCK :x 1308 :y (/ 32033 20) :w 52 :h 0 :elt 2414])
-                     ([ANON]
-                      ([LINE]
-                       ([INLINE :elt 2415]
-                        ([TEXT :x 1308 :y 1603.7 :w 52 :h 12 :text "View order"])))))))))
-                ([TEXT :x 1681 :y 1645.9 :w 0 :h 15 :text " "])))
-              ([MAGIC :x 1704 :y 1543.5 :w 310 :h 114.4 :elt 2421]
-               ([BLOCK :x 1704 :y (/ 31741 20) :w 310 :h 27.3 :elt 2422]
-                ([LINE]
-                 ([INLINE :x 1704 :y (/ 31741 20) :w 176 :h 27.3 :elt 2423]
-                  ([LINE]
-                   ([INLINE :elt 2424]
-                    ([INLINE :elt 2425]
-                     ([TEXT :x 1708 :y 1589.2 :w 168 :h 23 :text "Delete this button"]))))))))))
-            ([BLOCK :x 1394 :y 1668.9 :w 310 :h 116.4 :elt 2438]
-             ([MAGIC :x 1394 :y 1669.9 :w 620 :h 114.4 :elt 2439]
-              ([MAGIC :x 1394 :y 1669.9 :w 310 :h 114.4 :elt 2440]
-               ([INLINE :elt 2441]
-                ([INLINE :x 1417 :y 1669.9 :w 264 :h 114.4 :elt 2442]
-                 ([BLOCK :x 1417 :y 1669.9 :w 264 :h 115.1 :elt 2443]
-                  ([BLOCK :x 1422 :y 1674.9 :w 254 :h 105.1 :elt 2444]
-                   ([LINE]
-                    ([INLINE :elt 2445]
-                     ([INLINE :elt 2446]
-                      ([MAGIC :x 1460.1 :y 1674.9 :w 101.6 :h 105.1 :elt 2447]
-                       ([MAGIC :x 1460.1 :y 1674.9 :w 101.6 :h 105.1 :elt 2448]
-                        ([INLINE :elt 2449]
-                         ([INLINE :elt 2450])
-                         ([INLINE :x 1460.1 :y (/ 34669 20) :w 0 :h 0 :elt 2451])
-                         ([INLINE :elt 2452])))))
-                     ([BLOCK :x 1422 :y (/ 105353 60) :w 166 :h (/ 1447 60) :elt 2453]
-                      ([LINE]
-                       ([TEXT :x 1462 :y (/ 26429 15) :w 106 :h 12 :text "Quattro Tit…(1-Pack)"]))))
-                    ([BLOCK :x 1574.4 :y 1674.9 :w 101.6 :h 105.1 :elt 2454]
-                     ([BLOCK :x (/ 4733 3) :y (/ 50483 30) :w (/ 268 3) :h (/ 268 3) :elt 2455]
-                      ([BLOCK :x (/ 4733 3) :y (/ 50483 30) :w (/ 268 3) :h (/ 268 3) :elt 2456]
-                       ([BLOCK :x (/ 4772 3) :y (/ 25649 15) :w (/ 190 3) :h 23 :elt 2457]
-                        ([LINE]
-                         ([INLINE :elt 2458]
-                          ([BLOCK :x (/ 9599 6) :y (/ 25319 15) :w 54 :h 46 :elt 2459]
-                           ([LINE]
-                            ([TEXT :x (/ 9629 6) :y (/ 25319 15) :w 44 :h 23 :text "USD "]))
-                           ([LINE]
-                            ([TEXT :x (/ 9599 6) :y (/ 25664 15) :w 54 :h 23 :text "18.25"])))
-                          ([INLINE :elt 2460]
-                           ([INLINE :elt 2461]
-                            ([TEXT :x (/ 9599 6) :y (/ 25679 15) :w 7 :h 14 :text "$"]))
-                           ([INLINE :elt 2462]
-                            ([TEXT :x (/ 9641 6) :y (/ 25649 15) :w 24 :h 23 :text "18"])
-                            ([BLOCK :x (/ 9785 6) :y (/ 25649 15) :w 6 :h 23 :elt 2463]
-                             ([LINE]
-                              ([TEXT :x (/ 9785 6) :y (/ 25649 15) :w 6 :h 23 :text "."]))))
-                           ([INLINE :elt 2464]
-                            ([TEXT :x (/ 9785 6) :y (/ 25679 15) :w 14 :h 14 :text "25"]))))))
-                       ([ANON]
-                        ([LINE]
-                         ([INLINE :elt 2465]
-                          ([TEXT :x (/ 4804 3) :y (/ 25994 15) :w 42 :h 12 :text "Buy now"]))))))))))
-                 ([MAGIC :x 1294 :y (/ 34001 20) :w 80 :h (/ 3247 60) :elt 2481]
-                  ([MAGIC :x 1294 :y (/ 34001 20) :w 80 :h (/ 3247 60) :elt 2482]
-                   ([MAGIC :x 1294 :y (/ 34001 20) :w 80 :h (/ 3247 60) :elt 2486]
-                    ([BLOCK :x 1308 :y (/ 34201 20) :w 52 :h (/ 2047 60) :elt 2487]
-                     ([BLOCK :x 1308 :y (/ 34201 20) :w 52 :h 18 :elt 2488]
-                      ([LINE]
-                       ([TEXT :x 1315 :y (/ 34241 20) :w 38 :h 14 :text "Arrives"])))
-                     ([BLOCK :x 1308 :y (/ 34561 20) :w 52 :h 0 :elt 2489])
-                     ([ANON]
-                      ([LINE]
-                       ([INLINE :elt 2490]
-                        ([TEXT :x 1308 :y 1730.1 :w 52 :h 12 :text "View order"])))))))))
-                ([TEXT :x 1681 :y 1772.3 :w 0 :h 15 :text " "])))
-              ([MAGIC :x 1704 :y 1669.9 :w 310 :h 114.4 :elt 2496]
-               ([BLOCK :x 1704 :y (/ 34269 20) :w 310 :h 27.3 :elt 2497]
-                ([LINE]
-                 ([INLINE :x 1704 :y (/ 34269 20) :w 176 :h 27.3 :elt 2498]
-                  ([LINE]
-                   ([INLINE :elt 2499]
-                    ([INLINE :elt 2500]
-                     ([TEXT :x 1708 :y 1715.6 :w 168 :h 23 :text "Delete this button"]))))))))))
-            ([BLOCK :x 1394 :y 1795.3 :w 310 :h 116.4 :elt 2513]
-             ([MAGIC :x 1394 :y 1796.3 :w 620 :h 114.4 :elt 2514]
-              ([MAGIC :x 1394 :y 1796.3 :w 310 :h 114.4 :elt 2515]
-               ([INLINE :elt 2516]
-                ([INLINE :x 1417 :y 1796.3 :w 264 :h 114.4 :elt 2517]
-                 ([BLOCK :x 1417 :y 1796.3 :w 264 :h 115.1 :elt 2518]
-                  ([BLOCK :x 1422 :y 1801.3 :w 254 :h 105.1 :elt 2519]
-                   ([LINE]
-                    ([INLINE :elt 2520]
-                     ([INLINE :elt 2521]
-                      ([MAGIC :x 1460.1 :y 1801.3 :w 101.6 :h 105.1 :elt 2522]
-                       ([MAGIC :x 1460.1 :y 1801.3 :w 101.6 :h 105.1 :elt 2523]
-                        ([INLINE :elt 2524]
-                         ([INLINE :elt 2525])
-                         ([INLINE :x 1460.1 :y (/ 37197 20) :w 0 :h 0 :elt 2526])
-                         ([INLINE :elt 2527]))))))
-                    ([BLOCK :x 1574.4 :y 1801.3 :w 101.6 :h 105.1 :elt 2529]
-                     ([BLOCK :x (/ 4733 3) :y (/ 10855 6) :w (/ 268 3) :h (/ 268 3) :elt 2530]
-                      ([BLOCK :x (/ 4733 3) :y (/ 10855 6) :w (/ 268 3) :h (/ 268 3) :elt 2531]
-                       ([BLOCK :x (/ 4772 3) :y (/ 5509 3) :w (/ 190 3) :h 23 :elt 2532]
-                        ([LINE]
-                         ([INLINE :elt 2533]
-                          ([BLOCK :x (/ 9599 6) :y (/ 5443 3) :w 54 :h 46 :elt 2534]
-                           ([LINE]
-                            ([TEXT :x (/ 9629 6) :y (/ 5443 3) :w 44 :h 23 :text "USD "]))
-                           ([LINE]
-                            ([TEXT :x (/ 9599 6) :y (/ 5512 3) :w 54 :h 23 :text "12.29"])))
-                          ([INLINE :elt 2535]
-                           ([INLINE :elt 2536]
-                            ([TEXT :x (/ 9599 6) :y (/ 5515 3) :w 7 :h 14 :text "$"]))
-                           ([INLINE :elt 2537]
-                            ([TEXT :x (/ 9641 6) :y (/ 5509 3) :w 24 :h 23 :text "12"])
-                            ([BLOCK :x (/ 9785 6) :y (/ 5509 3) :w 6 :h 23 :elt 2538]
-                             ([LINE]
-                              ([TEXT :x (/ 9785 6) :y (/ 5509 3) :w 6 :h 23 :text "."]))))
-                           ([INLINE :elt 2539]
-                            ([TEXT :x (/ 9785 6) :y (/ 5515 3) :w 14 :h 14 :text "29"]))))))
-                       ([ANON]
-                        ([LINE]
-                         ([INLINE :elt 2540]
-                          ([TEXT :x (/ 4804 3) :y (/ 5578 3) :w 42 :h 12 :text "Buy now"]))))))))))
-                 ([MAGIC :x 1294 :y (/ 36529 20) :w 80 :h (/ 3247 60) :elt 2556]
-                  ([MAGIC :x 1294 :y (/ 36529 20) :w 80 :h (/ 3247 60) :elt 2557]
-                   ([MAGIC :x 1294 :y (/ 36529 20) :w 80 :h (/ 3247 60) :elt 2561]
-                    ([BLOCK :x 1308 :y (/ 36729 20) :w 52 :h (/ 2047 60) :elt 2562]
-                     ([BLOCK :x 1308 :y (/ 36729 20) :w 52 :h 18 :elt 2563]
-                      ([LINE]
-                       ([TEXT :x 1315 :y (/ 36769 20) :w 38 :h 14 :text "Arrives"])))
-                     ([BLOCK :x 1308 :y (/ 37089 20) :w 52 :h 0 :elt 2564])
-                     ([ANON]
-                      ([LINE]
-                       ([INLINE :elt 2565]
-                        ([TEXT :x 1308 :y 1856.5 :w 52 :h 12 :text "View order"])))))))))
-                ([TEXT :x 1681 :y 1898.7 :w 0 :h 15 :text " "])))
-              ([MAGIC :x 1704 :y 1796.3 :w 310 :h 114.4 :elt 2571]
-               ([BLOCK :x 1704 :y (/ 36797 20) :w 310 :h 27.3 :elt 2572]
-                ([LINE]
-                 ([INLINE :x 1704 :y (/ 36797 20) :w 176 :h 27.3 :elt 2573]
-                  ([LINE]
-                   ([INLINE :elt 2574]
-                    ([INLINE :elt 2575]
-                     ([TEXT :x 1708 :y 1842 :w 168 :h 23 :text "Delete this button"]))))))))))
-            ([ANON]
-             ([LINE]
-              ([INLINE :elt 2588]
-               ([TEXT :x 1473 :y 1923.7 :w 152 :h 15 :text " See all your Dash Buttons "])))))))
-         ([BLOCK :x 1417 :y 1962.7 :w 264 :h 1 :elt 2594])
-         ([BLOCK :x 1417 :y 1978.7 :w 264 :h 350 :elt 2595]
-          ([BLOCK :x 1417 :y 1978.7 :w 264 :h 350 :elt 2596]
-           ([BLOCK :x 1417 :y 1978.7 :w 264 :h 350 :elt 2598]
-            ([BLOCK :x 889 :y 1978.7 :w 1320 :h 350 :elt 2599]
-             ([LINE]
-              ([INLINE :x 1417 :y 1978.7 :w 264 :h 350 :elt 2600]
-               ([ANON]
-                ([LINE]
-                 ([INLINE :x 1417 :y 1978.7 :w 264 :h 350 :elt 2601]
-                  ([LINE]
-                   ([INLINE :x 1417 :y 1978.7 :w 264 :h 350 :elt 2602])))))
-               ([BLOCK :x 1417 :y 2328.7 :w 264 :h 0 :elt 2603])))))))
-         ([BLOCK :x 1417 :y 2343.7 :w 264 :h 1 :elt 2605]))))
-      ([BLOCK :x 204 :y (/ 75911 30) :w 1500 :h 1741.5 :elt 2637]
-       ([BLOCK :x 204 :y (/ 75911 30) :w 1500 :h 1741.5 :elt 2638]
-        ([BLOCK :x 204 :y (/ 75911 30) :w 1190 :h 0 :elt 2639]
-         ([BLOCK :x 204 :y (/ 75911 30) :w 1190 :h 1741.5 :elt 2640]
-          ([BLOCK :x 204 :y (/ 75911 30) :w 1190 :h 1741.5 :elt 2641]
-           ([BLOCK :x 224 :y (/ 76061 30) :w 1150 :h 329 :elt 2642]
-            ([BLOCK :x 236 :y (/ 76241 30) :w 1126 :h 305 :elt 2643]
-             ([BLOCK :x 244 :y (/ 76241 30) :w 1110 :h 305 :elt 2645]
-              ([ANON]
-               ([LINE]
-                ([INLINE :x 244 :y (/ 76241 30) :w 1110 :h 286 :elt 2646])))
-              ([BLOCK :x 244 :y (/ 84851 30) :w 1110 :h 20 :elt 2647]
-               ([BLOCK :x 1276 :y (/ 84911 30) :w 78 :h 14 :elt 2648]
-                ([LINE]
-                 ([INLINE :elt 2649]
-                  ([TEXT :x 1276 :y (/ 84911 30) :w 64 :h 12 :text " Ad feedback "])
-                  ([INLINE :x 1340 :y (/ 84941 30) :w 14 :h 12 :elt 2650]))))))))
-           ([BLOCK :x 224 :y (/ 85931 30) :w 1150 :h 1 :elt 2653])
-           ([BLOCK :x 224 :y (/ 86561 30) :w 1150 :h 239 :elt 2655]
-            ([BLOCK :x 224 :y (/ 86921 30) :w 1150 :h 200 :elt 2656]
-             ([BLOCK :x 224 :y (/ 86921 30) :w 562.9 :h 200 :elt 2657]
-              ([LINE]
-               ([INLINE :x 224 :y (/ 86921 30) :w 562.9 :h 200 :elt 2658]
-                ([BLOCK :x 234 :y (/ 86921 30) :w 542.9 :h 200 :elt 2659]
-                 ([BLOCK :x (/ 5709 20) :y (/ 86921 30) :w 440 :h 200 :elt 2661]
-                  ([LINE]
-                   ([INLINE :x (/ 5709 20) :y (/ 86921 30) :w 440 :h 200 :elt 2662])))))))
-             ([BLOCK :x 811.1 :y (/ 86921 30) :w 562.9 :h 200 :elt 2664]
-              ([LINE]
-               ([INLINE :x 811.1 :y (/ 86921 30) :w 562.9 :h 200 :elt 2665]
-                ([BLOCK :x 821.1 :y (/ 86921 30) :w 542.9 :h 200 :elt 2666]
-                 ([BLOCK :x 821.1 :y (/ 86921 30) :w 542.9 :h 200 :elt 2668]
-                  ([BLOCK :x -264.7 :y (/ 86921 30) :w 2714.5 :h 200 :elt 2669]
-                   ([LINE]
-                    ([INLINE :x (/ 17451 20) :y (/ 86921 30) :w 440 :h 200 :elt 2670]
-                     ([BLOCK :x (/ 17451 20) :y (/ 86921 30) :w 440 :h 200 :elt 2671]
-                      ([LINE]
-                       ([INLINE :x (/ 17451 20) :y (/ 86921 30) :w 440 :h 200 :elt 2672])))
-                     ([BLOCK :x (/ 17451 20) :y (/ 92921 30) :w 440 :h 0 :elt 2673])))))))))))
-           ([BLOCK :x 224 :y (/ 93731 30) :w 1150 :h 1 :elt 2675])
-           ([BLOCK :x 224 :y (/ 94361 30) :w 1150 :h 286.5 :elt 2676]
-            ([BLOCK :x 224 :y (/ 94361 30) :w 1150 :h 286.5 :elt 2677]
-             ([BLOCK :x 244 :y (/ 94961 30) :w 1110 :h 31.5 :elt 2678]
-              ([BLOCK :x 244 :y (/ 94961 30) :w 418 :h 31.5 :elt 2679]
-               ([LINE]
-                ([INLINE :elt 2680]
-                 ([TEXT :x 244 :y (/ 190177 60) :w 418 :h 23 :text "Recommended for you in Kindle Magazines"]))))
-              ([BLOCK :x 662 :y (/ 94961 30) :w 15 :h 0 :elt 2681]))
-             ([BLOCK :x 244 :y (/ 47953 15) :w 1110 :h 220 :elt 2682]
-              ([BLOCK :x 244 :y (/ 47953 15) :w 1110 :h 220 :elt 2683]
-               ([LINE]
-                ([INLINE :x 244 :y (/ 47953 15) :w 3089 :h 200 :elt 2684]
-                 ([LINE]
-                  ([INLINE :x 244 :y (/ 47953 15) :w 147 :h 200 :elt 2685]
-                   ([LINE]
-                    ([INLINE :x 244 :y (/ 47953 15) :w 147 :h 200 :elt 2686]
-                     ([LINE]
-                      ([INLINE :x 244 :y (/ 47953 15) :w 147 :h 200 :elt 2687]
-                       ([LINE]
-                        ([INLINE :x 244 :y (/ 47953 15) :w 147 :h 200 :elt 2688])))))))
-                  ([TEXT :x 401 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 405 :y (/ 47953 15) :w 146 :h 200 :elt 2689]
-                   ([LINE]
-                    ([INLINE :x 405 :y (/ 47953 15) :w 146 :h 200 :elt 2690]
-                     ([LINE]
-                      ([INLINE :x 405 :y (/ 47953 15) :w 146 :h 200 :elt 2691]
-                       ([LINE]
-                        ([INLINE :x 405 :y (/ 47953 15) :w 146 :h 200 :elt 2692])))))))
-                  ([TEXT :x 561 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 565 :y (/ 47953 15) :w 148 :h 200 :elt 2693]
-                   ([LINE]
-                    ([INLINE :x 565 :y (/ 47953 15) :w 148 :h 200 :elt 2694]
-                     ([LINE]
-                      ([INLINE :x 565 :y (/ 47953 15) :w 148 :h 200 :elt 2695]
-                       ([LINE]
-                        ([INLINE :x 565 :y (/ 47953 15) :w 148 :h 200 :elt 2696])))))))
-                  ([TEXT :x 723 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 727 :y (/ 47953 15) :w 147 :h 200 :elt 2697]
-                   ([LINE]
-                    ([INLINE :x 727 :y (/ 47953 15) :w 147 :h 200 :elt 2698]
-                     ([LINE]
-                      ([INLINE :x 727 :y (/ 47953 15) :w 147 :h 200 :elt 2699]
-                       ([LINE]
-                        ([INLINE :x 727 :y (/ 47953 15) :w 147 :h 200 :elt 2700])))))))
-                  ([TEXT :x 884 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 888 :y (/ 47953 15) :w 150 :h 200 :elt 2701]
-                   ([LINE]
-                    ([INLINE :x 888 :y (/ 47953 15) :w 150 :h 200 :elt 2702]
-                     ([LINE]
-                      ([INLINE :x 888 :y (/ 47953 15) :w 150 :h 200 :elt 2703]
-                       ([LINE]
-                        ([INLINE :x 888 :y (/ 47953 15) :w 150 :h 200 :elt 2704])))))))
-                  ([TEXT :x 1048 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1052 :y (/ 47953 15) :w 150 :h 200 :elt 2705]
-                   ([LINE]
-                    ([INLINE :x 1052 :y (/ 47953 15) :w 150 :h 200 :elt 2706]
-                     ([LINE]
-                      ([INLINE :x 1052 :y (/ 47953 15) :w 150 :h 200 :elt 2707]
-                       ([LINE]
-                        ([INLINE :x 1052 :y (/ 47953 15) :w 150 :h 200 :elt 2708])))))))
-                  ([TEXT :x 1212 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1216 :y (/ 47953 15) :w 150 :h 200 :elt 2709]
-                   ([LINE]
-                    ([INLINE :x 1216 :y (/ 47953 15) :w 150 :h 200 :elt 2710]
-                     ([LINE]
-                      ([INLINE :x 1216 :y (/ 47953 15) :w 150 :h 200 :elt 2711]
-                       ([LINE]
-                        ([INLINE :x 1216 :y (/ 47953 15) :w 150 :h 200 :elt 2712])))))))
-                  ([TEXT :x 1376 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1380 :y (/ 47953 15) :w 147 :h 200 :elt 2713]
-                   ([LINE]
-                    ([INLINE :x 1380 :y (/ 47953 15) :w 147 :h 200 :elt 2714]
-                     ([LINE]
-                      ([INLINE :x 1380 :y (/ 47953 15) :w 147 :h 200 :elt 2715]
-                       ([LINE]
-                        ([INLINE :x 1380 :y (/ 47953 15) :w 147 :h 200 :elt 2716])))))))
-                  ([TEXT :x 1537 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1541 :y (/ 47953 15) :w 168 :h 200 :elt 2717]
-                   ([LINE]
-                    ([INLINE :x 1541 :y (/ 47953 15) :w 168 :h 200 :elt 2718]
-                     ([LINE]
-                      ([INLINE :x 1541 :y (/ 47953 15) :w 168 :h 200 :elt 2719]
-                       ([LINE]
-                        ([INLINE :x 1541 :y (/ 47953 15) :w 168 :h 200 :elt 2720])))))))
-                  ([TEXT :x 1719 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1723 :y (/ 47953 15) :w 152 :h 200 :elt 2721]
-                   ([LINE]
-                    ([INLINE :x 1723 :y (/ 47953 15) :w 152 :h 200 :elt 2722]
-                     ([LINE]
-                      ([INLINE :x 1723 :y (/ 47953 15) :w 152 :h 200 :elt 2723]
-                       ([LINE]
-                        ([INLINE :x 1723 :y (/ 47953 15) :w 152 :h 200 :elt 2724])))))))
-                  ([TEXT :x 1885 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1889 :y (/ 47953 15) :w 146 :h 200 :elt 2725]
-                   ([LINE]
-                    ([INLINE :x 1889 :y (/ 47953 15) :w 146 :h 200 :elt 2726]
-                     ([LINE]
-                      ([INLINE :x 1889 :y (/ 47953 15) :w 146 :h 200 :elt 2727]
-                       ([LINE]
-                        ([INLINE :x 1889 :y (/ 47953 15) :w 146 :h 200 :elt 2728])))))))
-                  ([TEXT :x 2045 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2049 :y (/ 47953 15) :w 147 :h 200 :elt 2729]
-                   ([LINE]
-                    ([INLINE :x 2049 :y (/ 47953 15) :w 147 :h 200 :elt 2730]
-                     ([LINE]
-                      ([INLINE :x 2049 :y (/ 47953 15) :w 147 :h 200 :elt 2731]
-                       ([LINE]
-                        ([INLINE :x 2049 :y (/ 47953 15) :w 147 :h 200 :elt 2732])))))))
-                  ([TEXT :x 2206 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2210 :y (/ 47953 15) :w 152 :h 200 :elt 2733]
-                   ([LINE]
-                    ([INLINE :x 2210 :y (/ 47953 15) :w 152 :h 200 :elt 2734]
-                     ([LINE]
-                      ([INLINE :x 2210 :y (/ 47953 15) :w 152 :h 200 :elt 2735]
-                       ([LINE]
-                        ([INLINE :x 2210 :y (/ 47953 15) :w 152 :h 200 :elt 2736])))))))
-                  ([TEXT :x 2372 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2376 :y (/ 47953 15) :w 145 :h 200 :elt 2737]
-                   ([LINE]
-                    ([INLINE :x 2376 :y (/ 47953 15) :w 145 :h 200 :elt 2738]
-                     ([LINE]
-                      ([INLINE :x 2377 :y (/ 47953 15) :w 143 :h 200 :elt 2739]
-                       ([LINE]
-                        ([INLINE :x 2377 :y (/ 47953 15) :w 143 :h 200 :elt 2740])))))))
-                  ([TEXT :x 2531 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2535 :y (/ 47953 15) :w 148 :h 200 :elt 2741]
-                   ([LINE]
-                    ([INLINE :x 2535 :y (/ 47953 15) :w 148 :h 200 :elt 2742]
-                     ([LINE]
-                      ([INLINE :x 2535 :y (/ 47953 15) :w 148 :h 200 :elt 2743]
-                       ([LINE]
-                        ([INLINE :x 2535 :y (/ 47953 15) :w 148 :h 200 :elt 2744])))))))
-                  ([TEXT :x 2693 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2697 :y (/ 47953 15) :w 147 :h 200 :elt 2745]
-                   ([LINE]
-                    ([INLINE :x 2697 :y (/ 47953 15) :w 147 :h 200 :elt 2746]
-                     ([LINE]
-                      ([INLINE :x 2697 :y (/ 47953 15) :w 147 :h 200 :elt 2747]
-                       ([LINE]
-                        ([INLINE :x 2697 :y (/ 47953 15) :w 147 :h 200 :elt 2748])))))))
-                  ([TEXT :x 2854 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2858 :y (/ 47953 15) :w 149 :h 200 :elt 2749]
-                   ([LINE]
-                    ([INLINE :x 2858 :y (/ 47953 15) :w 149 :h 200 :elt 2750]
-                     ([LINE]
-                      ([INLINE :x 2858 :y (/ 47953 15) :w 149 :h 200 :elt 2751]
-                       ([LINE]
-                        ([INLINE :x 2858 :y (/ 47953 15) :w 149 :h 200 :elt 2752])))))))
-                  ([TEXT :x 3017 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 3021 :y (/ 47953 15) :w 153 :h 200 :elt 2753]
-                   ([LINE]
-                    ([INLINE :x 3021 :y (/ 47953 15) :w 153 :h 200 :elt 2754]
-                     ([LINE]
-                      ([INLINE :x 3021 :y (/ 47953 15) :w 153 :h 200 :elt 2755]
-                       ([LINE]
-                        ([INLINE :x 3021 :y (/ 47953 15) :w 153 :h 200 :elt 2756])))))))
-                  ([TEXT :x 3184 :y (/ 47983 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 3188 :y (/ 47953 15) :w 145 :h 200 :elt 2757]
-                   ([LINE]
-                    ([INLINE :x 3188 :y (/ 47953 15) :w 145 :h 200 :elt 2758]
-                     ([LINE]
-                      ([INLINE :x 3190.5 :y (/ 47953 15) :w 140 :h 200 :elt 2759]
-                       ([LINE]
-                        ([INLINE :x 3190.5 :y (/ 47953 15) :w 140 :h 200 :elt 2760])))))))))
-                ([TEXT :x 3333 :y (/ 47983 15) :w 0 :h 15 :text " "])))
-              ([BLOCK :x 244 :y (/ 51163 15) :w 1110 :h 6 :elt 2767]
-               ([BLOCK :x 244 :y (/ 51193 15) :w 1110 :h 1 :elt 2768])))))
-           ([BLOCK :x 224 :y (/ 51478 15) :w 1150 :h 290 :elt 2774]
-            ([BLOCK :x 224 :y (/ 51478 15) :w 1150 :h 290 :elt 2775]
-             ([BLOCK :x 244 :y (/ 51778 15) :w 1110 :h 35 :elt 2776]
-              ([BLOCK :x 244 :y (/ 51778 15) :w 297 :h 31.5 :elt 2777]
-               ([LINE]
-                ([INLINE :elt 2778]
-                 ([TEXT :x 244 :y (/ 207367 60) :w 297 :h 23 :text "Related to items you've viewed"]))))
-              ([BLOCK :x 541 :y (/ 51778 15) :w 77 :h 35 :elt 2779]
-               ([LINE]
-                ([INLINE :elt 2780]
-                 ([TEXT :x 556 :y (/ 103841 30) :w 62 :h 16 :text "See more"])))))
-             ([BLOCK :x 244 :y (/ 52303 15) :w 1110 :h 220 :elt 2781]
-              ([BLOCK :x 244 :y (/ 52303 15) :w 1110 :h 220 :elt 2782]
-               ([LINE]
-                ([INLINE :x 244 :y (/ 52303 15) :w 2757 :h 200 :elt 2783]
-                 ([LINE]
-                  ([INLINE :x 244 :y (/ 52303 15) :w 145 :h 200 :elt 2784]
-                   ([LINE]
-                    ([INLINE :x 244 :y (/ 52303 15) :w 145 :h 200 :elt 2785]
-                     ([LINE]
-                      ([INLINE :x 252.5 :y (/ 52303 15) :w 128 :h 200 :elt 2786]
-                       ([LINE]
-                        ([INLINE :x 252.5 :y (/ 52303 15) :w 128 :h 200 :elt 2787])))))))
-                  ([TEXT :x 399 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 403 :y (/ 52303 15) :w 145 :h 200 :elt 2788]
-                   ([LINE]
-                    ([INLINE :x 403 :y (/ 52303 15) :w 145 :h 200 :elt 2789]
-                     ([LINE]
-                      ([INLINE :x 410.5 :y (/ 52303 15) :w 130 :h 200 :elt 2790]
-                       ([LINE]
-                        ([INLINE :x 410.5 :y (/ 52303 15) :w 130 :h 200 :elt 2791])))))))
-                  ([TEXT :x 558 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 562 :y (/ 52303 15) :w 145 :h 200 :elt 2792]
-                   ([LINE]
-                    ([INLINE :x 562 :y (/ 52303 15) :w 145 :h 200 :elt 2793]
-                     ([LINE]
-                      ([INLINE :x 566 :y (/ 52303 15) :w 137 :h 200 :elt 2794]
-                       ([LINE]
-                        ([INLINE :x 566 :y (/ 52303 15) :w 137 :h 200 :elt 2795])))))))
-                  ([TEXT :x 717 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 721 :y (/ 52303 15) :w 145 :h 200 :elt 2796]
-                   ([LINE]
-                    ([INLINE :x 721 :y (/ 52303 15) :w 145 :h 200 :elt 2797]
-                     ([LINE]
-                      ([INLINE :x 727 :y (/ 52303 15) :w 133 :h 200 :elt 2798]
-                       ([LINE]
-                        ([INLINE :x 727 :y (/ 52303 15) :w 133 :h 200 :elt 2799])))))))
-                  ([TEXT :x 876 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 880 :y (/ 52303 15) :w 155 :h 200 :elt 2800]
-                   ([LINE]
-                    ([INLINE :x 880 :y (/ 52303 15) :w 155 :h 200 :elt 2801]
-                     ([LINE]
-                      ([INLINE :x 880 :y (/ 52303 15) :w 155 :h 200 :elt 2802]
-                       ([LINE]
-                        ([INLINE :x 880 :y (/ 52303 15) :w 155 :h 200 :elt 2803])))))))
-                  ([TEXT :x 1045 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1049 :y (/ 52303 15) :w 145 :h 200 :elt 2804]
-                   ([LINE]
-                    ([INLINE :x 1049 :y (/ 52303 15) :w 145 :h 200 :elt 2805]
-                     ([LINE]
-                      ([INLINE :x 1054.5 :y (/ 52303 15) :w 134 :h 200 :elt 2806]
-                       ([LINE]
-                        ([INLINE :x 1054.5 :y (/ 52303 15) :w 134 :h 200 :elt 2807])))))))
-                  ([TEXT :x 1204 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1208 :y (/ 52303 15) :w 145 :h 200 :elt 2808]
-                   ([LINE]
-                    ([INLINE :x 1208 :y (/ 52303 15) :w 145 :h 200 :elt 2809]
-                     ([LINE]
-                      ([INLINE :x 1214 :y (/ 52303 15) :w 133 :h 200 :elt 2810]
-                       ([LINE]
-                        ([INLINE :x 1214 :y (/ 52303 15) :w 133 :h 200 :elt 2811])))))))
-                  ([TEXT :x 1363 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1367 :y (/ 52303 15) :w 258 :h 200 :elt 2812]
-                   ([LINE]
-                    ([INLINE :x 1367 :y (/ 52303 15) :w 258 :h 200 :elt 2813]
-                     ([LINE]
-                      ([INLINE :x 1367 :y (/ 52303 15) :w 258 :h 200 :elt 2814]
-                       ([LINE]
-                        ([INLINE :x 1367 :y (/ 52303 15) :w 258 :h 200 :elt 2815])))))))
-                  ([TEXT :x 1635 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1639 :y (/ 52303 15) :w 145 :h 200 :elt 2816]
-                   ([LINE]
-                    ([INLINE :x 1639 :y (/ 52303 15) :w 145 :h 200 :elt 2817]
-                     ([LINE]
-                      ([INLINE :x 1646 :y (/ 52303 15) :w 131 :h 200 :elt 2818]
-                       ([LINE]
-                        ([INLINE :x 1646 :y (/ 52303 15) :w 131 :h 200 :elt 2819])))))))
-                  ([TEXT :x 1794 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1798 :y (/ 52303 15) :w 150 :h 200 :elt 2820]
-                   ([LINE]
-                    ([INLINE :x 1798 :y (/ 52303 15) :w 150 :h 200 :elt 2821]
-                     ([LINE]
-                      ([INLINE :x 1798 :y (/ 52303 15) :w 150 :h 200 :elt 2822]
-                       ([LINE]
-                        ([INLINE :x 1798 :y (/ 52303 15) :w 150 :h 200 :elt 2823])))))))
-                  ([TEXT :x 1958 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1962 :y (/ 52303 15) :w 145 :h 200 :elt 2824]
-                   ([LINE]
-                    ([INLINE :x 1962 :y (/ 52303 15) :w 145 :h 200 :elt 2825]
-                     ([LINE]
-                      ([INLINE :x 1969 :y (/ 52303 15) :w 131 :h 200 :elt 2826]
-                       ([LINE]
-                        ([INLINE :x 1969 :y (/ 52303 15) :w 131 :h 200 :elt 2827])))))))
-                  ([TEXT :x 2117 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2121 :y (/ 52303 15) :w 235 :h 200 :elt 2828]
-                   ([LINE]
-                    ([INLINE :x 2121 :y (/ 52303 15) :w 235 :h 200 :elt 2829]
-                     ([LINE]
-                      ([INLINE :x 2121 :y (/ 52303 15) :w 235 :h 200 :elt 2830]
-                       ([LINE]
-                        ([INLINE :x 2121 :y (/ 52303 15) :w 235 :h 200 :elt 2831])))))))
-                  ([TEXT :x 2366 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2370 :y (/ 52303 15) :w 154 :h 200 :elt 2832]
-                   ([LINE]
-                    ([INLINE :x 2370 :y (/ 52303 15) :w 154 :h 200 :elt 2833]
-                     ([LINE]
-                      ([INLINE :x 2370 :y (/ 52303 15) :w 154 :h 200 :elt 2834]
-                       ([LINE]
-                        ([INLINE :x 2370 :y (/ 52303 15) :w 154 :h 200 :elt 2835])))))))
-                  ([TEXT :x 2534 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2538 :y (/ 52303 15) :w 145 :h 200 :elt 2836]
-                   ([LINE]
-                    ([INLINE :x 2538 :y (/ 52303 15) :w 145 :h 200 :elt 2837]
-                     ([LINE]
-                      ([INLINE :x 2544 :y (/ 52303 15) :w 133 :h 200 :elt 2838]
-                       ([LINE]
-                        ([INLINE :x 2544 :y (/ 52303 15) :w 133 :h 200 :elt 2839])))))))
-                  ([TEXT :x 2693 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2697 :y (/ 52303 15) :w 145 :h 200 :elt 2840]
-                   ([LINE]
-                    ([INLINE :x 2697 :y (/ 52303 15) :w 145 :h 200 :elt 2841]
-                     ([LINE]
-                      ([INLINE :x 2703.5 :y (/ 52303 15) :w 132 :h 200 :elt 2842]
-                       ([LINE]
-                        ([INLINE :x 2703.5 :y (/ 52303 15) :w 132 :h 200 :elt 2843])))))))
-                  ([TEXT :x 2852 :y (/ 52333 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2856 :y (/ 52303 15) :w 145 :h 200 :elt 2844]
-                   ([LINE]
-                    ([INLINE :x 2856 :y (/ 52303 15) :w 145 :h 200 :elt 2845]
-                     ([LINE]
-                      ([INLINE :x 2859.5 :y (/ 52303 15) :w 138 :h 200 :elt 2846]
-                       ([LINE]
-                        ([INLINE :x 2859.5 :y (/ 52303 15) :w 138 :h 200 :elt 2847])))))))))
-                ([TEXT :x 3001 :y (/ 52333 15) :w 0 :h 15 :text " "])))
-              ([BLOCK :x 244 :y (/ 55513 15) :w 1110 :h 6 :elt 2854]
-               ([BLOCK :x 244 :y (/ 55543 15) :w 1110 :h 1 :elt 2855])))))
-           ([BLOCK :x 224 :y (/ 55828 15) :w 1150 :h 239 :elt 2862]
-            ([BLOCK :x 224 :y (/ 56008 15) :w 1150 :h 200 :elt 2863]
-             ([BLOCK :x 224 :y (/ 56008 15) :w 562.9 :h 200 :elt 2864]
-              ([LINE]
-               ([INLINE :x 224 :y (/ 56008 15) :w 562.9 :h 200 :elt 2865]
-                ([BLOCK :x 234 :y (/ 56008 15) :w 542.9 :h 200 :elt 2866]
-                 ([BLOCK :x (/ 5709 20) :y (/ 56008 15) :w 440 :h 200 :elt 2868]
-                  ([LINE]
-                   ([INLINE :x (/ 5709 20) :y (/ 56008 15) :w 440 :h 200 :elt 2869])))))))
-             ([BLOCK :x 811.1 :y (/ 56008 15) :w 562.9 :h 200 :elt 2871]
-              ([LINE]
-               ([INLINE :x 811.1 :y (/ 56008 15) :w 562.9 :h 200 :elt 2872]
-                ([BLOCK :x 821.1 :y (/ 56008 15) :w 542.9 :h 200 :elt 2873]
-                 ([BLOCK :x (/ 17451 20) :y (/ 56008 15) :w 440 :h 200 :elt 2875]
-                  ([LINE]
-                   ([INLINE :x (/ 17451 20) :y (/ 56008 15) :w 440 :h 200 :elt 2876])))))))))
-           ([BLOCK :x 224 :y (/ 59413 15) :w 1150 :h 1 :elt 2878])
-           ([BLOCK :x 224 :y (/ 59728 15) :w 1150 :h 290 :elt 2879]
-            ([BLOCK :x 224 :y (/ 59728 15) :w 1150 :h 290 :elt 2880]
-             ([BLOCK :x 244 :y (/ 60028 15) :w 1110 :h 35 :elt 2881]
-              ([BLOCK :x 244 :y (/ 60028 15) :w 256 :h 31.5 :elt 2882]
-               ([LINE]
-                ([INLINE :elt 2883]
-                 ([TEXT :x 244 :y (/ 240367 60) :w 256 :h 23 :text "Toys & Games best sellers "]))))
-              ([BLOCK :x 500 :y (/ 60028 15) :w 77 :h 35 :elt 2884]
-               ([LINE]
-                ([INLINE :elt 2885]
-                 ([TEXT :x 515 :y (/ 120341 30) :w 62 :h 16 :text "See more"])))))
-             ([BLOCK :x 244 :y (/ 60553 15) :w 1110 :h 220 :elt 2886]
-              ([BLOCK :x 244 :y (/ 60553 15) :w 1110 :h 220 :elt 2887]
-               ([LINE]
-                ([INLINE :x 244 :y (/ 60553 15) :w 4557 :h 200 :elt 2888]
-                 ([LINE]
-                  ([INLINE :x 244 :y (/ 60553 15) :w 192 :h 200 :elt 2889]
-                   ([LINE]
-                    ([INLINE :x 244 :y (/ 60553 15) :w 192 :h 200 :elt 2890]
-                     ([LINE]
-                      ([INLINE :x 244 :y (/ 60553 15) :w 192 :h 200 :elt 2891]
-                       ([LINE]
-                        ([INLINE :x 244 :y (/ 60553 15) :w 192 :h 200 :elt 2892])))))))
-                  ([TEXT :x 446 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 450 :y (/ 60553 15) :w 270 :h 200 :elt 2893]
-                   ([LINE]
-                    ([INLINE :x 450 :y (/ 60632 15) :w 270 :h (/ 2842 15) :elt 2894]
-                     ([LINE]
-                      ([INLINE :x 450 :y (/ 60632 15) :w 270 :h (/ 2842 15) :elt 2895]
-                       ([LINE]
-                        ([INLINE :x 450 :y (/ 60632 15) :w 270 :h (/ 2842 15) :elt 2896])))))))
-                  ([TEXT :x 730 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 734 :y (/ 60553 15) :w 270 :h 200 :elt 2897]
-                   ([LINE]
-                    ([INLINE :x 734 :y (/ 48533 12) :w 270 :h (/ 2219 12) :elt 2898]
-                     ([LINE]
-                      ([INLINE :x 734 :y (/ 48533 12) :w 270 :h (/ 2219 12) :elt 2899]
-                       ([LINE]
-                        ([INLINE :x 734 :y (/ 48533 12) :w 270 :h (/ 2219 12) :elt 2900])))))))
-                  ([TEXT :x 1014 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1018 :y (/ 60553 15) :w 270 :h 200 :elt 2901]
-                   ([LINE]
-                    ([INLINE :x 1018 :y (/ 12185 3) :w 270 :h (/ 1805 12) :elt 2902]
-                     ([LINE]
-                      ([INLINE :x 1018 :y (/ 12185 3) :w 270 :h (/ 1805 12) :elt 2903]
-                       ([LINE]
-                        ([INLINE :x 1018 :y (/ 12185 3) :w 270 :h (/ 1805 12) :elt 2904])))))))
-                  ([TEXT :x 1298 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1302 :y (/ 60553 15) :w 203 :h 200 :elt 2905]
-                   ([LINE]
-                    ([INLINE :x 1302 :y (/ 60553 15) :w 203 :h 200 :elt 2906]
-                     ([LINE]
-                      ([INLINE :x 1302 :y (/ 60553 15) :w 203 :h 200 :elt 2907]
-                       ([LINE]
-                        ([INLINE :x 1302 :y (/ 60553 15) :w 203 :h 200 :elt 2908])))))))
-                  ([TEXT :x 1515 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1519 :y (/ 60553 15) :w 247 :h 200 :elt 2909]
-                   ([LINE]
-                    ([INLINE :x 1519 :y (/ 60553 15) :w 247 :h 200 :elt 2910]
-                     ([LINE]
-                      ([INLINE :x 1519 :y (/ 60553 15) :w 247 :h 200 :elt 2911]
-                       ([LINE]
-                        ([INLINE :x 1519 :y (/ 60553 15) :w 247 :h 200 :elt 2912])))))))
-                  ([TEXT :x 1776 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1780 :y (/ 60553 15) :w 185 :h 200 :elt 2913]
-                   ([LINE]
-                    ([INLINE :x 1780 :y (/ 60553 15) :w 185 :h 200 :elt 2914]
-                     ([LINE]
-                      ([INLINE :x 1780 :y (/ 60553 15) :w 185 :h 200 :elt 2915]
-                       ([LINE]
-                        ([INLINE :x 1780 :y (/ 60553 15) :w 185 :h 200 :elt 2916])))))))
-                  ([TEXT :x 1975 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 1979 :y (/ 60553 15) :w 265 :h 200 :elt 2917]
-                   ([LINE]
-                    ([INLINE :x 1979 :y (/ 60553 15) :w 265 :h 200 :elt 2918]
-                     ([LINE]
-                      ([INLINE :x 1979 :y (/ 60553 15) :w 265 :h 200 :elt 2919]
-                       ([LINE]
-                        ([INLINE :x 1979 :y (/ 60553 15) :w 265 :h 200 :elt 2920])))))))
-                  ([TEXT :x 2254 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2258 :y (/ 60553 15) :w 145 :h 200 :elt 2921]
-                   ([LINE]
-                    ([INLINE :x 2258 :y (/ 60553 15) :w 145 :h 200 :elt 2922]
-                     ([LINE]
-                      ([INLINE :x 2287.5 :y (/ 60553 15) :w 86 :h 200 :elt 2923]
-                       ([LINE]
-                        ([INLINE :x 2287.5 :y (/ 60553 15) :w 86 :h 200 :elt 2924])))))))
-                  ([TEXT :x 2413 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2417 :y (/ 60553 15) :w 270 :h 200 :elt 2925]
-                   ([LINE]
-                    ([INLINE :x 2417 :y (/ 122071 30) :w 270 :h (/ 407 3) :elt 2926]
-                     ([LINE]
-                      ([INLINE :x 2417 :y (/ 122071 30) :w 270 :h (/ 407 3) :elt 2927]
-                       ([LINE]
-                        ([INLINE :x 2417 :y (/ 122071 30) :w 270 :h (/ 407 3) :elt 2928])))))))
-                  ([TEXT :x 2697 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2701 :y (/ 60553 15) :w 189 :h 200 :elt 2929]
-                   ([LINE]
-                    ([INLINE :x 2701 :y (/ 60553 15) :w 189 :h 200 :elt 2930]
-                     ([LINE]
-                      ([INLINE :x 2701 :y (/ 60553 15) :w 189 :h 200 :elt 2931]
-                       ([LINE]
-                        ([INLINE :x 2701 :y (/ 60553 15) :w 189 :h 200 :elt 2932])))))))
-                  ([TEXT :x 2900 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 2904 :y (/ 60553 15) :w 166 :h 200 :elt 2933]
-                   ([LINE]
-                    ([INLINE :x 2904 :y (/ 60553 15) :w 166 :h 200 :elt 2934]
-                     ([LINE]
-                      ([INLINE :x 2904 :y (/ 60553 15) :w 166 :h 200 :elt 2935]
-                       ([LINE]
-                        ([INLINE :x 2904 :y (/ 60553 15) :w 166 :h 200 :elt 2936])))))))
-                  ([TEXT :x 3080 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 3084 :y (/ 60553 15) :w 234 :h 200 :elt 2937]
-                   ([LINE]
-                    ([INLINE :x 3084 :y (/ 60553 15) :w 234 :h 200 :elt 2938]
-                     ([LINE]
-                      ([INLINE :x 3084 :y (/ 60553 15) :w 234 :h 200 :elt 2939]
-                       ([LINE]
-                        ([INLINE :x 3084 :y (/ 60553 15) :w 234 :h 200 :elt 2940])))))))
-                  ([TEXT :x 3328 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 3332 :y (/ 60553 15) :w 146 :h 200 :elt 2941]
-                   ([LINE]
-                    ([INLINE :x 3332 :y (/ 60553 15) :w 146 :h 200 :elt 2942]
-                     ([LINE]
-                      ([INLINE :x 3332 :y (/ 60553 15) :w 146 :h 200 :elt 2943]
-                       ([LINE]
-                        ([INLINE :x 3332 :y (/ 60553 15) :w 146 :h 200 :elt 2944])))))))
-                  ([TEXT :x 3488 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 3492 :y (/ 60553 15) :w 173 :h 200 :elt 2945]
-                   ([LINE]
-                    ([INLINE :x 3492 :y (/ 60553 15) :w 173 :h 200 :elt 2946]
-                     ([LINE]
-                      ([INLINE :x 3492 :y (/ 60553 15) :w 173 :h 200 :elt 2947]
-                       ([LINE]
-                        ([INLINE :x 3492 :y (/ 60553 15) :w 173 :h 200 :elt 2948])))))))
-                  ([TEXT :x 3675 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 3679 :y (/ 60553 15) :w 270 :h 200 :elt 2949]
-                   ([LINE]
-                    ([INLINE :x 3679 :y 4069.2 :w 270 :h (/ 406 3) :elt 2950]
-                     ([LINE]
-                      ([INLINE :x 3679 :y 4069.2 :w 270 :h (/ 406 3) :elt 2951]
-                       ([LINE]
-                        ([INLINE :x 3679 :y 4069.2 :w 270 :h (/ 406 3) :elt 2952])))))))
-                  ([TEXT :x 3959 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 3963 :y (/ 60553 15) :w 270 :h 200 :elt 2953]
-                   ([LINE]
-                    ([INLINE :x 3963 :y (/ 60862 15) :w 270 :h (/ 9529 60) :elt 2954]
-                     ([LINE]
-                      ([INLINE :x 3963 :y (/ 60862 15) :w 270 :h (/ 9529 60) :elt 2955]
-                       ([LINE]
-                        ([INLINE :x 3963 :y (/ 60862 15) :w 270 :h (/ 9529 60) :elt 2956])))))))
-                  ([TEXT :x 4243 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 4247 :y (/ 60553 15) :w 145 :h 200 :elt 2957]
-                   ([LINE]
-                    ([INLINE :x 4247 :y (/ 60553 15) :w 145 :h 200 :elt 2958]
-                     ([LINE]
-                      ([INLINE :x 4252.5 :y (/ 60553 15) :w 134 :h 200 :elt 2959]
-                       ([LINE]
-                        ([INLINE :x 4252.5 :y (/ 60553 15) :w 134 :h 200 :elt 2960])))))))
-                  ([TEXT :x 4402 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 4406 :y (/ 60553 15) :w 181 :h 200 :elt 2961]
-                   ([LINE]
-                    ([INLINE :x 4406 :y (/ 60553 15) :w 181 :h 200 :elt 2962]
-                     ([LINE]
-                      ([INLINE :x 4406 :y (/ 60553 15) :w 181 :h 200 :elt 2963]
-                       ([LINE]
-                        ([INLINE :x 4406 :y (/ 60553 15) :w 181 :h 200 :elt 2964])))))))
-                  ([TEXT :x 4597 :y (/ 60583 15) :w 4 :h 15 :text " "])
-                  ([INLINE :x 4601 :y (/ 60553 15) :w 200 :h 200 :elt 2965]
-                   ([LINE]
-                    ([INLINE :x 4601 :y (/ 60553 15) :w 200 :h 200 :elt 2966]
-                     ([LINE]
-                      ([INLINE :x 4601 :y (/ 60553 15) :w 200 :h 200 :elt 2967]
-                       ([LINE]
-                        ([INLINE :x 4601 :y (/ 60553 15) :w 200 :h 200 :elt 2968])))))))))
-                ([TEXT :x 4801 :y (/ 60583 15) :w 0 :h 15 :text " "])))
-              ([BLOCK :x 244 :y (/ 63763 15) :w 1110 :h 6 :elt 2975]
-               ([BLOCK :x 244 :y (/ 63793 15) :w 1110 :h 1 :elt 2976])))))))
-         ([BLOCK :x 1394 :y (/ 71081 30) :w 310 :h 1454 :elt 2982]
-          ([BLOCK :x 1417 :y (/ 71381 30) :w 264 :h 350 :elt 2983]
-           ([BLOCK :x 1417 :y (/ 71381 30) :w 264 :h 350 :elt 2984]
-            ([LINE]
-             ([INLINE :elt 2985]
-              ([INLINE :x 1417 :y (/ 71381 30) :w 264 :h 350 :elt 2986])))))
-          ([BLOCK :x 1417 :y (/ 82541 30) :w 264 :h 1 :elt 2988])
-          ([BLOCK :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2989]
-           ([BLOCK :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2990]
-            ([BLOCK :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2992]
-             ([BLOCK :x 889 :y (/ 83021 30) :w 1320 :h 350 :elt 2993]
-              ([LINE]
-               ([INLINE :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2994]
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2995]
-                   ([LINE]
-                    ([INLINE :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2996])))))
-                ([BLOCK :x 1417 :y (/ 93521 30) :w 264 :h 0 :elt 2997])))))))
-          ([BLOCK :x 1417 :y (/ 93971 30) :w 264 :h 1 :elt 2999])
-          ([BLOCK :x 1417 :y (/ 94451 30) :w 264 :h 350 :elt 3000]
-           ([BLOCK :x 1417 :y (/ 94451 30) :w 264 :h 350 :elt 3001]
-            ([LINE]
-             ([INLINE :x 1417 :y (/ 94451 30) :w 264 :h 350 :elt 3003]
-              ([LINE]
-               ([INLINE :x 1417 :y (/ 94451 30) :w 264 :h 350 :elt 3004]))))))
-          ([BLOCK :x 1417 :y (/ 105611 30) :w 264 :h 1 :elt 3006])
-          ([BLOCK :x 1399 :y (/ 106091 30) :w 300 :h 277 :elt 3007]
-           ([BLOCK :x 1399 :y (/ 106241 30) :w 300 :h 272 :elt 3010]
-            ([ANON]
-             ([LINE]
-              ([INLINE :x 1399 :y (/ 106241 30) :w 300 :h 250 :elt 3011])))
-            ([BLOCK :x 1399 :y (/ 113831 30) :w 300 :h 20 :elt 3012]
-             ([BLOCK :x 1621 :y (/ 113831 30) :w 78 :h 14 :elt 3013]
-              ([LINE]
-               ([INLINE :elt 3014]
-                ([TEXT :x 1621 :y (/ 113831 30) :w 64 :h 12 :text " Ad feedback "])
-                ([INLINE :x 1685 :y (/ 113861 30) :w 14 :h 12 :elt 3015])))))))))))
-      ([BLOCK :x 204 :y (/ 64078 15) :w 1500 :h 0 :elt 3059]))
-     ([BLOCK :x 0 :y (/ 64078 15) :w 1908 :h 0 :elt 3066])
-     ([BLOCK :x 0 :y (/ 64528 15) :w 1908 :h 885 :elt 3090]
-      ([ANON]
-       ([LINE]
-        ([INLINE :elt 3091])))
-      ([BLOCK :x 0 :y (/ 64528 15) :w 1908 :h 49 :elt 3092]
-       ([BLOCK :x 0 :y (/ 64528 15) :w 1908 :h 49 :elt 3093]
-        ([LINE]
-         ([TEXT :x 920.5 :y (/ 64783 15) :w 67 :h 15 :text "Back to top"]))))
-      ([MAGIC :x 454 :y (/ 65863 15) :w 1000 :h 241.1 :elt 3094]
-       ([MAGIC :x 454 :y (/ 65863 15) :w 1000 :h 241.1 :elt 3095]
-        ([MAGIC :x 454 :y (/ 65863 15) :w 138 :h 241.1 :elt 3096]
-         ([BLOCK :x 464 :y (/ 65953 15) :w 118 :h 15.6 :elt 3097]
-          ([LINE]
-           ([TEXT :x 464 :y (/ 26377 6) :w 118 :h 17 :text "Get to Know Us"])))
-         ([BLOCK :x 464 :y (/ 66397 15) :w 118 :h 118 :elt 3098]
-          ([BLOCK :x 464 :y (/ 66397 15) :w 118 :h 15.6 :elt 3099]
-           ([LINE]
-            ([INLINE :elt 3100]
-             ([TEXT :x 464 :y (/ 132803 30) :w 45 :h 15 :text "Careers"]))))
-          ([BLOCK :x 464 :y (/ 66781 15) :w 118 :h 15.6 :elt 3101]
-           ([LINE]
-            ([INLINE :elt 3102]
-             ([TEXT :x 464 :y (/ 133571 30) :w 26 :h 15 :text "Blog"]))))
-          ([BLOCK :x 464 :y (/ 13433 3) :w 118 :h 15.6 :elt 3103]
-           ([LINE]
-            ([INLINE :elt 3104]
-             ([TEXT :x 464 :y (/ 134339 30) :w 86 :h 15 :text "About Amazon"]))))
-          ([BLOCK :x 464 :y (/ 67549 15) :w 118 :h 15.6 :elt 3105]
-           ([LINE]
-            ([INLINE :elt 3106]
-             ([TEXT :x 464 :y (/ 135107 30) :w 105 :h 15 :text "Investor Relations"]))))
-          ([BLOCK :x 464 :y (/ 67933 15) :w 118 :h 15.6 :elt 3107]
-           ([LINE]
-            ([INLINE :elt 3108]
-             ([TEXT :x 464 :y (/ 27175 6) :w 99 :h 15 :text "Amazon Devices"]))))))
-        ([MAGIC :x 592 :y (/ 65863 15) :w 65 :h 241.1 :elt 3109])
-        ([MAGIC :x 657 :y (/ 65863 15) :w 197 :h 241.1 :elt 3110]
-         ([BLOCK :x 667 :y (/ 65953 15) :w 177 :h 15.6 :elt 3111]
-          ([LINE]
-           ([TEXT :x 667 :y (/ 26377 6) :w 155 :h 17 :text "Make Money with Us"])))
-         ([BLOCK :x 667 :y (/ 66397 15) :w 177 :h 195.5 :elt 3112]
-          ([BLOCK :x 667 :y (/ 66397 15) :w 177 :h 15.6 :elt 3113]
-           ([LINE]
-            ([INLINE :elt 3114]
-             ([TEXT :x 667 :y (/ 132803 30) :w 92 :h 15 :text "Sell on Amazon"]))))
-          ([BLOCK :x 667 :y (/ 66781 15) :w 177 :h 15.6 :elt 3115]
-           ([LINE]
-            ([INLINE :elt 3116]
-             ([TEXT :x 667 :y (/ 133571 30) :w 177 :h 15 :text "Sell Your Services on Amazon"]))))
-          ([BLOCK :x 667 :y (/ 13433 3) :w 177 :h 15.6 :elt 3117]
-           ([LINE]
-            ([INLINE :elt 3118]
-             ([TEXT :x 667 :y (/ 134339 30) :w 150 :h 15 :text "Sell on Amazon Business"]))))
-          ([BLOCK :x 667 :y (/ 67549 15) :w 177 :h 15.6 :elt 3119]
-           ([LINE]
-            ([INLINE :elt 3120]
-             ([TEXT :x 667 :y (/ 135107 30) :w 156 :h 15 :text "Sell Your Apps on Amazon"]))))
-          ([BLOCK :x 667 :y (/ 67933 15) :w 177 :h 15.6 :elt 3121]
-           ([LINE]
-            ([INLINE :elt 3122]
-             ([TEXT :x 667 :y (/ 27175 6) :w 114 :h 15 :text "Become an Affiliate"]))))
-          ([BLOCK :x 667 :y (/ 68317 15) :w 177 :h 15.6 :elt 3123]
-           ([LINE]
-            ([INLINE :elt 3124]
-             ([TEXT :x 667 :y (/ 136643 30) :w 141 :h 15 :text "Advertise Your Products"]))))
-          ([BLOCK :x 667 :y (/ 68701 15) :w 177 :h 15.6 :elt 3125]
-           ([LINE]
-            ([INLINE :elt 3126]
-             ([TEXT :x 667 :y (/ 137411 30) :w 117 :h 15 :text "Self-Publish with Us"]))))
-          ([BLOCK :x 667 :y (/ 13817 3) :w 177 :h 16.3 :elt 3127]
-           ([LINE]
-            ([INLINE :elt 3128]
-             ([TEXT :x 667 :y (/ 13814 3) :w 5 :h 17 :text "›"]))
-            ([INLINE :elt 3129]
-             ([TEXT :x 676 :y (/ 13820 3) :w 40 :h 15 :text "See all"]))))))
-        ([MAGIC :x 854 :y (/ 65863 15) :w 65 :h 241.1 :elt 3130])
-        ([MAGIC :x 919 :y (/ 65863 15) :w 249 :h 241.1 :elt 3131]
-         ([BLOCK :x 929 :y (/ 65953 15) :w 229 :h 15.6 :elt 3132]
-          ([LINE]
-           ([TEXT :x 929 :y (/ 26377 6) :w 208 :h 17 :text "Amazon Payment Products"])))
-         ([BLOCK :x 929 :y (/ 66397 15) :w 229 :h 169.2 :elt 3133]
-          ([BLOCK :x 929 :y (/ 66397 15) :w 229 :h 15.6 :elt 3134]
-           ([LINE]
-            ([INLINE :elt 3135]
-             ([TEXT :x 929 :y (/ 132803 30) :w 229 :h 15 :text "Amazon Rewards Visa Signature Cards"]))))
-          ([BLOCK :x 929 :y (/ 66781 15) :w 229 :h 15.6 :elt 3136]
-           ([LINE]
-            ([INLINE :elt 3137]
-             ([TEXT :x 929 :y (/ 133571 30) :w 143 :h 15 :text "Amazon.com Store Card"]))))
-          ([BLOCK :x 929 :y (/ 13433 3) :w 229 :h 15.6 :elt 3138]
-           ([LINE]
-            ([INLINE :elt 3139]
-             ([TEXT :x 929 :y (/ 134339 30) :w 203 :h 15 :text "Amazon.com Corporate Credit Line"]))))
-          ([BLOCK :x 929 :y (/ 67549 15) :w 229 :h 15.6 :elt 3140]
-           ([LINE]
-            ([INLINE :elt 3141]
-             ([TEXT :x 929 :y (/ 135107 30) :w 98 :h 15 :text "Shop with Points"]))))
-          ([BLOCK :x 929 :y (/ 67933 15) :w 229 :h 15.6 :elt 3142]
-           ([LINE]
-            ([INLINE :elt 3143]
-             ([TEXT :x 929 :y (/ 27175 6) :w 140 :h 15 :text "Credit Card Marketplace"]))))
-          ([BLOCK :x 929 :y (/ 68317 15) :w 229 :h 15.6 :elt 3144]
-           ([LINE]
-            ([INLINE :elt 3145]
-             ([TEXT :x 929 :y (/ 136643 30) :w 121 :h 15 :text "Reload Your Balance"]))))
-          ([BLOCK :x 929 :y (/ 68701 15) :w 229 :h 15.6 :elt 3146]
-           ([LINE]
-            ([INLINE :elt 3147]
-             ([TEXT :x 929 :y (/ 137411 30) :w 164 :h 15 :text "Amazon Currency Converter"]))))))
-        ([MAGIC :x 1168 :y (/ 65863 15) :w 65 :h 241.1 :elt 3148])
-        ([MAGIC :x 1233 :y (/ 65863 15) :w 221 :h 241.1 :elt 3149]
-         ([BLOCK :x 1243 :y (/ 65953 15) :w 201 :h 15.6 :elt 3150]
-          ([LINE]
-           ([TEXT :x 1243 :y (/ 26377 6) :w 122 :h 17 :text "Let Us Help You"])))
-         ([BLOCK :x 1243 :y (/ 66397 15) :w 201 :h 194.8 :elt 3151]
-          ([BLOCK :x 1243 :y (/ 66397 15) :w 201 :h 15.6 :elt 3152]
-           ([LINE]
-            ([INLINE :elt 3153]
-             ([TEXT :x 1243 :y (/ 132803 30) :w 78 :h 15 :text "Your Account"]))))
-          ([BLOCK :x 1243 :y (/ 66781 15) :w 201 :h 15.6 :elt 3154]
-           ([LINE]
-            ([INLINE :elt 3155]
-             ([TEXT :x 1243 :y (/ 133571 30) :w 69 :h 15 :text "Your Orders"]))))
-          ([BLOCK :x 1243 :y (/ 13433 3) :w 201 :h 15.6 :elt 3156]
-           ([LINE]
-            ([INLINE :elt 3157]
-             ([TEXT :x 1243 :y (/ 134339 30) :w 151 :h 15 :text "Shipping Rates & Policies"]))))
-          ([BLOCK :x 1243 :y (/ 67549 15) :w 201 :h 15.6 :elt 3158]
-           ([LINE]
-            ([INLINE :elt 3159]
-             ([TEXT :x 1243 :y (/ 135107 30) :w 86 :h 15 :text "Amazon Prime"]))))
-          ([BLOCK :x 1243 :y (/ 67933 15) :w 201 :h 15.6 :elt 3160]
-           ([LINE]
-            ([INLINE :elt 3161]
-             ([TEXT :x 1243 :y (/ 27175 6) :w 145 :h 15 :text "Returns & Replacements"]))))
-          ([BLOCK :x 1243 :y (/ 68317 15) :w 201 :h 15.6 :elt 3162]
-           ([LINE]
-            ([INLINE :elt 3163]
-             ([TEXT :x 1243 :y (/ 136643 30) :w 201 :h 15 :text "Manage Your Content and Devices"]))))
-          ([BLOCK :x 1243 :y (/ 68701 15) :w 201 :h 15.6 :elt 3164]
-           ([LINE]
-            ([INLINE :elt 3165]
-             ([TEXT :x 1243 :y (/ 137411 30) :w 107 :h 15 :text "Amazon Assistant"]))))
-          ([BLOCK :x 1243 :y (/ 13817 3) :w 201 :h 15.6 :elt 3166]
-           ([LINE]
-            ([INLINE :elt 3167]
-             ([TEXT :x 1243 :y (/ 138179 30) :w 26 :h 15 :text "Help"]))))))))
-      ([BLOCK :x 0 :y (/ 140159 30) :w 1908 :h 1 :elt 3168])
-      ([BLOCK :x 454 :y (/ 140489 30) :w 1000 :h 68 :elt 3169]
-       ([LINE]
-        ([INLINE :x 732.2 :y (/ 140489 30) :w 90.4 :h 68 :elt 3170]
-         ([BLOCK :x 739.4 :y (/ 141389 30) :w 76 :h 23 :elt 3171]
-          ([ANON]
-           ([LINE]
-            ([INLINE :elt 3172])))
-          ([BLOCK :x 739.4 :y (/ 141389 30) :w 76 :h 23 :elt 3173])))
-        ([INLINE :x 822.6 :y (/ 142199 30) :w 0 :h 0 :elt 3174]))
-       ([LINE]
-        ([INLINE :x 892.6 :y (/ 141029 30) :w 283.2 :h 33.5 :elt 3175]
-         ([BLOCK :x 899.8 :y (/ 141029 30) :w 268.8 :h 33.5 :elt 3176]
-          ([LINE]
-           ([INLINE :x 899.8 :y (/ 141029 30) :w 117.2 :h 33.5 :elt 3178]
-            ([LINE]
-             ([INLINE :x 908.8 :y (/ 141299 30) :w 15 :h 15 :elt 3179])
-             ([INLINE :x 923.8 :y (/ 70642 15) :w 58.6 :h 18 :elt 3180]
-              ([LINE]
-               ([TEXT :x 931.6 :y (/ 141329 30) :w 43 :h 15 :text "English"])))
-             ([INLINE :x 994.4 :y (/ 141329 30) :w 15.6 :h 12 :elt 3181])))
-           ([TEXT :x 1021 :y (/ 141359 30) :w 3 :h 14 :text " "])
-           ([INLINE :x 1024 :y (/ 141029 30) :w 140.6 :h 33.5 :elt 3183]
-            ([LINE]
-             ([INLINE :x 1033 :y (/ 141359 30) :w 18 :h 12 :elt 3184])
-             ([INLINE :x 1051 :y (/ 70642 15) :w 94.6 :h 18 :elt 3185]
-              ([LINE]
-               ([TEXT :x 1058.8 :y (/ 141329 30) :w 79 :h 15 :text "United States"])))))))))
-       ([LINE]
-        ([INLINE :x 1175.8 :y (/ 142199 30) :w 0 :h 0 :elt 3186])))
-      ([BLOCK :x 0 :y (/ 143429 30) :w 1908 :h 347.9 :elt 3187]
-       ([MAGIC :x 454 :y (/ 144329 30) :w 1000 :h 287.9 :elt 3188]
-        ([MAGIC :x 454 :y (/ 144329 30) :w 1000 :h 287.9 :elt 3189]
-         ([MAGIC :x 454 :y (/ 144329 30) :w 1000 :h (/ 2099 60) :elt 3190]
-          ([MAGIC :x 454 :y (/ 144329 30) :w 116.5 :h (/ 2099 60) :elt 3191]
-           ([INLINE :elt 3192]
-            ([TEXT :x (/ 1849 4) :y (/ 288677 60) :w 72 :h 12 :text "Amazon Music"])
-            ([INLINE :elt 3193])
-            ([INLINE :x (/ 1849 4) :y (/ 289417 60) :w (/ 4141 60) :h 22 :elt 3194]
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y (/ 289417 60) :w 69 :h 11 :text "Stream millions"])
-              ([INLINE :elt 3195]))
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y (/ 290077 60) :w 40 :h 11 :text " of songs"])))))
-          ([MAGIC :x 570.5 :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3196])
-          ([MAGIC :x (/ 7147 12) :y (/ 144329 30) :w 129.5 :h (/ 2099 60) :elt 3197]
-           ([INLINE :elt 3198]
-            ([TEXT :x (/ 3623 6) :y (/ 288677 60) :w 69 :h 12 :text "Amazon Drive"])
-            ([INLINE :elt 3199])
-            ([INLINE :x (/ 3623 6) :y (/ 289417 60) :w (/ 3901 60) :h 22 :elt 3200]
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 289417 60) :w 65 :h 11 :text "Cloud storage"])
-              ([INLINE :elt 3201]))
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 290077 60) :w 61 :h 11 :text " from Amazon"])))))
-          ([MAGIC :x (/ 8701 12) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3202])
-          ([MAGIC :x (/ 4501 6) :y (/ 144329 30) :w 118.5 :h (/ 2099 60) :elt 3203]
-           ([INLINE :elt 3204]
-            ([TEXT :x (/ 9101 12) :y (/ 288677 60) :w 21 :h 12 :text "6pm"])
-            ([INLINE :elt 3205])
-            ([INLINE :x (/ 9101 12) :y (/ 289417 60) :w 84 :h 22 :elt 3206]
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 289417 60) :w 55 :h 11 :text "Score deals"])
-              ([INLINE :elt 3207]))
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 290077 60) :w 84 :h 11 :text " on fashion brands"])))))
-          ([MAGIC :x (/ 2606 3) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3208])
-          ([MAGIC :x (/ 3575 4) :y (/ 144329 30) :w 102.5 :h (/ 2099 60) :elt 3209]
-           ([INLINE :elt 3210]
-            ([TEXT :x 902 :y (/ 288677 60) :w 50 :h 12 :text "AbeBooks"])
-            ([INLINE :elt 3211])
-            ([INLINE :x 902 :y (/ 289417 60) :w 60 :h 22 :elt 3212]
-             ([LINE]
-              ([TEXT :x 902 :y (/ 289417 60) :w 47 :h 11 :text "Books, art"])
-              ([INLINE :elt 3213]))
-             ([LINE]
-              ([TEXT :x 902 :y (/ 290077 60) :w 60 :h 11 :text " & collectibles"])))))
-          ([MAGIC :x (/ 3985 4) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3214])
-          ([MAGIC :x (/ 3064 3) :y (/ 144329 30) :w 122.5 :h (/ 2099 60) :elt 3215]
-           ([INLINE :elt 3216]
-            ([TEXT :x (/ 12355 12) :y (/ 288677 60) :w 22 :h 12 :text "ACX "])
-            ([INLINE :elt 3217])
-            ([INLINE :x (/ 12355 12) :y (/ 289417 60) :w (/ 6061 60) :h 22 :elt 3218]
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 289417 60) :w 101 :h 11 :text "Audiobook Publishing"])
-              ([INLINE :elt 3219]))
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 290077 60) :w 52 :h 11 :text " Made Easy"])))))
-          ([MAGIC :x (/ 6863 6) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3220])
-          ([MAGIC :x (/ 14027 12) :y (/ 144329 30) :w 130.5 :h (/ 2099 60) :elt 3221]
-           ([INLINE :elt 3222]
-            ([TEXT :x (/ 7063 6) :y (/ 288677 60) :w 27 :h 12 :text "Alexa"])
-            ([INLINE :elt 3223])
-            ([INLINE :x (/ 7063 6) :y (/ 289417 60) :w (/ 5581 60) :h 22 :elt 3224]
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 289417 60) :w 93 :h 11 :text "Actionable Analytics"])
-              ([INLINE :elt 3225]))
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 290077 60) :w 54 :h 11 :text " for the Web"])))))
-          ([MAGIC :x (/ 15593 12) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3226])
-          ([MAGIC :x 1324.5 :y (/ 144329 30) :w 129.5 :h (/ 2099 60) :elt 3227]
-           ([INLINE :elt 3228]
-            ([TEXT :x (/ 5331 4) :y (/ 288677 60) :w 88 :h 12 :text "Amazon Business"])
-            ([INLINE :elt 3229])
-            ([INLINE :x (/ 5331 4) :y (/ 289417 60) :w (/ 4021 60) :h 22 :elt 3230]
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y (/ 289417 60) :w 67 :h 11 :text "Everything For"])
-              ([INLINE :elt 3231]))
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y (/ 290077 60) :w 66 :h 11 :text " Your Business"]))))))
-         ([MAGIC :x 454 :y (/ 96919 20) :w 1000 :h 15.6 :elt 3232]
-          ([MAGIC :x 454 :y (/ 96919 20) :w 116.5 :h 15.6 :elt 3233]
-           ([TEXT :x (/ 2041 4) :y (/ 19385 4) :w 4 :h 15 :text " "])))
-         ([MAGIC :x 454 :y (/ 97231 20) :w 1000 :h (/ 2099 60) :elt 3234]
-          ([MAGIC :x 454 :y (/ 97231 20) :w 116.5 :h (/ 2099 60) :elt 3235]
-           ([INLINE :elt 3236]
-            ([TEXT :x (/ 1849 4) :y (/ 72928 15) :w 69 :h 12 :text "AmazonFresh"])
-            ([INLINE :elt 3237])
-            ([INLINE :x (/ 1849 4) :y 4874.2 :w 87 :h 22 :elt 3238]
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y 4874.2 :w 80 :h 11 :text "Groceries & More"])
-              ([INLINE :elt 3239]))
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y 4885.2 :w 87 :h 11 :text " Right To Your Door"])))))
-          ([MAGIC :x 570.5 :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3240])
-          ([MAGIC :x (/ 7147 12) :y (/ 97231 20) :w 129.5 :h (/ 2099 60) :elt 3241]
-           ([INLINE :elt 3242]
-            ([TEXT :x (/ 3623 6) :y (/ 72928 15) :w 71 :h 12 :text "AmazonGlobal"])
-            ([INLINE :elt 3243])
-            ([INLINE :x (/ 3623 6) :y 4874.2 :w 65 :h 22 :elt 3244]
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y 4874.2 :w 55 :h 11 :text "Ship Orders"])
-              ([INLINE :elt 3245]))
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y 4885.2 :w 65 :h 11 :text " Internationally"])))))
-          ([MAGIC :x (/ 8701 12) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3246])
-          ([MAGIC :x (/ 4501 6) :y (/ 97231 20) :w 118.5 :h (/ 2099 60) :elt 3247]
-           ([INLINE :elt 3248]
-            ([TEXT :x (/ 9101 12) :y (/ 72928 15) :w 75 :h 12 :text "Home Services"])
-            ([INLINE :elt 3249])
-            ([INLINE :x (/ 9101 12) :y 4874.2 :w 102 :h 22 :elt 3250]
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y 4874.2 :w 79 :h 11 :text "Handpicked Pros"])
-              ([INLINE :elt 3251]))
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y 4885.2 :w 102 :h 11 :text " Happiness Guarantee"])))))
-          ([MAGIC :x (/ 2606 3) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3252])
-          ([MAGIC :x (/ 3575 4) :y (/ 97231 20) :w 102.5 :h (/ 2099 60) :elt 3253]
-           ([INLINE :elt 3254]
-            ([TEXT :x 902 :y (/ 72928 15) :w 76 :h 12 :text "Amazon Inspire"])
-            ([INLINE :elt 3255])
-            ([INLINE :x 902 :y 4874.2 :w 86 :h 22 :elt 3256]
-             ([LINE]
-              ([TEXT :x 902 :y 4874.2 :w 86 :h 11 :text "Digital Educational"])
-              ([INLINE :elt 3257]))
-             ([LINE]
-              ([TEXT :x 902 :y 4885.2 :w 49 :h 11 :text " Resources"])))))
-          ([MAGIC :x (/ 3985 4) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3258])
-          ([MAGIC :x (/ 3064 3) :y (/ 97231 20) :w 122.5 :h (/ 2099 60) :elt 3259]
-           ([INLINE :elt 3260]
-            ([TEXT :x (/ 12355 12) :y (/ 72928 15) :w 77 :h 12 :text "Amazon Rapids"])
-            ([INLINE :elt 3261])
-            ([INLINE :x (/ 12355 12) :y 4874.2 :w (/ 3961 60) :h 22 :elt 3262]
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y 4874.2 :w 66 :h 11 :text "Fun stories for"])
-              ([INLINE :elt 3263]))
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y 4885.2 :w 66 :h 11 :text " kids on the go"])))))
-          ([MAGIC :x (/ 6863 6) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3264])
-          ([MAGIC :x (/ 14027 12) :y (/ 97231 20) :w 130.5 :h (/ 2099 60) :elt 3265]
-           ([INLINE :elt 3266]
-            ([TEXT :x (/ 7063 6) :y (/ 72928 15) :w 103 :h 12 :text "Amazon Restaurants"])
-            ([INLINE :elt 3267])
-            ([INLINE :x (/ 7063 6) :y 4874.2 :w (/ 5101 60) :h 22 :elt 3268]
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y 4874.2 :w 85 :h 11 :text "Food delivery from"])
-              ([INLINE :elt 3269]))
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y 4885.2 :w 76 :h 11 :text " local restaurants"])))))
-          ([MAGIC :x (/ 15593 12) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3270])
-          ([MAGIC :x 1324.5 :y (/ 97231 20) :w 129.5 :h (/ 2099 60) :elt 3271]
-           ([INLINE :elt 3272]
-            ([TEXT :x (/ 5331 4) :y (/ 72928 15) :w 111 :h 12 :text "Amazon Web Services"])
-            ([INLINE :elt 3273])
-            ([INLINE :x (/ 5331 4) :y 4874.2 :w 92 :h 22 :elt 3274]
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y 4874.2 :w 70 :h 11 :text "Scalable Cloud"])
-              ([INLINE :elt 3275]))
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y 4885.2 :w 92 :h 11 :text " Computing Services"]))))))
-         ([MAGIC :x 454 :y (/ 73448 15) :w 1000 :h 15.6 :elt 3276]
-          ([MAGIC :x 454 :y (/ 73448 15) :w 116.5 :h 15.6 :elt 3277]
-           ([TEXT :x (/ 2041 4) :y (/ 29381 6) :w 4 :h 15 :text " "])))
-         ([MAGIC :x 454 :y (/ 73682 15) :w 1000 :h (/ 2099 60) :elt 3278]
-          ([MAGIC :x 454 :y (/ 73682 15) :w 116.5 :h (/ 2099 60) :elt 3279]
-           ([INLINE :elt 3280]
-            ([TEXT :x (/ 1849 4) :y (/ 98249 20) :w 35 :h 12 :text "Audible"])
-            ([INLINE :elt 3281])
-            ([INLINE :x (/ 1849 4) :y (/ 295487 60) :w 55 :h 22 :elt 3282]
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y (/ 295487 60) :w 46 :h 11 :text "Download"])
-              ([INLINE :elt 3283]))
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y (/ 296147 60) :w 55 :h 11 :text " Audiobooks"])))))
-          ([MAGIC :x 570.5 :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3284])
-          ([MAGIC :x (/ 7147 12) :y (/ 73682 15) :w 129.5 :h (/ 2099 60) :elt 3285]
-           ([INLINE :elt 3286]
-            ([TEXT :x (/ 3623 6) :y (/ 98249 20) :w 79 :h 12 :text "AudiobookStand"])
-            ([INLINE :elt 3287])
-            ([INLINE :x (/ 3623 6) :y (/ 295487 60) :w (/ 5881 60) :h 22 :elt 3288]
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 295487 60) :w 98 :h 11 :text "Discount Audiobooks"])
-              ([INLINE :elt 3289]))
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 296147 60) :w 34 :h 11 :text " on Disc"])))))
-          ([MAGIC :x (/ 8701 12) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3290])
-          ([MAGIC :x (/ 4501 6) :y (/ 73682 15) :w 118.5 :h (/ 2099 60) :elt 3291]
-           ([INLINE :elt 3292]
-            ([TEXT :x (/ 9101 12) :y (/ 98249 20) :w 81 :h 12 :text "Book Depository"])
-            ([INLINE :elt 3293])
-            ([INLINE :x (/ 9101 12) :y (/ 295487 60) :w 86 :h 22 :elt 3294]
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 295487 60) :w 76 :h 11 :text "Books With Free"])
-              ([INLINE :elt 3295]))
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 296147 60) :w 86 :h 11 :text " Delivery Worldwide"])))))
-          ([MAGIC :x (/ 2606 3) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3296])
-          ([MAGIC :x (/ 3575 4) :y (/ 73682 15) :w 102.5 :h (/ 2099 60) :elt 3297]
-           ([INLINE :elt 3298]
-            ([TEXT :x 902 :y (/ 98249 20) :w 77 :h 12 :text "Box Office Mojo"])
-            ([INLINE :elt 3299])
-            ([INLINE :x 902 :y (/ 295487 60) :w 73 :h 22 :elt 3300]
-             ([LINE]
-              ([TEXT :x 902 :y (/ 295487 60) :w 50 :h 11 :text "Find Movie"])
-              ([INLINE :elt 3301]))
-             ([LINE]
-              ([TEXT :x 902 :y (/ 296147 60) :w 73 :h 11 :text " Box Office Data"])))))
-          ([MAGIC :x (/ 3985 4) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3302])
-          ([MAGIC :x (/ 3064 3) :y (/ 73682 15) :w 122.5 :h (/ 2099 60) :elt 3303]
-           ([INLINE :elt 3304]
-            ([TEXT :x (/ 12355 12) :y (/ 98249 20) :w 58 :h 12 :text "ComiXology"])
-            ([INLINE :elt 3305])
-            ([INLINE :x (/ 12355 12) :y (/ 295487 60) :w (/ 3841 60) :h 22 :elt 3306]
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 295487 60) :w 64 :h 11 :text "Thousands of"])
-              ([INLINE :elt 3307]))
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 296147 60) :w 64 :h 11 :text " Digital Comics"])))))
-          ([MAGIC :x (/ 6863 6) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3308])
-          ([MAGIC :x (/ 14027 12) :y (/ 73682 15) :w 130.5 :h (/ 2099 60) :elt 3309]
-           ([INLINE :elt 3310]
-            ([TEXT :x (/ 7063 6) :y (/ 98249 20) :w 64 :h 12 :text "CreateSpace"])
-            ([INLINE :elt 3311])
-            ([INLINE :x (/ 7063 6) :y (/ 295487 60) :w (/ 5881 60) :h 22 :elt 3312]
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 295487 60) :w 98 :h 11 :text "Indie Print Publishing"])
-              ([INLINE :elt 3313]))
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 296147 60) :w 52 :h 11 :text " Made Easy"])))))
-          ([MAGIC :x (/ 15593 12) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3314])
-          ([MAGIC :x 1324.5 :y (/ 73682 15) :w 129.5 :h (/ 2099 60) :elt 3315]
-           ([INLINE :elt 3316]
-            ([TEXT :x (/ 5331 4) :y (/ 98249 20) :w 51 :h 12 :text "DPReview"])
-            ([INLINE :elt 3317])
-            ([INLINE :x (/ 5331 4) :y (/ 295487 60) :w 60 :h 22 :elt 3318]
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y (/ 295487 60) :w 28 :h 11 :text "Digital"])
-              ([INLINE :elt 3319]))
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y (/ 296147 60) :w 60 :h 11 :text " Photography"]))))))
-         ([MAGIC :x 454 :y (/ 296827 60) :w 1000 :h 15.6 :elt 3320]
-          ([MAGIC :x 454 :y (/ 296827 60) :w 116.5 :h 15.6 :elt 3321]
-           ([TEXT :x (/ 2041 4) :y (/ 59369 12) :w 4 :h 15 :text " "])))
-         ([MAGIC :x 454 :y (/ 297763 60) :w 1000 :h (/ 2099 60) :elt 3322]
-          ([MAGIC :x 454 :y (/ 297763 60) :w 116.5 :h (/ 2099 60) :elt 3323]
-           ([INLINE :elt 3324]
-            ([TEXT :x (/ 1849 4) :y (/ 148891 30) :w 51 :h 12 :text "East Dane"])
-            ([INLINE :elt 3325])
-            ([INLINE :x (/ 1849 4) :y (/ 149261 30) :w (/ 4261 60) :h 22 :elt 3326]
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y (/ 149261 30) :w 71 :h 11 :text "Designer Men's"])
-              ([INLINE :elt 3327]))
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y (/ 149591 30) :w 37 :h 11 :text " Fashion"])))))
-          ([MAGIC :x 570.5 :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3328])
-          ([MAGIC :x (/ 7147 12) :y (/ 297763 60) :w 129.5 :h (/ 2099 60) :elt 3329]
-           ([INLINE :elt 3330]
-            ([TEXT :x (/ 3623 6) :y (/ 148891 30) :w 31 :h 12 :text "Fabric"])
-            ([INLINE :elt 3331])
-            ([INLINE :x (/ 3623 6) :y (/ 149261 30) :w (/ 4501 60) :h 22 :elt 3332]
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 149261 30) :w 75 :h 11 :text "Sewing, Quilting"])
-              ([INLINE :elt 3333]))
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 149591 30) :w 45 :h 11 :text " & Knitting"])))))
-          ([MAGIC :x (/ 8701 12) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3334])
-          ([MAGIC :x (/ 4501 6) :y (/ 297763 60) :w 118.5 :h (/ 2099 60) :elt 3335]
-           ([INLINE :elt 3336]
-            ([TEXT :x (/ 9101 12) :y (/ 148891 30) :w 55 :h 12 :text "Goodreads"])
-            ([INLINE :elt 3337])
-            ([INLINE :x (/ 9101 12) :y (/ 149261 30) :w 92 :h 22 :elt 3338]
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 149261 30) :w 61 :h 11 :text "Book reviews"])
-              ([INLINE :elt 3339]))
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 149591 30) :w 92 :h 11 :text " & recommendations"])))))
-          ([MAGIC :x (/ 2606 3) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3340])
-          ([MAGIC :x (/ 3575 4) :y (/ 297763 60) :w 102.5 :h (/ 2099 60) :elt 3341]
-           ([INLINE :elt 3342]
-            ([TEXT :x 902 :y (/ 148891 30) :w 26 :h 12 :text "IMDb"])
-            ([INLINE :elt 3343])
-            ([INLINE :x 902 :y (/ 149261 30) :w 58 :h 22 :elt 3344]
-             ([LINE]
-              ([TEXT :x 902 :y (/ 149261 30) :w 51 :h 11 :text "Movies, TV"])
-              ([INLINE :elt 3345]))
-             ([LINE]
-              ([TEXT :x 902 :y (/ 149591 30) :w 58 :h 11 :text " & Celebrities"])))))
-          ([MAGIC :x (/ 3985 4) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3346])
-          ([MAGIC :x (/ 3064 3) :y (/ 297763 60) :w 122.5 :h (/ 2099 60) :elt 3347]
-           ([INLINE :elt 3348]
-            ([TEXT :x (/ 12355 12) :y (/ 148891 30) :w 43 :h 12 :text "IMDbPro"])
-            ([INLINE :elt 3349])
-            ([INLINE :x (/ 12355 12) :y (/ 149261 30) :w 106 :h 22 :elt 3350]
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 149261 30) :w 106 :h 11 :text "Get Info Entertainment"])
-              ([INLINE :elt 3351]))
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 149591 30) :w 90 :h 11 :text " Professionals Need"])))))
-          ([MAGIC :x (/ 6863 6) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3352])
-          ([MAGIC :x (/ 14027 12) :y (/ 297763 60) :w 130.5 :h (/ 2099 60) :elt 3353]
-           ([INLINE :elt 3354]
-            ([TEXT :x (/ 7063 6) :y (/ 148891 30) :w 62 :h 12 :text "Junglee.com"])
-            ([INLINE :elt 3355])
-            ([INLINE :x (/ 7063 6) :y (/ 149261 30) :w (/ 3481 60) :h 22 :elt 3356]
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 149261 30) :w 58 :h 11 :text "Shop Online"])
-              ([INLINE :elt 3357]))
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 149591 30) :w 34 :h 11 :text " in India"])))))
-          ([MAGIC :x (/ 15593 12) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3358])
-          ([MAGIC :x 1324.5 :y (/ 297763 60) :w 129.5 :h (/ 2099 60) :elt 3359]
-           ([INLINE :elt 3360]
-            ([TEXT :x (/ 5331 4) :y (/ 148891 30) :w 113 :h 12 :text "Kindle Direct Publishing"])
-            ([INLINE :elt 3361])
-            ([INLINE :x (/ 5331 4) :y (/ 149261 30) :w (/ 6301 60) :h 22 :elt 3362]
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y (/ 149261 30) :w 105 :h 11 :text "Indie Digital Publishing"])
-              ([INLINE :elt 3363]))
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y (/ 149591 30) :w 52 :h 11 :text " Made Easy "]))))))
-         ([MAGIC :x 454 :y 4997.7 :w 1000 :h 15.6 :elt 3364]
-          ([MAGIC :x 454 :y 4997.7 :w 116.5 :h 15.6 :elt 3365]
-           ([TEXT :x (/ 2041 4) :y 4998 :w 4 :h 15 :text " "])))
-         ([MAGIC :x 454 :y 5013.3 :w 1000 :h (/ 2099 60) :elt 3366]
-          ([MAGIC :x 454 :y 5013.3 :w 116.5 :h (/ 2099 60) :elt 3367]
-           ([INLINE :elt 3368]
-            ([TEXT :x (/ 1849 4) :y (/ 300817 60) :w 53 :h 12 :text " Prime Now"])
-            ([INLINE :elt 3369])
-            ([INLINE :x (/ 1849 4) :y (/ 100519 20) :w 100 :h 22 :elt 3370]
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y (/ 100519 20) :w 100 :h 11 :text "FREE 2-Hour Delivery"])
-              ([INLINE :elt 3371]))
-             ([LINE]
-              ([TEXT :x (/ 1849 4) :y (/ 100739 20) :w 86 :h 11 :text " on Everyday Items"])))))
-          ([MAGIC :x 570.5 :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3372])
-          ([MAGIC :x (/ 7147 12) :y 5013.3 :w 129.5 :h (/ 2099 60) :elt 3373]
-           ([INLINE :elt 3374]
-            ([TEXT :x (/ 3623 6) :y (/ 300817 60) :w 65 :h 12 :text "Prime Photos"])
-            ([INLINE :elt 3375])
-            ([INLINE :x (/ 3623 6) :y (/ 100519 20) :w 113 :h 22 :elt 3376]
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 100519 20) :w 113 :h 11 :text "Unlimited Photo Storage"])
-              ([INLINE :elt 3377]))
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 100739 20) :w 73 :h 11 :text " Free With Prime"])))))
-          ([MAGIC :x (/ 8701 12) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3378])
-          ([MAGIC :x (/ 4501 6) :y 5013.3 :w 118.5 :h (/ 2099 60) :elt 3379]
-           ([INLINE :elt 3380]
-            ([TEXT :x (/ 9101 12) :y (/ 300817 60) :w 90 :h 12 :text "Prime Video Direct"])
-            ([INLINE :elt 3381])
-            ([INLINE :x (/ 9101 12) :y (/ 100519 20) :w (/ 4861 60) :h 22 :elt 3382]
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 100519 20) :w 81 :h 11 :text "Video Distribution"])
-              ([INLINE :elt 3383]))
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 100739 20) :w 52 :h 11 :text " Made Easy"])))))
-          ([MAGIC :x (/ 2606 3) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3384])
-          ([MAGIC :x (/ 3575 4) :y 5013.3 :w 102.5 :h (/ 2099 60) :elt 3385]
-           ([INLINE :elt 3386]
-            ([TEXT :x 902 :y (/ 300817 60) :w 43 :h 12 :text "Shopbop"])
-            ([INLINE :elt 3387])
-            ([INLINE :x 902 :y (/ 100519 20) :w 73 :h 22 :elt 3388]
-             ([LINE]
-              ([TEXT :x 902 :y (/ 100519 20) :w 41 :h 11 :text "Designer"])
-              ([INLINE :elt 3389]))
-             ([LINE]
-              ([TEXT :x 902 :y (/ 100739 20) :w 73 :h 11 :text " Fashion Brands"])))))
-          ([MAGIC :x (/ 3985 4) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3390])
-          ([MAGIC :x (/ 3064 3) :y 5013.3 :w 122.5 :h (/ 2099 60) :elt 3391]
-           ([INLINE :elt 3392]
-            ([TEXT :x (/ 12355 12) :y (/ 300817 60) :w 73 :h 12 :text "TenMarks.com"])
-            ([INLINE :elt 3393])
-            ([INLINE :x (/ 12355 12) :y (/ 100519 20) :w 85 :h 22 :elt 3394]
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 100519 20) :w 66 :h 11 :text "Math Activities"])
-              ([INLINE :elt 3395]))
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 100739 20) :w 85 :h 11 :text " for Kids & Schools"])))))
-          ([MAGIC :x (/ 6863 6) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3396])
-          ([MAGIC :x (/ 14027 12) :y 5013.3 :w 130.5 :h (/ 2099 60) :elt 3397]
-           ([INLINE :elt 3398]
-            ([TEXT :x (/ 7063 6) :y (/ 300817 60) :w 99 :h 12 :text "Amazon Warehouse"])
-            ([INLINE :elt 3399])
-            ([INLINE :x (/ 7063 6) :y (/ 100519 20) :w 103 :h 22 :elt 3400]
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 100519 20) :w 70 :h 11 :text "Great Deals on"])
-              ([INLINE :elt 3401]))
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 100739 20) :w 103 :h 11 :text " Quality Used Products "])))))
-          ([MAGIC :x (/ 15593 12) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3402])
-          ([MAGIC :x 1324.5 :y 5013.3 :w 129.5 :h (/ 2099 60) :elt 3403]
-           ([INLINE :elt 3404]
-            ([TEXT :x (/ 5331 4) :y (/ 300817 60) :w 101 :h 12 :text "Whole Foods Market"])
-            ([INLINE :elt 3405])
-            ([INLINE :x (/ 5331 4) :y (/ 100519 20) :w (/ 5581 60) :h 22 :elt 3406]
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y (/ 100519 20) :w 93 :h 11 :text "America’s Healthiest"])
-              ([INLINE :elt 3407]))
-             ([LINE]
-              ([TEXT :x (/ 5331 4) :y (/ 100739 20) :w 64 :h 11 :text " Grocery Store"]))))))
-         ([MAGIC :x 454 :y (/ 302897 60) :w 1000 :h 15.6 :elt 3408]
-          ([MAGIC :x 454 :y (/ 302897 60) :w 116.5 :h 15.6 :elt 3409]
-           ([TEXT :x (/ 2041 4) :y (/ 60583 12) :w 4 :h 15 :text " "])))
-         ([MAGIC :x 454 :y (/ 303833 60) :w 1000 :h (/ 2099 60) :elt 3410]
-          ([MAGIC :x 454 :y (/ 303833 60) :w 116.5 :h (/ 2099 60) :elt 3411]
-           ([TEXT :x (/ 1849 4) :y 5064.2 :w 3 :h 12 :text " "]))
-          ([MAGIC :x 570.5 :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3412])
-          ([MAGIC :x (/ 7147 12) :y (/ 303833 60) :w 129.5 :h (/ 2099 60) :elt 3413]
-           ([INLINE :elt 3414]
-            ([TEXT :x (/ 3623 6) :y 5064.2 :w 60 :h 12 :text "Withoutabox"])
-            ([INLINE :elt 3415])
-            ([INLINE :x (/ 3623 6) :y (/ 76148 15) :w 61 :h 22 :elt 3416]
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 76148 15) :w 44 :h 11 :text "Submit to"])
-              ([INLINE :elt 3417]))
-             ([LINE]
-              ([TEXT :x (/ 3623 6) :y (/ 76313 15) :w 61 :h 11 :text " Film Festivals"])))))
-          ([MAGIC :x (/ 8701 12) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3418])
-          ([MAGIC :x (/ 4501 6) :y (/ 303833 60) :w 118.5 :h (/ 2099 60) :elt 3419]
-           ([INLINE :elt 3420]
-            ([TEXT :x (/ 9101 12) :y 5064.2 :w 28 :h 12 :text "Woot!"])
-            ([INLINE :elt 3421])
-            ([INLINE :x (/ 9101 12) :y (/ 76148 15) :w 62 :h 22 :elt 3422]
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 76148 15) :w 47 :h 11 :text "Deals and "])
-              ([INLINE :elt 3423]))
-             ([LINE]
-              ([TEXT :x (/ 9101 12) :y (/ 76313 15) :w 62 :h 11 :text " Shenanigans"])))))
-          ([MAGIC :x (/ 2606 3) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3424])
-          ([MAGIC :x (/ 3575 4) :y (/ 303833 60) :w 102.5 :h (/ 2099 60) :elt 3425]
-           ([INLINE :elt 3426]
-            ([TEXT :x 902 :y 5064.2 :w 37 :h 12 :text "Zappos"])
-            ([INLINE :elt 3427])
-            ([INLINE :x 902 :y (/ 76148 15) :w (/ 2401 60) :h 22 :elt 3428]
-             ([LINE]
-              ([TEXT :x 902 :y (/ 76148 15) :w 40 :h 11 :text "Shoes &"])
-              ([INLINE :elt 3429]))
-             ([LINE]
-              ([TEXT :x 902 :y (/ 76313 15) :w 38 :h 11 :text " Clothing"])))))
-          ([MAGIC :x (/ 3985 4) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3430])
-          ([MAGIC :x (/ 3064 3) :y (/ 303833 60) :w 122.5 :h (/ 2099 60) :elt 3431]
-           ([INLINE :elt 3432]
-            ([TEXT :x (/ 12355 12) :y 5064.2 :w 49 :h 12 :text "Souq.com"])
-            ([INLINE :elt 3433])
-            ([INLINE :x (/ 12355 12) :y (/ 76148 15) :w 72 :h 22 :elt 3434]
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 76148 15) :w 69 :h 11 :text "Shop Online in"])
-              ([INLINE :elt 3435]))
-             ([LINE]
-              ([TEXT :x (/ 12355 12) :y (/ 76313 15) :w 72 :h 11 :text " the Middle East"])))))
-          ([MAGIC :x (/ 6863 6) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3436])
-          ([MAGIC :x (/ 14027 12) :y (/ 303833 60) :w 130.5 :h (/ 2099 60) :elt 3437]
-           ([INLINE :elt 3438]
-            ([TEXT :x (/ 7063 6) :y 5064.2 :w 114 :h 12 :text "Subscribe with Amazon"])
-            ([INLINE :elt 3439])
-            ([INLINE :x (/ 7063 6) :y (/ 76148 15) :w 95 :h 22 :elt 3440]
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 76148 15) :w 63 :h 11 :text "Discover & try"])
-              ([INLINE :elt 3441]))
-             ([LINE]
-              ([TEXT :x (/ 7063 6) :y (/ 76313 15) :w 95 :h 11 :text " subscription services"])))))
-          ([MAGIC :x (/ 15593 12) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3442])
-          ([MAGIC :x 1324.5 :y (/ 303833 60) :w 129.5 :h (/ 2099 60) :elt 3443]
-           ([TEXT :x (/ 5331 4) :y 5064.2 :w 3 :h 12 :text " "]))))))
-      ([BLOCK :x 0 :y (/ 76933 15) :w 1908 :h 58 :elt 3444]
-       ([LINE]
-        ([INLINE :x 667.9 :y (/ 77083 15) :w 572.2 :h 18 :elt 3445]
-         ([LINE]
-          ([INLINE :elt 3446]
-           ([INLINE :elt 3447]
-            ([TEXT :x 675.1 :y (/ 77113 15) :w 97 :h 14 :text "Conditions of Use"])))
-          ([INLINE :elt 3448]
-           ([INLINE :elt 3449]
-            ([TEXT :x 786.5 :y (/ 77113 15) :w 78 :h 14 :text "Privacy Notice"])))
-          ([INLINE :elt 3450]
-           ([INLINE :elt 3451]
-            ([TEXT :x 878.9 :y (/ 77113 15) :w 103 :h 14 :text "Interest-Based Ads"])))
-          ([INLINE :elt 3452]
-           ([TEXT :x 989.1 :y (/ 77113 15) :w 251 :h 14 :text "© 1996-2018, Amazon.com, Inc. or its affiliates"])))))))
-     ([BLOCK :x -1000000 :y -1000000 :w 1 :h 1 :elt 3453]
-      ([LINE]
-       ([INLINE :x -1000000 :y -999987 :w 1 :h 1 :elt 3454])))
-     ([BLOCK :x -1000000 :y -1000000 :w 0 :h 1 :elt 3456]
-      ([LINE]
-       ([INLINE :x -1000000 :y -999986 :w 0 :h 0 :elt 3457]))))
-    ([ANON]
-     ([LINE]
-      ([INLINE :elt 3465]
-       ([TEXT :x 0 :y (/ 77833 15) :w 39 :h 15 :text "normal"]))
-      ([BLOCK :x 0 :y (/ 78088 15) :w 0 :h 0 :elt 3466])
-      ([TEXT :x 39 :y (/ 77833 15) :w 0 :h 15 :text " "])
-      ([BLOCK :x 0 :y 0 :w 0 :h 0 :elt 3484])))))))
+(define-browser doc-1 :matched true :w 1920 :h 980 :fs 16 :scrollw 12)
 
 (define-document doc-1
   ([html :num 0 :class (a-ember a-transition a-transform a-opacity a-border-image a-border-radius a-box-shadow a-text-stroke a-text-shadow a-touch-scrolling a-transform3d a-gradients a-local-storage a-textarea-placeholder a-input-placeholder a-autofocus a-webworker a-history a-geolocation a-drag-drop a-svg a-canvas a-video a-audio a-js TridactylThemeDefault a-ws a-audio a-video a-canvas a-svg a-drag-drop a-geolocation a-history a-webworker a-autofocus a-input-placeholder a-textarea-placeholder a-local-storage a-gradients a-transform3d a-touch-scrolling a-text-shadow a-text-stroke a-box-shadow a-border-radius a-border-image a-opacity a-transform a-transition)]
@@ -13699,12 +10565,3147 @@
     ([script :num 3494 :id s-bia-view-more])
     ([script :num 3495 :id s-qu-suggestion]))))
 
+(define-layout doc-1 (doc-1 doc-1)
+ ([VIEW :w 1920]
+  ([BLOCK :x 0 :y 0 :w 1908 :h (/ 78088 15) :elt 0]
+   ([BLOCK :x 0 :y 0 :w 1908 :h (/ 78088 15) :elt 64]
+    ([ANON]
+     ([LINE]
+      ([INLINE :x 0 :y 10 :w 304 :h 4 :elt 65])))
+    ([BLOCK :x 0 :y 19 :w 1908 :h (/ 77518 15) :elt 66]
+     ([ANON]
+      ([LINE]
+       ([INLINE :elt 79])))
+     ([BLOCK :x 0 :y 19 :w 1908 :h 55 :elt 81]
+      ([BLOCK :x 0 :y 19 :w 1908 :h 55 :elt 82]
+       ([BLOCK :x 0 :y -10000 :w 1 :h 1 :elt 83]
+        ([LINE]
+         ([TEXT :x 0 :y -9998 :w 61 :h 15 :text "Interesting " :features exclusion-zone]))
+        ([LINE]
+         ([TEXT :x 0 :y -9979 :w 32 :h 15 :text "Finds " :features exclusion-zone]))
+        ([LINE]
+         ([TEXT :x 0 :y -9960 :w 48 :h 15 :text "Updated " :features exclusion-zone]))
+        ([LINE]
+         ([TEXT :x 0 :y -9941 :w 29 :h 15 :text "Daily" :features exclusion-zone])))))
+     ([BLOCK :x 0 :y 74 :w 1908 :h 99 :elt 86]
+      ([BLOCK :x 0 :y 74 :w 1908 :h 99 :elt 87]
+       ([BLOCK :x 0 :y 74 :w 1908 :h 39 :elt 88]
+        ([BLOCK :x 0 :y 74 :w 192 :h 39 :elt 89]
+         ([BLOCK :x 0 :y 74 :w 192 :h 39 :elt 93]
+          ([LINE]
+           ([INLINE :x 27 :y 87 :w 97 :h 30 :elt 94]
+            ([BLOCK :x 27 :y 87 :w 97 :h 30 :elt 95]
+             ([LINE]
+              ([TEXT :x -473 :y 79 :w 52 :h 16 :text "Amazon"]))))
+           ([TEXT :x 124 :y 104 :w 0 :h 16 :text " "])
+           ([BLOCK :x 92 :y 106 :w 45 :h 17 :elt 98]))))
+        ([BLOCK :x 1508 :y 74 :w 400 :h 39 :elt 100]
+         ([ANON]
+          ([LINE]
+           ([INLINE :elt 102])))
+         ([BLOCK :x 1508 :y 83 :w 400 :h 39 :elt 103]
+          ([BLOCK :x 1508 :y 83 :w 400 :h 39 :elt 104]
+           ([LINE]
+            ([INLINE :x 1508 :y 83 :w 400 :h 39 :elt 105])))))
+        ([BLOCK :x 0 :y 74 :w 1908 :h 39 :elt 107]
+         ([BLOCK :x 192 :y 74 :w 1316 :h 46 :elt 109]
+          ([BLOCK :x 192 :y 85 :w 1291 :h 0 :elt 110])
+          ([BLOCK :x 192 :y 85 :w 1291 :h 35 :elt 111]
+           ([BLOCK :x 192 :y 85 :w 47 :h 35 :elt 112]
+            ([BLOCK :x 192 :y 85 :w 47 :h 35 :elt 113]
+             ([BLOCK :x 198 :y 87 :w 40 :h 33 :elt 114]
+              ([BLOCK :x 203 :y 87 :w 14 :h 33 :elt 115]
+               ([LINE]
+                ([TEXT :x 203 :y 96.5 :w 14 :h 14 :text "All"])))
+              ([BLOCK :x 222 :y 101 :w 8 :h 4 :elt 116]))
+             ([BLOCK :x 193 :y 85 :w 221 :h 35 :elt 118]
+              ([BLOCK :x 195 :y 86 :w 221 :h 16 :elt 119]
+               ([LINE]
+                ([TEXT :x 198 :y 86 :w 101 :h 16 :text "All Departments" :features exclusion-zone])))
+              ([BLOCK :x 195 :y 102 :w 221 :h 16 :elt 120]
+               ([LINE]
+                ([TEXT :x 198 :y 102 :w 71 :h 16 :text "Alexa Skills"])))
+              ([BLOCK :x 195 :y 118 :w 221 :h 16 :elt 121]
+               ([LINE]
+                ([TEXT :x 198 :y 118 :w 106 :h 16 :text "Amazon Devices"])))
+              ([BLOCK :x 195 :y 134 :w 221 :h 16 :elt 122]
+               ([LINE]
+                ([TEXT :x 198 :y 134 :w 93 :h 16 :text "Amazon Fresh"])))
+              ([BLOCK :x 195 :y 150 :w 221 :h 16 :elt 123]
+               ([LINE]
+                ([TEXT :x 198 :y 150 :w 128 :h 16 :text "Amazon Warehouse"])))
+              ([BLOCK :x 195 :y 166 :w 221 :h 16 :elt 124]
+               ([LINE]
+                ([TEXT :x 198 :y 166 :w 69 :h 16 :text "Appliances"])))
+              ([BLOCK :x 195 :y 182 :w 221 :h 16 :elt 125]
+               ([LINE]
+                ([TEXT :x 198 :y 182 :w 95 :h 16 :text "Apps & Games"])))
+              ([BLOCK :x 195 :y 198 :w 221 :h 16 :elt 126]
+               ([LINE]
+                ([TEXT :x 198 :y 198 :w 134 :h 16 :text "Arts, Crafts & Sewing"])))
+              ([BLOCK :x 195 :y 214 :w 221 :h 16 :elt 127]
+               ([LINE]
+                ([TEXT :x 198 :y 214 :w 201 :h 16 :text "Automotive Parts & Accessories"])))
+              ([BLOCK :x 195 :y 230 :w 221 :h 16 :elt 128]
+               ([LINE]
+                ([TEXT :x 198 :y 230 :w 32 :h 16 :text "Baby"])))
+              ([BLOCK :x 195 :y 246 :w 221 :h 16 :elt 129]
+               ([LINE]
+                ([TEXT :x 198 :y 246 :w 152 :h 16 :text "Beauty & Personal Care"])))
+              ([BLOCK :x 195 :y 262 :w 221 :h 16 :elt 130]
+               ([LINE]
+                ([TEXT :x 198 :y 262 :w 39 :h 16 :text "Books"])))
+              ([BLOCK :x 195 :y 278 :w 221 :h 16 :elt 131]
+               ([LINE]
+                ([TEXT :x 198 :y 278 :w 74 :h 16 :text "CDs & Vinyl"])))
+              ([BLOCK :x 195 :y 294 :w 221 :h 16 :elt 132]
+               ([LINE]
+                ([TEXT :x 198 :y 294 :w 169 :h 16 :text "Cell Phones & Accessories"])))
+              ([BLOCK :x 195 :y 310 :w 221 :h 16 :elt 133]
+               ([LINE]
+                ([TEXT :x 198 :y 310 :w 165 :h 16 :text "Clothing, Shoes & Jewelry"])))
+              ([BLOCK :x 195 :y 326 :w 221 :h 16 :elt 134]
+               ([LINE]
+                ([TEXT :x 198 :y 326 :w 61 :h 16 :text " Women"])))
+              ([BLOCK :x 195 :y 342 :w 221 :h 16 :elt 135]
+               ([LINE]
+                ([TEXT :x 198 :y 342 :w 40 :h 16 :text " Men"])))
+              ([BLOCK :x 195 :y 358 :w 221 :h 16 :elt 136]
+               ([LINE]
+                ([TEXT :x 198 :y 358 :w 41 :h 16 :text " Girls"])))
+              ([BLOCK :x 195 :y 374 :w 221 :h 16 :elt 137]
+               ([LINE]
+                ([TEXT :x 198 :y 374 :w 43 :h 16 :text " Boys"])))
+              ([BLOCK :x 195 :y 390 :w 221 :h 16 :elt 138]
+               ([LINE]
+                ([TEXT :x 198 :y 390 :w 44 :h 16 :text " Baby"])))
+              ([BLOCK :x 195 :y 406 :w 221 :h 16 :elt 139]
+               ([LINE]
+                ([TEXT :x 198 :y 406 :w 139 :h 16 :text "Collectibles & Fine Art"])))
+              ([BLOCK :x 195 :y 422 :w 221 :h 16 :elt 140]
+               ([LINE]
+                ([TEXT :x 198 :y 422 :w 70 :h 16 :text "Computers"])))
+              ([BLOCK :x 195 :y 438 :w 221 :h 16 :elt 141]
+               ([LINE]
+                ([TEXT :x 198 :y 438 :w 53 :h 16 :text "Courses"])))
+              ([BLOCK :x 195 :y 454 :w 221 :h 16 :elt 142]
+               ([LINE]
+                ([TEXT :x 198 :y 454 :w 168 :h 16 :text "Credit and Payment Cards"])))
+              ([BLOCK :x 195 :y 470 :w 221 :h 16 :elt 143]
+               ([LINE]
+                ([TEXT :x 198 :y 470 :w 80 :h 16 :text "Digital Music"])))
+              ([BLOCK :x 195 :y 486 :w 221 :h 16 :elt 144]
+               ([LINE]
+                ([TEXT :x 198 :y 486 :w 69 :h 16 :text "Electronics"])))
+              ([BLOCK :x 195 :y 502 :w 221 :h 16 :elt 145]
+               ([LINE]
+                ([TEXT :x 198 :y 502 :w 117 :h 16 :text "Garden & Outdoor"])))
+              ([BLOCK :x 195 :y 518 :w 221 :h 16 :elt 146]
+               ([LINE]
+                ([TEXT :x 198 :y 518 :w 64 :h 16 :text "Gift Cards"])))
+              ([BLOCK :x 195 :y 534 :w 221 :h 16 :elt 147]
+               ([LINE]
+                ([TEXT :x 198 :y 534 :w 161 :h 16 :text "Grocery & Gourmet Food"])))
+              ([BLOCK :x 195 :y 550 :w 221 :h 16 :elt 148]
+               ([LINE]
+                ([TEXT :x 198 :y 550 :w 70 :h 16 :text "Handmade"])))
+              ([BLOCK :x 195 :y 566 :w 221 :h 16 :elt 149]
+               ([LINE]
+                ([TEXT :x 198 :y 566 :w 201 :h 16 :text "Health, Household & Baby Care"])))
+              ([BLOCK :x 195 :y 582 :w 221 :h 16 :elt 150]
+               ([LINE]
+                ([TEXT :x 198 :y 582 :w 170 :h 16 :text "Home & Business Services"])))
+              ([BLOCK :x 195 :y 598 :w 221 :h 16 :elt 151]
+               ([LINE]
+                ([TEXT :x 198 :y 598 :w 102 :h 16 :text "Home & Kitchen"])))
+              ([BLOCK :x 195 :y 614 :w 221 :h 16 :elt 152]
+               ([LINE]
+                ([TEXT :x 198 :y 614 :w 131 :h 16 :text "Industrial & Scientific"])))
+              ([BLOCK :x 195 :y 630 :w 221 :h 16 :elt 153]
+               ([LINE]
+                ([TEXT :x 198 :y 630 :w 77 :h 16 :text "Kindle Store"])))
+              ([BLOCK :x 195 :y 646 :w 221 :h 16 :elt 154]
+               ([LINE]
+                ([TEXT :x 198 :y 646 :w 148 :h 16 :text "Luggage & Travel Gear"])))
+              ([BLOCK :x 195 :y 662 :w 221 :h 16 :elt 155]
+               ([LINE]
+                ([TEXT :x 198 :y 662 :w 91 :h 16 :text "Luxury Beauty"])))
+              ([BLOCK :x 195 :y 678 :w 221 :h 16 :elt 156]
+               ([LINE]
+                ([TEXT :x 198 :y 678 :w 151 :h 16 :text "Magazine Subscriptions"])))
+              ([BLOCK :x 195 :y 694 :w 221 :h 16 :elt 157]
+               ([LINE]
+                ([TEXT :x 198 :y 694 :w 80 :h 16 :text "Movies & TV"])))
+              ([BLOCK :x 195 :y 710 :w 221 :h 16 :elt 158]
+               ([LINE]
+                ([TEXT :x 198 :y 710 :w 127 :h 16 :text "Musical Instruments"])))
+              ([BLOCK :x 195 :y 726 :w 221 :h 16 :elt 159]
+               ([LINE]
+                ([TEXT :x 198 :y 726 :w 97 :h 16 :text "Office Products"])))
+              ([BLOCK :x 195 :y 742 :w 221 :h 16 :elt 160]
+               ([LINE]
+                ([TEXT :x 198 :y 742 :w 79 :h 16 :text "Pet Supplies"])))
+              ([BLOCK :x 195 :y 758 :w 221 :h 16 :elt 161]
+               ([LINE]
+                ([TEXT :x 198 :y 758 :w 154 :h 16 :text "Prime Exclusive Savings"])))
+              ([BLOCK :x 195 :y 774 :w 221 :h 16 :elt 162]
+               ([LINE]
+                ([TEXT :x 198 :y 774 :w 82 :h 16 :text "Prime Pantry"])))
+              ([BLOCK :x 195 :y 790 :w 221 :h 16 :elt 163]
+               ([LINE]
+                ([TEXT :x 198 :y 790 :w 77 :h 16 :text "Prime Video"])))
+              ([BLOCK :x 195 :y 806 :w 221 :h 16 :elt 164]
+               ([LINE]
+                ([TEXT :x 198 :y 806 :w 56 :h 16 :text "Software"])))
+              ([BLOCK :x 195 :y 822 :w 221 :h 16 :elt 165]
+               ([LINE]
+                ([TEXT :x 198 :y 822 :w 117 :h 16 :text "Sports & Outdoors"])))
+              ([BLOCK :x 195 :y 838 :w 221 :h 16 :elt 166]
+               ([LINE]
+                ([TEXT :x 198 :y 838 :w 176 :h 16 :text "Tools & Home Improvement"])))
+              ([BLOCK :x 195 :y 854 :w 221 :h 16 :elt 167]
+               ([LINE]
+                ([TEXT :x 198 :y 854 :w 92 :h 16 :text "Toys & Games"])))
+              ([BLOCK :x 195 :y 870 :w 221 :h 16 :elt 168]
+               ([LINE]
+                ([TEXT :x 198 :y 870 :w 52 :h 16 :text "Vehicles"])))
+              ([BLOCK :x 195 :y 886 :w 221 :h 16 :elt 169]
+               ([LINE]
+                ([TEXT :x 198 :y 886 :w 86 :h 16 :text "Video Games"]))))))
+           ([BLOCK :x 1438 :y 85 :w 45 :h 35 :elt 170]
+            ([BLOCK :x 1438 :y 85 :w 45 :h 35 :elt 171]
+             ([BLOCK :x 1450 :y 92 :w 21 :h 21 :elt 172]
+              ([LINE]
+               ([TEXT :x 1201.5 :y 91 :w 18 :h 15 :text "Go"])))
+             ([BLOCK :x 1438 :y 85 :w 45 :h 35 :elt 173])))
+           ([BLOCK :x 239 :y 85 :w 1199 :h 35 :elt 174]
+            ([BLOCK :x 239 :y 85 :w 1199 :h 35 :elt 175]
+             ([BLOCK :x 239 :y 97 :w 55 :h 24 :elt 176]
+              ([LINE]
+               ([TEXT :x 239 :y 106.5 :w 45 :h 16 :text " Search "])))
+             ([BLOCK :x 239 :y 86 :w 1199 :h 33 :elt 177]))
+            ([BLOCK :x 239 :y 120 :w 1199 :h 0 :elt 178])))))
+        ([BLOCK :x 0 :y 113 :w 1908 :h 0 :elt 180])
+        ([BLOCK :x 0 :y 113 :w 1908 :h 0 :elt 1288])
+        ([BLOCK :x 0 :y 113 :w 1908 :h 0 :elt 1291])
+        ([BLOCK :x 0 :y 113 :w 1908 :h 0 :elt 1320]))
+       ([BLOCK :x 0 :y 113 :w 1908 :h 60 :elt 1323]
+        ([BLOCK :x 0 :y 118 :w 192 :h 55 :elt 1324]
+         ([BLOCK :x 0 :y 120 :w 192 :h 50 :elt 1325]
+          ([LINE]
+           ([INLINE :elt 1326]
+            ([BLOCK :x 11 :y 127 :w 129 :h 44 :elt 1327]
+             ([BLOCK :x 13 :y 140 :w 22 :h 22 :elt 1328])
+             ([BLOCK :x 38 :y 127 :w 102 :h 0 :elt 1329]
+              ([BLOCK :x 38 :y 136 :w 97 :h 14 :elt 1330]
+               ([LINE]
+                ([TEXT :x 38 :y 136 :w 86 :h 14 :text "Deliver to Pavel"])))
+              ([BLOCK :x 38 :y 150 :w 102 :h 20 :elt 1331]
+               ([LINE]
+                ([TEXT :x 38 :y 149.5 :w 91 :h 16 :text "Seattle 98122‌"])))))))))
+        ([BLOCK :x 1436 :y 118 :w 472 :h 55 :elt 1334]
+         ([BLOCK :x 1436 :y 120 :w 472 :h 50 :elt 1336]
+          ([BLOCK :x 1469 :y 127 :w 51 :h 44 :elt 1337]
+           ([LINE]
+            ([INLINE :x 1462 :y 127 :w 54 :h 43 :elt 1338]
+             ([BLOCK :x 1462 :y 136 :w 43 :h 14 :elt 1339]
+              ([LINE]
+               ([INLINE :x 1486 :y 151 :w 14 :h 14 :elt 1340]))
+              ([LINE]
+               ([TEXT :x 1476 :y 139 :w 3 :h 14 :text " "])
+               ([INLINE :elt 1341]
+                ([TEXT :x 1484 :y 136 :w 17 :h 14 :text "EN"]))))
+             ([BLOCK :x 1455 :y 150 :w 30 :h 20 :elt 1342]
+              ([LINE]
+               ([TEXT :x 1455 :y 149.5 :w 8 :h 16 :text " "])
+               ([INLINE :x 1506 :y 156.5 :w 8 :h 4 :elt 1343]))))
+            ([TEXT :x 1516 :y 159 :w 3 :h 14 :text " "])
+            ([INLINE :x 1519 :y 136 :w 1 :h 29 :elt 1344])))
+          ([BLOCK :x 1522 :y 127 :w 141 :h 44 :elt 1345]
+           ([BLOCK :x 1522 :y 136 :w 141 :h 14 :elt 1346]
+            ([LINE]
+             ([TEXT :x 1532 :y 136 :w 66 :h 14 :text "Hello, Pavel"])))
+           ([BLOCK :x 1531 :y 127 :w 132 :h 43 :elt 1347]
+            ([LINE]
+             ([TEXT :x 1531 :y 149.5 :w 110 :h 16 :text "Account & Lists"])
+             ([INLINE :x 1646 :y 156.5 :w 8 :h 4 :elt 1348]))))
+          ([BLOCK :x -8564 :y 126 :w 1 :h 1 :elt 1351]
+           ([LINE]
+            ([TEXT :x -8564 :y 125 :w 19 :h 14 :text "Not " :features exclusion-zone]))
+           ([LINE]
+            ([TEXT :x -8564 :y 137 :w 38 :h 14 :text "Pavel? "]))
+           ([LINE]
+            ([TEXT :x -8564 :y 149 :w 25 :h 14 :text "Sign "]))
+           ([LINE]
+            ([TEXT :x -8564 :y 161 :w 19 :h 14 :text "Out "])))
+          ([BLOCK :x 1665 :y 145 :w 64 :h 26 :elt 1352]
+           ([BLOCK :x 1674 :y 150 :w 9 :h 0 :elt 1353])
+           ([BLOCK :x 1674 :y 150 :w 55 :h 20 :elt 1354]
+            ([LINE]
+             ([TEXT :x 1674 :y 149.5 :w 46 :h 16 :text "Orders"]))))
+          ([BLOCK :x 1731 :y 145 :w 69 :h 26 :elt 1355]
+           ([BLOCK :x 1740 :y 150 :w 9 :h 0 :elt 1356])
+           ([BLOCK :x 1740 :y 150 :w 60 :h 20 :elt 1357]
+            ([LINE]
+             ([TEXT :x 1740 :y 149.5 :w 38 :h 16 :text "Prime"])
+             ([INLINE :x 1783 :y 156.5 :w 8 :h 4 :elt 1358]))))
+          ([BLOCK :x 1802 :y 127 :w 98 :h 44 :elt 1359]
+           ([BLOCK :x 1850 :y 136 :w 9 :h 14 :elt 1360])
+           ([BLOCK :x 1850 :y 150 :w 50 :h 20 :elt 1361]
+            ([LINE]
+             ([TEXT :x 1850 :y 149.5 :w 28 :h 16 :text "Cart"])
+             ([INLINE :x 1883 :y 156.5 :w 8 :h 4 :elt 1362])))
+           ([BLOCK :x 1812 :y 138 :w 38 :h 26 :elt 1363])
+           ([BLOCK :x 1825 :y 134 :w 19 :h 16 :elt 1364]
+            ([LINE]
+             ([TEXT :x 1830 :y 133.5 :w 9 :h 17 :text "0" :features exclusion-zone]))))))
+        ([BLOCK :x 192 :y 118 :w 1244 :h 55 :elt 1366]
+         ([BLOCK :x 192 :y 120 :w 142 :h 48 :elt 1367]
+          ([BLOCK :x 193 :y 143 :w 125 :h 26 :elt 1368]
+           ([BLOCK :x 193 :y 148 :w 25 :h 0 :elt 1369])
+           ([BLOCK :x 193 :y 148 :w 125 :h 20 :elt 1370]
+            ([LINE]
+             ([TEXT :x 206 :y 147.5 :w 87 :h 16 :text "Departments"])
+             ([INLINE :x 298 :y 154.5 :w 8 :h 4 :elt 1371])))))
+         ([BLOCK :x 192 :y 118 :w 1244 :h 71 :elt 1372]
+          ([BLOCK :x 334 :y 152 :w 1102 :h 37 :elt 1373]
+           ([BLOCK :x 334 :y 152 :w 120 :h 17 :elt 1375]
+            ([LINE]
+             ([TEXT :x 334 :y 150.5 :w 98 :h 15 :text "Browsing History"])
+             ([INLINE :x 437 :y 156.5 :w 8 :h 4 :elt 1376])))
+           ([BLOCK :x 454 :y 152 :w 141 :h 12.5 :elt 1377]
+            ([LINE]
+             ([INLINE :x 463 :y 152 :w 123 :h 12.5 :elt 1378]
+              ([LINE]
+               ([INLINE :x 463 :y 152 :w 33 :h 12.5 :elt 1379]
+                ([LINE]
+                 ([TEXT :x 463 :y 150.5 :w 33 :h 15 :text "Pavel"])))
+               ([TEXT :x 496 :y 150.5 :w 90 :h 15 :text "'s Amazon.com"])))))
+           ([BLOCK :x 595 :y 152 :w 99 :h 12 :elt 1380]
+            ([LINE]
+             ([TEXT :x 604 :y 150.5 :w 81 :h 15 :text "Today's Deals"])))
+           ([BLOCK :x 694 :y 152 :w 77 :h 12 :elt 1381]
+            ([LINE]
+             ([TEXT :x 703 :y 150.5 :w 59 :h 15 :text "Gift Cards"])))
+           ([BLOCK :x 771 :y 152 :w 66 :h 12 :elt 1382]
+            ([LINE]
+             ([TEXT :x 780 :y 150.5 :w 48 :h 15 :text "Registry"])))
+           ([BLOCK :x 837 :y 152 :w 40 :h 12 :elt 1383]
+            ([LINE]
+             ([TEXT :x 846 :y 150.5 :w 22 :h 15 :text "Sell"])))
+           ([BLOCK :x 877 :y 152 :w 106 :h 12 :elt 1384]
+            ([LINE]
+             ([TEXT :x 886 :y 150.5 :w 88 :h 15 :text "Treasure Truck"])))
+           ([BLOCK :x 983 :y 152 :w 44 :h 12 :elt 1385]
+            ([LINE]
+             ([TEXT :x 992 :y 150.5 :w 26 :h 15 :text "Help"])))
+           ([BLOCK :x -10000 :y 152 :w 1 :h 1 :elt 1386]
+            ([LINE]
+             ([TEXT :x -10000 :y 151 :w 152 :h 14 :text "Disability Customer Support " :features exclusion-zone])))))))
+       ([BLOCK :x 0 :y 173 :w 1908 :h 0 :elt 1388])))
+     ([BLOCK :x 204 :y 173 :w 1500 :h (/ 61483 15) :elt 1401]
+      ([ANON]
+       ([LINE]
+        ([INLINE :elt 1402])
+        ([BLOCK :x 0 :y -500 :w 1 :h 1 :elt 1404]
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -498 :w 54 :h 15 :text "Welcome " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -479 :w 11 :h 15 :text "to " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -460 :w 81 :h 15 :text "Amazon.com. " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -441 :w 8 :h 15 :text "If " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -422 :w 21 :h 15 :text "you " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -403 :w 33 :h 15 :text "prefer " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -384 :w 7 :h 15 :text "a " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -365 :w 55 :h 15 :text "simplified " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -346 :w 52 :h 15 :text "shopping " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -327 :w 67 :h 15 :text "experience, " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -308 :w 15 :h 15 :text "try " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -289 :w 18 :h 15 :text "the " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -270 :w 38 :h 15 :text "mobile " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -251 :w 23 :h 15 :text "web " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -232 :w 42 :h 15 :text "version " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -213 :w 11 :h 15 :text "of " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -194 :w 48 :h 15 :text "Amazon " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -175 :w 11 :h 15 :text "at " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -156 :w 155 :h 15 :text "www.amazon.com/access. " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -137 :w 22 :h 15 :text "The " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -118 :w 38 :h 15 :text "mobile " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -99 :w 23 :h 15 :text "web " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -80 :w 42 :h 15 :text "version " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -61 :w 10 :h 15 :text "is " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -42 :w 38 :h 15 :text "similar " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -23 :w 11 :h 15 :text "to " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y -4 :w 18 :h 15 :text "the " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 15 :w 38 :h 15 :text "mobile " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 34 :w 25 :h 15 :text "app. " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 53 :w 27 :h 15 :text "Stay " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 72 :w 14 :h 15 :text "on " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 91 :w 77 :h 15 :text "Amazon.com " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 110 :w 15 :h 15 :text "for " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 129 :w 42 :h 15 :text "access " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 148 :w 11 :h 15 :text "to " :features exclusion-zone])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 167 :w 13 :h 15 :text "all "])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 186 :w 18 :h 15 :text "the "])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 205 :w 47 :h 15 :text "features "])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 224 :w 11 :h 15 :text "of "])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 243 :w 18 :h 15 :text "the "])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 262 :w 28 :h 15 :text "main "])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 281 :w 48 :h 15 :text "Amazon "])))
+         ([LINE]
+          ([INLINE :elt 1405]
+           ([TEXT :x 0 :y 300 :w 48 :h 15 :text "website."]))))))
+      ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1406]
+       ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1408]
+        ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1409]
+         ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1411]
+          ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1412]
+           ([BLOCK :x 204 :y 173 :w 80 :h 300 :elt 1413]
+            ([BLOCK :x 204 :y 173 :w 80 :h 300 :elt 1414]
+             ([BLOCK :x 227 :y 297 :w 34 :h 52 :elt 1415]
+              ([BLOCK :x -9772 :y 297 :w 1 :h 1 :elt 1416]
+               ([LINE]
+                ([TEXT :x -9772 :y 297 :w 6 :h 1 :text "Previous "]))
+               ([LINE]
+                ([TEXT :x -9772 :y 298 :w 4 :h 1 :text "page"]))))))
+           ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1417]
+            ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1418]
+             ([BLOCK :x -4296 :y 173 :w 10500 :h 300 :elt 1419]
+              ([LINE]
+               ([INLINE :x -4296 :y 173 :w 1500 :h 300 :elt 1420]
+                ([BLOCK :x -4296 :y 173 :w 1500 :h 300 :elt 1421]
+                 ([BLOCK :x -4296 :y 173 :w 1500 :h 300 :elt 1422]
+                  ([BLOCK :x -4296 :y 173 :w 1500 :h 300 :elt 1423]
+                   ([BLOCK :x -7296 :y 173 :w 7500 :h 300 :elt 1424]
+                    ([LINE]
+                     ([INLINE :x -4296 :y 173 :w 1500 :h 300 :elt 1425]
+                      ([ANON]
+                       ([LINE]
+                        ([INLINE :x -4296 :y 173 :w 1500 :h 300 :elt 1426]
+                         ([LINE]
+                          ([INLINE :x -4296 :y 173 :w 1500 :h 300 :elt 1427])))))
+                      ([BLOCK :x -4296 :y 473 :w 1500 :h 0 :elt 1428]))))))))
+               ([INLINE :x -2796 :y 173 :w 1500 :h 300 :elt 1429]
+                ([BLOCK :x -2796 :y 173 :w 1500 :h 300 :elt 1430]
+                 ([BLOCK :x -2796 :y 173 :w 1500 :h 300 :elt 1431]
+                  ([BLOCK :x -2796 :y 173 :w 1500 :h 300 :elt 1432]
+                   ([BLOCK :x -5796 :y 173 :w 7500 :h 300 :elt 1433]
+                    ([LINE]
+                     ([INLINE :x -2796 :y 173 :w 1500 :h 300 :elt 1434]
+                      ([ANON]
+                       ([LINE]
+                        ([INLINE :x -2796 :y 173 :w 1500 :h 300 :elt 1435]
+                         ([LINE]
+                          ([INLINE :x -2796 :y 173 :w 1500 :h 300 :elt 1436])))))
+                      ([BLOCK :x -2796 :y 473 :w 1500 :h 0 :elt 1437]))))))))
+               ([INLINE :x -1296 :y 173 :w 1500 :h 300 :elt 1438]
+                ([BLOCK :x -1296 :y 173 :w 1500 :h 300 :elt 1439]
+                 ([BLOCK :x -1296 :y 173 :w 1500 :h 300 :elt 1440]
+                  ([BLOCK :x -1296 :y 173 :w 1500 :h 300 :elt 1442]
+                   ([BLOCK :x -4296 :y 173 :w 7500 :h 300 :elt 1443]
+                    ([LINE]
+                     ([INLINE :x -1296 :y 173 :w 1500 :h 300 :elt 1444]
+                      ([ANON]
+                       ([LINE]
+                        ([INLINE :x -1296 :y 173 :w 1500 :h 300 :elt 1445]
+                         ([LINE]
+                          ([INLINE :x -1296 :y 173 :w 1500 :h 300 :elt 1446])))))
+                      ([BLOCK :x -1296 :y 473 :w 1500 :h 0 :elt 1447]))))))))
+               ([INLINE :x 204 :y 173 :w 1500 :h 300 :elt 1449]
+                ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1450]
+                 ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1451]
+                  ([BLOCK :x 204 :y 173 :w 1500 :h 300 :elt 1452]
+                   ([BLOCK :x -2796 :y 173 :w 7500 :h 300 :elt 1453]
+                    ([LINE]
+                     ([INLINE :x 204 :y 173 :w 1500 :h 300 :elt 1454]
+                      ([ANON]
+                       ([LINE]
+                        ([INLINE :x 204 :y 173 :w 1500 :h 300 :elt 1455]
+                         ([LINE]
+                          ([INLINE :x 204 :y 173 :w 1500 :h 300 :elt 1456])))))
+                      ([BLOCK :x 204 :y 473 :w 1500 :h 0 :elt 1457]))))))))
+               ([INLINE :x 1704 :y 173 :w 1500 :h 300 :elt 1458]
+                ([BLOCK :x 1704 :y 173 :w 1500 :h 300 :elt 1459]
+                 ([BLOCK :x 1704 :y 173 :w 1500 :h 300 :elt 1460]
+                  ([BLOCK :x 1704 :y 173 :w 1500 :h 300 :elt 1461]
+                   ([BLOCK :x -1296 :y 173 :w 7500 :h 300 :elt 1462]
+                    ([LINE]
+                     ([INLINE :x 1704 :y 173 :w 1500 :h 300 :elt 1463]
+                      ([ANON]
+                       ([LINE]
+                        ([INLINE :x 1704 :y 173 :w 1500 :h 300 :elt 1464]
+                         ([LINE]
+                          ([INLINE :x 1704 :y 173 :w 1500 :h 300 :elt 1465])))))
+                      ([BLOCK :x 1704 :y 473 :w 1500 :h 0 :elt 1466]))))))))
+               ([INLINE :x 3204 :y 173 :w 1500 :h 300 :elt 1467]
+                ([BLOCK :x 3204 :y 173 :w 1500 :h 300 :elt 1468]
+                 ([BLOCK :x 3204 :y 173 :w 1500 :h 300 :elt 1469]
+                  ([BLOCK :x 3204 :y 173 :w 1500 :h 300 :elt 1470]
+                   ([BLOCK :x 204 :y 173 :w 7500 :h 300 :elt 1471]
+                    ([LINE]
+                     ([INLINE :x 3204 :y 173 :w 1500 :h 300 :elt 1472]
+                      ([ANON]
+                       ([LINE]
+                        ([INLINE :x 3204 :y 173 :w 1500 :h 300 :elt 1473]
+                         ([LINE]
+                          ([INLINE :x 3204 :y 173 :w 1500 :h 300 :elt 1474])))))
+                      ([BLOCK :x 3204 :y 473 :w 1500 :h 0 :elt 1475]))))))))
+               ([INLINE :x 4704 :y 173 :w 1500 :h 300 :elt 1476]
+                ([BLOCK :x 4704 :y 173 :w 1500 :h 300 :elt 1477]
+                 ([BLOCK :x 4704 :y 173 :w 1500 :h 300 :elt 1478]
+                  ([BLOCK :x 4704 :y 173 :w 1500 :h 300 :elt 1479]
+                   ([BLOCK :x 1704 :y 173 :w 7500 :h 300 :elt 1480]
+                    ([LINE]
+                     ([INLINE :x 4704 :y 173 :w 1500 :h 300 :elt 1481]
+                      ([ANON]
+                       ([LINE]
+                        ([INLINE :x 4704 :y 173 :w 1500 :h 300 :elt 1482]
+                         ([LINE]
+                          ([INLINE :x 4704 :y 173 :w 1500 :h 300 :elt 1483])))))
+                      ([BLOCK :x 4704 :y 473 :w 1500 :h 0 :elt 1484]))))))))))))
+           ([BLOCK :x 1624 :y 173 :w 80 :h 300 :elt 1485]
+            ([BLOCK :x 1624 :y 173 :w 80 :h 300 :elt 1486]
+             ([BLOCK :x 1647 :y 297 :w 34 :h 52 :elt 1487]
+              ([BLOCK :x -8352 :y 297 :w 1 :h 1 :elt 1488]
+               ([LINE]
+                ([TEXT :x -8352 :y 297 :w 3 :h 1 :text "Next "]))
+               ([LINE]
+                ([TEXT :x -8352 :y 298 :w 4 :h 1 :text "page"])))))))))))
+      ([BLOCK :x 204 :y 473 :w 1500 :h 300 :elt 1491]
+       ([BLOCK :x 204 :y 473 :w 1500 :h 300 :elt 1493]
+        ([BLOCK :x 204 :y 473 :w 1500 :h 300 :elt 1494]
+         ([BLOCK :x 208 :y 473 :w 1486 :h 300 :elt 1495]
+          ([BLOCK :x 208 :y 742.7 :w 252 :h 31.3 :elt 1496]
+           ([LINE]
+            ([TEXT :x 208 :y (/ 14897 20) :w 252 :h 23 :text " Your Amazon Dashboard "])))
+          ([ANON]
+           ([LINE]
+            ([INLINE :x 208 :y 473 :w 1996 :h 300 :elt 1497]
+             ([LINE]
+              ([INLINE :x 214 :y 483 :w 240 :h 280 :elt 1498]
+               ([BLOCK :x 214 :y 483 :w 240 :h 216 :elt 1500]
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :x 229 :y 495 :w 224 :h 45 :elt 1501]
+                   ([LINE]
+                    ([INLINE :x 229 :y 495 :w 45 :h 45 :elt 1502]
+                     ([LINE]
+                      ([INLINE :elt 1503]
+                       ([INLINE :x 229 :y 495 :w 45 :h 45 :elt 1504])
+                       ([TEXT :x 274 :y 497 :w 0 :h 15 :text " "]))))
+                    ([TEXT :x 274 :y 497 :w 4 :h 15 :text " "])
+                    ([INLINE :x 278 :y 495 :w 175 :h 45 :elt 1505]
+                     ([BLOCK :x 293 :y 495 :w 160 :h 24 :elt 1506]
+                      ([LINE]
+                       ([TEXT :x 293 :y 496.5 :w 72 :h 20 :text "Hi, Pavel"])))
+                     ([BLOCK :x 293 :y 519 :w 160 :h 23 :elt 1507]
+                      ([LINE]
+                       ([TEXT :x 293 :y 523 :w 149 :h 15 :text "CUSTOMER SINCE 2011"]))))))))
+                ([BLOCK :x 229 :y 555 :w 45 :h 0 :elt 1508])
+                ([BLOCK :x 229 :y 555 :w 210 :h 19 :elt 1509]
+                 ([LINE]
+                  ([TEXT :x 229 :y 557 :w 96 :h 15 :text "YOUR ORDERS"])))
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :elt 1510]
+                   ([TEXT :x 229 :y 576 :w 80 :h 15 :text "1 recent order"]))))
+                ([BLOCK :x 229 :y 608 :w 45 :h 0 :elt 1511])
+                ([BLOCK :x 229 :y 608 :w 210 :h 19 :elt 1512]
+                 ([LINE]
+                  ([TEXT :x 229 :y 610 :w 179 :h 15 :text "TOP CATEGORIES FOR YOU"])))
+                ([BLOCK :x 229 :y 627 :w 210 :h 19 :elt 1513]
+                 ([BLOCK :x 229 :y 627 :w 214 :h 19 :elt 1514]
+                  ([LINE]
+                   ([TEXT :x 229 :y 629 :w 115 :h 15 :text "Health & Household"]))))
+                ([BLOCK :x 229 :y 646 :w 210 :h 19 :elt 1515]
+                 ([BLOCK :x 229 :y 646 :w 214 :h 19 :elt 1516]
+                  ([LINE]
+                   ([TEXT :x 229 :y 648 :w 159 :h 15 :text "Cell Phones & Accessories"]))))
+                ([BLOCK :x 229 :y 665 :w 210 :h 19 :elt 1517]
+                 ([BLOCK :x 229 :y 665 :w 214 :h 19 :elt 1518]
+                  ([LINE]
+                   ([TEXT :x 229 :y 667 :w 65 :h 15 :text "Electronics"]))))))
+              ([TEXT :x 454 :y 475 :w 4 :h 15 :text " "])
+              ([INLINE :x 464 :y 483 :w 240 :h 280 :elt 1519]
+               ([BLOCK :x 464 :y 483 :w 240 :h 280 :elt 1521]
+                ([BLOCK :x 479 :y 498 :w 210 :h 19 :elt 1522]
+                 ([LINE]
+                  ([INLINE :elt 1523]
+                   ([TEXT :x 479 :y 494 :w 76 :h 27 :text "PRIME"]))))
+                ([BLOCK :x 479 :y 522 :w 210 :h 5 :elt 1524])
+                ([BLOCK :x 479 :y 537 :w 210 :h 38 :elt 1525]
+                 ([BLOCK :x 479 :y 537 :w 210 :h 38 :elt 1526]
+                  ([LINE]
+                   ([TEXT :x 479 :y 538 :w 178 :h 17 :text "Prime Day starts July 16 at "]))
+                  ([LINE]
+                   ([TEXT :x 479 :y 557 :w 137 :h 17 :text "3pm ET. Learn more."]))))
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :elt 1527]
+                   ([INLINE :x 479 :y 590 :w 210 :h 150 :elt 1528])
+                   ([TEXT :x 689 :y 577 :w 0 :h 15 :text " "]))))))
+              ([TEXT :x 704 :y 475 :w 4 :h 15 :text " "])
+              ([INLINE :x 714 :y 483 :w 240 :h 280 :elt 1531]
+               ([BLOCK :x 714 :y 483 :w 240 :h 280 :elt 1533]
+                ([BLOCK :x 729 :y 498 :w 210 :h 19 :elt 1534]
+                 ([LINE]
+                  ([INLINE :elt 1535]
+                   ([TEXT :x 729 :y 494 :w 81 :h 27 :text "FRESH"]))))
+                ([BLOCK :x 729 :y 522 :w 210 :h 5 :elt 1536])
+                ([BLOCK :x 729 :y 537 :w 210 :h 38 :elt 1537]
+                 ([BLOCK :x 729 :y 537 :w 210 :h 38 :elt 1538]
+                  ([LINE]
+                   ([TEXT :x 729 :y 538 :w 187 :h 17 :text "Start your FREE trial: $25 off "]))
+                  ([LINE]
+                   ([TEXT :x 729 :y 557 :w 95 :h 17 :text "your first order"]))))
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :elt 1539]
+                   ([INLINE :x 729 :y 590 :w 210 :h 150 :elt 1540])
+                   ([TEXT :x 939 :y 577 :w 0 :h 15 :text " "]))))))
+              ([TEXT :x 954 :y 475 :w 4 :h 15 :text " "])
+              ([INLINE :x 964 :y 483 :w 240 :h 280 :elt 1543]
+               ([BLOCK :x 964 :y 483 :w 240 :h 280 :elt 1544]
+                ([BLOCK :x 979 :y 498 :w 210 :h 19 :elt 1545]
+                 ([LINE]
+                  ([INLINE :elt 1546]
+                   ([TEXT :x 979 :y 494 :w 75 :h 27 :text "VIDEO"]))))
+                ([BLOCK :x 979 :y 522 :w 210 :h 5 :elt 1547])
+                ([BLOCK :x 979 :y 537 :w 210 :h 36 :elt 1548]
+                 ([BLOCK :x 979 :y 537 :w 210 :h 19 :elt 1549]
+                  ([LINE]
+                   ([TEXT :x 979 :y 538 :w 154 :h 17 :text "Recommended for you:"])))
+                 ([BLOCK :x 979 :y 554 :w 210 :h 19 :elt 1550]
+                  ([LINE]
+                   ([TEXT :x 979 :y 555 :w 121 :h 17 :text "Goliath - Season 1"]))))
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :x 979 :y 573 :w 200 :h 170 :elt 1551]
+                   ([LINE]
+                    ([INLINE :elt 1552]
+                     ([INLINE :x 979 :y 588 :w 200 :h 150 :elt 1553])
+                     ([TEXT :x 1179 :y 575 :w 0 :h 15 :text " "]))))
+                  ([TEXT :x 1179 :y 575 :w 0 :h 15 :text " "])))))
+              ([TEXT :x 1204 :y 475 :w 4 :h 15 :text " "])
+              ([INLINE :x 1214 :y 483 :w 240 :h 280 :elt 1556]
+               ([BLOCK :x 1214 :y 483 :w 240 :h 280 :elt 1557]
+                ([BLOCK :x 1229 :y 498 :w 210 :h 19 :elt 1558]
+                 ([LINE]
+                  ([INLINE :elt 1559]
+                   ([TEXT :x 1229 :y 494 :w 77 :h 27 :text "MUSIC"]))))
+                ([BLOCK :x 1229 :y 522 :w 210 :h 5 :elt 1560])
+                ([BLOCK :x 1229 :y 537 :w 210 :h 36 :elt 1561]
+                 ([BLOCK :x 1229 :y 537 :w 210 :h 19 :elt 1562]
+                  ([LINE]
+                   ([TEXT :x 1229 :y 538 :w 154 :h 17 :text "Recommended for you:"])))
+                 ([BLOCK :x 1229 :y 554 :w 210 :h 19 :elt 1563]
+                  ([LINE]
+                   ([TEXT :x 1229 :y 555 :w 149 :h 17 :text "Wanted! - The Outlaws"]))))
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :x 1229 :y 573 :w 145 :h 170 :elt 1564]
+                   ([LINE]
+                    ([INLINE :elt 1565]
+                     ([INLINE :x 1229 :y 588 :w 145 :h 150 :elt 1566])
+                     ([TEXT :x 1374 :y 575 :w 0 :h 15 :text " "]))))
+                  ([TEXT :x 1374 :y 575 :w 0 :h 15 :text " "])))))
+              ([TEXT :x 1454 :y 475 :w 4 :h 15 :text " "])
+              ([INLINE :x 1464 :y 483 :w 240 :h 280 :elt 1569]
+               ([BLOCK :x 1464 :y 483 :w 240 :h 280 :elt 1571]
+                ([BLOCK :x 1479 :y 498 :w 210 :h 19 :elt 1572]
+                 ([LINE]
+                  ([INLINE :elt 1573]
+                   ([TEXT :x 1479 :y 494 :w 151 :h 27 :text "MEET ALEXA"]))))
+                ([BLOCK :x 1479 :y 522 :w 210 :h 5 :elt 1574])
+                ([BLOCK :x 1479 :y 537 :w 210 :h 36 :elt 1575]
+                 ([BLOCK :x 1479 :y 537 :w 210 :h 19 :elt 1576]
+                  ([LINE]
+                   ([TEXT :x 1479 :y 538 :w 186 :h 17 :text "Voice control your world with"])))
+                 ([BLOCK :x 1479 :y 554 :w 210 :h 19 :elt 1577]
+                  ([LINE]
+                   ([TEXT :x 1479 :y 555 :w 144 :h 17 :text "Echo & Alexa devices"]))))
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :elt 1578]
+                   ([INLINE :x 1479 :y 588 :w 210 :h 150 :elt 1579])
+                   ([TEXT :x 1689 :y 575 :w 0 :h 15 :text " "]))))))
+              ([TEXT :x 1704 :y 475 :w 4 :h 15 :text " "])
+              ([INLINE :x 1714 :y 483 :w 240 :h 280 :elt 1582]
+               ([BLOCK :x 1714 :y 483 :w 240 :h 280 :elt 1584]
+                ([BLOCK :x 1729 :y 498 :w 210 :h 19 :elt 1585]
+                 ([LINE]
+                  ([INLINE :elt 1586]
+                   ([TEXT :x 1729 :y 494 :w 102 :h 27 :text "AUDIBLE"]))))
+                ([BLOCK :x 1729 :y 522 :w 210 :h 5 :elt 1587])
+                ([BLOCK :x 1729 :y 537 :w 210 :h 62 :elt 1588]
+                 ([BLOCK :x 1729 :y 537 :w 210 :h 19 :elt 1589]
+                  ([LINE]
+                   ([TEXT :x 1729 :y 538 :w 187 :h 17 :text "Get any 2 audiobooks FREE"])))
+                 ([MAGIC :x 1729 :y 561 :w 210 :h 38 :elt 1590]
+                  ([TEXT :x 1729 :y 562 :w 184 :h 17 :text "Start with one we think you'll "])
+                  ([TEXT :x 1729 :y 581 :w 31 :h 17 :text "love:"])))
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :elt 1591]
+                   ([INLINE :x 1729 :y 609 :w 130 :h 130 :elt 1592])
+                   ([TEXT :x 1859 :y 601 :w 0 :h 15 :text " "]))))))
+              ([TEXT :x 1954 :y 475 :w 4 :h 15 :text " "])
+              ([INLINE :x 1964 :y 483 :w 240 :h 280 :elt 1593]
+               ([BLOCK :x 1964 :y 483 :w 240 :h 280 :elt 1595]
+                ([BLOCK :x 1979 :y 498 :w 210 :h 19 :elt 1596]
+                 ([LINE]
+                  ([INLINE :elt 1597]
+                   ([TEXT :x 1979 :y 494 :w 183 :h 27 :text "RECENT VIEWS"]))))
+                ([BLOCK :x 1979 :y 522 :w 210 :h 5 :elt 1598])
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :elt 1599]
+                   ([TEXT :x 1979 :y 538 :w 176 :h 17 :text "View your browsing history"]))))
+                ([BLOCK :x 1979 :y 562 :w 210 :h 110 :elt 1600]
+                 ([LINE]
+                  ([INLINE :elt 1601]
+                   ([INLINE :x 1979 :y 562 :w 210 :h 110 :elt 1602])
+                   ([TEXT :x 2189 :y 564 :w 0 :h 15 :text " "]))))
+                ([BLOCK :x 1979 :y 677 :w 210 :h 80 :elt 1603]
+                 ([LINE]
+                  ([INLINE :x 1979 :y 677 :w 70 :h 75 :elt 1604]
+                   ([BLOCK :x 1979 :y 682 :w 70 :h 70 :elt 1605]
+                    ([LINE]
+                     ([INLINE :elt 1606]
+                      ([INLINE :x 1979 :y 682 :w 70 :h 70 :elt 1607])
+                      ([TEXT :x 2049 :y 684 :w 0 :h 15 :text " "])))))
+                  ([TEXT :x 2049 :y 740 :w 4 :h 15 :text " "])
+                  ([INLINE :x 2053 :y 677 :w 70 :h 75 :elt 1608]
+                   ([BLOCK :x 2053 :y 682 :w 70 :h 70 :elt 1609]
+                    ([LINE]
+                     ([INLINE :elt 1610]
+                      ([INLINE :x 2053 :y 682 :w 70 :h 70 :elt 1611])
+                      ([TEXT :x 2123 :y 684 :w 0 :h 15 :text " "])))))
+                  ([TEXT :x 2123 :y 740 :w 4 :h 15 :text " "])
+                  ([INLINE :x 2127 :y 677 :w 70 :h 75 :elt 1612]
+                   ([BLOCK :x 2127 :y 682 :w 70 :h 70 :elt 1613]
+                    ([LINE]
+                     ([INLINE :elt 1614]
+                      ([INLINE :x 2127 :y 682 :w 70 :h 70 :elt 1615])
+                      ([TEXT :x 2197 :y 684 :w 0 :h 15 :text " "])))))))))
+              ([TEXT :x 2204 :y 475 :w 0 :h 15 :text " "]))))))
+         ([BLOCK :x 1649 :y 563 :w 45 :h 100 :elt 1618]
+          ([LINE]
+           ([INLINE :x 1667.5 :y 602 :w 13 :h 22 :elt 1619]))))))
+      ([BLOCK :x 204 :y 773 :w 1500 :h (/ 52721 30) :elt 1622]
+       ([BLOCK :x 204 :y 773 :w 1500 :h (/ 52721 30) :elt 1623]
+        ([BLOCK :x 204 :y 773 :w 1190 :h (/ 52721 30) :elt 1624]
+         ([BLOCK :x 204 :y 773 :w 1190 :h (/ 52721 30) :elt 1625]
+          ([BLOCK :x 224 :y 778 :w 1150 :h 286.5 :elt 1626]
+           ([BLOCK :x 224 :y 778 :w 1150 :h 286.5 :elt 1627]
+            ([BLOCK :x 244 :y 798 :w 1110 :h 31.5 :elt 1628]
+             ([BLOCK :x 244 :y 798 :w 341 :h 31.5 :elt 1629]
+              ([LINE]
+               ([INLINE :elt 1630]
+                ([TEXT :x 244 :y (/ 3209 4) :w 341 :h 23 :text "Recommendations for you in Books"]))))
+             ([BLOCK :x 585 :y 798 :w 15 :h 0 :elt 1631]))
+            ([BLOCK :x 244 :y 829.5 :w 1110 :h 220 :elt 1632]
+             ([BLOCK :x 244 :y 829.5 :w 1110 :h 220 :elt 1633]
+              ([LINE]
+               ([INLINE :x 244 :y 829.5 :w 2551 :h 200 :elt 1634]
+                ([LINE]
+                 ([INLINE :x 244 :y 829.5 :w 145 :h 200 :elt 1635]
+                  ([LINE]
+                   ([INLINE :x 244 :y 829.5 :w 145 :h 200 :elt 1636]
+                    ([LINE]
+                     ([INLINE :x 250.5 :y 829.5 :w 132 :h 200 :elt 1637]
+                      ([LINE]
+                       ([INLINE :x 250.5 :y 829.5 :w 132 :h 200 :elt 1638])))))))
+                 ([TEXT :x 399 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 403 :y 829.5 :w 145 :h 200 :elt 1639]
+                  ([LINE]
+                   ([INLINE :x 403 :y 829.5 :w 145 :h 200 :elt 1640]
+                    ([LINE]
+                     ([INLINE :x 409.5 :y 829.5 :w 132 :h 200 :elt 1641]
+                      ([LINE]
+                       ([INLINE :x 409.5 :y 829.5 :w 132 :h 200 :elt 1642])))))))
+                 ([TEXT :x 558 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 562 :y 829.5 :w 145 :h 200 :elt 1643]
+                  ([LINE]
+                   ([INLINE :x 562 :y 829.5 :w 145 :h 200 :elt 1644]
+                    ([LINE]
+                     ([INLINE :x 569 :y 829.5 :w 131 :h 200 :elt 1645]
+                      ([LINE]
+                       ([INLINE :x 569 :y 829.5 :w 131 :h 200 :elt 1646])))))))
+                 ([TEXT :x 717 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 721 :y 829.5 :w 145 :h 200 :elt 1647]
+                  ([LINE]
+                   ([INLINE :x 721 :y 829.5 :w 145 :h 200 :elt 1648]
+                    ([LINE]
+                     ([INLINE :x 725.5 :y 829.5 :w 136 :h 200 :elt 1649]
+                      ([LINE]
+                       ([INLINE :x 725.5 :y 829.5 :w 136 :h 200 :elt 1650])))))))
+                 ([TEXT :x 876 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 880 :y 829.5 :w 145 :h 200 :elt 1651]
+                  ([LINE]
+                   ([INLINE :x 880 :y 829.5 :w 145 :h 200 :elt 1652]
+                    ([LINE]
+                     ([INLINE :x 886 :y 829.5 :w 133 :h 200 :elt 1653]
+                      ([LINE]
+                       ([INLINE :x 886 :y 829.5 :w 133 :h 200 :elt 1654])))))))
+                 ([TEXT :x 1035 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1039 :y 829.5 :w 145 :h 200 :elt 1655]
+                  ([LINE]
+                   ([INLINE :x 1039 :y 829.5 :w 145 :h 200 :elt 1656]
+                    ([LINE]
+                     ([INLINE :x 1046.5 :y 829.5 :w 130 :h 200 :elt 1657]
+                      ([LINE]
+                       ([INLINE :x 1046.5 :y 829.5 :w 130 :h 200 :elt 1658])))))))
+                 ([TEXT :x 1194 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1198 :y 829.5 :w 145 :h 200 :elt 1659]
+                  ([LINE]
+                   ([INLINE :x 1198 :y 829.5 :w 145 :h 200 :elt 1660]
+                    ([LINE]
+                     ([INLINE :x 1205 :y 829.5 :w 131 :h 200 :elt 1661]
+                      ([LINE]
+                       ([INLINE :x 1205 :y 829.5 :w 131 :h 200 :elt 1662])))))))
+                 ([TEXT :x 1353 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1357 :y 829.5 :w 145 :h 200 :elt 1663]
+                  ([LINE]
+                   ([INLINE :x 1357 :y 829.5 :w 145 :h 200 :elt 1664]
+                    ([LINE]
+                     ([INLINE :x 1363.5 :y 829.5 :w 132 :h 200 :elt 1665]
+                      ([LINE]
+                       ([INLINE :x 1363.5 :y 829.5 :w 132 :h 200 :elt 1666])))))))
+                 ([TEXT :x 1512 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1516 :y 829.5 :w 145 :h 200 :elt 1667]
+                  ([LINE]
+                   ([INLINE :x 1516 :y 829.5 :w 145 :h 200 :elt 1668]
+                    ([LINE]
+                     ([INLINE :x 1522.5 :y 829.5 :w 132 :h 200 :elt 1669]
+                      ([LINE]
+                       ([INLINE :x 1522.5 :y 829.5 :w 132 :h 200 :elt 1670])))))))
+                 ([TEXT :x 1671 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1675 :y 829.5 :w 145 :h 200 :elt 1671]
+                  ([LINE]
+                   ([INLINE :x 1675 :y 829.5 :w 145 :h 200 :elt 1672]
+                    ([LINE]
+                     ([INLINE :x 1681 :y 829.5 :w 133 :h 200 :elt 1673]
+                      ([LINE]
+                       ([INLINE :x 1681 :y 829.5 :w 133 :h 200 :elt 1674])))))))
+                 ([TEXT :x 1830 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1834 :y 829.5 :w 162 :h 200 :elt 1675]
+                  ([LINE]
+                   ([INLINE :x 1834 :y 829.5 :w 162 :h 200 :elt 1676]
+                    ([LINE]
+                     ([INLINE :x 1834 :y 829.5 :w 162 :h 200 :elt 1677]
+                      ([LINE]
+                       ([INLINE :x 1834 :y 829.5 :w 162 :h 200 :elt 1678])))))))
+                 ([TEXT :x 2006 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2010 :y 829.5 :w 145 :h 200 :elt 1679]
+                  ([LINE]
+                   ([INLINE :x 2010 :y 829.5 :w 145 :h 200 :elt 1680]
+                    ([LINE]
+                     ([INLINE :x 2016 :y 829.5 :w 133 :h 200 :elt 1681]
+                      ([LINE]
+                       ([INLINE :x 2016 :y 829.5 :w 133 :h 200 :elt 1682])))))))
+                 ([TEXT :x 2165 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2169 :y 829.5 :w 145 :h 200 :elt 1683]
+                  ([LINE]
+                   ([INLINE :x 2169 :y 829.5 :w 145 :h 200 :elt 1684]
+                    ([LINE]
+                     ([INLINE :x 2173.5 :y 829.5 :w 136 :h 200 :elt 1685]
+                      ([LINE]
+                       ([INLINE :x 2173.5 :y 829.5 :w 136 :h 200 :elt 1686])))))))
+                 ([TEXT :x 2324 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2328 :y 829.5 :w 149 :h 200 :elt 1687]
+                  ([LINE]
+                   ([INLINE :x 2328 :y 829.5 :w 149 :h 200 :elt 1688]
+                    ([LINE]
+                     ([INLINE :x 2328 :y 829.5 :w 149 :h 200 :elt 1689]
+                      ([LINE]
+                       ([INLINE :x 2328 :y 829.5 :w 149 :h 200 :elt 1690])))))))
+                 ([TEXT :x 2487 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2491 :y 829.5 :w 145 :h 200 :elt 1691]
+                  ([LINE]
+                   ([INLINE :x 2491 :y 829.5 :w 145 :h 200 :elt 1692]
+                    ([LINE]
+                     ([INLINE :x 2496.5 :y 829.5 :w 134 :h 200 :elt 1693]
+                      ([LINE]
+                       ([INLINE :x 2496.5 :y 829.5 :w 134 :h 200 :elt 1694])))))))
+                 ([TEXT :x 2646 :y 831.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2650 :y 829.5 :w 145 :h 200 :elt 1695]
+                  ([LINE]
+                   ([INLINE :x 2650 :y 829.5 :w 145 :h 200 :elt 1696]
+                    ([LINE]
+                     ([INLINE :x 2657.5 :y 829.5 :w 130 :h 200 :elt 1697]
+                      ([LINE]
+                       ([INLINE :x 2657.5 :y 829.5 :w 130 :h 200 :elt 1698])))))))))
+               ([TEXT :x 2795 :y 831.5 :w 0 :h 15 :text " "])))
+             ([BLOCK :x 244 :y 1043.5 :w 1110 :h 6 :elt 1705]
+              ([BLOCK :x 244 :y 1045.5 :w 1110 :h 1 :elt 1706])))))
+          ([BLOCK :x 224 :y 1064.5 :w 1150 :h 290 :elt 1712]
+           ([BLOCK :x 224 :y 1064.5 :w 1150 :h 290 :elt 1713]
+            ([BLOCK :x 244 :y 1084.5 :w 1110 :h 35 :elt 1714]
+             ([BLOCK :x 244 :y 1084.5 :w 299 :h 31.5 :elt 1715]
+              ([LINE]
+               ([INLINE :elt 1716]
+                ([TEXT :x 244 :y (/ 4355 4) :w 299 :h 23 :text "More recommendations for you"]))))
+             ([BLOCK :x 543 :y 1084.5 :w 77 :h 35 :elt 1717]
+              ([LINE]
+               ([INLINE :elt 1718]
+                ([TEXT :x 558 :y 1094 :w 62 :h 16 :text "See more"])))))
+            ([BLOCK :x 244 :y 1119.5 :w 1110 :h 220 :elt 1719]
+             ([BLOCK :x 244 :y 1119.5 :w 1110 :h 220 :elt 1720]
+              ([LINE]
+               ([INLINE :x 244 :y 1119.5 :w 2283 :h 200 :elt 1721]
+                ([LINE]
+                 ([INLINE :x 244 :y 1119.5 :w 145 :h 200 :elt 1722]
+                  ([LINE]
+                   ([INLINE :x 244 :y 1119.5 :w 145 :h 200 :elt 1723]
+                    ([LINE]
+                     ([INLINE :x 264.5 :y 1119.5 :w 104 :h 200 :elt 1724]
+                      ([LINE]
+                       ([INLINE :x 264.5 :y 1119.5 :w 104 :h 200 :elt 1725])))))))
+                 ([TEXT :x 399 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 403 :y 1119.5 :w 145 :h 200 :elt 1726]
+                  ([LINE]
+                   ([INLINE :x 403 :y 1119.5 :w 145 :h 200 :elt 1727]
+                    ([LINE]
+                     ([INLINE :x 431.5 :y 1119.5 :w 88 :h 200 :elt 1728]
+                      ([LINE]
+                       ([INLINE :x 431.5 :y 1119.5 :w 88 :h 200 :elt 1729])))))))
+                 ([TEXT :x 558 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 562 :y 1119.5 :w 200 :h 200 :elt 1730]
+                  ([LINE]
+                   ([INLINE :x 562 :y 1119.5 :w 200 :h 200 :elt 1731]
+                    ([LINE]
+                     ([INLINE :x 562 :y 1119.5 :w 200 :h 200 :elt 1732]
+                      ([LINE]
+                       ([INLINE :x 562 :y 1119.5 :w 200 :h 200 :elt 1733])))))))
+                 ([TEXT :x 772 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 776 :y 1119.5 :w 200 :h 200 :elt 1734]
+                  ([LINE]
+                   ([INLINE :x 776 :y 1119.5 :w 200 :h 200 :elt 1735]
+                    ([LINE]
+                     ([INLINE :x 776 :y 1119.5 :w 200 :h 200 :elt 1736]
+                      ([LINE]
+                       ([INLINE :x 776 :y 1119.5 :w 200 :h 200 :elt 1737])))))))
+                 ([TEXT :x 986 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 990 :y 1119.5 :w 194 :h 200 :elt 1738]
+                  ([LINE]
+                   ([INLINE :x 990 :y 1119.5 :w 194 :h 200 :elt 1739]
+                    ([LINE]
+                     ([INLINE :x 990 :y 1119.5 :w 194 :h 200 :elt 1740]
+                      ([LINE]
+                       ([INLINE :x 990 :y 1119.5 :w 194 :h 200 :elt 1741])))))))
+                 ([TEXT :x 1194 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1198 :y 1119.5 :w 270 :h 200 :elt 1742]
+                  ([LINE]
+                   ([INLINE :x 1198 :y (/ 35581 30) :w 270 :h (/ 1339 20) :elt 1743]
+                    ([LINE]
+                     ([INLINE :x 1198 :y (/ 35581 30) :w 270 :h (/ 1339 20) :elt 1744]
+                      ([LINE]
+                       ([INLINE :x 1198 :y (/ 35581 30) :w 270 :h (/ 1339 20) :elt 1745])))))))
+                 ([TEXT :x 1478 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1482 :y 1119.5 :w 224 :h 200 :elt 1746]
+                  ([LINE]
+                   ([INLINE :x 1482 :y 1119.5 :w 224 :h 200 :elt 1747]
+                    ([LINE]
+                     ([INLINE :x 1482 :y 1119.5 :w 224 :h 200 :elt 1748]
+                      ([LINE]
+                       ([INLINE :x 1482 :y 1119.5 :w 224 :h 200 :elt 1749])))))))
+                 ([TEXT :x 1716 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1720 :y 1119.5 :w 270 :h 200 :elt 1750]
+                  ([LINE]
+                   ([INLINE :x 1720 :y 1180.6 :w 270 :h 77.8 :elt 1751]
+                    ([LINE]
+                     ([INLINE :x 1720 :y 1180.6 :w 270 :h 77.8 :elt 1752]
+                      ([LINE]
+                       ([INLINE :x 1720 :y 1180.6 :w 270 :h 77.8 :elt 1753])))))))
+                 ([TEXT :x 2000 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2004 :y 1119.5 :w 153 :h 200 :elt 1754]
+                  ([LINE]
+                   ([INLINE :x 2004 :y 1119.5 :w 153 :h 200 :elt 1755]
+                    ([LINE]
+                     ([INLINE :x 2004 :y 1119.5 :w 153 :h 200 :elt 1756]
+                      ([LINE]
+                       ([INLINE :x 2004 :y 1119.5 :w 153 :h 200 :elt 1757])))))))
+                 ([TEXT :x 2167 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2171 :y 1119.5 :w 145 :h 200 :elt 1758]
+                  ([LINE]
+                   ([INLINE :x 2171 :y 1119.5 :w 145 :h 200 :elt 1759]
+                    ([LINE]
+                     ([INLINE :x 2196 :y 1119.5 :w 95 :h 200 :elt 1760]
+                      ([LINE]
+                       ([INLINE :x 2196 :y 1119.5 :w 95 :h 200 :elt 1761])))))))
+                 ([TEXT :x 2326 :y 1121.5 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2330 :y 1119.5 :w 197 :h 200 :elt 1762]
+                  ([LINE]
+                   ([INLINE :x 2330 :y 1119.5 :w 197 :h 200 :elt 1763]
+                    ([LINE]
+                     ([INLINE :x 2330 :y 1119.5 :w 197 :h 200 :elt 1764]
+                      ([LINE]
+                       ([INLINE :x 2330 :y 1119.5 :w 197 :h 200 :elt 1765])))))))))
+               ([TEXT :x 2527 :y 1121.5 :w 0 :h 15 :text " "])))
+             ([BLOCK :x 244 :y 1333.5 :w 1110 :h 6 :elt 1772]
+              ([BLOCK :x 244 :y 1335.5 :w 1110 :h 1 :elt 1773])))))
+          ([BLOCK :x 224 :y 1354.5 :w 1150 :h 239 :elt 1781]
+           ([BLOCK :x 224 :y 1366.5 :w 1150 :h 200 :elt 1782]
+            ([BLOCK :x 224 :y 1366.5 :w 562.9 :h 200 :elt 1783]
+             ([LINE]
+              ([INLINE :x 224 :y 1366.5 :w 562.9 :h 200 :elt 1784]
+               ([BLOCK :x 234 :y 1366.5 :w 542.9 :h 200 :elt 1785]
+                ([BLOCK :x (/ 5709 20) :y 1366.5 :w 440 :h 200 :elt 1787]
+                 ([LINE]
+                  ([INLINE :x (/ 5709 20) :y 1366.5 :w 440 :h 200 :elt 1788])))))))
+            ([BLOCK :x 811.1 :y 1366.5 :w 562.9 :h 200 :elt 1790]
+             ([LINE]
+              ([INLINE :x 811.1 :y 1366.5 :w 562.9 :h 200 :elt 1791]
+               ([BLOCK :x 821.1 :y 1366.5 :w 542.9 :h 200 :elt 1792]
+                ([BLOCK :x (/ 17451 20) :y 1366.5 :w 440 :h 200 :elt 1794]
+                 ([LINE]
+                  ([INLINE :x (/ 17451 20) :y 1366.5 :w 440 :h 200 :elt 1795])))))))))
+          ([BLOCK :x 224 :y 1593.5 :w 1150 :h 1 :elt 1797])
+          ([BLOCK :x 224 :y 1614.5 :w 1150 :h 286.5 :elt 1798]
+           ([BLOCK :x 224 :y 1614.5 :w 1150 :h 286.5 :elt 1799]
+            ([BLOCK :x 244 :y 1634.5 :w 1110 :h 31.5 :elt 1800]
+             ([BLOCK :x 244 :y 1634.5 :w 472 :h 31.5 :elt 1801]
+              ([LINE]
+               ([INLINE :elt 1802]
+                ([TEXT :x 244 :y (/ 6555 4) :w 472 :h 23 :text "Recommendations for you in Health & Household"]))))
+             ([BLOCK :x 716 :y 1634.5 :w 15 :h 0 :elt 1803]))
+            ([BLOCK :x 244 :y 1666 :w 1110 :h 220 :elt 1804]
+             ([BLOCK :x 244 :y 1666 :w 1110 :h 220 :elt 1805]
+              ([LINE]
+               ([INLINE :x 244 :y 1666 :w 4156 :h 200 :elt 1806]
+                ([LINE]
+                 ([INLINE :x 244 :y 1666 :w 145 :h 200 :elt 1807]
+                  ([LINE]
+                   ([INLINE :x 244 :y 1666 :w 145 :h 200 :elt 1808]
+                    ([LINE]
+                     ([INLINE :x 270.5 :y 1666 :w 92 :h 200 :elt 1809]
+                      ([LINE]
+                       ([INLINE :x 270.5 :y 1666 :w 92 :h 200 :elt 1810])))))))
+                 ([TEXT :x 399 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 403 :y 1666 :w 176 :h 200 :elt 1811]
+                  ([LINE]
+                   ([INLINE :x 403 :y 1666 :w 176 :h 200 :elt 1812]
+                    ([LINE]
+                     ([INLINE :x 403 :y 1666 :w 176 :h 200 :elt 1813]
+                      ([LINE]
+                       ([INLINE :x 403 :y 1666 :w 176 :h 200 :elt 1814])))))))
+                 ([TEXT :x 589 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 593 :y 1666 :w 167 :h 200 :elt 1815]
+                  ([LINE]
+                   ([INLINE :x 593 :y 1666 :w 167 :h 200 :elt 1816]
+                    ([LINE]
+                     ([INLINE :x 593 :y 1666 :w 167 :h 200 :elt 1817]
+                      ([LINE]
+                       ([INLINE :x 593 :y 1666 :w 167 :h 200 :elt 1818])))))))
+                 ([TEXT :x 770 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 774 :y 1666 :w 145 :h 200 :elt 1819]
+                  ([LINE]
+                   ([INLINE :x 774 :y 1666 :w 145 :h 200 :elt 1820]
+                    ([LINE]
+                     ([INLINE :x 783.5 :y 1666 :w 126 :h 200 :elt 1821]
+                      ([LINE]
+                       ([INLINE :x 783.5 :y 1666 :w 126 :h 200 :elt 1822])))))))
+                 ([TEXT :x 929 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 933 :y 1666 :w 197 :h 200 :elt 1823]
+                  ([LINE]
+                   ([INLINE :x 933 :y 1666 :w 197 :h 200 :elt 1824]
+                    ([LINE]
+                     ([INLINE :x 933 :y 1666 :w 197 :h 200 :elt 1825]
+                      ([LINE]
+                       ([INLINE :x 933 :y 1666 :w 197 :h 200 :elt 1826])))))))
+                 ([TEXT :x 1140 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1144 :y 1666 :w 225 :h 200 :elt 1827]
+                  ([LINE]
+                   ([INLINE :x 1144 :y 1666 :w 225 :h 200 :elt 1828]
+                    ([LINE]
+                     ([INLINE :x 1144 :y 1666 :w 225 :h 200 :elt 1829]
+                      ([LINE]
+                       ([INLINE :x 1144 :y 1666 :w 225 :h 200 :elt 1830])))))))
+                 ([TEXT :x 1379 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1383 :y 1666 :w 208 :h 200 :elt 1831]
+                  ([LINE]
+                   ([INLINE :x 1383 :y 1666 :w 208 :h 200 :elt 1832]
+                    ([LINE]
+                     ([INLINE :x 1383 :y 1666 :w 208 :h 200 :elt 1833]
+                      ([LINE]
+                       ([INLINE :x 1383 :y 1666 :w 208 :h 200 :elt 1834])))))))
+                 ([TEXT :x 1601 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1605 :y 1666 :w 270 :h 200 :elt 1835]
+                  ([LINE]
+                   ([INLINE :x 1605 :y (/ 10045 6) :w 270 :h (/ 551 3) :elt 1836]
+                    ([LINE]
+                     ([INLINE :x 1605 :y (/ 10045 6) :w 270 :h (/ 551 3) :elt 1837]
+                      ([LINE]
+                       ([INLINE :x 1605 :y (/ 10045 6) :w 270 :h (/ 551 3) :elt 1838])))))))
+                 ([TEXT :x 1885 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 1889 :y 1666 :w 215 :h 200 :elt 1839]
+                  ([LINE]
+                   ([INLINE :x 1889 :y 1666 :w 215 :h 200 :elt 1840]
+                    ([LINE]
+                     ([INLINE :x 1889 :y 1666 :w 215 :h 200 :elt 1841]
+                      ([LINE]
+                       ([INLINE :x 1889 :y 1666 :w 215 :h 200 :elt 1842])))))))
+                 ([TEXT :x 2114 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2118 :y 1666 :w 251 :h 200 :elt 1843]
+                  ([LINE]
+                   ([INLINE :x 2118 :y 1666 :w 251 :h 200 :elt 1844]
+                    ([LINE]
+                     ([INLINE :x 2118 :y 1666 :w 251 :h 200 :elt 1845]
+                      ([LINE]
+                       ([INLINE :x 2118 :y 1666 :w 251 :h 200 :elt 1846])))))))
+                 ([TEXT :x 2379 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2383 :y 1666 :w 270 :h 200 :elt 1847]
+                  ([LINE]
+                   ([INLINE :x 2383 :y (/ 20039 12) :w 270 :h (/ 1153 6) :elt 1848]
+                    ([LINE]
+                     ([INLINE :x 2383 :y (/ 20039 12) :w 270 :h (/ 1153 6) :elt 1849]
+                      ([LINE]
+                       ([INLINE :x 2383 :y (/ 20039 12) :w 270 :h (/ 1153 6) :elt 1850])))))))
+                 ([TEXT :x 2663 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2667 :y 1666 :w 176 :h 200 :elt 1851]
+                  ([LINE]
+                   ([INLINE :x 2667 :y 1666 :w 176 :h 200 :elt 1852]
+                    ([LINE]
+                     ([INLINE :x 2667 :y 1666 :w 176 :h 200 :elt 1853]
+                      ([LINE]
+                       ([INLINE :x 2667 :y 1666 :w 176 :h 200 :elt 1854])))))))
+                 ([TEXT :x 2853 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 2857 :y 1666 :w 145 :h 200 :elt 1855]
+                  ([LINE]
+                   ([INLINE :x 2857 :y 1666 :w 145 :h 200 :elt 1856]
+                    ([LINE]
+                     ([INLINE :x 2875 :y 1666 :w 109 :h 200 :elt 1857]
+                      ([LINE]
+                       ([INLINE :x 2875 :y 1666 :w 109 :h 200 :elt 1858])))))))
+                 ([TEXT :x 3012 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 3016 :y 1666 :w 145 :h 200 :elt 1859]
+                  ([LINE]
+                   ([INLINE :x 3016 :y 1666 :w 145 :h 200 :elt 1860]
+                    ([LINE]
+                     ([INLINE :x 3026.5 :y 1666 :w 124 :h 200 :elt 1861]
+                      ([LINE]
+                       ([INLINE :x 3026.5 :y 1666 :w 124 :h 200 :elt 1862])))))))
+                 ([TEXT :x 3171 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 3175 :y 1666 :w 176 :h 200 :elt 1863]
+                  ([LINE]
+                   ([INLINE :x 3175 :y 1666 :w 176 :h 200 :elt 1864]
+                    ([LINE]
+                     ([INLINE :x 3175 :y 1666 :w 176 :h 200 :elt 1865]
+                      ([LINE]
+                       ([INLINE :x 3175 :y 1666 :w 176 :h 200 :elt 1866])))))))
+                 ([TEXT :x 3361 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 3365 :y 1666 :w 213 :h 200 :elt 1867]
+                  ([LINE]
+                   ([INLINE :x 3365 :y 1666 :w 213 :h 200 :elt 1868]
+                    ([LINE]
+                     ([INLINE :x 3365 :y 1666 :w 213 :h 200 :elt 1869]
+                      ([LINE]
+                       ([INLINE :x 3365 :y 1666 :w 213 :h 200 :elt 1870])))))))
+                 ([TEXT :x 3588 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 3592 :y 1666 :w 209 :h 200 :elt 1871]
+                  ([LINE]
+                   ([INLINE :x 3592 :y 1666 :w 209 :h 200 :elt 1872]
+                    ([LINE]
+                     ([INLINE :x 3592 :y 1666 :w 209 :h 200 :elt 1873]
+                      ([LINE]
+                       ([INLINE :x 3592 :y 1666 :w 209 :h 200 :elt 1874])))))))
+                 ([TEXT :x 3811 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 3815 :y 1666 :w 194 :h 200 :elt 1875]
+                  ([LINE]
+                   ([INLINE :x 3815 :y 1666 :w 194 :h 200 :elt 1876]
+                    ([LINE]
+                     ([INLINE :x 3815 :y 1666 :w 194 :h 200 :elt 1877]
+                      ([LINE]
+                       ([INLINE :x 3815 :y 1666 :w 194 :h 200 :elt 1878])))))))
+                 ([TEXT :x 4019 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 4023 :y 1666 :w 208 :h 200 :elt 1879]
+                  ([LINE]
+                   ([INLINE :x 4023 :y 1666 :w 208 :h 200 :elt 1880]
+                    ([LINE]
+                     ([INLINE :x 4023 :y 1666 :w 208 :h 200 :elt 1881]
+                      ([LINE]
+                       ([INLINE :x 4023 :y 1666 :w 208 :h 200 :elt 1882])))))))
+                 ([TEXT :x 4241 :y 1668 :w 4 :h 15 :text " "])
+                 ([INLINE :x 4245 :y 1666 :w 145 :h 200 :elt 1883]
+                  ([LINE]
+                   ([INLINE :x 4245 :y 1666 :w 145 :h 200 :elt 1884]
+                    ([LINE]
+                     ([INLINE :x 4265 :y 1666 :w 105 :h 200 :elt 1885]
+                      ([LINE]
+                       ([INLINE :x 4265 :y 1666 :w 105 :h 200 :elt 1886])))))))))
+               ([TEXT :x 4400 :y 1668 :w 0 :h 15 :text " "])))
+             ([BLOCK :x 244 :y 1880 :w 1110 :h 6 :elt 1893]
+              ([BLOCK :x 244 :y 1882 :w 1110 :h 1 :elt 1894])))))
+          ([ANON]
+           ([LINE]
+            ([INLINE :x 224 :y 1901 :w 1150 :h (/ 10181 30) :elt 1900]
+             ([BLOCK :x 234 :y 1901 :w 1130 :h (/ 9521 30) :elt 1901]
+              ([LINE]
+               ([INLINE :x 234 :y 1901 :w 1130 :h (/ 9521 30) :elt 1903]
+                ([LINE]
+                 ([INLINE :x 234 :y 1901 :w 1130 :h (/ 9521 30) :elt 1904]))))))))
+          ([BLOCK :x 224 :y (/ 67211 30) :w 1150 :h 290 :elt 1906]
+           ([BLOCK :x 224 :y (/ 67211 30) :w 1150 :h 290 :elt 1907]
+            ([BLOCK :x 244 :y (/ 67811 30) :w 1110 :h 35 :elt 1908]
+             ([BLOCK :x 244 :y (/ 67811 30) :w 515 :h 31.5 :elt 1909]
+              ([LINE]
+               ([INLINE :elt 1910]
+                ([TEXT :x 244 :y (/ 135877 60) :w 515 :h 23 :text "Popular movies included with your Prime membership"]))))
+             ([BLOCK :x 759 :y (/ 67811 30) :w 77 :h 35 :elt 1911]
+              ([LINE]
+               ([INLINE :elt 1912]
+                ([TEXT :x 774 :y (/ 34048 15) :w 62 :h 16 :text "See more"])))))
+            ([BLOCK :x 244 :y (/ 68861 30) :w 1110 :h 220 :elt 1913]
+             ([BLOCK :x 244 :y (/ 68861 30) :w 1110 :h 220 :elt 1914]
+              ([LINE]
+               ([INLINE :x 244 :y (/ 68861 30) :w 3247 :h 200 :elt 1915]
+                ([LINE]
+                 ([INLINE :x 244 :y (/ 68861 30) :w 146 :h 200 :elt 1916]
+                  ([LINE]
+                   ([INLINE :x 244 :y (/ 68861 30) :w 146 :h 200 :elt 1917]
+                    ([LINE]
+                     ([INLINE :x 244 :y (/ 68861 30) :w 146 :h 200 :elt 1918]
+                      ([LINE]
+                       ([INLINE :x 244 :y (/ 68861 30) :w 146 :h 200 :elt 1919])))))))
+                 ([TEXT :x 400 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 404 :y (/ 68861 30) :w 150 :h 200 :elt 1920]
+                  ([LINE]
+                   ([INLINE :x 404 :y (/ 68861 30) :w 150 :h 200 :elt 1921]
+                    ([LINE]
+                     ([INLINE :x 404 :y (/ 68861 30) :w 150 :h 200 :elt 1922]
+                      ([LINE]
+                       ([INLINE :x 404 :y (/ 68861 30) :w 150 :h 200 :elt 1923])))))))
+                 ([TEXT :x 564 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 568 :y (/ 68861 30) :w 150 :h 200 :elt 1924]
+                  ([LINE]
+                   ([INLINE :x 568 :y (/ 68861 30) :w 150 :h 200 :elt 1925]
+                    ([LINE]
+                     ([INLINE :x 568 :y (/ 68861 30) :w 150 :h 200 :elt 1926]
+                      ([LINE]
+                       ([INLINE :x 568 :y (/ 68861 30) :w 150 :h 200 :elt 1927])))))))
+                 ([TEXT :x 728 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 732 :y (/ 68861 30) :w 150 :h 200 :elt 1928]
+                  ([LINE]
+                   ([INLINE :x 732 :y (/ 68861 30) :w 150 :h 200 :elt 1929]
+                    ([LINE]
+                     ([INLINE :x 732 :y (/ 68861 30) :w 150 :h 200 :elt 1930]
+                      ([LINE]
+                       ([INLINE :x 732 :y (/ 68861 30) :w 150 :h 200 :elt 1931])))))))
+                 ([TEXT :x 892 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 896 :y (/ 68861 30) :w 150 :h 200 :elt 1932]
+                  ([LINE]
+                   ([INLINE :x 896 :y (/ 68861 30) :w 150 :h 200 :elt 1933]
+                    ([LINE]
+                     ([INLINE :x 896 :y (/ 68861 30) :w 150 :h 200 :elt 1934]
+                      ([LINE]
+                       ([INLINE :x 896 :y (/ 68861 30) :w 150 :h 200 :elt 1935])))))))
+                 ([TEXT :x 1056 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 1060 :y (/ 68861 30) :w 150 :h 200 :elt 1936]
+                  ([LINE]
+                   ([INLINE :x 1060 :y (/ 68861 30) :w 150 :h 200 :elt 1937]
+                    ([LINE]
+                     ([INLINE :x 1060 :y (/ 68861 30) :w 150 :h 200 :elt 1938]
+                      ([LINE]
+                       ([INLINE :x 1060 :y (/ 68861 30) :w 150 :h 200 :elt 1939])))))))
+                 ([TEXT :x 1220 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 1224 :y (/ 68861 30) :w 145 :h 200 :elt 1940]
+                  ([LINE]
+                   ([INLINE :x 1224 :y (/ 68861 30) :w 145 :h 200 :elt 1941]
+                    ([LINE]
+                     ([INLINE :x 1230 :y (/ 68861 30) :w 133 :h 200 :elt 1942]
+                      ([LINE]
+                       ([INLINE :x 1230 :y (/ 68861 30) :w 133 :h 200 :elt 1943])))))))
+                 ([TEXT :x 1379 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 1383 :y (/ 68861 30) :w 150 :h 200 :elt 1944]
+                  ([LINE]
+                   ([INLINE :x 1383 :y (/ 68861 30) :w 150 :h 200 :elt 1945]
+                    ([LINE]
+                     ([INLINE :x 1383 :y (/ 68861 30) :w 150 :h 200 :elt 1946]
+                      ([LINE]
+                       ([INLINE :x 1383 :y (/ 68861 30) :w 150 :h 200 :elt 1947])))))))
+                 ([TEXT :x 1543 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 1547 :y (/ 68861 30) :w 150 :h 200 :elt 1948]
+                  ([LINE]
+                   ([INLINE :x 1547 :y (/ 68861 30) :w 150 :h 200 :elt 1949]
+                    ([LINE]
+                     ([INLINE :x 1547 :y (/ 68861 30) :w 150 :h 200 :elt 1950]
+                      ([LINE]
+                       ([INLINE :x 1547 :y (/ 68861 30) :w 150 :h 200 :elt 1951])))))))
+                 ([TEXT :x 1707 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 1711 :y (/ 68861 30) :w 150 :h 200 :elt 1952]
+                  ([LINE]
+                   ([INLINE :x 1711 :y (/ 68861 30) :w 150 :h 200 :elt 1953]
+                    ([LINE]
+                     ([INLINE :x 1711 :y (/ 68861 30) :w 150 :h 200 :elt 1954]
+                      ([LINE]
+                       ([INLINE :x 1711 :y (/ 68861 30) :w 150 :h 200 :elt 1955])))))))
+                 ([TEXT :x 1871 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 1875 :y (/ 68861 30) :w 150 :h 200 :elt 1956]
+                  ([LINE]
+                   ([INLINE :x 1875 :y (/ 68861 30) :w 150 :h 200 :elt 1957]
+                    ([LINE]
+                     ([INLINE :x 1875 :y (/ 68861 30) :w 150 :h 200 :elt 1958]
+                      ([LINE]
+                       ([INLINE :x 1875 :y (/ 68861 30) :w 150 :h 200 :elt 1959])))))))
+                 ([TEXT :x 2035 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 2039 :y (/ 68861 30) :w 150 :h 200 :elt 1960]
+                  ([LINE]
+                   ([INLINE :x 2039 :y (/ 68861 30) :w 150 :h 200 :elt 1961]
+                    ([LINE]
+                     ([INLINE :x 2039 :y (/ 68861 30) :w 150 :h 200 :elt 1962]
+                      ([LINE]
+                       ([INLINE :x 2039 :y (/ 68861 30) :w 150 :h 200 :elt 1963])))))))
+                 ([TEXT :x 2199 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 2203 :y (/ 68861 30) :w 150 :h 200 :elt 1964]
+                  ([LINE]
+                   ([INLINE :x 2203 :y (/ 68861 30) :w 150 :h 200 :elt 1965]
+                    ([LINE]
+                     ([INLINE :x 2203 :y (/ 68861 30) :w 150 :h 200 :elt 1966]
+                      ([LINE]
+                       ([INLINE :x 2203 :y (/ 68861 30) :w 150 :h 200 :elt 1967])))))))
+                 ([TEXT :x 2363 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 2367 :y (/ 68861 30) :w 145 :h 200 :elt 1968]
+                  ([LINE]
+                   ([INLINE :x 2367 :y (/ 68861 30) :w 145 :h 200 :elt 1969]
+                    ([LINE]
+                     ([INLINE :x 2373 :y (/ 68861 30) :w 133 :h 200 :elt 1970]
+                      ([LINE]
+                       ([INLINE :x 2373 :y (/ 68861 30) :w 133 :h 200 :elt 1971])))))))
+                 ([TEXT :x 2522 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 2526 :y (/ 68861 30) :w 150 :h 200 :elt 1972]
+                  ([LINE]
+                   ([INLINE :x 2526 :y (/ 68861 30) :w 150 :h 200 :elt 1973]
+                    ([LINE]
+                     ([INLINE :x 2526 :y (/ 68861 30) :w 150 :h 200 :elt 1974]
+                      ([LINE]
+                       ([INLINE :x 2526 :y (/ 68861 30) :w 150 :h 200 :elt 1975])))))))
+                 ([TEXT :x 2686 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 2690 :y (/ 68861 30) :w 145 :h 200 :elt 1976]
+                  ([LINE]
+                   ([INLINE :x 2690 :y (/ 68861 30) :w 145 :h 200 :elt 1977]
+                    ([LINE]
+                     ([INLINE :x 2693 :y (/ 68861 30) :w 139 :h 200 :elt 1978]
+                      ([LINE]
+                       ([INLINE :x 2693 :y (/ 68861 30) :w 139 :h 200 :elt 1979])))))))
+                 ([TEXT :x 2845 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 2849 :y (/ 68861 30) :w 145 :h 200 :elt 1980]
+                  ([LINE]
+                   ([INLINE :x 2849 :y (/ 68861 30) :w 145 :h 200 :elt 1981]
+                    ([LINE]
+                     ([INLINE :x 2849.5 :y (/ 68861 30) :w 144 :h 200 :elt 1982]
+                      ([LINE]
+                       ([INLINE :x 2849.5 :y (/ 68861 30) :w 144 :h 200 :elt 1983])))))))
+                 ([TEXT :x 3004 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 3008 :y (/ 68861 30) :w 150 :h 200 :elt 1984]
+                  ([LINE]
+                   ([INLINE :x 3008 :y (/ 68861 30) :w 150 :h 200 :elt 1985]
+                    ([LINE]
+                     ([INLINE :x 3008 :y (/ 68861 30) :w 150 :h 200 :elt 1986]
+                      ([LINE]
+                       ([INLINE :x 3008 :y (/ 68861 30) :w 150 :h 200 :elt 1987])))))))
+                 ([TEXT :x 3168 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 3172 :y (/ 68861 30) :w 150 :h 200 :elt 1988]
+                  ([LINE]
+                   ([INLINE :x 3172 :y (/ 68861 30) :w 150 :h 200 :elt 1989]
+                    ([LINE]
+                     ([INLINE :x 3172 :y (/ 68861 30) :w 150 :h 200 :elt 1990]
+                      ([LINE]
+                       ([INLINE :x 3172 :y (/ 68861 30) :w 150 :h 200 :elt 1991])))))))
+                 ([TEXT :x 3332 :y (/ 68921 30) :w 4 :h 15 :text " "])
+                 ([INLINE :x 3336 :y (/ 68861 30) :w 145 :h 200 :elt 1992]
+                  ([LINE]
+                   ([INLINE :x 3336 :y (/ 68861 30) :w 145 :h 200 :elt 1993]
+                    ([LINE]
+                     ([INLINE :x 3342 :y (/ 68861 30) :w 133 :h 200 :elt 1994]
+                      ([LINE]
+                       ([INLINE :x 3342 :y (/ 68861 30) :w 133 :h 200 :elt 1995])))))))))
+               ([TEXT :x 3491 :y (/ 68921 30) :w 0 :h 15 :text " "])))
+             ([BLOCK :x 244 :y (/ 75281 30) :w 1110 :h 6 :elt 2002]
+              ([BLOCK :x 244 :y (/ 75341 30) :w 1110 :h 1 :elt 2003])))))))
+        ([BLOCK :x 1394 :y 773 :w 310 :h 1596.7 :elt 2009]
+         ([BLOCK :x 1399 :y 783 :w 300 :h 277 :elt 2010]
+          ([BLOCK :x 1399 :y 788 :w 300 :h 272 :elt 2013]
+           ([ANON]
+            ([LINE]
+             ([INLINE :x 1399 :y 788 :w 300 :h 250 :elt 2014])))
+           ([BLOCK :x 1399 :y 1041 :w 300 :h 20 :elt 2016]
+            ([BLOCK :x 1621 :y 1041 :w 78 :h 14 :elt 2017]
+             ([LINE]
+              ([INLINE :elt 2018]
+               ([TEXT :x 1621 :y 1041 :w 64 :h 12 :text " Ad feedback "])
+               ([INLINE :x 1685 :y 1042 :w 14 :h 12 :elt 2019])))))))
+         ([BLOCK :x 1417 :y 1060 :w 264 :h 1 :elt 2023])
+         ([BLOCK :x 1417 :y 1076 :w 264 :h 864.7 :elt 2024]
+          ([BLOCK :x 1394 :y 1076 :w 310 :h 864.7 :elt 2027]
+           ([BLOCK :x 1394 :y 1076 :w 310 :h 56.3 :elt 2028]
+            ([BLOCK :x 1417 :y 1076 :w 264 :h 37.3 :elt 2029]
+             ([BLOCK :x 1417 :y 1076 :w 264 :h 37.3 :elt 2030]
+              ([BLOCK :x 1417 :y 1076 :w 264 :h 27.3 :elt 2031]
+               ([LINE]
+                ([TEXT :x 1446 :y (/ 21563 20) :w 206 :h 23 :text " Tap Below to Reorder "])))))
+            ([BLOCK :x 1417 :y 1113.3 :w 264 :h 19 :elt 2032]
+             ([BLOCK :x 1417 :y 1113.3 :w (/ 7753 60) :h 19 :elt 2033]
+              ([LINE]
+               ([INLINE :elt 2034]
+                ([TEXT :x 1417 :y 1115.3 :w 109 :h 15 :text " Your Dash Buttons "]))))
+             ([BLOCK :x (/ 93107 60) :y 1113.3 :w (/ 7753 60) :h 19 :elt 2035]
+              ([LINE]
+               ([INLINE :elt 2036]
+                ([INLINE :elt 2037]
+                 ([TEXT :x 1616 :y 1115.3 :w 65 :h 15 :text " Learn more "])))))))
+           ([BLOCK :x 1394 :y 1142.3 :w 310 :h 0 :elt 2038])
+           ([BLOCK :x 1394 :y 1147.3 :w 310 :h 1 :elt 2039])
+           ([BLOCK :x 1394 :y 1163.3 :w 310 :h 777.4 :elt 2040]
+            ([BLOCK :x 1394 :y 1163.3 :w 310 :h 116.4 :elt 2041]
+             ([MAGIC :x 1394 :y 1164.3 :w 620 :h 114.4 :elt 2042]
+              ([MAGIC :x 1394 :y 1164.3 :w 310 :h 114.4 :elt 2043]
+               ([INLINE :elt 2045]
+                ([INLINE :x 1417 :y 1164.3 :w 264 :h 114.4 :elt 2046]
+                 ([BLOCK :x 1417 :y 1164.3 :w 264 :h 115.1 :elt 2047]
+                  ([BLOCK :x 1422 :y 1169.3 :w 254 :h 105.1 :elt 2048]
+                   ([LINE]
+                    ([INLINE :elt 2049]
+                     ([INLINE :elt 2050]
+                      ([MAGIC :x 1460.1 :y 1169.3 :w 101.6 :h 105.1 :elt 2051]
+                       ([MAGIC :x 1460.1 :y 1169.3 :w 101.6 :h 105.1 :elt 2052]
+                        ([INLINE :elt 2053]
+                         ([INLINE :elt 2054])
+                         ([INLINE :x 1460.1 :y (/ 24557 20) :w 0 :h 0 :elt 2055])
+                         ([INLINE :elt 2056])))))
+                     ([BLOCK :x 1422 :y (/ 75017 60) :w (/ 508 3) :h (/ 1447 60) :elt 2057]
+                      ([LINE]
+                       ([TEXT :x 1462 :y (/ 3769 3) :w 113 :h 12 :text "Super Ad…(Chocolate)"]))))
+                    ([BLOCK :x 1574.4 :y 1169.3 :w 101.6 :h 105.1 :elt 2058]
+                     ([BLOCK :x (/ 4733 3) :y (/ 7063 6) :w (/ 268 3) :h (/ 268 3) :elt 2059]
+                      ([BLOCK :x (/ 4733 3) :y (/ 7063 6) :w (/ 268 3) :h (/ 268 3) :elt 2060]
+                       ([BLOCK :x (/ 4772 3) :y (/ 3613 3) :w (/ 190 3) :h 23 :elt 2061]
+                        ([LINE]
+                         ([INLINE :elt 2062]
+                          ([BLOCK :x (/ 9599 6) :y (/ 3547 3) :w 54 :h 46 :elt 2063]
+                           ([LINE]
+                            ([TEXT :x (/ 9629 6) :y (/ 3547 3) :w 44 :h 23 :text "USD "]))
+                           ([LINE]
+                            ([TEXT :x (/ 9599 6) :y (/ 3616 3) :w 54 :h 23 :text "18.68"])))
+                          ([INLINE :elt 2064]
+                           ([INLINE :elt 2065]
+                            ([TEXT :x (/ 9599 6) :y (/ 3619 3) :w 7 :h 14 :text "$"]))
+                           ([INLINE :elt 2066]
+                            ([TEXT :x (/ 9641 6) :y (/ 3613 3) :w 24 :h 23 :text "18"])
+                            ([BLOCK :x (/ 9785 6) :y (/ 3613 3) :w 6 :h 23 :elt 2067]
+                             ([LINE]
+                              ([TEXT :x (/ 9785 6) :y (/ 3613 3) :w 6 :h 23 :text "."]))))
+                           ([INLINE :elt 2068]
+                            ([TEXT :x (/ 9785 6) :y (/ 3619 3) :w 14 :h 14 :text "68"]))))))
+                       ([ANON]
+                        ([LINE]
+                         ([INLINE :elt 2069]
+                          ([TEXT :x (/ 4804 3) :y (/ 3682 3) :w 42 :h 12 :text "Buy now"]))))))))))
+                 ([MAGIC :x 1394 :y (/ 23699 20) :w 80 :h (/ 4387 60) :elt 2085]
+                  ([MAGIC :x 1394 :y (/ 23699 20) :w 80 :h (/ 4387 60) :elt 2086]
+                   ([MAGIC :x 1394 :y (/ 23699 20) :w 80 :h (/ 4387 60) :elt 2090]
+                    ([BLOCK :x 1408 :y (/ 23899 20) :w 52 :h (/ 3187 60) :elt 2091]
+                     ([BLOCK :x 1408 :y (/ 23899 20) :w 52 :h 18 :elt 2092]
+                      ([LINE]
+                       ([TEXT :x 1415 :y (/ 23939 20) :w 38 :h 14 :text "Arrives"])))
+                     ([BLOCK :x 1408 :y (/ 24259 20) :w 52 :h 19 :elt 2093]
+                      ([LINE]
+                       ([TEXT :x 1415.5 :y (/ 24299 20) :w 37 :h 15 :text "Jul 16"])))
+                     ([ANON]
+                      ([LINE]
+                       ([INLINE :elt 2094]
+                        ([TEXT :x 1408 :y 1234 :w 52 :h 12 :text "View order"])))))))))
+                ([TEXT :x 1681 :y 1266.7 :w 0 :h 15 :text " "])))
+              ([MAGIC :x 1704 :y 1164.3 :w 310 :h 114.4 :elt 2196]
+               ([BLOCK :x 1704 :y (/ 24157 20) :w 310 :h 27.3 :elt 2197]
+                ([LINE]
+                 ([INLINE :x 1704 :y (/ 24157 20) :w 176 :h 27.3 :elt 2198]
+                  ([LINE]
+                   ([INLINE :elt 2199]
+                    ([INLINE :elt 2200]
+                     ([TEXT :x 1708 :y 1210 :w 168 :h 23 :text "Delete this button"]))))))))))
+            ([BLOCK :x 1394 :y 1289.7 :w 310 :h 116.4 :elt 2213]
+             ([MAGIC :x 1394 :y 1290.7 :w 620 :h 114.4 :elt 2214]
+              ([MAGIC :x 1394 :y 1290.7 :w 310 :h 114.4 :elt 2215]
+               ([INLINE :elt 2216]
+                ([INLINE :x 1417 :y 1290.7 :w 264 :h 114.4 :elt 2217]
+                 ([BLOCK :x 1417 :y 1290.7 :w 264 :h 115.1 :elt 2218]
+                  ([BLOCK :x 1422 :y 1295.7 :w 254 :h 105.1 :elt 2219]
+                   ([LINE]
+                    ([INLINE :elt 2220]
+                     ([INLINE :elt 2221]
+                      ([MAGIC :x 1460.1 :y 1295.7 :w 101.6 :h 105.1 :elt 2222]
+                       ([MAGIC :x 1460.1 :y 1295.7 :w 101.6 :h 105.1 :elt 2223]
+                        ([INLINE :elt 2224]
+                         ([INLINE :elt 2225])
+                         ([INLINE :x 1460.1 :y (/ 5417 4) :w 0 :h 0 :elt 2226])
+                         ([INLINE :elt 2227])))))
+                     ([BLOCK :x 1422 :y (/ 82601 60) :w 165 :h (/ 1447 60) :elt 2228]
+                      ([LINE]
+                       ([TEXT :x 1462 :y (/ 20741 15) :w 105 :h 12 :text "8 Cartridges, Regul…"]))))
+                    ([BLOCK :x 1574.4 :y 1295.7 :w 101.6 :h 105.1 :elt 2229]
+                     ([BLOCK :x (/ 4733 3) :y (/ 39107 30) :w (/ 268 3) :h (/ 268 3) :elt 2230]
+                      ([BLOCK :x (/ 4733 3) :y (/ 39107 30) :w (/ 268 3) :h (/ 268 3) :elt 2231]
+                       ([BLOCK :x (/ 4772 3) :y (/ 19961 15) :w (/ 190 3) :h 23 :elt 2232]
+                        ([LINE]
+                         ([INLINE :elt 2233]
+                          ([BLOCK :x (/ 9599 6) :y (/ 19631 15) :w 54 :h 46 :elt 2234]
+                           ([LINE]
+                            ([TEXT :x (/ 9629 6) :y (/ 19631 15) :w 44 :h 23 :text "USD "]))
+                           ([LINE]
+                            ([TEXT :x (/ 9599 6) :y (/ 19976 15) :w 54 :h 23 :text "19.23"])))
+                          ([INLINE :elt 2235]
+                           ([INLINE :elt 2236]
+                            ([TEXT :x (/ 9599 6) :y (/ 19991 15) :w 7 :h 14 :text "$"]))
+                           ([INLINE :elt 2237]
+                            ([TEXT :x (/ 9641 6) :y (/ 19961 15) :w 24 :h 23 :text "19"])
+                            ([BLOCK :x (/ 9785 6) :y (/ 19961 15) :w 6 :h 23 :elt 2238]
+                             ([LINE]
+                              ([TEXT :x (/ 9785 6) :y (/ 19961 15) :w 6 :h 23 :text "."]))))
+                           ([INLINE :elt 2239]
+                            ([TEXT :x (/ 9785 6) :y (/ 19991 15) :w 14 :h 14 :text "23"]))))))
+                       ([ANON]
+                        ([LINE]
+                         ([INLINE :elt 2240]
+                          ([TEXT :x (/ 4804 3) :y (/ 20306 15) :w 42 :h 12 :text "Buy now"]))))))))))
+                 ([MAGIC :x 1294 :y (/ 26417 20) :w 80 :h (/ 3247 60) :elt 2256]
+                  ([MAGIC :x 1294 :y (/ 26417 20) :w 80 :h (/ 3247 60) :elt 2257]
+                   ([MAGIC :x 1294 :y (/ 26417 20) :w 80 :h (/ 3247 60) :elt 2261]
+                    ([BLOCK :x 1308 :y (/ 26617 20) :w 52 :h (/ 2047 60) :elt 2262]
+                     ([BLOCK :x 1308 :y (/ 26617 20) :w 52 :h 18 :elt 2263]
+                      ([LINE]
+                       ([TEXT :x 1315 :y (/ 26657 20) :w 38 :h 14 :text "Arrives"])))
+                     ([BLOCK :x 1308 :y (/ 26977 20) :w 52 :h 0 :elt 2264])
+                     ([ANON]
+                      ([LINE]
+                       ([INLINE :elt 2265]
+                        ([TEXT :x 1308 :y 1350.9 :w 52 :h 12 :text "View order"])))))))))
+                ([TEXT :x 1681 :y 1393.1 :w 0 :h 15 :text " "])))
+              ([MAGIC :x 1704 :y 1290.7 :w 310 :h 114.4 :elt 2271]
+               ([BLOCK :x 1704 :y (/ 5337 4) :w 310 :h 27.3 :elt 2272]
+                ([LINE]
+                 ([INLINE :x 1704 :y (/ 5337 4) :w 176 :h 27.3 :elt 2273]
+                  ([LINE]
+                   ([INLINE :elt 2274]
+                    ([INLINE :elt 2275]
+                     ([TEXT :x 1708 :y 1336.4 :w 168 :h 23 :text "Delete this button"]))))))))))
+            ([BLOCK :x 1394 :y 1416.1 :w 310 :h 116.4 :elt 2288]
+             ([MAGIC :x 1394 :y 1417.1 :w 620 :h 114.4 :elt 2289]
+              ([MAGIC :x 1394 :y 1417.1 :w 310 :h 114.4 :elt 2290]
+               ([INLINE :elt 2291]
+                ([INLINE :x 1417 :y 1417.1 :w 264 :h 114.4 :elt 2292]
+                 ([BLOCK :x 1417 :y 1417.1 :w 264 :h 115.1 :elt 2293]
+                  ([BLOCK :x 1422 :y 1422.1 :w 254 :h 105.1 :elt 2294]
+                   ([LINE]
+                    ([INLINE :elt 2295]
+                     ([INLINE :elt 2296]
+                      ([MAGIC :x 1460.1 :y 1422.1 :w 101.6 :h 105.1 :elt 2297]
+                       ([MAGIC :x 1460.1 :y 1422.1 :w 101.6 :h 105.1 :elt 2298]
+                        ([INLINE :elt 2299]
+                         ([INLINE :elt 2300])
+                         ([INLINE :x 1460.1 :y (/ 29613 20) :w 0 :h 0 :elt 2301])
+                         ([INLINE :elt 2302]))))))
+                    ([BLOCK :x 1574.4 :y 1422.1 :w 101.6 :h 105.1 :elt 2304]
+                     ([BLOCK :x (/ 4733 3) :y (/ 42899 30) :w (/ 268 3) :h (/ 268 3) :elt 2305]
+                      ([BLOCK :x (/ 4733 3) :y (/ 42899 30) :w (/ 268 3) :h (/ 268 3) :elt 2306]
+                       ([BLOCK :x (/ 4772 3) :y (/ 21857 15) :w (/ 190 3) :h 23 :elt 2307]
+                        ([LINE]
+                         ([INLINE :elt 2308]
+                          ([BLOCK :x (/ 9599 6) :y (/ 21527 15) :w 54 :h 46 :elt 2309]
+                           ([LINE]
+                            ([TEXT :x (/ 9629 6) :y (/ 21527 15) :w 44 :h 23 :text "USD "]))
+                           ([LINE]
+                            ([TEXT :x (/ 9599 6) :y (/ 21872 15) :w 54 :h 23 :text "25.99"])))
+                          ([INLINE :elt 2310]
+                           ([INLINE :elt 2311]
+                            ([TEXT :x (/ 9599 6) :y (/ 21887 15) :w 7 :h 14 :text "$"]))
+                           ([INLINE :elt 2312]
+                            ([TEXT :x (/ 9641 6) :y (/ 21857 15) :w 24 :h 23 :text "25"])
+                            ([BLOCK :x (/ 9785 6) :y (/ 21857 15) :w 6 :h 23 :elt 2313]
+                             ([LINE]
+                              ([TEXT :x (/ 9785 6) :y (/ 21857 15) :w 6 :h 23 :text "."]))))
+                           ([INLINE :elt 2314]
+                            ([TEXT :x (/ 9785 6) :y (/ 21887 15) :w 14 :h 14 :text "99"]))))))
+                       ([ANON]
+                        ([LINE]
+                         ([INLINE :elt 2315]
+                          ([TEXT :x (/ 4804 3) :y (/ 22202 15) :w 42 :h 12 :text "Buy now"]))))))))))
+                 ([MAGIC :x 1294 :y (/ 5789 4) :w 80 :h (/ 3247 60) :elt 2331]
+                  ([MAGIC :x 1294 :y (/ 5789 4) :w 80 :h (/ 3247 60) :elt 2332]
+                   ([MAGIC :x 1294 :y (/ 5789 4) :w 80 :h (/ 3247 60) :elt 2336]
+                    ([BLOCK :x 1308 :y (/ 5829 4) :w 52 :h (/ 2047 60) :elt 2337]
+                     ([BLOCK :x 1308 :y (/ 5829 4) :w 52 :h 18 :elt 2338]
+                      ([LINE]
+                       ([TEXT :x 1315 :y (/ 5837 4) :w 38 :h 14 :text "Arrives"])))
+                     ([BLOCK :x 1308 :y (/ 5901 4) :w 52 :h 0 :elt 2339])
+                     ([ANON]
+                      ([LINE]
+                       ([INLINE :elt 2340]
+                        ([TEXT :x 1308 :y 1477.3 :w 52 :h 12 :text "View order"])))))))))
+                ([TEXT :x 1681 :y 1519.5 :w 0 :h 15 :text " "])))
+              ([MAGIC :x 1704 :y 1417.1 :w 310 :h 114.4 :elt 2346]
+               ([BLOCK :x 1704 :y (/ 29213 20) :w 310 :h 27.3 :elt 2347]
+                ([LINE]
+                 ([INLINE :x 1704 :y (/ 29213 20) :w 176 :h 27.3 :elt 2348]
+                  ([LINE]
+                   ([INLINE :elt 2349]
+                    ([INLINE :elt 2350]
+                     ([TEXT :x 1708 :y 1462.8 :w 168 :h 23 :text "Delete this button"]))))))))))
+            ([BLOCK :x 1394 :y 1542.5 :w 310 :h 116.4 :elt 2363]
+             ([MAGIC :x 1394 :y 1543.5 :w 620 :h 114.4 :elt 2364]
+              ([MAGIC :x 1394 :y 1543.5 :w 310 :h 114.4 :elt 2365]
+               ([INLINE :elt 2366]
+                ([INLINE :x 1417 :y 1543.5 :w 264 :h 114.4 :elt 2367]
+                 ([BLOCK :x 1417 :y 1543.5 :w 264 :h 115.1 :elt 2368]
+                  ([BLOCK :x 1422 :y 1548.5 :w 254 :h 105.1 :elt 2369]
+                   ([LINE]
+                    ([INLINE :elt 2370]
+                     ([INLINE :elt 2371]
+                      ([MAGIC :x 1460.1 :y 1548.5 :w 101.6 :h 105.1 :elt 2372]
+                       ([MAGIC :x 1460.1 :y 1548.5 :w 101.6 :h 105.1 :elt 2373]
+                        ([INLINE :elt 2374]
+                         ([INLINE :elt 2375])
+                         ([INLINE :x 1460.1 :y (/ 32141 20) :w 0 :h 0 :elt 2376])
+                         ([INLINE :elt 2377])))))
+                     ([BLOCK :x 1422 :y (/ 97769 60) :w 166 :h (/ 1447 60) :elt 2378]
+                      ([LINE]
+                       ([TEXT :x 1462 :y (/ 24533 15) :w 106 :h 12 :text "Super Adva…(Vanilla)"]))))
+                    ([BLOCK :x 1574.4 :y 1548.5 :w 101.6 :h 105.1 :elt 2379]
+                     ([BLOCK :x (/ 4733 3) :y (/ 46691 30) :w (/ 268 3) :h (/ 268 3) :elt 2380]
+                      ([BLOCK :x (/ 4733 3) :y (/ 46691 30) :w (/ 268 3) :h (/ 268 3) :elt 2381]
+                       ([BLOCK :x (/ 4772 3) :y (/ 23753 15) :w (/ 190 3) :h 23 :elt 2382]
+                        ([LINE]
+                         ([INLINE :elt 2383]
+                          ([BLOCK :x (/ 9599 6) :y (/ 23423 15) :w 54 :h 46 :elt 2384]
+                           ([LINE]
+                            ([TEXT :x (/ 9629 6) :y (/ 23423 15) :w 44 :h 23 :text "USD "]))
+                           ([LINE]
+                            ([TEXT :x (/ 9599 6) :y (/ 23768 15) :w 54 :h 23 :text "22.45"])))
+                          ([INLINE :elt 2385]
+                           ([INLINE :elt 2386]
+                            ([TEXT :x (/ 9599 6) :y (/ 23783 15) :w 7 :h 14 :text "$"]))
+                           ([INLINE :elt 2387]
+                            ([TEXT :x (/ 9641 6) :y (/ 23753 15) :w 24 :h 23 :text "22"])
+                            ([BLOCK :x (/ 9785 6) :y (/ 23753 15) :w 6 :h 23 :elt 2388]
+                             ([LINE]
+                              ([TEXT :x (/ 9785 6) :y (/ 23753 15) :w 6 :h 23 :text "."]))))
+                           ([INLINE :elt 2389]
+                            ([TEXT :x (/ 9785 6) :y (/ 23783 15) :w 14 :h 14 :text "45"]))))))
+                       ([ANON]
+                        ([LINE]
+                         ([INLINE :elt 2390]
+                          ([TEXT :x (/ 4804 3) :y (/ 24098 15) :w 42 :h 12 :text "Buy now"]))))))))))
+                 ([MAGIC :x 1294 :y (/ 31473 20) :w 80 :h (/ 3247 60) :elt 2406]
+                  ([MAGIC :x 1294 :y (/ 31473 20) :w 80 :h (/ 3247 60) :elt 2407]
+                   ([MAGIC :x 1294 :y (/ 31473 20) :w 80 :h (/ 3247 60) :elt 2411]
+                    ([BLOCK :x 1308 :y (/ 31673 20) :w 52 :h (/ 2047 60) :elt 2412]
+                     ([BLOCK :x 1308 :y (/ 31673 20) :w 52 :h 18 :elt 2413]
+                      ([LINE]
+                       ([TEXT :x 1315 :y (/ 31713 20) :w 38 :h 14 :text "Arrives"])))
+                     ([BLOCK :x 1308 :y (/ 32033 20) :w 52 :h 0 :elt 2414])
+                     ([ANON]
+                      ([LINE]
+                       ([INLINE :elt 2415]
+                        ([TEXT :x 1308 :y 1603.7 :w 52 :h 12 :text "View order"])))))))))
+                ([TEXT :x 1681 :y 1645.9 :w 0 :h 15 :text " "])))
+              ([MAGIC :x 1704 :y 1543.5 :w 310 :h 114.4 :elt 2421]
+               ([BLOCK :x 1704 :y (/ 31741 20) :w 310 :h 27.3 :elt 2422]
+                ([LINE]
+                 ([INLINE :x 1704 :y (/ 31741 20) :w 176 :h 27.3 :elt 2423]
+                  ([LINE]
+                   ([INLINE :elt 2424]
+                    ([INLINE :elt 2425]
+                     ([TEXT :x 1708 :y 1589.2 :w 168 :h 23 :text "Delete this button"]))))))))))
+            ([BLOCK :x 1394 :y 1668.9 :w 310 :h 116.4 :elt 2438]
+             ([MAGIC :x 1394 :y 1669.9 :w 620 :h 114.4 :elt 2439]
+              ([MAGIC :x 1394 :y 1669.9 :w 310 :h 114.4 :elt 2440]
+               ([INLINE :elt 2441]
+                ([INLINE :x 1417 :y 1669.9 :w 264 :h 114.4 :elt 2442]
+                 ([BLOCK :x 1417 :y 1669.9 :w 264 :h 115.1 :elt 2443]
+                  ([BLOCK :x 1422 :y 1674.9 :w 254 :h 105.1 :elt 2444]
+                   ([LINE]
+                    ([INLINE :elt 2445]
+                     ([INLINE :elt 2446]
+                      ([MAGIC :x 1460.1 :y 1674.9 :w 101.6 :h 105.1 :elt 2447]
+                       ([MAGIC :x 1460.1 :y 1674.9 :w 101.6 :h 105.1 :elt 2448]
+                        ([INLINE :elt 2449]
+                         ([INLINE :elt 2450])
+                         ([INLINE :x 1460.1 :y (/ 34669 20) :w 0 :h 0 :elt 2451])
+                         ([INLINE :elt 2452])))))
+                     ([BLOCK :x 1422 :y (/ 105353 60) :w 166 :h (/ 1447 60) :elt 2453]
+                      ([LINE]
+                       ([TEXT :x 1462 :y (/ 26429 15) :w 106 :h 12 :text "Quattro Tit…(1-Pack)"]))))
+                    ([BLOCK :x 1574.4 :y 1674.9 :w 101.6 :h 105.1 :elt 2454]
+                     ([BLOCK :x (/ 4733 3) :y (/ 50483 30) :w (/ 268 3) :h (/ 268 3) :elt 2455]
+                      ([BLOCK :x (/ 4733 3) :y (/ 50483 30) :w (/ 268 3) :h (/ 268 3) :elt 2456]
+                       ([BLOCK :x (/ 4772 3) :y (/ 25649 15) :w (/ 190 3) :h 23 :elt 2457]
+                        ([LINE]
+                         ([INLINE :elt 2458]
+                          ([BLOCK :x (/ 9599 6) :y (/ 25319 15) :w 54 :h 46 :elt 2459]
+                           ([LINE]
+                            ([TEXT :x (/ 9629 6) :y (/ 25319 15) :w 44 :h 23 :text "USD "]))
+                           ([LINE]
+                            ([TEXT :x (/ 9599 6) :y (/ 25664 15) :w 54 :h 23 :text "18.25"])))
+                          ([INLINE :elt 2460]
+                           ([INLINE :elt 2461]
+                            ([TEXT :x (/ 9599 6) :y (/ 25679 15) :w 7 :h 14 :text "$"]))
+                           ([INLINE :elt 2462]
+                            ([TEXT :x (/ 9641 6) :y (/ 25649 15) :w 24 :h 23 :text "18"])
+                            ([BLOCK :x (/ 9785 6) :y (/ 25649 15) :w 6 :h 23 :elt 2463]
+                             ([LINE]
+                              ([TEXT :x (/ 9785 6) :y (/ 25649 15) :w 6 :h 23 :text "."]))))
+                           ([INLINE :elt 2464]
+                            ([TEXT :x (/ 9785 6) :y (/ 25679 15) :w 14 :h 14 :text "25"]))))))
+                       ([ANON]
+                        ([LINE]
+                         ([INLINE :elt 2465]
+                          ([TEXT :x (/ 4804 3) :y (/ 25994 15) :w 42 :h 12 :text "Buy now"]))))))))))
+                 ([MAGIC :x 1294 :y (/ 34001 20) :w 80 :h (/ 3247 60) :elt 2481]
+                  ([MAGIC :x 1294 :y (/ 34001 20) :w 80 :h (/ 3247 60) :elt 2482]
+                   ([MAGIC :x 1294 :y (/ 34001 20) :w 80 :h (/ 3247 60) :elt 2486]
+                    ([BLOCK :x 1308 :y (/ 34201 20) :w 52 :h (/ 2047 60) :elt 2487]
+                     ([BLOCK :x 1308 :y (/ 34201 20) :w 52 :h 18 :elt 2488]
+                      ([LINE]
+                       ([TEXT :x 1315 :y (/ 34241 20) :w 38 :h 14 :text "Arrives"])))
+                     ([BLOCK :x 1308 :y (/ 34561 20) :w 52 :h 0 :elt 2489])
+                     ([ANON]
+                      ([LINE]
+                       ([INLINE :elt 2490]
+                        ([TEXT :x 1308 :y 1730.1 :w 52 :h 12 :text "View order"])))))))))
+                ([TEXT :x 1681 :y 1772.3 :w 0 :h 15 :text " "])))
+              ([MAGIC :x 1704 :y 1669.9 :w 310 :h 114.4 :elt 2496]
+               ([BLOCK :x 1704 :y (/ 34269 20) :w 310 :h 27.3 :elt 2497]
+                ([LINE]
+                 ([INLINE :x 1704 :y (/ 34269 20) :w 176 :h 27.3 :elt 2498]
+                  ([LINE]
+                   ([INLINE :elt 2499]
+                    ([INLINE :elt 2500]
+                     ([TEXT :x 1708 :y 1715.6 :w 168 :h 23 :text "Delete this button"]))))))))))
+            ([BLOCK :x 1394 :y 1795.3 :w 310 :h 116.4 :elt 2513]
+             ([MAGIC :x 1394 :y 1796.3 :w 620 :h 114.4 :elt 2514]
+              ([MAGIC :x 1394 :y 1796.3 :w 310 :h 114.4 :elt 2515]
+               ([INLINE :elt 2516]
+                ([INLINE :x 1417 :y 1796.3 :w 264 :h 114.4 :elt 2517]
+                 ([BLOCK :x 1417 :y 1796.3 :w 264 :h 115.1 :elt 2518]
+                  ([BLOCK :x 1422 :y 1801.3 :w 254 :h 105.1 :elt 2519]
+                   ([LINE]
+                    ([INLINE :elt 2520]
+                     ([INLINE :elt 2521]
+                      ([MAGIC :x 1460.1 :y 1801.3 :w 101.6 :h 105.1 :elt 2522]
+                       ([MAGIC :x 1460.1 :y 1801.3 :w 101.6 :h 105.1 :elt 2523]
+                        ([INLINE :elt 2524]
+                         ([INLINE :elt 2525])
+                         ([INLINE :x 1460.1 :y (/ 37197 20) :w 0 :h 0 :elt 2526])
+                         ([INLINE :elt 2527]))))))
+                    ([BLOCK :x 1574.4 :y 1801.3 :w 101.6 :h 105.1 :elt 2529]
+                     ([BLOCK :x (/ 4733 3) :y (/ 10855 6) :w (/ 268 3) :h (/ 268 3) :elt 2530]
+                      ([BLOCK :x (/ 4733 3) :y (/ 10855 6) :w (/ 268 3) :h (/ 268 3) :elt 2531]
+                       ([BLOCK :x (/ 4772 3) :y (/ 5509 3) :w (/ 190 3) :h 23 :elt 2532]
+                        ([LINE]
+                         ([INLINE :elt 2533]
+                          ([BLOCK :x (/ 9599 6) :y (/ 5443 3) :w 54 :h 46 :elt 2534]
+                           ([LINE]
+                            ([TEXT :x (/ 9629 6) :y (/ 5443 3) :w 44 :h 23 :text "USD "]))
+                           ([LINE]
+                            ([TEXT :x (/ 9599 6) :y (/ 5512 3) :w 54 :h 23 :text "12.29"])))
+                          ([INLINE :elt 2535]
+                           ([INLINE :elt 2536]
+                            ([TEXT :x (/ 9599 6) :y (/ 5515 3) :w 7 :h 14 :text "$"]))
+                           ([INLINE :elt 2537]
+                            ([TEXT :x (/ 9641 6) :y (/ 5509 3) :w 24 :h 23 :text "12"])
+                            ([BLOCK :x (/ 9785 6) :y (/ 5509 3) :w 6 :h 23 :elt 2538]
+                             ([LINE]
+                              ([TEXT :x (/ 9785 6) :y (/ 5509 3) :w 6 :h 23 :text "."]))))
+                           ([INLINE :elt 2539]
+                            ([TEXT :x (/ 9785 6) :y (/ 5515 3) :w 14 :h 14 :text "29"]))))))
+                       ([ANON]
+                        ([LINE]
+                         ([INLINE :elt 2540]
+                          ([TEXT :x (/ 4804 3) :y (/ 5578 3) :w 42 :h 12 :text "Buy now"]))))))))))
+                 ([MAGIC :x 1294 :y (/ 36529 20) :w 80 :h (/ 3247 60) :elt 2556]
+                  ([MAGIC :x 1294 :y (/ 36529 20) :w 80 :h (/ 3247 60) :elt 2557]
+                   ([MAGIC :x 1294 :y (/ 36529 20) :w 80 :h (/ 3247 60) :elt 2561]
+                    ([BLOCK :x 1308 :y (/ 36729 20) :w 52 :h (/ 2047 60) :elt 2562]
+                     ([BLOCK :x 1308 :y (/ 36729 20) :w 52 :h 18 :elt 2563]
+                      ([LINE]
+                       ([TEXT :x 1315 :y (/ 36769 20) :w 38 :h 14 :text "Arrives"])))
+                     ([BLOCK :x 1308 :y (/ 37089 20) :w 52 :h 0 :elt 2564])
+                     ([ANON]
+                      ([LINE]
+                       ([INLINE :elt 2565]
+                        ([TEXT :x 1308 :y 1856.5 :w 52 :h 12 :text "View order"])))))))))
+                ([TEXT :x 1681 :y 1898.7 :w 0 :h 15 :text " "])))
+              ([MAGIC :x 1704 :y 1796.3 :w 310 :h 114.4 :elt 2571]
+               ([BLOCK :x 1704 :y (/ 36797 20) :w 310 :h 27.3 :elt 2572]
+                ([LINE]
+                 ([INLINE :x 1704 :y (/ 36797 20) :w 176 :h 27.3 :elt 2573]
+                  ([LINE]
+                   ([INLINE :elt 2574]
+                    ([INLINE :elt 2575]
+                     ([TEXT :x 1708 :y 1842 :w 168 :h 23 :text "Delete this button"]))))))))))
+            ([ANON]
+             ([LINE]
+              ([INLINE :elt 2588]
+               ([TEXT :x 1473 :y 1923.7 :w 152 :h 15 :text " See all your Dash Buttons "])))))))
+         ([BLOCK :x 1417 :y 1962.7 :w 264 :h 1 :elt 2594])
+         ([BLOCK :x 1417 :y 1978.7 :w 264 :h 350 :elt 2595]
+          ([BLOCK :x 1417 :y 1978.7 :w 264 :h 350 :elt 2596]
+           ([BLOCK :x 1417 :y 1978.7 :w 264 :h 350 :elt 2598]
+            ([BLOCK :x 889 :y 1978.7 :w 1320 :h 350 :elt 2599]
+             ([LINE]
+              ([INLINE :x 1417 :y 1978.7 :w 264 :h 350 :elt 2600]
+               ([ANON]
+                ([LINE]
+                 ([INLINE :x 1417 :y 1978.7 :w 264 :h 350 :elt 2601]
+                  ([LINE]
+                   ([INLINE :x 1417 :y 1978.7 :w 264 :h 350 :elt 2602])))))
+               ([BLOCK :x 1417 :y 2328.7 :w 264 :h 0 :elt 2603])))))))
+         ([BLOCK :x 1417 :y 2343.7 :w 264 :h 1 :elt 2605]))))
+      ([BLOCK :x 204 :y (/ 75911 30) :w 1500 :h 1741.5 :elt 2637]
+       ([BLOCK :x 204 :y (/ 75911 30) :w 1500 :h 1741.5 :elt 2638]
+        ([BLOCK :x 204 :y (/ 75911 30) :w 1190 :h 0 :elt 2639]
+         ([BLOCK :x 204 :y (/ 75911 30) :w 1190 :h 1741.5 :elt 2640]
+          ([BLOCK :x 204 :y (/ 75911 30) :w 1190 :h 1741.5 :elt 2641]
+           ([BLOCK :x 224 :y (/ 76061 30) :w 1150 :h 329 :elt 2642]
+            ([BLOCK :x 236 :y (/ 76241 30) :w 1126 :h 305 :elt 2643]
+             ([BLOCK :x 244 :y (/ 76241 30) :w 1110 :h 305 :elt 2645]
+              ([ANON]
+               ([LINE]
+                ([INLINE :x 244 :y (/ 76241 30) :w 1110 :h 286 :elt 2646])))
+              ([BLOCK :x 244 :y (/ 84851 30) :w 1110 :h 20 :elt 2647]
+               ([BLOCK :x 1276 :y (/ 84911 30) :w 78 :h 14 :elt 2648]
+                ([LINE]
+                 ([INLINE :elt 2649]
+                  ([TEXT :x 1276 :y (/ 84911 30) :w 64 :h 12 :text " Ad feedback "])
+                  ([INLINE :x 1340 :y (/ 84941 30) :w 14 :h 12 :elt 2650]))))))))
+           ([BLOCK :x 224 :y (/ 85931 30) :w 1150 :h 1 :elt 2653])
+           ([BLOCK :x 224 :y (/ 86561 30) :w 1150 :h 239 :elt 2655]
+            ([BLOCK :x 224 :y (/ 86921 30) :w 1150 :h 200 :elt 2656]
+             ([BLOCK :x 224 :y (/ 86921 30) :w 562.9 :h 200 :elt 2657]
+              ([LINE]
+               ([INLINE :x 224 :y (/ 86921 30) :w 562.9 :h 200 :elt 2658]
+                ([BLOCK :x 234 :y (/ 86921 30) :w 542.9 :h 200 :elt 2659]
+                 ([BLOCK :x (/ 5709 20) :y (/ 86921 30) :w 440 :h 200 :elt 2661]
+                  ([LINE]
+                   ([INLINE :x (/ 5709 20) :y (/ 86921 30) :w 440 :h 200 :elt 2662])))))))
+             ([BLOCK :x 811.1 :y (/ 86921 30) :w 562.9 :h 200 :elt 2664]
+              ([LINE]
+               ([INLINE :x 811.1 :y (/ 86921 30) :w 562.9 :h 200 :elt 2665]
+                ([BLOCK :x 821.1 :y (/ 86921 30) :w 542.9 :h 200 :elt 2666]
+                 ([BLOCK :x 821.1 :y (/ 86921 30) :w 542.9 :h 200 :elt 2668]
+                  ([BLOCK :x -264.7 :y (/ 86921 30) :w 2714.5 :h 200 :elt 2669]
+                   ([LINE]
+                    ([INLINE :x (/ 17451 20) :y (/ 86921 30) :w 440 :h 200 :elt 2670]
+                     ([BLOCK :x (/ 17451 20) :y (/ 86921 30) :w 440 :h 200 :elt 2671]
+                      ([LINE]
+                       ([INLINE :x (/ 17451 20) :y (/ 86921 30) :w 440 :h 200 :elt 2672])))
+                     ([BLOCK :x (/ 17451 20) :y (/ 92921 30) :w 440 :h 0 :elt 2673])))))))))))
+           ([BLOCK :x 224 :y (/ 93731 30) :w 1150 :h 1 :elt 2675])
+           ([BLOCK :x 224 :y (/ 94361 30) :w 1150 :h 286.5 :elt 2676]
+            ([BLOCK :x 224 :y (/ 94361 30) :w 1150 :h 286.5 :elt 2677]
+             ([BLOCK :x 244 :y (/ 94961 30) :w 1110 :h 31.5 :elt 2678]
+              ([BLOCK :x 244 :y (/ 94961 30) :w 418 :h 31.5 :elt 2679]
+               ([LINE]
+                ([INLINE :elt 2680]
+                 ([TEXT :x 244 :y (/ 190177 60) :w 418 :h 23 :text "Recommended for you in Kindle Magazines"]))))
+              ([BLOCK :x 662 :y (/ 94961 30) :w 15 :h 0 :elt 2681]))
+             ([BLOCK :x 244 :y (/ 47953 15) :w 1110 :h 220 :elt 2682]
+              ([BLOCK :x 244 :y (/ 47953 15) :w 1110 :h 220 :elt 2683]
+               ([LINE]
+                ([INLINE :x 244 :y (/ 47953 15) :w 3089 :h 200 :elt 2684]
+                 ([LINE]
+                  ([INLINE :x 244 :y (/ 47953 15) :w 147 :h 200 :elt 2685]
+                   ([LINE]
+                    ([INLINE :x 244 :y (/ 47953 15) :w 147 :h 200 :elt 2686]
+                     ([LINE]
+                      ([INLINE :x 244 :y (/ 47953 15) :w 147 :h 200 :elt 2687]
+                       ([LINE]
+                        ([INLINE :x 244 :y (/ 47953 15) :w 147 :h 200 :elt 2688])))))))
+                  ([TEXT :x 401 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 405 :y (/ 47953 15) :w 146 :h 200 :elt 2689]
+                   ([LINE]
+                    ([INLINE :x 405 :y (/ 47953 15) :w 146 :h 200 :elt 2690]
+                     ([LINE]
+                      ([INLINE :x 405 :y (/ 47953 15) :w 146 :h 200 :elt 2691]
+                       ([LINE]
+                        ([INLINE :x 405 :y (/ 47953 15) :w 146 :h 200 :elt 2692])))))))
+                  ([TEXT :x 561 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 565 :y (/ 47953 15) :w 148 :h 200 :elt 2693]
+                   ([LINE]
+                    ([INLINE :x 565 :y (/ 47953 15) :w 148 :h 200 :elt 2694]
+                     ([LINE]
+                      ([INLINE :x 565 :y (/ 47953 15) :w 148 :h 200 :elt 2695]
+                       ([LINE]
+                        ([INLINE :x 565 :y (/ 47953 15) :w 148 :h 200 :elt 2696])))))))
+                  ([TEXT :x 723 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 727 :y (/ 47953 15) :w 147 :h 200 :elt 2697]
+                   ([LINE]
+                    ([INLINE :x 727 :y (/ 47953 15) :w 147 :h 200 :elt 2698]
+                     ([LINE]
+                      ([INLINE :x 727 :y (/ 47953 15) :w 147 :h 200 :elt 2699]
+                       ([LINE]
+                        ([INLINE :x 727 :y (/ 47953 15) :w 147 :h 200 :elt 2700])))))))
+                  ([TEXT :x 884 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 888 :y (/ 47953 15) :w 150 :h 200 :elt 2701]
+                   ([LINE]
+                    ([INLINE :x 888 :y (/ 47953 15) :w 150 :h 200 :elt 2702]
+                     ([LINE]
+                      ([INLINE :x 888 :y (/ 47953 15) :w 150 :h 200 :elt 2703]
+                       ([LINE]
+                        ([INLINE :x 888 :y (/ 47953 15) :w 150 :h 200 :elt 2704])))))))
+                  ([TEXT :x 1048 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1052 :y (/ 47953 15) :w 150 :h 200 :elt 2705]
+                   ([LINE]
+                    ([INLINE :x 1052 :y (/ 47953 15) :w 150 :h 200 :elt 2706]
+                     ([LINE]
+                      ([INLINE :x 1052 :y (/ 47953 15) :w 150 :h 200 :elt 2707]
+                       ([LINE]
+                        ([INLINE :x 1052 :y (/ 47953 15) :w 150 :h 200 :elt 2708])))))))
+                  ([TEXT :x 1212 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1216 :y (/ 47953 15) :w 150 :h 200 :elt 2709]
+                   ([LINE]
+                    ([INLINE :x 1216 :y (/ 47953 15) :w 150 :h 200 :elt 2710]
+                     ([LINE]
+                      ([INLINE :x 1216 :y (/ 47953 15) :w 150 :h 200 :elt 2711]
+                       ([LINE]
+                        ([INLINE :x 1216 :y (/ 47953 15) :w 150 :h 200 :elt 2712])))))))
+                  ([TEXT :x 1376 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1380 :y (/ 47953 15) :w 147 :h 200 :elt 2713]
+                   ([LINE]
+                    ([INLINE :x 1380 :y (/ 47953 15) :w 147 :h 200 :elt 2714]
+                     ([LINE]
+                      ([INLINE :x 1380 :y (/ 47953 15) :w 147 :h 200 :elt 2715]
+                       ([LINE]
+                        ([INLINE :x 1380 :y (/ 47953 15) :w 147 :h 200 :elt 2716])))))))
+                  ([TEXT :x 1537 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1541 :y (/ 47953 15) :w 168 :h 200 :elt 2717]
+                   ([LINE]
+                    ([INLINE :x 1541 :y (/ 47953 15) :w 168 :h 200 :elt 2718]
+                     ([LINE]
+                      ([INLINE :x 1541 :y (/ 47953 15) :w 168 :h 200 :elt 2719]
+                       ([LINE]
+                        ([INLINE :x 1541 :y (/ 47953 15) :w 168 :h 200 :elt 2720])))))))
+                  ([TEXT :x 1719 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1723 :y (/ 47953 15) :w 152 :h 200 :elt 2721]
+                   ([LINE]
+                    ([INLINE :x 1723 :y (/ 47953 15) :w 152 :h 200 :elt 2722]
+                     ([LINE]
+                      ([INLINE :x 1723 :y (/ 47953 15) :w 152 :h 200 :elt 2723]
+                       ([LINE]
+                        ([INLINE :x 1723 :y (/ 47953 15) :w 152 :h 200 :elt 2724])))))))
+                  ([TEXT :x 1885 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1889 :y (/ 47953 15) :w 146 :h 200 :elt 2725]
+                   ([LINE]
+                    ([INLINE :x 1889 :y (/ 47953 15) :w 146 :h 200 :elt 2726]
+                     ([LINE]
+                      ([INLINE :x 1889 :y (/ 47953 15) :w 146 :h 200 :elt 2727]
+                       ([LINE]
+                        ([INLINE :x 1889 :y (/ 47953 15) :w 146 :h 200 :elt 2728])))))))
+                  ([TEXT :x 2045 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2049 :y (/ 47953 15) :w 147 :h 200 :elt 2729]
+                   ([LINE]
+                    ([INLINE :x 2049 :y (/ 47953 15) :w 147 :h 200 :elt 2730]
+                     ([LINE]
+                      ([INLINE :x 2049 :y (/ 47953 15) :w 147 :h 200 :elt 2731]
+                       ([LINE]
+                        ([INLINE :x 2049 :y (/ 47953 15) :w 147 :h 200 :elt 2732])))))))
+                  ([TEXT :x 2206 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2210 :y (/ 47953 15) :w 152 :h 200 :elt 2733]
+                   ([LINE]
+                    ([INLINE :x 2210 :y (/ 47953 15) :w 152 :h 200 :elt 2734]
+                     ([LINE]
+                      ([INLINE :x 2210 :y (/ 47953 15) :w 152 :h 200 :elt 2735]
+                       ([LINE]
+                        ([INLINE :x 2210 :y (/ 47953 15) :w 152 :h 200 :elt 2736])))))))
+                  ([TEXT :x 2372 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2376 :y (/ 47953 15) :w 145 :h 200 :elt 2737]
+                   ([LINE]
+                    ([INLINE :x 2376 :y (/ 47953 15) :w 145 :h 200 :elt 2738]
+                     ([LINE]
+                      ([INLINE :x 2377 :y (/ 47953 15) :w 143 :h 200 :elt 2739]
+                       ([LINE]
+                        ([INLINE :x 2377 :y (/ 47953 15) :w 143 :h 200 :elt 2740])))))))
+                  ([TEXT :x 2531 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2535 :y (/ 47953 15) :w 148 :h 200 :elt 2741]
+                   ([LINE]
+                    ([INLINE :x 2535 :y (/ 47953 15) :w 148 :h 200 :elt 2742]
+                     ([LINE]
+                      ([INLINE :x 2535 :y (/ 47953 15) :w 148 :h 200 :elt 2743]
+                       ([LINE]
+                        ([INLINE :x 2535 :y (/ 47953 15) :w 148 :h 200 :elt 2744])))))))
+                  ([TEXT :x 2693 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2697 :y (/ 47953 15) :w 147 :h 200 :elt 2745]
+                   ([LINE]
+                    ([INLINE :x 2697 :y (/ 47953 15) :w 147 :h 200 :elt 2746]
+                     ([LINE]
+                      ([INLINE :x 2697 :y (/ 47953 15) :w 147 :h 200 :elt 2747]
+                       ([LINE]
+                        ([INLINE :x 2697 :y (/ 47953 15) :w 147 :h 200 :elt 2748])))))))
+                  ([TEXT :x 2854 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2858 :y (/ 47953 15) :w 149 :h 200 :elt 2749]
+                   ([LINE]
+                    ([INLINE :x 2858 :y (/ 47953 15) :w 149 :h 200 :elt 2750]
+                     ([LINE]
+                      ([INLINE :x 2858 :y (/ 47953 15) :w 149 :h 200 :elt 2751]
+                       ([LINE]
+                        ([INLINE :x 2858 :y (/ 47953 15) :w 149 :h 200 :elt 2752])))))))
+                  ([TEXT :x 3017 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 3021 :y (/ 47953 15) :w 153 :h 200 :elt 2753]
+                   ([LINE]
+                    ([INLINE :x 3021 :y (/ 47953 15) :w 153 :h 200 :elt 2754]
+                     ([LINE]
+                      ([INLINE :x 3021 :y (/ 47953 15) :w 153 :h 200 :elt 2755]
+                       ([LINE]
+                        ([INLINE :x 3021 :y (/ 47953 15) :w 153 :h 200 :elt 2756])))))))
+                  ([TEXT :x 3184 :y (/ 47983 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 3188 :y (/ 47953 15) :w 145 :h 200 :elt 2757]
+                   ([LINE]
+                    ([INLINE :x 3188 :y (/ 47953 15) :w 145 :h 200 :elt 2758]
+                     ([LINE]
+                      ([INLINE :x 3190.5 :y (/ 47953 15) :w 140 :h 200 :elt 2759]
+                       ([LINE]
+                        ([INLINE :x 3190.5 :y (/ 47953 15) :w 140 :h 200 :elt 2760])))))))))
+                ([TEXT :x 3333 :y (/ 47983 15) :w 0 :h 15 :text " "])))
+              ([BLOCK :x 244 :y (/ 51163 15) :w 1110 :h 6 :elt 2767]
+               ([BLOCK :x 244 :y (/ 51193 15) :w 1110 :h 1 :elt 2768])))))
+           ([BLOCK :x 224 :y (/ 51478 15) :w 1150 :h 290 :elt 2774]
+            ([BLOCK :x 224 :y (/ 51478 15) :w 1150 :h 290 :elt 2775]
+             ([BLOCK :x 244 :y (/ 51778 15) :w 1110 :h 35 :elt 2776]
+              ([BLOCK :x 244 :y (/ 51778 15) :w 297 :h 31.5 :elt 2777]
+               ([LINE]
+                ([INLINE :elt 2778]
+                 ([TEXT :x 244 :y (/ 207367 60) :w 297 :h 23 :text "Related to items you've viewed"]))))
+              ([BLOCK :x 541 :y (/ 51778 15) :w 77 :h 35 :elt 2779]
+               ([LINE]
+                ([INLINE :elt 2780]
+                 ([TEXT :x 556 :y (/ 103841 30) :w 62 :h 16 :text "See more"])))))
+             ([BLOCK :x 244 :y (/ 52303 15) :w 1110 :h 220 :elt 2781]
+              ([BLOCK :x 244 :y (/ 52303 15) :w 1110 :h 220 :elt 2782]
+               ([LINE]
+                ([INLINE :x 244 :y (/ 52303 15) :w 2757 :h 200 :elt 2783]
+                 ([LINE]
+                  ([INLINE :x 244 :y (/ 52303 15) :w 145 :h 200 :elt 2784]
+                   ([LINE]
+                    ([INLINE :x 244 :y (/ 52303 15) :w 145 :h 200 :elt 2785]
+                     ([LINE]
+                      ([INLINE :x 252.5 :y (/ 52303 15) :w 128 :h 200 :elt 2786]
+                       ([LINE]
+                        ([INLINE :x 252.5 :y (/ 52303 15) :w 128 :h 200 :elt 2787])))))))
+                  ([TEXT :x 399 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 403 :y (/ 52303 15) :w 145 :h 200 :elt 2788]
+                   ([LINE]
+                    ([INLINE :x 403 :y (/ 52303 15) :w 145 :h 200 :elt 2789]
+                     ([LINE]
+                      ([INLINE :x 410.5 :y (/ 52303 15) :w 130 :h 200 :elt 2790]
+                       ([LINE]
+                        ([INLINE :x 410.5 :y (/ 52303 15) :w 130 :h 200 :elt 2791])))))))
+                  ([TEXT :x 558 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 562 :y (/ 52303 15) :w 145 :h 200 :elt 2792]
+                   ([LINE]
+                    ([INLINE :x 562 :y (/ 52303 15) :w 145 :h 200 :elt 2793]
+                     ([LINE]
+                      ([INLINE :x 566 :y (/ 52303 15) :w 137 :h 200 :elt 2794]
+                       ([LINE]
+                        ([INLINE :x 566 :y (/ 52303 15) :w 137 :h 200 :elt 2795])))))))
+                  ([TEXT :x 717 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 721 :y (/ 52303 15) :w 145 :h 200 :elt 2796]
+                   ([LINE]
+                    ([INLINE :x 721 :y (/ 52303 15) :w 145 :h 200 :elt 2797]
+                     ([LINE]
+                      ([INLINE :x 727 :y (/ 52303 15) :w 133 :h 200 :elt 2798]
+                       ([LINE]
+                        ([INLINE :x 727 :y (/ 52303 15) :w 133 :h 200 :elt 2799])))))))
+                  ([TEXT :x 876 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 880 :y (/ 52303 15) :w 155 :h 200 :elt 2800]
+                   ([LINE]
+                    ([INLINE :x 880 :y (/ 52303 15) :w 155 :h 200 :elt 2801]
+                     ([LINE]
+                      ([INLINE :x 880 :y (/ 52303 15) :w 155 :h 200 :elt 2802]
+                       ([LINE]
+                        ([INLINE :x 880 :y (/ 52303 15) :w 155 :h 200 :elt 2803])))))))
+                  ([TEXT :x 1045 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1049 :y (/ 52303 15) :w 145 :h 200 :elt 2804]
+                   ([LINE]
+                    ([INLINE :x 1049 :y (/ 52303 15) :w 145 :h 200 :elt 2805]
+                     ([LINE]
+                      ([INLINE :x 1054.5 :y (/ 52303 15) :w 134 :h 200 :elt 2806]
+                       ([LINE]
+                        ([INLINE :x 1054.5 :y (/ 52303 15) :w 134 :h 200 :elt 2807])))))))
+                  ([TEXT :x 1204 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1208 :y (/ 52303 15) :w 145 :h 200 :elt 2808]
+                   ([LINE]
+                    ([INLINE :x 1208 :y (/ 52303 15) :w 145 :h 200 :elt 2809]
+                     ([LINE]
+                      ([INLINE :x 1214 :y (/ 52303 15) :w 133 :h 200 :elt 2810]
+                       ([LINE]
+                        ([INLINE :x 1214 :y (/ 52303 15) :w 133 :h 200 :elt 2811])))))))
+                  ([TEXT :x 1363 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1367 :y (/ 52303 15) :w 258 :h 200 :elt 2812]
+                   ([LINE]
+                    ([INLINE :x 1367 :y (/ 52303 15) :w 258 :h 200 :elt 2813]
+                     ([LINE]
+                      ([INLINE :x 1367 :y (/ 52303 15) :w 258 :h 200 :elt 2814]
+                       ([LINE]
+                        ([INLINE :x 1367 :y (/ 52303 15) :w 258 :h 200 :elt 2815])))))))
+                  ([TEXT :x 1635 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1639 :y (/ 52303 15) :w 145 :h 200 :elt 2816]
+                   ([LINE]
+                    ([INLINE :x 1639 :y (/ 52303 15) :w 145 :h 200 :elt 2817]
+                     ([LINE]
+                      ([INLINE :x 1646 :y (/ 52303 15) :w 131 :h 200 :elt 2818]
+                       ([LINE]
+                        ([INLINE :x 1646 :y (/ 52303 15) :w 131 :h 200 :elt 2819])))))))
+                  ([TEXT :x 1794 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1798 :y (/ 52303 15) :w 150 :h 200 :elt 2820]
+                   ([LINE]
+                    ([INLINE :x 1798 :y (/ 52303 15) :w 150 :h 200 :elt 2821]
+                     ([LINE]
+                      ([INLINE :x 1798 :y (/ 52303 15) :w 150 :h 200 :elt 2822]
+                       ([LINE]
+                        ([INLINE :x 1798 :y (/ 52303 15) :w 150 :h 200 :elt 2823])))))))
+                  ([TEXT :x 1958 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1962 :y (/ 52303 15) :w 145 :h 200 :elt 2824]
+                   ([LINE]
+                    ([INLINE :x 1962 :y (/ 52303 15) :w 145 :h 200 :elt 2825]
+                     ([LINE]
+                      ([INLINE :x 1969 :y (/ 52303 15) :w 131 :h 200 :elt 2826]
+                       ([LINE]
+                        ([INLINE :x 1969 :y (/ 52303 15) :w 131 :h 200 :elt 2827])))))))
+                  ([TEXT :x 2117 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2121 :y (/ 52303 15) :w 235 :h 200 :elt 2828]
+                   ([LINE]
+                    ([INLINE :x 2121 :y (/ 52303 15) :w 235 :h 200 :elt 2829]
+                     ([LINE]
+                      ([INLINE :x 2121 :y (/ 52303 15) :w 235 :h 200 :elt 2830]
+                       ([LINE]
+                        ([INLINE :x 2121 :y (/ 52303 15) :w 235 :h 200 :elt 2831])))))))
+                  ([TEXT :x 2366 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2370 :y (/ 52303 15) :w 154 :h 200 :elt 2832]
+                   ([LINE]
+                    ([INLINE :x 2370 :y (/ 52303 15) :w 154 :h 200 :elt 2833]
+                     ([LINE]
+                      ([INLINE :x 2370 :y (/ 52303 15) :w 154 :h 200 :elt 2834]
+                       ([LINE]
+                        ([INLINE :x 2370 :y (/ 52303 15) :w 154 :h 200 :elt 2835])))))))
+                  ([TEXT :x 2534 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2538 :y (/ 52303 15) :w 145 :h 200 :elt 2836]
+                   ([LINE]
+                    ([INLINE :x 2538 :y (/ 52303 15) :w 145 :h 200 :elt 2837]
+                     ([LINE]
+                      ([INLINE :x 2544 :y (/ 52303 15) :w 133 :h 200 :elt 2838]
+                       ([LINE]
+                        ([INLINE :x 2544 :y (/ 52303 15) :w 133 :h 200 :elt 2839])))))))
+                  ([TEXT :x 2693 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2697 :y (/ 52303 15) :w 145 :h 200 :elt 2840]
+                   ([LINE]
+                    ([INLINE :x 2697 :y (/ 52303 15) :w 145 :h 200 :elt 2841]
+                     ([LINE]
+                      ([INLINE :x 2703.5 :y (/ 52303 15) :w 132 :h 200 :elt 2842]
+                       ([LINE]
+                        ([INLINE :x 2703.5 :y (/ 52303 15) :w 132 :h 200 :elt 2843])))))))
+                  ([TEXT :x 2852 :y (/ 52333 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2856 :y (/ 52303 15) :w 145 :h 200 :elt 2844]
+                   ([LINE]
+                    ([INLINE :x 2856 :y (/ 52303 15) :w 145 :h 200 :elt 2845]
+                     ([LINE]
+                      ([INLINE :x 2859.5 :y (/ 52303 15) :w 138 :h 200 :elt 2846]
+                       ([LINE]
+                        ([INLINE :x 2859.5 :y (/ 52303 15) :w 138 :h 200 :elt 2847])))))))))
+                ([TEXT :x 3001 :y (/ 52333 15) :w 0 :h 15 :text " "])))
+              ([BLOCK :x 244 :y (/ 55513 15) :w 1110 :h 6 :elt 2854]
+               ([BLOCK :x 244 :y (/ 55543 15) :w 1110 :h 1 :elt 2855])))))
+           ([BLOCK :x 224 :y (/ 55828 15) :w 1150 :h 239 :elt 2862]
+            ([BLOCK :x 224 :y (/ 56008 15) :w 1150 :h 200 :elt 2863]
+             ([BLOCK :x 224 :y (/ 56008 15) :w 562.9 :h 200 :elt 2864]
+              ([LINE]
+               ([INLINE :x 224 :y (/ 56008 15) :w 562.9 :h 200 :elt 2865]
+                ([BLOCK :x 234 :y (/ 56008 15) :w 542.9 :h 200 :elt 2866]
+                 ([BLOCK :x (/ 5709 20) :y (/ 56008 15) :w 440 :h 200 :elt 2868]
+                  ([LINE]
+                   ([INLINE :x (/ 5709 20) :y (/ 56008 15) :w 440 :h 200 :elt 2869])))))))
+             ([BLOCK :x 811.1 :y (/ 56008 15) :w 562.9 :h 200 :elt 2871]
+              ([LINE]
+               ([INLINE :x 811.1 :y (/ 56008 15) :w 562.9 :h 200 :elt 2872]
+                ([BLOCK :x 821.1 :y (/ 56008 15) :w 542.9 :h 200 :elt 2873]
+                 ([BLOCK :x (/ 17451 20) :y (/ 56008 15) :w 440 :h 200 :elt 2875]
+                  ([LINE]
+                   ([INLINE :x (/ 17451 20) :y (/ 56008 15) :w 440 :h 200 :elt 2876])))))))))
+           ([BLOCK :x 224 :y (/ 59413 15) :w 1150 :h 1 :elt 2878])
+           ([BLOCK :x 224 :y (/ 59728 15) :w 1150 :h 290 :elt 2879]
+            ([BLOCK :x 224 :y (/ 59728 15) :w 1150 :h 290 :elt 2880]
+             ([BLOCK :x 244 :y (/ 60028 15) :w 1110 :h 35 :elt 2881]
+              ([BLOCK :x 244 :y (/ 60028 15) :w 256 :h 31.5 :elt 2882]
+               ([LINE]
+                ([INLINE :elt 2883]
+                 ([TEXT :x 244 :y (/ 240367 60) :w 256 :h 23 :text "Toys & Games best sellers "]))))
+              ([BLOCK :x 500 :y (/ 60028 15) :w 77 :h 35 :elt 2884]
+               ([LINE]
+                ([INLINE :elt 2885]
+                 ([TEXT :x 515 :y (/ 120341 30) :w 62 :h 16 :text "See more"])))))
+             ([BLOCK :x 244 :y (/ 60553 15) :w 1110 :h 220 :elt 2886]
+              ([BLOCK :x 244 :y (/ 60553 15) :w 1110 :h 220 :elt 2887]
+               ([LINE]
+                ([INLINE :x 244 :y (/ 60553 15) :w 4557 :h 200 :elt 2888]
+                 ([LINE]
+                  ([INLINE :x 244 :y (/ 60553 15) :w 192 :h 200 :elt 2889]
+                   ([LINE]
+                    ([INLINE :x 244 :y (/ 60553 15) :w 192 :h 200 :elt 2890]
+                     ([LINE]
+                      ([INLINE :x 244 :y (/ 60553 15) :w 192 :h 200 :elt 2891]
+                       ([LINE]
+                        ([INLINE :x 244 :y (/ 60553 15) :w 192 :h 200 :elt 2892])))))))
+                  ([TEXT :x 446 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 450 :y (/ 60553 15) :w 270 :h 200 :elt 2893]
+                   ([LINE]
+                    ([INLINE :x 450 :y (/ 60632 15) :w 270 :h (/ 2842 15) :elt 2894]
+                     ([LINE]
+                      ([INLINE :x 450 :y (/ 60632 15) :w 270 :h (/ 2842 15) :elt 2895]
+                       ([LINE]
+                        ([INLINE :x 450 :y (/ 60632 15) :w 270 :h (/ 2842 15) :elt 2896])))))))
+                  ([TEXT :x 730 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 734 :y (/ 60553 15) :w 270 :h 200 :elt 2897]
+                   ([LINE]
+                    ([INLINE :x 734 :y (/ 48533 12) :w 270 :h (/ 2219 12) :elt 2898]
+                     ([LINE]
+                      ([INLINE :x 734 :y (/ 48533 12) :w 270 :h (/ 2219 12) :elt 2899]
+                       ([LINE]
+                        ([INLINE :x 734 :y (/ 48533 12) :w 270 :h (/ 2219 12) :elt 2900])))))))
+                  ([TEXT :x 1014 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1018 :y (/ 60553 15) :w 270 :h 200 :elt 2901]
+                   ([LINE]
+                    ([INLINE :x 1018 :y (/ 12185 3) :w 270 :h (/ 1805 12) :elt 2902]
+                     ([LINE]
+                      ([INLINE :x 1018 :y (/ 12185 3) :w 270 :h (/ 1805 12) :elt 2903]
+                       ([LINE]
+                        ([INLINE :x 1018 :y (/ 12185 3) :w 270 :h (/ 1805 12) :elt 2904])))))))
+                  ([TEXT :x 1298 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1302 :y (/ 60553 15) :w 203 :h 200 :elt 2905]
+                   ([LINE]
+                    ([INLINE :x 1302 :y (/ 60553 15) :w 203 :h 200 :elt 2906]
+                     ([LINE]
+                      ([INLINE :x 1302 :y (/ 60553 15) :w 203 :h 200 :elt 2907]
+                       ([LINE]
+                        ([INLINE :x 1302 :y (/ 60553 15) :w 203 :h 200 :elt 2908])))))))
+                  ([TEXT :x 1515 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1519 :y (/ 60553 15) :w 247 :h 200 :elt 2909]
+                   ([LINE]
+                    ([INLINE :x 1519 :y (/ 60553 15) :w 247 :h 200 :elt 2910]
+                     ([LINE]
+                      ([INLINE :x 1519 :y (/ 60553 15) :w 247 :h 200 :elt 2911]
+                       ([LINE]
+                        ([INLINE :x 1519 :y (/ 60553 15) :w 247 :h 200 :elt 2912])))))))
+                  ([TEXT :x 1776 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1780 :y (/ 60553 15) :w 185 :h 200 :elt 2913]
+                   ([LINE]
+                    ([INLINE :x 1780 :y (/ 60553 15) :w 185 :h 200 :elt 2914]
+                     ([LINE]
+                      ([INLINE :x 1780 :y (/ 60553 15) :w 185 :h 200 :elt 2915]
+                       ([LINE]
+                        ([INLINE :x 1780 :y (/ 60553 15) :w 185 :h 200 :elt 2916])))))))
+                  ([TEXT :x 1975 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 1979 :y (/ 60553 15) :w 265 :h 200 :elt 2917]
+                   ([LINE]
+                    ([INLINE :x 1979 :y (/ 60553 15) :w 265 :h 200 :elt 2918]
+                     ([LINE]
+                      ([INLINE :x 1979 :y (/ 60553 15) :w 265 :h 200 :elt 2919]
+                       ([LINE]
+                        ([INLINE :x 1979 :y (/ 60553 15) :w 265 :h 200 :elt 2920])))))))
+                  ([TEXT :x 2254 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2258 :y (/ 60553 15) :w 145 :h 200 :elt 2921]
+                   ([LINE]
+                    ([INLINE :x 2258 :y (/ 60553 15) :w 145 :h 200 :elt 2922]
+                     ([LINE]
+                      ([INLINE :x 2287.5 :y (/ 60553 15) :w 86 :h 200 :elt 2923]
+                       ([LINE]
+                        ([INLINE :x 2287.5 :y (/ 60553 15) :w 86 :h 200 :elt 2924])))))))
+                  ([TEXT :x 2413 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2417 :y (/ 60553 15) :w 270 :h 200 :elt 2925]
+                   ([LINE]
+                    ([INLINE :x 2417 :y (/ 122071 30) :w 270 :h (/ 407 3) :elt 2926]
+                     ([LINE]
+                      ([INLINE :x 2417 :y (/ 122071 30) :w 270 :h (/ 407 3) :elt 2927]
+                       ([LINE]
+                        ([INLINE :x 2417 :y (/ 122071 30) :w 270 :h (/ 407 3) :elt 2928])))))))
+                  ([TEXT :x 2697 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2701 :y (/ 60553 15) :w 189 :h 200 :elt 2929]
+                   ([LINE]
+                    ([INLINE :x 2701 :y (/ 60553 15) :w 189 :h 200 :elt 2930]
+                     ([LINE]
+                      ([INLINE :x 2701 :y (/ 60553 15) :w 189 :h 200 :elt 2931]
+                       ([LINE]
+                        ([INLINE :x 2701 :y (/ 60553 15) :w 189 :h 200 :elt 2932])))))))
+                  ([TEXT :x 2900 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 2904 :y (/ 60553 15) :w 166 :h 200 :elt 2933]
+                   ([LINE]
+                    ([INLINE :x 2904 :y (/ 60553 15) :w 166 :h 200 :elt 2934]
+                     ([LINE]
+                      ([INLINE :x 2904 :y (/ 60553 15) :w 166 :h 200 :elt 2935]
+                       ([LINE]
+                        ([INLINE :x 2904 :y (/ 60553 15) :w 166 :h 200 :elt 2936])))))))
+                  ([TEXT :x 3080 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 3084 :y (/ 60553 15) :w 234 :h 200 :elt 2937]
+                   ([LINE]
+                    ([INLINE :x 3084 :y (/ 60553 15) :w 234 :h 200 :elt 2938]
+                     ([LINE]
+                      ([INLINE :x 3084 :y (/ 60553 15) :w 234 :h 200 :elt 2939]
+                       ([LINE]
+                        ([INLINE :x 3084 :y (/ 60553 15) :w 234 :h 200 :elt 2940])))))))
+                  ([TEXT :x 3328 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 3332 :y (/ 60553 15) :w 146 :h 200 :elt 2941]
+                   ([LINE]
+                    ([INLINE :x 3332 :y (/ 60553 15) :w 146 :h 200 :elt 2942]
+                     ([LINE]
+                      ([INLINE :x 3332 :y (/ 60553 15) :w 146 :h 200 :elt 2943]
+                       ([LINE]
+                        ([INLINE :x 3332 :y (/ 60553 15) :w 146 :h 200 :elt 2944])))))))
+                  ([TEXT :x 3488 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 3492 :y (/ 60553 15) :w 173 :h 200 :elt 2945]
+                   ([LINE]
+                    ([INLINE :x 3492 :y (/ 60553 15) :w 173 :h 200 :elt 2946]
+                     ([LINE]
+                      ([INLINE :x 3492 :y (/ 60553 15) :w 173 :h 200 :elt 2947]
+                       ([LINE]
+                        ([INLINE :x 3492 :y (/ 60553 15) :w 173 :h 200 :elt 2948])))))))
+                  ([TEXT :x 3675 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 3679 :y (/ 60553 15) :w 270 :h 200 :elt 2949]
+                   ([LINE]
+                    ([INLINE :x 3679 :y 4069.2 :w 270 :h (/ 406 3) :elt 2950]
+                     ([LINE]
+                      ([INLINE :x 3679 :y 4069.2 :w 270 :h (/ 406 3) :elt 2951]
+                       ([LINE]
+                        ([INLINE :x 3679 :y 4069.2 :w 270 :h (/ 406 3) :elt 2952])))))))
+                  ([TEXT :x 3959 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 3963 :y (/ 60553 15) :w 270 :h 200 :elt 2953]
+                   ([LINE]
+                    ([INLINE :x 3963 :y (/ 60862 15) :w 270 :h (/ 9529 60) :elt 2954]
+                     ([LINE]
+                      ([INLINE :x 3963 :y (/ 60862 15) :w 270 :h (/ 9529 60) :elt 2955]
+                       ([LINE]
+                        ([INLINE :x 3963 :y (/ 60862 15) :w 270 :h (/ 9529 60) :elt 2956])))))))
+                  ([TEXT :x 4243 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 4247 :y (/ 60553 15) :w 145 :h 200 :elt 2957]
+                   ([LINE]
+                    ([INLINE :x 4247 :y (/ 60553 15) :w 145 :h 200 :elt 2958]
+                     ([LINE]
+                      ([INLINE :x 4252.5 :y (/ 60553 15) :w 134 :h 200 :elt 2959]
+                       ([LINE]
+                        ([INLINE :x 4252.5 :y (/ 60553 15) :w 134 :h 200 :elt 2960])))))))
+                  ([TEXT :x 4402 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 4406 :y (/ 60553 15) :w 181 :h 200 :elt 2961]
+                   ([LINE]
+                    ([INLINE :x 4406 :y (/ 60553 15) :w 181 :h 200 :elt 2962]
+                     ([LINE]
+                      ([INLINE :x 4406 :y (/ 60553 15) :w 181 :h 200 :elt 2963]
+                       ([LINE]
+                        ([INLINE :x 4406 :y (/ 60553 15) :w 181 :h 200 :elt 2964])))))))
+                  ([TEXT :x 4597 :y (/ 60583 15) :w 4 :h 15 :text " "])
+                  ([INLINE :x 4601 :y (/ 60553 15) :w 200 :h 200 :elt 2965]
+                   ([LINE]
+                    ([INLINE :x 4601 :y (/ 60553 15) :w 200 :h 200 :elt 2966]
+                     ([LINE]
+                      ([INLINE :x 4601 :y (/ 60553 15) :w 200 :h 200 :elt 2967]
+                       ([LINE]
+                        ([INLINE :x 4601 :y (/ 60553 15) :w 200 :h 200 :elt 2968])))))))))
+                ([TEXT :x 4801 :y (/ 60583 15) :w 0 :h 15 :text " "])))
+              ([BLOCK :x 244 :y (/ 63763 15) :w 1110 :h 6 :elt 2975]
+               ([BLOCK :x 244 :y (/ 63793 15) :w 1110 :h 1 :elt 2976])))))))
+         ([BLOCK :x 1394 :y (/ 71081 30) :w 310 :h 1454 :elt 2982]
+          ([BLOCK :x 1417 :y (/ 71381 30) :w 264 :h 350 :elt 2983]
+           ([BLOCK :x 1417 :y (/ 71381 30) :w 264 :h 350 :elt 2984]
+            ([LINE]
+             ([INLINE :elt 2985]
+              ([INLINE :x 1417 :y (/ 71381 30) :w 264 :h 350 :elt 2986])))))
+          ([BLOCK :x 1417 :y (/ 82541 30) :w 264 :h 1 :elt 2988])
+          ([BLOCK :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2989]
+           ([BLOCK :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2990]
+            ([BLOCK :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2992]
+             ([BLOCK :x 889 :y (/ 83021 30) :w 1320 :h 350 :elt 2993]
+              ([LINE]
+               ([INLINE :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2994]
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2995]
+                   ([LINE]
+                    ([INLINE :x 1417 :y (/ 83021 30) :w 264 :h 350 :elt 2996])))))
+                ([BLOCK :x 1417 :y (/ 93521 30) :w 264 :h 0 :elt 2997])))))))
+          ([BLOCK :x 1417 :y (/ 93971 30) :w 264 :h 1 :elt 2999])
+          ([BLOCK :x 1417 :y (/ 94451 30) :w 264 :h 350 :elt 3000]
+           ([BLOCK :x 1417 :y (/ 94451 30) :w 264 :h 350 :elt 3001]
+            ([LINE]
+             ([INLINE :x 1417 :y (/ 94451 30) :w 264 :h 350 :elt 3003]
+              ([LINE]
+               ([INLINE :x 1417 :y (/ 94451 30) :w 264 :h 350 :elt 3004]))))))
+          ([BLOCK :x 1417 :y (/ 105611 30) :w 264 :h 1 :elt 3006])
+          ([BLOCK :x 1399 :y (/ 106091 30) :w 300 :h 277 :elt 3007]
+           ([BLOCK :x 1399 :y (/ 106241 30) :w 300 :h 272 :elt 3010]
+            ([ANON]
+             ([LINE]
+              ([INLINE :x 1399 :y (/ 106241 30) :w 300 :h 250 :elt 3011])))
+            ([BLOCK :x 1399 :y (/ 113831 30) :w 300 :h 20 :elt 3012]
+             ([BLOCK :x 1621 :y (/ 113831 30) :w 78 :h 14 :elt 3013]
+              ([LINE]
+               ([INLINE :elt 3014]
+                ([TEXT :x 1621 :y (/ 113831 30) :w 64 :h 12 :text " Ad feedback "])
+                ([INLINE :x 1685 :y (/ 113861 30) :w 14 :h 12 :elt 3015])))))))))))
+      ([BLOCK :x 204 :y (/ 64078 15) :w 1500 :h 0 :elt 3059]))
+     ([BLOCK :x 0 :y (/ 64078 15) :w 1908 :h 0 :elt 3066])
+     ([BLOCK :x 0 :y (/ 64528 15) :w 1908 :h 885 :elt 3090]
+      ([ANON]
+       ([LINE]
+        ([INLINE :elt 3091])))
+      ([BLOCK :x 0 :y (/ 64528 15) :w 1908 :h 49 :elt 3092]
+       ([BLOCK :x 0 :y (/ 64528 15) :w 1908 :h 49 :elt 3093]
+        ([LINE]
+         ([TEXT :x 920.5 :y (/ 64783 15) :w 67 :h 15 :text "Back to top"]))))
+      ([MAGIC :x 454 :y (/ 65863 15) :w 1000 :h 241.1 :elt 3094]
+       ([MAGIC :x 454 :y (/ 65863 15) :w 1000 :h 241.1 :elt 3095]
+        ([MAGIC :x 454 :y (/ 65863 15) :w 138 :h 241.1 :elt 3096]
+         ([BLOCK :x 464 :y (/ 65953 15) :w 118 :h 15.6 :elt 3097]
+          ([LINE]
+           ([TEXT :x 464 :y (/ 26377 6) :w 118 :h 17 :text "Get to Know Us"])))
+         ([BLOCK :x 464 :y (/ 66397 15) :w 118 :h 118 :elt 3098]
+          ([BLOCK :x 464 :y (/ 66397 15) :w 118 :h 15.6 :elt 3099]
+           ([LINE]
+            ([INLINE :elt 3100]
+             ([TEXT :x 464 :y (/ 132803 30) :w 45 :h 15 :text "Careers"]))))
+          ([BLOCK :x 464 :y (/ 66781 15) :w 118 :h 15.6 :elt 3101]
+           ([LINE]
+            ([INLINE :elt 3102]
+             ([TEXT :x 464 :y (/ 133571 30) :w 26 :h 15 :text "Blog"]))))
+          ([BLOCK :x 464 :y (/ 13433 3) :w 118 :h 15.6 :elt 3103]
+           ([LINE]
+            ([INLINE :elt 3104]
+             ([TEXT :x 464 :y (/ 134339 30) :w 86 :h 15 :text "About Amazon"]))))
+          ([BLOCK :x 464 :y (/ 67549 15) :w 118 :h 15.6 :elt 3105]
+           ([LINE]
+            ([INLINE :elt 3106]
+             ([TEXT :x 464 :y (/ 135107 30) :w 105 :h 15 :text "Investor Relations"]))))
+          ([BLOCK :x 464 :y (/ 67933 15) :w 118 :h 15.6 :elt 3107]
+           ([LINE]
+            ([INLINE :elt 3108]
+             ([TEXT :x 464 :y (/ 27175 6) :w 99 :h 15 :text "Amazon Devices"]))))))
+        ([MAGIC :x 592 :y (/ 65863 15) :w 65 :h 241.1 :elt 3109])
+        ([MAGIC :x 657 :y (/ 65863 15) :w 197 :h 241.1 :elt 3110]
+         ([BLOCK :x 667 :y (/ 65953 15) :w 177 :h 15.6 :elt 3111]
+          ([LINE]
+           ([TEXT :x 667 :y (/ 26377 6) :w 155 :h 17 :text "Make Money with Us"])))
+         ([BLOCK :x 667 :y (/ 66397 15) :w 177 :h 195.5 :elt 3112]
+          ([BLOCK :x 667 :y (/ 66397 15) :w 177 :h 15.6 :elt 3113]
+           ([LINE]
+            ([INLINE :elt 3114]
+             ([TEXT :x 667 :y (/ 132803 30) :w 92 :h 15 :text "Sell on Amazon"]))))
+          ([BLOCK :x 667 :y (/ 66781 15) :w 177 :h 15.6 :elt 3115]
+           ([LINE]
+            ([INLINE :elt 3116]
+             ([TEXT :x 667 :y (/ 133571 30) :w 177 :h 15 :text "Sell Your Services on Amazon"]))))
+          ([BLOCK :x 667 :y (/ 13433 3) :w 177 :h 15.6 :elt 3117]
+           ([LINE]
+            ([INLINE :elt 3118]
+             ([TEXT :x 667 :y (/ 134339 30) :w 150 :h 15 :text "Sell on Amazon Business"]))))
+          ([BLOCK :x 667 :y (/ 67549 15) :w 177 :h 15.6 :elt 3119]
+           ([LINE]
+            ([INLINE :elt 3120]
+             ([TEXT :x 667 :y (/ 135107 30) :w 156 :h 15 :text "Sell Your Apps on Amazon"]))))
+          ([BLOCK :x 667 :y (/ 67933 15) :w 177 :h 15.6 :elt 3121]
+           ([LINE]
+            ([INLINE :elt 3122]
+             ([TEXT :x 667 :y (/ 27175 6) :w 114 :h 15 :text "Become an Affiliate"]))))
+          ([BLOCK :x 667 :y (/ 68317 15) :w 177 :h 15.6 :elt 3123]
+           ([LINE]
+            ([INLINE :elt 3124]
+             ([TEXT :x 667 :y (/ 136643 30) :w 141 :h 15 :text "Advertise Your Products"]))))
+          ([BLOCK :x 667 :y (/ 68701 15) :w 177 :h 15.6 :elt 3125]
+           ([LINE]
+            ([INLINE :elt 3126]
+             ([TEXT :x 667 :y (/ 137411 30) :w 117 :h 15 :text "Self-Publish with Us"]))))
+          ([BLOCK :x 667 :y (/ 13817 3) :w 177 :h 16.3 :elt 3127]
+           ([LINE]
+            ([INLINE :elt 3128]
+             ([TEXT :x 667 :y (/ 13814 3) :w 5 :h 17 :text "›"]))
+            ([INLINE :elt 3129]
+             ([TEXT :x 676 :y (/ 13820 3) :w 40 :h 15 :text "See all"]))))))
+        ([MAGIC :x 854 :y (/ 65863 15) :w 65 :h 241.1 :elt 3130])
+        ([MAGIC :x 919 :y (/ 65863 15) :w 249 :h 241.1 :elt 3131]
+         ([BLOCK :x 929 :y (/ 65953 15) :w 229 :h 15.6 :elt 3132]
+          ([LINE]
+           ([TEXT :x 929 :y (/ 26377 6) :w 208 :h 17 :text "Amazon Payment Products"])))
+         ([BLOCK :x 929 :y (/ 66397 15) :w 229 :h 169.2 :elt 3133]
+          ([BLOCK :x 929 :y (/ 66397 15) :w 229 :h 15.6 :elt 3134]
+           ([LINE]
+            ([INLINE :elt 3135]
+             ([TEXT :x 929 :y (/ 132803 30) :w 229 :h 15 :text "Amazon Rewards Visa Signature Cards"]))))
+          ([BLOCK :x 929 :y (/ 66781 15) :w 229 :h 15.6 :elt 3136]
+           ([LINE]
+            ([INLINE :elt 3137]
+             ([TEXT :x 929 :y (/ 133571 30) :w 143 :h 15 :text "Amazon.com Store Card"]))))
+          ([BLOCK :x 929 :y (/ 13433 3) :w 229 :h 15.6 :elt 3138]
+           ([LINE]
+            ([INLINE :elt 3139]
+             ([TEXT :x 929 :y (/ 134339 30) :w 203 :h 15 :text "Amazon.com Corporate Credit Line"]))))
+          ([BLOCK :x 929 :y (/ 67549 15) :w 229 :h 15.6 :elt 3140]
+           ([LINE]
+            ([INLINE :elt 3141]
+             ([TEXT :x 929 :y (/ 135107 30) :w 98 :h 15 :text "Shop with Points"]))))
+          ([BLOCK :x 929 :y (/ 67933 15) :w 229 :h 15.6 :elt 3142]
+           ([LINE]
+            ([INLINE :elt 3143]
+             ([TEXT :x 929 :y (/ 27175 6) :w 140 :h 15 :text "Credit Card Marketplace"]))))
+          ([BLOCK :x 929 :y (/ 68317 15) :w 229 :h 15.6 :elt 3144]
+           ([LINE]
+            ([INLINE :elt 3145]
+             ([TEXT :x 929 :y (/ 136643 30) :w 121 :h 15 :text "Reload Your Balance"]))))
+          ([BLOCK :x 929 :y (/ 68701 15) :w 229 :h 15.6 :elt 3146]
+           ([LINE]
+            ([INLINE :elt 3147]
+             ([TEXT :x 929 :y (/ 137411 30) :w 164 :h 15 :text "Amazon Currency Converter"]))))))
+        ([MAGIC :x 1168 :y (/ 65863 15) :w 65 :h 241.1 :elt 3148])
+        ([MAGIC :x 1233 :y (/ 65863 15) :w 221 :h 241.1 :elt 3149]
+         ([BLOCK :x 1243 :y (/ 65953 15) :w 201 :h 15.6 :elt 3150]
+          ([LINE]
+           ([TEXT :x 1243 :y (/ 26377 6) :w 122 :h 17 :text "Let Us Help You"])))
+         ([BLOCK :x 1243 :y (/ 66397 15) :w 201 :h 194.8 :elt 3151]
+          ([BLOCK :x 1243 :y (/ 66397 15) :w 201 :h 15.6 :elt 3152]
+           ([LINE]
+            ([INLINE :elt 3153]
+             ([TEXT :x 1243 :y (/ 132803 30) :w 78 :h 15 :text "Your Account"]))))
+          ([BLOCK :x 1243 :y (/ 66781 15) :w 201 :h 15.6 :elt 3154]
+           ([LINE]
+            ([INLINE :elt 3155]
+             ([TEXT :x 1243 :y (/ 133571 30) :w 69 :h 15 :text "Your Orders"]))))
+          ([BLOCK :x 1243 :y (/ 13433 3) :w 201 :h 15.6 :elt 3156]
+           ([LINE]
+            ([INLINE :elt 3157]
+             ([TEXT :x 1243 :y (/ 134339 30) :w 151 :h 15 :text "Shipping Rates & Policies"]))))
+          ([BLOCK :x 1243 :y (/ 67549 15) :w 201 :h 15.6 :elt 3158]
+           ([LINE]
+            ([INLINE :elt 3159]
+             ([TEXT :x 1243 :y (/ 135107 30) :w 86 :h 15 :text "Amazon Prime"]))))
+          ([BLOCK :x 1243 :y (/ 67933 15) :w 201 :h 15.6 :elt 3160]
+           ([LINE]
+            ([INLINE :elt 3161]
+             ([TEXT :x 1243 :y (/ 27175 6) :w 145 :h 15 :text "Returns & Replacements"]))))
+          ([BLOCK :x 1243 :y (/ 68317 15) :w 201 :h 15.6 :elt 3162]
+           ([LINE]
+            ([INLINE :elt 3163]
+             ([TEXT :x 1243 :y (/ 136643 30) :w 201 :h 15 :text "Manage Your Content and Devices"]))))
+          ([BLOCK :x 1243 :y (/ 68701 15) :w 201 :h 15.6 :elt 3164]
+           ([LINE]
+            ([INLINE :elt 3165]
+             ([TEXT :x 1243 :y (/ 137411 30) :w 107 :h 15 :text "Amazon Assistant"]))))
+          ([BLOCK :x 1243 :y (/ 13817 3) :w 201 :h 15.6 :elt 3166]
+           ([LINE]
+            ([INLINE :elt 3167]
+             ([TEXT :x 1243 :y (/ 138179 30) :w 26 :h 15 :text "Help"]))))))))
+      ([BLOCK :x 0 :y (/ 140159 30) :w 1908 :h 1 :elt 3168])
+      ([BLOCK :x 454 :y (/ 140489 30) :w 1000 :h 68 :elt 3169]
+       ([LINE]
+        ([INLINE :x 732.2 :y (/ 140489 30) :w 90.4 :h 68 :elt 3170]
+         ([BLOCK :x 739.4 :y (/ 141389 30) :w 76 :h 23 :elt 3171]
+          ([ANON]
+           ([LINE]
+            ([INLINE :elt 3172])))
+          ([BLOCK :x 739.4 :y (/ 141389 30) :w 76 :h 23 :elt 3173])))
+        ([INLINE :x 822.6 :y (/ 142199 30) :w 0 :h 0 :elt 3174]))
+       ([LINE]
+        ([INLINE :x 892.6 :y (/ 141029 30) :w 283.2 :h 33.5 :elt 3175]
+         ([BLOCK :x 899.8 :y (/ 141029 30) :w 268.8 :h 33.5 :elt 3176]
+          ([LINE]
+           ([INLINE :x 899.8 :y (/ 141029 30) :w 117.2 :h 33.5 :elt 3178]
+            ([LINE]
+             ([INLINE :x 908.8 :y (/ 141299 30) :w 15 :h 15 :elt 3179])
+             ([INLINE :x 923.8 :y (/ 70642 15) :w 58.6 :h 18 :elt 3180]
+              ([LINE]
+               ([TEXT :x 931.6 :y (/ 141329 30) :w 43 :h 15 :text "English"])))
+             ([INLINE :x 994.4 :y (/ 141329 30) :w 15.6 :h 12 :elt 3181])))
+           ([TEXT :x 1021 :y (/ 141359 30) :w 3 :h 14 :text " "])
+           ([INLINE :x 1024 :y (/ 141029 30) :w 140.6 :h 33.5 :elt 3183]
+            ([LINE]
+             ([INLINE :x 1033 :y (/ 141359 30) :w 18 :h 12 :elt 3184])
+             ([INLINE :x 1051 :y (/ 70642 15) :w 94.6 :h 18 :elt 3185]
+              ([LINE]
+               ([TEXT :x 1058.8 :y (/ 141329 30) :w 79 :h 15 :text "United States"])))))))))
+       ([LINE]
+        ([INLINE :x 1175.8 :y (/ 142199 30) :w 0 :h 0 :elt 3186])))
+      ([BLOCK :x 0 :y (/ 143429 30) :w 1908 :h 347.9 :elt 3187]
+       ([MAGIC :x 454 :y (/ 144329 30) :w 1000 :h 287.9 :elt 3188]
+        ([MAGIC :x 454 :y (/ 144329 30) :w 1000 :h 287.9 :elt 3189]
+         ([MAGIC :x 454 :y (/ 144329 30) :w 1000 :h (/ 2099 60) :elt 3190]
+          ([MAGIC :x 454 :y (/ 144329 30) :w 116.5 :h (/ 2099 60) :elt 3191]
+           ([INLINE :elt 3192]
+            ([TEXT :x (/ 1849 4) :y (/ 288677 60) :w 72 :h 12 :text "Amazon Music"])
+            ([INLINE :elt 3193])
+            ([INLINE :x (/ 1849 4) :y (/ 289417 60) :w (/ 4141 60) :h 22 :elt 3194]
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y (/ 289417 60) :w 69 :h 11 :text "Stream millions"])
+              ([INLINE :elt 3195]))
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y (/ 290077 60) :w 40 :h 11 :text " of songs"])))))
+          ([MAGIC :x 570.5 :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3196])
+          ([MAGIC :x (/ 7147 12) :y (/ 144329 30) :w 129.5 :h (/ 2099 60) :elt 3197]
+           ([INLINE :elt 3198]
+            ([TEXT :x (/ 3623 6) :y (/ 288677 60) :w 69 :h 12 :text "Amazon Drive"])
+            ([INLINE :elt 3199])
+            ([INLINE :x (/ 3623 6) :y (/ 289417 60) :w (/ 3901 60) :h 22 :elt 3200]
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 289417 60) :w 65 :h 11 :text "Cloud storage"])
+              ([INLINE :elt 3201]))
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 290077 60) :w 61 :h 11 :text " from Amazon"])))))
+          ([MAGIC :x (/ 8701 12) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3202])
+          ([MAGIC :x (/ 4501 6) :y (/ 144329 30) :w 118.5 :h (/ 2099 60) :elt 3203]
+           ([INLINE :elt 3204]
+            ([TEXT :x (/ 9101 12) :y (/ 288677 60) :w 21 :h 12 :text "6pm"])
+            ([INLINE :elt 3205])
+            ([INLINE :x (/ 9101 12) :y (/ 289417 60) :w 84 :h 22 :elt 3206]
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 289417 60) :w 55 :h 11 :text "Score deals"])
+              ([INLINE :elt 3207]))
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 290077 60) :w 84 :h 11 :text " on fashion brands"])))))
+          ([MAGIC :x (/ 2606 3) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3208])
+          ([MAGIC :x (/ 3575 4) :y (/ 144329 30) :w 102.5 :h (/ 2099 60) :elt 3209]
+           ([INLINE :elt 3210]
+            ([TEXT :x 902 :y (/ 288677 60) :w 50 :h 12 :text "AbeBooks"])
+            ([INLINE :elt 3211])
+            ([INLINE :x 902 :y (/ 289417 60) :w 60 :h 22 :elt 3212]
+             ([LINE]
+              ([TEXT :x 902 :y (/ 289417 60) :w 47 :h 11 :text "Books, art"])
+              ([INLINE :elt 3213]))
+             ([LINE]
+              ([TEXT :x 902 :y (/ 290077 60) :w 60 :h 11 :text " & collectibles"])))))
+          ([MAGIC :x (/ 3985 4) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3214])
+          ([MAGIC :x (/ 3064 3) :y (/ 144329 30) :w 122.5 :h (/ 2099 60) :elt 3215]
+           ([INLINE :elt 3216]
+            ([TEXT :x (/ 12355 12) :y (/ 288677 60) :w 22 :h 12 :text "ACX "])
+            ([INLINE :elt 3217])
+            ([INLINE :x (/ 12355 12) :y (/ 289417 60) :w (/ 6061 60) :h 22 :elt 3218]
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 289417 60) :w 101 :h 11 :text "Audiobook Publishing"])
+              ([INLINE :elt 3219]))
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 290077 60) :w 52 :h 11 :text " Made Easy"])))))
+          ([MAGIC :x (/ 6863 6) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3220])
+          ([MAGIC :x (/ 14027 12) :y (/ 144329 30) :w 130.5 :h (/ 2099 60) :elt 3221]
+           ([INLINE :elt 3222]
+            ([TEXT :x (/ 7063 6) :y (/ 288677 60) :w 27 :h 12 :text "Alexa"])
+            ([INLINE :elt 3223])
+            ([INLINE :x (/ 7063 6) :y (/ 289417 60) :w (/ 5581 60) :h 22 :elt 3224]
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 289417 60) :w 93 :h 11 :text "Actionable Analytics"])
+              ([INLINE :elt 3225]))
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 290077 60) :w 54 :h 11 :text " for the Web"])))))
+          ([MAGIC :x (/ 15593 12) :y (/ 144329 30) :w (/ 301 12) :h (/ 2099 60) :elt 3226])
+          ([MAGIC :x 1324.5 :y (/ 144329 30) :w 129.5 :h (/ 2099 60) :elt 3227]
+           ([INLINE :elt 3228]
+            ([TEXT :x (/ 5331 4) :y (/ 288677 60) :w 88 :h 12 :text "Amazon Business"])
+            ([INLINE :elt 3229])
+            ([INLINE :x (/ 5331 4) :y (/ 289417 60) :w (/ 4021 60) :h 22 :elt 3230]
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y (/ 289417 60) :w 67 :h 11 :text "Everything For"])
+              ([INLINE :elt 3231]))
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y (/ 290077 60) :w 66 :h 11 :text " Your Business"]))))))
+         ([MAGIC :x 454 :y (/ 96919 20) :w 1000 :h 15.6 :elt 3232]
+          ([MAGIC :x 454 :y (/ 96919 20) :w 116.5 :h 15.6 :elt 3233]
+           ([TEXT :x (/ 2041 4) :y (/ 19385 4) :w 4 :h 15 :text " "])))
+         ([MAGIC :x 454 :y (/ 97231 20) :w 1000 :h (/ 2099 60) :elt 3234]
+          ([MAGIC :x 454 :y (/ 97231 20) :w 116.5 :h (/ 2099 60) :elt 3235]
+           ([INLINE :elt 3236]
+            ([TEXT :x (/ 1849 4) :y (/ 72928 15) :w 69 :h 12 :text "AmazonFresh"])
+            ([INLINE :elt 3237])
+            ([INLINE :x (/ 1849 4) :y 4874.2 :w 87 :h 22 :elt 3238]
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y 4874.2 :w 80 :h 11 :text "Groceries & More"])
+              ([INLINE :elt 3239]))
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y 4885.2 :w 87 :h 11 :text " Right To Your Door"])))))
+          ([MAGIC :x 570.5 :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3240])
+          ([MAGIC :x (/ 7147 12) :y (/ 97231 20) :w 129.5 :h (/ 2099 60) :elt 3241]
+           ([INLINE :elt 3242]
+            ([TEXT :x (/ 3623 6) :y (/ 72928 15) :w 71 :h 12 :text "AmazonGlobal"])
+            ([INLINE :elt 3243])
+            ([INLINE :x (/ 3623 6) :y 4874.2 :w 65 :h 22 :elt 3244]
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y 4874.2 :w 55 :h 11 :text "Ship Orders"])
+              ([INLINE :elt 3245]))
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y 4885.2 :w 65 :h 11 :text " Internationally"])))))
+          ([MAGIC :x (/ 8701 12) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3246])
+          ([MAGIC :x (/ 4501 6) :y (/ 97231 20) :w 118.5 :h (/ 2099 60) :elt 3247]
+           ([INLINE :elt 3248]
+            ([TEXT :x (/ 9101 12) :y (/ 72928 15) :w 75 :h 12 :text "Home Services"])
+            ([INLINE :elt 3249])
+            ([INLINE :x (/ 9101 12) :y 4874.2 :w 102 :h 22 :elt 3250]
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y 4874.2 :w 79 :h 11 :text "Handpicked Pros"])
+              ([INLINE :elt 3251]))
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y 4885.2 :w 102 :h 11 :text " Happiness Guarantee"])))))
+          ([MAGIC :x (/ 2606 3) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3252])
+          ([MAGIC :x (/ 3575 4) :y (/ 97231 20) :w 102.5 :h (/ 2099 60) :elt 3253]
+           ([INLINE :elt 3254]
+            ([TEXT :x 902 :y (/ 72928 15) :w 76 :h 12 :text "Amazon Inspire"])
+            ([INLINE :elt 3255])
+            ([INLINE :x 902 :y 4874.2 :w 86 :h 22 :elt 3256]
+             ([LINE]
+              ([TEXT :x 902 :y 4874.2 :w 86 :h 11 :text "Digital Educational"])
+              ([INLINE :elt 3257]))
+             ([LINE]
+              ([TEXT :x 902 :y 4885.2 :w 49 :h 11 :text " Resources"])))))
+          ([MAGIC :x (/ 3985 4) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3258])
+          ([MAGIC :x (/ 3064 3) :y (/ 97231 20) :w 122.5 :h (/ 2099 60) :elt 3259]
+           ([INLINE :elt 3260]
+            ([TEXT :x (/ 12355 12) :y (/ 72928 15) :w 77 :h 12 :text "Amazon Rapids"])
+            ([INLINE :elt 3261])
+            ([INLINE :x (/ 12355 12) :y 4874.2 :w (/ 3961 60) :h 22 :elt 3262]
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y 4874.2 :w 66 :h 11 :text "Fun stories for"])
+              ([INLINE :elt 3263]))
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y 4885.2 :w 66 :h 11 :text " kids on the go"])))))
+          ([MAGIC :x (/ 6863 6) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3264])
+          ([MAGIC :x (/ 14027 12) :y (/ 97231 20) :w 130.5 :h (/ 2099 60) :elt 3265]
+           ([INLINE :elt 3266]
+            ([TEXT :x (/ 7063 6) :y (/ 72928 15) :w 103 :h 12 :text "Amazon Restaurants"])
+            ([INLINE :elt 3267])
+            ([INLINE :x (/ 7063 6) :y 4874.2 :w (/ 5101 60) :h 22 :elt 3268]
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y 4874.2 :w 85 :h 11 :text "Food delivery from"])
+              ([INLINE :elt 3269]))
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y 4885.2 :w 76 :h 11 :text " local restaurants"])))))
+          ([MAGIC :x (/ 15593 12) :y (/ 97231 20) :w (/ 301 12) :h (/ 2099 60) :elt 3270])
+          ([MAGIC :x 1324.5 :y (/ 97231 20) :w 129.5 :h (/ 2099 60) :elt 3271]
+           ([INLINE :elt 3272]
+            ([TEXT :x (/ 5331 4) :y (/ 72928 15) :w 111 :h 12 :text "Amazon Web Services"])
+            ([INLINE :elt 3273])
+            ([INLINE :x (/ 5331 4) :y 4874.2 :w 92 :h 22 :elt 3274]
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y 4874.2 :w 70 :h 11 :text "Scalable Cloud"])
+              ([INLINE :elt 3275]))
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y 4885.2 :w 92 :h 11 :text " Computing Services"]))))))
+         ([MAGIC :x 454 :y (/ 73448 15) :w 1000 :h 15.6 :elt 3276]
+          ([MAGIC :x 454 :y (/ 73448 15) :w 116.5 :h 15.6 :elt 3277]
+           ([TEXT :x (/ 2041 4) :y (/ 29381 6) :w 4 :h 15 :text " "])))
+         ([MAGIC :x 454 :y (/ 73682 15) :w 1000 :h (/ 2099 60) :elt 3278]
+          ([MAGIC :x 454 :y (/ 73682 15) :w 116.5 :h (/ 2099 60) :elt 3279]
+           ([INLINE :elt 3280]
+            ([TEXT :x (/ 1849 4) :y (/ 98249 20) :w 35 :h 12 :text "Audible"])
+            ([INLINE :elt 3281])
+            ([INLINE :x (/ 1849 4) :y (/ 295487 60) :w 55 :h 22 :elt 3282]
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y (/ 295487 60) :w 46 :h 11 :text "Download"])
+              ([INLINE :elt 3283]))
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y (/ 296147 60) :w 55 :h 11 :text " Audiobooks"])))))
+          ([MAGIC :x 570.5 :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3284])
+          ([MAGIC :x (/ 7147 12) :y (/ 73682 15) :w 129.5 :h (/ 2099 60) :elt 3285]
+           ([INLINE :elt 3286]
+            ([TEXT :x (/ 3623 6) :y (/ 98249 20) :w 79 :h 12 :text "AudiobookStand"])
+            ([INLINE :elt 3287])
+            ([INLINE :x (/ 3623 6) :y (/ 295487 60) :w (/ 5881 60) :h 22 :elt 3288]
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 295487 60) :w 98 :h 11 :text "Discount Audiobooks"])
+              ([INLINE :elt 3289]))
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 296147 60) :w 34 :h 11 :text " on Disc"])))))
+          ([MAGIC :x (/ 8701 12) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3290])
+          ([MAGIC :x (/ 4501 6) :y (/ 73682 15) :w 118.5 :h (/ 2099 60) :elt 3291]
+           ([INLINE :elt 3292]
+            ([TEXT :x (/ 9101 12) :y (/ 98249 20) :w 81 :h 12 :text "Book Depository"])
+            ([INLINE :elt 3293])
+            ([INLINE :x (/ 9101 12) :y (/ 295487 60) :w 86 :h 22 :elt 3294]
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 295487 60) :w 76 :h 11 :text "Books With Free"])
+              ([INLINE :elt 3295]))
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 296147 60) :w 86 :h 11 :text " Delivery Worldwide"])))))
+          ([MAGIC :x (/ 2606 3) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3296])
+          ([MAGIC :x (/ 3575 4) :y (/ 73682 15) :w 102.5 :h (/ 2099 60) :elt 3297]
+           ([INLINE :elt 3298]
+            ([TEXT :x 902 :y (/ 98249 20) :w 77 :h 12 :text "Box Office Mojo"])
+            ([INLINE :elt 3299])
+            ([INLINE :x 902 :y (/ 295487 60) :w 73 :h 22 :elt 3300]
+             ([LINE]
+              ([TEXT :x 902 :y (/ 295487 60) :w 50 :h 11 :text "Find Movie"])
+              ([INLINE :elt 3301]))
+             ([LINE]
+              ([TEXT :x 902 :y (/ 296147 60) :w 73 :h 11 :text " Box Office Data"])))))
+          ([MAGIC :x (/ 3985 4) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3302])
+          ([MAGIC :x (/ 3064 3) :y (/ 73682 15) :w 122.5 :h (/ 2099 60) :elt 3303]
+           ([INLINE :elt 3304]
+            ([TEXT :x (/ 12355 12) :y (/ 98249 20) :w 58 :h 12 :text "ComiXology"])
+            ([INLINE :elt 3305])
+            ([INLINE :x (/ 12355 12) :y (/ 295487 60) :w (/ 3841 60) :h 22 :elt 3306]
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 295487 60) :w 64 :h 11 :text "Thousands of"])
+              ([INLINE :elt 3307]))
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 296147 60) :w 64 :h 11 :text " Digital Comics"])))))
+          ([MAGIC :x (/ 6863 6) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3308])
+          ([MAGIC :x (/ 14027 12) :y (/ 73682 15) :w 130.5 :h (/ 2099 60) :elt 3309]
+           ([INLINE :elt 3310]
+            ([TEXT :x (/ 7063 6) :y (/ 98249 20) :w 64 :h 12 :text "CreateSpace"])
+            ([INLINE :elt 3311])
+            ([INLINE :x (/ 7063 6) :y (/ 295487 60) :w (/ 5881 60) :h 22 :elt 3312]
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 295487 60) :w 98 :h 11 :text "Indie Print Publishing"])
+              ([INLINE :elt 3313]))
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 296147 60) :w 52 :h 11 :text " Made Easy"])))))
+          ([MAGIC :x (/ 15593 12) :y (/ 73682 15) :w (/ 301 12) :h (/ 2099 60) :elt 3314])
+          ([MAGIC :x 1324.5 :y (/ 73682 15) :w 129.5 :h (/ 2099 60) :elt 3315]
+           ([INLINE :elt 3316]
+            ([TEXT :x (/ 5331 4) :y (/ 98249 20) :w 51 :h 12 :text "DPReview"])
+            ([INLINE :elt 3317])
+            ([INLINE :x (/ 5331 4) :y (/ 295487 60) :w 60 :h 22 :elt 3318]
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y (/ 295487 60) :w 28 :h 11 :text "Digital"])
+              ([INLINE :elt 3319]))
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y (/ 296147 60) :w 60 :h 11 :text " Photography"]))))))
+         ([MAGIC :x 454 :y (/ 296827 60) :w 1000 :h 15.6 :elt 3320]
+          ([MAGIC :x 454 :y (/ 296827 60) :w 116.5 :h 15.6 :elt 3321]
+           ([TEXT :x (/ 2041 4) :y (/ 59369 12) :w 4 :h 15 :text " "])))
+         ([MAGIC :x 454 :y (/ 297763 60) :w 1000 :h (/ 2099 60) :elt 3322]
+          ([MAGIC :x 454 :y (/ 297763 60) :w 116.5 :h (/ 2099 60) :elt 3323]
+           ([INLINE :elt 3324]
+            ([TEXT :x (/ 1849 4) :y (/ 148891 30) :w 51 :h 12 :text "East Dane"])
+            ([INLINE :elt 3325])
+            ([INLINE :x (/ 1849 4) :y (/ 149261 30) :w (/ 4261 60) :h 22 :elt 3326]
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y (/ 149261 30) :w 71 :h 11 :text "Designer Men's"])
+              ([INLINE :elt 3327]))
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y (/ 149591 30) :w 37 :h 11 :text " Fashion"])))))
+          ([MAGIC :x 570.5 :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3328])
+          ([MAGIC :x (/ 7147 12) :y (/ 297763 60) :w 129.5 :h (/ 2099 60) :elt 3329]
+           ([INLINE :elt 3330]
+            ([TEXT :x (/ 3623 6) :y (/ 148891 30) :w 31 :h 12 :text "Fabric"])
+            ([INLINE :elt 3331])
+            ([INLINE :x (/ 3623 6) :y (/ 149261 30) :w (/ 4501 60) :h 22 :elt 3332]
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 149261 30) :w 75 :h 11 :text "Sewing, Quilting"])
+              ([INLINE :elt 3333]))
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 149591 30) :w 45 :h 11 :text " & Knitting"])))))
+          ([MAGIC :x (/ 8701 12) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3334])
+          ([MAGIC :x (/ 4501 6) :y (/ 297763 60) :w 118.5 :h (/ 2099 60) :elt 3335]
+           ([INLINE :elt 3336]
+            ([TEXT :x (/ 9101 12) :y (/ 148891 30) :w 55 :h 12 :text "Goodreads"])
+            ([INLINE :elt 3337])
+            ([INLINE :x (/ 9101 12) :y (/ 149261 30) :w 92 :h 22 :elt 3338]
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 149261 30) :w 61 :h 11 :text "Book reviews"])
+              ([INLINE :elt 3339]))
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 149591 30) :w 92 :h 11 :text " & recommendations"])))))
+          ([MAGIC :x (/ 2606 3) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3340])
+          ([MAGIC :x (/ 3575 4) :y (/ 297763 60) :w 102.5 :h (/ 2099 60) :elt 3341]
+           ([INLINE :elt 3342]
+            ([TEXT :x 902 :y (/ 148891 30) :w 26 :h 12 :text "IMDb"])
+            ([INLINE :elt 3343])
+            ([INLINE :x 902 :y (/ 149261 30) :w 58 :h 22 :elt 3344]
+             ([LINE]
+              ([TEXT :x 902 :y (/ 149261 30) :w 51 :h 11 :text "Movies, TV"])
+              ([INLINE :elt 3345]))
+             ([LINE]
+              ([TEXT :x 902 :y (/ 149591 30) :w 58 :h 11 :text " & Celebrities"])))))
+          ([MAGIC :x (/ 3985 4) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3346])
+          ([MAGIC :x (/ 3064 3) :y (/ 297763 60) :w 122.5 :h (/ 2099 60) :elt 3347]
+           ([INLINE :elt 3348]
+            ([TEXT :x (/ 12355 12) :y (/ 148891 30) :w 43 :h 12 :text "IMDbPro"])
+            ([INLINE :elt 3349])
+            ([INLINE :x (/ 12355 12) :y (/ 149261 30) :w 106 :h 22 :elt 3350]
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 149261 30) :w 106 :h 11 :text "Get Info Entertainment"])
+              ([INLINE :elt 3351]))
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 149591 30) :w 90 :h 11 :text " Professionals Need"])))))
+          ([MAGIC :x (/ 6863 6) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3352])
+          ([MAGIC :x (/ 14027 12) :y (/ 297763 60) :w 130.5 :h (/ 2099 60) :elt 3353]
+           ([INLINE :elt 3354]
+            ([TEXT :x (/ 7063 6) :y (/ 148891 30) :w 62 :h 12 :text "Junglee.com"])
+            ([INLINE :elt 3355])
+            ([INLINE :x (/ 7063 6) :y (/ 149261 30) :w (/ 3481 60) :h 22 :elt 3356]
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 149261 30) :w 58 :h 11 :text "Shop Online"])
+              ([INLINE :elt 3357]))
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 149591 30) :w 34 :h 11 :text " in India"])))))
+          ([MAGIC :x (/ 15593 12) :y (/ 297763 60) :w (/ 301 12) :h (/ 2099 60) :elt 3358])
+          ([MAGIC :x 1324.5 :y (/ 297763 60) :w 129.5 :h (/ 2099 60) :elt 3359]
+           ([INLINE :elt 3360]
+            ([TEXT :x (/ 5331 4) :y (/ 148891 30) :w 113 :h 12 :text "Kindle Direct Publishing"])
+            ([INLINE :elt 3361])
+            ([INLINE :x (/ 5331 4) :y (/ 149261 30) :w (/ 6301 60) :h 22 :elt 3362]
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y (/ 149261 30) :w 105 :h 11 :text "Indie Digital Publishing"])
+              ([INLINE :elt 3363]))
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y (/ 149591 30) :w 52 :h 11 :text " Made Easy "]))))))
+         ([MAGIC :x 454 :y 4997.7 :w 1000 :h 15.6 :elt 3364]
+          ([MAGIC :x 454 :y 4997.7 :w 116.5 :h 15.6 :elt 3365]
+           ([TEXT :x (/ 2041 4) :y 4998 :w 4 :h 15 :text " "])))
+         ([MAGIC :x 454 :y 5013.3 :w 1000 :h (/ 2099 60) :elt 3366]
+          ([MAGIC :x 454 :y 5013.3 :w 116.5 :h (/ 2099 60) :elt 3367]
+           ([INLINE :elt 3368]
+            ([TEXT :x (/ 1849 4) :y (/ 300817 60) :w 53 :h 12 :text " Prime Now"])
+            ([INLINE :elt 3369])
+            ([INLINE :x (/ 1849 4) :y (/ 100519 20) :w 100 :h 22 :elt 3370]
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y (/ 100519 20) :w 100 :h 11 :text "FREE 2-Hour Delivery"])
+              ([INLINE :elt 3371]))
+             ([LINE]
+              ([TEXT :x (/ 1849 4) :y (/ 100739 20) :w 86 :h 11 :text " on Everyday Items"])))))
+          ([MAGIC :x 570.5 :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3372])
+          ([MAGIC :x (/ 7147 12) :y 5013.3 :w 129.5 :h (/ 2099 60) :elt 3373]
+           ([INLINE :elt 3374]
+            ([TEXT :x (/ 3623 6) :y (/ 300817 60) :w 65 :h 12 :text "Prime Photos"])
+            ([INLINE :elt 3375])
+            ([INLINE :x (/ 3623 6) :y (/ 100519 20) :w 113 :h 22 :elt 3376]
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 100519 20) :w 113 :h 11 :text "Unlimited Photo Storage"])
+              ([INLINE :elt 3377]))
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 100739 20) :w 73 :h 11 :text " Free With Prime"])))))
+          ([MAGIC :x (/ 8701 12) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3378])
+          ([MAGIC :x (/ 4501 6) :y 5013.3 :w 118.5 :h (/ 2099 60) :elt 3379]
+           ([INLINE :elt 3380]
+            ([TEXT :x (/ 9101 12) :y (/ 300817 60) :w 90 :h 12 :text "Prime Video Direct"])
+            ([INLINE :elt 3381])
+            ([INLINE :x (/ 9101 12) :y (/ 100519 20) :w (/ 4861 60) :h 22 :elt 3382]
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 100519 20) :w 81 :h 11 :text "Video Distribution"])
+              ([INLINE :elt 3383]))
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 100739 20) :w 52 :h 11 :text " Made Easy"])))))
+          ([MAGIC :x (/ 2606 3) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3384])
+          ([MAGIC :x (/ 3575 4) :y 5013.3 :w 102.5 :h (/ 2099 60) :elt 3385]
+           ([INLINE :elt 3386]
+            ([TEXT :x 902 :y (/ 300817 60) :w 43 :h 12 :text "Shopbop"])
+            ([INLINE :elt 3387])
+            ([INLINE :x 902 :y (/ 100519 20) :w 73 :h 22 :elt 3388]
+             ([LINE]
+              ([TEXT :x 902 :y (/ 100519 20) :w 41 :h 11 :text "Designer"])
+              ([INLINE :elt 3389]))
+             ([LINE]
+              ([TEXT :x 902 :y (/ 100739 20) :w 73 :h 11 :text " Fashion Brands"])))))
+          ([MAGIC :x (/ 3985 4) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3390])
+          ([MAGIC :x (/ 3064 3) :y 5013.3 :w 122.5 :h (/ 2099 60) :elt 3391]
+           ([INLINE :elt 3392]
+            ([TEXT :x (/ 12355 12) :y (/ 300817 60) :w 73 :h 12 :text "TenMarks.com"])
+            ([INLINE :elt 3393])
+            ([INLINE :x (/ 12355 12) :y (/ 100519 20) :w 85 :h 22 :elt 3394]
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 100519 20) :w 66 :h 11 :text "Math Activities"])
+              ([INLINE :elt 3395]))
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 100739 20) :w 85 :h 11 :text " for Kids & Schools"])))))
+          ([MAGIC :x (/ 6863 6) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3396])
+          ([MAGIC :x (/ 14027 12) :y 5013.3 :w 130.5 :h (/ 2099 60) :elt 3397]
+           ([INLINE :elt 3398]
+            ([TEXT :x (/ 7063 6) :y (/ 300817 60) :w 99 :h 12 :text "Amazon Warehouse"])
+            ([INLINE :elt 3399])
+            ([INLINE :x (/ 7063 6) :y (/ 100519 20) :w 103 :h 22 :elt 3400]
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 100519 20) :w 70 :h 11 :text "Great Deals on"])
+              ([INLINE :elt 3401]))
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 100739 20) :w 103 :h 11 :text " Quality Used Products "])))))
+          ([MAGIC :x (/ 15593 12) :y 5013.3 :w (/ 301 12) :h (/ 2099 60) :elt 3402])
+          ([MAGIC :x 1324.5 :y 5013.3 :w 129.5 :h (/ 2099 60) :elt 3403]
+           ([INLINE :elt 3404]
+            ([TEXT :x (/ 5331 4) :y (/ 300817 60) :w 101 :h 12 :text "Whole Foods Market"])
+            ([INLINE :elt 3405])
+            ([INLINE :x (/ 5331 4) :y (/ 100519 20) :w (/ 5581 60) :h 22 :elt 3406]
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y (/ 100519 20) :w 93 :h 11 :text "America’s Healthiest"])
+              ([INLINE :elt 3407]))
+             ([LINE]
+              ([TEXT :x (/ 5331 4) :y (/ 100739 20) :w 64 :h 11 :text " Grocery Store"]))))))
+         ([MAGIC :x 454 :y (/ 302897 60) :w 1000 :h 15.6 :elt 3408]
+          ([MAGIC :x 454 :y (/ 302897 60) :w 116.5 :h 15.6 :elt 3409]
+           ([TEXT :x (/ 2041 4) :y (/ 60583 12) :w 4 :h 15 :text " "])))
+         ([MAGIC :x 454 :y (/ 303833 60) :w 1000 :h (/ 2099 60) :elt 3410]
+          ([MAGIC :x 454 :y (/ 303833 60) :w 116.5 :h (/ 2099 60) :elt 3411]
+           ([TEXT :x (/ 1849 4) :y 5064.2 :w 3 :h 12 :text " "]))
+          ([MAGIC :x 570.5 :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3412])
+          ([MAGIC :x (/ 7147 12) :y (/ 303833 60) :w 129.5 :h (/ 2099 60) :elt 3413]
+           ([INLINE :elt 3414]
+            ([TEXT :x (/ 3623 6) :y 5064.2 :w 60 :h 12 :text "Withoutabox"])
+            ([INLINE :elt 3415])
+            ([INLINE :x (/ 3623 6) :y (/ 76148 15) :w 61 :h 22 :elt 3416]
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 76148 15) :w 44 :h 11 :text "Submit to"])
+              ([INLINE :elt 3417]))
+             ([LINE]
+              ([TEXT :x (/ 3623 6) :y (/ 76313 15) :w 61 :h 11 :text " Film Festivals"])))))
+          ([MAGIC :x (/ 8701 12) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3418])
+          ([MAGIC :x (/ 4501 6) :y (/ 303833 60) :w 118.5 :h (/ 2099 60) :elt 3419]
+           ([INLINE :elt 3420]
+            ([TEXT :x (/ 9101 12) :y 5064.2 :w 28 :h 12 :text "Woot!"])
+            ([INLINE :elt 3421])
+            ([INLINE :x (/ 9101 12) :y (/ 76148 15) :w 62 :h 22 :elt 3422]
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 76148 15) :w 47 :h 11 :text "Deals and "])
+              ([INLINE :elt 3423]))
+             ([LINE]
+              ([TEXT :x (/ 9101 12) :y (/ 76313 15) :w 62 :h 11 :text " Shenanigans"])))))
+          ([MAGIC :x (/ 2606 3) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3424])
+          ([MAGIC :x (/ 3575 4) :y (/ 303833 60) :w 102.5 :h (/ 2099 60) :elt 3425]
+           ([INLINE :elt 3426]
+            ([TEXT :x 902 :y 5064.2 :w 37 :h 12 :text "Zappos"])
+            ([INLINE :elt 3427])
+            ([INLINE :x 902 :y (/ 76148 15) :w (/ 2401 60) :h 22 :elt 3428]
+             ([LINE]
+              ([TEXT :x 902 :y (/ 76148 15) :w 40 :h 11 :text "Shoes &"])
+              ([INLINE :elt 3429]))
+             ([LINE]
+              ([TEXT :x 902 :y (/ 76313 15) :w 38 :h 11 :text " Clothing"])))))
+          ([MAGIC :x (/ 3985 4) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3430])
+          ([MAGIC :x (/ 3064 3) :y (/ 303833 60) :w 122.5 :h (/ 2099 60) :elt 3431]
+           ([INLINE :elt 3432]
+            ([TEXT :x (/ 12355 12) :y 5064.2 :w 49 :h 12 :text "Souq.com"])
+            ([INLINE :elt 3433])
+            ([INLINE :x (/ 12355 12) :y (/ 76148 15) :w 72 :h 22 :elt 3434]
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 76148 15) :w 69 :h 11 :text "Shop Online in"])
+              ([INLINE :elt 3435]))
+             ([LINE]
+              ([TEXT :x (/ 12355 12) :y (/ 76313 15) :w 72 :h 11 :text " the Middle East"])))))
+          ([MAGIC :x (/ 6863 6) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3436])
+          ([MAGIC :x (/ 14027 12) :y (/ 303833 60) :w 130.5 :h (/ 2099 60) :elt 3437]
+           ([INLINE :elt 3438]
+            ([TEXT :x (/ 7063 6) :y 5064.2 :w 114 :h 12 :text "Subscribe with Amazon"])
+            ([INLINE :elt 3439])
+            ([INLINE :x (/ 7063 6) :y (/ 76148 15) :w 95 :h 22 :elt 3440]
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 76148 15) :w 63 :h 11 :text "Discover & try"])
+              ([INLINE :elt 3441]))
+             ([LINE]
+              ([TEXT :x (/ 7063 6) :y (/ 76313 15) :w 95 :h 11 :text " subscription services"])))))
+          ([MAGIC :x (/ 15593 12) :y (/ 303833 60) :w (/ 301 12) :h (/ 2099 60) :elt 3442])
+          ([MAGIC :x 1324.5 :y (/ 303833 60) :w 129.5 :h (/ 2099 60) :elt 3443]
+           ([TEXT :x (/ 5331 4) :y 5064.2 :w 3 :h 12 :text " "]))))))
+      ([BLOCK :x 0 :y (/ 76933 15) :w 1908 :h 58 :elt 3444]
+       ([LINE]
+        ([INLINE :x 667.9 :y (/ 77083 15) :w 572.2 :h 18 :elt 3445]
+         ([LINE]
+          ([INLINE :elt 3446]
+           ([INLINE :elt 3447]
+            ([TEXT :x 675.1 :y (/ 77113 15) :w 97 :h 14 :text "Conditions of Use"])))
+          ([INLINE :elt 3448]
+           ([INLINE :elt 3449]
+            ([TEXT :x 786.5 :y (/ 77113 15) :w 78 :h 14 :text "Privacy Notice"])))
+          ([INLINE :elt 3450]
+           ([INLINE :elt 3451]
+            ([TEXT :x 878.9 :y (/ 77113 15) :w 103 :h 14 :text "Interest-Based Ads"])))
+          ([INLINE :elt 3452]
+           ([TEXT :x 989.1 :y (/ 77113 15) :w 251 :h 14 :text "© 1996-2018, Amazon.com, Inc. or its affiliates"])))))))
+     ([BLOCK :x -1000000 :y -1000000 :w 1 :h 1 :elt 3453]
+      ([LINE]
+       ([INLINE :x -1000000 :y -999987 :w 1 :h 1 :elt 3454])))
+     ([BLOCK :x -1000000 :y -1000000 :w 0 :h 1 :elt 3456]
+      ([LINE]
+       ([INLINE :x -1000000 :y -999986 :w 0 :h 0 :elt 3457]))))
+    ([ANON]
+     ([LINE]
+      ([INLINE :elt 3465]
+       ([TEXT :x 0 :y (/ 77833 15) :w 39 :h 15 :text "normal"]))
+      ([BLOCK :x 0 :y (/ 78088 15) :w 0 :h 0 :elt 3466])
+      ([TEXT :x 39 :y (/ 77833 15) :w 0 :h 15 :text " "])
+      ([BLOCK :x 0 :y 0 :w 0 :h 0 :elt 3484])))))))
+
 (define-problem doc-1
   :title "Amazon.com: Online Shopping for Electronics, Apparel, Computers, Books, DVDs & more"
   :url "file:///tmp/amazon.html"
   :sheets firefox doc-1
   :fonts doc-1
-  :documents doc-1
   :layouts doc-1
   :error "Error, 1ms is not a known unit"
   :features css:box-sizing css:min-height css:font-size css:max-width css:vertical-align css:position priority:important css:float css:overflow-x css:overflow-y css:before-after unknown-selector css:inherit css:white-space css:type-13-rule css:text-indent css:type-12-rule css:max-height css:min-width css:clear @media unit:ch color:rgba unknown-error tag:iframe empty-text tag:img display:inline-block tag:input display:unknown display:table tag:button display:list-item attr:dir float:6 exclusion-zone)

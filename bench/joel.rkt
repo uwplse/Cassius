@@ -5565,7 +5565,318 @@
   [12 "\"Source Sans Pro\", \"Helvetica Neue\", Helvetica, Arial, sans-serif" 500 normal 9 3 1.5 1.5 15]
   [16 "\"Source Sans Pro\", \"Helvetica Neue\", Helvetica, Arial, sans-serif" 700 normal 12 4 2 2 20])
 
-(define-layout (doc-1 :browser firefox :matched true :w 1920 :h 980 :fs 16 :scrollw 12)
+(define-browser firefox :matched true :w 1920 :h 980 :fs 16 :scrollw 12)
+
+(define-document doc-1
+  ([html :num 0]
+   ([body :num 1 :class (post-template-default single single-post postid-1820 single-format-standard)]
+    ([div :num 2 :id page :class (hfeed site container)]
+     ([a :num 3 :class (skip-link screen-reader-text)] "Skip to content") " " " "
+     ([header :num 4 :id masthead :class (site-header light)] " " " "
+      ([ul :num 5 :class (toggle-bar)] " "
+       ([li :num 6 :id panel-1 :class (current)]
+        ([a :num 7 :class (current nav-toggle)]
+         ([i :num 8 :class (fa fa-bars)])
+         ([span :num 9 :class (screen-reader-text)] "View menu"))) " " " "
+       ([li :num 10 :id panel-2]
+        ([a :num 11]
+         ([i :num 12 :class (fa fa-thumb-tack)])
+         ([span :num 13 :class (screen-reader-text)] "View featured posts"))) " " " "
+       ([li :num 14 :id panel-3]
+        ([a :num 15 :class (folder-toggle)]
+         ([i :num 16 :class (fa fa-folder)])
+         ([i :num 17 :class (fa fa-folder-open)])
+         ([span :num 18 :class (screen-reader-text)] "View sidebar"))))
+      ([div :num 19 :id tabs :class (toggle-tabs)]
+       ([div :num 20 :class (site-header-inside)]
+        ([div :num 21 :id tab-1 :class (tab-content current fadeIn)]
+         ([div :num 22 :class (site-branding)]
+          ([h1 :num 23 :class (site-title)]
+           ([a :num 24] "Editor"))
+          ([h2 :num 25 :class (site-description)] "Simply beautiful publishing powered by WordPress."))
+         ([nav :num 26 :id site-navigation :class (main-navigation)]
+          ([div :num 27 :class (menu-header-container)]
+           ([ul :num 28 :id menu-header :class (menu)]
+            ([li :num 29 :id menu-item-2235 :class (menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-2235)]
+             ([a :num 30] "Home"))
+            ([li :num 31 :id menu-item-2233 :class (menu-item menu-item-type-post_type menu-item-object-page menu-item-2233)]
+             ([a :num 32] "Style Guide"))
+            ([li :num 33 :id menu-item-2236 :class (menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent menu-item-2236)]
+             ([a :num 34] "Editorials"))
+            ([li :num 35 :id menu-item-2234 :class (menu-item menu-item-type-post_type menu-item-object-page menu-item-2234)]
+             ([a :num 36] "Contact")))))
+         ([div :num 37 :class (social-links)]
+          ([ul :num 38 :id menu-social :class (menu)]
+           ([li :num 39 :id menu-item-2301 :class (menu-item menu-item-type-custom menu-item-object-custom menu-item-2301)]
+            ([a :num 40]
+             ([span :num 41 :class (screen-reader-text)] "Twitter"))) " "
+           ([li :num 42 :id menu-item-2302 :class (menu-item menu-item-type-custom menu-item-object-custom menu-item-2302)]
+            ([a :num 43]
+             ([span :num 44 :class (screen-reader-text)] "Facebook.com"))) " "
+           ([li :num 45 :id menu-item-2303 :class (menu-item menu-item-type-custom menu-item-object-custom menu-item-2303)]
+            ([a :num 46]
+             ([span :num 47 :class (screen-reader-text)] "WordPress")))))) " " " "
+        ([div :num 48 :id tab-2 :class (widget-area tab-content animated fadeIn)]
+         ([div :num 49 :class (widget featured-posts-widget)]
+          ([h2 :num 50 :class (widget-title)])
+          ([div :num 51 :class (featured-posts)]
+           ([div :num 52 :class (featured-post)]
+            ([a :num 53 :class (featured-post-image)]
+             ([img :num 54 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
+            ([h3 :num 55]
+             ([a :num 56]))
+            ([div :num 57 :class (featured-post-meta)]
+             ([div :num 58 :class (featured-post-date)]
+              ([i :num 59 :class (fa fa-clock-o)])
+              ([span :num 60 :class (posted-on)]
+               ([a :num 61]
+                ([time :num 62 :class (entry-date published)])))
+              ([span :num 63 :class (byline)])
+              ([span :num 64 :class (author vcard)]
+               ([a :num 65 :class (url fn n)])))))
+           ([div :num 66 :class (featured-post)]
+            ([a :num 67 :class (featured-post-image)]
+             ([img :num 68 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
+            ([h3 :num 69]
+             ([a :num 70]))
+            ([div :num 71 :class (featured-post-meta)]
+             ([div :num 72 :class (featured-post-date)]
+              ([i :num 73 :class (fa fa-clock-o)])
+              ([span :num 74 :class (posted-on)]
+               ([a :num 75]
+                ([time :num 76 :class (entry-date published)])))
+              ([span :num 77 :class (byline)])
+              ([span :num 78 :class (author vcard)]
+               ([a :num 79 :class (url fn n)])))))
+           ([div :num 80 :class (featured-post)]
+            ([a :num 81 :class (featured-post-image)]
+             ([img :num 82 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
+            ([h3 :num 83]
+             ([a :num 84]))
+            ([div :num 85 :class (featured-post-meta)]
+             ([div :num 86 :class (featured-post-date)]
+              ([i :num 87 :class (fa fa-clock-o)])
+              ([span :num 88 :class (posted-on)]
+               ([a :num 89]
+                ([time :num 90 :class (entry-date published)])))
+              ([span :num 91 :class (byline)])
+              ([span :num 92 :class (author vcard)]
+               ([a :num 93 :class (url fn n)])))))
+           ([div :num 94 :class (featured-post)]
+            ([a :num 95 :class (featured-post-image)]
+             ([img :num 96 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
+            ([h3 :num 97]
+             ([a :num 98]))
+            ([div :num 99 :class (featured-post-meta)]
+             ([div :num 100 :class (featured-post-date)]
+              ([i :num 101 :class (fa fa-clock-o)])
+              ([span :num 102 :class (posted-on)]
+               ([a :num 103]
+                ([time :num 104 :class (entry-date published)])))
+              ([span :num 105 :class (byline)])
+              ([span :num 106 :class (author vcard)]
+               ([a :num 107 :class (url fn n)])))))
+           ([div :num 108 :class (featured-post)]
+            ([a :num 109 :class (featured-post-image)]
+             ([img :num 110 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
+            ([h3 :num 111]
+             ([a :num 112]))
+            ([div :num 113 :class (featured-post-meta)]
+             ([div :num 114 :class (featured-post-date)]
+              ([i :num 115 :class (fa fa-clock-o)])
+              ([span :num 116 :class (posted-on)]
+               ([a :num 117]
+                ([time :num 118 :class (entry-date published)])
+                ([time :num 119 :class (updated)])))
+              ([span :num 120 :class (byline)])
+              ([span :num 121 :class (author vcard)]
+               ([a :num 122 :class (url fn n)])))))
+           ([div :num 123 :class (featured-post)]
+            ([a :num 124 :class (featured-post-image)]
+             ([img :num 125 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
+            ([h3 :num 126]
+             ([a :num 127]))
+            ([div :num 128 :class (featured-post-meta)]
+             ([div :num 129 :class (featured-post-date)]
+              ([i :num 130 :class (fa fa-clock-o)])
+              ([span :num 131 :class (posted-on)]
+               ([a :num 132]
+                ([time :num 133 :class (entry-date published)])))
+              ([span :num 134 :class (byline)])
+              ([span :num 135 :class (author vcard)]
+               ([a :num 136 :class (url fn n)])))))))) " " " "
+        ([div :num 137 :id tab-3 :class (tab-content animated fadeIn)]
+         ([div :num 138 :id secondary :class (widget-area)]
+          ([aside :num 139 :id search-2 :class (widget widget_search)]
+           ([form :num 140 :class (search-form)]
+            ([label :num 141]
+             ([span :num 142 :class (screen-reader-text)])
+             ([input :num 143 :class (search-field) :w 0 :h 0 :type search]))
+            ([input :num 144 :class (search-submit) :w 0 :h 0 :type submit])))
+          ([aside :num 145 :id recent-posts-2 :class (widget widget_recent_entries)]
+           ([h2 :num 146 :class (widget-title)])
+           ([ul :num 147]
+            ([li :num 148]
+             ([a :num 149]))
+            ([li :num 150]
+             ([a :num 151]))
+            ([li :num 152]
+             ([a :num 153]))
+            ([li :num 154]
+             ([a :num 155]))
+            ([li :num 156]
+             ([a :num 157]))))
+          ([aside :num 158 :id text-1 :class (widget widget_text)]
+           ([h2 :num 159 :class (widget-title)])
+           ([div :num 160 :class (textwidget)]
+            ([iframe :num 161 :id twitter-widget-0 :class (twitter-timeline twitter-timeline-rendered) :w 0 :h 0])))
+          ([aside :num 162 :id archives-2 :class (widget widget_archive)]
+           ([h2 :num 163 :class (widget-title)])
+           ([ul :num 164]
+            ([li :num 165]
+             ([a :num 166]))
+            ([li :num 167]
+             ([a :num 168]))
+            ([li :num 169]
+             ([a :num 170]))))
+          ([aside :num 171 :id categories-2 :class (widget widget_categories)]
+           ([h2 :num 172 :class (widget-title)])
+           ([ul :num 173]
+            ([li :num 174 :class (cat-item cat-item-2)]
+             ([a :num 175]))
+            ([li :num 176 :class (cat-item cat-item-3)]
+             ([a :num 177]))
+            ([li :num 178 :class (cat-item cat-item-4)]
+             ([a :num 179]))
+            ([li :num 180 :class (cat-item cat-item-5)]
+             ([a :num 181]))
+            ([li :num 182 :class (cat-item cat-item-6)]
+             ([a :num 183]))
+            ([li :num 184 :class (cat-item cat-item-7)]
+             ([a :num 185]))
+            ([li :num 186 :class (cat-item cat-item-8)]
+             ([a :num 187]))
+            ([li :num 188 :class (cat-item cat-item-9)]
+             ([a :num 189]))
+            ([li :num 190 :class (cat-item cat-item-1)]
+             ([a :num 191])))))))) " ") " "
+     ([div :num 192 :id content :class (site-content fadeInFast)]
+      ([div :num 193 :id primary :class (content-area)]
+       ([main :num 194 :id main :class (site-main)]
+        ([article :num 195 :id post-1820 :class (post post-1820 type-post status-publish format-standard has-post-thumbnail hentry category-design category-editorials tag-braun tag-dieter-rams)] " "
+         ([a :num 196 :class (featured-image)]
+          ([img :num 197 :class (attachment-large-image size-large-image wp-post-image) :w 1000 :h 631]))
+         ([header :num 198 :class (entry-header)]
+          ([div :num 199 :class (entry-date)]
+           ([span :num 200 :class (posted-on)]
+            ([a :num 201]
+             ([time :num 202 :class (entry-date published)] "May 1, 2018")))
+           ([span :num 203 :class (byline)] " by ") " "
+           ([span :num 204 :class (author vcard)]
+            ([a :num 205 :class (url fn n)] "Mike McAlister")))
+          ([h1 :num 206 :class (entry-title)] "Knobs, Buttons and Dials")) " "
+         ([div :num 207 :class (entry-meta)]
+          ([ul :num 208 :class (meta-list)]
+           ([li :num 209 :class (meta-cat)]
+            ([a :num 210] "Design") ", "
+            ([a :num 211] "Editorials"))
+           ([li :num 212 :class (meta-tag)]
+            ([a :num 213] "Braun") ", "
+            ([a :num 214] "Dieter Rams"))
+           ([li :num 215 :class (meta-comment)] " "
+            ([span :num 216 :class (comments-link)]
+             ([a :num 217] "2 Comments"))))) " "
+         ([div :num 218 :class (entry-content)]
+          ([p :num 219] "The phonograph, also called gramophone or record player, is a device introduced in 1877 for the recording and reproduction of sound recordings. The recordings played on such a device consist of waveforms that are engraved onto a rotating cylinder or disc. As the recorded surface rotates, a playback stylus traces the waveforms and vibrates to reproduce the recorded sound waves.")
+          ([h3 :num 220] "Enter Edison")
+          ([p :num 221] "The phonograph was invented in 1877 by Thomas Edison. While other inventors had produced devices that could record sounds, Edison’s phonograph was the first to be able to reproduce the recorded sound. His phonograph originally recorded sound onto a tinfoil sheet phonograph cylinder, and could both record and reproduce sounds. Alexander Graham Bell’s Volta Laboratory made several improvements in the 1880s, including the use of wax-coated cardboard cylinders, and a cutting stylus that moved from side to side in a “zig zag” pattern across the record.")
+          ([p :num 222] "In the 1890s, Emile Berliner initiated the transition from phonograph cylinders to flat discs with a spiral groove running from the periphery to near the center. Other improvements were made throughout the years, including modifications to the turntable and its drive system, the stylus or needle, and the sound and equalization systems.")
+          ([p :num 223]
+           ([span :num 224 :id more-1820]))
+          ([div :num 225 :id edoc-10001 :class (embed-vimeo)]
+           ([div :num 226 :class (fitvid)]
+            ([div :num 227 :id edoc-10002 :class (fluid-width-video-wrapper)]
+             ([iframe :num 228 :id fitvid626826 :w 720 :h (/ 12161 30)]))))
+          ([blockquote :num 229]
+           ([p :num 230] "As the recorded surface rotates, a playback stylus traces the waveforms and vibrates to reproduce the recorded sound waves."))
+          ([h3 :num 231] "Predecessors ")
+          ([p :num 232] "Several inventors devised machines to record sound prior to Thomas Edison’s phonograph, Edison being the first to produce a device that could both record and reproduce sound. The phonograph’s predecessors include Édouard-Léon Scott de Martinville’s phonautograph, and Charles Cros’s paleophone. ")
+          ([p :num 233] "Recordings made with the phonautograph were intended to be visual representations of the sound and were not to be reproduced as sound until 2008. Cros’s paleophone was intended to both record and reproduce sound but had not been developed beyond a basic concept at the time of Edison’s successful demonstration of the Phonograph in 1877.")))
+        ([nav :num 234 :class (navigation post-navigation)]
+         ([h1 :num 235 :class (screen-reader-text)] "Post navigation")
+         ([div :num 236 :class (nav-links)]
+          ([div :num 237 :class (nav-previous)]
+           ([a :num 238]
+            ([span :num 239 :class (meta-nav)] "← Previous Post") " Time Travel and You: A Beginner’s Guide"))
+          ([div :num 240 :class (nav-next)]
+           ([a :num 241]
+            ([span :num 242 :class (meta-nav)] "Next Post →") " Abraham Lincoln"))))
+        ([div :num 243 :id comments :class (comments-area)]
+         ([h3 :num 244 :class (comments-title)] " 2 Comments ")
+         ([ol :num 245 :class (comment-list)]
+          ([li :num 246 :id li-comment-8 :class (comment even thread-even depth-1 clear)]
+           ([article :num 247 :id comment-8 :class (comment-block)]
+            ([img :num 248 :class (avatar avatar-51 photo) :w 60.8 :h 60.8]) " "
+            ([div :num 249 :class (comment-wrap)]
+             ([footer :num 250 :class (comment-info)]
+              ([cite :num 251 :class (comment-cite)]
+               ([a :num 252 :class (url)] "Mandi Hollis")) " "
+              ([a :num 253 :class (comment-time)] "May 1, 2018 at 7:49 pm"))
+             ([div :num 254 :class (comment-content)]
+              ([p :num 255] "Several inventors devised machines to record sound prior to Thomas Edison’s phonograph, Edison being the first to produce a device that could both record and reproduce sound.")
+              ([p :num 256 :class (reply)]
+               ([a :num 257 :class (comment-reply-link)] "Reply"))))))
+          ([li :num 258 :id li-comment-9 :class (comment odd alt thread-odd thread-alt depth-1 clear)]
+           ([article :num 259 :id comment-9 :class (comment-block)]
+            ([img :num 260 :class (avatar avatar-51 photo) :w 60.8 :h 60.8]) " "
+            ([div :num 261 :class (comment-wrap)]
+             ([footer :num 262 :class (comment-info)]
+              ([cite :num 263 :class (comment-cite)]
+               ([a :num 264 :class (url)] "Mike McAlister")) " "
+              ([a :num 265 :class (comment-time)] "May 1, 2018 at 7:50 pm"))
+             ([div :num 266 :class (comment-content)]
+              ([p :num 267] "His phonograph originally recorded sound onto a tinfoil sheet phonograph cylinder, and could both record and reproduce sounds.")
+              ([p :num 268 :class (reply)]
+               ([a :num 269 :class (comment-reply-link)] "Reply")))))))
+         ([div :num 270 :id respond :class (comment-respond)]
+          ([h3 :num 271 :id reply-title :class (comment-reply-title)] "Leave a Reply "
+           ([small :num 272]
+            ([a :num 273 :id cancel-comment-reply-link])))
+          ([form :num 274 :id commentform :class (comment-form)]
+           ([p :num 275 :class (comment-notes)]
+            ([span :num 276 :id email-notes])
+            ([span :num 277 :class (required)]))
+           ([p :num 278 :class (comment-form-comment)]
+            ([label :num 279] "Comment") " "
+            ([textarea :num 280 :id comment :w 760 :h 276]))
+           ([p :num 281 :class (comment-form-author)]
+            ([label :num 282] "Name "
+             ([span :num 283 :class (required)] "*")) " "
+            ([input :num 284 :id author :w 760 :h 50 :type text])) " "
+           ([p :num 285 :class (comment-form-email)]
+            ([label :num 286] "Email "
+             ([span :num 287 :class (required)] "*")) " "
+            ([input :num 288 :id email :w 760 :h 50 :type email])) " "
+           ([p :num 289 :class (comment-form-url)]
+            ([label :num 290] "Website") " "
+            ([input :num 291 :id url :w 760 :h 50 :type url]))
+           ([p :num 292 :class (form-submit)]
+            ([input :num 293 :id submit :class (submit) :w 150 :h 48 :type submit]) " "
+            ([input :num 294 :id comment_post_ID :w 0 :h 0 :type hidden]) " "
+            ([input :num 295 :id comment_parent :w 0 :h 0 :type hidden]))
+           ([p :num 296 :id edoc-10003]
+            ([input :num 297 :id akismet_comment_nonce :w 0 :h 0 :type hidden]))
+           ([p :num 298 :id edoc-10004]) " "
+           ([input :num 299 :id ak_js :w 0 :h 0 :type hidden])))))) " ") " "
+     ([footer :num 300 :id colophon :class (site-footer)]
+      ([div :num 301 :class (site-info)]
+       ([a :num 302 :class (powered-by)] "Proudly powered by WordPress") " "
+       ([span :num 303 :class (sep)] " | ") " Theme: editor by "
+       ([a :num 304] "Array")) " ")) " " " " " " " " " " " " " " " "
+    ([span :num 305 :class (cleanslate TridactylStatusIndicator)] "normal")
+    ([iframe :num 306 :id cmdline_iframe :class (cleanslate) :w 300 :h 0]))))
+
+(define-layout doc-1 (firefox doc-1)
  ([VIEW :w 1920]
   ([BLOCK :x 0 :y 0 :w 1908 :h (/ 71096 15) :elt 0]
    ([BLOCK :x 0 :y 0 :w 1908 :h (/ 71096 15) :elt 1]
@@ -5940,315 +6251,6 @@
       ([INLINE :elt 305]
        ([TEXT :x 0 :y (/ 141367 30) :w 61 :h 25 :text "normal"]))
       ([INLINE :x 61 :y (/ 141967 30) :w 300 :h 0 :elt 306])))))))
-
-(define-document doc-1
-  ([html :num 0]
-   ([body :num 1 :class (post-template-default single single-post postid-1820 single-format-standard)]
-    ([div :num 2 :id page :class (hfeed site container)]
-     ([a :num 3 :class (skip-link screen-reader-text)] "Skip to content") " " " "
-     ([header :num 4 :id masthead :class (site-header light)] " " " "
-      ([ul :num 5 :class (toggle-bar)] " "
-       ([li :num 6 :id panel-1 :class (current)]
-        ([a :num 7 :class (current nav-toggle)]
-         ([i :num 8 :class (fa fa-bars)])
-         ([span :num 9 :class (screen-reader-text)] "View menu"))) " " " "
-       ([li :num 10 :id panel-2]
-        ([a :num 11]
-         ([i :num 12 :class (fa fa-thumb-tack)])
-         ([span :num 13 :class (screen-reader-text)] "View featured posts"))) " " " "
-       ([li :num 14 :id panel-3]
-        ([a :num 15 :class (folder-toggle)]
-         ([i :num 16 :class (fa fa-folder)])
-         ([i :num 17 :class (fa fa-folder-open)])
-         ([span :num 18 :class (screen-reader-text)] "View sidebar"))))
-      ([div :num 19 :id tabs :class (toggle-tabs)]
-       ([div :num 20 :class (site-header-inside)]
-        ([div :num 21 :id tab-1 :class (tab-content current fadeIn)]
-         ([div :num 22 :class (site-branding)]
-          ([h1 :num 23 :class (site-title)]
-           ([a :num 24] "Editor"))
-          ([h2 :num 25 :class (site-description)] "Simply beautiful publishing powered by WordPress."))
-         ([nav :num 26 :id site-navigation :class (main-navigation)]
-          ([div :num 27 :class (menu-header-container)]
-           ([ul :num 28 :id menu-header :class (menu)]
-            ([li :num 29 :id menu-item-2235 :class (menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-2235)]
-             ([a :num 30] "Home"))
-            ([li :num 31 :id menu-item-2233 :class (menu-item menu-item-type-post_type menu-item-object-page menu-item-2233)]
-             ([a :num 32] "Style Guide"))
-            ([li :num 33 :id menu-item-2236 :class (menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent menu-item-2236)]
-             ([a :num 34] "Editorials"))
-            ([li :num 35 :id menu-item-2234 :class (menu-item menu-item-type-post_type menu-item-object-page menu-item-2234)]
-             ([a :num 36] "Contact")))))
-         ([div :num 37 :class (social-links)]
-          ([ul :num 38 :id menu-social :class (menu)]
-           ([li :num 39 :id menu-item-2301 :class (menu-item menu-item-type-custom menu-item-object-custom menu-item-2301)]
-            ([a :num 40]
-             ([span :num 41 :class (screen-reader-text)] "Twitter"))) " "
-           ([li :num 42 :id menu-item-2302 :class (menu-item menu-item-type-custom menu-item-object-custom menu-item-2302)]
-            ([a :num 43]
-             ([span :num 44 :class (screen-reader-text)] "Facebook.com"))) " "
-           ([li :num 45 :id menu-item-2303 :class (menu-item menu-item-type-custom menu-item-object-custom menu-item-2303)]
-            ([a :num 46]
-             ([span :num 47 :class (screen-reader-text)] "WordPress")))))) " " " "
-        ([div :num 48 :id tab-2 :class (widget-area tab-content animated fadeIn)]
-         ([div :num 49 :class (widget featured-posts-widget)]
-          ([h2 :num 50 :class (widget-title)])
-          ([div :num 51 :class (featured-posts)]
-           ([div :num 52 :class (featured-post)]
-            ([a :num 53 :class (featured-post-image)]
-             ([img :num 54 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
-            ([h3 :num 55]
-             ([a :num 56]))
-            ([div :num 57 :class (featured-post-meta)]
-             ([div :num 58 :class (featured-post-date)]
-              ([i :num 59 :class (fa fa-clock-o)])
-              ([span :num 60 :class (posted-on)]
-               ([a :num 61]
-                ([time :num 62 :class (entry-date published)])))
-              ([span :num 63 :class (byline)])
-              ([span :num 64 :class (author vcard)]
-               ([a :num 65 :class (url fn n)])))))
-           ([div :num 66 :class (featured-post)]
-            ([a :num 67 :class (featured-post-image)]
-             ([img :num 68 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
-            ([h3 :num 69]
-             ([a :num 70]))
-            ([div :num 71 :class (featured-post-meta)]
-             ([div :num 72 :class (featured-post-date)]
-              ([i :num 73 :class (fa fa-clock-o)])
-              ([span :num 74 :class (posted-on)]
-               ([a :num 75]
-                ([time :num 76 :class (entry-date published)])))
-              ([span :num 77 :class (byline)])
-              ([span :num 78 :class (author vcard)]
-               ([a :num 79 :class (url fn n)])))))
-           ([div :num 80 :class (featured-post)]
-            ([a :num 81 :class (featured-post-image)]
-             ([img :num 82 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
-            ([h3 :num 83]
-             ([a :num 84]))
-            ([div :num 85 :class (featured-post-meta)]
-             ([div :num 86 :class (featured-post-date)]
-              ([i :num 87 :class (fa fa-clock-o)])
-              ([span :num 88 :class (posted-on)]
-               ([a :num 89]
-                ([time :num 90 :class (entry-date published)])))
-              ([span :num 91 :class (byline)])
-              ([span :num 92 :class (author vcard)]
-               ([a :num 93 :class (url fn n)])))))
-           ([div :num 94 :class (featured-post)]
-            ([a :num 95 :class (featured-post-image)]
-             ([img :num 96 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
-            ([h3 :num 97]
-             ([a :num 98]))
-            ([div :num 99 :class (featured-post-meta)]
-             ([div :num 100 :class (featured-post-date)]
-              ([i :num 101 :class (fa fa-clock-o)])
-              ([span :num 102 :class (posted-on)]
-               ([a :num 103]
-                ([time :num 104 :class (entry-date published)])))
-              ([span :num 105 :class (byline)])
-              ([span :num 106 :class (author vcard)]
-               ([a :num 107 :class (url fn n)])))))
-           ([div :num 108 :class (featured-post)]
-            ([a :num 109 :class (featured-post-image)]
-             ([img :num 110 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
-            ([h3 :num 111]
-             ([a :num 112]))
-            ([div :num 113 :class (featured-post-meta)]
-             ([div :num 114 :class (featured-post-date)]
-              ([i :num 115 :class (fa fa-clock-o)])
-              ([span :num 116 :class (posted-on)]
-               ([a :num 117]
-                ([time :num 118 :class (entry-date published)])
-                ([time :num 119 :class (updated)])))
-              ([span :num 120 :class (byline)])
-              ([span :num 121 :class (author vcard)]
-               ([a :num 122 :class (url fn n)])))))
-           ([div :num 123 :class (featured-post)]
-            ([a :num 124 :class (featured-post-image)]
-             ([img :num 125 :class (attachment-featured-post-image size-featured-post-image wp-post-image) :w 0 :h 0]))
-            ([h3 :num 126]
-             ([a :num 127]))
-            ([div :num 128 :class (featured-post-meta)]
-             ([div :num 129 :class (featured-post-date)]
-              ([i :num 130 :class (fa fa-clock-o)])
-              ([span :num 131 :class (posted-on)]
-               ([a :num 132]
-                ([time :num 133 :class (entry-date published)])))
-              ([span :num 134 :class (byline)])
-              ([span :num 135 :class (author vcard)]
-               ([a :num 136 :class (url fn n)])))))))) " " " "
-        ([div :num 137 :id tab-3 :class (tab-content animated fadeIn)]
-         ([div :num 138 :id secondary :class (widget-area)]
-          ([aside :num 139 :id search-2 :class (widget widget_search)]
-           ([form :num 140 :class (search-form)]
-            ([label :num 141]
-             ([span :num 142 :class (screen-reader-text)])
-             ([input :num 143 :class (search-field) :w 0 :h 0 :type search]))
-            ([input :num 144 :class (search-submit) :w 0 :h 0 :type submit])))
-          ([aside :num 145 :id recent-posts-2 :class (widget widget_recent_entries)]
-           ([h2 :num 146 :class (widget-title)])
-           ([ul :num 147]
-            ([li :num 148]
-             ([a :num 149]))
-            ([li :num 150]
-             ([a :num 151]))
-            ([li :num 152]
-             ([a :num 153]))
-            ([li :num 154]
-             ([a :num 155]))
-            ([li :num 156]
-             ([a :num 157]))))
-          ([aside :num 158 :id text-1 :class (widget widget_text)]
-           ([h2 :num 159 :class (widget-title)])
-           ([div :num 160 :class (textwidget)]
-            ([iframe :num 161 :id twitter-widget-0 :class (twitter-timeline twitter-timeline-rendered) :w 0 :h 0])))
-          ([aside :num 162 :id archives-2 :class (widget widget_archive)]
-           ([h2 :num 163 :class (widget-title)])
-           ([ul :num 164]
-            ([li :num 165]
-             ([a :num 166]))
-            ([li :num 167]
-             ([a :num 168]))
-            ([li :num 169]
-             ([a :num 170]))))
-          ([aside :num 171 :id categories-2 :class (widget widget_categories)]
-           ([h2 :num 172 :class (widget-title)])
-           ([ul :num 173]
-            ([li :num 174 :class (cat-item cat-item-2)]
-             ([a :num 175]))
-            ([li :num 176 :class (cat-item cat-item-3)]
-             ([a :num 177]))
-            ([li :num 178 :class (cat-item cat-item-4)]
-             ([a :num 179]))
-            ([li :num 180 :class (cat-item cat-item-5)]
-             ([a :num 181]))
-            ([li :num 182 :class (cat-item cat-item-6)]
-             ([a :num 183]))
-            ([li :num 184 :class (cat-item cat-item-7)]
-             ([a :num 185]))
-            ([li :num 186 :class (cat-item cat-item-8)]
-             ([a :num 187]))
-            ([li :num 188 :class (cat-item cat-item-9)]
-             ([a :num 189]))
-            ([li :num 190 :class (cat-item cat-item-1)]
-             ([a :num 191])))))))) " ") " "
-     ([div :num 192 :id content :class (site-content fadeInFast)]
-      ([div :num 193 :id primary :class (content-area)]
-       ([main :num 194 :id main :class (site-main)]
-        ([article :num 195 :id post-1820 :class (post post-1820 type-post status-publish format-standard has-post-thumbnail hentry category-design category-editorials tag-braun tag-dieter-rams)] " "
-         ([a :num 196 :class (featured-image)]
-          ([img :num 197 :class (attachment-large-image size-large-image wp-post-image) :w 1000 :h 631]))
-         ([header :num 198 :class (entry-header)]
-          ([div :num 199 :class (entry-date)]
-           ([span :num 200 :class (posted-on)]
-            ([a :num 201]
-             ([time :num 202 :class (entry-date published)] "May 1, 2018")))
-           ([span :num 203 :class (byline)] " by ") " "
-           ([span :num 204 :class (author vcard)]
-            ([a :num 205 :class (url fn n)] "Mike McAlister")))
-          ([h1 :num 206 :class (entry-title)] "Knobs, Buttons and Dials")) " "
-         ([div :num 207 :class (entry-meta)]
-          ([ul :num 208 :class (meta-list)]
-           ([li :num 209 :class (meta-cat)]
-            ([a :num 210] "Design") ", "
-            ([a :num 211] "Editorials"))
-           ([li :num 212 :class (meta-tag)]
-            ([a :num 213] "Braun") ", "
-            ([a :num 214] "Dieter Rams"))
-           ([li :num 215 :class (meta-comment)] " "
-            ([span :num 216 :class (comments-link)]
-             ([a :num 217] "2 Comments"))))) " "
-         ([div :num 218 :class (entry-content)]
-          ([p :num 219] "The phonograph, also called gramophone or record player, is a device introduced in 1877 for the recording and reproduction of sound recordings. The recordings played on such a device consist of waveforms that are engraved onto a rotating cylinder or disc. As the recorded surface rotates, a playback stylus traces the waveforms and vibrates to reproduce the recorded sound waves.")
-          ([h3 :num 220] "Enter Edison")
-          ([p :num 221] "The phonograph was invented in 1877 by Thomas Edison. While other inventors had produced devices that could record sounds, Edison’s phonograph was the first to be able to reproduce the recorded sound. His phonograph originally recorded sound onto a tinfoil sheet phonograph cylinder, and could both record and reproduce sounds. Alexander Graham Bell’s Volta Laboratory made several improvements in the 1880s, including the use of wax-coated cardboard cylinders, and a cutting stylus that moved from side to side in a “zig zag” pattern across the record.")
-          ([p :num 222] "In the 1890s, Emile Berliner initiated the transition from phonograph cylinders to flat discs with a spiral groove running from the periphery to near the center. Other improvements were made throughout the years, including modifications to the turntable and its drive system, the stylus or needle, and the sound and equalization systems.")
-          ([p :num 223]
-           ([span :num 224 :id more-1820]))
-          ([div :num 225 :id edoc-10001 :class (embed-vimeo)]
-           ([div :num 226 :class (fitvid)]
-            ([div :num 227 :id edoc-10002 :class (fluid-width-video-wrapper)]
-             ([iframe :num 228 :id fitvid626826 :w 720 :h (/ 12161 30)]))))
-          ([blockquote :num 229]
-           ([p :num 230] "As the recorded surface rotates, a playback stylus traces the waveforms and vibrates to reproduce the recorded sound waves."))
-          ([h3 :num 231] "Predecessors ")
-          ([p :num 232] "Several inventors devised machines to record sound prior to Thomas Edison’s phonograph, Edison being the first to produce a device that could both record and reproduce sound. The phonograph’s predecessors include Édouard-Léon Scott de Martinville’s phonautograph, and Charles Cros’s paleophone. ")
-          ([p :num 233] "Recordings made with the phonautograph were intended to be visual representations of the sound and were not to be reproduced as sound until 2008. Cros’s paleophone was intended to both record and reproduce sound but had not been developed beyond a basic concept at the time of Edison’s successful demonstration of the Phonograph in 1877.")))
-        ([nav :num 234 :class (navigation post-navigation)]
-         ([h1 :num 235 :class (screen-reader-text)] "Post navigation")
-         ([div :num 236 :class (nav-links)]
-          ([div :num 237 :class (nav-previous)]
-           ([a :num 238]
-            ([span :num 239 :class (meta-nav)] "← Previous Post") " Time Travel and You: A Beginner’s Guide"))
-          ([div :num 240 :class (nav-next)]
-           ([a :num 241]
-            ([span :num 242 :class (meta-nav)] "Next Post →") " Abraham Lincoln"))))
-        ([div :num 243 :id comments :class (comments-area)]
-         ([h3 :num 244 :class (comments-title)] " 2 Comments ")
-         ([ol :num 245 :class (comment-list)]
-          ([li :num 246 :id li-comment-8 :class (comment even thread-even depth-1 clear)]
-           ([article :num 247 :id comment-8 :class (comment-block)]
-            ([img :num 248 :class (avatar avatar-51 photo) :w 60.8 :h 60.8]) " "
-            ([div :num 249 :class (comment-wrap)]
-             ([footer :num 250 :class (comment-info)]
-              ([cite :num 251 :class (comment-cite)]
-               ([a :num 252 :class (url)] "Mandi Hollis")) " "
-              ([a :num 253 :class (comment-time)] "May 1, 2018 at 7:49 pm"))
-             ([div :num 254 :class (comment-content)]
-              ([p :num 255] "Several inventors devised machines to record sound prior to Thomas Edison’s phonograph, Edison being the first to produce a device that could both record and reproduce sound.")
-              ([p :num 256 :class (reply)]
-               ([a :num 257 :class (comment-reply-link)] "Reply"))))))
-          ([li :num 258 :id li-comment-9 :class (comment odd alt thread-odd thread-alt depth-1 clear)]
-           ([article :num 259 :id comment-9 :class (comment-block)]
-            ([img :num 260 :class (avatar avatar-51 photo) :w 60.8 :h 60.8]) " "
-            ([div :num 261 :class (comment-wrap)]
-             ([footer :num 262 :class (comment-info)]
-              ([cite :num 263 :class (comment-cite)]
-               ([a :num 264 :class (url)] "Mike McAlister")) " "
-              ([a :num 265 :class (comment-time)] "May 1, 2018 at 7:50 pm"))
-             ([div :num 266 :class (comment-content)]
-              ([p :num 267] "His phonograph originally recorded sound onto a tinfoil sheet phonograph cylinder, and could both record and reproduce sounds.")
-              ([p :num 268 :class (reply)]
-               ([a :num 269 :class (comment-reply-link)] "Reply")))))))
-         ([div :num 270 :id respond :class (comment-respond)]
-          ([h3 :num 271 :id reply-title :class (comment-reply-title)] "Leave a Reply "
-           ([small :num 272]
-            ([a :num 273 :id cancel-comment-reply-link])))
-          ([form :num 274 :id commentform :class (comment-form)]
-           ([p :num 275 :class (comment-notes)]
-            ([span :num 276 :id email-notes])
-            ([span :num 277 :class (required)]))
-           ([p :num 278 :class (comment-form-comment)]
-            ([label :num 279] "Comment") " "
-            ([textarea :num 280 :id comment :w 760 :h 276]))
-           ([p :num 281 :class (comment-form-author)]
-            ([label :num 282] "Name "
-             ([span :num 283 :class (required)] "*")) " "
-            ([input :num 284 :id author :w 760 :h 50 :type text])) " "
-           ([p :num 285 :class (comment-form-email)]
-            ([label :num 286] "Email "
-             ([span :num 287 :class (required)] "*")) " "
-            ([input :num 288 :id email :w 760 :h 50 :type email])) " "
-           ([p :num 289 :class (comment-form-url)]
-            ([label :num 290] "Website") " "
-            ([input :num 291 :id url :w 760 :h 50 :type url]))
-           ([p :num 292 :class (form-submit)]
-            ([input :num 293 :id submit :class (submit) :w 150 :h 48 :type submit]) " "
-            ([input :num 294 :id comment_post_ID :w 0 :h 0 :type hidden]) " "
-            ([input :num 295 :id comment_parent :w 0 :h 0 :type hidden]))
-           ([p :num 296 :id edoc-10003]
-            ([input :num 297 :id akismet_comment_nonce :w 0 :h 0 :type hidden]))
-           ([p :num 298 :id edoc-10004]) " "
-           ([input :num 299 :id ak_js :w 0 :h 0 :type hidden])))))) " ") " "
-     ([footer :num 300 :id colophon :class (site-footer)]
-      ([div :num 301 :class (site-info)]
-       ([a :num 302 :class (powered-by)] "Proudly powered by WordPress") " "
-       ([span :num 303 :class (sep)] " | ") " Theme: editor by "
-       ([a :num 304] "Array")) " ")) " " " " " " " " " " " " " " " "
-    ([span :num 305 :class (cleanslate TridactylStatusIndicator)] "normal")
-    ([iframe :num 306 :id cmdline_iframe :class (cleanslate) :w 300 :h 0]))))
 
 (define-problem doc-1
   :title "Knobs, Buttons and Dials – Editor"
@@ -18016,7 +18018,182 @@
   [50 "\"Roboto Condensed\", \"Helvetica Neue\", Helvetica, Arial, sans-serif" 400 normal 38 12 4.5 4.5 59]
   [26 "\"Roboto Condensed\", \"Helvetica Neue\", Helvetica, Arial, sans-serif" 400 normal 20 6 2.5 2.5 31])
 
-(define-layout (doc-2 :browser firefox :matched true :w 1920 :h 980 :fs 16 :scrollw 12)
+(define-document doc-2
+  ([html :num 0]
+   ([body :num 1 :class (post-template-default single single-post postid-3260 single-format-standard)]
+    ([div :num 2 :id page :class (hfeed site container)]
+     ([a :num 3 :class (skip-link screen-reader-text)] "Skip to content") " " " "
+     ([header :num 4 :id masthead :class (site-header light)] " " " "
+      ([ul :num 5 :class (toggle-bar)] " "
+       ([li :num 6 :id panel-1 :class (current)]
+        ([a :num 7 :class (current nav-toggle)]
+         ([i :num 8 :class (fa fa-bars)])
+         ([span :num 9 :class (screen-reader-text)] "View menu"))) " " " " " "
+       ([li :num 10 :id panel-3]
+        ([a :num 11 :class (folder-toggle)]
+         ([i :num 12 :class (fa fa-folder)])
+         ([i :num 13 :class (fa fa-folder-open)])
+         ([span :num 14 :class (screen-reader-text)] "View sidebar"))))
+      ([div :num 15 :id tabs :class (toggle-tabs)]
+       ([div :num 16 :class (site-header-inside)]
+        ([div :num 17 :id tab-1 :class (tab-content current fadeIn)]
+         ([div :num 18 :class (site-branding)]
+          ([h1 :num 19 :class (site-title)]
+           ([a :num 20] "Joel on Software"))
+          ([h2 :num 21 :class (site-description)]))
+         ([nav :num 22 :id site-navigation :class (main-navigation)])
+         ([div :num 23 :id front-widgets :class (widget-area)]
+          ([aside :num 24 :id text-3 :class (widget widget_text)]
+           ([h2 :num 25 :class (widget-title)] "Your host")
+           ([div :num 26 :class (textwidget)]
+            ([a :num 27]
+             ([img :num 28 :w 293 :h (/ 8698 15)]))
+            ([p :num 29] "I’m Joel Spolsky, a software developer in New York City. "
+             ([a :num 30] "More about me") "."))))) " " " " " "
+        ([div :num 31 :id tab-3 :class (tab-content animated fadeIn)]
+         ([div :num 32 :id secondary :class (widget-area)]
+          ([aside :num 33 :id search-3 :class (widget widget_search)]
+           ([form :num 34 :id cse-search-box :class (search-form)]
+            ([div :num 35]
+             ([input :num 36 :w 0 :h 0 :type hidden])
+             ([input :num 37 :w 0 :h 0 :type hidden]))
+            ([input :num 38 :class (search-field) :w 0 :h 0 :type search])
+            ([input :num 39 :class (search-submit) :w 0 :h 0 :type submit])
+            ([span :num 40 :class (screen-reader-text)])))
+          ([aside :num 41 :id text-2 :class (widget widget_text)]
+           ([div :num 42 :class (textwidget)]
+            ([img :num 43 :id edoc-20001 :w 0 :h 0])
+            ([a :num 44])))
+          ([aside :num 45 :id text-4 :class (widget widget_text)]
+           ([h2 :num 46 :class (widget-title)])
+           ([div :num 47 :class (textwidget)]
+            ([p :num 48]
+             ([img :num 49 :w 0 :h 0]))
+            ([p :num 50]
+             ([a :num 51])
+             ([a :num 52]))
+            ([p :num 53]
+             ([a :num 54])
+             ([a :num 55]))))
+          ([aside :num 56 :id text-6 :class (widget widget_text)]
+           ([div :num 57 :class (textwidget)]
+            ([p :num 58]
+             ([a :num 59]
+              ([img :num 60 :w 0 :h 0])))
+            ([p :num 61]
+             ([a :num 62])
+             ([a :num 63])
+             ([br :num 64])
+             ([a :num 65]
+              ([br :num 66])
+              ([img :num 67 :w 0 :h 0])
+              ([br :num 68])))))
+          ([aside :num 69 :id text-7 :class (widget widget_text)]
+           ([div :num 70 :class (textwidget)]
+            ([p :num 71]
+             ([a :num 72]
+              ([img :num 73 :w 0 :h 0]))
+             ([br :num 74])
+             ([a :num 75])
+             ([a :num 76])
+             ([a :num 77])
+             ([a :num 78]))))
+          ([aside :num 79 :id twitter_timeline-4 :class (widget widget_twitter_timeline)]
+           ([h2 :num 80 :class (widget-title)])
+           ([iframe :num 81 :id twitter-widget-0 :class (twitter-timeline twitter-timeline-rendered) :w 0 :h 0])
+           ([a :num 82 :class (twitter-timeline)])))))) " ") " "
+     ([div :num 83 :id content :class (site-content fadeInFast)]
+      ([div :num 84 :id primary :class (content-area)]
+       ([main :num 85 :id main :class (site-main)]
+        ([article :num 86 :id post-3260 :class (post post-3260 type-post status-publish format-standard hentry category-news)]
+         ([header :num 87 :class (entry-header)]
+          ([div :num 88 :class (entry-date)]
+           ([span :num 89 :class (posted-on)]
+            ([a :num 90]
+             ([time :num 91 :class (entry-date published)] "April 13, 2018")
+             ([time :num 92 :class (updated)])))
+           ([span :num 93 :class (byline)] " by ") " "
+           ([span :num 94 :class (author vcard)]
+            ([a :num 95 :class (url fn n)] "Joel Spolsky")))
+          ([h1 :num 96 :class (entry-title)] "A Dusting of Gamification"))
+         ([div :num 97 :class (entry-meta)]
+          ([ul :num 98 :class (meta-list)]
+           ([li :num 99 :class (meta-cat)]
+            ([a :num 100] "News"))))
+         ([div :num 101 :class (entry-content)]
+          ([p :num 102]
+           ([em :num 103] "[This is the second in a series of posts about Stack Overflow. The first one is "
+            ([a :num 104] "The Stack Overflow Age") ".]"))
+          ([p :num 105] "Around 2010 the success of Stack Overflow had led us into some conversations with VCs, who wanted to invest.")
+          ([p :num 106]
+           ([img :num 107 :class (aligncenter wp-image-3273) :w 500 :h (/ 2000 3)]))
+          ([p :num 108] "The firm that eventually invested in us, "
+           ([a :num 109] "Union Square Ventures") ", told us that they were so excited by the power of gamification that they were only investing in companies that incorporated some kind of game play.")
+          ([p :num 110] "For example, Foursquare. Remember Foursquare? It was all about making your normal post-NYU life of going to ramen noodle places and dive bars into a fun game that incidentally generated wads of data for marketers. Or Duolingo, which is a fun app with flash cards that teaches you foreign languages. Those were other USV investments from that time period.")
+          ([p :num 111] "At the time, I had to think for a minute to realize that Stack Overflow has “gamification” too. Not a ton. Maybe a "
+           ([em :num 112] "dusting") " of gamification, most of it around reputation.")
+          ([p :num 113] "Stack Overflow reputation started as a very simple score. The original idea was just that you would get 10 points when your answers were upvoted. Upvotes do two things. They get the most useful answers to the top, signaling that other developers who saw this answer thought it was good. They also send the person who wrote the answer a real signal that their efforts helped someone. This can be incredibly motivating.")
+          ([p :num 114] "You would lose points if your questions were downvoted, but you actually only lose 2 points. We didn’t want to punish you so much as we wanted to show other people that your answer was wrong. And to avoid abuse, we actually make you "
+           ([em :num 115] "pay") " one reputation point to downvote somebody, so you better really mean it. That was pretty much the whole system.")
+          ([p :num 116] "Now, this wasn’t an original idea. It was originally inspired by Reddit Karma, which started out as an integer that appeared in parentheses after your handle. If you posted something that got upvoted, your karma went up as a “reward.” That was it. Karma "
+           ([a :num 117] "didn’t do a single thing") " but still served as a system for reward and punishment.")
+          ([p :num 118] "What reputation and karma do is send a message that this is a community with norms, it’s not just a place to type words onto the internet. (That would be 4chan.) We don’t really exist for the purpose of letting you exercise your freedom of speech. You can get your freedom of speech somewhere else. Our goal is to get the best answers to questions. All the voting makes it clear that we have standards, that some posts are better than others, and that the community itself has some norms about what’s good and bad that they express through the vote.")
+          ([p :num 119] "It’s not a perfect system (more on the problems in a minute), but it’s a reasonable first approximation.")
+          ([p :num 120] "By the way, Alexis Ohanian and Steve Huffman, the creators of Reddit, were themselves inspired by a more primitive karma system, on Slashdot. This system had real-world implications. You didn’t get karma so that other people could see your karma; you got karma so that the system knew you weren’t a spammer. If a lot of your posts had been flagged for abuse, your karma would go down and you might lose posting or moderation privileges. But you weren’t really supposed to show off your high karma. “Don’t worry too much about it; it’s just an integer in a database,” Slashdot told us.")
+          ([p :num 121] "To be honest, it was initially surprising to me that you could just print a number after people’s handles and they would feel rewarded. Look at me! Look at my four digit number! But it does drive a tremendous amount of good behavior. Even people who aren’t participating in the system (by working to earn reputation) buy into it (e.g., by respecting high-reputation users for their demonstrated knowledge and helpfulness).")
+          ([p :num 122] "But there’s still something of a mystery here, which is why earning “magic internet points” is appealing to anyone.")
+          ([p :num 123] "I think the answer is that it’s nice to know that you’ve made a difference. You toil away in the hot kitchen all day and when you serve dinner it’s nice to hear a compliment or two. If somebody compliments you on the extra effort you put into making radish roses, you’re going to be very happy.")
+          ([p :num 124] "This is a part of a greater human need: to make an impact on the world, and to know that you’re contributing and being appreciated for it. Stack Overflow’s reputation system serves to recognize that you’re a human being and we are super thankful for your contribution.")
+          ([p :num 125]
+           ([img :num 126 :class (aligncenter wp-image-3276 size-large) :w 600 :h 450]))
+          ([p :num 127] "That said, there is a dark side to gamification. It’s not 100% awesome.")
+          ([p :num 128] "The first problem we noticed is that it’s very nice to get an upvote, but getting a downvote feels like a slap in the face. Especially if you don’t understand why you got the downvote, or if you don’t agree. Stack Overflow’s voting has made many people unhappy over the years, and there are probably loads of people who felt unwelcome and who don’t participate in Stack Overflow as a result. (Here’s an old blog post explaining "
+           ([a :num 129] "why we didn’t just eliminate downvotes") ").")
+          ([p :num 130] "There’s another problem, which is that, to the extent that the gamification in Stack Overflow makes the site feel less inclusive and welcoming to many people, it is disproportionately off-putting to programmers from underrepresented groups. While Stack Overflow does have many amazing, high reputation contributors who are women or minorities, we’ve also heard from too many who were apprehensive about participating.")
+          ([p :num 131] "These are big problems. There’s a lot more we can and will say about that over the next few months, and we’ve got a lot of work ahead of us trying to make Stack Overflow a more inclusive and diverse place so we can improve the important service that it provides to developers everywhere.")
+          ([p :num 132] "Gamification can shape behavior. It can guide you to do certain things in certain ways, and it can encourage certain behaviors. But it’s a very weak force. You can’t do that much with gamification. You certainly can’t get people to do something that they’re not interested in doing, anyway. I’ve heard a lot of crazy business plans that are pinning rather too high hopes on gamification as a way of getting people to go along with some crazy scheme that the people won’t want to go along with. Nobody’s going to learn French just to get the Duolingo points. But if you are learning French, and you are using Duolingo, you might make an effort to open the app every day just to keep your streak going.")
+          ([p :num 133] "I’ve got more posts coming! The next one will be about the obsessive way Stack Overflow was designed for the artifact, in other words, we optimized everything to create amazing results for developers with problems arriving from Google, not just to answer questions that people typed into our site.")
+          ([p :num 134] " ")))
+        ([div :num 135 :id post-footer-widgets :class (widget-area)]
+         ([aside :num 136 :id text-8 :class (widget widget_text)]
+          ([h2 :num 137 :class (widget-title)] "Subscribe!")
+          ([div :num 138 :class (textwidget)]
+           ([p :num 139] "You’re reading "
+            ([a :num 140] "Joel on Software") ", stuffed with years and years of completely raving mad articles about software development, managing software teams, designing user interfaces, running successful software companies, and rubber duckies.")
+           ([p :num 141] "If you want to know when I publish something new, I recommend getting an RSS reader like "
+            ([a :num 142] "NewsBlur") " and subscribing to my "
+            ([a :num 143] "RSS feed") ".")))) " "
+        ([div :num 144 :class (author-info)]
+         ([div :num 145 :class (author-avatar)]
+          ([img :num 146 :class (avatar avatar-64 photo) :w 64 :h 64])) " "
+         ([div :num 147 :class (author-description)]
+          ([h2 :num 148 :class (author-title)]
+           ([span :num 149 :class (author-heading)] "About the author."))
+          ([p :num 150 :class (author-bio)] " I'm Joel Spolsky, co-founder of "
+           ([a :num 151] "Trello") " and "
+           ([a :num 152] "Fog Creek Software") ", and CEO of "
+           ([a :num 153] "Stack Overflow. ")
+           ([a :num 154] "More about me") ". ")))
+        ([nav :num 155 :class (navigation post-navigation)]
+         ([h1 :num 156 :class (screen-reader-text)] "Post navigation")
+         ([div :num 157 :class (nav-links)]
+          ([div :num 158 :class (nav-previous)]
+           ([a :num 159]
+            ([span :num 160 :class (meta-nav)] "← Previous Post") " The Stack Overflow Age"))
+          ([div :num 161 :class (nav-next)]
+           ([a :num 162]
+            ([span :num 163 :class (meta-nav)] "Next Post →") " Strange and maddening rules")))))) " ") " "
+     ([footer :num 164 :id colophon :class (site-footer)]
+      ([div :num 165 :class (site-info)]
+       ([a :num 166 :class (powered-by)] "Proudly powered by WordPress")) " ")) " "
+    ([div :num 167 :id edoc-20002]
+     ([div :num 168 :class (grofile-hash-map-d95216e70bed7430716b91ddd6df55fe)])) " " " " " " " " " " " " " " " " " " " "
+    ([span :num 169 :class (cleanslate TridactylStatusIndicator)] "normal")
+    ([img :num 170 :id wpstats :w 0 :h 0])
+    ([iframe :num 171 :id cmdline_iframe :class (cleanslate) :w 300 :h 0]) " "
+    ([img :num 172 :id wpstats :w 0 :h 0]))))
+
+(define-layout doc-2 (firefox doc-2)
  ([VIEW :w 1920]
   ([BLOCK :x 0 :y 0 :w 1908 :h (/ 361891 60) :elt 0]
    ([BLOCK :x 0 :y 0 :w 1908 :h (/ 361891 60) :elt 1]
@@ -18448,181 +18625,6 @@
          ([LINE]
           ([INLINE :elt 166]
            ([TEXT :x (/ 15937 15) :y 5951.5 :w 241 :h 18 :text "Proudly powered by WordPress"]))))))))))))
-
-(define-document doc-2
-  ([html :num 0]
-   ([body :num 1 :class (post-template-default single single-post postid-3260 single-format-standard)]
-    ([div :num 2 :id page :class (hfeed site container)]
-     ([a :num 3 :class (skip-link screen-reader-text)] "Skip to content") " " " "
-     ([header :num 4 :id masthead :class (site-header light)] " " " "
-      ([ul :num 5 :class (toggle-bar)] " "
-       ([li :num 6 :id panel-1 :class (current)]
-        ([a :num 7 :class (current nav-toggle)]
-         ([i :num 8 :class (fa fa-bars)])
-         ([span :num 9 :class (screen-reader-text)] "View menu"))) " " " " " "
-       ([li :num 10 :id panel-3]
-        ([a :num 11 :class (folder-toggle)]
-         ([i :num 12 :class (fa fa-folder)])
-         ([i :num 13 :class (fa fa-folder-open)])
-         ([span :num 14 :class (screen-reader-text)] "View sidebar"))))
-      ([div :num 15 :id tabs :class (toggle-tabs)]
-       ([div :num 16 :class (site-header-inside)]
-        ([div :num 17 :id tab-1 :class (tab-content current fadeIn)]
-         ([div :num 18 :class (site-branding)]
-          ([h1 :num 19 :class (site-title)]
-           ([a :num 20] "Joel on Software"))
-          ([h2 :num 21 :class (site-description)]))
-         ([nav :num 22 :id site-navigation :class (main-navigation)])
-         ([div :num 23 :id front-widgets :class (widget-area)]
-          ([aside :num 24 :id text-3 :class (widget widget_text)]
-           ([h2 :num 25 :class (widget-title)] "Your host")
-           ([div :num 26 :class (textwidget)]
-            ([a :num 27]
-             ([img :num 28 :w 293 :h (/ 8698 15)]))
-            ([p :num 29] "I’m Joel Spolsky, a software developer in New York City. "
-             ([a :num 30] "More about me") "."))))) " " " " " "
-        ([div :num 31 :id tab-3 :class (tab-content animated fadeIn)]
-         ([div :num 32 :id secondary :class (widget-area)]
-          ([aside :num 33 :id search-3 :class (widget widget_search)]
-           ([form :num 34 :id cse-search-box :class (search-form)]
-            ([div :num 35]
-             ([input :num 36 :w 0 :h 0 :type hidden])
-             ([input :num 37 :w 0 :h 0 :type hidden]))
-            ([input :num 38 :class (search-field) :w 0 :h 0 :type search])
-            ([input :num 39 :class (search-submit) :w 0 :h 0 :type submit])
-            ([span :num 40 :class (screen-reader-text)])))
-          ([aside :num 41 :id text-2 :class (widget widget_text)]
-           ([div :num 42 :class (textwidget)]
-            ([img :num 43 :id edoc-20001 :w 0 :h 0])
-            ([a :num 44])))
-          ([aside :num 45 :id text-4 :class (widget widget_text)]
-           ([h2 :num 46 :class (widget-title)])
-           ([div :num 47 :class (textwidget)]
-            ([p :num 48]
-             ([img :num 49 :w 0 :h 0]))
-            ([p :num 50]
-             ([a :num 51])
-             ([a :num 52]))
-            ([p :num 53]
-             ([a :num 54])
-             ([a :num 55]))))
-          ([aside :num 56 :id text-6 :class (widget widget_text)]
-           ([div :num 57 :class (textwidget)]
-            ([p :num 58]
-             ([a :num 59]
-              ([img :num 60 :w 0 :h 0])))
-            ([p :num 61]
-             ([a :num 62])
-             ([a :num 63])
-             ([br :num 64])
-             ([a :num 65]
-              ([br :num 66])
-              ([img :num 67 :w 0 :h 0])
-              ([br :num 68])))))
-          ([aside :num 69 :id text-7 :class (widget widget_text)]
-           ([div :num 70 :class (textwidget)]
-            ([p :num 71]
-             ([a :num 72]
-              ([img :num 73 :w 0 :h 0]))
-             ([br :num 74])
-             ([a :num 75])
-             ([a :num 76])
-             ([a :num 77])
-             ([a :num 78]))))
-          ([aside :num 79 :id twitter_timeline-4 :class (widget widget_twitter_timeline)]
-           ([h2 :num 80 :class (widget-title)])
-           ([iframe :num 81 :id twitter-widget-0 :class (twitter-timeline twitter-timeline-rendered) :w 0 :h 0])
-           ([a :num 82 :class (twitter-timeline)])))))) " ") " "
-     ([div :num 83 :id content :class (site-content fadeInFast)]
-      ([div :num 84 :id primary :class (content-area)]
-       ([main :num 85 :id main :class (site-main)]
-        ([article :num 86 :id post-3260 :class (post post-3260 type-post status-publish format-standard hentry category-news)]
-         ([header :num 87 :class (entry-header)]
-          ([div :num 88 :class (entry-date)]
-           ([span :num 89 :class (posted-on)]
-            ([a :num 90]
-             ([time :num 91 :class (entry-date published)] "April 13, 2018")
-             ([time :num 92 :class (updated)])))
-           ([span :num 93 :class (byline)] " by ") " "
-           ([span :num 94 :class (author vcard)]
-            ([a :num 95 :class (url fn n)] "Joel Spolsky")))
-          ([h1 :num 96 :class (entry-title)] "A Dusting of Gamification"))
-         ([div :num 97 :class (entry-meta)]
-          ([ul :num 98 :class (meta-list)]
-           ([li :num 99 :class (meta-cat)]
-            ([a :num 100] "News"))))
-         ([div :num 101 :class (entry-content)]
-          ([p :num 102]
-           ([em :num 103] "[This is the second in a series of posts about Stack Overflow. The first one is "
-            ([a :num 104] "The Stack Overflow Age") ".]"))
-          ([p :num 105] "Around 2010 the success of Stack Overflow had led us into some conversations with VCs, who wanted to invest.")
-          ([p :num 106]
-           ([img :num 107 :class (aligncenter wp-image-3273) :w 500 :h (/ 2000 3)]))
-          ([p :num 108] "The firm that eventually invested in us, "
-           ([a :num 109] "Union Square Ventures") ", told us that they were so excited by the power of gamification that they were only investing in companies that incorporated some kind of game play.")
-          ([p :num 110] "For example, Foursquare. Remember Foursquare? It was all about making your normal post-NYU life of going to ramen noodle places and dive bars into a fun game that incidentally generated wads of data for marketers. Or Duolingo, which is a fun app with flash cards that teaches you foreign languages. Those were other USV investments from that time period.")
-          ([p :num 111] "At the time, I had to think for a minute to realize that Stack Overflow has “gamification” too. Not a ton. Maybe a "
-           ([em :num 112] "dusting") " of gamification, most of it around reputation.")
-          ([p :num 113] "Stack Overflow reputation started as a very simple score. The original idea was just that you would get 10 points when your answers were upvoted. Upvotes do two things. They get the most useful answers to the top, signaling that other developers who saw this answer thought it was good. They also send the person who wrote the answer a real signal that their efforts helped someone. This can be incredibly motivating.")
-          ([p :num 114] "You would lose points if your questions were downvoted, but you actually only lose 2 points. We didn’t want to punish you so much as we wanted to show other people that your answer was wrong. And to avoid abuse, we actually make you "
-           ([em :num 115] "pay") " one reputation point to downvote somebody, so you better really mean it. That was pretty much the whole system.")
-          ([p :num 116] "Now, this wasn’t an original idea. It was originally inspired by Reddit Karma, which started out as an integer that appeared in parentheses after your handle. If you posted something that got upvoted, your karma went up as a “reward.” That was it. Karma "
-           ([a :num 117] "didn’t do a single thing") " but still served as a system for reward and punishment.")
-          ([p :num 118] "What reputation and karma do is send a message that this is a community with norms, it’s not just a place to type words onto the internet. (That would be 4chan.) We don’t really exist for the purpose of letting you exercise your freedom of speech. You can get your freedom of speech somewhere else. Our goal is to get the best answers to questions. All the voting makes it clear that we have standards, that some posts are better than others, and that the community itself has some norms about what’s good and bad that they express through the vote.")
-          ([p :num 119] "It’s not a perfect system (more on the problems in a minute), but it’s a reasonable first approximation.")
-          ([p :num 120] "By the way, Alexis Ohanian and Steve Huffman, the creators of Reddit, were themselves inspired by a more primitive karma system, on Slashdot. This system had real-world implications. You didn’t get karma so that other people could see your karma; you got karma so that the system knew you weren’t a spammer. If a lot of your posts had been flagged for abuse, your karma would go down and you might lose posting or moderation privileges. But you weren’t really supposed to show off your high karma. “Don’t worry too much about it; it’s just an integer in a database,” Slashdot told us.")
-          ([p :num 121] "To be honest, it was initially surprising to me that you could just print a number after people’s handles and they would feel rewarded. Look at me! Look at my four digit number! But it does drive a tremendous amount of good behavior. Even people who aren’t participating in the system (by working to earn reputation) buy into it (e.g., by respecting high-reputation users for their demonstrated knowledge and helpfulness).")
-          ([p :num 122] "But there’s still something of a mystery here, which is why earning “magic internet points” is appealing to anyone.")
-          ([p :num 123] "I think the answer is that it’s nice to know that you’ve made a difference. You toil away in the hot kitchen all day and when you serve dinner it’s nice to hear a compliment or two. If somebody compliments you on the extra effort you put into making radish roses, you’re going to be very happy.")
-          ([p :num 124] "This is a part of a greater human need: to make an impact on the world, and to know that you’re contributing and being appreciated for it. Stack Overflow’s reputation system serves to recognize that you’re a human being and we are super thankful for your contribution.")
-          ([p :num 125]
-           ([img :num 126 :class (aligncenter wp-image-3276 size-large) :w 600 :h 450]))
-          ([p :num 127] "That said, there is a dark side to gamification. It’s not 100% awesome.")
-          ([p :num 128] "The first problem we noticed is that it’s very nice to get an upvote, but getting a downvote feels like a slap in the face. Especially if you don’t understand why you got the downvote, or if you don’t agree. Stack Overflow’s voting has made many people unhappy over the years, and there are probably loads of people who felt unwelcome and who don’t participate in Stack Overflow as a result. (Here’s an old blog post explaining "
-           ([a :num 129] "why we didn’t just eliminate downvotes") ").")
-          ([p :num 130] "There’s another problem, which is that, to the extent that the gamification in Stack Overflow makes the site feel less inclusive and welcoming to many people, it is disproportionately off-putting to programmers from underrepresented groups. While Stack Overflow does have many amazing, high reputation contributors who are women or minorities, we’ve also heard from too many who were apprehensive about participating.")
-          ([p :num 131] "These are big problems. There’s a lot more we can and will say about that over the next few months, and we’ve got a lot of work ahead of us trying to make Stack Overflow a more inclusive and diverse place so we can improve the important service that it provides to developers everywhere.")
-          ([p :num 132] "Gamification can shape behavior. It can guide you to do certain things in certain ways, and it can encourage certain behaviors. But it’s a very weak force. You can’t do that much with gamification. You certainly can’t get people to do something that they’re not interested in doing, anyway. I’ve heard a lot of crazy business plans that are pinning rather too high hopes on gamification as a way of getting people to go along with some crazy scheme that the people won’t want to go along with. Nobody’s going to learn French just to get the Duolingo points. But if you are learning French, and you are using Duolingo, you might make an effort to open the app every day just to keep your streak going.")
-          ([p :num 133] "I’ve got more posts coming! The next one will be about the obsessive way Stack Overflow was designed for the artifact, in other words, we optimized everything to create amazing results for developers with problems arriving from Google, not just to answer questions that people typed into our site.")
-          ([p :num 134] " ")))
-        ([div :num 135 :id post-footer-widgets :class (widget-area)]
-         ([aside :num 136 :id text-8 :class (widget widget_text)]
-          ([h2 :num 137 :class (widget-title)] "Subscribe!")
-          ([div :num 138 :class (textwidget)]
-           ([p :num 139] "You’re reading "
-            ([a :num 140] "Joel on Software") ", stuffed with years and years of completely raving mad articles about software development, managing software teams, designing user interfaces, running successful software companies, and rubber duckies.")
-           ([p :num 141] "If you want to know when I publish something new, I recommend getting an RSS reader like "
-            ([a :num 142] "NewsBlur") " and subscribing to my "
-            ([a :num 143] "RSS feed") ".")))) " "
-        ([div :num 144 :class (author-info)]
-         ([div :num 145 :class (author-avatar)]
-          ([img :num 146 :class (avatar avatar-64 photo) :w 64 :h 64])) " "
-         ([div :num 147 :class (author-description)]
-          ([h2 :num 148 :class (author-title)]
-           ([span :num 149 :class (author-heading)] "About the author."))
-          ([p :num 150 :class (author-bio)] " I'm Joel Spolsky, co-founder of "
-           ([a :num 151] "Trello") " and "
-           ([a :num 152] "Fog Creek Software") ", and CEO of "
-           ([a :num 153] "Stack Overflow. ")
-           ([a :num 154] "More about me") ". ")))
-        ([nav :num 155 :class (navigation post-navigation)]
-         ([h1 :num 156 :class (screen-reader-text)] "Post navigation")
-         ([div :num 157 :class (nav-links)]
-          ([div :num 158 :class (nav-previous)]
-           ([a :num 159]
-            ([span :num 160 :class (meta-nav)] "← Previous Post") " The Stack Overflow Age"))
-          ([div :num 161 :class (nav-next)]
-           ([a :num 162]
-            ([span :num 163 :class (meta-nav)] "Next Post →") " Strange and maddening rules")))))) " ") " "
-     ([footer :num 164 :id colophon :class (site-footer)]
-      ([div :num 165 :class (site-info)]
-       ([a :num 166 :class (powered-by)] "Proudly powered by WordPress")) " ")) " "
-    ([div :num 167 :id edoc-20002]
-     ([div :num 168 :class (grofile-hash-map-d95216e70bed7430716b91ddd6df55fe)])) " " " " " " " " " " " " " " " " " " " "
-    ([span :num 169 :class (cleanslate TridactylStatusIndicator)] "normal")
-    ([img :num 170 :id wpstats :w 0 :h 0])
-    ([iframe :num 171 :id cmdline_iframe :class (cleanslate) :w 300 :h 0]) " "
-    ([img :num 172 :id wpstats :w 0 :h 0]))))
 
 (define-problem doc-2
   :title "A Dusting of Gamification – Joel on Software"
@@ -30389,7 +30391,193 @@
   [50 "\"Roboto Condensed\", \"Helvetica Neue\", Helvetica, Arial, sans-serif" 400 normal 38 12 4.5 4.5 59]
   [26 "\"Roboto Condensed\", \"Helvetica Neue\", Helvetica, Arial, sans-serif" 400 normal 20 6 2.5 2.5 31])
 
-(define-layout (doc-3 :browser firefox :matched true :w 1920 :h 980 :fs 16 :scrollw 12)
+(define-document doc-3
+  ([html :num 0]
+   ([body :num 1 :class (post-template-default single single-post postid-3246 single-format-standard)]
+    ([div :num 2 :id page :class (hfeed site container)]
+     ([a :num 3 :class (skip-link screen-reader-text)] "Skip to content") " " " "
+     ([header :num 4 :id masthead :class (site-header light)] " " " "
+      ([ul :num 5 :class (toggle-bar)] " "
+       ([li :num 6 :id panel-1 :class (current)]
+        ([a :num 7 :class (current nav-toggle)]
+         ([i :num 8 :class (fa fa-bars)])
+         ([span :num 9 :class (screen-reader-text)] "View menu"))) " " " " " "
+       ([li :num 10 :id panel-3]
+        ([a :num 11 :class (folder-toggle)]
+         ([i :num 12 :class (fa fa-folder)])
+         ([i :num 13 :class (fa fa-folder-open)])
+         ([span :num 14 :class (screen-reader-text)] "View sidebar"))))
+      ([div :num 15 :id tabs :class (toggle-tabs)]
+       ([div :num 16 :class (site-header-inside)]
+        ([div :num 17 :id tab-1 :class (tab-content current fadeIn)]
+         ([div :num 18 :class (site-branding)]
+          ([h1 :num 19 :class (site-title)]
+           ([a :num 20] "Joel on Software"))
+          ([h2 :num 21 :class (site-description)]))
+         ([nav :num 22 :id site-navigation :class (main-navigation)])
+         ([div :num 23 :id front-widgets :class (widget-area)]
+          ([aside :num 24 :id text-3 :class (widget widget_text)]
+           ([h2 :num 25 :class (widget-title)] "Your host")
+           ([div :num 26 :class (textwidget)]
+            ([a :num 27]
+             ([img :num 28 :w 293 :h (/ 8698 15)]))
+            ([p :num 29] "I’m Joel Spolsky, a software developer in New York City. "
+             ([a :num 30] "More about me") "."))))) " " " " " "
+        ([div :num 31 :id tab-3 :class (tab-content animated fadeIn)]
+         ([div :num 32 :id secondary :class (widget-area)]
+          ([aside :num 33 :id search-3 :class (widget widget_search)]
+           ([form :num 34 :id cse-search-box :class (search-form)]
+            ([div :num 35]
+             ([input :num 36 :w 0 :h 0 :type hidden])
+             ([input :num 37 :w 0 :h 0 :type hidden]))
+            ([input :num 38 :class (search-field) :w 0 :h 0 :type search])
+            ([input :num 39 :class (search-submit) :w 0 :h 0 :type submit])
+            ([span :num 40 :class (screen-reader-text)])))
+          ([aside :num 41 :id text-2 :class (widget widget_text)]
+           ([div :num 42 :class (textwidget)]
+            ([img :num 43 :id edoc-30001 :w 0 :h 0])
+            ([a :num 44])))
+          ([aside :num 45 :id text-4 :class (widget widget_text)]
+           ([h2 :num 46 :class (widget-title)])
+           ([div :num 47 :class (textwidget)]
+            ([p :num 48]
+             ([img :num 49 :w 0 :h 0]))
+            ([p :num 50]
+             ([a :num 51])
+             ([a :num 52]))
+            ([p :num 53]
+             ([a :num 54])
+             ([a :num 55]))))
+          ([aside :num 56 :id text-6 :class (widget widget_text)]
+           ([div :num 57 :class (textwidget)]
+            ([p :num 58]
+             ([a :num 59]
+              ([img :num 60 :w 0 :h 0])))
+            ([p :num 61]
+             ([a :num 62])
+             ([a :num 63])
+             ([br :num 64])
+             ([a :num 65]
+              ([br :num 66])
+              ([img :num 67 :w 0 :h 0])
+              ([br :num 68])))))
+          ([aside :num 69 :id text-7 :class (widget widget_text)]
+           ([div :num 70 :class (textwidget)]
+            ([p :num 71]
+             ([a :num 72]
+              ([img :num 73 :w 0 :h 0]))
+             ([br :num 74])
+             ([a :num 75])
+             ([a :num 76])
+             ([a :num 77])
+             ([a :num 78]))))
+          ([aside :num 79 :id twitter_timeline-4 :class (widget widget_twitter_timeline)]
+           ([h2 :num 80 :class (widget-title)])
+           ([iframe :num 81 :id twitter-widget-0 :class (twitter-timeline twitter-timeline-rendered) :w 0 :h 0])
+           ([a :num 82 :class (twitter-timeline)])))))) " ") " "
+     ([div :num 83 :id content :class (site-content fadeInFast)]
+      ([div :num 84 :id primary :class (content-area)]
+       ([main :num 85 :id main :class (site-main)]
+        ([article :num 86 :id post-3246 :class (post post-3246 type-post status-publish format-standard hentry category-stack-overflow category-news)]
+         ([header :num 87 :class (entry-header)]
+          ([div :num 88 :class (entry-date)]
+           ([span :num 89 :class (posted-on)]
+            ([a :num 90]
+             ([time :num 91 :class (entry-date published)] "April 6, 2018")
+             ([time :num 92 :class (updated)])))
+           ([span :num 93 :class (byline)] " by ") " "
+           ([span :num 94 :class (author vcard)]
+            ([a :num 95 :class (url fn n)] "Joel Spolsky")))
+          ([h1 :num 96 :class (entry-title)] "The Stack Overflow Age"))
+         ([div :num 97 :class (entry-meta)]
+          ([ul :num 98 :class (meta-list)]
+           ([li :num 99 :class (meta-cat)]
+            ([a :num 100] "Stack Overflow") ", "
+            ([a :num 101] "News"))))
+         ([div :num 102 :class (entry-content)]
+          ([p :num 103] "Hi, everyone! A lot of stuff has happened since I was writing all those blog posts about Aeron chairs 18 years ago. Some of those blog posts are old enough to go to college.")
+          ([p :num 104] "And, also: "
+           ([a :num 105] "Stack Overflow") " will be ten years old soon! Wow! So I thought it would be cool to get the old band back together for a little reunion tour over the next few weeks. I want to catch you all up on some stuff but mostly I want to tell the story of Stack Overflow in a not-completely-disorganized way. With some perspective, it’s clearer now what we did right and what we messed up, so I’ll try to cover the good and the bad over a series of blog posts.")
+          ([p :num 106] "And, also: we’re just a few weeks away from launching Stack Overflow Teams, the biggest upgrade to Stack Overflow ever, so that’s going to be really cool. I’ll get to that in a future blog post!")
+          ([p :num 107] "Today is chapter one. I want to talk a little bit about what it was like for developers before Stack Overflow, the problem that Stack Overflow tried to solve, and early origins.")
+          ([p :num 108]
+           "In the early days of the Internet, before the Web, there was a system called "
+           ([a :num 111] "Usenet") " which created primitive online discussion forums. When programmers had problems with their code, they could ask a question on a Usenet forum. (They were technically called newsgroups, not forums (even though they had nothing to do with news. (You couldn’t even get news on Usenet.)))")
+          ([p :num 112] "As soon as the world wide web became a thing, Usenet was immediately technically obsolete. We programmers started asking about our problems on various web-based forums, of which there were thousands.")
+          ([p :num 113] "One of the biggest such forums was called Experts Exchange. The first version of Experts Exchange was not successful financially. Apparently they went bankrupt in 2001. Eventually new owners bought the assets and resurrected the site with a clever business model: charging money to read answers.")
+          ([p :num 114] "This actually fixed the business, which started making money, but it caused some problems.")
+          ([p :num 115] "The first problem was that programmers with problems would search on Google, not on Experts Exchange. And Google only knows about free, open websites, not websites that you have to pay to access. So EE did a bamboozle: when the Google Robot came by, they showed it the full question and its answers. But when regular people went to the same page, they saw the answers were scrambled, with instructions to pay (I think it was about $250 a year) to see the results. Most programmers couldn’t be bothered.")
+          ([p :num 116] "The second problem was that EE let you get a free membership if you answered a certain number of questions. As it turned out, the people who were most desperate for free memberships were not exactly the best programmers in the world, and they wrote low quality answers to questions just to get those free memberships. And the quality of answers on the site went down.")
+          ([p :num 117] "For a long time (at least five years, I think) programmers would constantly come across EE in the Google search results, try to click on them, discover that it was a pay site, grumble, and just go back to Google and try to find an answer for free.")
+          ([p :num 118] "And I kept thinking, how hard is it to run a discussion forum on the Internet? For fudge sake, I had written one in Visual Basic in a weekend. (Not kidding, actually. Yeah I know that I am always saying “I could do that in a weekend in Visual Basic” when developers tell me some feature is going to take a year. This is why). So I was confident that it was only a matter of time before one of the 9,000,000 smart programmers in the world decided to route around this EE damage and make a free forum.")
+          ([p :num 119] "You know what? Nobody ever did. I kept waiting.")
+          ([p :num 120] "Another thing I wrote in a weekend (well, to be precise: a fortnight (shut up, I’m telling this lie)) was a "
+           ([a :num 121] "job listing board for this blog") ". And in the first month of running that job board I think we sold about $90,000 of job listings. Huzzah! And then I thought, wow, if we smashed these ideas together—replace Experts Exchange with a free site, and pay for it with job listings—we could undo the damage to the internet and let developers get work done again.")
+          ([p :num 122] "I kept thinking “Man, this is so obvious, somebody is going to do it.”")
+          ([p :num 123] "And they never did.")
+          ([p :num 124] "And I went to one of the programmers at Fog Creek, and explained my idea, and he was like “yeah yeah sounds like a great idea, but I really like working on FogBugz.”")
+          ([p :num 125] "And more time went by.")
+          ([p :num 126] "And eventually, early in 2008, a developer/blogger named "
+           ([a :num 127] "Jeff Atwood") " called me up, and said, “Hey Joel, I’m thinking of quitting my day job to be a Pro Blogger; you’re a blogger: what do you think?”")
+          ([p :num 128] "And I said, “Jeff, I’ve got a better idea” and I told him about the idea to combine the job listings with the Q&A site for developers, and, it took more than a weekend, but eventually I convinced him. We started talking about all the ways our Q&A site would be amazing. Jeff started working on the code in April 2008, recruited two other programmers to join him (Geoff and Jarrod, who are still here), and the three of them heroically launched what became Stack Overflow in September 2008.")
+          ([p :num 129] " ")
+          ([p :num 130]
+           ([img :num 131 :class (aligncenter) :w 427 :h 446]))
+          ([p :num 132] " ")
+          ([p :num 133] "And thus began the Stack Overflow Age.")
+          ([p :num 134] "Stack Overflow was better because it was free, but it had a ton of other “innovations” (which I put in quotes because we stole them from other Internet pioneers) which made it a much, much better site for getting answers to programming questions.")
+          ([p :num 135] "We wanted the whole thing to be a fun game, with incentives to answer questions, so we had a reputation system. The more you answer, the more reputation you earn. The reputation idea had been seen before on sites like Slashdot and Reddit.")
+          ([p :num 136] "As you earn reputation, you also earn moderation privileges on the site. So the site actually moderates itself, which is pretty cool.")
+          ([p :num 137] "Instead of putting all the Java programmers in one little forum and all the C++ programmers in another, we dumped everyone together and just let them tag their questions. This idea was stolen from "
+           ([a :num 138] "flickr") " (remember flickr?) who, I think, stole it from del.icio.us (now gone)—who knows, anyway, the point is, tags were the new hotness and made Stack Overflow work great.")
+          ([p :num 139] "Most importantly, we realized that each question is asked by one person but the answers are seen by thousands of people who found it through a search. So we decided to optimize everything to be useful for the thousands, not the individual. We literally have 1000 visitors for every person who asks a question. That’s why we sort the answers by votes. It’s also why we optimize for questions and answers that will be helpful to other people, later.")
+          ([p :num 140] "Interestingly, when Jeff and I started Stack Overflow, we didn’t really care if it was a business and we didn’t need it to be a big profitable success. We created it because the internet sucked for programmers and we needed to make it better. We thought the job listings would pay the bills, and we’d fix the internet, and that was all we cared about and it’s what motivated us to work so hard.")
+          ([p :num 141] "Of course, it turned out a lot bigger than we thought it would. The company today has 250 employees, is profitable, and has made it possible for millions of people to learn how to code and to deal with the new, super-complicated world of APIs and frameworks that we live in. But we just wanted to fix the internet.")
+          ([p :num 142] "I have met a lot of people who started businesses because they wanted to start a business. "
+           ([a :num 143] "Paul Graham calls this “Playing House.”") " And they didn’t really care what the business did; they just wanted to “be entrepreneurs.” Which is weird, because being an entrepreneur really sucks. It’s really hard to get through all the extraordinary difficulty, pain, and stress of starting a company if you’re not super, super motivated to solve a problem for the world.")
+          ([p :num 144] "The entrepreneurs who succeed do so because it is incredibly important to them a thing exist in the world, and it does not exist, so they work like crazy until it does. When we started Stack Overflow we didn’t expect it to be a big business; we just wanted there to be someplace where developers could get help to daily problems, while showing off how smart they were helping other developers.")
+          ([p :num 145] "Ok, that’s chapter one. I’ve got a lot more to talk about. In the next installment, I’ll talk more about "
+           ([a :num 146] "how Stack Overflow’s light dusting of gamification made it really take off."))))
+        ([div :num 147 :id post-footer-widgets :class (widget-area)]
+         ([aside :num 148 :id text-8 :class (widget widget_text)]
+          ([h2 :num 149 :class (widget-title)] "Subscribe!")
+          ([div :num 150 :class (textwidget)]
+           ([p :num 151] "You’re reading "
+            ([a :num 152] "Joel on Software") ", stuffed with years and years of completely raving mad articles about software development, managing software teams, designing user interfaces, running successful software companies, and rubber duckies.")
+           ([p :num 153] "If you want to know when I publish something new, I recommend getting an RSS reader like "
+            ([a :num 154] "NewsBlur") " and subscribing to my "
+            ([a :num 155] "RSS feed") ".")))) " "
+        ([div :num 156 :class (author-info)]
+         ([div :num 157 :class (author-avatar)]
+          ([img :num 158 :class (avatar avatar-64 photo) :w 64 :h 64])) " "
+         ([div :num 159 :class (author-description)]
+          ([h2 :num 160 :class (author-title)]
+           ([span :num 161 :class (author-heading)] "About the author."))
+          ([p :num 162 :class (author-bio)] " I'm Joel Spolsky, co-founder of "
+           ([a :num 163] "Trello") " and "
+           ([a :num 164] "Fog Creek Software") ", and CEO of "
+           ([a :num 165] "Stack Overflow. ")
+           ([a :num 166] "More about me") ". ")))
+        ([nav :num 167 :class (navigation post-navigation)]
+         ([h1 :num 168 :class (screen-reader-text)] "Post navigation")
+         ([div :num 169 :class (nav-links)]
+          ([div :num 170 :class (nav-previous)]
+           ([a :num 171]
+            ([span :num 172 :class (meta-nav)] "← Previous Post") " Birdcage liners"))
+          ([div :num 173 :class (nav-next)]
+           ([a :num 174]
+            ([span :num 175 :class (meta-nav)] "Next Post →") " A Dusting of Gamification")))))) " ") " "
+     ([footer :num 176 :id colophon :class (site-footer)]
+      ([div :num 177 :class (site-info)]
+       ([a :num 178 :class (powered-by)] "Proudly powered by WordPress")) " ")) " "
+    ([div :num 179 :id edoc-30002]
+     ([div :num 180 :class (grofile-hash-map-d95216e70bed7430716b91ddd6df55fe)])) " " " " " " " " " " " " " " " " " " " "
+    ([img :num 181 :id wpstats :w 0 :h 0])
+    ([span :num 182 :class (cleanslate TridactylStatusIndicator)] "normal")
+    ([iframe :num 183 :id cmdline_iframe :class (cleanslate) :w 300 :h 0]) " "
+    ([img :num 184 :id wpstats :w 0 :h 0]))))
+
+(define-layout doc-3 (firefox doc-3)
  ([VIEW :w 1920]
   ([BLOCK :x 0 :y 0 :w 1908 :h (/ 131017 20) :elt 0]
    ([BLOCK :x 0 :y 0 :w 1908 :h (/ 131017 20) :elt 1]
@@ -30904,192 +31092,6 @@
        ([TEXT :x 0 :y (/ 130467 20) :w 61 :h 25 :text "normal"]))
       ([INLINE :x 61 :y (/ 130867 20) :w 300 :h 0 :elt 183])
       ([TEXT :x 361 :y (/ 130467 20) :w 0 :h 25 :text " "])))))))
-
-(define-document doc-3
-  ([html :num 0]
-   ([body :num 1 :class (post-template-default single single-post postid-3246 single-format-standard)]
-    ([div :num 2 :id page :class (hfeed site container)]
-     ([a :num 3 :class (skip-link screen-reader-text)] "Skip to content") " " " "
-     ([header :num 4 :id masthead :class (site-header light)] " " " "
-      ([ul :num 5 :class (toggle-bar)] " "
-       ([li :num 6 :id panel-1 :class (current)]
-        ([a :num 7 :class (current nav-toggle)]
-         ([i :num 8 :class (fa fa-bars)])
-         ([span :num 9 :class (screen-reader-text)] "View menu"))) " " " " " "
-       ([li :num 10 :id panel-3]
-        ([a :num 11 :class (folder-toggle)]
-         ([i :num 12 :class (fa fa-folder)])
-         ([i :num 13 :class (fa fa-folder-open)])
-         ([span :num 14 :class (screen-reader-text)] "View sidebar"))))
-      ([div :num 15 :id tabs :class (toggle-tabs)]
-       ([div :num 16 :class (site-header-inside)]
-        ([div :num 17 :id tab-1 :class (tab-content current fadeIn)]
-         ([div :num 18 :class (site-branding)]
-          ([h1 :num 19 :class (site-title)]
-           ([a :num 20] "Joel on Software"))
-          ([h2 :num 21 :class (site-description)]))
-         ([nav :num 22 :id site-navigation :class (main-navigation)])
-         ([div :num 23 :id front-widgets :class (widget-area)]
-          ([aside :num 24 :id text-3 :class (widget widget_text)]
-           ([h2 :num 25 :class (widget-title)] "Your host")
-           ([div :num 26 :class (textwidget)]
-            ([a :num 27]
-             ([img :num 28 :w 293 :h (/ 8698 15)]))
-            ([p :num 29] "I’m Joel Spolsky, a software developer in New York City. "
-             ([a :num 30] "More about me") "."))))) " " " " " "
-        ([div :num 31 :id tab-3 :class (tab-content animated fadeIn)]
-         ([div :num 32 :id secondary :class (widget-area)]
-          ([aside :num 33 :id search-3 :class (widget widget_search)]
-           ([form :num 34 :id cse-search-box :class (search-form)]
-            ([div :num 35]
-             ([input :num 36 :w 0 :h 0 :type hidden])
-             ([input :num 37 :w 0 :h 0 :type hidden]))
-            ([input :num 38 :class (search-field) :w 0 :h 0 :type search])
-            ([input :num 39 :class (search-submit) :w 0 :h 0 :type submit])
-            ([span :num 40 :class (screen-reader-text)])))
-          ([aside :num 41 :id text-2 :class (widget widget_text)]
-           ([div :num 42 :class (textwidget)]
-            ([img :num 43 :id edoc-30001 :w 0 :h 0])
-            ([a :num 44])))
-          ([aside :num 45 :id text-4 :class (widget widget_text)]
-           ([h2 :num 46 :class (widget-title)])
-           ([div :num 47 :class (textwidget)]
-            ([p :num 48]
-             ([img :num 49 :w 0 :h 0]))
-            ([p :num 50]
-             ([a :num 51])
-             ([a :num 52]))
-            ([p :num 53]
-             ([a :num 54])
-             ([a :num 55]))))
-          ([aside :num 56 :id text-6 :class (widget widget_text)]
-           ([div :num 57 :class (textwidget)]
-            ([p :num 58]
-             ([a :num 59]
-              ([img :num 60 :w 0 :h 0])))
-            ([p :num 61]
-             ([a :num 62])
-             ([a :num 63])
-             ([br :num 64])
-             ([a :num 65]
-              ([br :num 66])
-              ([img :num 67 :w 0 :h 0])
-              ([br :num 68])))))
-          ([aside :num 69 :id text-7 :class (widget widget_text)]
-           ([div :num 70 :class (textwidget)]
-            ([p :num 71]
-             ([a :num 72]
-              ([img :num 73 :w 0 :h 0]))
-             ([br :num 74])
-             ([a :num 75])
-             ([a :num 76])
-             ([a :num 77])
-             ([a :num 78]))))
-          ([aside :num 79 :id twitter_timeline-4 :class (widget widget_twitter_timeline)]
-           ([h2 :num 80 :class (widget-title)])
-           ([iframe :num 81 :id twitter-widget-0 :class (twitter-timeline twitter-timeline-rendered) :w 0 :h 0])
-           ([a :num 82 :class (twitter-timeline)])))))) " ") " "
-     ([div :num 83 :id content :class (site-content fadeInFast)]
-      ([div :num 84 :id primary :class (content-area)]
-       ([main :num 85 :id main :class (site-main)]
-        ([article :num 86 :id post-3246 :class (post post-3246 type-post status-publish format-standard hentry category-stack-overflow category-news)]
-         ([header :num 87 :class (entry-header)]
-          ([div :num 88 :class (entry-date)]
-           ([span :num 89 :class (posted-on)]
-            ([a :num 90]
-             ([time :num 91 :class (entry-date published)] "April 6, 2018")
-             ([time :num 92 :class (updated)])))
-           ([span :num 93 :class (byline)] " by ") " "
-           ([span :num 94 :class (author vcard)]
-            ([a :num 95 :class (url fn n)] "Joel Spolsky")))
-          ([h1 :num 96 :class (entry-title)] "The Stack Overflow Age"))
-         ([div :num 97 :class (entry-meta)]
-          ([ul :num 98 :class (meta-list)]
-           ([li :num 99 :class (meta-cat)]
-            ([a :num 100] "Stack Overflow") ", "
-            ([a :num 101] "News"))))
-         ([div :num 102 :class (entry-content)]
-          ([p :num 103] "Hi, everyone! A lot of stuff has happened since I was writing all those blog posts about Aeron chairs 18 years ago. Some of those blog posts are old enough to go to college.")
-          ([p :num 104] "And, also: "
-           ([a :num 105] "Stack Overflow") " will be ten years old soon! Wow! So I thought it would be cool to get the old band back together for a little reunion tour over the next few weeks. I want to catch you all up on some stuff but mostly I want to tell the story of Stack Overflow in a not-completely-disorganized way. With some perspective, it’s clearer now what we did right and what we messed up, so I’ll try to cover the good and the bad over a series of blog posts.")
-          ([p :num 106] "And, also: we’re just a few weeks away from launching Stack Overflow Teams, the biggest upgrade to Stack Overflow ever, so that’s going to be really cool. I’ll get to that in a future blog post!")
-          ([p :num 107] "Today is chapter one. I want to talk a little bit about what it was like for developers before Stack Overflow, the problem that Stack Overflow tried to solve, and early origins.")
-          ([p :num 108]
-           "In the early days of the Internet, before the Web, there was a system called "
-           ([a :num 111] "Usenet") " which created primitive online discussion forums. When programmers had problems with their code, they could ask a question on a Usenet forum. (They were technically called newsgroups, not forums (even though they had nothing to do with news. (You couldn’t even get news on Usenet.)))")
-          ([p :num 112] "As soon as the world wide web became a thing, Usenet was immediately technically obsolete. We programmers started asking about our problems on various web-based forums, of which there were thousands.")
-          ([p :num 113] "One of the biggest such forums was called Experts Exchange. The first version of Experts Exchange was not successful financially. Apparently they went bankrupt in 2001. Eventually new owners bought the assets and resurrected the site with a clever business model: charging money to read answers.")
-          ([p :num 114] "This actually fixed the business, which started making money, but it caused some problems.")
-          ([p :num 115] "The first problem was that programmers with problems would search on Google, not on Experts Exchange. And Google only knows about free, open websites, not websites that you have to pay to access. So EE did a bamboozle: when the Google Robot came by, they showed it the full question and its answers. But when regular people went to the same page, they saw the answers were scrambled, with instructions to pay (I think it was about $250 a year) to see the results. Most programmers couldn’t be bothered.")
-          ([p :num 116] "The second problem was that EE let you get a free membership if you answered a certain number of questions. As it turned out, the people who were most desperate for free memberships were not exactly the best programmers in the world, and they wrote low quality answers to questions just to get those free memberships. And the quality of answers on the site went down.")
-          ([p :num 117] "For a long time (at least five years, I think) programmers would constantly come across EE in the Google search results, try to click on them, discover that it was a pay site, grumble, and just go back to Google and try to find an answer for free.")
-          ([p :num 118] "And I kept thinking, how hard is it to run a discussion forum on the Internet? For fudge sake, I had written one in Visual Basic in a weekend. (Not kidding, actually. Yeah I know that I am always saying “I could do that in a weekend in Visual Basic” when developers tell me some feature is going to take a year. This is why). So I was confident that it was only a matter of time before one of the 9,000,000 smart programmers in the world decided to route around this EE damage and make a free forum.")
-          ([p :num 119] "You know what? Nobody ever did. I kept waiting.")
-          ([p :num 120] "Another thing I wrote in a weekend (well, to be precise: a fortnight (shut up, I’m telling this lie)) was a "
-           ([a :num 121] "job listing board for this blog") ". And in the first month of running that job board I think we sold about $90,000 of job listings. Huzzah! And then I thought, wow, if we smashed these ideas together—replace Experts Exchange with a free site, and pay for it with job listings—we could undo the damage to the internet and let developers get work done again.")
-          ([p :num 122] "I kept thinking “Man, this is so obvious, somebody is going to do it.”")
-          ([p :num 123] "And they never did.")
-          ([p :num 124] "And I went to one of the programmers at Fog Creek, and explained my idea, and he was like “yeah yeah sounds like a great idea, but I really like working on FogBugz.”")
-          ([p :num 125] "And more time went by.")
-          ([p :num 126] "And eventually, early in 2008, a developer/blogger named "
-           ([a :num 127] "Jeff Atwood") " called me up, and said, “Hey Joel, I’m thinking of quitting my day job to be a Pro Blogger; you’re a blogger: what do you think?”")
-          ([p :num 128] "And I said, “Jeff, I’ve got a better idea” and I told him about the idea to combine the job listings with the Q&A site for developers, and, it took more than a weekend, but eventually I convinced him. We started talking about all the ways our Q&A site would be amazing. Jeff started working on the code in April 2008, recruited two other programmers to join him (Geoff and Jarrod, who are still here), and the three of them heroically launched what became Stack Overflow in September 2008.")
-          ([p :num 129] " ")
-          ([p :num 130]
-           ([img :num 131 :class (aligncenter) :w 427 :h 446]))
-          ([p :num 132] " ")
-          ([p :num 133] "And thus began the Stack Overflow Age.")
-          ([p :num 134] "Stack Overflow was better because it was free, but it had a ton of other “innovations” (which I put in quotes because we stole them from other Internet pioneers) which made it a much, much better site for getting answers to programming questions.")
-          ([p :num 135] "We wanted the whole thing to be a fun game, with incentives to answer questions, so we had a reputation system. The more you answer, the more reputation you earn. The reputation idea had been seen before on sites like Slashdot and Reddit.")
-          ([p :num 136] "As you earn reputation, you also earn moderation privileges on the site. So the site actually moderates itself, which is pretty cool.")
-          ([p :num 137] "Instead of putting all the Java programmers in one little forum and all the C++ programmers in another, we dumped everyone together and just let them tag their questions. This idea was stolen from "
-           ([a :num 138] "flickr") " (remember flickr?) who, I think, stole it from del.icio.us (now gone)—who knows, anyway, the point is, tags were the new hotness and made Stack Overflow work great.")
-          ([p :num 139] "Most importantly, we realized that each question is asked by one person but the answers are seen by thousands of people who found it through a search. So we decided to optimize everything to be useful for the thousands, not the individual. We literally have 1000 visitors for every person who asks a question. That’s why we sort the answers by votes. It’s also why we optimize for questions and answers that will be helpful to other people, later.")
-          ([p :num 140] "Interestingly, when Jeff and I started Stack Overflow, we didn’t really care if it was a business and we didn’t need it to be a big profitable success. We created it because the internet sucked for programmers and we needed to make it better. We thought the job listings would pay the bills, and we’d fix the internet, and that was all we cared about and it’s what motivated us to work so hard.")
-          ([p :num 141] "Of course, it turned out a lot bigger than we thought it would. The company today has 250 employees, is profitable, and has made it possible for millions of people to learn how to code and to deal with the new, super-complicated world of APIs and frameworks that we live in. But we just wanted to fix the internet.")
-          ([p :num 142] "I have met a lot of people who started businesses because they wanted to start a business. "
-           ([a :num 143] "Paul Graham calls this “Playing House.”") " And they didn’t really care what the business did; they just wanted to “be entrepreneurs.” Which is weird, because being an entrepreneur really sucks. It’s really hard to get through all the extraordinary difficulty, pain, and stress of starting a company if you’re not super, super motivated to solve a problem for the world.")
-          ([p :num 144] "The entrepreneurs who succeed do so because it is incredibly important to them a thing exist in the world, and it does not exist, so they work like crazy until it does. When we started Stack Overflow we didn’t expect it to be a big business; we just wanted there to be someplace where developers could get help to daily problems, while showing off how smart they were helping other developers.")
-          ([p :num 145] "Ok, that’s chapter one. I’ve got a lot more to talk about. In the next installment, I’ll talk more about "
-           ([a :num 146] "how Stack Overflow’s light dusting of gamification made it really take off."))))
-        ([div :num 147 :id post-footer-widgets :class (widget-area)]
-         ([aside :num 148 :id text-8 :class (widget widget_text)]
-          ([h2 :num 149 :class (widget-title)] "Subscribe!")
-          ([div :num 150 :class (textwidget)]
-           ([p :num 151] "You’re reading "
-            ([a :num 152] "Joel on Software") ", stuffed with years and years of completely raving mad articles about software development, managing software teams, designing user interfaces, running successful software companies, and rubber duckies.")
-           ([p :num 153] "If you want to know when I publish something new, I recommend getting an RSS reader like "
-            ([a :num 154] "NewsBlur") " and subscribing to my "
-            ([a :num 155] "RSS feed") ".")))) " "
-        ([div :num 156 :class (author-info)]
-         ([div :num 157 :class (author-avatar)]
-          ([img :num 158 :class (avatar avatar-64 photo) :w 64 :h 64])) " "
-         ([div :num 159 :class (author-description)]
-          ([h2 :num 160 :class (author-title)]
-           ([span :num 161 :class (author-heading)] "About the author."))
-          ([p :num 162 :class (author-bio)] " I'm Joel Spolsky, co-founder of "
-           ([a :num 163] "Trello") " and "
-           ([a :num 164] "Fog Creek Software") ", and CEO of "
-           ([a :num 165] "Stack Overflow. ")
-           ([a :num 166] "More about me") ". ")))
-        ([nav :num 167 :class (navigation post-navigation)]
-         ([h1 :num 168 :class (screen-reader-text)] "Post navigation")
-         ([div :num 169 :class (nav-links)]
-          ([div :num 170 :class (nav-previous)]
-           ([a :num 171]
-            ([span :num 172 :class (meta-nav)] "← Previous Post") " Birdcage liners"))
-          ([div :num 173 :class (nav-next)]
-           ([a :num 174]
-            ([span :num 175 :class (meta-nav)] "Next Post →") " A Dusting of Gamification")))))) " ") " "
-     ([footer :num 176 :id colophon :class (site-footer)]
-      ([div :num 177 :class (site-info)]
-       ([a :num 178 :class (powered-by)] "Proudly powered by WordPress")) " ")) " "
-    ([div :num 179 :id edoc-30002]
-     ([div :num 180 :class (grofile-hash-map-d95216e70bed7430716b91ddd6df55fe)])) " " " " " " " " " " " " " " " " " " " "
-    ([img :num 181 :id wpstats :w 0 :h 0])
-    ([span :num 182 :class (cleanslate TridactylStatusIndicator)] "normal")
-    ([iframe :num 183 :id cmdline_iframe :class (cleanslate) :w 300 :h 0]) " "
-    ([img :num 184 :id wpstats :w 0 :h 0]))))
 
 (define-problem doc-3
   :title "The Stack Overflow Age – Joel on Software"

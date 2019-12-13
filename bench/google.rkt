@@ -2169,188 +2169,7 @@
   [13.3333 "arial, sans-serif" 400 normal 10 3 1 1 15]
   [13 "arial, sans-serif" 400 italic 10 3 1 1 15])
 
-(define-layout (doc-1 :matched true :w 1920 :h 980 :fs 16 :scrollw 12)
- ([VIEW :w 1920]
-  ([BLOCK :x 0 :y 0 :w 1920 :h 980 :elt 0]
-   ([BLOCK :x 0 :y 0 :w 1920 :h 980 :elt 29]
-    ([BLOCK :x 0 :y 0 :w 1920 :h 980 :elt 30]
-     ([BLOCK :x 0 :y 0 :w 1920 :h 0 :elt 31])
-     ([BLOCK :x 0 :y 0 :w 1920 :h 0 :elt 32])
-     ([BLOCK :x 0 :y 311 :w 1920 :h 129 :elt 36]
-      ([BLOCK :x 0 :y 16 :w 1920 :h 30 :elt 39]
-       ([BLOCK :x 10 :y 23 :w 99 :h 15 :elt 40]
-        ([LINE]
-         ([INLINE :x 10 :y 23 :w 49 :h 15 :elt 41]
-          ([LINE]
-           ([TEXT :x 25 :y 23 :w 34 :h 15 :text "About"])))
-         ([TEXT :x 59 :y 23 :w 4 :h 15 :text " "])
-         ([INLINE :x 63 :y 23 :w 46 :h 15 :elt 42]
-          ([LINE]
-           ([TEXT :x 78 :y 23 :w 31 :h 15 :text "Store"])))))
-       ([BLOCK :x 0 :y 16 :w 1920 :h 0 :elt 43]
-        ([BLOCK :x 0 :y 16 :w 1920 :h 0 :elt 44]
-         ([MAGIC :x 1628 :y 16 :w 292 :h 30 :elt 45]
-          ([MAGIC :x 1658 :y 19 :w 112 :h 24 :elt 46]
-           ([MAGIC :x 1658 :y 19 :w 0 :h 24 :elt 47])
-           ([BLOCK :x 1658 :y 19 :w 39 :h 24 :elt 49]
-            ([LINE]
-             ([INLINE :x 1673 :y 19 :w 24 :h 24 :elt 50]
-              ([LINE]
-               ([TEXT :x 1673 :y 23.5 :w 24 :h 15 :text "Mail"])))))
-           ([BLOCK :x 1697 :y 19 :w 58 :h 24 :elt 51]
-            ([LINE]
-             ([INLINE :x 1712 :y 19 :w 43 :h 24 :elt 52]
-              ([LINE]
-               ([TEXT :x 1712 :y 23.5 :w 43 :h 15 :text "Images"]))))))
-          ([MAGIC :x 1770 :y 16 :w 120 :h 30 :elt 53]
-           ([BLOCK :x 1770 :y 16 :w 30 :h 30 :elt 56]
-            ([BLOCK :x 1770 :y 16 :w 30 :h 30 :elt 57]
-             ([LINE]
-              ([INLINE :x 1770 :y 16 :w 30 :h 30 :elt 58]))))
-           ([BLOCK :x 1800 :y 16 :w 45 :h 30 :elt 272]
-            ([BLOCK :x 1815 :y 16 :w 30 :h 30 :elt 273]
-             ([LINE]
-              ([INLINE :x 1815 :y 16 :w 30 :h 30 :elt 274]
-               ([BLOCK :x 1820 :y 21 :w 20 :h 20 :elt 275])))))
-           ([MAGIC :x 1845 :y 16 :w 45 :h 30 :elt 279]
-            ([MAGIC :x 1860 :y 16 :w 30 :h 30 :elt 280]
-             ([BLOCK :x 1860 :y 16 :w 30 :h 30 :elt 281]
-              ([BLOCK :x 1859 :y 15 :w 32 :h 32 :elt 282]))
-             ([BLOCK :x 1866.5 :y 52 :w 16 :h 8 :elt 283])
-             ([BLOCK :x 1866.5 :y 53 :w 16 :h 8 :elt 284]))
-            ([BLOCK :x 1571 :y 60 :w 319 :h 302 :elt 285]
-             ([BLOCK :x 1572 :y 61 :w 317 :h 44 :elt 286]
-              ([BLOCK :x 1592 :y 71 :w 277 :h 12 :elt 287]
-               ([LINE]
-                ([TEXT :x 1592 :y 71 :w 140 :h 12 :text "This account is managed by "])
-                ([INLINE :elt 288]
-                 ([TEXT :x 1732 :y 71 :w 103 :h 12 :text "pavpanchekha.com"]))
-                ([TEXT :x 1835 :y 71 :w 3 :h 12 :text "."])))
-              ([ANON]
-               ([LINE]
-                ([INLINE :elt 289]
-                 ([TEXT :x 1592 :y 83 :w 56 :h 12 :text "Learn more"])))))
-             ([BLOCK :x 1592 :y 125 :w 277 :h 96 :elt 290]
-              ([LINE]
-               ([INLINE :x 1592 :y 125 :w 96 :h 96 :elt 291]
-                ([BLOCK :x 1592 :y 125 :w 96 :h 96 :elt 292])
-                ([BLOCK :x 1592 :y 198 :w 96 :h 23 :elt 293]
-                 ([LINE]
-                  ([TEXT :x 1622.5 :y 204.5 :w 35 :h 10 :text "Change"]))))
-               ([INLINE :x 1708 :y 125 :w 161 :h 94 :elt 294]
-                ([BLOCK :x 1708 :y 121 :w 161 :h 15 :elt 295]
-                 ([LINE]
-                  ([TEXT :x 1708 :y 121 :w 106 :h 15 :text "Pavel Panchekha"])))
-                ([BLOCK :x 1708 :y 137 :w 161 :h 15 :elt 296]
-                 ([LINE]
-                  ([TEXT :x 1708 :y 137 :w 144 :h 15 :text "me@pavpanchekha.com"])))
-                ([BLOCK :x 1708 :y 158 :w 161 :h 15 :elt 297]
-                 ([LINE]
-                  ([INLINE :elt 298]
-                   ([TEXT :x 1708 :y 158 :w 90 :h 15 :text "Google+ Profile"]))
-                  ([INLINE :elt 299]
-                   ([TEXT :x 1808 :y 158 :w 7 :h 15 :text "–"]))
-                  ([INLINE :elt 300]
-                   ([TEXT :x 1825 :y 158 :w 44 :h 15 :text "Privacy"]))))
-                ([ANON]
-                 ([LINE]
-                  ([INLINE :x 1708 :y 189 :w 126 :h 30 :elt 301]
-                   ([LINE]
-                    ([TEXT :x 1721 :y 196.5 :w 100 :h 15 :text "Google Account"]))))))))
-             ([BLOCK :x 1572 :y 241 :w 317 :h 69 :elt 302]
-              ([BLOCK :x 1572 :y 241 :w 317 :h 69 :elt 303]
-               ([BLOCK :x 1572 :y 242 :w 317 :h 68 :elt 309]
-                ([LINE]
-                 ([INLINE :x 1592 :y 252 :w 48 :h 48 :elt 310])
-                 ([INLINE :x 1650 :y 258 :w 163 :h 30 :elt 311]
-                  ([BLOCK :x 1650 :y 258 :w 163 :h 15 :elt 312]
-                   ([LINE]
-                    ([TEXT :x 1650 :y 258 :w 102 :h 15 :text "Pavel Panchekha"])))
-                  ([BLOCK :x 1650 :y 273 :w 163 :h 15 :elt 313]
-                   ([LINE]
-                    ([TEXT :x 1650 :y 273 :w 163 :h 15 :text "pavpan@cs.washington.edu"]))))))))
-             ([MAGIC :x 1572 :y 310 :w 317 :h 51 :elt 319]
-              ([MAGIC :x 1572 :y 321 :w (/ 1045 6) :h 30 :elt 320]
-               ([INLINE :x 1592 :y 321 :w 99 :h 30 :elt 321]
-                ([LINE]
-                 ([TEXT :x 1605 :y 328.5 :w 73 :h 15 :text "Add account"]))))
-              ([MAGIC :x (/ 10477 6) :y 321 :w (/ 857 6) :h 30 :elt 322]
-               ([INLINE :x 1795 :y 321 :w 74 :h 30 :elt 323]
-                ([LINE]
-                 ([TEXT :x 1808 :y 328.5 :w 48 :h 15 :text "Sign out"]))))))))))))
-      ([BLOCK :x 0 :y 291 :w 1920 :h 64 :elt 324]
-       ([BLOCK :x 0 :y 291 :w 1920 :h 64 :elt 325]))
-      ([BLOCK :x 390.5 :y 310 :w 1139 :h 130 :elt 326]
-       ([BLOCK :x 390.5 :y 310 :w 1139 :h 0 :elt 327])
-       ([BLOCK :x 390.5 :y 310 :w 1139 :h 130 :elt 331]
-        ([BLOCK :x 674.5 :y 315 :w 632 :h 49 :elt 336]
-         ([BLOCK :x 674.5 :y 317 :w 632 :h 44 :elt 337]
-          ([BLOCK :x 674.5 :y 317 :w 632 :h 44 :elt 338]
-           ([BLOCK :x 674.5 :y 317 :w 584 :h 44 :elt 341]
-            ([BLOCK :x 674.5 :y 317 :w 584 :h 44 :elt 346]
-             ([BLOCK :x 674.5 :y 317 :w 584 :h 44 :elt 347]
-              ([BLOCK :x 674.5 :y 317 :w 584 :h 44 :elt 349]
-               ([BLOCK :x 690.5 :y 322 :w 559 :h 0 :elt 350]
-                ([BLOCK :x 690.5 :y 322 :w 559 :h 34 :elt 351])
-                ([BLOCK :x 690.5 :y 322 :w 0 :h 34 :elt 352])
-                ([BLOCK :x 690.5 :y 322 :w 559 :h 34 :elt 353])
-                ([BLOCK :x 690.5 :y 322 :w 559 :h 34 :elt 354]))))))))
-         ([BLOCK :x 674.5 :y 362 :w 632 :h 0 :elt 360]))
-        ([BLOCK :x 674.5 :y 364 :w 571 :h 76 :elt 369]
-         ([BLOCK :x 674.5 :y 382 :w 571 :h 58 :elt 370]
-          ([LINE]
-           ([INLINE :x 821 :y 393 :w 126 :h 36 :elt 371])
-           ([INLINE :x 955 :y 393 :w 144 :h 36 :elt 372])))))))
-     ([BLOCK :x 0 :y 0 :w 1920 :h 0 :elt 407])
-     ([BLOCK :x 0 :y 89 :w 1920 :h 398 :elt 408]
-      ([BLOCK :x 0 :y 89 :w 1920 :h 351 :elt 409]
-       ([BLOCK :x 0 :y 89 :w 1920 :h 351 :elt 410]
-        ([BLOCK :x 0 :y 89 :w 1920 :h 233 :elt 411]
-         ([LINE]
-          ([INLINE :x 939.5 :y -20 :w 41 :h 124 :elt 412])))
-        ([BLOCK :x 0 :y 322 :w 1920 :h 118 :elt 413])
-        ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 414]
-         ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 416]))))
-      ([BLOCK :x 0 :y 945 :w 1920 :h 35 :elt 417]
-       ([BLOCK :x 0 :y 945 :w 1920 :h 0 :elt 418]
-        ([BLOCK :x 0 :y 945 :w 1920 :h 0 :elt 419]
-         ([BLOCK :x 0 :y 939 :w 1920 :h 41 :elt 422]
-          ([BLOCK :x -27 :y 940 :w 1947 :h 40 :elt 423]
-           ([BLOCK :x -27 :y 940 :w 1947 :h 0 :elt 424]
-            ([BLOCK :x 3 :y 940 :w 1917 :h 0 :elt 426]))
-           ([BLOCK :x 1681 :y 940 :w 209 :h 40 :elt 427]
-            ([LINE]
-             ([INLINE :x 1681 :y 940 :w 71 :h 40 :elt 428]
-              ([LINE]
-               ([TEXT :x 1708 :y 952.5 :w 44 :h 15 :text "Privacy"])))
-             ([INLINE :x 1752 :y 940 :w 63 :h 40 :elt 429]
-              ([LINE]
-               ([TEXT :x 1779 :y 952.5 :w 36 :h 15 :text "Terms"])))
-             ([INLINE :x 1815 :y 940 :w 75 :h 40 :elt 430]
-              ([LINE]
-               ([INLINE :x 1815 :y 940 :w 75 :h 40 :elt 431]
-                ([LINE]
-                 ([TEXT :x 1842 :y 952.5 :w 48 :h 15 :text "Settings"])))))))
-           ([ANON]
-            ([LINE]
-             ([INLINE :elt 439]
-              ([INLINE :x 3 :y 940 :w 92 :h 40 :elt 440]
-               ([LINE]
-                ([TEXT :x 30 :y 952.5 :w 65 :h 15 :text "Advertising"])))
-              ([INLINE :x 95 :y 940 :w 81 :h 40 :elt 441]
-               ([LINE]
-                ([TEXT :x 122 :y 952.5 :w 54 :h 15 :text "Business"])))))))))))
-      ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 442]
-       ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 443]
-        ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 444])
-        ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 447])))
-      ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 449]))
-     ([BLOCK :x 0 :y 487 :w 1920 :h 0 :elt 456]))
-    ([ANON]
-     ([LINE]
-      ([INLINE :elt 457]
-       ([TEXT :x 0 :y 0 :w 32 :h 15 :text "insert" :features exclusion-zone]))
-      ([INLINE :x 32 :y 8 :w 304 :h 4 :elt 459])))))))
+(define-browser doc-1 :matched true :w 1920 :h 980 :fs 16 :scrollw 12)
 
 (define-document doc-1
   ([html :num 0]
@@ -2814,12 +2633,194 @@
     ([script :num 458])
     ([iframe :num 459 :id cmdline_iframe :class (cleanslate) :w 304 :h 4]))))
 
+(define-layout doc-1 (doc-1 doc-1)
+ ([VIEW :w 1920]
+  ([BLOCK :x 0 :y 0 :w 1920 :h 980 :elt 0]
+   ([BLOCK :x 0 :y 0 :w 1920 :h 980 :elt 29]
+    ([BLOCK :x 0 :y 0 :w 1920 :h 980 :elt 30]
+     ([BLOCK :x 0 :y 0 :w 1920 :h 0 :elt 31])
+     ([BLOCK :x 0 :y 0 :w 1920 :h 0 :elt 32])
+     ([BLOCK :x 0 :y 311 :w 1920 :h 129 :elt 36]
+      ([BLOCK :x 0 :y 16 :w 1920 :h 30 :elt 39]
+       ([BLOCK :x 10 :y 23 :w 99 :h 15 :elt 40]
+        ([LINE]
+         ([INLINE :x 10 :y 23 :w 49 :h 15 :elt 41]
+          ([LINE]
+           ([TEXT :x 25 :y 23 :w 34 :h 15 :text "About"])))
+         ([TEXT :x 59 :y 23 :w 4 :h 15 :text " "])
+         ([INLINE :x 63 :y 23 :w 46 :h 15 :elt 42]
+          ([LINE]
+           ([TEXT :x 78 :y 23 :w 31 :h 15 :text "Store"])))))
+       ([BLOCK :x 0 :y 16 :w 1920 :h 0 :elt 43]
+        ([BLOCK :x 0 :y 16 :w 1920 :h 0 :elt 44]
+         ([MAGIC :x 1628 :y 16 :w 292 :h 30 :elt 45]
+          ([MAGIC :x 1658 :y 19 :w 112 :h 24 :elt 46]
+           ([MAGIC :x 1658 :y 19 :w 0 :h 24 :elt 47])
+           ([BLOCK :x 1658 :y 19 :w 39 :h 24 :elt 49]
+            ([LINE]
+             ([INLINE :x 1673 :y 19 :w 24 :h 24 :elt 50]
+              ([LINE]
+               ([TEXT :x 1673 :y 23.5 :w 24 :h 15 :text "Mail"])))))
+           ([BLOCK :x 1697 :y 19 :w 58 :h 24 :elt 51]
+            ([LINE]
+             ([INLINE :x 1712 :y 19 :w 43 :h 24 :elt 52]
+              ([LINE]
+               ([TEXT :x 1712 :y 23.5 :w 43 :h 15 :text "Images"]))))))
+          ([MAGIC :x 1770 :y 16 :w 120 :h 30 :elt 53]
+           ([BLOCK :x 1770 :y 16 :w 30 :h 30 :elt 56]
+            ([BLOCK :x 1770 :y 16 :w 30 :h 30 :elt 57]
+             ([LINE]
+              ([INLINE :x 1770 :y 16 :w 30 :h 30 :elt 58]))))
+           ([BLOCK :x 1800 :y 16 :w 45 :h 30 :elt 272]
+            ([BLOCK :x 1815 :y 16 :w 30 :h 30 :elt 273]
+             ([LINE]
+              ([INLINE :x 1815 :y 16 :w 30 :h 30 :elt 274]
+               ([BLOCK :x 1820 :y 21 :w 20 :h 20 :elt 275])))))
+           ([MAGIC :x 1845 :y 16 :w 45 :h 30 :elt 279]
+            ([MAGIC :x 1860 :y 16 :w 30 :h 30 :elt 280]
+             ([BLOCK :x 1860 :y 16 :w 30 :h 30 :elt 281]
+              ([BLOCK :x 1859 :y 15 :w 32 :h 32 :elt 282]))
+             ([BLOCK :x 1866.5 :y 52 :w 16 :h 8 :elt 283])
+             ([BLOCK :x 1866.5 :y 53 :w 16 :h 8 :elt 284]))
+            ([BLOCK :x 1571 :y 60 :w 319 :h 302 :elt 285]
+             ([BLOCK :x 1572 :y 61 :w 317 :h 44 :elt 286]
+              ([BLOCK :x 1592 :y 71 :w 277 :h 12 :elt 287]
+               ([LINE]
+                ([TEXT :x 1592 :y 71 :w 140 :h 12 :text "This account is managed by "])
+                ([INLINE :elt 288]
+                 ([TEXT :x 1732 :y 71 :w 103 :h 12 :text "pavpanchekha.com"]))
+                ([TEXT :x 1835 :y 71 :w 3 :h 12 :text "."])))
+              ([ANON]
+               ([LINE]
+                ([INLINE :elt 289]
+                 ([TEXT :x 1592 :y 83 :w 56 :h 12 :text "Learn more"])))))
+             ([BLOCK :x 1592 :y 125 :w 277 :h 96 :elt 290]
+              ([LINE]
+               ([INLINE :x 1592 :y 125 :w 96 :h 96 :elt 291]
+                ([BLOCK :x 1592 :y 125 :w 96 :h 96 :elt 292])
+                ([BLOCK :x 1592 :y 198 :w 96 :h 23 :elt 293]
+                 ([LINE]
+                  ([TEXT :x 1622.5 :y 204.5 :w 35 :h 10 :text "Change"]))))
+               ([INLINE :x 1708 :y 125 :w 161 :h 94 :elt 294]
+                ([BLOCK :x 1708 :y 121 :w 161 :h 15 :elt 295]
+                 ([LINE]
+                  ([TEXT :x 1708 :y 121 :w 106 :h 15 :text "Pavel Panchekha"])))
+                ([BLOCK :x 1708 :y 137 :w 161 :h 15 :elt 296]
+                 ([LINE]
+                  ([TEXT :x 1708 :y 137 :w 144 :h 15 :text "me@pavpanchekha.com"])))
+                ([BLOCK :x 1708 :y 158 :w 161 :h 15 :elt 297]
+                 ([LINE]
+                  ([INLINE :elt 298]
+                   ([TEXT :x 1708 :y 158 :w 90 :h 15 :text "Google+ Profile"]))
+                  ([INLINE :elt 299]
+                   ([TEXT :x 1808 :y 158 :w 7 :h 15 :text "–"]))
+                  ([INLINE :elt 300]
+                   ([TEXT :x 1825 :y 158 :w 44 :h 15 :text "Privacy"]))))
+                ([ANON]
+                 ([LINE]
+                  ([INLINE :x 1708 :y 189 :w 126 :h 30 :elt 301]
+                   ([LINE]
+                    ([TEXT :x 1721 :y 196.5 :w 100 :h 15 :text "Google Account"]))))))))
+             ([BLOCK :x 1572 :y 241 :w 317 :h 69 :elt 302]
+              ([BLOCK :x 1572 :y 241 :w 317 :h 69 :elt 303]
+               ([BLOCK :x 1572 :y 242 :w 317 :h 68 :elt 309]
+                ([LINE]
+                 ([INLINE :x 1592 :y 252 :w 48 :h 48 :elt 310])
+                 ([INLINE :x 1650 :y 258 :w 163 :h 30 :elt 311]
+                  ([BLOCK :x 1650 :y 258 :w 163 :h 15 :elt 312]
+                   ([LINE]
+                    ([TEXT :x 1650 :y 258 :w 102 :h 15 :text "Pavel Panchekha"])))
+                  ([BLOCK :x 1650 :y 273 :w 163 :h 15 :elt 313]
+                   ([LINE]
+                    ([TEXT :x 1650 :y 273 :w 163 :h 15 :text "pavpan@cs.washington.edu"]))))))))
+             ([MAGIC :x 1572 :y 310 :w 317 :h 51 :elt 319]
+              ([MAGIC :x 1572 :y 321 :w (/ 1045 6) :h 30 :elt 320]
+               ([INLINE :x 1592 :y 321 :w 99 :h 30 :elt 321]
+                ([LINE]
+                 ([TEXT :x 1605 :y 328.5 :w 73 :h 15 :text "Add account"]))))
+              ([MAGIC :x (/ 10477 6) :y 321 :w (/ 857 6) :h 30 :elt 322]
+               ([INLINE :x 1795 :y 321 :w 74 :h 30 :elt 323]
+                ([LINE]
+                 ([TEXT :x 1808 :y 328.5 :w 48 :h 15 :text "Sign out"]))))))))))))
+      ([BLOCK :x 0 :y 291 :w 1920 :h 64 :elt 324]
+       ([BLOCK :x 0 :y 291 :w 1920 :h 64 :elt 325]))
+      ([BLOCK :x 390.5 :y 310 :w 1139 :h 130 :elt 326]
+       ([BLOCK :x 390.5 :y 310 :w 1139 :h 0 :elt 327])
+       ([BLOCK :x 390.5 :y 310 :w 1139 :h 130 :elt 331]
+        ([BLOCK :x 674.5 :y 315 :w 632 :h 49 :elt 336]
+         ([BLOCK :x 674.5 :y 317 :w 632 :h 44 :elt 337]
+          ([BLOCK :x 674.5 :y 317 :w 632 :h 44 :elt 338]
+           ([BLOCK :x 674.5 :y 317 :w 584 :h 44 :elt 341]
+            ([BLOCK :x 674.5 :y 317 :w 584 :h 44 :elt 346]
+             ([BLOCK :x 674.5 :y 317 :w 584 :h 44 :elt 347]
+              ([BLOCK :x 674.5 :y 317 :w 584 :h 44 :elt 349]
+               ([BLOCK :x 690.5 :y 322 :w 559 :h 0 :elt 350]
+                ([BLOCK :x 690.5 :y 322 :w 559 :h 34 :elt 351])
+                ([BLOCK :x 690.5 :y 322 :w 0 :h 34 :elt 352])
+                ([BLOCK :x 690.5 :y 322 :w 559 :h 34 :elt 353])
+                ([BLOCK :x 690.5 :y 322 :w 559 :h 34 :elt 354]))))))))
+         ([BLOCK :x 674.5 :y 362 :w 632 :h 0 :elt 360]))
+        ([BLOCK :x 674.5 :y 364 :w 571 :h 76 :elt 369]
+         ([BLOCK :x 674.5 :y 382 :w 571 :h 58 :elt 370]
+          ([LINE]
+           ([INLINE :x 821 :y 393 :w 126 :h 36 :elt 371])
+           ([INLINE :x 955 :y 393 :w 144 :h 36 :elt 372])))))))
+     ([BLOCK :x 0 :y 0 :w 1920 :h 0 :elt 407])
+     ([BLOCK :x 0 :y 89 :w 1920 :h 398 :elt 408]
+      ([BLOCK :x 0 :y 89 :w 1920 :h 351 :elt 409]
+       ([BLOCK :x 0 :y 89 :w 1920 :h 351 :elt 410]
+        ([BLOCK :x 0 :y 89 :w 1920 :h 233 :elt 411]
+         ([LINE]
+          ([INLINE :x 939.5 :y -20 :w 41 :h 124 :elt 412])))
+        ([BLOCK :x 0 :y 322 :w 1920 :h 118 :elt 413])
+        ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 414]
+         ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 416]))))
+      ([BLOCK :x 0 :y 945 :w 1920 :h 35 :elt 417]
+       ([BLOCK :x 0 :y 945 :w 1920 :h 0 :elt 418]
+        ([BLOCK :x 0 :y 945 :w 1920 :h 0 :elt 419]
+         ([BLOCK :x 0 :y 939 :w 1920 :h 41 :elt 422]
+          ([BLOCK :x -27 :y 940 :w 1947 :h 40 :elt 423]
+           ([BLOCK :x -27 :y 940 :w 1947 :h 0 :elt 424]
+            ([BLOCK :x 3 :y 940 :w 1917 :h 0 :elt 426]))
+           ([BLOCK :x 1681 :y 940 :w 209 :h 40 :elt 427]
+            ([LINE]
+             ([INLINE :x 1681 :y 940 :w 71 :h 40 :elt 428]
+              ([LINE]
+               ([TEXT :x 1708 :y 952.5 :w 44 :h 15 :text "Privacy"])))
+             ([INLINE :x 1752 :y 940 :w 63 :h 40 :elt 429]
+              ([LINE]
+               ([TEXT :x 1779 :y 952.5 :w 36 :h 15 :text "Terms"])))
+             ([INLINE :x 1815 :y 940 :w 75 :h 40 :elt 430]
+              ([LINE]
+               ([INLINE :x 1815 :y 940 :w 75 :h 40 :elt 431]
+                ([LINE]
+                 ([TEXT :x 1842 :y 952.5 :w 48 :h 15 :text "Settings"])))))))
+           ([ANON]
+            ([LINE]
+             ([INLINE :elt 439]
+              ([INLINE :x 3 :y 940 :w 92 :h 40 :elt 440]
+               ([LINE]
+                ([TEXT :x 30 :y 952.5 :w 65 :h 15 :text "Advertising"])))
+              ([INLINE :x 95 :y 940 :w 81 :h 40 :elt 441]
+               ([LINE]
+                ([TEXT :x 122 :y 952.5 :w 54 :h 15 :text "Business"])))))))))))
+      ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 442]
+       ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 443]
+        ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 444])
+        ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 447])))
+      ([BLOCK :x 0 :y 452 :w 1920 :h 0 :elt 449]))
+     ([BLOCK :x 0 :y 487 :w 1920 :h 0 :elt 456]))
+    ([ANON]
+     ([LINE]
+      ([INLINE :elt 457]
+       ([TEXT :x 0 :y 0 :w 32 :h 15 :text "insert" :features exclusion-zone]))
+      ([INLINE :x 32 :y 8 :w 304 :h 4 :elt 459])))))))
+
 (define-problem doc-1
   :title "Google"
   :url "file:///tmp/google.html"
   :sheets firefox doc-1
   :fonts doc-1
-  :documents doc-1
   :layouts doc-1
   :error "Error, 200ms is not a known unit"
   :features css:overflow-x css:overflow-y css:position css:vertical-align css:font-size priority:important css:float css:min-width css:white-space css:max-width css:min-height color:rgba unknown-selector css:max-height css:box-sizing @media empty-text display:inline-block display:unknown tag:iframe tag:img display:table tag:input tag:button attr:dir float:1 exclusion-zone unknown-error)
