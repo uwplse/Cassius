@@ -246,8 +246,11 @@ function infer_lines(box, parent) {
         var m = get_margins(prev.node);
         ph += m.top + m.bottom;
         py -= m.top;
-        pw += m.left + m.right
-        px -= m.left;
+        if (prev.node.nodeType == document.ELEMENT_NODE) {
+            // Ultimately we need a horizontal cursor, not this nonsense.
+            pw += m.left + m.right
+            px -= m.left;
+        }
         var pos = get_relative_offset(prev.node);
         if (pos.top) py -= pos.top;
         else if (pos.bottom) py += pos.bottom;
@@ -260,7 +263,9 @@ function infer_lines(box, parent) {
         var m = get_margins(txt.node);
         th += m.top + m.bottom;
         ty -= m.top;
-        tx -= m.left;
+        if (txt.node.nodeType == document.ELEMENT_NODE) {
+            tx -= m.left;
+        }
         var pos = get_relative_offset(txt.node);
         if (pos.top) ty -= pos.top;
         else if (pos.bottom) ty += pos.bottom;
