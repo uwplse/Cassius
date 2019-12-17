@@ -25,8 +25,8 @@
                                       (equal? (node-get box ':name) name)))))
   (define raw-query (if tests (append layout verify) layout))
 
-  (log-phase "Produced ~a constraints of ~a terms" (length query) (tree-size query))
-  (define query (z3-prepare query))
+  (log-phase "Produced ~a constraints of ~a terms" (length raw-query) (tree-size raw-query))
+  (define query (z3-prepare raw-query))
   (log-phase "Prepared ~a constraints of ~a terms" (length query) (tree-size query))
 
   ((*exit-early*) (append query (list cassius-check-sat)))
