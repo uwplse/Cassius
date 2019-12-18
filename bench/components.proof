@@ -1,15 +1,11 @@
 ;; -*- mode: scheme -*-
 
+(import "common.thm")
+
 (page amazon (load "amazon.rkt" doc-1)
       :w (between 800 1920)
       :h (between 600 1280)
       :fs (between 16 32))
-
-(define (onscreen b)
-  (and (>= (top b) 0) (>= (left b) 0)))
-
-(theorem (interactive-onscreen b)
-         (=> (is-interactive b) (onscreen b)))
 
 (proof (amazon interactive-onscreen amazon)
   (component top (id nav-upnav))

@@ -1,5 +1,7 @@
 ;; -*- mode: scheme -*-
 
+(import "common.thm")
+
 (page yoga (load "fwt.rkt" doc-080)
       :w (between 800 1920)
       :h (between 600 1280)
@@ -15,21 +17,10 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
-;; The core theorem: links, inputs, and buttons are at least scrollable to
-
-(define (onscreen b)
-  (and (>= (top b) 0) (>= (left b) 0)))
-
-(define (is-link b)
-  (matches b (tag a)))
-
-(theorem (interactive-onscreen b)
-  (=> (is-link b) (onscreen b)))
-
 ;; This is a trivial proof of it, using a single component / whole page approach
 
 (proof (trivial interactive-onscreen yoga surf park)
-  (page root (forall (b) (=> (is-link b) (onscreen b)))))
+  (page root (forall (b) (=> (is-interactive b) (onscreen b)))))
 
 ;; A proof that we mention in the overview section
 
@@ -38,7 +29,7 @@
   (component body (id body))
   (component footer (id footer))
 
-  (page * (forall (b) (=> (is-link b) (onscreen b)))))
+  (page * (forall (b) (=> (is-interactive b) (onscreen b)))))
 
 ;; The final proof in the overview section
 
@@ -48,7 +39,7 @@
   (component footer (id footer))
 
   (assert (or header footer)
-          (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
+          (forall (a) (=> (onscreen ?) (is-interactive a) (onscreen a))))
   (assert root (onscreen header))
   (assert root (onscreen footer))
 
@@ -69,7 +60,7 @@
   (component body (id body))
   (component footer (id footer))
 
-  (assert * (forall (a) (=> (onscreen ?) (is-link a) (onscreen a))))
+  (assert * (forall (a) (=> (onscreen ?) (is-interactive a) (onscreen a))))
   (assert root (and (onscreen header) (onscreen body) (onscreen footer)))
 
   (pre footer (>= (width footer) 200))
@@ -92,9 +83,9 @@
 
   (assert (- * nav home)
           (forall (b) (=> (no-floats-enter ?)
-                          (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
+                          (onscreen ?) (or (is-interactive b) (is-component b)) (onscreen b))))
   (assert (or nav home)
-          (forall (b) (=> (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
+          (forall (b) (=> (onscreen ?) (or (is-interactive b) (is-component b)) (onscreen b))))
 
   (assert root (onscreen root))
   (assert root (= (floats-tracked root) 0))
@@ -123,7 +114,7 @@
   (component footer (id footer))
 
   (pre (- * root) (>= (width ?) 960))
-  (assert * (forall (b) (=> (onscreen ?) (or (is-link b) (is-component b)) (onscreen b))))
+  (assert * (forall (b) (=> (onscreen ?) (or (is-interactive b) (is-component b)) (onscreen b))))
 
   (pre (- * root) (no-floats-enter ?))
   (assert root (= (width header) (width figure) (width section) (width footer) 960))
@@ -147,18 +138,11 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
-(define (carshop-button b)
-  (matches b (child (desc (id body) (class body) (tag div)) (tag a))))
-
-(theorem (button-large b)
-  (=> (carshop-button b) (and (>= (height b) 24) (>= (width b) 72))))
-
 (proof (button-large button-large carshop)
   (component body (desc (id body) (class body)))
   (assert body (forall (b) (=> (carshop-button b) (and (>= (height b) 24) (>= (width b) 72))))))
 
-#|
-Supposed to fail
+#| Supposed to fail
 (page generic (load "fwt.rkt" doc-047)
       :w (between 800 1920)
       :h (between 600 1280)
@@ -247,17 +231,6 @@ Supposed to fail
 
 ;; A theorem about line width, from the VizAssert paper
 
-(define (line b)
-  (ancestor b (has-type ? line)))
-
-(define (width-line b)
-  (- (right (last b)) (left (first b))))
-
-(theorem (line-width b)
-  (=> (has-type b text) (has-contents b)
-      (!= (first (line b)) null)
-      (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))
-
 (define (14-px-text b)
   (<= 13 (text-height b) 15)
   #;(raw (= (font-size.px (style.font-size (computed-style (box-elt b)))) 14)))
@@ -272,18 +245,7 @@ Supposed to fail
   (pre (or header body footer) (14-px-text ?))
   (assert root (and (14-px-text header) (14-px-text body) (14-px-text footer))))
 
-
-(define (social-button b)
-  (matches b (id twitter) (id facebook) (id youtube) (id vimeo) (id flickr) (id linkedin) (id pinterest) (id rss) (id googleplus)))
-
-(define (viewable b)
-  (and (> (right b) 0) (> (bottom b) 0)))
-
-(define (accessibility-text b)
-  (and (has-type b text) (social-button (ancestor b (not (anonymous? ?))))))
-
-(theorem (accessible-offscreen b)
-  (=> (accessibility-text b) (not (viewable b))))
+;; A theorem about accessibility text being offscreen on yoga
 
 (proof (accessible-offscreen accessible-offscreen yoga)
   (component header (id header))

@@ -1,0 +1,73 @@
+;; -*- mode: scheme -*-
+
+(define (onscreen b)
+  (and (>= (top b) 0) (>= (left b) 0)))
+
+(define (viewable b)
+  (and (> (bottom b) 0) (> (right b) 0)))
+
+(define (is-interactive b)
+  (matches b (tag a) (tag input) (tag button)))
+
+(define (!= a b)
+  (not (= a b)))
+
+(theorem (text-size b)
+  (=> (has-type b text) (has-contents b)
+      (let ([eb (ancestor b (not (anonymous? ?)))])
+        (not (descends eb (class footer) (id footer))))
+      (>= (height b) 13.5)))
+
+(theorem (interactive-onscreen b)
+  (=> (is-interactive b) (onscreen b)))
+
+(define (ancestor-line b)
+  (ancestor b (has-type ? line)))
+
+(define (character-width b)
+  (* (/ 10 19) (height b)))
+
+(define (line-width b)
+  (- (right (last b)) (left (first b))))
+
+(theorem (line-width b)
+  (=> (has-type b text) (has-contents b) (viewable b)
+      (=> (!= (first (ancestor-line b)) null)
+          (<= (line-width (ancestor-line b)) (* 80 (character-width b))))))
+
+(define (ancestor-elt b)
+  (ancestor b (not (anonymous? ?))))
+
+(define (social-media-button b)
+  (matches b (id twitter) (id facebook) (id youtube) (id vimeo) (id flickr) (id linkedin) (id pinterest) (id rss) (id googleplus)))
+
+(theorem (accessible-offscreen b)
+  (=> (has-type b text) (social-media-button (ancestor-elt b)) (not (viewable b))))
+
+(theorem (no-horizontal-scroll b)
+  (<= (right b) (right root)))
+
+(theorem (heading-size b1 b2)
+  (=>
+   (has-type b1 text) (has-type b2 text)
+   (has-contents b1) (has-contents b2)
+   (viewable b1) (viewable b2)
+   (or (and (descends b1 (tag h1)) (descends b2 (tag h2)))
+       (and (descends b1 (tag h2)) (descends b2 (tag h3)))
+       (and (descends b1 (tag h3)) (descends b2 (tag h4)))
+       (and (descends b1 (tag h4)) (descends b2 (tag h5)))
+       (and (descends b1 (tag h5)) (descends b2 (tag h6))))
+   (> (height b1) (height b2))))
+
+(theorem (overlapping-text b1 b2)
+  (=> (has-type b1 text) (has-type b2 text) (!= b1 b2)
+      (has-contents b1) (has-contents b2)
+      (viewable b1) (viewable b2)
+      (not (overlaps b1 b2))))
+
+(theorem (line-spacing b1 b2)
+  (let ([line1 (ancestor-line b1)] [line2 (ancestor-line b2)])
+    (=> (has-type b1 text) (has-contents b1) (viewable b1)
+        (has-type b2 text) (has-contents b2) (viewable b2)
+        (= (next line1) line2)
+        (>= (- (top b2) (top b1)) (* 1.04 (text-height b1))))))
