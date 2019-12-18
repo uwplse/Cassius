@@ -13,15 +13,15 @@
   (reset!)
   (log-phase "Read ~a documents with ~a elements, ~a boxes, ~a rules, and ~a fonts"
              (length doms)
-             (length (append-map (compose sequence->list in-tree dom-elements) doms))
-             (length (append-map (compose sequence->list in-tree dom-boxes) doms))
+             (length (append-map (compose sequence->list in-elements) doms))
+             (length (append-map (compose sequence->list in-boxes) doms))
              (length (apply append sheets))
              (length fonts))
 
   (define layout (all-constraints sheets doms fonts #:render? render?))
   (define verify 
     (add-test doms (or tests '()) #:render? render?
-              #:component (and name (for/first ([dom doms] [box (in-boxes dom)])
+              #:component (and name (for*/first ([dom doms] [box (in-boxes dom)])
                                       (equal? (node-get box ':name) name)))))
   (define raw-query (if tests (append layout verify) layout))
 

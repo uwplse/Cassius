@@ -37,10 +37,10 @@
       (define ctx
         (hash-union
          varmap
-         (hash '? (dump-box (dom-boxes (first doms))))
+         (hash '? (dump-box (dom-boxes dom)))
          (if (andmap (curryr dom-context ':component) doms)
              (hash)
-             (hash 'root (dump-box (dom-boxes (first doms)))))
+             (hash 'root (dump-box (dom-boxes dom))))
          (for*/hash ([dom doms] [node (in-boxes dom)]
                      #:when (node-get node ':name #:default false))
            (values (node-get node ':name) (dump-box node)))
@@ -61,6 +61,7 @@
     (if component
         (nodes-below component  '(:pre :spec :assert :admit))
         (for/list ([box (in-boxes dom)]) box)))
+
   `(,@(auxiliary-definitions)
     (declare-const which-constraint Real)
     ,@(for/reap [sow] ([test tests*] [id (in-naturals)]
