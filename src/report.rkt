@@ -355,7 +355,7 @@
 
   (define (show-res res)
     (not (set-member?
-          (if (show-success) '() '(success unsupported expected))
+          (if (show-success) '() '(success unsupported expected timeout))
           (result-status res))))
 
   (call-with-output-to
