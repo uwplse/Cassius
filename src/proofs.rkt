@@ -96,7 +96,7 @@
                            ,thbody)))]))
 
   (define problem* (dict-set problem ':documents (list (unparse-dom the-dom))))
-  (define problem** (dict-set* problem* ':test (list theorem) ':tool (list 'assert)))
+  (define problem** (dict-set* problem* ':tests (list theorem) ':tool '(assert)))
 
   (define cnt 0)
   (define extras
@@ -112,12 +112,12 @@
           [name name]))
       (dict-set* problem* ':name (list name) ':component (list name)
                  ':selectors selectors ':named-selectors named-selectors
-                 ':test (list assert) ':tool (list tool))))
+                 ':tests (list assert) ':tool (list tool))))
 
   (define extras*
     (for/list ([group (group-by (λ (x) (cons (dict-ref x ':component) (dict-ref x ':tool))) extras)])
-      (define asserts (append-map (curryr dict-ref ':test) group))
-      (dict-set (first group) ':test asserts)))
+      (define asserts (append-map (curryr dict-ref ':tests) group))
+      (dict-set (first group) ':tests asserts)))
 
   (append
    (modularize problem**)

@@ -582,7 +582,7 @@
       (for*/list ([prob prob1] [assertion assertions*])
         (match-define `(define-test (,name ,args ...) ,body) assertion)
         (match-define (cons a (cons b c)) prob)
-        (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))
+        (list* name a b (dict-set c ':tests (list `(forall ,args ,body))))))
     (write-report
      #:output out-file
      (run-assertion-tests probs #:valid valid? #:index index #:threads threads))]
@@ -600,7 +600,7 @@
       (call-with-input-file problems
         (λ (f)
           (for/list ([x (in-port read f)])
-            (list* (second x) file (first x) (dict-set (dict-ref probs (first x)) ':test (list (dict-ref assns (second x)))))))))
+            (list* (second x) file (first x) (dict-set (dict-ref probs (first x)) ':tests (list (dict-ref assns (second x)))))))))
 
     (write-report
      #:output out-file

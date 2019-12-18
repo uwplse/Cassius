@@ -215,7 +215,7 @@
     (do-minimize-assertion
      (dict-set
       (dict-set prob ':documents documents)
-      ':test (list (dict-ref assertions (string->symbol assertion))))
+      ':tests (list (dict-ref assertions (string->symbol assertion))))
      cache)]
    ["dump"
     #:once-each
@@ -248,4 +248,4 @@
     (do-verify
      (dict-set
       (dict-set prob ':documents documents)
-      ':test (list (dict-ref assertions (string->symbol assertion)))))]))
+      ':tests (list (dict-ref assertions (string->symbol assertion)))))]))
