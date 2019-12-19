@@ -418,13 +418,13 @@
              ,@(for/list ([ress (group-by result-problem results-group)]
                           #:unless (not (ormap show-res ress)))
                  (match-define (result file problem _ test section _ description features _ url) (car ress))
-                 (apply row
-                        `(div
-                          ,@(for/list ([res ress])
-                              `(span ([class ,(~a (result-status res))]
-                                      [title ,(format "~a\nTime: ~a" (or (result-subproblem res) "") (print-time (result-time res)))])
-                                     ,(status-symbol (result-status res)))))
-                        (~a problem) `(a ([href ,url]) ,(~a test)) description))))))))))
+                 (row
+                  `(div
+                    ,@(for/list ([res ress])
+                        `(span ([class ,(~a (result-status res))]
+                                [title ,(format "~a\nTime: ~a" (or (result-subproblem res) "") (print-time (result-time res)))])
+                               ,(status-symbol (result-status res)))))
+                  (~a problem) `(a ([href ,url]) ,(~a test)) description))))))))))
 
 (define (print-feature-table problems)
   (define all-features (remove-duplicates (append-map (λ (x) (dict-ref x ':features '())) problems)))
