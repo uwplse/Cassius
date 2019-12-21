@@ -138,6 +138,10 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
+(theorem (button-large b)
+  (=> (matches b (child (desc (id body) (class body) (tag div)) (tag a)))
+      (and (>= (height b) 24) (>= (width b) 72))))
+
 (proof (button-large button-large carshop)
   (component body (desc (id body) (class body)))
   (assert body (forall (b) (=> (carshop-button b) (and (>= (height b) 24) (>= (width b) 72))))))
