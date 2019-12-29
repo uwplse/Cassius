@@ -138,9 +138,11 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
+(define (carshop-button b)
+  (matches b (child (desc (id body) (class body) (tag div)) (tag a))))
+
 (theorem (button-large b)
-  (=> (matches b (child (desc (id body) (class body) (tag div)) (tag a)))
-      (and (>= (height b) 24) (>= (width b) 72))))
+  (=> (carshop-button b) (and (>= (height b) 24) (>= (width b) 72))))
 
 (proof (button-large button-large carshop)
   (component body (desc (id body) (class body)))
@@ -244,8 +246,8 @@
   (component body (id body))
   (component footer (id footer))
   (assert * (forall (b) (=> (has-type b text) (has-contents b)
-                            (!= (first (line b)) null)
-                            (<= (width-line (line b)) (* 80 (/ 10 19) (height b))))))
+                            (!= (first (ancestor-line b)) null)
+                            (<= (width-line (ancestor-line b)) (* 80 (/ 10 19) (height b))))))
   (pre (or header body footer) (14-px-text ?))
   (assert root (and (14-px-text header) (14-px-text body) (14-px-text footer))))
 
@@ -256,7 +258,7 @@
   (component body (id body))
   (component footer (id footer))
 
-  (assert footer (forall (b) (=> (accessibility-text b) (not (viewable b)))))
+  (assert footer (forall (b) (=> (social-media-button (ancestor-elt b)) (not (viewable b)))))
 
   (assert footer (<= (width footer) 2000))
   (assert footer (<= (raw (ml footer)) 1000))
