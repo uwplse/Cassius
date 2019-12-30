@@ -21,8 +21,9 @@
   (define layout (all-constraints sheets doms fonts #:render? render?))
   (define verify 
     (add-test doms (or tests '()) #:render? render?
-              #:component (and name (for*/first ([dom doms] [box (in-boxes dom)])
-                                      (equal? (node-get box ':name) name)))))
+              #:component (and name (for*/first ([dom doms] [box (in-boxes dom)]
+                                                 #:when (equal? (node-get box ':name) name))
+                                      box))))
   (define raw-query (if tests (append layout verify) layout))
 
   (log-phase "Produced ~a constraints of ~a terms" (length raw-query) (tree-size raw-query))

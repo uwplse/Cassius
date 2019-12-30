@@ -59,7 +59,7 @@
 
   (define possible-boxes
     (if component
-        (nodes-below component  '(:pre :spec :assert :admit))
+        (nodes-below component (λ (x) (ormap (curry node-get* x) '(:pre :spec :assert :admit))))
         (for/list ([box (in-boxes dom)]) box)))
 
   `(,@(auxiliary-definitions)
