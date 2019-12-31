@@ -1,0 +1,25 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@master
+      - name: "Install Racket"
+        uses: Bogdanp/setup-racket@v0.5
+        with:
+          distribution: 'full'
+          version: 'latest'
+      - name: "Install Z3"
+        run: |
+          curl -L -O https://github.com/Z3Prover/z3/releases/download/z3-$version/z3-$version-x64-ubuntu-18.04.zip
+          unzip z3-$version-x64-ubuntu-18.04.zip
+          echo "::add-path::$PATH:z3-$version-x64-ubuntu-18.04.zip"
+        env:
+          version: 4.8.7
+      - name: "Run tests"
+        run: make test
