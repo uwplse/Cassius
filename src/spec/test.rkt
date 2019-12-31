@@ -9,7 +9,7 @@
   (call-with-z3
    (λ (z3)
      (z3-send z3 constraints)
-     (match (z3 '(check-sat))
+     (match (z3-check-sat z3 (z3 '(check-sat)))
        [`(core ,_) #f]
        [`(model ,model)
         (cons model
