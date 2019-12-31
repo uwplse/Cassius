@@ -11,9 +11,6 @@ jobs:
       - uses: actions/checkout@master
       - name: "Install Racket"
         uses: Bogdanp/setup-racket@v0.5
-        with:
-          distribution: 'full'
-          version: 'latest'
       - name: "Install Z3"
         run: |
           curl -L -O https://github.com/Z3Prover/z3/releases/download/z3-$version/z3-$version-x64-ubuntu-18.04.zip
