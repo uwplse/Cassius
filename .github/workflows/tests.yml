@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@master
@@ -13,10 +13,11 @@ jobs:
         uses: Bogdanp/setup-racket@v0.5
       - name: "Install Z3"
         run: |
-          curl -L -O https://github.com/Z3Prover/z3/releases/download/z3-$version/z3-$version-x64-ubuntu-18.04.zip
-          unzip z3-$version-x64-ubuntu-18.04.zip
-          echo "::add-path::$PATH:z3-$version-x64-ubuntu-18.04.zip"
+          curl -L -O https://github.com/Z3Prover/z3/releases/download/z3-$version/z3-$version-x64-$distribution.zip
+          unzip z3-$version-x64-$distribution.zip
+          echo "::add-path::$GITHUB_WORKSPACE/z3-$version-x64-$distribution/bin"
         env:
           version: 4.8.7
+          distribution: ubuntu-16.04
       - name: "Run tests"
         run: make test
