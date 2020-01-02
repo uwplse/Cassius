@@ -1,6 +1,7 @@
 #lang racket
 (require racket/hash)
 (require "common.rkt" "dom.rkt" "smt.rkt" "encode.rkt" "tree.rkt" "selectors.rkt" "modularize.rkt")
+(require "assertions.rkt")
 (require "spec/css-properties.rkt" "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt"
          "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
          "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt")
@@ -24,12 +25,46 @@
 
 (define (add-test doms tests #:component [component #f] #:render? [render? true])
   (match-define (list dom) doms)
+
+  (define ms (model-valid/z3 doms))
+
+  (define tests*
+    (for/list ([test tests] [id (in-naturals)])
+      (define-values (test-vars test-body) (disassemble-forall test))
+      (define varmap
+        (for/hash ([var test-vars])
+          (values var (sformat "cex~a~a" id var))))
+      (define ctx
+        (hash-union
+         varmap
+         (hash '? (dump-box (dom-boxes dom)))
+         (if (andmap (curryr dom-context ':component) doms)
+             (hash)
+             (hash 'root (dump-box (dom-boxes dom))))
+         (for*/hash ([dom doms] [node (in-boxes dom)]
+                     #:when (node-get node ':name #:default false))
+           (values (node-get node ':name) (dump-box node)))
+         #:combine/key (λ (k a b) (if (equal? a b) a (raise "Different bindings for ~a: ~a and ~a" k a b)))))
+      (cons varmap
+            (let loop ([expr (compile-assertion doms test-body ctx)])
+              (match expr
+                [`(forall ,vars ,body)
+                 `(forall ,vars ,(loop body))]
+                [`(=> ,as ... ,body)
+                 `(=> ,@as ,(loop body))]
+                [body
+                 (if render?
+                     `(and ,ms ,body)
+                     body)])))))
+
   (define possible-boxes
     (if component
-        (nodes-below component  '(:pre :spec :assert :admit))
+        (nodes-below component (λ (x) (ormap (curry node-get* x) '(:pre :spec :assert :admit))))
         (for/list ([box (in-boxes dom)]) box)))
-  `((declare-const which-constraint Real)
-    ,@(for/reap [sow] ([test tests] [id (in-naturals)]
+
+  `(,@(auxiliary-definitions)
+    (declare-const which-constraint Real)
+    ,@(for/reap [sow] ([test tests*] [id (in-naturals)]
                        #:when true
                        [(var cexvar) (in-dict (car test))])
         (define var-values
@@ -38,7 +73,7 @@
         (sow `(declare-const ,cexvar Box))
         (sow `(assert ,(apply smt-or (for/list ([boxvar var-values]) `(= ,cexvar ,boxvar))))))
     (assert ,(apply smt-or
-                    (for/list ([test tests] [i (in-naturals)])
+                    (for/list ([test tests*] [i (in-naturals)])
                       `(and (not ,(cdr test)) (= which-constraint ,i)))))
     ,@(reap [sow]
          (for ([box (in-boxes dom)])

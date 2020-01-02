@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../smt.rkt" "../common.rkt")
+(require "../smt.rkt" "../common.rkt" "browser.rkt")
 (provide media-query? media-matches?)
 
 (define-by-match media-query?
@@ -21,21 +21,15 @@
   `(px ,(? number?))
   `(em ,(? number?)))
 
-(define (media-parameters? p)
-  (and (dict? p)
-       (dict-has-key? p ':type)
-       (set-member? '(screen print handheld projection tty tv) (dict-ref p ':type))
-       (dict-has-key? p ':w)
-       (smt? (dict-ref p ':w))
-       (dict-has-key? p ':h)
-       (smt? (dict-ref p ':h))))
+(define (media-type? p)
+  (or/c 'screen 'print 'handheld 'projection 'tty 'tv))
 
-(define/contract (media-matches? params query)
-  (-> media-parameters? media-query? smt?)
+(define/contract (media-matches? type query)
+  (-> media-type? media-query? smt?)
   (define (mk-length l)
     (match l
       [`(px ,l) l]
-      [`(em ,l) `(%of (* 100 ,l) ,(dict-ref params ':fs))]))
+      [`(em ,l) `(%of (* 100 ,l) (browser.fs.serif ,(the-browser)))]))
 
   (let loop ([query query])
     (match query
@@ -49,13 +43,13 @@
        (smt-not (loop q))]
       ['all 'true]
       [(or 'screen 'print 'handheld 'projection 'tty 'tv)
-       (if (equal? (dict-ref params ':type) query) 'true 'false)]
+       (if (equal? type query) 'true 'false)]
       ['(orientation landscape)
-       `(< ,(dict-ref params ':w) ,(dict-ref params ':h))]
+       `(< (browser.w ,(the-browser)) (browser.h ,(the-browser)))]
       ['(orientation portrait)
-       `(< ,(dict-ref params ':h) ,(dict-ref params ':w))]
+       `(< (browser.h ,(the-browser)) (browser.w ,(the-browser)))]
       [`(-webkit-min-device-pixel-ratio ,_) 'true]
-      [`(max-width  ,l) `(<= ,(dict-ref params ':w) ,(mk-length l))]
-      [`(min-width  ,l) `(>= ,(dict-ref params ':w) ,(mk-length l))]
-      [`(min-height ,l) `(<= ,(dict-ref params ':h) ,(mk-length l))]
-      [`(max-height ,l) `(>= ,(dict-ref params ':h) ,(mk-length l))])))
+      [`(max-width  ,l) `(<= (browser.w ,(the-browser)) ,(mk-length l))]
+      [`(min-width  ,l) `(>= (browser.w ,(the-browser)) ,(mk-length l))]
+      [`(min-height ,l) `(<= (browser.h ,(the-browser)) ,(mk-length l))]
+      [`(max-height ,l) `(>= (browser.h ,(the-browser)) ,(mk-length l))])))

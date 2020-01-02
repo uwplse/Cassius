@@ -53,7 +53,7 @@
     (dict-set* problem
                ':documents (list (struct-copy dom piece [elements elements***] [boxes boxes*]))
                ':name (list (dom-name piece))
-               ':test specs
+               ':tests specs
                ':tool '(assert)
                ':sheets sheets*
                ':fonts fonts*

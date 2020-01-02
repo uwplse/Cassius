@@ -96,7 +96,7 @@
                            ,thbody)))]))
 
   (define problem* (dict-set problem ':documents (list (unparse-dom the-dom))))
-  (define problem** (dict-set* problem* ':test (list theorem) ':tool (list 'assert)))
+  (define problem** (dict-set* problem* ':tests (list theorem) ':tool '(assert)))
 
   (define cnt 0)
   (define extras
@@ -112,53 +112,61 @@
           [name name]))
       (dict-set* problem* ':name (list name) ':component (list name)
                  ':selectors selectors ':named-selectors named-selectors
-                 ':test (list assert) ':tool (list tool))))
+                 ':tests (list assert) ':tool (list tool))))
 
   (define extras*
     (for/list ([group (group-by (λ (x) (cons (dict-ref x ':component) (dict-ref x ':tool))) extras)])
-      (define asserts (append-map (curryr dict-ref ':test) group))
-      (dict-set (first group) ':test asserts)))
+      (define asserts (append-map (curryr dict-ref ':tests) group))
+      (dict-set (first group) ':tests asserts)))
 
   (append
    (modularize problem**)
    extras*
    (list (dict-set* problem** ':tool '(modular) ':name (list ':check)))))
 
+(define (read-command cmd problem-context theorem-context proof-context)
+  (match cmd
+    [`(page ,name (load ,file ,pname) ,attrs ...)
+     (define problem (dict-ref (call-with-input-file file parse-file) pname))
+     (define the-dom* (first (dict-ref problem ':documents)))
+     (define ctx*
+       (for/fold ([ctx (dom-properties the-dom*)])
+           ([(k v) (in-dict (attributes->dict attrs))])
+         (dict-set ctx k v)))
+     (define problem*
+       (dict-set problem ':documents
+                 (map dom-strip-positions
+                      (cons (struct-copy dom the-dom* [properties ctx*])
+                            (cdr (dict-ref problem ':documents))))))
+     (hash-set! problem-context name problem*)]
+    [`(import ,file)
+     (call-with-input-file file
+       (λ (p)
+         (for ([cmd* (in-port read p)])
+           (read-command cmd* problem-context theorem-context proof-context))))]
+    [`(define (,name ,args ...) ,body)
+     (define helper
+       (procedure-reduce-arity
+        (λ vals (smt-replace-terms body (map cons args vals)))
+        (length args)))
+     (hash-set! helper-dict (cons name args) body)
+     (hash-set! assertion-helpers name helper)]
+    [`(,(or 'theorem 'lemma) (,name ,args ...) ,body)
+     (hash-set! theorem-context name `(forall ,args ,body))]
+    [`(proof (,name ,thmname ,pages ...) ,subcmds ...)
+     (define theorem (dict-ref theorem-context thmname))
+     (hash-set! proof-context name
+                (for/hash ([page pages])
+                  (values
+                   page
+                   (dom-run-proof (dict-ref problem-context page)
+                                  subcmds theorem (curry dict-ref theorem-context)))))]))
+
 (define (read-proofs port)
   (define problem-context (make-hash))
   (define theorem-context (make-hash))
   (define proof-context (make-hash))
   (for ([cmd (in-port read port)])
-    (match cmd
-      [`(page ,name (load ,file ,pname) ,attrs ...)
-       (define problem (dict-ref (call-with-input-file file parse-file) pname))
-       (define the-dom* (first (dict-ref problem ':documents)))
-       (define ctx*
-         (for/fold ([ctx (dom-properties the-dom*)])
-             ([(k v) (in-dict (attributes->dict attrs))])
-           (dict-set ctx k v)))
-       (define problem*
-         (dict-set problem ':documents
-                   (map dom-strip-positions
-                        (cons (struct-copy dom the-dom* [properties ctx*])
-                              (cdr (dict-ref problem ':documents))))))
-       (hash-set! problem-context name problem*)]
-      [`(define (,name ,args ...) ,body)
-       (define helper
-         (procedure-reduce-arity
-          (λ vals (smt-replace-terms body (map cons args vals)))
-          (length args)))
-       (hash-set! helper-dict (cons name args) body)
-       (hash-set! assertion-helpers name helper)]
-      [`(,(or 'theorem 'lemma) (,name ,args ...) ,body)
-       (hash-set! theorem-context name `(forall ,args ,body))]
-      [`(proof (,name ,thmname ,pages ...) ,subcmds ...)
-       (define theorem (dict-ref theorem-context thmname))
-       (hash-set! proof-context name
-                  (for/hash ([page pages])
-                    (values
-                     page
-                     (dom-run-proof (dict-ref problem-context page)
-                                    subcmds theorem (curry dict-ref theorem-context)))))]))
+    (read-command cmd problem-context theorem-context proof-context))
   proof-context)
 

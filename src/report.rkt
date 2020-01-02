@@ -109,8 +109,8 @@
       ['timeout 'timeout]
       [(list 'error e) 'error]
       ['break 'break]
-      [(success stylesheet trees doms test) (if invert? 'fail 'success)]
-      [(failure stylesheet trees) (if invert? 'success 'fail)]))
+      [(success doms test) (if invert? 'fail 'success)]
+      [(failure doms) (if invert? 'success 'fail)]))
   (cond
    [(not (equal? out 'fail))
     out]
@@ -355,7 +355,7 @@
 
   (define (show-res res)
     (not (set-member?
-          (if (show-success) '() '(success unsupported expected))
+          (if (show-success) '() '(success unsupported expected timeout))
           (result-status res))))
 
   (call-with-output-to
@@ -418,11 +418,13 @@
              ,@(for/list ([ress (group-by result-problem results-group)]
                           #:unless (not (ormap show-res ress)))
                  (match-define (result file problem _ test section _ description features _ url) (car ress))
-                 (apply row (~a problem) `(a ([href ,url]) ,(~a test)) description
-                        (for/list ([res ress])
-                          `(span ([class ,(~a (result-status res))]
-                                  [title ,(format "~a\nTime: ~a" (or (result-subproblem res) "") (print-time (result-time res)))])
-                                 ,(status-symbol (result-status res))))))))))))))
+                 (row
+                  `(div
+                    ,@(for/list ([res ress])
+                        `(span ([class ,(~a (result-status res))]
+                                [title ,(format "~a\nTime: ~a" (or (result-subproblem res) "") (print-time (result-time res)))])
+                               ,(status-symbol (result-status res)))))
+                  (~a problem) `(a ([href ,url]) ,(~a test)) description))))))))))
 
 (define (print-feature-table problems)
   (define all-features (remove-duplicates (append-map (λ (x) (dict-ref x ':features '())) problems)))
@@ -457,7 +459,7 @@
           (count (λ (prob) (not (subset? (dict-ref prob ':features '()) (supported-features)))) problems)))
 
 (define-syntax-rule (and! var function)
-  (set! var (let ([test var]) (λ (x) (and (function x) (test x))))))
+  (set! var (let ([fn function] [test var]) (λ (x) (and (fn x) (test x))))))
 
 (define (read-index iname)
   (for*/hash ([sec (call-with-input-file iname read-json)]
@@ -478,7 +480,7 @@
 
 (define (read-failed-tests jname)
   (define failed-tests
-    (for/list ([rec (call-with-input-file jname read-json)]
+    (for/list ([rec (hash-ref (call-with-input-file jname read-json) 'problems)]
                #:unless (equal? (dict-ref rec 'status) "success"))
       (dict-ref rec 'test)))
 
@@ -580,7 +582,7 @@
       (for*/list ([prob prob1] [assertion assertions*])
         (match-define `(define-test (,name ,args ...) ,body) assertion)
         (match-define (cons a (cons b c)) prob)
-        (list* name a b (dict-set c ':test (list `(forall ,args ,body))))))
+        (list* name a b (dict-set c ':tests (list `(forall ,args ,body))))))
     (write-report
      #:output out-file
      (run-assertion-tests probs #:valid valid? #:index index #:threads threads))]
@@ -598,7 +600,7 @@
       (call-with-input-file problems
         (λ (f)
           (for/list ([x (in-port read f)])
-            (list* (second x) file (first x) (dict-set (dict-ref probs (first x)) ':test (list (dict-ref assns (second x)))))))))
+            (list* (second x) file (first x) (dict-set (dict-ref probs (first x)) ':tests (list (dict-ref assns (second x)))))))))
 
     (write-report
      #:output out-file

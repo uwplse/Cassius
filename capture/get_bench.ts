@@ -46,97 +46,9 @@ function gensym() {
     return "e" + LETTER + PADDING.substring(0, PADDING.length - s.length) + s;
 }
 
-var APP_PIXEL_TO_PIXELS = 60; // See mozilla/gfx/src/nsCoord.h:18--25 in Firefox source
-var DIVISORS : number[] = [];
+import { f2r, MIN_LENGTH, val2px, val2pct, val2em, cs, dump_string, is_comment } from "./util";
 
-for (var i = 1; i * i < APP_PIXEL_TO_PIXELS; i++) {
-    if (APP_PIXEL_TO_PIXELS % i == 0) {
-        DIVISORS.push(i);
-        DIVISORS.push(APP_PIXEL_TO_PIXELS / i);
-    }
-}
-
-DIVISORS.sort(function(a, b) { return a - b; });
-DIVISORS.reverse();
-
-function f2r(x) {
-    var out = f2q(x);
-    if (out.denom == 1) {
-        return "" + out.num;
-    } else if (out.denom == 2 || out.denom == 5 || out.denom == 10) {
-        return "" + (out.num / out.denom);
-    } else {
-        return "(/ " + out.num + " " + out.denom + ")";
-    }
-}
-
-function f2q(x) {
-    var xm = Math.round(x * APP_PIXEL_TO_PIXELS);
-        
-    for (var i = 0; i < DIVISORS.length; i++) {
-        var div = DIVISORS[i];
-        if (xm % div == 0) {
-            return { num: xm / div, denom: APP_PIXEL_TO_PIXELS / div };
-        }
-    }
-
-    throw "Insufficiently many divisors!";
-}
-
-function val2px(val, features) {
-    var match;
-    if (val == "0") {
-        return 0;
-    } else if (val.match(/^-?0[^0-9.]+/)) {
-        return 0;
-    } else if (val.match(/^[-+0-9.e]+px$/)) {
-        return +val.substr(0, val.length - 2);
-    } else if (val.match(/^[-+0-9.e]+pt$/)) {
-        return +val.substr(0, val.length - 2)*96/72;
-    } else if (val.match(/^[-+0-9.e]+pc$/)) {
-        return +val.substr(0, val.length - 2)*12*96/72;
-    } else if (val.match(/^[-+0-9.e]+mm$/)) {
-        return +val.substr(0, val.length - 2)*96/25.4;
-    } else if (val.match(/^[-+0-9.e]+cm$/)) {
-        return +val.substr(0, val.length - 2)*96/2.54;
-    } else if (val.match(/^[-+0-9.e]+in$/)) {
-        return +val.substr(0, val.length - 2)*96;
-    } else if (match = val.match(/^([-+0-9.e]+)([a-z]+)$/)) {
-        features["unit:" + match[2]] = true;
-        throw "Error, " + val + " is not a known unit";
-    } else {
-        throw "Error, " + val + " is not a pixel quantity."
-    }
-}
-
-function val2pct(val : string, _) {
-    if (val.match(/^[-+0-9.e]+%$/)) {
-        return +val.substr(0, val.length - 1);
-    } else {
-        throw "Error, " + val + " is not a percentage quantity."
-    }
-}
-
-function val2em(val, features) {
-    if (val.match(/^[-+0-9.e]+em$/)) {
-        return +val.substr(0, val.length - 2);
-    } else if (val.match(/^[-+0-9.e]+rem$/)) {
-        return +val.substr(0, val.length - 3);
-    } else if (val.match(/^-?[-+0-9.e]+ex$/)) {
-        features["unit:ex"] = true;
-        return +val.substr(0, val.length - 2) / 16 * 9;
-    } else {
-        throw "Error, " + val + " is not a em quantity."
-    }
-}
-
-function dump_string(s) {
-    return '"' + s.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + '"';
-}
-
-function cs(elt, value) {return window.getComputedStyle(elt).getPropertyValue(value);}
 function is_text(elt) {return elt.nodeType == document.TEXT_NODE || elt.nodeType == document.CDATA_SECTION_NODE;}
-function is_comment(elt) {return elt.nodeType == document.COMMENT_NODE;}
 function is_inline(elt) {return cs(elt, "display") == "inline";}
 function is_iblock(elt) {return cs(elt, "display") == "inline-block";}
 function is_block(elt) {
@@ -297,11 +209,6 @@ function infer_anons(inputs) {
     return out;
 }
 
-function has_positions(b) {
-    return typeof b.props.w === "number" && typeof b.props.h === "number" &&
-        typeof b.props.x === "number" && typeof b.props.y === "number";
-}
-
 function infer_lines(box, parent) {
     function last_line() {
         if (parent.children.length === 0 || parent.children[parent.children.length - 1].type !== "LINE") {
@@ -331,6 +238,7 @@ function infer_lines(box, parent) {
         if (prev.type == "LINE" || prev.type == "INLINE") return true;
         */
         if (!prev) return true;
+        if (prev.props.br === "") return false;
         var ph = prev.props.h;
         var py = prev.props.y;
         var px = prev.props.x;
@@ -338,6 +246,11 @@ function infer_lines(box, parent) {
         var m = get_margins(prev.node);
         ph += m.top + m.bottom;
         py -= m.top;
+        if (prev.node.nodeType == document.ELEMENT_NODE) {
+            // Ultimately we need a horizontal cursor, not this nonsense.
+            pw += m.left + m.right
+            px -= m.left;
+        }
         var pos = get_relative_offset(prev.node);
         if (pos.top) py -= pos.top;
         else if (pos.bottom) py += pos.bottom;
@@ -350,6 +263,9 @@ function infer_lines(box, parent) {
         var m = get_margins(txt.node);
         th += m.top + m.bottom;
         ty -= m.top;
+        if (txt.node.nodeType == document.ELEMENT_NODE) {
+            tx -= m.left;
+        }
         var pos = get_relative_offset(txt.node);
         if (pos.top) ty -= pos.top;
         else if (pos.bottom) ty += pos.bottom;
@@ -359,13 +275,14 @@ function infer_lines(box, parent) {
         var horiz_adj = (ty + th >= py && py >= ty || py + ph >= ty && ty >= py)
 
         // Note fuzziness
-        return horiz_adj && tx >= px + pw - 1/APP_PIXEL_TO_PIXELS;
+        return horiz_adj && tx >= px + pw - MIN_LENGTH;
     }
 
     function stackup(l, stack, sstack) {
         for (var i = 0; i < stack.length; i++) {
             if (!sstack[i]) {
-                var sselt = new Box(stack[i].type, stack[i].node, stack[i].props);
+                var newprops = Object.assign({}, stack[i].props);
+                var sselt = new Box(stack[i].type, stack[i].node, newprops);
                 (i == 0 ? l : sstack[i - 1]).children.push(sselt);
                 sstack.push(sselt);
             }
@@ -374,19 +291,23 @@ function infer_lines(box, parent) {
 
     var stack : Box[] = [];
     var sstack : Box[] = [];
-    var last = false;
+    var last = false; // Handles last in-flow element; skips floats/positioned
     function go(b) {
-        if (b.type == "TEXT" || b.type == "BLOCK" || b.type == "MAGIC" ||
-            (b.type == "INLINE" && has_positions(b))) {
-            // TODO: does not handle case where previous elt is floating BLOCK
+        if (b.type == "BLOCK") {
+            // Handles case of floating block
             var l = last_line() || new_line();
-            if (b.type !== "BLOCK" && !fits(b, last)) {
+            stackup(l, stack, sstack);
+            (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
+        } else if (b.type == "TEXT" || b.type == "MAGIC" ||
+                   (b.type == "INLINE" && b.node && (is_replaced(b.node) || is_iblock(b.node)))) {
+            var l = last_line() || new_line();
+            if (!fits(b, last)) {
                 l = new_line();
                 sstack = [];
             }
             stackup(l, stack, sstack);
             (sstack.length === 0 ? l : sstack[sstack.length-1]).children.push(b);
-            if (b.type !== "BLOCK") last = b;
+            last = b;
         } else if (b.type == "INLINE") {
             stack.push(b);
             for (var i = 0; i < b.children.length; i++) {
@@ -430,10 +351,13 @@ function extract_text(elt) {
         box.props.text = dump_string(ranges[i].toString().replace(/\s+/g, " "));
         outs.push(box);
     }
+    for (var i = 0; i < outs.length - 1; i++) {
+        outs[i].props.br = "";
+    }
     return outs;
 }
 
-function extract_block(elt, children) {
+function extract_block(elt, children, features) {
     var r = elt.getBoundingClientRect();
 
     children = infer_anons(children);
@@ -458,17 +382,58 @@ function extract_block(elt, children) {
         children.push(Line(null, {}));
     }
 
+    try {
+        annotate_inlines(box);
+    } catch {
+        features["inlines:weird"] = true;
+    }
     return box;
 }
 
-function extract_inline(elt, children) {
-    var r = elt.getClientRects();
-    var box;
-    if (r.length == 1 && is_replaced(elt)) { // TODO: enable in all cases
-        box = Inline(elt, {x: r[0].x, y: r[0].y, w: r[0].width, h: r[0].height});
-    } else {
-        box = Inline(elt, {});
+function annotate_inlines(box) {
+    var elements : Element[] = [];
+    var boxes : Box[][] = [];
+    function collect_by_elt(b) {
+        for (var i = 0; i < b.children.length; i++) {
+            // Skip blocks that we've already gone and annotated
+            if (b.children[i].type == "BLOCK") continue;
+            collect_by_elt(b.children[i]);
+        }
+        if (!b.node) return;
+        if (b.type != "INLINE") return;
+        var idx = elements.indexOf(b.node);
+        if (idx === -1) {
+            idx = elements.length;
+            elements.push(b.node);
+            boxes.push([]);
+        }
+        boxes[idx].push(b);
     }
+    collect_by_elt(box);
+    for (var i = 0; i < elements.length; i++) {
+        var rects = elements[i].getClientRects();
+        if (rects.length !== boxes[i].length) {
+            throw "Rect/box invariant does not hold for #" + elements[i].id + 
+                " " + rects.length + " " + boxes[i].length;
+        }
+        for (var j = 0; j < boxes[i].length; j++) {
+            var p = boxes[i][j].props;
+            var r = rects[j];
+            // For replaced elements, this overwrites existing values
+            Object.assign(p, {x: r.x, y: r.y, w: r.width, h: r.height});
+        }
+    }
+}
+
+function extract_inline(elt, children) {
+    // Inline sizes are handled by annotate_inlines after line breaking;
+    // however, for replaced elements we need sizes for line breaking.
+    var rects = elt.getClientRects();
+    var props = {};
+    if (rects.length == 1) {
+        props = { x: rects[0].x, y: rects[0].y, w: rects[0].width, h: rects[0].height };
+    }
+    var box = Inline(elt, props);
     box.children = children;
     return box;
 }
@@ -532,7 +497,7 @@ function make_boxes(elt, styles, features) {
     } else if (!is_visible(elt)) {
         return [];
     } else if ((is_block(elt) || is_iblock(elt))) {
-        var box = extract_block(elt, children);
+        var box = extract_block(elt, children, features);
         if (is_iblock(elt)) box.type = "INLINE";
         return [box];
     } else if (is_inline(elt)) {
@@ -542,28 +507,11 @@ function make_boxes(elt, styles, features) {
     }
 }
 
-// Inspired by https://stackoverflow.com/questions/13382516/getting-scroll-bar-width-using-javascript
-function compute_scrollbar_width() {
-    var outer = document.createElement("CassiusBlock");
-    var inner = document.createElement("CassiusBlock");
-    outer.style.display = "block";
-    outer.style.overflow = "scroll";
-    outer.style.borderLeftStyle = "none";
-    outer.style.borderRightStyle = "none";
-    outer.style.position = "absolute";
-    outer.appendChild(inner);
-    document.body.appendChild(outer);
-    var out = outer.offsetWidth - outer.clientWidth;
-    document.body.removeChild(outer)
-    return out;
-}
-
-function get_boxes(features) {
+function get_boxes(style, features) {
     window.scrollTo(0, 0);
     var view = Page(document, {w: window.innerWidth, h: window.innerHeight});
-    var style = {};
     view.children = make_boxes(document.documentElement, style, features);
-    return {view: view, style: style, scroll: compute_scrollbar_width()};
+    return view;
 }
 
 function dump_selector(sel) {
@@ -988,8 +936,9 @@ function annotate_box_elt(box) {
     }
 }
 
-import { MAX, compute_flt_pointer, check_float_registers } from "./ezone"
-import { dump_fonts } from "./fonts"
+import { MAX, compute_flt_pointer, check_float_registers } from "./ezone";
+import { dump_fonts } from "./fonts";
+import { dump_browser } from "./browser";
 
 export function page2text(name) {
     LETTER = name;
@@ -1008,45 +957,38 @@ export function page2text(name) {
         }
     }
 
-    var out = get_boxes(features);
+    var style = {}
+    var page = get_boxes(style, features);
     var doc = dump_document(features);
-    var page = out.view;
     annotate_box_elt(page);
     
     compute_flt_pointer(page, null, null);
     features["float:" + MAX] = true;
     check_float_registers(page, features);
 
-    var style = out.style;
     for (var eid in style) {
         if (!style.hasOwnProperty(eid)) continue;
         text += dump_rule("#" + eid, style[eid], features, true, false);
     }
     text += ")\n\n";
 
-    text += dump_fonts(name, features);
+    text += dump_fonts(name, features) + "\n";
+    text += dump_browser(name, features) + "\n";
 
-    text += "\n\n(define-layout (" + name
-    var props = {matched: "true", w: page.props.w, h: page.props.h, fs: 16, scrollw: out.scroll };
-    for (var prop in props) {
-        if (typeof props[prop] !== "undefined") {
-            text += " :" + prop + " " + props[prop];
-        }
-    }
-    text += ")\n ([VIEW :w " + page.props.w + "]";
-    text += dump_tree(page.children[0]);
-    text += "))\n\n";
     text += "(define-document " + name;
     text += dump_tree(doc);
     text += ")\n\n";
 
-    var title = dump_string(document.title);
+    text += "(define-layout " + name + " (" + name + " " + name + ")\n";
+    text += " ([VIEW :w " + page.props.w + "]";
+    text += dump_tree(page.children[0]);
+    text += "))\n\n";
+
     text += "(define-problem " + name;
-    text += "\n  :title " + title;
-    text += "\n  :url \""  + location;
-    text += "\"\n  :sheets firefox " + name;
+    text += "\n  :title " + dump_string(document.title);
+    text += "\n  :url "  + dump_string("" + location);
+    text += "\n  :sheets firefox " + name;
     text += "\n  :fonts " + name;
-    text += "\n  :documents " + name;
     text += "\n  :layouts " + name;
     if (ERROR) {
         text += "\n  :error " + dump_string(ERROR + "");

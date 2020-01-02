@@ -3,7 +3,7 @@
 (require "common.rkt" "dom.rkt" "smt.rkt" "encode.rkt" "tree.rkt" "selectors.rkt")
 (require "spec/css-properties.rkt" "spec/tree.rkt" "spec/compute-style.rkt" "spec/layout.rkt"
          "spec/percentages.rkt" "spec/utils.rkt" "spec/float.rkt" "spec/colors.rkt" "spec/fonts.rkt"
-         "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt" "modularize.rkt")
+         "spec/media-query.rkt" "assertions.rkt" "spec/replaced-elements.rkt" "spec/browser.rkt" "modularize.rkt")
 (provide all-constraints)
 
 ;; The constraints
@@ -11,7 +11,7 @@
 (define (tree-constraints dom emit elt)
   (emit `(assert (= (pelt ,(dump-elt elt)) ,(dump-elt (node-parent elt))))))
 
-(define (selector-constraints media-params emit elts rules)
+(define (selector-constraints emit elts rules)
   (define ml (rule-matchlist rules elts))
 
   (for ([rm ml])
@@ -49,7 +49,7 @@
 
           (match (car (rulematch-rule rm))
             [`(media ,(? media-query? mq) ,_)
-             (set! propname? `(and ,propname? ,(media-matches? media-params mq)))]
+             (set! propname? `(and ,propname? ,(media-matches? 'screen mq)))]
             [_ (void)])
           (emit `(assert (=> (and ,no-match-so-far ,propname?)
                              (= (,(sformat "style.~a" prop) ,style) ,propname))))
@@ -84,36 +84,20 @@
     (emit `(assert (= (bid ,(dump-box box)) ,(node-id box))))
     (emit `(assert (is-box ,(dump-box box))))))
 
-(define (configuration-constraints params doms emit)
+(define (configuration-constraints doms emit)
   (for ([dom doms])
-    (define w (car (dom-context dom ':w #:default '(?))))
-    (define h (car (dom-context dom ':h #:default '(?))))
-    (define fs (car (dom-context dom ':fs #:default '(?))))
-    (define scrollw (car (dom-context dom ':scrollw #:default '(?))))
-
-    (define (param var) (sformat "config/~a/~a" (dom-name dom) var))
-    (define (emit-const name type value)
-      (match value
-        [(? number*?)
-         (emit `(define-const ,name ,type ,(number->z3 value)))]
+    (define browser (sformat "browser/~a" (dom-name dom)))
+    (the-browser browser)
+    (emit `(declare-const ,browser Browser))
+    (for ([(key field) (in-hash browser-fields)])
+      (define const `(,(sformat "browser.~a" field) ,browser))
+      (match (car (dom-context dom key #:default '(?)))
+        [(? number*? value)
+         (emit `(assert (= ,const ,(number->z3 value))))]
         ['?
-         (emit `(declare-const ,name ,type))]
+         (void)]
         [`(between ,(? number*? min) ,(? number*? max))
-          (emit `(declare-const ,name ,type))
-          (emit `(assert (<= ,(number->z3 min) ,name ,(number->z3 max))))]))
-
-    (emit-const (param 'w) 'Real w)
-    (emit-const (param 'h) 'Real h)
-    (emit-const (param 'font-size) 'Real fs)
-    (emit-const (param 'scrollbar-width) 'Real scrollw)
-    (fs-name (param 'font-size))
-    (view-width-name (param 'w))
-    (view-height-name (param 'h))
-    (scroll-width-name (param 'scrollbar-width))
-    (dict-set! params ':fs (param 'font-size))
-    (dict-set! params ':scrollbar-width (param 'scrollbar-width))
-    (dict-set! params ':w (param 'w))
-    (dict-set! params ':h (param 'h))))
+          (emit `(assert (<= ,(number->z3 min) ,const ,(number->z3 max))))]))))
 
 (define (number*? x)
   (match x
@@ -180,7 +164,8 @@
   (emit `(assert (= (is-image ,(dump-elt elt)) ,(if (element-image? elt) 'true 'false))))
 
   (when (element-br? elt)
-    (emit `(assert (= 0 (intrinsic-width ,(dump-elt elt)) (intrinsic-height ,(dump-elt elt))))))
+    ;; The height is drawn from font information but we ignore that here
+    (emit `(assert (= (/ 1 60) (intrinsic-width ,(dump-elt elt))))))
   (when (node-get elt ':w)
     (emit `(assert (= (intrinsic-width ,(dump-elt elt)) ,(node-get elt ':w)))))
   (when (node-get elt ':h)
@@ -201,8 +186,10 @@
           (for ([key to-do]) (hash-remove! consts key))
           (loop))))))
 
-(define (sheet-constraints params doms rules)
-  (reap [emit] (for ([dom doms]) (selector-constraints params emit (sequence->list (in-tree (dom-elements dom))) rules))))
+(define (sheet-constraints doms rules)
+  (reap [emit]
+        (for ([dom doms])
+          (selector-constraints emit (sequence->list (in-tree (dom-elements dom))) rules))))
 
 (define (all-constraints sheets doms fonts #:render? [render? true])
   (define (global f) (reap [sow] (f doms sow)))
@@ -210,13 +197,15 @@
     (reap [sow] (for* ([dom doms] [elt (in-elements dom)]) (f dom sow elt))))
   (define (per-box f)
     (reap [sow] (for* ([dom doms] [box (in-boxes dom)]) (f dom sow box))))
-  (define media-params (make-hash '((:type . screen))))
   (define (for-render f . args) (if render? (apply f args) '()))
+
+  (*%* (set-union (*%*) (gather-percentages sheets)))
 
   `((set-option :produce-unsat-cores true)
     ;(set-option :sat.minimize_core true) ;; TODO: Fix Z3 install
     (echo "Basic definitions")
     ,@(for-render make-%of)
+    ,@(browser-definition)
     ,@(colors)
     (declare-datatypes
      ()
@@ -238,13 +227,13 @@
     ,@(for-render make-get-font fonts)
     ,@(for-render global dom-define-elements)
     ,@(global dom-define-boxes)
-    ,@(global (curry configuration-constraints media-params))
+    ,@(global configuration-constraints)
     ,@(for-render element-definitions)
     ,@(utility-definitions)
     ,@(link-common)
     ,@(for-render link-definitions)
     ,@(for-render style-computation)
-    ,@(for-render sheet-constraints media-params doms (apply append sheets))
+    ,@(for-render sheet-constraints doms (apply append sheets))
     ,@(for-render per-element tree-constraints)
     ,@(per-box box-tree-constraints)
     ,@(per-box position-constraints)

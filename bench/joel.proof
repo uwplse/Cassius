@@ -1,5 +1,7 @@
 ;; -*- mode: scheme -*-
 
+(import "common.thm")
+
 (page joel1 (load "joel.rkt" doc-2)
       :w (between 800 1920)
       :h (between 600 1280)
@@ -13,17 +15,8 @@
       :h (between 600 1280)
       :fs (between 16 32))
 
-(define (is-interactive b)
-  (matches b (tag a)))
-
-(define (onscreen b)
-  (and (>= (top b) 0) (>= (left b) 0)))
-
 (define (onscreen-plus b delta)
   (and (>= (top b) delta) (>= (left b) 0)))
-
-(theorem (interactive-onscreen b)
-  (=> (is-interactive b) (onscreen b)))
 
 (proof (interactive-onscreen interactive-onscreen joel1 joel2 other)
   (component sidebar (id masthead))
@@ -120,20 +113,6 @@
             (=> (onscreen-plus sidebar-title 5)
                 (is-interactive b) (onscreen b)))))
 
-(define (viewable b)
-  (and (> (right b) 0) (> (bottom b) 0)))
-
-(define (line b)
-  (ancestor b (has-type ? line)))
-
-(define (width-line b)
-  (- (right (last b)) (left (first b))))
-
-(theorem (line-width b)
-  (=> (has-type b text) (has-contents b) (viewable b)
-      (!= (first (line b)) null)
-      (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))
-
 (proof (line-width line-width joel1 joel2 other)
   (component sidebar (id masthead))
   (component sidebar-content (id tabs))
@@ -158,11 +137,11 @@
   (components (id respond))
 
   (assert * (forall (b) (=> (has-type b text) (has-contents b)
-                            (!= (first (line b)) null)
+                            (!= (first (ancestor-line b)) null)
                             (not (matches ? (id post-footer-widgets)))
-                            (<= (width-line (line b)) (* 80 (/ 10 19) (height b))))))
+                            (<= (line-width (ancestor-line b)) (* 80 (character-width b))))))
 
   (admit * (forall (b) (=> (matches ? (id post-footer-widgets))
                            (has-type b text) (has-contents b)
-                           (!= (first (line b)) null)
-                           (<= (width-line (line b)) (* 80 (/ 10 19) (height b)))))))
+                           (!= (first (ancestor-line b)) null)
+                           (<= (line-width (ancestor-line b)) (* 80 (character-width b)))))))

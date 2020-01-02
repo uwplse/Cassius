@@ -12,6 +12,7 @@
         "strictPropertyInitialization": true,
         "outFile": "./all.js",
         "module": "amd",
+        "target": "es6",
     },
     "include": [ "*.ts" ]
 }

@@ -1,10 +1,6 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt" "css-properties.rkt")
-(provide layout-definitions view-width-name view-height-name boxref-definitions scroll-width-name)
-
-(define view-width-name (make-parameter false))
-(define view-height-name (make-parameter false))
-(define scroll-width-name (make-parameter false))
+(require "../common.rkt" "../smt.rkt" "css-properties.rkt" "browser.rkt")
+(provide layout-definitions boxref-definitions)
 
 (define (get-px-or-% prop wrt b)
   (define r `(computed-style (box-elt ,b)))
@@ -15,19 +11,23 @@
           (%of (,(sformat "~a.%" type) (,(sformat "style.~a" prop) ,r)) ,wrt)))
   (match prop
    [(or 'min-width 'width 'max-width)
-    `(-
-      ,out
-      (ite (is-box-sizing/border-box (style.box-sizing ,r))
-           (+ (bl ,b) (pl ,b) (pr ,b) (br ,b))
-           0.0)
-      (scroll-y ,b))]
+    `(max
+      (-
+       ,out
+       (ite (is-box-sizing/border-box (style.box-sizing ,r))
+            (+ (bl ,b) (pl ,b) (pr ,b) (br ,b))
+            0.0)
+       (scroll-y ,b))
+      0.0)]
    [(or 'min-height 'height 'max-height)
-    `(-
-      ,out
-      (ite (is-box-sizing/border-box (style.box-sizing ,r))
-           (+ (bt ,b) (pt ,b) (pb ,b) (bb ,b))
-           0.0)
-      (scroll-x ,b))]
+    `(max
+      (-
+       ,out
+       (ite (is-box-sizing/border-box (style.box-sizing ,r))
+            (+ (bt ,b) (pt ,b) (pb ,b) (bb ,b))
+            0.0)
+       (scroll-x ,b))
+      0.0)]
    [else
     out]))
 
@@ -386,8 +386,24 @@
      (= (mbp b) (max (mb b) 0.0))
      (= (mbn b) (min (mb b) 0.0))))
 
+  (declare-fun ancestor-block (Box) Box)
+  (assert
+   (forall ((b Box))
+     (= (ancestor-block b)
+        (ite (is-box/block (type b))
+             b
+             (ite (is-flow-root (pbox b))
+                  no-box
+                  (ancestor-block (pbox b)))))))
+
+  (define-fun relative-position-parent ((b Box)) Box
+    (let ([r (computed-style (box-elt b))])
+      (ite (and (is-elt (box-elt b)) (not (is-float/none (style.float r))))
+           (ancestor-block (pflow b))
+           (pflow b))))
+
   (define-fun relatively-positioned ((b Box)) Bool
-    ,(smt-let ([r (computed-style (box-elt b))] [p (pflow b)])
+    ,(smt-let ([r (computed-style (box-elt b))] [p (relative-position-parent b)])
        (=> (is-offset/px (style.left r))
            (= (xo b) (+ (offset.px (style.left r)) (xo p))))
        (=> (is-offset/% (style.left r))
@@ -410,7 +426,7 @@
            (= (yo b) (yo p)))))
 
   (define-fun no-relative-offset ((b Box)) Bool
-    ,(smt-let ([r (computed-style (box-elt b))] [p (pflow b)])
+    ,(smt-let ([r (computed-style (box-elt b))] [p (relative-position-parent b)])
        (= (xo b) (xo p))
        (= (yo b) (yo p))))
 
@@ -593,7 +609,12 @@
             (and (= (w b) (usable-stfwidth b))
                  (w-from-stfwidth b)))
         (=> (and (not left?) (not right?))
-            (= (left-outer b) (left-content p)))
+            (= (left-outer b)
+               (ite (or (is-box/block (type (pflow b))) (is-flow-root (pflow b)))
+                    (left-content p)
+                    (ite (is-box (vflow b))
+                         (right-outer (vflow b))
+                         (left-outer (pflow b))))))
         (=> (and right? (not (and left? width?)))
             (= (right-outer b) (- (right-padding pp) temp-right)))
         (=> (and left? right?) (not (w-from-stfwidth b)))
@@ -630,10 +651,18 @@
   (declare-fun ez.line (Box) EZone)
   (declare-fun ez.line-up (Box) EZone)
 
+  (define-fun float-affects-own-line ((b Box)) Bool
+    ;; PRECONDITION: (is-flow-root b)
+    (let ([l (ancestor-line b)])
+      (and
+       (is-box l)
+       (or (< (top-outer b) (bottom-outer l))
+           ;; Special case for zero-height (empty) lines
+           (= (top-outer b) (top-outer l) (bottom-outer l))))))
+
   (assert (forall ((b Box))
                   (= (ez.line-up b)
-                     (ite (and (is-flow-root b) (is-box (ancestor-line b))
-                               (< (top-outer b) (bottom-outer (ancestor-line b))))
+                     (ite (and (is-flow-root b) (float-affects-own-line b))
                           (ez.line b)
                           (ite (is-box (lbox b))
                                (ez.line-up (lbox b))
@@ -641,8 +670,7 @@
   (assert
    (forall ((b Box))
      (= (ez.line b)
-        (ite (and (is-flow-root b) (is-box (ancestor-line b))
-                  (< (top-outer b) (bottom-outer (ancestor-line b))))
+        (ite (and (is-flow-root b) (float-affects-own-line b))
              (ez.out b)
              (ite (is-box (vbox b))
                   (ez.line-up (vbox b))
@@ -791,7 +819,7 @@
        (ite (is-position/relative (style.position r)) (relatively-positioned b) (no-relative-offset b))
 
        (= (text-indent b)
-          (ite (is-elt e) ,(get-px-or-% 'text-indent '(w p) 'b) 0.0))
+          (ite (is-elt e) ,(get-px-or-% 'text-indent '(w b) 'b) 0.0))
 
        ,(smt-cond
          [(or (is-position/absolute (position b)) (is-position/fixed (position b)))
@@ -854,11 +882,11 @@
 
        (= (baseline b) (baseline p))
 
-       (=> (and (is-elt e) (is-image e)) (= (inline-block-offset b) 1))
+       (=> (and (is-elt e) (is-image e)) (= (inline-block-offset b) 0))
 
        (ite (or (and (is-elt e) (is-replaced e)) (is-display/inline-block (style.display r)))
            (and
-            (< 0 (inline-block-offset b) (max (height-outer b) (font.descent metrics)))
+            (<= 0 (inline-block-offset b) (max (height-outer b) (font.descent metrics)))
             (= (above-baseline b)
                (max-if (- (height-outer b) (inline-block-offset b))
                        (is-box v) (above-baseline v)))
@@ -979,10 +1007,13 @@
 
        (=> (is-box l)
            (= (baseline b)
-              (+ (y b) (max-if
-                        (above-baseline l)
-                        (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
-                        (+ (font.ascent metrics) (* 0.5 leading))))))
+              (+ (y b)
+                 (ite (contains-content l)
+                      (max-if
+                       (above-baseline l)
+                       (=> quirks-mode (is-display/list-item (style.display (computed-style (box-elt (pflow b))))))
+                       (+ (font.ascent metrics) (* 0.5 leading)))
+                      0.0))))
        (=> (is-box l)
            (= (h b)
               (ite (contains-content l)
@@ -1017,8 +1048,8 @@
      (zero-box-model b)
      (= (x b) (y b) 0.0)
      (= (xo b) (yo b) 0.0)
-     (= (box-width b) ,(view-width-name))
-     (= (box-height b) ,(view-height-name))
+     (= (box-width b) (browser.w ,(the-browser)))
+     (= (box-height b) (browser.h ,(the-browser)))
      (= (ez.lookback b) false)
      (= (text-indent b) 0.0)))
 
@@ -1062,11 +1093,13 @@
                  (is-elt (box-elt b))
                  (is-elt (pelt (box-elt b)))
                  (is-overflow/scroll (style.overflow-x (computed-style (box-elt b)))))
-                ,(scroll-width-name)
+                (browser.scrollbar-width ,(the-browser))
                 0))
             (and
              (is-no-box (pbox b))
-             (or (= (scroll-x b) 0) (= (scroll-x b) ,(scroll-width-name))))))) ; The root box is weird in several ways
+             (or (= (scroll-x b) 0) (= (scroll-x b)
+                                       (browser.scrollbar-width ,(the-browser))
+                                       )))))) ; The root box is weird in several ways
 
   (assert
    (forall ((b Box))
@@ -1079,8 +1112,8 @@
                  (is-elt (box-elt b))
                  (is-elt (pelt (box-elt b)))
                  (is-overflow/scroll (style.overflow-y (computed-style (box-elt b)))))
-                ,(scroll-width-name)
+                (browser.scrollbar-width ,(the-browser))
                 0))
             (and
              (is-no-box (pbox b))
-             (or (= (scroll-y b) 0) (= (scroll-y b) ,(scroll-width-name))))))))
+             (or (= (scroll-y b) 0) (= (scroll-y b) (browser.scrollbar-width ,(the-browser)))))))))

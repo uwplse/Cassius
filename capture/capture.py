@@ -9,7 +9,7 @@ Uses Selenium Webdriver to download new benchmarks for Cassius.
 Opens a page in Firefox, causes it to execute get_bench.js, and saves the result.
 """
 
-from selenium import webdriver
+import selenium, selenium.webdriver
 import os, sys
 import warnings
 try:
@@ -27,12 +27,12 @@ def measure_scrollbar(browser):
     browser.execute_script(jsfile("scrollbar.js") + "; estimate_scrollbar()");
 
 def make_browser():
-    profile = webdriver.FirefoxProfile()
+    profile = selenium.webdriver.FirefoxProfile()
     profile.set_preference("security.mixed_content.block_active_content", False)
     profile.set_preference("security.mixed_content.block_display_content", False)
-    options = webdriver.firefox.options.Options()
+    options = selenium.webdriver.firefox.options.Options()
     options.headless = True
-    browser = webdriver.Firefox(options=options, firefox_profile=profile)
+    browser = selenium.webdriver.Firefox(options=options, firefox_profile=profile)
     measure_scrollbar(browser)
     return browser
 
@@ -65,16 +65,19 @@ def main(urls, prerun=None, fd=None):
     browser = make_browser()
     
     try:
-        print("Saving layout to {}:".format(fd.name), file=sys.stderr, end=" ")
+        captured = 0
         for n, url in name(urls):
             try:
                 fd.write(capture(browser, url, n, prerun=prerun))
-                print(n, file=sys.stderr, end=" ")
+            except selenium.common.exceptions.JavascriptException as e:
+                print("JS Exception in {}: {}".format(n, e.msg))
             except:
+                print("Exception in {}:".format(n))
                 import traceback
                 traceback.print_exc()
-                continue
-        print(file=sys.stderr)
+            else:
+                captured += 1
+        print("Captured {} layouts to {}".format(captured, fd.name), file=sys.stderr)
     finally:
         browser.quit()
 

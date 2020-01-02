@@ -1,5 +1,5 @@
 #lang racket
-(require "common.rkt" "dom.rkt" "tree.rkt" "spec/css-properties.rkt" "spec/utils.rkt" "smt.rkt")
+(require "common.rkt" "dom.rkt" "tree.rkt" "spec/css-properties.rkt" "spec/utils.rkt" "smt.rkt" "spec/browser.rkt")
 
 (provide dump-tag extract-tag dump-id extract-id
          dump-elt dump-box extract-box extract-style
@@ -150,12 +150,10 @@
       [_ test])))
 
 (define (extract-ctx! model d)
+  (match-define (list 'browser values ...) (dict-ref model (the-browser)))
   (define ctx*
-    (for/fold ([ctx (dom-properties d)]) ([(attr varname) #hash((:w . w) (:h . h) (:fs . font-size))])
-      (define var (sformat "config/~a/~a" (dom-name d) varname))
-      (if (dict-has-key? model var)
-          (dict-set ctx attr (list (dict-ref model var)))
-          ctx)))
+    (for/fold ([ctx (dom-properties d)]) ([(field var) (in-hash browser-fields)] [value values])
+      (dict-set ctx field (list value))))
   (struct-copy dom d [properties ctx*]))
 
 ;; Does tagging of bad

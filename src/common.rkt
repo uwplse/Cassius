@@ -3,7 +3,7 @@
 
 (provide
  reap for/reap for*/reap for/append
- sformat slower indent tree-size snoc dict-remove*
+ sformat slower indent tree-size snoc dict-remove* dict-ref-define
  supported-features support-features!
  xor ->number z3-path value=?
  attribute? attributes->dict dict->attributes
@@ -13,7 +13,7 @@
  define-by-match
  list-intersect multi-command-line debug-mode!
  minimize-mode!
- *debug* *fuzz* *font-fuzz*
+ *debug* *fuzz*
  *version* *commit* *branch*
  *minimize*
  *cache-file* *cache*
@@ -51,12 +51,10 @@
 
 (define *debug* (make-parameter false))
 (define *fuzz* (make-parameter '(/ 10 60)))
-(define *font-fuzz* (make-parameter  1))
 
 (define (debug-mode!)
   (*debug* true)
-  (*fuzz* #f)
-  (*font-fuzz* #f))
+  (*fuzz* #f))
 
 (define *minimize* (make-parameter false))
 (define (minimize-mode!)
@@ -146,6 +144,11 @@
 (define (dict-remove* dict keys)
   (for/fold ([dict dict]) ([key keys])
     (dict-remove dict key)))
+
+(define-syntax-rule (dict-ref-define dict-expr [var key] ...)
+  (begin
+    (define dict dict-expr)
+    (define var (dict-ref dict key)) ...))
 
 (define (make-log)
   (define time-start (current-inexact-milliseconds))

@@ -1,14 +1,12 @@
 #lang racket
-(require "../common.rkt" "../smt.rkt" "css-properties.rkt" "../encode.rkt")
-(provide style-computation fs-name)
+(require "../common.rkt" "../smt.rkt" "css-properties.rkt" "../encode.rkt" "browser.rkt")
+(provide style-computation)
 
 ;; This file defines the translation from specified to computed
 ;; styles. The specified style happens after all the cascading and so
 ;; on occurs, but it differs from the specified style in three weird
 ;; cases where CSS wants "bad" but legal values not to participate in
 ;; inheritance.
-
-(define fs-name (make-parameter false))
 
 (define (prop-is-positive prop elt)
   (define type (slower (css-type prop)))
@@ -76,7 +74,7 @@
 
 (define-constraints (style-computation)
   (define-fun rem2px ((rem Real)) Real
-    (%of rem ,(fs-name)))
+    (%of rem (browser.fs.serif ,(the-browser))))
 
   (define-fun compute-style ((elt Element)) Bool
     (and
@@ -87,19 +85,26 @@
      (is-font-size/px (style.font-size (computed-style elt)))
 
      (= (style.font-size (computed-style elt))
-        (let ([fs (style.font-size (specified-style elt))]
-              [pfs (ite (is-elt (pelt elt))
-                        (font-size.px (style.font-size (computed-style (pelt elt))))
-                        ,(fs-name))])
-          ,(smt-cond
-            [(is-font-size/inherit fs)
-             (font-size/px pfs)]
-            [(is-font-size/% fs)
-             (font-size/px (%of (font-size.% fs) pfs))]
-            [(is-font-size/em fs)
-             (font-size/px (%of (* 100 (font-size.em fs)) pfs))]
-            [else
-             fs])))
+        ,(smt-let* ([fs (style.font-size (specified-style elt))]
+                    [pfs (ite (is-elt (pelt elt))
+                              (font-size.px (style.font-size (computed-style (pelt elt))))
+                              (browser.fs.serif ,(the-browser)))]
+                    ;; "monospace" text in particular has a default font size of 12 or 13px!
+                    [pfs* (ite (= (style.font-family (specified-style elt))
+                                  ,(dump-value 'Font-Family "monospace"))
+                               (* pfs
+                                  (/ (browser.fs.mono ,(the-browser))
+                                     (browser.fs.serif ,(the-browser))))
+                               pfs)])
+           ,(smt-cond
+             [(is-font-size/inherit fs)
+              (font-size/px pfs*)]
+             [(is-font-size/% fs)
+              (font-size/px (%of (font-size.% fs) pfs*))]
+             [(is-font-size/em fs)
+              (font-size/px (%of (* 100 (font-size.em fs)) pfs*))]
+             [else
+              fs])))
 
      (= (style.line-height (computed-style elt))
         (ite (is-line-height/inherit (style.line-height (specified-style elt)))

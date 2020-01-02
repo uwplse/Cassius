@@ -78,7 +78,7 @@ reports/vizassert.html reports/vizassert.json: bench/fwt.working.rkt
 reports/specific.html reports/specific.json: bench/fwt.rkt bench/assertions/specific.sexp
 	racket src/report.rkt specific-assertions $(FLAGS) --cache reports/fwt.cache --expected bench/fwt/expected.sexp --show-all --timeout 1800 -o reports/specific bench/assertions/specific.vizassert bench/fwt.rkt bench/assertions/specific.sexp
 
-reports/modular.html reports/modular.json: bench/fwt.proof bench/joel.proof bench/components.proof
+reports/modular.html reports/modular.json: bench/fwt.proof bench/joel.proof
 	racket src/report.rkt proofs $(FLAGS) --show-all --timeout 600 -o reports/modular $^
 
 # Joel on Software blog posts
