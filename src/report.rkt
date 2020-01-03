@@ -186,16 +186,22 @@
             (unless (null? to-send)
               (place-channel-put worker (cons worker (car to-send)))
               (set! to-send (cdr to-send))))
-          (let loop ([out '()])
-            (cond
-             [(= (length out) (length inputs))
-              (map cdr (sort out < #:key car))]
-             [else
-              (match-define (cons worker result) (apply sync workers))
-              (unless (null? to-send)
-                (place-channel-put worker (cons worker (car to-send)))
-                (set! to-send (cdr to-send)))
-              (loop (cons result out))])))
+          (with-handlers ([exn:break?
+                           (λ (e)
+                             (eprintf "Terminating after ~a/~a. Waiting for ~a\n"
+                                      (length out) (length inputs)
+                                      (car to-send))
+                             (raise e))])
+            (let loop ([out '()])
+              (cond
+               [(= (length out) (length inputs))
+                (map cdr (sort out < #:key car))]
+               [else
+                (match-define (cons worker result) (apply sync workers))
+                (unless (null? to-send)
+                  (place-channel-put worker (cons worker (car to-send)))
+                  (set! to-send (cdr to-send)))
+                (loop (cons result out))]))))
         (for/list ([input inputs]) body ...))))
 
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
