@@ -70,11 +70,12 @@ def main(urls, prerun=None, fd=None):
             try:
                 fd.write(capture(browser, url, n, prerun=prerun))
             except selenium.common.exceptions.JavascriptException as e:
-                print("JS Exception in {}: {}".format(n, e.msg))
+                print("JS Exception in {}: {}".format(n, e.msg), file=sys.stderr)
             except:
-                print("Exception in {}:".format(n))
+                print("Exception in {}:".format(n), file=sys.stderr)
                 import traceback
                 traceback.print_exc()
+                browser = make_browser() # reset browser just in case
             else:
                 captured += 1
         print("Captured {} layouts to {}".format(captured, fd.name), file=sys.stderr)
