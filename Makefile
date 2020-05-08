@@ -1,7 +1,7 @@
 TIME=$(shell date +%s)
 FLAGS=
 
-CAPTURE=python3 capture/capture.py --retries 3
+CAPTURE=python3 capture/capture.py --retry 3
 
 .PHONY: deploy test nightly publish index clean setup
 
