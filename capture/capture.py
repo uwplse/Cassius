@@ -53,7 +53,7 @@ def name(urls):
             out.append(("doc-" + id, url))
         return out
 
-def main(urls, prerun=None, fd=None):
+def main(urls, prerun=None, fd=None, retries=1):
     urls = sorted([url if "://" in url else "file://" + os.path.abspath(url)
                    for url in urls])
 
@@ -67,18 +67,21 @@ def main(urls, prerun=None, fd=None):
     try:
         captured = 0
         for n, url in name(urls):
-            try:
-                fd.write(capture(browser, url, n, prerun=prerun))
-            except selenium.common.exceptions.JavascriptException as e:
-                print("JS Exception in {}: {}".format(n, e.msg), file=sys.stderr)
-            except:
-                print("Exception in {}:".format(n), file=sys.stderr)
-                import traceback
-                traceback.print_exc()
-                browser = make_browser() # reset browser just in case
-            else:
-                captured += 1
-        print("Captured {} layouts to {}".format(captured, fd.name), file=sys.stderr)
+            for i in range(retries):
+                try:
+                    text = capture(browser, url, n, prerun=prerun)
+                except selenium.common.exceptions.JavascriptException as e:
+                    print("JS Exception in {}: {}".format(n, e.msg), file=sys.stderr)
+                except:
+                    print("Exception in {}:".format(n), file=sys.stderr)
+                    import traceback
+                    traceback.print_exc()
+                    browser = make_browser() # reset browser just in case
+                else:
+                    fd.write(text)
+                    captured += 1
+                    break
+        print("Captured {}/{} layouts to {}".format(captured, len(urls), fd.name), file=sys.stderr)
     finally:
         browser.quit()
 
@@ -87,6 +90,7 @@ if __name__ == "__main__":
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
     p.add_argument("--output", type=argparse.FileType('w'), default=sys.stdout, help="File name under bench/.")
     p.add_argument("--prerun", type=argparse.FileType('r'), help="JS file to run before capturing.")
+    p.add_argument("--retry", type=int, default=1 help="How many times to retry capturing on failure")
     args = p.parse_args()
     
     prerun = args.prerun.read() if args.prerun else None
