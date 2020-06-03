@@ -111,7 +111,6 @@ def main(urls, prerun=None, fd=None, retries=1):
             else:
                 fd.write(text)
                 captured += 1
-                break
         print("Captured {}/{} layouts to {}".format(captured, len(urls), fd.name), file=sys.stderr)
     finally:
         browser.quit()
