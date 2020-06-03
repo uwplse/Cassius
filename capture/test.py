@@ -33,7 +33,7 @@ def all_params(params, num, exhaustive=False):
             yield i
 
 def main(num, urls, code, params):
-    browser = capture.make_browser()
+    browser = capture.Browser()
 
     try:
         for url in urls:
@@ -44,15 +44,14 @@ def main(num, urls, code, params):
         for url in urls:
             for w, h, fs in all_params(params, args.num, args.exhaustive):
                 try:
-                    browser.set_window_size(w, h)
-                    browser.profile.set_preference("layout.css.devPixelsPerPx", fs)
-                    browser.profile.update_preferences()
-                    browser.get(url)
-                    if not browser.execute_script(code):
+                    browser["w"] = w
+                    browser["h"] = h
+                    browser["fs"] = fs
+                    if not browser.execute(code):
                         browser.quit()
-                        print(":w " + str(w))
-                        print(":h " + str(h))
-                        print(":fs " + str(fs))
+                        print(":w", w)
+                        print(":h", h)
+                        print(":fs", fs)
                         sys.exit(1)
                 except:
                     import traceback

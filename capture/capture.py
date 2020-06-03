@@ -22,25 +22,62 @@ import argparse
 def jsfile(name):
     return open(os.path.join(os.path.dirname(__file__), name), "rt").read()
 
-def measure_scrollbar(browser):
-    browser.get("about:blank");
-    browser.execute_script(jsfile("scrollbar.js") + "; estimate_scrollbar()");
+class Browser:
+    def __init__(self):
+        self.w, self.h, self.fs = 1280, 1024, 16
+        self._make_browser()
 
-def make_browser():
-    profile = selenium.webdriver.FirefoxProfile()
-    profile.set_preference("security.mixed_content.block_active_content", False)
-    profile.set_preference("security.mixed_content.block_display_content", False)
-    options = selenium.webdriver.firefox.options.Options()
-    options.headless = True
-    browser = selenium.webdriver.Firefox(options=options, firefox_profile=profile)
-    measure_scrollbar(browser)
-    return browser
+    def _make_browser(self):
+        while True:
+            profile = selenium.webdriver.FirefoxProfile()
+            profile.set_preference("security.mixed_content.block_active_content", False)
+            profile.set_preference("security.mixed_content.block_display_content", False)
+            options = selenium.webdriver.firefox.options.Options()
+            options.headless = True
+            self.browser = selenium.webdriver.Firefox(options=options, firefox_profile=profile)
+            if self._reset_browser(): return
 
-def capture(browser, url, id, prerun=None):
-    browser.get(url)
-    if prerun: browser.execute_script(prerun)
-    text = browser.execute_script(jsfile("all.js") + "; return page2text(arguments[0]);", id)
-    return ";; From {}\n\n{}\n\n".format(url, text)
+    def _reset_browser(self):
+        try:
+            self.browser.set_window_size(self.w, self.h)
+            self.browser.profile.set_preference("layout.css.devPixelsPerPx", self.fs / 16)
+            self.browser.profile.update_preferences()
+            self.browser.get("about:blank");
+            self.browser.execute_script(jsfile("scrollbar.js") + "; estimate_scrollbar()");
+        except selenium.common.exceptions.WebDriverException:
+            warnings.warn("Restarting browser during reset due to exception:\n  {}".format(str(e)))
+            return False
+        else:
+            return True
+
+    def execute(self, url, code, *args):
+        while True:
+            try:
+                self.browser.get(url)
+                return self.browser.execute_script(code, *args)
+            except selenium.common.exceptions.WebDriverException as e:
+                warnings.warn("Restarting browser on {} due to exception:\n  {}".format(url, str(e)))
+                self._make_browser()
+
+    def capture(self, url, id, prerun=None):
+        code = ""
+        if prerun: code += "; " + prerun
+        code += "; " + jsfile("all.js")
+        code += "; return page2text(arguments[0]);"
+        text = self.execute(url, code, id)
+        return ";; From {}\n\n{}\n\n".format(url, text)
+
+    def __setitem__(self, key, value):
+        if key == "w":
+            self.w = value
+        elif key == "h":
+            self.h = value
+        elif key == "fs":
+            self.fs = value
+        self._reset_browser()
+
+    def quit(self):
+        self.browser.quit()
 
 def name(urls):
     fns = [url.rsplit("/", 1)[1].rsplit(".", 1)[0] for url in urls]
@@ -62,25 +99,19 @@ def main(urls, prerun=None, fd=None, retries=1):
         if scheme not in ["http", "https", "file"]:
             warnings.warn("Only http and file scheme supported (not {})".format(scheme))
     
-    browser = make_browser()
+    browser = Browser()
     
     try:
         captured = 0
         for n, url in name(urls):
-            for i in range(retries):
-                try:
-                    text = capture(browser, url, n, prerun=prerun)
-                except selenium.common.exceptions.JavascriptException as e:
-                    print("JS Exception in {}: {}".format(n, e.msg), file=sys.stderr)
-                except:
-                    print("Exception in {}:".format(n), file=sys.stderr)
-                    import traceback
-                    traceback.print_exc()
-                    browser = make_browser() # reset browser just in case
-                else:
-                    fd.write(text)
-                    captured += 1
-                    break
+            try:
+                text = browser.capture(url, n, prerun=prerun)
+            except selenium.common.exceptions.JavascriptException as e:
+                print("JS Exception in {}: {}".format(n, e.msg), file=sys.stderr)
+            else:
+                fd.write(text)
+                captured += 1
+                break
         print("Captured {}/{} layouts to {}".format(captured, len(urls), fd.name), file=sys.stderr)
     finally:
         browser.quit()

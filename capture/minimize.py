@@ -45,10 +45,10 @@ def run_accept(filename, cache_name, backtracked, maxtime=600):
 
 def get_minimized(url, elts, filename):
     # Sadly, something seems to go wrong if the browser is cached between calls
-    browser = capture.make_browser()
+    browser = capture.Browser()
     prerun = "; ".join(["document.getElementsByTagName({}.tag)[{}.index].remove()".format(elt, elt) for elt in elts])
     with open(filename, "w") as f:
-        f.write(capture.capture(browser, url, "doc-1", prerun=prerun))
+        f.write(browser.capture(url, "doc-1", prerun=prerun))
     browser.quit()
 
 def minimize(name, url, cache=None, timeout=None):
