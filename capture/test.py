@@ -7,6 +7,7 @@ Uses Selenium Webdriver to test assertions on web pages.
 """
 
 from selenium import webdriver
+import capture
 import os, sys
 import warnings
 import random
@@ -16,12 +17,6 @@ try:
 except:
     import urlparse as parse
 import argparse
-
-def make_browser():
-    profile = webdriver.FirefoxProfile()
-    profile.set_preference("security.mixed_content.block_active_content", False)
-    profile.set_preference("security.mixed_content.block_display_content", False)
-    return webdriver.Firefox(firefox_profile=profile)
 
 def all_params(params, num, exhaustive=False):
     if not exhaustive:
@@ -38,7 +33,7 @@ def all_params(params, num, exhaustive=False):
             yield i
 
 def main(num, urls, code, params):
-    browser = make_browser()
+    browser = capture.make_browser()
 
     try:
         for url in urls:
