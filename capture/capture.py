@@ -90,7 +90,7 @@ def name(urls):
             out.append(("doc-" + id, url))
         return out
 
-def main(urls, prerun=None, fd=None, retries=1):
+def main(urls, prerun=None, fd=None):
     urls = sorted([url if "://" in url else "file://" + os.path.abspath(url)
                    for url in urls])
 
@@ -120,7 +120,6 @@ if __name__ == "__main__":
     p.add_argument("urls", metavar="URLs", type=str, nargs="+", help="URLs to dowload")
     p.add_argument("--output", type=argparse.FileType('w'), default=sys.stdout, help="File name under bench/.")
     p.add_argument("--prerun", type=argparse.FileType('r'), help="JS file to run before capturing.")
-    p.add_argument("--retry", type=int, default=1, help="How many times to retry capturing on failure")
     args = p.parse_args()
     
     prerun = args.prerun.read() if args.prerun else None
