@@ -44,7 +44,7 @@ class Browser:
             self.browser.profile.update_preferences()
             self.browser.get("about:blank");
             self.browser.execute_script(jsfile("scrollbar.js") + "; estimate_scrollbar()");
-        except selenium.common.exceptions.JavaScriptException:
+        except selenium.common.exceptions.JavascriptException:
             raise
         except selenium.common.exceptions.WebDriverException as e:
             warnings.warn("Restarting browser during reset due to exception:\n  {}".format(str(e)))
@@ -57,7 +57,7 @@ class Browser:
             try:
                 self.browser.get(url)
                 return self.browser.execute_script(code, *args)
-            except selenium.common.exceptions.JavaScriptException:
+            except selenium.common.exceptions.JavascriptException:
                 raise
             except selenium.common.exceptions.WebDriverException as e:
                 warnings.warn("Restarting browser on {} due to exception:\n  {}".format(url, str(e)))
