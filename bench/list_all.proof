@@ -1,0 +1,37 @@
+;;A Proof to verify the functionality of a simple website that uses java script
+;;Skyler Griffith
+(import "common.thm")
+
+(page zero-presses (load "list_all.rkt" button_test_1)
+        :w (between 800 1920)
+        :h (between 600 1280)
+        :fs (between 16 32)
+)
+ 
+(page one-press (load "list_all.rkt" button_test_2)
+        :w (between 800 1920)
+        :h (between 600 1280)
+        :fs (between 16 32)
+)
+ 
+(page two-presses (load "list_all.rkt" button_test_3)
+        :w (between 800 1920)
+        :h (between 600 1280)
+        :fs (between 16 32)
+) 
+
+(page three-presses (load "list_all.rkt" button_test_4)
+        :w (between 800 1920)
+        :h (between 600 1280)
+        :fs (between 16 32)
+) 
+
+(proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
+	(components (child (id list) *))
+	(component button (tag button))
+	(assert *
+	(forall(b) (=> (onscreen ?)
+			 (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+	(assert * (non-negative-margins ?))
+	(assert root (onscreen root))
+)
