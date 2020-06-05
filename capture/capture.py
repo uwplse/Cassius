@@ -29,16 +29,16 @@ class Browser:
 
     def _make_browser(self):
         while True:
-            profile = selenium.webdriver.FirefoxProfile()
-            profile.set_preference("security.mixed_content.block_active_content", False)
-            profile.set_preference("security.mixed_content.block_display_content", False)
-            options = selenium.webdriver.firefox.options.Options()
-            options.headless = True
-            self.browser = selenium.webdriver.Firefox(options=options, firefox_profile=profile)
+            self.profile = selenium.webdriver.FirefoxProfile()
+            self.profile.set_preference("security.mixed_content.block_active_content", False)
+            self.profile.set_preference("security.mixed_content.block_display_content", False)
+            self.options = selenium.webdriver.firefox.options.Options()
+            self.options.headless = True
             if self._reset_browser(): return
 
     def _reset_browser(self):
         try:
+            self.browser = selenium.webdriver.Firefox(options=self.options, firefox_profile=self.profile)
             self.browser.set_window_size(self.w, self.h)
             self.browser.profile.set_preference("layout.css.devPixelsPerPx", self.fs / 16)
             self.browser.profile.update_preferences()
