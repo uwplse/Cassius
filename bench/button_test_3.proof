@@ -1,0 +1,28 @@
+;;A Proof to verify the functionality of a simple website that uses java script
+;;Skyler Griffith
+(import "common.thm")
+
+(page no-pre (load "button_test_3/no_prerun.rkt" button_test_3)
+        :w (between 800 1920)
+        :h (between 600 1280)
+        :fs (between 16 32)
+)
+ 
+(page anr-pre (load "button_test_3/add_and_remove_prerun.rkt" button_test_3)
+        :w (between 800 1920)
+        :h (between 600 1280)
+        :fs (between 16 32)
+)
+ 
+
+(proof (interactive-onscreen interactive-onscreen no-pre anr-pre)
+	(components (child (id list) *))
+	(component box (id myText))
+	(component add (id add))
+	(component remove (id remove))
+	(assert *
+	(forall(b) (=> (onscreen ?)
+			 (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+	(assert * (non-negative-margins ?))
+	(assert root (onscreen root))
+)
