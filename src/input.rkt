@@ -48,6 +48,7 @@
          (set! properties
                (dict-set properties ':fonts
                          (append-map (curry dict-ref fonts) (dict-ref properties ':fonts))))
+         (set! properties (dict-remove properties ':layouts))
          (dict-set! problems name properties)])))
 
   problems)
