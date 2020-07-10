@@ -28,7 +28,11 @@
 
 (proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
         (component list (id list))
+	(component button (tag button))
 	(components (child (id list) *))
+        (erase list :w)
+        (erase list :text)
+
         (assert list 
           (=> (or (= (prev list) null)
                   (non-negative-margins (prev list)))
@@ -36,6 +40,6 @@
 	(assert *
 	(forall(b) (=> (onscreen ?)
 			 (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
-	(assert (- * list) (non-negative-margins ?))
+	(assert (- * list) (forall (t) (=> (has-type t text) (> (width t) 0) (non-negative-margins ?))))
 	(assert root (onscreen root))
 )

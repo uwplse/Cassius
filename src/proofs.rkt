@@ -74,6 +74,12 @@
          (set! selectors (append sels selectors))
          (set! components (cons box components)))]
 
+      ;;Given a name and type of value this command erases all values of that type from the component with the given name
+      [`(erase ,name ,type)
+       (define boxes (box-set name components box-context))
+       (for* ([box (in-list boxes)] [subbox (in-tree box)])
+         (node-remove! subbox type))]
+
       [`(,(and (or 'assert 'page (list 'random (? number?))
                    'exhaustive 'admit) tool) ,boxes ,assert)
        (for ([box (box-set boxes components box-context)])
