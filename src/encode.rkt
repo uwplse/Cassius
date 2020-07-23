@@ -4,7 +4,7 @@
 (provide dump-tag extract-tag dump-id extract-id
          dump-elt dump-box extract-box extract-style
          dump-value extract-value dump-selector extract-selector
-         z3->number number->z3 extract-field extract-test
+         extract-field extract-test
          extract-ctx! extract-core! extract-tree! extract-counterexample!)
 
 (define (dump-tag tag)
@@ -40,11 +40,6 @@
              #:unless (or (value=? type value (dump-value prop default))))
     `[,prop ,(extract-value value)]))
 
-(define (number->z3 v)
-  (match v
-    [(? number?) (exact->inexact v)]
-    [`(/ ,n ,d) `(/ ,(exact->inexact n) ,(exact->inexact d))]))
-
 (define (gamma-correction x)
   (let ([corrected (expt (/ x 255) 2.2)])
     ;; Round to avoid exponential notation; it's graphics, so accuracy doesn't matter much
@@ -62,11 +57,11 @@
      (list (sformat "~a/string" prefix)
            (hash-ref! all-strings value* (hash-count all-strings)))]
     [0 (list (sformat "~a/px" prefix) 0)]
-    [(? number?) (list (sformat "~a/num" prefix) (number->z3 value))]
-    [(list 'em n) (list (sformat "~a/em" prefix) (number->z3 n))]
-    [(list 'rem n) (list (sformat "~a/px" prefix) (list 'rem2px (number->z3 n)))]
-    [(list 'px n) (list (sformat "~a/px" prefix) (number->z3 n))]
-    [(list '% n) (list (sformat "~a/%" prefix) (number->z3 n))]
+    [(? number?) (list (sformat "~a/num" prefix) value)]
+    [(list 'em n) (list (sformat "~a/em" prefix) n)]
+    [(list 'rem n) (list (sformat "~a/px" prefix) (list 'rem2px n))]
+    [(list 'px n) (list (sformat "~a/px" prefix) n)]
+    [(list '% n) (list (sformat "~a/%" prefix) n)]
     [(list 'rgb r g b) `(color/rgb (color ,r ,g ,b ,(gamma-correction r) ,(gamma-correction g) ,(gamma-correction b)))]
     [(list 'rgba r g b a)
      (warn "Colors with alpha values not supported" "Encoding " type " " value)
@@ -94,11 +89,6 @@
     ['sel/all '*]
     [`(sel/id ,id) (list 'id (string->symbol (substring (~a id) 3)))]
     [`(sel/tag ,tag) (list 'tag (string->symbol (substring (~a tag) 4)))]))
-
-(define (z3->number v)
-  (match v
-    [`(/ ,a ,b) (/ a b)]
-    [_ v]))
 
 (define (extract-box box)
   (define box-def

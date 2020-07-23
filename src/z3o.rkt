@@ -654,7 +654,7 @@
      `(! ,(fix-rational term) :named ,n)]
     [(? list?) (map fix-rational expr)]
     [(? (and/c rational? exact? (not/c integer?)))
-     `(/ ,(exact->inexact (numerator expr)) ,(exact->inexact (denominator expr)))]
+     `(/ ,(numerator expr) ,(denominator expr))]
     [_ expr]))
 
 (define (z3-fix-rational cmds)
@@ -662,6 +662,8 @@
     (match cmd
       [`(define-fun ,name (,vars ...) ,rtype ,body)
        `(define-fun ,name (,@vars) ,rtype ,(fix-rational body))]
+      [`(define-const ,name ,type ,body)
+       `(define-const ,name ,type ,(fix-rational body))]
       [`(assert ,body)
        `(assert ,(fix-rational body))]
       [_ cmd])))

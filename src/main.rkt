@@ -92,18 +92,12 @@
     (for ([(key field) (in-hash browser-fields)])
       (define const `(,(sformat "browser.~a" field) ,browser))
       (match (car (dom-context dom key #:default '(?)))
-        [(? number*? value)
-         (emit `(assert (= ,const ,(number->z3 value))))]
+        [(? number? value)
+         (emit `(assert (= ,const ,value)))]
         ['?
          (void)]
-        [`(between ,(? number*? min) ,(? number*? max))
-          (emit `(assert (<= ,(number->z3 min) ,const ,(number->z3 max))))]))))
-
-(define (number*? x)
-  (match x
-    [(? number?) #t]
-    [`(/ ,(? number*?) ,(? number*?)) #t]
-    [_ #f]))
+        [`(between ,(? number? min) ,(? number? max))
+          (emit `(assert (<= ,min ,const ,max)))]))))
 
 (define (position-constraints dom emit elt)
   (for ([cmd '(:x :y :w :h)] #:when (node-get* elt cmd #:default #f))
@@ -112,12 +106,12 @@
     (define expr `(,fun ,(dump-box elt)))
     (define constraint
       (match arg
-        [(? number*?) (if (*fuzz*) `(< (- ,(number->z3 arg) ,(number->z3 (*fuzz*)))
-                                       ,expr
-                                       (+ ,(number->z3 arg) ,(number->z3 (*fuzz*))))
-                          `(= ,expr ,(number->z3 arg)))]
-        [`(not ,(? number*? value)) `(not (= ,expr ,(number->z3 value)))]
-        [`(between ,(? number*? min) ,(? number*? max)) `(<= ,(number->z3 min) ,expr ,(number->z3 max))]))
+        [(? number?)
+         (if (*fuzz*)
+             `(< (- ,arg ,(*fuzz*)) ,expr (+ ,arg ,(*fuzz*)))
+             `(= ,expr ,arg))]
+        [`(not ,(? number? value)) `(not (= ,expr ,value))]
+        [`(between ,(? number? min) ,(? number? max)) `(<= ,min ,expr ,max)]))
 
     (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (node-id elt)))))))
 

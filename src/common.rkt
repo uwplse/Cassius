@@ -5,7 +5,7 @@
  reap for/reap for*/reap for/append
  sformat slower indent tree-size snoc dict-remove* dict-ref-define
  supported-features support-features!
- xor ->number z3-path value=?
+ xor z3-path value=?
  attribute? attributes->dict dict->attributes
  split-symbol split-line-name
  assert make-log
@@ -50,7 +50,7 @@
   (error "Cannot find `z3` binary; please put a `z3` binary into your PATH."))
 
 (define *debug* (make-parameter false))
-(define *fuzz* (make-parameter '(/ 10 60)))
+(define *fuzz* (make-parameter 10/60))
 
 (define (debug-mode!)
   (*debug* true)
@@ -90,11 +90,6 @@
       1))
 
 (define (xor a b) (not (equal? (not a) (not b))))
-
-(define (->number n)
-  (match n
-    [(? number?) n]
-    [`(/ ,a ,b) (/ a b)]))
 
 (define (value=? prop a b)
   (or

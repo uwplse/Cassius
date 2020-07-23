@@ -70,7 +70,7 @@
                    (for/list ([attr '(:w :h :x :y)] #:when (member attr attrs))
                      (define property (match attr [':w 'width] [':h 'height] [':x 'left] [':y 'top]))
                      `(,property ,(format "~avw" (real->double-flonum
-                                                  (/ (* (->number (cadr (member attr attrs))) w) 100)))))))
+                                                  (/ (* (cadr (member attr attrs)) w) 100)))))))
             (append-map loop (cdr tree)))]))))))
 
 (define (do-render problem)

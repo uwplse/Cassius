@@ -33,7 +33,7 @@ export function f2r(x) {
     } else if (out.denom == 2 || out.denom == 5 || out.denom == 10) {
         return "" + (out.num / out.denom);
     } else {
-        return "(/ " + out.num + " " + out.denom + ")";
+        return out.num + "/" + out.denom;
     }
 }
 
