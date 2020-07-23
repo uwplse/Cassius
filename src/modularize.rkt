@@ -50,13 +50,15 @@
     (define elements** (prune-attrs elements* sheets* specs))
     (define fonts* (prune-fonts fonts sheets*))
     (define-values (boxes* elements***) (prune-renumber (dom-boxes piece) elements**))
+    (define boxes** (prune-box-attrs boxes*))
     (dict-set* problem
-               ':documents (list (struct-copy dom piece [elements elements***] [boxes boxes*]))
-               ':name (list (dom-name piece))
+               ':documents (list (struct-copy dom piece [elements elements***] [boxes boxes**]))
+               ':name (list (dom-name piece)) 
                ':tests specs
                ':tool '(assert)
                ':sheets sheets*
                ':fonts fonts*
                ':title '("[removed for caching]")
                ':url '("[removed for caching]")
-               ':features '())))
+               ':features '()))
+    (dict-set* dom 'name "replaced-for-caching"))

@@ -108,18 +108,20 @@
      (parse-check-result doms tests (test-problem problem #:samples n))]))
 
 (define (solve-problem problem)
+  (define problem* (dict-set problem ':name '("[removed for caching]")))
+
   (cond
    [(*cache-file*)
     (define out
       (cond
-       [(hash-has-key? *cache* problem)
+       [(hash-has-key? *cache* problem*)
         ((make-log) "Retrieved result from cache")
-        (hash-ref *cache* problem)]
+        (hash-ref *cache* problem*)]
        [else
-        (solve-problem* problem)]))
+        (solve-problem* problem*)]))
     (unless (match out [(list 'error _) true] ['break true] [_ false])
       (hash-set! *cache* problem out)
       (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p))))
     out]
    [else
-    (solve-problem* problem)]))
+    (solve-problem* problem*)]))
