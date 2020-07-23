@@ -662,6 +662,8 @@
     (match cmd
       [`(define-fun ,name (,vars ...) ,rtype ,body)
        `(define-fun ,name (,@vars) ,rtype ,(fix-rational body))]
+      [`(define-const ,name ,type ,body)
+       `(define-const ,name ,type ,(fix-rational body))]
       [`(assert ,body)
        `(assert ,(fix-rational body))]
       [_ cmd])))
