@@ -6,13 +6,6 @@
          dom-strip-positions dom-set-range)
 
 (struct dom (name properties elements boxes match) #:prefab)
-(struct element (type attrs parent* children)
-        #:mutable
-        #:methods gen:custom-write
-        [(define (write-proc elt port mode)
-           (fprintf port "[~a ~a]"
-                    (element-type elt)
-                    (string-join (map ~a (element-attrs elt)) " ")))])
 
 (define (dom-context dom key #:default [default #f])
   (dict-ref (dom-properties dom) key default))
