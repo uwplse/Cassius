@@ -60,5 +60,4 @@
                ':fonts fonts*
                ':title '("[removed for caching]")
                ':url '("[removed for caching]")
-               ':features '()))
-    (dict-set* dom 'name "replaced-for-caching"))
+               ':features '())))

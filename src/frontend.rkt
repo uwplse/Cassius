@@ -107,8 +107,15 @@
     [`((random ,n))
      (parse-check-result doms tests (test-problem problem #:samples n))]))
 
-(define (solve-problem problem)
+(define (rename-dom doc)
+  (struct-copy dom doc [name 'removed-for-caching]))
+
+(define (remove-for-caching problem)
   (define problem* (dict-set problem ':name '("[removed for caching]")))
+  (dict-update problem* ':documents (curry map rename-dom)))
+
+(define (solve-problem problem)
+  (define problem* (remove-for-caching problem))
 
   (cond
    [(*cache-file*)
@@ -120,7 +127,7 @@
        [else
         (solve-problem* problem*)]))
     (unless (match out [(list 'error _) true] ['break true] [_ false])
-      (hash-set! *cache* problem out)
+      (hash-set! *cache* problem* out)
       (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p))))
     out]
    [else
