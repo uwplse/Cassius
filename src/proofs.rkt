@@ -66,18 +66,12 @@
        (set! selectors (cons sel selectors))
        (hash-set! named-selectors name sel)
        (set! components (cons box components))]
-    [`(components ,sel)
-       (define selected-boxes (get-by-selector sel))
+      [`(components ,sels ...)
+       (define selected-boxes (append-map get-by-selector sels))
        (for ([box selected-boxes])
          (node-set*! box ':spec (list))
          (node-set! box ':split (length components))
-         (set! components (cons box components)))]
-      [`(components ,name ,sel)
-       (define selected-boxes (get-by-selector sel))
-       (for ([box selected-boxes])
-         (node-set! box ':name name)
-         (node-set*! box ':spec (list))
-         (node-set! box ':split (length components))
+         (set! selectors (append sels selectors))
          (set! components (cons box components)))]
 
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
