@@ -3,8 +3,7 @@
 (require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt" "assertions.rkt")
 (provide pruning-functions prune-for-caching)
 
-(define/contract (prune-elements problem) ; TODO: kind of weird here with the unparsing
-  (-> node-stx? node-stx? node-stx?)
+(define (prune-elements problem) ; TODO: kind of weird here with the unparsing
   (define doc (first (dict-ref problem ':documents)))
   (define elts-stx (dom-elements doc))
   (define boxes (parse-tree (dom-boxes doc)))
