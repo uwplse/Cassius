@@ -29,7 +29,7 @@
 (proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
         (component list (id list))
 	(component button (tag button))
-	(components (child (id list) *))
+	(components todos (child (id list) *))
         (erase list :w)
         (erase list :text)
 
