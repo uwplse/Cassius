@@ -29,9 +29,8 @@
 (proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
         (component list (id list))
 	(component button (tag button))
-	(components (child (id list) *))
-        (erase list :w)
-        (erase list :text)
+	(components todos (child (id list) *))
+        (erase todos :text)
 
         (assert list 
           (=> (or (= (prev list) null)
