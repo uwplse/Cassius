@@ -13,7 +13,7 @@
   (let loop ([stx stx])
     (match stx
       ['* components]
-      [(? symbol?) (list (dict-ref ctx stx))]
+      [(? symbol?) (dict-ref ctx stx)]
       [`(- ,stx1 ,stx2s ...)
        (apply set-subtract (loop stx1) (map loop stx2s))]
       [`(or ,stx1 ,stx2s ...)
@@ -38,11 +38,11 @@
                #:when (selector-matches? sel (dom-box->elt the-dom box)))
       box))
 
-  (define box-context (make-hash (list (cons 'root boxes))))
+  (define box-context (make-hash (list (cons 'root (list boxes)))))
   (node-set! boxes ':split 0)
 
   (node-set! boxes ':name 'root)
-  (define components (hash-values box-context))
+  (define components (list boxes))
 
   (define extra-problems (list))
 
@@ -51,7 +51,7 @@
 
   (for ([cmd tactics])
     (match cmd
-
+      
       [`(component ,name ,sel)
        (define selected-boxes (get-by-selector sel))
        (define box
@@ -59,7 +59,7 @@
            [(list) (raise (format "Could not find any elements matching ~a" sel))]
            [(list box) box]
            [(list boxes ...) (raise (format "~a matches multiple elements ~a" sel (string-join (map ~a boxes) ", ")))]))
-       (hash-set! box-context name box)
+       (hash-set! box-context name selected-boxes)
        (node-set! box ':name name)
        (node-set*! box ':spec (list))
        (node-set! box ':split (length components))
@@ -82,7 +82,8 @@
 
       [`(,(and (or 'assert 'page (list 'random (? number?))
                    'exhaustive 'admit) tool) ,boxes ,assert)
-       (for ([box (box-set boxes components box-context)])
+	(define foo (box-set boxes components box-context))
+       (for ([box foo])
          (if (equal? tool 'assert)
              (node-add! box (spec-or-assert assert) assert)
              (begin
@@ -124,7 +125,7 @@
     (for/list ([group (group-by (λ (x) (cons (dict-ref x ':component) (dict-ref x ':tool))) extras)])
       (define asserts (append-map (curryr dict-ref ':tests) group))
       (dict-set (first group) ':tests asserts)))
-
+ 
   (append
    (modularize problem**)
    extras*
@@ -166,7 +167,8 @@
                   (values
                    page
                    (dom-run-proof (dict-ref problem-context page)
-                                  subcmds theorem (curry dict-ref theorem-context)))))]))
+                                  subcmds theorem (curry dict-ref theorem-context)))))])
+  )
 
 (define (read-proofs port)
   (define problem-context (make-hash))
