@@ -12,7 +12,6 @@
 (define (box-set stx components ctx)
   (let loop ([stx stx])
     (match stx
-      ['* components]
       [(? symbol?) (dict-ref ctx stx)]
       [`(- ,stx1 ,stx2s ...)
        (apply set-subtract (loop stx1) (map loop stx2s))]
@@ -42,7 +41,7 @@
   (node-set! boxes ':split 0)
 
   (node-set! boxes ':name 'root)
-  (define components (list boxes))
+  (hash-set! box-context '* (list boxes))
 
   (define extra-problems (list))
 
@@ -62,33 +61,33 @@
        (hash-set! box-context name selected-boxes)
        (node-set! box ':name name)
        (node-set*! box ':spec (list))
-       (node-set! box ':split (length components))
+       (node-set! box ':split (length (hash-ref box-context '*)))
        (set! selectors (cons sel selectors))
        (hash-set! named-selectors name sel)
-       (set! components (cons box components))]
+       (hash-update! box-context '* (curry cons box))]
       [`(components ,sel)
        (define selected-boxes (get-by-selector sel))
        (for ([box selected-boxes])
          (node-set*! box ':spec (list))
-         (node-set! box ':split (length components))
-         (set! components (cons box components)))]
+         (node-set! box ':split (length (hash-ref box-context '*)))
+         (hash-update! box-context '* (curry cons box)))]
       [`(components ,name ,sel)
        (define selected-boxes (get-by-selector sel))
        (hash-set! box-context name selected-boxes)
        (for ([box selected-boxes])
          (node-set*! box ':spec (list))
-         (node-set! box ':split (length components))
-         (set! components (cons box components)))]
+         (node-set! box ':split (length (hash-ref box-context '*)))
+         (hash-update! box-context '* (curry cons box)))]
 
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
       [`(erase ,name ,type)
-       (define boxes (box-set name components box-context))
+       (define boxes (box-set name (hash-ref box-context '*) box-context))
        (for* ([box (in-list boxes)] [subbox (in-tree box)])
          (node-remove! subbox type))]
 
       [`(,(and (or 'assert 'page (list 'random (? number?))
                    'exhaustive 'admit) tool) ,boxes ,assert)
-	(define foo (box-set boxes components box-context))
+	(define foo (box-set boxes (hash-ref box-context '*) box-context))
        (for ([box foo])
          (if (equal? tool 'assert)
              (node-add! box (spec-or-assert assert) assert)
@@ -97,7 +96,7 @@
                (set! extra-problems
                      (cons (list tool box assert) extra-problems)))))]
       [`(pre ,boxes ,assert)
-       (for ([box (box-set boxes components box-context)])
+       (for ([box (box-set boxes (hash-ref box-context '*) box-context)])
          (node-add! box ':pre assert))]
       [`(lemma (,thm ,boxes ...))
        (define-values (vars body) (disassemble-forall (theorems thm)))       
