@@ -96,7 +96,7 @@
 
 (define (prune-fonts problem)
   (define fonts (dict-ref problem ':fonts))
-  (define sheets (dict-ref problem ':fonts))
+  (define sheets (dict-ref problem ':sheets))
   (define-values (families weights styles)
     (reap [f! w! s!]
       (f! "serif")
@@ -111,13 +111,13 @@
             ['font-style (s! val)]
             [_ (void)])))))
   (define fonts*
-    (for/reap [reap] ([font fonts])
+    (for/reap [sow] ([font fonts])
       (match-define (list size family weight style metrics ...) font)
       (when (and (set-member? families family)
                  (set-member? weights weight)
                  (set-member? styles style))
-        font)))
-  (dict-ref problem ':fonts fonts*))
+        (sow font))))
+  (dict-set problem ':fonts fonts*))
 
 (define (prune-renumber problem)
   (define doc (first (dict-ref problem ':documents)))
