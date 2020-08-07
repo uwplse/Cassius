@@ -45,11 +45,19 @@
   (for*/list ([doc (dict-ref problem ':documents)] [(name thing) (split-document doc)]
               #:unless (null? (cdr thing)))
     (match-define (cons piece specs) thing)
-    (define problem*
-      (dict-set* problem
-                 ':documents (list piece)
-                 ':name (list (dom-name piece))
-                 ':tests specs
-                 ':tool '(assert)))
-    (for/fold ([problem problem*]) ([pruning-function pruning-functions])
-      (pruning-function problem))))
+    (define elements* (prune-elements (dom-boxes piece) (dom-elements piece)))
+    (define sheets* (prune-sheets sheets (list elements*)))
+    (define elements** (prune-attrs elements* sheets* specs))
+    (define fonts* (prune-fonts fonts sheets*))
+    (define-values (boxes* elements***) (prune-renumber (dom-boxes piece) elements**))
+    (define boxes** (prune-box-attrs boxes*))
+    (dict-set* problem
+               ':documents (list (struct-copy dom piece [elements elements***] [boxes boxes**]))
+               ':name (list (dom-name piece)) 
+               ':tests specs
+               ':tool '(assert)
+               ':sheets sheets*
+               ':fonts fonts*
+               ':title '("[removed for caching]")
+               ':url '("[removed for caching]")
+               ':features '())))

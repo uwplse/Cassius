@@ -2,7 +2,7 @@
 (require racket/hash)
 (require "common.rkt" "z3.rkt" "dom.rkt" "tree.rkt" "solver.rkt" "encode.rkt" "smt.rkt")
 (require "main.rkt" "spec/float.rkt")
-(require "assertions.rkt" "verify.rkt" "assertion2js.rkt" "prune.rkt")
+(require "assertions.rkt" "verify.rkt" "assertion2js.rkt")
 (provide (struct-out success) (struct-out failure) solve-problem *exit-early*)
 
 (define *exit-early* (make-parameter void))
@@ -107,8 +107,15 @@
     [`((random ,n))
      (parse-check-result doms tests (test-problem problem #:samples n))]))
 
+(define (rename-dom doc)
+  (struct-copy dom doc [name 'removed-for-caching]))
+
+(define (remove-for-caching problem)
+  (define problem* (dict-set problem ':name '("[removed for caching]")))
+  (dict-update problem* ':documents (curry map rename-dom)))
+
 (define (solve-problem problem)
-  (define problem* (prune-for-caching problem))
+  (define problem* (remove-for-caching problem))
 
   (cond
    [(*cache-file*)
