@@ -2,35 +2,17 @@
 ;;Skyler Griffith
 (import "common.thm")
 
-(page zero-presses (load "list_all.rkt" button_test_1)
+(page stress (load "stress_test.rkt" button_test_stress)
         :w (between 800 1920)
         :h (between 600 1280)
         :fs (between 16 32)
 )
  
-(page one-press (load "list_all.rkt" button_test_2)
-        :w (between 800 1920)
-        :h (between 600 1280)
-        :fs (between 16 32)
-)
- 
-(page two-presses (load "list_all.rkt" button_test_3)
-        :w (between 800 1920)
-        :h (between 600 1280)
-        :fs (between 16 32)
-) 
 
-(page three-presses (load "list_all.rkt" button_test_4)
-        :w (between 800 1920)
-        :h (between 600 1280)
-        :fs (between 16 32)
-) 
-
-(proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
+(proof (interactive-onscreen interactive-onscreen stress)
         (component list (id list))
-	(component button (tag button))
 	(components todos (child (id list) *))
-        (erase todos :text)
+;;        (erase todos :text)
 
         (assert list 
           (=> (or (= (prev list) null)

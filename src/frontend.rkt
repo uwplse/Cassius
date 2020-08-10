@@ -2,7 +2,7 @@
 (require racket/hash)
 (require "common.rkt" "z3.rkt" "dom.rkt" "tree.rkt" "solver.rkt" "encode.rkt" "smt.rkt")
 (require "main.rkt" "spec/float.rkt")
-(require "assertions.rkt" "verify.rkt" "assertion2js.rkt")
+(require "assertions.rkt" "verify.rkt" "assertion2js.rkt" "prune.rkt")
 (provide (struct-out success) (struct-out failure) solve-problem *exit-early*)
 
 (define *exit-early* (make-parameter void))
@@ -108,18 +108,20 @@
      (parse-check-result doms tests (test-problem problem #:samples n))]))
 
 (define (solve-problem problem)
+  (define problem* (prune-for-caching problem))
+
   (cond
    [(*cache-file*)
     (define out
       (cond
-       [(hash-has-key? *cache* problem)
+       [(hash-has-key? *cache* problem*)
         ((make-log) "Retrieved result from cache")
-        (hash-ref *cache* problem)]
+        (hash-ref *cache* problem*)]
        [else
-        (solve-problem* problem)]))
+        (solve-problem* problem*)]))
     (unless (match out [(list 'error _) true] ['break true] [_ false])
-      (hash-set! *cache* problem out)
+      (hash-set! *cache* problem* out)
       (call-with-output-file (*cache-file*) #:exists 'replace (λ (p) (write *cache* p))))
     out]
    [else
-    (solve-problem* problem)]))
+    (solve-problem* problem*)]))

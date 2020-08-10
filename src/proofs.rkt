@@ -9,11 +9,10 @@
   (define-values (vars body) (disassemble-forall assert))
   (if (null? vars) ':spec ':assert))
 
-(define (box-set stx components ctx)
+(define (box-set stx ctx)
   (let loop ([stx stx])
     (match stx
-      ['* components]
-      [(? symbol?) (list (dict-ref ctx stx))]
+      [(? symbol?) (dict-ref ctx stx)]
       [`(- ,stx1 ,stx2s ...)
        (apply set-subtract (loop stx1) (map loop stx2s))]
       [`(or ,stx1 ,stx2s ...)
@@ -38,11 +37,11 @@
                #:when (selector-matches? sel (dom-box->elt the-dom box)))
       box))
 
-  (define box-context (make-hash (list (cons 'root boxes))))
+  (define box-context (make-hash (list (cons 'root (list boxes)))))
   (node-set! boxes ':split 0)
 
   (node-set! boxes ':name 'root)
-  (define components (hash-values box-context))
+  (hash-set! box-context '* (list boxes))
 
   (define extra-problems (list))
 
@@ -51,7 +50,7 @@
 
   (for ([cmd tactics])
     (match cmd
-
+      
       [`(component ,name ,sel)
        (define selected-boxes (get-by-selector sel))
        (define box
@@ -59,30 +58,37 @@
            [(list) (raise (format "Could not find any elements matching ~a" sel))]
            [(list box) box]
            [(list boxes ...) (raise (format "~a matches multiple elements ~a" sel (string-join (map ~a boxes) ", ")))]))
-       (hash-set! box-context name box)
+       (hash-set! box-context name selected-boxes)
        (node-set! box ':name name)
        (node-set*! box ':spec (list))
-       (node-set! box ':split (length components))
+       (node-set! box ':split (length (hash-ref box-context '*)))
        (set! selectors (cons sel selectors))
        (hash-set! named-selectors name sel)
-       (set! components (cons box components))]
-      [`(components ,sels ...)
-       (define selected-boxes (append-map get-by-selector sels))
+       (hash-update! box-context '* (curry cons box))]
+      [`(components ,sel)
+       (define selected-boxes (get-by-selector sel))
        (for ([box selected-boxes])
          (node-set*! box ':spec (list))
-         (node-set! box ':split (length components))
-         (set! selectors (append sels selectors))
-         (set! components (cons box components)))]
+         (node-set! box ':split (length (hash-ref box-context '*)))
+         (hash-update! box-context '* (curry cons box)))]
+      [`(components ,name ,sel)
+       (define selected-boxes (get-by-selector sel))
+       (hash-set! box-context name selected-boxes)
+       (for ([box selected-boxes])
+         (node-set*! box ':spec (list))
+         (node-set! box ':split (length (hash-ref box-context '*)))
+         (hash-update! box-context '* (curry cons box)))]
 
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
       [`(erase ,name ,type)
-       (define boxes (box-set name components box-context))
+       (define boxes (box-set name box-context))
        (for* ([box (in-list boxes)] [subbox (in-tree box)])
          (node-remove! subbox type))]
 
       [`(,(and (or 'assert 'page (list 'random (? number?))
                    'exhaustive 'admit) tool) ,boxes ,assert)
-       (for ([box (box-set boxes components box-context)])
+	(define foo (box-set boxes box-context))
+       (for ([box foo])
          (if (equal? tool 'assert)
              (node-add! box (spec-or-assert assert) assert)
              (begin
@@ -90,7 +96,7 @@
                (set! extra-problems
                      (cons (list tool box assert) extra-problems)))))]
       [`(pre ,boxes ,assert)
-       (for ([box (box-set boxes components box-context)])
+       (for ([box (box-set boxes box-context)])
          (node-add! box ':pre assert))]
       [`(lemma (,thm ,boxes ...))
        (define-values (vars body) (disassemble-forall (theorems thm)))       
@@ -124,7 +130,7 @@
     (for/list ([group (group-by (λ (x) (cons (dict-ref x ':component) (dict-ref x ':tool))) extras)])
       (define asserts (append-map (curryr dict-ref ':tests) group))
       (dict-set (first group) ':tests asserts)))
-
+ 
   (append
    (modularize problem**)
    extras*
@@ -166,7 +172,8 @@
                   (values
                    page
                    (dom-run-proof (dict-ref problem-context page)
-                                  subcmds theorem (curry dict-ref theorem-context)))))]))
+                                  subcmds theorem (curry dict-ref theorem-context)))))])
+  )
 
 (define (read-proofs port)
   (define problem-context (make-hash))
