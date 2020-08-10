@@ -9,7 +9,7 @@
   (define-values (vars body) (disassemble-forall assert))
   (if (null? vars) ':spec ':assert))
 
-(define (box-set stx components ctx)
+(define (box-set stx ctx)
   (let loop ([stx stx])
     (match stx
       [(? symbol?) (dict-ref ctx stx)]
@@ -81,13 +81,13 @@
 
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
       [`(erase ,name ,type)
-       (define boxes (box-set name (hash-ref box-context '*) box-context))
+       (define boxes (box-set name box-context))
        (for* ([box (in-list boxes)] [subbox (in-tree box)])
          (node-remove! subbox type))]
 
       [`(,(and (or 'assert 'page (list 'random (? number?))
                    'exhaustive 'admit) tool) ,boxes ,assert)
-	(define foo (box-set boxes (hash-ref box-context '*) box-context))
+	(define foo (box-set boxes box-context))
        (for ([box foo])
          (if (equal? tool 'assert)
              (node-add! box (spec-or-assert assert) assert)
@@ -96,7 +96,7 @@
                (set! extra-problems
                      (cons (list tool box assert) extra-problems)))))]
       [`(pre ,boxes ,assert)
-       (for ([box (box-set boxes (hash-ref box-context '*) box-context)])
+       (for ([box (box-set boxes box-context)])
          (node-add! box ':pre assert))]
       [`(lemma (,thm ,boxes ...))
        (define-values (vars body) (disassemble-forall (theorems thm)))       
