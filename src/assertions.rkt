@@ -19,7 +19,7 @@
    `((descends . ,(λ (b . sels) `(!= (ancestor ,b (matches ? ,@sels)) null)))
      (is-interactive . ,(λ (b) `(matches ,b (tag a) (tag input) (tag button))))
      (viewable . ,(λ (b) `(and (> (right ,b) (left root)) (> (bottom ,b) (top root)))))
-     (onscreen . ,(λ (b) `(and (>= (left ,b) (left root)) (>= (top ,b) (top root)))))
+     (onscreen . ,(λ (b) `(and (>= (top ,b) 0) (>= (left ,b) 0) )))
      (!= . ,(λ (a b) `(not (= ,a ,b))))
      (width . ,(λ (b [dir 'border]) `(- (right ,b ,dir) (left ,b ,dir))))
      (height . ,(λ (b [dir 'border]) `(- (bottom ,b ,dir) (top ,b ,dir))))
