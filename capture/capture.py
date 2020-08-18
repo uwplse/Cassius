@@ -127,4 +127,6 @@ if __name__ == "__main__":
     args = p.parse_args()
     
     prerun = args.prerun.read() if args.prerun else None
+    if os.path.exists("geckodriver.log"):
+        open("geckodriver.log", "w").close() # truncate
     main(args.urls, prerun=prerun, fd=args.output)
