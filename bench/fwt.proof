@@ -247,7 +247,7 @@
   (component footer (id footer))
   (assert * (forall (b) (=> (has-type b text) (has-contents b)
                             (!= (first (ancestor-line b)) null)
-                            (<= (width-line (ancestor-line b)) (* 80 (/ 10 19) (height b))))))
+                            (<= (line-width (ancestor-line b)) (* 80 (/ 10 19) (height b))))))
   (pre (or header body footer) (14-px-text ?))
   (assert root (and (14-px-text header) (14-px-text body) (14-px-text footer))))
 
