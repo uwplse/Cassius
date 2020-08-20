@@ -115,45 +115,30 @@
 
     (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (node-id elt)))))))
 
-;Sets up the special constraints needed to do a proof by induction on a given list
-(define (inductive-list-constraints dom emit box)
-  ;Note the header and footer of the list
-  (define header (node-fchild box))
-  (define footer (node-lchild box))
-  (when (node-fchild box)
-    ;Note the box after the header and before the footer
-    (define leftbox (node-next header))
-    (define rightbox (node-prev footer))
-    (when (node-get* header ':inductive-header)
-      ;Explicitely say what the neighbors and parent of the header are
-      (emit `(assert (and (= (pbox ,(dump-box header)) ,(dump-box box)) (= (vbox ,(dump-box header)) no-box) (= (nbox ,(dump-box header)) ,(dump-box leftbox)))))
-      ;Explicitly state what the neighbors and parent of the footer are
-      (emit `(assert (and (= (pbox ,(dump-box footer)) ,(dump-box box)) (= (vbox ,(dump-box footer)) ,(dump-box rightbox)) (= (nbox ,(dump-box footer)) no-box))))
-      ;Explicity state leftbox's neighbors and parent, leaving its next up to z3
-      (emit `(assert (and (= (pbox ,(dump-box leftbox)) ,(dump-box box)) (= (vbox ,(dump-box leftbox)) ,(dump-box header)))))
-      ;Explicitely state rightbox's neighbors and parent, leaving its previous up to z3
-      (emit `(assert (and (= (pbox ,(dump-box rightbox)) ,(dump-box box)) (= (nbox ,(dump-box rightbox)) ,(dump-box footer))))))))
 
 (define (box-tree-constraints dom emit box)
-  (define skip false)
-  (when (node-fchild box)
-    (when (node-get* (node-fchild box) ':inductive-header)
-      (set! skip true)))
+  ;; TODO: complicated and possibly wrong
   (define link-function
-    (if (dom-context dom ':component)
-        'link-box-component
-        (if (node-get* box ':component)
-            'link-box-magic
-            'link-box)))
-  (when (equal? skip #f)
-    (emit `(assert (= (is-component ,(dump-box box)) ,(if (is-component box) 'true 'false))))
-    (emit `(assert (,link-function
-                    ,(dump-box box)
-                    ,(dump-box (node-parent box))
-                    ,(dump-box (node-prev box))
-                    ,(dump-box (node-next box))
-                    ,(dump-box (node-fchild box))
-                    ,(dump-box (node-lchild box)))))))
+    (cond
+     [(node-get* box ':inductive-header)
+      'link-box-inductive-header]
+     [(node-get* box ':inductive-footer)
+      'link-box-inductive-footer]
+     [(dom-context dom ':component)
+      'link-box-component]
+     [(node-get* box ':component)
+      'link-box-magic]
+     [else
+      'link-box]))
+  ;Set the constraints for a component assuming this is not the case of a proof by induction
+  (emit `(assert (= (is-component ,(dump-box box)) ,(if (is-component box) 'true 'false))))
+  (emit `(assert (,link-function
+                  ,(dump-box box)
+                  ,(dump-box (node-parent box))
+                  ,(dump-box (node-prev box))
+                  ,(dump-box (node-next box))
+                  ,(dump-box (node-fchild box))
+                  ,(dump-box (node-lchild box))))))
 
 
 (define (layout-constraints dom emit elt)
@@ -254,7 +239,6 @@
     ,@(for-render sheet-constraints doms (apply append sheets))
     ,@(for-render per-element tree-constraints)
     ,@(per-box box-tree-constraints)
-    ,@(per-box inductive-list-constraints)
     ,@(per-box position-constraints)
     ,@(for-render box-element-constraints doms)
     ,@(box-first-last-constraints doms)
