@@ -120,10 +120,12 @@
   ;; TODO: complicated and possibly wrong
   (define link-function
     (cond
-     [(node-get* box ':inductive-header)
-      'link-box-inductive-header]
-     [(node-get* box ':inductive-footer)
-      'link-box-inductive-footer]
+     [(node-get* box ':no-next-or-prev)
+      'link-box-no-next-or-prev]
+     [(node-get* box ':no-next)
+      'link-box-no-next]
+     [(node-get* box ':no-prev)
+      'link-box-no-prev]
      [(dom-context dom ':component)
       'link-box-component]
      [(node-get* box ':component)

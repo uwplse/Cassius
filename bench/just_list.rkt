@@ -47,7 +47,6 @@
   ;; mystery elements go here
   ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?))))))
 
-
 (define-problem base
   :title ""
   :url "file:///home/p92/button_test_1.html"
@@ -58,6 +57,63 @@
      (=> (= (floats-tracked list) 0)
      (and (>= (- (bottom inductive-base) (top inductive-base)) 0) (= (floats-tracked inductive-base) (floats-tracked inductive-base)))))
   :layouts base
+  :features display:list-item empty-text tag:button display:inline-block float:0)
+
+; base2
+(define-stylesheet base2 
+   ((tag html) (display block))
+   ((tag body) (display block))
+   ((tag ul) (display block))
+   ((tag li) (display list-item))
+   ((tag body)
+    :browser
+    (margin-top (px 8))
+    (margin-right (px 8))
+    (margin-bottom (px 8))
+    (margin-left (px 8)))
+   ((tag ul)
+    :browser
+    (margin-top (em 1))
+    (margin-bottom (em 1))
+    (padding-left (px 40))))
+(define-fonts base2
+  [16 "serif" 400 normal 16 0 1.5 1.5 19])
+(define-browser base2
+  :matched true
+  :w (between 800 1920)
+  :h (between 600 1280)
+  :fs (between 16 32)
+  :fsm 12
+  :scrollw 10
+  :component)
+
+(define-document base2
+ ((html :num 5 :class ())
+   ((body :num 6 :class ())
+    ((ul :num 0 :class ())
+     ((li :num 1 :class ()))
+     ((li :num 2 :class ()))
+     ((li :num 3 :class ()))
+     ((li :num 4 :class ()))))))
+
+(define-layout base2 (base2 base2)
+ ((BLOCK :elt 0 :name list)
+  ((BLOCK :elt 1 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?))))
+  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-baseA))
+  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-baseB :no-next))
+  ;; mystery elements go here
+  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :no-prev))))
+
+(define-problem base2
+  :title ""
+  :url "file:///home/p92/button_test_1.html"
+  :sheets base2
+  :fonts base2
+  :tests
+  (forall () ; base2
+     (=> (= (floats-tracked list) 0)
+     (and (>= (- (bottom inductive-baseB) (top inductive-baseA)) 0) (= (floats-tracked inductive-baseA) (floats-tracked inductive-baseB)))))
+  :layouts base2
   :features display:list-item empty-text tag:button display:inline-block float:0)
 
 ; thm
@@ -100,10 +156,10 @@
 (define-layout thm (thm thm)
  ((BLOCK :elt 0 :name list)
   ((BLOCK :elt 1 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?))))
-  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-header :inductive-header))
+  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-header :no-next))
   ;; mystery elements go her
-  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-footer :inductive-footer))
-  ((BLOCK :elt 4 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?))))))
+  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-footer :no-prev-or-next))
+  ((BLOCK :elt 4 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :no-prev))))
 
 
 (define-problem thm
@@ -159,11 +215,11 @@
 (define-layout ind (ind ind)
  ((BLOCK :elt 0 :name list)
   ((BLOCK :elt 1 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?))))
-  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-header :inductive-header))
+  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-header :no-next))
   ;; mystery elements go here
-  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-footer :inductive-footer))
-  ((BLOCK :elt 4 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-step))
-  ((BLOCK :elt 5 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?))))))
+  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-footer :no-prev))
+  ((BLOCK :elt 4 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-step :no-next))
+  ((BLOCK :elt 5 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :no-prev))))
 
 
 (define-problem ind
