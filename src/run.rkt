@@ -147,7 +147,14 @@
        (exit 127)])))
 
 (define (get-problem fname pname)
-  (hash-ref (call-with-input-file fname parse-file) (string->symbol pname)))
+  (define problems (call-with-input-file fname parse-file))
+  (hash-ref problems (string->symbol pname)
+            (λ ()
+              (raise-user-error 'parse
+                                "No problem named ~a in file ~a\n  Problems: ~a"
+                                pname
+                                fname
+                                (string-join (map ~a (hash-keys problems)) ", ")))))
 
 (define (get-proof fname pname gname cname)
   (define files
