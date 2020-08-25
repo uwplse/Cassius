@@ -65,5 +65,16 @@
          (= (fbox box) f) (= (lbox box) l)))
 
   (define-fun link-box-magic ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
-    (and (=> (is-box p) (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n))))))
+    (and (=> (is-box p) (and (= (pbox box) p) (= (vbox box) v) (= (nbox box) n)))))
+  
+   (define-fun link-box-no-next  ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
+    (and (= (pbox box) p) (= (vbox box) v)))
+  
+   (define-fun link-box-no-prev  ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
+    (and (= (pbox box) p) (= (nbox box) n)))
+
+   (define-fun link-box-no-next-or-prev  ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
+    (and (= (pbox box) p)))
+
+  )
 

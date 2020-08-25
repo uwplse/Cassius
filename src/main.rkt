@@ -115,13 +115,24 @@
 
     (emit `(assert (! ,constraint :named ,(sformat "~a/~a" fun (node-id elt)))))))
 
+
 (define (box-tree-constraints dom emit box)
+  ;; TODO: complicated and possibly wrong
   (define link-function
-    (if (dom-context dom ':component)
-        'link-box-component
-        (if (node-get* box ':component)
-            'link-box-magic
-            'link-box)))
+    (cond
+     [(node-get* box ':no-next-or-prev)
+      'link-box-no-next-or-prev]
+     [(node-get* box ':no-next)
+      'link-box-no-next]
+     [(node-get* box ':no-prev)
+      'link-box-no-prev]
+     [(dom-context dom ':component)
+      'link-box-component]
+     [(node-get* box ':component)
+      'link-box-magic]
+     [else
+      'link-box]))
+  ;Set the constraints for a component assuming this is not the case of a proof by induction
   (emit `(assert (= (is-component ,(dump-box box)) ,(if (is-component box) 'true 'false))))
   (emit `(assert (,link-function
                   ,(dump-box box)
