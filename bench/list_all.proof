@@ -31,7 +31,9 @@
 	(component button (tag button))
 	(components todos (child (id list) *))
         (erase todos :text)
-
+        (induct list
+		;;inductive fact
+	)
         (assert list 
           (=> (or (= (prev list) null)
                   (non-negative-margins (prev list)))
