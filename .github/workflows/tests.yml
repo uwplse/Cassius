@@ -22,12 +22,12 @@ jobs:
         uses: Bogdanp/setup-racket@v0.5
       - name: "Install Z3"
         uses: pavpanchekha/setup-z3@v1.2
-      - run: racket src/run.rkt accept bench/just_list.rkt base | grep -q Rejected
+      - run: racket src/run.rkt accept bench/just_list.rkt base |& grep -q Rejected
         name: "Base case"
-      - run: racket src/run.rkt accept bench/just_list.rkt base2 | grep -q Rejected
+      - run: racket src/run.rkt accept bench/just_list.rkt base2 |& grep -q Rejected
         name: "Base case 2"
-      - run: racket src/run.rkt accept bench/just_list.rkt ind | grep -q Rejected
+      - run: racket src/run.rkt accept bench/just_list.rkt ind |& grep -q Rejected
         name: "Inductive case"
-      - run: racket src/run.rkt accept bench/just_list.rkt thm | grep -q Rejected
+      - run: racket src/run.rkt accept bench/just_list.rkt thm |& grep -q Rejected
         name: "Overall theorem"
     
