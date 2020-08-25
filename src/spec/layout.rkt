@@ -778,18 +778,17 @@
             (= (h b) (min-max-height ,(get-px-or-% 'height '(h p) 'b) b)))
 
        ;; level -> x -> advance -> can-add -> add
-       (let* ([ez (ez.in b)]
-              [w (- (right-outer b) (left-outer b))]
-              [h (- (bottom-outer b) (top-outer b))]
-              [y-normal
-               (resolve-clear b (vertical-position-for-flow-roots b))]
-              [y* (ez.level ez w (left-content (pbflow b)) (right-content (pbflow b)) y-normal (style.float r))]
-              [x* (ez.x ez y* (style.float r) (left-content (pbflow b)) (right-content (pbflow b)))]
-              [x (ite (is-float/left (style.float r)) x* (- x* w))])
-         (and
+       ,(smt-let* ([ez (ez.in b)]
+                   [w (- (right-outer b) (left-outer b))]
+                   [h (- (bottom-outer b) (top-outer b))]
+                   [y-normal
+                    (resolve-clear b (vertical-position-for-flow-roots b))]
+                   [y* (ez.level ez w (left-content (pbflow b)) (right-content (pbflow b)) y-normal (style.float r))]
+                   [x* (ez.x ez y* (style.float r) (left-content (pbflow b)) (right-content (pbflow b)))]
+                   [x (ite (is-float/left (style.float r)) x* (- x* w))])
           (= (top-outer b) y*)
           (= (left-outer b) x)
-          (= (ez.lookback b) false)))))
+          (= (ez.lookback b) false))))
 
   (define-fun a-block-positioned-box ((b Box)) Bool
     (and
@@ -975,8 +974,7 @@
            (= (ancestor-elt b) (ite (is-elt (box-elt b)) (box-elt b) (ite (is-box (pbox b)) (ancestor-elt (pbox b)) no-elt)))))
 
   (define-fun a-line-box ((b Box)) Bool
-    ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [flt (flt b)]
-               [f (fflow b)] [l (lflow b)]
+    ,(smt-let ([p (pflow b)] [v (vflow b)] [n (nflow b)] [f (fflow b)] [l (lflow b)]
                [metrics (font-info b)] [leading (- (line-height b) (height-text b))])
        (= (type b) box/line)
        (no-relative-offset b)
