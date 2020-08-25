@@ -3,10 +3,8 @@ name: CI
 on: [push]
 
 jobs:
-  build:
-
+  unit-tests:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@master
       - name: "Install Racket"
@@ -15,3 +13,21 @@ jobs:
         uses: pavpanchekha/setup-z3@v1.2
       - name: "Run tests"
         run: make test
+
+  induction-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: "Install Racket"
+        uses: Bogdanp/setup-racket@v0.5
+      - name: "Install Z3"
+        uses: pavpanchekha/setup-z3@v1.2
+      - run: racket src/run.rkt accept bench/just_list.rkt base | grep -q Rejected
+        name: "Base case"
+      - run: racket src/run.rkt accept bench/just_list.rkt base2 | grep -q Rejected
+        name: "Base case 2"
+      - run: racket src/run.rkt accept bench/just_list.rkt ind | grep -q Rejected
+        name: "Inductive case"
+      - run: racket src/run.rkt accept bench/just_list.rkt thm | grep -q Rejected
+        name: "Overall theorem"
+    
