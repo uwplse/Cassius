@@ -78,7 +78,11 @@
          (node-set*! box ':spec (list))
          (node-set! box ':split (length (hash-ref box-context '*)))
          (hash-update! box-context '* (curry cons box)))]
-
+      ;;Add the relevant tags to the input box to get modularize to correctly create the setup for a proof by induction
+      [`(induct ,name ,inductive-fact)
+	(define boxes (box-set name box-context))
+	(node-set! box ':induct inductive-fact)]
+	
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
       [`(erase ,name ,type)
        (define boxes (box-set name box-context))
