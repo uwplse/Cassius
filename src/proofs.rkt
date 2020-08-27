@@ -82,7 +82,7 @@
       [`(induct ,name ,inductive-fact)
 	(define boxes (box-set name box-context))
 	(for* ([box (in-list boxes)])
-	(node-set! box ':induct inductive-fact))]
+	(node-set! box ':inductive-fact inductive-fact))]
 	
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
       [`(erase ,name ,type)

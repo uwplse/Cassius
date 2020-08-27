@@ -39,10 +39,21 @@
        (cons (first tree) children*)]))
   out)
 
+;; Produces the documents and problems for the different cases of a proof by induction and returns a list of those cases based on the input document and pre and post conditions
+(define (inductive-cases component-document precondition postcondition)
+  (define component-box (parse-tree (dom-boxes component-document)))
+  (if (node-get* component-box ':inductive-fact)
+    (begin
+      (eprintf "Found inductive fact ~a\n" (node-get* component-box ':inductive-fact))
+      (list (cons component-document postcondition)))
+    (list (cons component-document postcondition))))
+
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))
   (define sheets (dict-ref problem ':sheets))
-  (for*/list ([doc (dict-ref problem ':documents)] [(name thing) (split-document doc)]
+  (for*/list ([doc (dict-ref problem ':documents)] 
+	      [(name thing) (split-document doc)]
+	      [cases (inductive-cases (car thing) 'todo-no-precondition (cdr thing))]
               #:unless (null? (cdr thing)))
     (match-define (cons piece specs) thing)
     (define problem*
