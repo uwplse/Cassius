@@ -41,12 +41,36 @@
 
 ;; Produces the documents and problems for the different cases of a proof by induction and returns a list of those cases based on the input document and pre and post conditions
 (define (inductive-cases component-document precondition postcondition)
-  (define component-box (parse-tree (dom-boxes component-document)))
-  (if (node-get* component-box ':inductive-fact)
-    (begin
-      (eprintf "Found inductive fact ~a\n" (node-get* component-box ':inductive-fact))
-      (list (cons component-document postcondition)))
-    (list (cons component-document postcondition))))
+  (define thm-box (parse-tree (dom-boxes component-document)))
+  (pretty-print thm-box)
+  ;;If the list has an inductive fact and it has 4 or more elements, set up a proof by induction
+  (cond
+    ;;When no induction is requested, do nothing
+    [(not (node-get* thm-box ':inductive-fact))
+     (list (cons component-document postcondition))]
+    ;;When induction is requested, but the list given doesn't have at leaste for elements, print out a warning and do nothing
+    [(and (not (and (and (and (and (node-lchild thm-box) (node-fchild thm-box)) (and (node-next (node-fchild thm-box)) (node-prev (node-lchild thm-box)))) (and (not (equal? (node-next (node-fchild thm-box)) (node-lchild thm-box))) (not (equal? (node-next (node-fchild thm-box)) (node-prev (node-lchild thm-box))))))))  (node-get* thm-box ':inductive-fact))
+     (begin
+       (eprintf "Warning: ~a is to small to induct over on page one of the given pages. ~a Must have at least 4 elements. Skipping induction for ~a\n"   (node-get* thm-box ':name) (node-get* thm-box ':name) (node-get* thm-box ':name))
+       (list (cons component-document postcondition)))]
+    ;;When induction is requested and the list given has at least 4 elements create and return the list of cases for induction
+    [(and (and (and (and (and (node-lchild thm-box) (node-fchild thm-box)) (and (node-next (node-fchild thm-box)) (node-prev (node-lchild thm-box)))) (and (not (equal? (node-next (node-fchild thm-box)) (node-lchild thm-box))) (not (equal? (node-next (node-fchild thm-box)) (node-prev (node-lchild thm-box))))))) (node-get* thm-box ':inductive-fact))
+     (begin
+       (eprintf "Found inductive fact ~a\n" (node-get* thm-box ':inductive-fact))
+       ;;Create the document/proof for the base case
+       ;;Create the document/proof for the base2 case
+       ;;Create the document/proof for the thm case
+       ;;Add the proper tags to the inductive header, inductive footer, and end of the list to get the correct inductive behaviour from Cassius
+       (node-set*! (node-next (node-fchild thm-box)) ':no-next #t)
+       (node-set*! (node-prev (node-lchild thm-box)) ':no-prev-or-next #t)
+       (node-set*! (node-lchild thm-box) ':no-prev #t)
+       ;;Name the inductive header and footer
+       (node-set*! (node-next (node-fchild thm-box)) ':name "inductive-header")
+       (node-set*! (node-prev (node-lchild thm-box)) ':name "inductive-footer")
+       ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
+       (pretty-print postcondition)
+       ;;Create the document/proof for the ind case
+       (list (cons component-document postcondition)))]))
 
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))

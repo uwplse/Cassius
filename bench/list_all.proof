@@ -26,14 +26,35 @@
         :fs (between 16 32)
 ) 
 
+(page four-presses (load "list_all.rkt" button_test_5)
+	:w (between 800 1920)
+	:h (between 600 1280)
+	:fs (between 16 32)
+)
+
+(theorem (top-above-bottom b)
+	(>= (- (bottom b) (top b) 0)))
+
+(proof (top-above-bottom top-above-bottom zero-presses one-press two-presses three-presses four-presses)
+	(component list (id list))
+	(component button (tag button))
+	(components todos (child (id list) *))
+	(erase todos :text)
+        (induct list 
+		;;inductive fact
+		(and (>= (- (bottom inductive-base) (top inductive-base)) 0) (= (floats-tracked inductive-base) (floats-tracked inductive-base)))
+	)
+	(assert *
+	(forall (b) 
+		(=> 
+			(non-negative-margins b) (>= (height b) 0) (float-flow-skip b) 
+			(>= (- (bottom b) (top b) 0))))))
+
 (proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
         (component list (id list))
 	(component button (tag button))
 	(components todos (child (id list) *))
         (erase todos :text)
-        (induct list
-		;;inductive fact
-	)
         (assert list 
           (=> (or (= (prev list) null)
                   (non-negative-margins (prev list)))
