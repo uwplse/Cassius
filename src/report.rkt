@@ -153,56 +153,71 @@
   (flush-output (current-error-port))
   (struct-copy result res [status status] [time runtime]))
 
+(define (termination-message all sent recv)
+  (eprintf "\nTerminating after ~a/~a. Waiting for ~a\n"
+           (length recv) (length all) (sort (set-subtract sent recv) <)))
+
 (define-syntax-rule (for/threads num-threads ([input all-inputs]) body ...)
-  (let ([threads num-threads] [inputs all-inputs])
-    (if threads
-        (let ([workers
-               (build-list
-                threads
-                (λ (i)
-                  (place ch
-                         (match-define (list-rest hd* verbose* timeout* expected-failures*) (place-channel-get ch))
-                         (verbose verbose*)
-                         (timeout timeout*)
-                         (for ([(k v) (in-dict hd*)])
-                           (hash-set! helper-dict k v)
-                           (hash-set! assertion-helpers (car k)
-                                      (procedure-reduce-arity
-                                       (λ vals
-                                         (smt-replace-terms v (map cons (cdr k) vals)))
-                                       (length (cdr k)))))
-                         (expected-failures expected-failures*)
-                         (let loop ()
-                           (match-define (cons self (cons id thing)) (place-channel-get ch))
-                           (define result
-                             (let ([input thing])
-                               body ...))
-                           (place-channel-put ch (cons self (cons id result)))
-                           (loop)))))])
-          (for ([worker workers])
-            (place-channel-put worker (list* helper-dict (verbose) (timeout) (expected-failures))))
-          (define to-send (map cons (range 0 (length inputs)) inputs))
-          (for ([worker workers])
-            (unless (null? to-send)
-              (place-channel-put worker (cons worker (car to-send)))
-              (set! to-send (cdr to-send))))
-            (let loop ([out '()])
-              (with-handlers ([exn:break?
+  (let* ([threads num-threads] [inputs all-inputs] [total (length inputs)])
+    (cond
+     [(not threads)
+      (for/list ([input inputs] [n (in-naturals)])
+        (with-handlers ([exn:break?
+                         (λ (e)
+                           (termination-message (range total) (range (+ n 1)) (range n))
+                           (raise e))])
+          body ...))]
+     [else
+      (define workers
+        (for/list ([i (in-range threads)])
+          (define-values (hd* vb* to* ef*)
+            (values helper-dict (verbose) (timeout) (expected-failures)))
+          (place/context ch
+            (for ([(k v) (in-dict hd*)])
+              (hash-set! helper-dict k v)
+              (hash-set! assertion-helpers (car k)
+                         (procedure-reduce-arity
+                          (λ vals
+                            (smt-replace-terms v (map cons (cdr k) vals)))
+                          (length (cdr k)))))
+            (verbose vb*)
+            (timeout to*)
+            (expected-failures ef*)
+            
+            ;; Main loop
+            (let loop ()
+              (match-define (list* self id thing) (place-channel-get ch))
+              (with-handlers ([exn:fail?
                                (λ (e)
-                                 (eprintf "Terminating after ~a/~a. Waiting for #~a\n"
-                                          (length out) (length inputs)
-                                          (first (set-subtract (range 0 (length inputs)) (set-union (map car to-send) (map car out)))))
-                                 (raise e))])
-                (cond
-                 [(= (length out) (length inputs))
-                  (map cdr (sort out < #:key car))]
-                 [else
-                  (match-define (cons worker result) (apply sync workers))
-                  (unless (null? to-send)
-                    (place-channel-put worker (cons worker (car to-send)))
-                    (set! to-send (cdr to-send)))
-                  (loop (cons result out))]))))
-        (for/list ([input inputs]) body ...))))
+                                 ((error-display-handler) (exn-message e) e)
+                                 (place-channel-put ch (list* self id)))])
+                (define result (let ([input thing]) body ...))
+                (place-channel-put ch (list* self id result)))
+              (loop)))))
+      (define to-send (map cons (range 0 (length inputs)) inputs))
+      (for ([worker workers])
+        (unless (null? to-send)
+          (place-channel-put worker (cons worker (car to-send)))
+          (set! to-send (cdr to-send))))
+      (let loop ([out '()])
+        (define sent (set-subtract (range total) (map car to-send)))
+        (cond
+         [(= (length out) (length inputs))
+          (map cdr (sort out < #:key car))]
+         [else
+          (match-define (cons worker result) 
+                        (with-handlers ([exn:break?
+                                         (λ (e)
+                                           (termination-message (range total) sent (map car out))
+                                           (raise e))])
+                          (apply sync workers)))
+          (unless (pair? result)
+            (termination-message (range total) sent (map car out))
+            (exit 1))
+          (unless (null? to-send)
+            (place-channel-put worker (cons worker (car to-send)))
+            (set! to-send (cdr to-send)))
+          (loop (cons result out))]))])))
 
 (define (run-regression-tests probs #:valid [valid? (const true)] #:index [index (hash)]
                               #:threads [threads #f])

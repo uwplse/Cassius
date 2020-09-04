@@ -42,7 +42,7 @@ do
     echo bench/css/$CSSWG.rkt
 done | xargs make -j$THREADS bench/fwt.rkt
 
-make FWT_PATH="$FWT_PATH" FLAGS="--verbose --threads $THREADS --cache reports/run.cache" \
+make FWT_PATH="$FWT_PATH" FLAGS="--threads $THREADS --cache reports/run.cache" \
      reports/csswg.html reports/bugs.html \
      reports/fwt.html reports/vizassert.html reports/specific.html \
      reports/modular.html
