@@ -42,7 +42,6 @@
 ;; Produces the documents and problems for the different cases of a proof by induction and returns a list of those cases based on the input document and pre and post conditions
 (define (inductive-cases component-document precondition postcondition)
   (define thm-box (parse-tree (dom-boxes component-document)))
-  (pretty-print thm-box)
   ;;If the list has an inductive fact and it has 4 or more elements, set up a proof by induction
   (cond
     ;;When no induction is requested, do nothing
@@ -61,16 +60,22 @@
        ;;Create the document/proof for the base2 case
        ;;Create the document/proof for the thm case
        ;;Add the proper tags to the inductive header, inductive footer, and end of the list to get the correct inductive behaviour from Cassius
-       (node-set*! (node-next (node-fchild thm-box)) ':no-next #t)
-       (node-set*! (node-prev (node-lchild thm-box)) ':no-prev-or-next #t)
-       (node-set*! (node-lchild thm-box) ':no-prev #t)
+       (node-set! (node-next (node-fchild thm-box)) ':no-next #t)
+       (node-set! (node-prev (node-lchild thm-box)) ':no-prev #t)
        ;;Name the inductive header and footer
-       (node-set*! (node-next (node-fchild thm-box)) ':name "inductive-header")
-       (node-set*! (node-prev (node-lchild thm-box)) ':name "inductive-footer")
+       (node-set! (node-next (node-fchild thm-box)) ':name 'inductive-header)
+       (node-set! (node-prev (node-lchild thm-box)) ':name 'inductive-footer)
+       (pretty-print (node-next (node-fchild thm-box)))
+       (pretty-print (node-prev (node-lchild thm-box)))
        ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
-       (pretty-print postcondition)
+       (match-define (list `(forall (,varss ...) (=> ,press ... ,posts)) ...) postcondition)
+       (define thm-test 
+	 (for/list ([vars varss] [pres press] [post posts])
+	   `(forall (,@vars) (=> ,@pres ,@(node-get* thm-box ':inductive-fact) ,post))))
+       (pretty-print thm-test)
        ;;Create the document/proof for the ind case
-       (list (cons component-document postcondition)))]))
+       ;;Return a list of the documents of each of the cases
+       (list (cons (unparse-tree thm-box) thm-test)))]))
 
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))

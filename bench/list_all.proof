@@ -39,7 +39,6 @@
 	(component list (id list))
 	(component button (tag button))
 	(components todos (child (id list) *))
-	(erase todos :text)
         (induct list 
 		;;inductive fact
 		(and (>= (- (bottom inductive-base) (top inductive-base)) 0) (= (floats-tracked inductive-base) (floats-tracked inductive-base)))
@@ -50,18 +49,18 @@
 			(non-negative-margins b) (>= (height b) 0) (float-flow-skip b) 
 			(>= (- (bottom b) (top b) 0))))))
 
-(proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
-        (component list (id list))
-	(component button (tag button))
-	(components todos (child (id list) *))
-        (erase todos :text)
-        (assert list 
-          (=> (or (= (prev list) null)
-                  (non-negative-margins (prev list)))
-              (non-negative-margins list)))
-	(assert *
-	(forall(b) (=> (onscreen ?)
-			 (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
-	(assert (- * list) (forall (t) (=> (has-type t text) (> (width t) 0) (non-negative-margins ?))))
-	(assert root (onscreen root))
-)
+;(proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
+;        (component list (id list))
+;	(component button (tag button))
+;	(components todos (child (id list) *))
+;        (erase todos :text)
+;        (assert list 
+;          (=> (or (= (prev list) null)
+;                  (non-negative-margins (prev list)))
+;              (non-negative-margins list)))
+;	(assert *
+;	(forall(b) (=> (onscreen ?)
+;			 (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+;	(assert (- * list) (forall (t) (=> (has-type t text) (> (width t) 0) (non-negative-margins ?))))
+;	(assert root (onscreen root))
+;)
