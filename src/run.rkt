@@ -194,6 +194,7 @@
         (call-with-output-file
             file-name #:exists 'replace
             (λ (p)
+              (fprintf p "; (set-option :print-success true) ; Disabled for interactive use\n")
               (for ([cmd query])
                 (match cmd
                   [(list 'echo comment) (fprintf p "; ~a\n" comment)]
