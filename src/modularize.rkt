@@ -55,7 +55,7 @@
     ;;When induction is requested and the list given has at least 4 elements create and return the list of cases for induction
     [(and (and (and (and (and (node-lchild thm-box) (node-fchild thm-box)) (and (node-next (node-fchild thm-box)) (node-prev (node-lchild thm-box)))) (and (not (equal? (node-next (node-fchild thm-box)) (node-lchild thm-box))) (not (equal? (node-next (node-fchild thm-box)) (node-prev (node-lchild thm-box))))))) (node-get* thm-box ':inductive-fact))
      (begin
-       (eprintf "Found inductive fact ~a\n" (node-get* thm-box ':inductive-fact))
+       ;(eprintf "Found inductive fact ~a\n" (node-get* thm-box ':inductive-fact))
        ;;Create the document/proof for the base case
        ;;Create the document/proof for the base2 case
        ;;Create the document/proof for the thm case
@@ -65,26 +65,27 @@
        ;;Name the inductive header and footer
        (node-set! (node-next (node-fchild thm-box)) ':name 'inductive-header)
        (node-set! (node-prev (node-lchild thm-box)) ':name 'inductive-footer)
-       (pretty-print (node-next (node-fchild thm-box)))
-       (pretty-print (node-prev (node-lchild thm-box)))
        ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
        (match-define (list `(forall (,varss ...) (=> ,press ... ,posts)) ...) postcondition)
+       ;(pretty-print posts)
        (define thm-test 
 	 (for/list ([vars varss] [pres press] [post posts])
+	   ;(pretty-print post)
 	   `(forall (,@vars) (=> ,@pres ,@(node-get* thm-box ':inductive-fact) ,post))))
-       (pretty-print thm-test)
        ;;Create the document/proof for the ind case
        ;;Return a list of the documents of each of the cases
-       (list (cons (unparse-tree thm-box) thm-test)))]))
+       (list (cons (struct-copy dom component-document 
+				[boxes (unparse-tree thm-box)])
+		   thm-test)))]))
 
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))
   (define sheets (dict-ref problem ':sheets))
   (for*/list ([doc (dict-ref problem ':documents)] 
 	      [(name thing) (split-document doc)]
-	      [cases (inductive-cases (car thing) 'todo-no-precondition (cdr thing))]
+	      [case* (inductive-cases (car thing) 'todo-no-precondition (cdr thing))]
               #:unless (null? (cdr thing)))
-    (match-define (cons piece specs) thing)
+    (match-define (cons piece specs) case*)
     (define problem*
       (dict-set* problem
                  ':documents (list piece)

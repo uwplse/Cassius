@@ -39,15 +39,15 @@
 	(component list (id list))
 	(component button (tag button))
 	(components todos (child (id list) *))
+	(assert todos (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)))
+	(pre list (= (floats-tracked ?) 0))
         (induct list 
 		;;inductive fact
-		(and (>= (- (bottom inductive-base) (top inductive-base)) 0) (= (floats-tracked inductive-base) (floats-tracked inductive-base)))
+		(and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-footer) (floats-tracked inductive-header)))
 	)
-	(assert *
-	(forall (b) 
-		(=> 
-			(non-negative-margins b) (>= (height b) 0) (float-flow-skip b) 
-			(>= (- (bottom b) (top b) 0))))))
+	(assert list
+	(forall ()  
+			(>= (- (bottom (last list)) (top (first list)) 0)))))
 
 ;(proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
 ;        (component list (id list))
