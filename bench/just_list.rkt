@@ -154,12 +154,12 @@
      ((li :num 4 :class ()))))))
 
 (define-layout thm (thm thm)
- ((BLOCK :elt 0 :name list)
-  ((BLOCK :elt 1 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?))))
-  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-header :no-next))
+ ((BLOCK :elt 0 :name list :component true) 
+  ((BLOCK :elt 1 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :component true))
+  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :component true :name inductive-header :no-next #t))
   ;; mystery elements go her
-  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-footer :no-prev-or-next))
-  ((BLOCK :elt 4 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :no-prev))))
+  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :component true :name inductive-footer :no-prev #t))
+  ((BLOCK :elt 4 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :component true))))
 
 
 (define-problem thm
@@ -168,9 +168,15 @@
   :sheets thm
   :fonts thm
   :tests
-  (forall () ; thm
-    (=> (and (and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-header) (floats-tracked inductive-footer))) (= (floats-tracked list) 0))
-        (>= (- (bottom (last list)) (top (first list))) 0)))
+   (forall
+    ()
+    (=>
+     (= (floats-tracked ?) 0)
+     (and (>= (- (bottom inductive-footer) (top inductive-header)) 0)
+          (=
+           (floats-tracked inductive-footer)
+           (floats-tracked inductive-header)))
+     (>= (- (bottom (last list)) (top (first list)) 0))))
   :layouts thm
   :features display:list-item empty-text tag:button display:inline-block float:0)
 
