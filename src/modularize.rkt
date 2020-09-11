@@ -42,6 +42,9 @@
 ;; Produces the documents and problems for the different cases of a proof by induction and returns a list of those cases based on the input document and pre and post conditions
 (define (inductive-cases component-document precondition postcondition)
   (define thm-box (parse-tree (dom-boxes component-document)))
+  (define ind-dom (parse-dom component-document))
+  (define ind-box (dom-boxes ind-dom))
+  (define ind-elts (dom-elements ind-dom))
   ;;If the list has an inductive fact and it has 4 or more elements, set up a proof by induction
   (cond
     ;;When no induction is requested, do nothing
@@ -55,28 +58,51 @@
     ;;When induction is requested and the list given has at least 4 elements create and return the list of cases for induction
     [(and (and (and (and (and (node-lchild thm-box) (node-fchild thm-box)) (and (node-next (node-fchild thm-box)) (node-prev (node-lchild thm-box)))) (and (not (equal? (node-next (node-fchild thm-box)) (node-lchild thm-box))) (not (equal? (node-next (node-fchild thm-box)) (node-prev (node-lchild thm-box))))))) (node-get* thm-box ':inductive-fact))
      (begin
-       ;(eprintf "Found inductive fact ~a\n" (node-get* thm-box ':inductive-fact))
+       (eprintf "Found inductive fact ~a\n" (node-get* thm-box ':inductive-fact))
        ;;Create the document/proof for the base case
        ;;Create the document/proof for the base2 case
        ;;Create the document/proof for the thm case
        ;;Add the proper tags to the inductive header, inductive footer, and end of the list to get the correct inductive behaviour from Cassius
-       (node-set! (node-next (node-fchild thm-box)) ':no-next #t)
-       (node-set! (node-prev (node-lchild thm-box)) ':no-prev #t)
+;       (node-set! (node-next (node-fchild thm-box)) ':no-next #t)
+;       (node-set! (node-prev (node-lchild thm-box)) ':no-prev #t)
        ;;Name the inductive header and footer
-       (node-set! (node-next (node-fchild thm-box)) ':name 'inductive-header)
-       (node-set! (node-prev (node-lchild thm-box)) ':name 'inductive-footer)
+;       (node-set! (node-next (node-fchild thm-box)) ':name 'inductive-header)
+;       (node-set! (node-prev (node-lchild thm-box)) ':name 'inductive-footer)
        ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
-       (match-define (list `(forall (,varss ...) (=> ,press ... ,posts)) ...) postcondition)
-       ;(pretty-print posts)
-       (define thm-test 
-	 (for/list ([vars varss] [pres press] [post posts])
-	   ;(pretty-print post)
-	   `(forall (,@vars) (=> ,@pres ,@(node-get* thm-box ':inductive-fact) ,post))))
+;       (match-define (list `(forall (,thm-varss ...) (=> ,thm-press ... ,thm-posts)) ...) postcondition)
+;       (define thm-test 
+;	 (for/list ([thm-vars thm-varss] [thm-pres thm-press] [thm-post thm-posts])
+;	   `(forall (,@thm-vars) (=> ,@thm-pres ,@(node-get* thm-box ':inductive-fact) ,thm-post))))
        ;;Create the document/proof for the ind case
+       ;;Create and add the node for the inductive-step
+       (pretty-print (node-children ind-box))
+       (define ind-clone (clone-node (node-prev (node-lchild ind-box))))
+       (add-node-before! (node-prev (node-lchild ind-box)) ind-clone)
+      ; (pretty-print ind-elts)
+       (pretty-print (node-children (node-fchild (node-lchild ind-elts))))
+       (define ind-elt-clone (clone-node (node-prev (node-lchild (dom-box->elt ind-dom ind-box)))))
+       (add-node-before! (node-prev (node-lchild (dom-box->elt ind-dom ind-box))) ind-elt-clone)
+       (pretty-print (node-children (node-fchild (node-lchild ind-elts))))
+       (node-set! (node-prev (node-prev (node-lchild ind-box))) ':elt (node-id ind-elt-clone))
+       ;;Add the proper tags to the inductive header, inductive footer, and end of the list to get the correct inductive behaviour from Cassius
+       (node-set! (node-next (node-fchild ind-box)) ':no-next #t)
+       (node-set! (node-prev (node-prev (node-lchild ind-box))) ':no-prev #t)
+       (node-set! (node-prev (node-lchild ind-box)) ':no-next #t)
+       (node-set! (node-lchild ind-box) ':no-prev #t)
+       ;;Name the inductive header, step, and footer
+       (node-set! (node-next (node-fchild ind-box)) ':name 'inductive-header)
+       (node-set! (node-prev (node-prev (node-lchild ind-box))) ':name 'inductive-footer)
+       (node-set! (node-prev (node-lchild ind-box)) ':name 'inductive-step)
+       (pretty-print (node-children ind-box))
+       ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
+       (match-define (list `(forall (,ind-varss ...) (=> ,ind-press ... ,ind-posts)) ...) postcondition)
+       (define ind-test 
+	 (for/list ([ind-vars ind-varss] [ind-pres ind-press] [ind-post ind-posts])
+	   `(forall (,@ind-vars) (=> ,@ind-pres ,@(node-get* ind-box ':inductive-fact) (let ([inductive-footer inductive-step]) ,@(node-get* ind-box ':inductive-fact))))))
+	(pretty-print ind-test)
        ;;Return a list of the documents of each of the cases
-       (list (cons (struct-copy dom component-document 
-				[boxes (unparse-tree thm-box)])
-		   thm-test)))]))
+       (list #|(cons (struct-copy dom component-document [boxes (unparse-tree thm-box)]) thm-test)|#
+	     (cons (unparse-dom ind-dom) ind-test)))]))
 
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))

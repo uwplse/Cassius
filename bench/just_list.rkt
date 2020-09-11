@@ -234,8 +234,14 @@
   :sheets ind
   :fonts ind
   :tests
-  (forall () ; ind
-    (=> (and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-header) (floats-tracked inductive-footer)))
-        (and (>= (- (bottom inductive-step) (top inductive-header) 0)) (= (floats-tracked inductive-header) (floats-tracked inductive-step)))))
+   (forall
+    ()
+    (=>
+     (= (floats-tracked ?) 0)
+     (and (>= (- (bottom inductive-footer) (top inductive-header)) 0)
+          (=
+           (floats-tracked inductive-footer)
+           (floats-tracked inductive-header)))
+        (let ([inductive-footer inductive-step]) (and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-footer) (floats-tracked inductive-header))))))
   :layouts ind
   :features display:list-item empty-text tag:button display:inline-block float:0)
