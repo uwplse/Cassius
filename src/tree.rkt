@@ -3,7 +3,8 @@
 (provide parse-tree unparse-tree tree-copy tree=?
          node-stx? node? node-type node-id node-parent node-children* node-children node-attrs
          node-get node-get* node-set! node-set*! node-add! node-remove!
-         node-prev node-next node-fchild node-lchild in-ancestors in-tree)
+         node-prev node-next node-fchild node-lchild in-ancestors in-tree
+	 add-node-before! clone-node delete-node!)
 
 (define-by-match node-stx?
   (? string?)
@@ -26,6 +27,30 @@
 
 (define (tree=? tree1 tree2)
   (equal? (unparse-tree tree1) (unparse-tree tree2)))
+
+(define (delete-node! node)
+  (set-node-children*!
+   (node-parent node)
+   (filter (λ (x) (not (equal? x node))) (node-children* (node-parent node)))))
+
+(define (add-to-list-before lst elt to-add)
+  (if (equal? (car lst) elt)
+      (cons to-add lst)
+      (cons (car lst) (add-to-list-before (cdr lst) elt to-add))))
+
+(define (add-node-before! next node)
+  (set-node-children*!
+   (node-parent next)
+   (add-to-list-before (node-children* (node-parent next)) next node)))
+
+(define (clone-node n)
+  (match n
+    [(? string?) n]
+    [(node type id attrs parent children*)
+     (define n* (node type node-counter attrs parent (map clone-node children*)))
+     (when (node-get n* ':num) (node-set! n* ':num (node-id n*)))
+     (set! node-counter (+ 1 node-counter))
+     n*]))
 
 (define (parse-tree tree)
   (let loop ([tree tree] [parent #f])

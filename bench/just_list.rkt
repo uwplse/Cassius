@@ -54,8 +54,8 @@
   :fonts base
   :tests
   (forall () ; base
-     (=> (= (floats-tracked list) 0)
-     (and (>= (- (bottom inductive-base) (top inductive-base)) 0) (= (floats-tracked inductive-base) (floats-tracked inductive-base)))))
+     (=> (= (floats-tracked ?) 0)
+     (let ([inductive-footer inductive-base] [inductive-header inductive-base]) (and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-footer) (floats-tracked inductive-header))))))
   :layouts base
   :features display:list-item empty-text tag:button display:inline-block float:0)
 
@@ -100,9 +100,9 @@
  ((BLOCK :elt 0 :name list)
   ((BLOCK :elt 1 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?))))
   ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-baseA))
-  ((BLOCK :elt 2 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-baseB :no-next))
+  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :name inductive-baseB :no-next))
   ;; mystery elements go here
-  ((BLOCK :elt 3 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :no-prev))))
+  ((BLOCK :elt 4 :component true :spec (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)) :no-prev))))
 
 (define-problem base2
   :title ""
@@ -111,8 +111,8 @@
   :fonts base2
   :tests
   (forall () ; base2
-     (=> (= (floats-tracked list) 0)
-     (and (>= (- (bottom inductive-baseB) (top inductive-baseA)) 0) (= (floats-tracked inductive-baseA) (floats-tracked inductive-baseB)))))
+     (=> (= (floats-tracked ?) 0)
+     (let ([inductive-footer inductive-baseB] [inductive-header inductive-baseA]) (and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-footer) (floats-tracked inductive-header))))))
   :layouts base2
   :features display:list-item empty-text tag:button display:inline-block float:0)
 
