@@ -38,6 +38,37 @@
       [_
        (cons (first tree) children*)]))
   out)
+
+;;For Inductive proofs create the problem for the case where the list is 3 items long
+(define (one-case component-document precondition postcondition ind-fact)
+  (define one-dom (parse-dom component-document))
+  (define one-box (dom-boxes one-dom))
+  (define one-elt (dom-box->elt one-dom one-box))
+  ;;Remove the nodes that arent the first, last, or inductive base form the lisit
+  (for ([child (node-children one-box)]
+    #:unless (equal? child (node-fchild one-box)))
+	(delete-node! child))
+  (for ([child-elt (node-children one-elt)]
+    #:unless (equal? child-elt (node-fchild one-elt)))
+	(delete-node! child-elt))
+       ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
+  (cons (unparse-dom one-dom) postcondition))
+
+;;For Inductive proofs create the problem for the case where the list is 3 items long
+(define (two-case component-document precondition postcondition ind-fact)
+  (define two-dom (parse-dom component-document))
+  (define two-box (dom-boxes two-dom))
+  (define two-elt (dom-box->elt two-dom two-box))
+  (node-set! (node-next (node-fchild two-box)) ':name 'inductive-base)
+  ;;Remove the nodes that arent the first, last, or inductive base form the lisit
+  (for ([child (node-children two-box)]
+    #:unless (or (equal? child (node-fchild two-box)) (equal? child (node-lchild two-box))))
+	(delete-node! child))
+  (for ([child-elt (node-children two-elt)]
+    #:unless (or (equal? child-elt (node-fchild two-elt)) (equal? child-elt (node-lchild two-elt))))
+	(delete-node! child-elt))
+  (cons (unparse-dom two-dom) postcondition))
+
 ;;For Inductive proofs create the problem for the case where the list is 3 items long
 (define (three-case component-document precondition postcondition ind-fact)
   (define three-dom (parse-dom component-document))
@@ -140,23 +171,34 @@
     (begin
        (eprintf "Warning: ~a is Empty, and can not be inducted over. Cassius induction requires that  ~a  have at least 1 element. Skipping induction for ~a\n"   (node-get* list-box ':name) (node-get* list-box ':name) (node-get* list-box ':name))
        (list (cons component-document postcondition)))]
-    [(< 0  (length (node-children list-box)) 4)
+    [(not (equal?  (length (node-children list-box)) 4))
      (eprintf "Warning: ~a has to few elements to do an induction over. Generating new elements based on what is in the list, this may break something depending on your proof\n" (node-get* list-box ':name))
      (let loop ()
        (if (>= (length (node-children list-box)) 4)
 	 (void)
+	 ;;else
        	 (let ([box-clone (clone-node (node-lchild list-box))]
                [elt-clone (clone-node (node-lchild list-elt))])
            (add-node-before! (node-lchild list-box) box-clone)
-           (add-node-before! (node-lchild (dom-box->elt list-dom list-box)) elt-clone)
+           (add-node-before! (node-lchild list-elt) elt-clone)
            (node-set! box-clone ':elt (node-id elt-clone))
+	   (loop))))
+     (let loop ()
+       (if (<= (length (node-children list-box)) 4)
+	 (void)
+	 ;;else
+	 (begin
+	   (delete-node! (node-prev (node-lchild list-box)))
+	   (delete-node! (node-prev (node-lchild list-elt)))
 	   (loop))))
      (inductive-cases (unparse-dom list-dom) precondition postcondition)]
     ;;When induction is requested and the list given has at least 4 elements create and return the list of cases for induction
     [(>= (length (node-children list-box)) 4)
      (eprintf "Found inductive fact ~a\n" ind-fact)
      ;;Return a list of the documents of each of the cases
-     (list   (three-case component-document precondition postcondition ind-fact)
+     (list   (one-case component-document precondition postcondition ind-fact)
+	     (two-case component-document precondition postcondition ind-fact)
+       	     (three-case component-document precondition postcondition ind-fact)
 	     (base-case component-document precondition postcondition ind-fact)
 	     (thm-case component-document precondition postcondition ind-fact)
 	     (ind-case component-document precondition postcondition ind-fact))]))
