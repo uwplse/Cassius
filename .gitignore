@@ -8,7 +8,9 @@ bench/joel
 bench/pages/
 bench/fwt.rkt
 bench/bugs.rkt
+bench/induction.rkt
 geckodriver.log
+cache
 previous/
 
 # Racket and TypeScript junk
