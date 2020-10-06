@@ -161,6 +161,7 @@
   (define list-box (dom-boxes list-dom))
   (define list-elt (dom-box->elt list-dom list-box))
   (define ind-fact (node-get* list-box ':inductive-fact))
+  (define name (node-get list'box ':name))
   ;;If the list has an inductive fact and it has 4 or more elements, set up a proof by induction
   (cond
     ;;When no induction is requested, do nothing
@@ -169,10 +170,10 @@
     ;;When induction is requested, but the list given is empty, print out a warning and do nothing
     [(and (= (length (node-children list-box)) 0) ind-fact)
     (begin
-       (eprintf "Warning: ~a is Empty, and can not be inducted over. Cassius induction requires that  ~a  have at least 1 element. Skipping induction for ~a\n"   (node-get* list-box ':name) (node-get* list-box ':name) (node-get* list-box ':name))
+       (eprintf "Warning: Cannot induct over empty component ~a. Proving ~a directly\n" name name name)
        (list (cons component-document postcondition)))]
     [(not (equal?  (length (node-children list-box)) 4))
-     (eprintf "Warning: ~a has to few elements to do an induction over. Generating new elements based on what is in the list, this may break something depending on your proof\n" (node-get* list-box ':name))
+     (eprintf "Warning: Generating new elements for inductive component ~a.\n" name)
      (let loop ()
        (if (>= (length (node-children list-box)) 4)
 	 (void)
