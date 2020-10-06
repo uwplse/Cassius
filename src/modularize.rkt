@@ -155,6 +155,15 @@
       `(forall (,@thm-vars) (=> ,@thm-pres ,@ind-fact ,thm-post))))
   (cons (unparse-dom thm-dom) thm-test))
 
+(define-syntax-rule (while condition body ...)
+  (let loop ()
+    (cond
+     [condition
+      body ...
+      (loop)]
+     [else
+      (void)])))
+
 ;; Produces the documents and problems for the different cases of a proof by induction and returns a list of those cases based on the input document and pre and post conditions
 (define (inductive-cases component-document precondition postcondition)
   (define list-dom (parse-dom component-document))
@@ -162,40 +171,34 @@
   (define list-elt (dom-box->elt list-dom list-box))
   (define ind-fact (node-get* list-box ':inductive-fact))
   (define name (node-get list'box ':name))
+
   ;;If the list has an inductive fact and it has 4 or more elements, set up a proof by induction
   (cond
     ;;When no induction is requested, do nothing
     [(not ind-fact)
      (list (cons component-document postcondition))]
+
     ;;When induction is requested, but the list given is empty, print out a warning and do nothing
     [(and (= (length (node-children list-box)) 0) ind-fact)
-    (begin
-       (eprintf "Warning: Cannot induct over empty component ~a. Proving ~a directly\n" name name name)
-       (list (cons component-document postcondition)))]
-    [(not (equal?  (length (node-children list-box)) 4))
+     (eprintf "Warning: Cannot induct over empty component ~a. Proving ~a directly\n" name name name)
+     (list (cons component-document postcondition))]
+    [(< (length (node-children list-box)) 4)
      (eprintf "Warning: Generating new elements for inductive component ~a.\n" name)
-     (let loop ()
-       (if (>= (length (node-children list-box)) 4)
-	 (void)
-	 ;;else
-       	 (let ([box-clone (clone-node (node-lchild list-box))]
-               [elt-clone (clone-node (node-lchild list-elt))])
-           (add-node-before! (node-lchild list-box) box-clone)
-           (add-node-before! (node-lchild list-elt) elt-clone)
-           (node-set! box-clone ':elt (node-id elt-clone))
-	   (loop))))
-     (let loop ()
-       (if (<= (length (node-children list-box)) 4)
-	 (void)
-	 ;;else
-	 (begin
-	   (delete-node! (node-prev (node-lchild list-box)))
-	   (delete-node! (node-prev (node-lchild list-elt)))
-	   (loop))))
+     (while (< (length (node-children list-box)) 4)
+       (define box-clone (clone-node (node-lchild list-box)))
+       (define elt-clone (clone-node (node-lchild list-elt)))
+       (add-node-before! (node-lchild list-box) box-clone)
+       (add-node-before! (node-lchild list-elt) elt-clone)
+       (node-set! box-clone ':elt (node-id elt-clone)))
      (inductive-cases (unparse-dom list-dom) precondition postcondition)]
+    [(< 4 (length (node-children list-box)))
+     (while (< 4 (length (node-children list-box)))
+       (delete-node! (node-prev (node-lchild list-box)))
+       (delete-node! (node-prev (node-lchild list-elt))))
+     (inductive-cases (unparse-dom list-dom) precondition postcondition)]
+
     ;;When induction is requested and the list given has at least 4 elements create and return the list of cases for induction
     [(>= (length (node-children list-box)) 4)
-     (eprintf "Found inductive fact ~a\n" ind-fact)
      ;;Return a list of the documents of each of the cases
      (list   (one-case component-document precondition postcondition ind-fact)
 	     (two-case component-document precondition postcondition ind-fact)
