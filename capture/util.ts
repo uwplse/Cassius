@@ -63,9 +63,9 @@ export function val2px(val, features) {
         return +val.substr(0, val.length - 2)*96;
     } else if (match = val.match(/^([-+0-9.e]+)([a-z]+)$/)) {
         features["unit:" + match[2]] = true;
-        throw "Error, " + val + " is not a known unit";
+        throw Error("Error, " + val + " is not a known unit");
     } else {
-        throw "Error, " + val + " is not a pixel quantity."
+        throw Error("Error, " + val + " is not a pixel quantity.");
     }
 }
 
@@ -73,7 +73,7 @@ export function val2pct(val : string, _) {
     if (val.match(/^[-+0-9.e]+%$/)) {
         return +val.substr(0, val.length - 1);
     } else {
-        throw "Error, " + val + " is not a percentage quantity."
+        throw Error("Error, " + val + " is not a percentage quantity.");
     }
 }
 
@@ -86,7 +86,7 @@ export function val2em(val, features) {
         features["unit:ex"] = true;
         return +val.substr(0, val.length - 2) / 16 * 9;
     } else {
-        throw "Error, " + val + " is not a em quantity."
+        throw Error("Error, " + val + " is not a em quantity.");
     }
 }
 

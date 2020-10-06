@@ -112,6 +112,8 @@ def main(urls, prerun=None, fd=None):
                 text = browser.capture(url, n, prerun=prerun)
             except selenium.common.exceptions.JavascriptException as e:
                 print("JS Exception in {}: {}".format(n, e.msg), file=sys.stderr)
+                if e.stacktrace:
+                    print("\n".join(e.stacktrace))
             else:
                 fd.write(text)
                 captured += 1
