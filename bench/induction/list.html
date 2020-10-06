@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<script>
+function add_element(e) {
+    let list = document.getElementById("list");
+    let n = list.children.length + 1;
+    let list_element = document.createElement('li');
+    list_element.id = 'element-' + n + '/' + window.iteration;
+    list_element.innerHTML = "value-" + n + '/' + window.iteration;
+    list.appendChild(list_element);
+}
+</script>
+<body>
+  <ul id="list"></ul>
+
+  <button type="button" id="click" onclick="add_element()">Click Me! </button>
+</body>
+</html>
