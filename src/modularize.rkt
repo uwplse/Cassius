@@ -180,7 +180,7 @@
 
     ;;When induction is requested, but the list given is empty, print out a warning and do nothing
     [(and (= (length (node-children list-box)) 0) ind-fact)
-     (eprintf "Warning: Cannot induct over empty component ~a. Proving ~a directly\n" name name name)
+     (eprintf "Warning: Cannot induct over empty component ~a. Proving ~a directly\n" name name)
      (list (cons component-document postcondition))]
     [(< (length (node-children list-box)) 4)
      (eprintf "Warning: Generating new elements for inductive component ~a.\n" name)
