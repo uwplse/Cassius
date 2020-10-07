@@ -170,7 +170,7 @@
   (define list-box (dom-boxes list-dom))
   (define list-elt (dom-box->elt list-dom list-box))
   (define ind-fact (node-get* list-box ':inductive-fact))
-  (define name (node-get list'box ':name))
+  (define name (node-get list-box ':name))
 
   ;;If the list has an inductive fact and it has 4 or more elements, set up a proof by induction
   (cond
