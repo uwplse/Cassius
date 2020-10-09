@@ -104,5 +104,5 @@ bench/induction.rkt: capture/capture.py capture/all.js bench/induction/list.html
 		'bench/induction/list.html#4' 'bench/induction/list.html#5' \
 		'bench/induction/list.html#50'
 
-reports/induction.html reports/induction.json: bench/induction.proof
+reports/induction.html reports/induction.json: bench/induction.proof bench/induction.rkt
 	racket src/report.rkt proofs $(FLAGS) --show-all --cache reports/induction.cache --timeout 600 -o reports/induction $^
