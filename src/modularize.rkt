@@ -41,7 +41,12 @@
 
 ;;For Inductive proofs create the problem for the case where the list is 3 items long
 (define (one-case component-document precondition postcondition ind-fact)
-  (define one-dom (parse-dom component-document))
+  (define one-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name one-dom-old-name))
+  (define new-name (sformat "~a.one-case" old-name))
+  (define one-dom 
+    (struct-copy dom one-dom-old-name
+  	         [name new-name]))
   (define one-box (dom-boxes one-dom))
   (define one-elt (dom-box->elt one-dom one-box))
   ;;Remove the nodes that arent the first, last, or inductive base form the lisit
@@ -51,12 +56,16 @@
   (for ([child-elt (node-children one-elt)]
     #:unless (equal? child-elt (node-fchild one-elt)))
 	(delete-node! child-elt))
-       ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
   (cons (unparse-dom one-dom) postcondition))
 
 ;;For Inductive proofs create the problem for the case where the list is 3 items long
 (define (two-case component-document precondition postcondition ind-fact)
-  (define two-dom (parse-dom component-document))
+  (define two-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name two-dom-old-name))
+  (define new-name (sformat "~a.two-case" old-name))
+  (define two-dom
+    (struct-copy dom two-dom-old-name
+		 [name new-name]))
   (define two-box (dom-boxes two-dom))
   (define two-elt (dom-box->elt two-dom two-box))
   (node-set! (node-next (node-fchild two-box)) ':name 'inductive-base)
@@ -71,7 +80,12 @@
 
 ;;For Inductive proofs create the problem for the case where the list is 3 items long
 (define (three-case component-document precondition postcondition ind-fact)
-  (define three-dom (parse-dom component-document))
+  (define three-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name three-dom-old-name))
+  (define new-name (sformat "~a.three-case" old-name))
+  (define three-dom
+    (struct-copy dom three-dom-old-name
+		 [name new-name]))
   (define three-box (dom-boxes three-dom))
   (define three-elt (dom-box->elt three-dom three-box))
   (node-set! (node-next (node-fchild three-box)) ':name 'inductive-base)
@@ -91,7 +105,12 @@
 
 ;;For inductive proofs create the problem for the base case
 (define (base-case component-document precondition postcondition ind-fact) 
-  (define base-dom (parse-dom component-document))
+  (define base-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name base-dom-old-name))
+  (define new-name (sformat "~a.base-case" old-name))
+  (define base-dom
+    (struct-copy dom base-dom-old-name
+		 [name new-name]))
   (define base-box (dom-boxes base-dom))
   (define base-elt (dom-box->elt base-dom base-box))
   (node-set! (node-prev (node-lchild base-box)) ':no-next #t)
@@ -115,7 +134,12 @@
 
 ;;For inductive proofs create the problem for the ind case
 (define (ind-case component-document precondition postcondition ind-fact)
-  (define ind-dom (parse-dom component-document))
+  (define ind-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name ind-dom-old-name))
+  (define new-name (sformat "~a.inductive-step" old-name))
+  (define ind-dom
+    (struct-copy dom ind-dom-old-name
+		[name new-name]))
   (define ind-box (dom-boxes ind-dom))
   (define ind-elt (dom-box->elt ind-dom ind-box))
   (define ind-clone (clone-node (node-prev (node-lchild ind-box))))
@@ -141,7 +165,12 @@
 
 ;;For inductive proofs create the problem for the thm case
 (define (thm-case component-document precondition postcondition ind-fact)
-  (define thm-dom (parse-dom component-document))
+  (define thm-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name thm-dom-old-name))
+  (define new-name (sformat "~a.theorem" old-name))
+  (define thm-dom
+    (struct-copy dom thm-dom-old-name
+		 [name new-name]))
   (define thm-box (dom-boxes thm-dom))
   (node-set! (node-next (node-fchild thm-box)) ':no-next #t)
   (node-set! (node-prev (node-lchild thm-box)) ':no-prev #t)
