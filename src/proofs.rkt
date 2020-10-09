@@ -82,7 +82,9 @@
       [`(induct ,name ,inductive-fact)
 	(define boxes (box-set name box-context))
 	(for* ([box (in-list boxes)])
-	(node-set! box ':inductive-fact inductive-fact))]
+	      (when (node-get box ':inductive-fact)
+		(raise (format "~a can not be inducted over more than once" box)))
+	      (node-set! box ':inductive-fact inductive-fact))]
 	
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
       [`(erase ,name ,type)
