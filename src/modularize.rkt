@@ -68,7 +68,6 @@
 		 [name new-name]))
   (define two-box (dom-boxes two-dom))
   (define two-elt (dom-box->elt two-dom two-box))
-  (node-set! (node-next (node-fchild two-box)) ':name 'inductive-base)
   ;;Remove the nodes that arent the first, last, or inductive base form the lisit
   (for ([child (node-children two-box)]
     #:unless (or (equal? child (node-fchild two-box)) (equal? child (node-lchild two-box))))
@@ -193,11 +192,17 @@
      [else
       (void)])))
 
+(define (remove-attr attrs attr)
+  (if (dict-ref attrs attr)
+    (dict-remove attrs attr)
+    attrs))
+
 ;; Produces the documents and problems for the different cases of a proof by induction and returns a list of those cases based on the input document and pre and post conditions
 (define (inductive-cases component-document precondition postcondition)
   (define list-dom (parse-dom component-document))
   (define list-box (dom-boxes list-dom))
   (define list-elt (dom-box->elt list-dom list-box))
+
   (define ind-fact (node-get* list-box ':inductive-fact))
   (define name (node-get list-box ':name))
 
@@ -207,34 +212,41 @@
     [(not ind-fact)
      (list (cons component-document postcondition))]
 
+    [(not list-elt)
+     (raise-user-error 'induct "Can't induct on ~a because it has no element tree" name)]
+
     ;;When induction is requested, but the list given is empty, print out a warning and do nothing
     [(and (= (length (node-children list-box)) 0) ind-fact)
      (eprintf "Warning: Cannot induct over empty component ~a. Proving ~a directly\n" name name)
      (list (cons component-document postcondition))]
-    [(< (length (node-children list-box)) 4)
-     (eprintf "Warning: Generating new elements for inductive component ~a.\n" name)
-     (while (< (length (node-children list-box)) 4)
-       (define box-clone (clone-node (node-lchild list-box)))
-       (define elt-clone (clone-node (node-lchild list-elt)))
-       (add-node-before! (node-lchild list-box) box-clone)
-       (add-node-before! (node-lchild list-elt) elt-clone)
-       (node-set! box-clone ':elt (node-id elt-clone)))
-     (inductive-cases (unparse-dom list-dom) precondition postcondition)]
-    [(< 4 (length (node-children list-box)))
-     (while (< 4 (length (node-children list-box)))
-       (delete-node! (node-prev (node-lchild list-box)))
-       (delete-node! (node-prev (node-lchild list-elt))))
-     (inductive-cases (unparse-dom list-dom) precondition postcondition)]
+    [else
+     ;;Check that the elements and boxes in this list are similar enough for this to be a valid candidate for induction
+     (unless (= (length (remove-duplicates (map (lambda (node) (remove-attr (node-attrs node) ':elt)) (node-children list-box)))) 1)
+       (raise-user-error 'induct "Can not induct over ~a because its box's children are too dissimilar" name))
+     (unless (= (length (remove-duplicates (map (lambda (node) (remove-attr (node-attrs node) ':num)) (node-children list-elt)))) 1)
+       (raise-user-error 'induct "Can not induct over ~a because its element's children are too dissimilar" name))
+     (when (< (length (node-children list-box)) 4)
+       (eprintf "Warning: Adding elements to inductive component ~a.\n" name)
+       (inductive-add-elements! list-box list-elt))
 
-    ;;When induction is requested and the list given has at least 4 elements create and return the list of cases for induction
-    [(>= (length (node-children list-box)) 4)
-     ;;Return a list of the documents of each of the cases
-     (list   (one-case component-document precondition postcondition ind-fact)
-	     (two-case component-document precondition postcondition ind-fact)
-       	     (three-case component-document precondition postcondition ind-fact)
-	     (base-case component-document precondition postcondition ind-fact)
-	     (thm-case component-document precondition postcondition ind-fact)
-	     (ind-case component-document precondition postcondition ind-fact))]))
+     (when (> (length (node-children list-box)) 4)
+       (eprintf "Warning: Removing elements from inductive component ~a.\n" name)
+       (inductive-remove-elements! list-box list-elt))
+     (for/list ([fn (list one-case two-case three-case base-case ind-case thm-case)])
+       (fn (unparse-dom list-dom) precondition postcondition ind-fact))]))
+
+(define (inductive-add-elements! list-box list-elt)
+  (while (< (length (node-children list-box)) 4)
+    (define box-clone (clone-node (node-lchild list-box)))
+    (define elt-clone (clone-node (node-lchild list-elt)))
+    (add-node-before! (node-lchild list-box) box-clone)
+    (add-node-before! (node-lchild list-elt) elt-clone)
+    (node-set! box-clone ':elt (node-id elt-clone))))
+
+(define (inductive-remove-elements! list-box list-elt)
+  (while (< 4 (length (node-children list-box)))
+    (delete-node! (node-prev (node-lchild list-box)))
+    (delete-node! (node-prev (node-lchild list-elt)))))
 
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))
