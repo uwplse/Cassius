@@ -26,19 +26,41 @@
         :fs (between 16 32)
 ) 
 
-(proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
-        (component list (id list))
+(page four-presses (load "list_all.rkt" button_test_5)
+	:w (between 800 1920)
+	:h (between 600 1280)
+	:fs (between 16 32)
+)
+
+(theorem (top-above-bottom b)
+	(>= (- (bottom b) (top b) 0)))
+
+(proof (top-above-bottom top-above-bottom zero-presses one-press two-presses three-presses four-presses)
+	(component list (id list))
 	(component button (tag button))
 	(components todos (child (id list) *))
-        (erase todos :text)
+	(assert todos (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)))
+	(pre list (= (floats-tracked ?) 0))
+        (induct list 
+		;;inductive fact
+		(and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-footer) (floats-tracked inductive-header)))
+	)
+	(assert list
+	(forall ()  
+			(>= (- (bottom (last list)) (top (first list)) 0)))))
 
-        (assert list 
-          (=> (or (= (prev list) null)
-                  (non-negative-margins (prev list)))
-              (non-negative-margins list)))
-	(assert *
-	(forall(b) (=> (onscreen ?)
-			 (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
-	(assert (- * list) (forall (t) (=> (has-type t text) (> (width t) 0) (non-negative-margins ?))))
-	(assert root (onscreen root))
-)
+;(proof (interactive-onscreen interactive-onscreen zero-presses one-press two-presses three-presses)
+;        (component list (id list))
+;	(component button (tag button))
+;	(components todos (child (id list) *))
+;        (erase todos :text)
+;        (assert list 
+;          (=> (or (= (prev list) null)
+;                  (non-negative-margins (prev list)))
+;              (non-negative-margins list)))
+;	(assert *
+;	(forall(b) (=> (onscreen ?)
+;			 (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+;	(assert (- * list) (forall (t) (=> (has-type t text) (> (width t) 0) (non-negative-margins ?))))
+;	(assert root (onscreen root))
+;)

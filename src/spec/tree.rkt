@@ -72,9 +72,5 @@
   
    (define-fun link-box-no-prev  ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
     (and (= (pbox box) p) (= (nbox box) n)))
-
-   (define-fun link-box-no-next-or-prev  ((box Box) (p Box) (v Box) (n Box) (f Box) (l Box)) Bool
-    (and (= (pbox box) p)))
-
   )
 

@@ -39,12 +39,223 @@
        (cons (first tree) children*)]))
   out)
 
+;;For Inductive proofs create the problem for the case where the list is 3 items long
+(define (one-case component-document precondition postcondition ind-fact)
+  (define one-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name one-dom-old-name))
+  (define new-name (sformat "~a.one-case" old-name))
+  (define one-dom 
+    (struct-copy dom one-dom-old-name
+  	         [name new-name]))
+  (define one-box (dom-boxes one-dom))
+  (define one-elt (dom-box->elt one-dom one-box))
+  ;;Remove the nodes that arent the first, last, or inductive base form the lisit
+  (for ([child (node-children one-box)]
+    #:unless (equal? child (node-fchild one-box)))
+	(delete-node! child))
+  (for ([child-elt (node-children one-elt)]
+    #:unless (equal? child-elt (node-fchild one-elt)))
+	(delete-node! child-elt))
+  (cons (unparse-dom one-dom) postcondition))
+
+;;For Inductive proofs create the problem for the case where the list is 3 items long
+(define (two-case component-document precondition postcondition ind-fact)
+  (define two-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name two-dom-old-name))
+  (define new-name (sformat "~a.two-case" old-name))
+  (define two-dom
+    (struct-copy dom two-dom-old-name
+		 [name new-name]))
+  (define two-box (dom-boxes two-dom))
+  (define two-elt (dom-box->elt two-dom two-box))
+  ;;Remove the nodes that arent the first, last, or inductive base form the lisit
+  (for ([child (node-children two-box)]
+    #:unless (or (equal? child (node-fchild two-box)) (equal? child (node-lchild two-box))))
+	(delete-node! child))
+  (for ([child-elt (node-children two-elt)]
+    #:unless (or (equal? child-elt (node-fchild two-elt)) (equal? child-elt (node-lchild two-elt))))
+	(delete-node! child-elt))
+  (cons (unparse-dom two-dom) postcondition))
+
+;;For Inductive proofs create the problem for the case where the list is 3 items long
+(define (three-case component-document precondition postcondition ind-fact)
+  (define three-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name three-dom-old-name))
+  (define new-name (sformat "~a.three-case" old-name))
+  (define three-dom
+    (struct-copy dom three-dom-old-name
+		 [name new-name]))
+  (define three-box (dom-boxes three-dom))
+  (define three-elt (dom-box->elt three-dom three-box))
+  (node-set! (node-next (node-fchild three-box)) ':name 'inductive-base)
+  ;;Remove the nodes that arent the first, last, or inductive base form the lisit
+  (for ([child (node-children three-box)]
+    #:unless (or (equal? child (node-fchild three-box)) (equal? child (node-next (node-fchild three-box))) (equal? child (node-lchild three-box))))
+	(delete-node! child))
+  (for ([child-elt (node-children three-elt)]
+    #:unless (or (equal? child-elt (node-fchild three-elt)) (equal? child-elt (node-next (node-fchild three-elt))) (equal? child-elt (node-lchild three-elt))))
+	(delete-node! child-elt))
+       ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
+  (match-define (list `(forall (,three-varss ...) (=> ,three-press ... ,three-posts)) ...) postcondition)
+  (define three-test 
+    (for/list ([three-vars three-varss] [three-pres three-press] [three-post three-posts])
+     `(forall (,@three-vars) (=> ,@three-pres  (let ([inductive-footer inductive-base] [inductive-header inductive-base]) ,@ind-fact)))))
+  (cons (unparse-dom three-dom) three-test))
+
+;;For inductive proofs create the problem for the base case
+(define (base-case component-document precondition postcondition ind-fact) 
+  (define base-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name base-dom-old-name))
+  (define new-name (sformat "~a.base-case" old-name))
+  (define base-dom
+    (struct-copy dom base-dom-old-name
+		 [name new-name]))
+  (define base-box (dom-boxes base-dom))
+  (define base-elt (dom-box->elt base-dom base-box))
+  (node-set! (node-prev (node-lchild base-box)) ':no-next #t)
+  (node-set! (node-lchild base-box) ':no-prev #t)
+  ;;Name the inductive base
+  (node-set! (node-next (node-fchild base-box)) ':name 'inductive-baseA)
+  (node-set! (node-prev (node-lchild base-box)) ':name 'inductive-baseB)
+  ;;Remove the nodes that arent the first, last, or inductive base form the lisit
+  (for ([child (node-children base-box)]
+    #:unless (or (equal? child (node-fchild base-box)) (equal? child (node-next (node-fchild base-box))) (equal? child (node-prev (node-lchild base-box))) (equal? child (node-lchild base-box))))
+	(delete-node! child))
+  (for ([child-elt (node-children base-elt)]
+    #:unless (or (equal? child-elt (node-fchild base-elt)) (equal? child-elt (node-next (node-fchild base-elt))) (equal? child-elt (node-prev (node-lchild base-elt))) (equal? child-elt (node-lchild base-elt))))
+	(delete-node! child-elt))
+  ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
+  (match-define (list `(forall (,base-varss ...) (=> ,base-press ... ,base-posts)) ...) postcondition)
+  (define base-test 
+    (for/list ([base-vars base-varss] [base-pres base-press] [base-post base-posts])
+     `(forall (,@base-vars) (=> ,@base-pres  (let ([inductive-footer inductive-baseB] [inductive-header inductive-baseA]) ,@ind-fact)))))
+  (cons (unparse-dom base-dom) base-test))
+
+;;For inductive proofs create the problem for the ind case
+(define (ind-case component-document precondition postcondition ind-fact)
+  (define ind-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name ind-dom-old-name))
+  (define new-name (sformat "~a.inductive-step" old-name))
+  (define ind-dom
+    (struct-copy dom ind-dom-old-name
+		[name new-name]))
+  (define ind-box (dom-boxes ind-dom))
+  (define ind-elt (dom-box->elt ind-dom ind-box))
+  (define ind-clone (clone-node (node-prev (node-lchild ind-box))))
+  (add-node-before! (node-prev (node-lchild ind-box)) ind-clone)
+  (define ind-elt-clone (clone-node (node-prev (node-lchild (dom-box->elt ind-dom ind-box)))))
+  (add-node-before! (node-prev (node-lchild (dom-box->elt ind-dom ind-box))) ind-elt-clone)
+  (node-set! (node-prev (node-prev (node-lchild ind-box))) ':elt (node-id ind-elt-clone))
+  ;;Add the proper tags to the inductive header, inductive footer, and end of the list to get the correct inductive behaviour from Cassius
+  (node-set! (node-next (node-fchild ind-box)) ':no-next #t)
+  (node-set! (node-prev (node-prev (node-lchild ind-box))) ':no-prev #t)
+  (node-set! (node-prev (node-lchild ind-box)) ':no-next #t)
+  (node-set! (node-lchild ind-box) ':no-prev #t)
+  ;;Name the inductive header, step, and footer
+  (node-set! (node-next (node-fchild ind-box)) ':name 'inductive-header)
+  (node-set! (node-prev (node-prev (node-lchild ind-box))) ':name 'inductive-footer)
+  (node-set! (node-prev (node-lchild ind-box)) ':name 'inductive-step)
+  ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
+  (match-define (list `(forall (,ind-varss ...) (=> ,ind-press ... ,ind-posts)) ...) postcondition)
+  (define ind-test 
+    (for/list ([ind-vars ind-varss] [ind-pres ind-press] [ind-post ind-posts])
+      `(forall (,@ind-vars) (=> ,@ind-pres ,@ind-fact (let ([inductive-footer inductive-step]) ,@ind-fact)))))
+  (cons (unparse-dom ind-dom) ind-test))
+
+;;For inductive proofs create the problem for the thm case
+(define (thm-case component-document precondition postcondition ind-fact)
+  (define thm-dom-old-name (parse-dom component-document))
+  (define old-name (dom-name thm-dom-old-name))
+  (define new-name (sformat "~a.theorem" old-name))
+  (define thm-dom
+    (struct-copy dom thm-dom-old-name
+		 [name new-name]))
+  (define thm-box (dom-boxes thm-dom))
+  (node-set! (node-next (node-fchild thm-box)) ':no-next #t)
+  (node-set! (node-prev (node-lchild thm-box)) ':no-prev #t)
+  ;;Name the inductive header and footer
+  (node-set! (node-next (node-fchild thm-box)) ':name 'inductive-header)
+  (node-set! (node-prev (node-lchild thm-box)) ':name 'inductive-footer)
+  ;;Reconstruct the proof to fit the inductive fact into the set of pre conditions
+  (match-define (list `(forall (,thm-varss ...) (=> ,thm-press ... ,thm-posts)) ...) postcondition)
+  (define thm-test 
+    (for/list ([thm-vars thm-varss] [thm-pres thm-press] [thm-post thm-posts])
+      `(forall (,@thm-vars) (=> ,@thm-pres ,@ind-fact ,thm-post))))
+  (cons (unparse-dom thm-dom) thm-test))
+
+(define-syntax-rule (while condition body ...)
+  (let loop ()
+    (cond
+     [condition
+      body ...
+      (loop)]
+     [else
+      (void)])))
+
+(define (remove-attr attrs attr)
+  (if (dict-ref attrs attr)
+    (dict-remove attrs attr)
+    attrs))
+
+;; Produces the documents and problems for the different cases of a proof by induction and returns a list of those cases based on the input document and pre and post conditions
+(define (inductive-cases component-document precondition postcondition)
+  (define list-dom (parse-dom component-document))
+  (define list-box (dom-boxes list-dom))
+  (define list-elt (dom-box->elt list-dom list-box))
+
+  (define ind-fact (node-get* list-box ':inductive-fact))
+  (define name (node-get list-box ':name))
+
+  ;;If the list has an inductive fact and it has 4 or more elements, set up a proof by induction
+  (cond
+    ;;When no induction is requested, do nothing
+    [(not ind-fact)
+     (list (cons component-document postcondition))]
+
+    [(not list-elt)
+     (raise-user-error 'induct "Can't induct on ~a because it has no element tree" name)]
+
+    ;;When induction is requested, but the list given is empty, print out a warning and do nothing
+    [(and (= (length (node-children list-box)) 0) ind-fact)
+     (eprintf "Warning: Cannot induct over empty component ~a. Proving ~a directly\n" name name)
+     (list (cons component-document postcondition))]
+    [else
+     ;;Check that the elements and boxes in this list are similar enough for this to be a valid candidate for induction
+     (unless (= (length (remove-duplicates (map (lambda (node) (remove-attr (node-attrs node) ':elt)) (node-children list-box)))) 1)
+       (raise-user-error 'induct "Can not induct over ~a because its box's children are too dissimilar" name))
+     (unless (= (length (remove-duplicates (map (lambda (node) (remove-attr (node-attrs node) ':num)) (node-children list-elt)))) 1)
+       (raise-user-error 'induct "Can not induct over ~a because its element's children are too dissimilar" name))
+     (when (< (length (node-children list-box)) 4)
+       (eprintf "Warning: Adding elements to inductive component ~a.\n" name)
+       (inductive-add-elements! list-box list-elt))
+
+     (when (> (length (node-children list-box)) 4)
+       (eprintf "Warning: Removing elements from inductive component ~a.\n" name)
+       (inductive-remove-elements! list-box list-elt))
+     (for/list ([fn (list one-case two-case three-case base-case ind-case thm-case)])
+       (fn (unparse-dom list-dom) precondition postcondition ind-fact))]))
+
+(define (inductive-add-elements! list-box list-elt)
+  (while (< (length (node-children list-box)) 4)
+    (define box-clone (clone-node (node-lchild list-box)))
+    (define elt-clone (clone-node (node-lchild list-elt)))
+    (add-node-before! (node-lchild list-box) box-clone)
+    (add-node-before! (node-lchild list-elt) elt-clone)
+    (node-set! box-clone ':elt (node-id elt-clone))))
+
+(define (inductive-remove-elements! list-box list-elt)
+  (while (< 4 (length (node-children list-box)))
+    (delete-node! (node-prev (node-lchild list-box)))
+    (delete-node! (node-prev (node-lchild list-elt)))))
+
 (define (modularize problem)
   (define fonts (dict-ref problem ':fonts))
   (define sheets (dict-ref problem ':sheets))
-  (for*/list ([doc (dict-ref problem ':documents)] [(name thing) (split-document doc)]
+  (for*/list ([doc (dict-ref problem ':documents)] 
+	      [(name thing) (split-document doc)]
+	      [case* (inductive-cases (car thing) 'todo-no-precondition (cdr thing))]
               #:unless (null? (cdr thing)))
-    (match-define (cons piece specs) thing)
+    (match-define (cons piece specs) case*)
     (define problem*
       (dict-set* problem
                  ':documents (list piece)

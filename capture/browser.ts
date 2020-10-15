@@ -12,7 +12,7 @@ function compute_scrollbar_width() {
     outer.appendChild(inner);
     document.body.appendChild(outer);
     var out = outer.offsetWidth - outer.clientWidth;
-    document.body.removeChild(outer)
+    outer.remove();
     return out;
 }
 
@@ -25,7 +25,9 @@ function default_font_size(family, features) {
     div.style.fontSize = "medium";
     div.style.fontWeight = "400";
     div.style.fontStyle = "normal";
-    return val2px(cs(div, "font-size"), features);
+    var out = val2px(cs(div, "font-size"), features);
+    div.remove();
+    return out;
 }
 
 function browser_info(features) {

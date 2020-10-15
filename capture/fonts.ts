@@ -42,7 +42,7 @@ function get_font_metrics(font) {
     div.removeChild(img);
     div.innerHTML = "H";
     var ascent = div.getBoundingClientRect().height - descent;
-    body.removeChild(div);
+    div.remove();
     return { a: ascent, d: descent};
 }
 
@@ -72,7 +72,7 @@ function get_font_lineheight(font) {
 
     var div_rect = div.getBoundingClientRect();
     var lineheight = div_rect.height;
-    body.removeChild(div);
+    div.remove();
     return lineheight;
 }
 
@@ -118,7 +118,7 @@ function get_font_offsets(font) {
 
     var span_rect = span.getBoundingClientRect();
     var div_rect = div.getBoundingClientRect();
-    body.removeChild(div);
+    div.remove();
 
     return { top: div_rect.top - span_rect.top, bottom: span_rect.bottom - div_rect.top };
 }
