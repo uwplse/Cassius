@@ -202,7 +202,11 @@
   (define list-dom (parse-dom component-document))
   (define list-box (dom-boxes list-dom))
   (define list-elt (dom-box->elt list-dom list-box))
-
+  (define node-info (node-get* list-box ':node-info))
+  (define elt-info (node-get* list-box ':elt-info))
+  (when node-info
+    (pretty-print node-info)
+    (pretty-print elt-info))
   (define ind-fact (node-get* list-box ':inductive-fact))
   (define name (node-get list-box ':name))
 
