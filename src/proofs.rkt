@@ -85,7 +85,8 @@
 	      (when (node-get box ':inductive-fact)
 		(raise (format "~a can not be inducted over more than once" box)))
 	      (node-set! box ':inductive-fact inductive-fact))]
-	
+      ;;Allow the user to state that a given node will be appended to a given list
+	[`(append-list ,name ,node-info)]	
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
       [`(erase ,name ,type)
        (define boxes (box-set name box-context))
