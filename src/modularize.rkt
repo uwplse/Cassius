@@ -202,14 +202,11 @@
   (define list-dom (parse-dom component-document))
   (define list-box (dom-boxes list-dom))
   (define list-elt (dom-box->elt list-dom list-box))
-  (define node-info (node-get* list-box ':node-info))
+  (define box-info (node-get* list-box ':box-info))
   (define elt-info (node-get* list-box ':elt-info))
-  (when node-info
-    (pretty-print node-info)
-    (pretty-print elt-info))
   (define ind-fact (node-get* list-box ':inductive-fact))
   (define name (node-get list-box ':name))
-
+ 
   ;;If the list has an inductive fact and it has 4 or more elements, set up a proof by induction
   (cond
     ;;When no induction is requested, do nothing
@@ -231,7 +228,7 @@
        (raise-user-error 'induct "Can not induct over ~a because its element's children are too dissimilar" name))
      (when (< (length (node-children list-box)) 4)
        (eprintf "Warning: Adding elements to inductive component ~a.\n" name)
-       (inductive-add-elements! list-box list-elt))
+       (inductive-add-elements! list-dom list-box list-elt))
 
      (when (> (length (node-children list-box)) 4)
        (eprintf "Warning: Removing elements from inductive component ~a.\n" name)
@@ -239,13 +236,15 @@
      (for/list ([fn (list one-case two-case three-case base-case ind-case thm-case)])
        (fn (unparse-dom list-dom) precondition postcondition ind-fact))]))
 
-(define (inductive-add-elements! list-box list-elt)
+(define (inductive-add-elements! list-dom list-box list-elt)
   (while (< (length (node-children list-box)) 4)
     (define box-clone (clone-node (node-lchild list-box)))
     (define elt-clone (clone-node (node-lchild list-elt)))
     (add-node-before! (node-lchild list-box) box-clone)
     (add-node-before! (node-lchild list-elt) elt-clone)
-    (node-set! box-clone ':elt (node-id elt-clone))))
+    (node-set! elt-clone ':num (node-id elt-clone))
+    (node-set! box-clone ':elt (node-id elt-clone))
+    (dom-rematch! list-dom)))
 
 (define (inductive-remove-elements! list-box list-elt)
   (while (< 4 (length (node-children list-box)))

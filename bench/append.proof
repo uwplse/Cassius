@@ -9,36 +9,14 @@
       :h (between 600 1280)
       :fs (between 16 32))
  
-(page press-1 (load "induction.rkt" doc-2)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-2 (load "induction.rkt" doc-3)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-3 (load "induction.rkt" doc-4)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-4 (load "induction.rkt" doc-5)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-5 (load "induction.rkt" doc-6)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
+(page press-1 (run press-0 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
  
 (theorem (top-above-bottom b)
   (>= (- (bottom b) (top b) 0)))
 
-(proof (top-above-bottom top-above-bottom press-0 press-1 press-2 press-3 press-4 press-5)
+(proof (top-above-bottom top-above-bottom press-1)
   (component list (id list))
   (component button (tag button))
   (components todos (child (id list) *))
@@ -46,14 +24,11 @@
   (erase todos :text)
   (assert todos (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)))
   (pre list (= (floats-tracked ?) 0))
-  (append-list list 
-    [BLOCK :x 48 :y 16 :w 1224 :h 19 :elt 5]
-    ([li :num 5]))  
   (induct list ; the inductive fact
   	(and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-footer) (floats-tracked inductive-header))))
   (assert list (forall () (>= (- (bottom (last list)) (top (first list)) 0)))))
 
-(proof (interactive-onscreen interactive-onscreen press-0 press-1 press-2 press-3)
+(proof (interactive-onscreen interactive-onscreen press-0 press-1)
   (component list (id list))
   (component button (tag button))
   (components todos (child (id list) *))
