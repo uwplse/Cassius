@@ -13,10 +13,22 @@
     [BLOCK]
     [li]))) 
  
+(page press-2 (run press-1 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
+(page press-3 (run press-2 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
+(page press-4 (run press-3 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
+(page press-5 (run press-4 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
 (theorem (top-above-bottom b)
   (>= (- (bottom b) (top b) 0)))
 
-(proof (top-above-bottom top-above-bottom press-1)
+(proof (top-above-bottom top-above-bottom press-1 press-2 press-3 press-4 press-5)
   (component list (id list))
   (component button (tag button))
   (components todos (child (id list) *))
@@ -28,7 +40,7 @@
   	(and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-footer) (floats-tracked inductive-header))))
   (assert list (forall () (>= (- (bottom (last list)) (top (first list)) 0)))))
 
-(proof (interactive-onscreen interactive-onscreen press-0 press-1)
+(proof (interactive-onscreen interactive-onscreen press-0 press-1 press-2 press-3 press-4 press-5)
   (component list (id list))
   (component button (tag button))
   (components todos (child (id list) *))
