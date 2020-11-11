@@ -148,67 +148,33 @@
    extras*
    (list (dict-set* problem** ':tool '(modular) ':name (list ':check)))))
 
-;;Returns true if this attrs has the :id list-id combo we are looking for
-(define (check-is-list attrs list-id)
-  (for/or ([attr1 attrs] [attr2 (cdr attrs)])
-    (and (equal? attr1 ':id) (equal? attr2 list-id))))
-
-;;Returns true if this cmds as the ':elt number  combo we are looking for
-(define (check-is-list-box cmds num)
-  (for/or ([cmd1 cmds] [cmd2 (cdr cmds)])
-    (and (equal? cmd1 ':elt) (equal? cmd2 num))))
-
-;;Returns the num attribute or false if no such attribute is in the provided list
-(define (get-num attrs)
-  (define num #f)
-  (for ([attr1 attrs] [attr2 (cdr attrs)]
-        #:when (equal? attr1 ':num))
-       (set! num attr2))
-  num)
-
 (define (append-child d box-info elt-info list-id)
   (define elt-num #f)
   (define new-elt-num (gensym))
-  (define is-list #f)
-  (define elt-tag #f)
-  (define elt-attrs #f)
-  (define elt-children #f)
   ;;Create a new elements tree with the child added
   (define elements*
     (let loop ([tree (dom-elements d)])
-      (when (list? tree)
-        (match-define (list (list tag attrs ...) children ...) tree)
-	(set! elt-tag tag)
-	(set! elt-attrs attrs)
-	(set! elt-children children))
-      (if (list? tree)
-	(begin
-          ;;Figure out if this tree is the list we want based on the list-id
-          (when (> (length elt-attrs) 0)
-            (set! is-list (check-is-list elt-attrs list-id)))
-          ;;Alter Children based on wether or not this is the list
-          (when is-list
-            (set! is-list #f)
-            (set! elt-children (append elt-children (list (list (append elt-info (list ':num new-elt-num))))))
-            (set! elt-num (get-num elt-attrs)))
-          ;;Build the new elements tree with the potentially altered children
-          (cons 
-            (cons elt-tag elt-attrs)
-            (map loop elt-children)))
-	tree)))
+      (match tree
+	[(? string?) tree]
+	[(list (list tag attrs ...) children ...)
+	 (define attrdict (attributes->dict attrs))
+         ;;Alter Children based on wether or not this is the list
+         (when (equal? (first (dict-ref attrdict ':id '(#f))) list-id)
+           (set! children (append children (list (list (append elt-info (list ':num new-elt-num))))))
+           (set! elt-num (first (dict-ref attrdict ':num '(#f)))))
+         ;;Build the new elements tree with the potentially altered children
+         (cons 
+           (cons tag attrs)
+           (map loop children))])))
   (unless elt-num
     (raise-user-error 'append-child "Could not find element with ID ~a" list-id))
-  ;;Retrieve the element number of the list we want
   ;;Create a new box tree with the child added
   (define boxes*
     (let loop ([tree (dom-boxes d)])
       (match-define (list (list type cmds ...) children ...) tree)
-      ;;Figure out if this box tree is the one corrolating to the list specified by the id
-      (define is-list-box #f)
-      (when (> (length cmds) 0)
-	(set! is-list-box (check-is-list-box cmds elt-num)))
+      (define cmddict (attributes->dict cmds))
       ;;Alter the children when this is the list tree
-      (when is-list-box
+      (when (equal? (first (dict-ref cmddict ':elt '(#f))) elt-num)
 	(set! children (append children (list (list (append box-info (list ':elt new-elt-num)))))))
       (cons
 	(cons type cmds)
