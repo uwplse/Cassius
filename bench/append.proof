@@ -25,10 +25,21 @@
 (page press-5 (run press-4 (append-child (id list) 
     [BLOCK]
     [li]))) 
+
+
+(script add_element
+  (let list (select (id list)))
+  (let elt (create [li]))
+  (set elt ':id "'element-' + (list.children.length + 1) + '/' + window.iteration")
+  (set elt ':text "'value-' + (list.children.length + 1) + '/' + window.iteration")
+  (append-child list elt))
+
+(page press-js (run-js press-0 add_element))
+
 (theorem (top-above-bottom b)
   (>= (- (bottom b) (top b) 0)))
 
-(proof (top-above-bottom top-above-bottom press-1 press-2 press-3 press-4 press-5)
+(proof (top-above-bottom top-above-bottom press-js)
   (component list (id list))
   (component button (tag button))
   (components todos (child (id list) *))

@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt"
-         "assertions.rkt" "input.rkt" "modularize.rkt")
+         "assertions.rkt" "input.rkt" "modularize.rkt" "execute.rkt")
 
 (provide read-proofs)
 
@@ -185,6 +185,9 @@
 
 (define (read-command cmd problem-context theorem-context proof-context)
   (match cmd
+    ;;Saves a list of provided psuedo js commands to the name of a script to use later
+    [`(script ,name ,cmds ...)
+      (hash-set! problem-context name cmds)]
     [`(page ,name (load ,file ,pname) ,attrs ...)
      (define problem (dict-ref (call-with-input-file file parse-file) pname))
      (define the-dom* (first (dict-ref problem ':documents)))
@@ -198,6 +201,23 @@
                       (cons (struct-copy dom the-dom* [properties ctx*])
                             (cdr (dict-ref problem ':documents))))))
      (hash-set! problem-context name problem*)]
+    ;;Creates a new page with a given name by running a script on an already loaded page
+    [`(page ,name (run-js ,old-page ,script-name))
+      ;;Compute the list of changes this script can perform on the page
+      (define effects (execute-script (hash-ref problem-context script-name)))
+      ;;Pull the problem of the old-page out of the context
+      (define problem* (hash-ref problem-context old-page))
+      (define the-dom* (first (dict-ref problem* ':documents)))
+      ;;Itterate through the effects of the script, changing the page in the needed ways when certain effects appear
+      (for ([effect effects])
+	(match effect
+	  ;;When the append child effect appears, append child and box to elt
+          [(list 'append-child (list 'id list-id) elt-info box-info)
+            (set! problem*
+	      (dict-set problem* ':documents
+	        (list (append-child the-dom* box-info elt-info list-id))))
+	    (set! the-dom* (first (dict-ref problem* ':documents)))]))
+      (hash-set! problem-context name problem*)]
     [`(page ,name (run ,old-page (append-child (id ,list-id) ,box-info ,elt-info)))
       ;;Pull up the old page
       (define problem (hash-ref problem-context old-page))
