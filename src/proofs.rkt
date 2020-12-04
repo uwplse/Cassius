@@ -203,10 +203,15 @@
      (hash-set! problem-context name problem*)]
     ;;Creates a new page with a given name by running a script on an already loaded page
     [`(page ,name (run-js ,old-page ,script-name))
+      ;;Check that the sudoscript translates to javascript that does what the javascript in the provided file does
+      (define generated-js (script->js (hash-ref problem-context script-name) script-name))
+      (define problem* (hash-ref problem-context old-page))
+      (define provided-js (substring (first (dict-ref problem* ':script)) 1 (- (string-length (first (dict-ref problem* ':script))) 1)))
+      (when (not (equal? generated-js provided-js))
+	(raise (format "Page script and proof script do not match, can not verify this page\n Page Script: ~a\n Proof Script: ~a\n" provided-js generated-js)))
       ;;Compute the list of changes this script can perform on the page
       (define effects (execute-script (hash-ref problem-context script-name)))
       ;;Pull the problem of the old-page out of the context
-      (define problem* (hash-ref problem-context old-page))
       (define the-dom* (first (dict-ref problem* ':documents)))
       ;;Itterate through the effects of the script, changing the page in the needed ways when certain effects appear
       (for ([effect effects])

@@ -32,19 +32,39 @@
 (define (elt->box tree)
   '[BLOCK])
 
-(define (script->js lines)
-  (define lines '())
+(define (script->js lines name)
+  (define js-lines '())
+  (set! js-lines (cons (format "function ~a(e) {" name) js-lines))
   (for ([line (in-list lines)])
     (define str
       (match line
         [`(let ,var ,expr)
          (format "var ~a = ~a;" var (expr->js expr))]
         [`(set ,var ,field ,expr)
-         (format "~a.~a = ~a;" var field (expr->js expr))]
+         (format "~a.~a = ~a;" var (expr->js field) (expr->js expr))]
         [`(append-child ,elt ,child)
-         (format "~a.appendChild(~a)" (expr->js elt) (expr->js child))]))
-    (set! lines (cons str lines)))
-  (string-join (reverse lines) "\n"))
+         (format "~a.appendChild(~a);" (expr->js elt) (expr->js child))]))
+    (set! js-lines (cons str js-lines)))
+  (set! js-lines (cons "}" js-lines))
+  (string-join (reverse js-lines) "\n"))
 
 (define (expr->js expr)
-  expr)
+  (match expr
+    [`(select ,sel) ;;todo use selector->string
+      (match sel
+	[(list 'id elt-id)
+	 (format "document.getElementById(\"~a\")" elt-id)] 
+	[else
+	  (raise (format "unsupported selector ~a" sel))])]
+    [`(create ,elt)
+      (format "document.createElement('~a')" (list-ref elt 0))] ;;TODO write a match
+    [`(quote ,elt)
+      (match elt
+	[':id
+	  "id"]
+	[':text
+	 "innerText"]
+	[else
+	  (raise (format "~a not supported" elt))])]
+    [else
+      expr]))

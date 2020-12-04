@@ -908,7 +908,8 @@ function dump_document(features) {
             if (elt.tagName.toUpperCase() === "HR" && elt.size) {
                 rec.props["size"] = elt.size;
                 features["hr:size"] = true;
-            }
+	    }
+
 
             for (var i = 0; i < elt.childNodes.length; i++) {
                 if (is_comment(elt.childNodes[i])) continue;
@@ -939,6 +940,15 @@ function annotate_box_elt(box) {
 import { MAX, compute_flt_pointer, check_float_registers } from "./ezone";
 import { dump_fonts } from "./fonts";
 import { dump_browser } from "./browser";
+
+function trim_script(script) {
+    var out = "";
+    var split_script = script.split("\n");
+    for (var i = 0; i < split_script.length; i++) {
+        out += split_script[i].trim() + "\n";
+    }
+    return out;
+}
 
 export function page2text(name) {
     LETTER = name;
@@ -983,6 +993,10 @@ export function page2text(name) {
     text += " ([VIEW :w " + page.props.w + "]";
     text += dump_tree(page.children[0]);
     text += "))\n\n";
+    
+    text += "(define-script " + name +"\n";
+    text += trim_script(dump_string(document.querySelectorAll("script")[0].textContent));
+    text += ")\n\n";
 
     text += "(define-problem " + name;
     text += "\n  :title " + dump_string(document.title);
@@ -990,6 +1004,7 @@ export function page2text(name) {
     text += "\n  :sheets firefox " + name;
     text += "\n  :fonts " + name;
     text += "\n  :layouts " + name;
+    text += "\n  :script " + name;
     if (ERROR) {
         text += "\n  :error " + dump_string(ERROR + "");
         features["unknown-error"] = true;

@@ -2,12 +2,11 @@
 <html>
 <script>
 function add_element(e) {
-    let list = document.getElementById("list");
-    let n = list.children.length + 1;
-    let list_element = document.createElement('li');
-    list_element.id = 'element-' + n + '/' + window.iteration;
-    list_element.innerHTML = "value-" + n + '/' + window.iteration;
-    list.appendChild(list_element);
+	var list = document.getElementById("list");
+	var elt = document.createElement('li');
+	elt.id = 'element-' + (list.children.length + 1) + '/' + window.iteration;
+	elt.innerText = 'value-' + (list.children.length + 1) + '/' + window.iteration;
+	list.appendChild(elt);
 }
 </script>
 <body>
