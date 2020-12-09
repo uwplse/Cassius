@@ -10,7 +10,7 @@ jobs:
       - name: "Install Racket"
         uses: Bogdanp/setup-racket@v0.5
       - name: "Install Z3"
-        uses: pavpanchekha/setup-z3@latest
+        uses: pavpanchekha/setup-z3@master
       - name: "Run tests"
         run: make test
 
