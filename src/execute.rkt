@@ -1,5 +1,6 @@
 #lang racket
 
+(require "print/css.rkt")
 (provide execute-script script->js)
 
 
@@ -50,14 +51,14 @@
 
 (define (expr->js expr)
   (match expr
-    [`(select ,sel) ;;todo use selector->string
-      (match sel
-	[(list 'id elt-id)
-	 (format "document.getElementById(\"~a\")" elt-id)] 
-	[else
-	  (raise (format "unsupported selector ~a" sel))])]
+    [`(select ,sel) 
+       (format "document.querySelector(\"~a\")" (selector->string sel))] 
     [`(create ,elt)
-      (format "document.createElement('~a')" (list-ref elt 0))] ;;TODO write a match
+      (match elt 
+       [(list element)
+          (format "document.createElement('~a')" element)]
+       [else
+	 (raise "Bad input for create")])]
     [`(quote ,elt)
       (match elt
 	[':id
