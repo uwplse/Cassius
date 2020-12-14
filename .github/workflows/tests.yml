@@ -10,7 +10,7 @@ jobs:
       - name: "Install Racket"
         uses: Bogdanp/setup-racket@v0.5
       - name: "Install Z3"
-        uses: pavpanchekha/setup-z3@v1.2
+        uses: pavpanchekha/setup-z3@master
       - name: "Run tests"
         run: make test
 
@@ -21,7 +21,7 @@ jobs:
       - name: "Install Racket"
         uses: Bogdanp/setup-racket@v0.5
       - name: "Install Z3"
-        uses: pavpanchekha/setup-z3@v1.2
+        uses: pavpanchekha/setup-z3@master
       - run: racket src/run.rkt accept bench/just_list.rkt base |& grep -q Rejected
         name: "Base case"
       - run: racket src/run.rkt accept bench/just_list.rkt base2 |& grep -q Rejected
