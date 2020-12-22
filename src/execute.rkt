@@ -42,12 +42,23 @@
         [`(let ,var ,expr)
          (format "var ~a = ~a;" var (expr->js expr))]
         [`(set ,var ,field ,expr)
-         (format "~a.~a = ~a;" var (expr->js field) (expr->js expr))]
+         (format "~a.~a = ~a;" var (field->js field) (expr->js expr))]
         [`(append-child ,elt ,child)
          (format "~a.appendChild(~a);" (expr->js elt) (expr->js child))]))
     (set! js-lines (cons str js-lines)))
   (set! js-lines (cons "}" js-lines))
   (string-join (reverse js-lines) "\n"))
+
+(define (field->js field)
+  (match field
+    [`(quote ,elt)
+      (match elt
+	[':id
+	  "id"]
+	[':text
+	 "innerText"]
+	[else
+	  (raise (format "~a not supported" elt))])]))
 
 (define (expr->js expr)
   (match expr
@@ -59,13 +70,5 @@
           (format "document.createElement('~a')" element)]
        [else
 	 (raise "Bad input for create")])]
-    [`(quote ,elt)
-      (match elt
-	[':id
-	  "id"]
-	[':text
-	 "innerText"]
-	[else
-	  (raise (format "~a not supported" elt))])]
     [else
       expr]))
