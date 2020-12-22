@@ -4,7 +4,7 @@
 
 (import "common.thm")
 
-(page press-0 (load "induction.rkt" doc-1)
+(page press-0 (load "append-with-js.rkt" list)
       :w (between 800 1920)
       :h (between 600 1280)
       :fs (between 16 32))

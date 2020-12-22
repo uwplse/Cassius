@@ -183,11 +183,11 @@
   (struct-copy dom d [elements elements*]
 	             [boxes boxes*]))
 
-(define (read-command cmd problem-context theorem-context proof-context)
+(define (read-command cmd problem-context script-context theorem-context proof-context)
   (match cmd
     ;;Saves a list of provided psuedo js commands to the name of a script to use later
     [`(script ,name ,cmds ...)
-      (hash-set! problem-context name cmds)]
+      (hash-set! script-context name cmds)]
     [`(page ,name (load ,file ,pname) ,attrs ...)
      (define problem (dict-ref (call-with-input-file file parse-file) pname))
      (define the-dom* (first (dict-ref problem ':documents)))
@@ -204,13 +204,13 @@
     ;;Creates a new page with a given name by running a script on an already loaded page
     [`(page ,name (run-js ,old-page ,script-name))
       ;;Check that the sudoscript translates to javascript that does what the javascript in the provided file does
-      (define generated-js (script->js (hash-ref problem-context script-name) script-name))
+      (define generated-js (script->js (hash-ref script-context script-name) script-name))
       (define problem* (hash-ref problem-context old-page))
       (define provided-js (substring (first (dict-ref problem* ':script)) 1 (- (string-length (first (dict-ref problem* ':script))) 1)))
       (when (not (equal? generated-js provided-js))
 	(raise (format "Page script and proof script do not match, can not verify this page\n Page Script: ~a\n Proof Script: ~a\n" provided-js generated-js)))
       ;;Compute the list of changes this script can perform on the page
-      (define effects (execute-script (hash-ref problem-context script-name)))
+      (define effects (execute-script (hash-ref script-context script-name)))
       ;;Pull the problem of the old-page out of the context
       (define the-dom* (first (dict-ref problem* ':documents)))
       ;;Itterate through the effects of the script, changing the page in the needed ways when certain effects appear
@@ -236,7 +236,7 @@
      (call-with-input-file file
        (λ (p)
          (for ([cmd* (in-port read p)])
-           (read-command cmd* problem-context theorem-context proof-context))))]
+           (read-command cmd* problem-context script-context theorem-context proof-context))))]
     [`(define (,name ,args ...) ,body)
      (define helper
        (procedure-reduce-arity
@@ -260,7 +260,8 @@
   (define problem-context (make-hash))
   (define theorem-context (make-hash))
   (define proof-context (make-hash))
+  (define script-context (make-hash))
   (for ([cmd (in-port read port)])
-    (read-command cmd problem-context theorem-context proof-context))
+    (read-command cmd problem-context script-context theorem-context proof-context))
   proof-context)
 
