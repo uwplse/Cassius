@@ -1,7 +1,7 @@
 #lang racket
 
 (require "common.rkt" "tree.rkt" "dom.rkt" "smt.rkt" "selectors.rkt"
-         "assertions.rkt" "input.rkt" "modularize.rkt")
+         "assertions.rkt" "input.rkt" "modularize.rkt" "execute.rkt")
 
 (provide read-proofs)
 
@@ -85,7 +85,13 @@
 	      (when (node-get box ':inductive-fact)
 		(raise (format "~a can not be inducted over more than once" box)))
 	      (node-set! box ':inductive-fact inductive-fact))]
-	
+      ;;Allow the user to state that a given node will be appended to a given list
+	[`(append-list ,name ,box-info ,elt-info)
+	  (define boxes (box-set name box-context))
+	  (for* ([box (in-list boxes)])
+		(node-set! box ':append #t)
+		(node-set! box ':box-info box-info)
+		(node-set! box ':elt-info elt-info))]	
       ;;Given a name and type of value this command erases all values of that type from the component with the given name
       [`(erase ,name ,type)
        (define boxes (box-set name box-context))
@@ -132,8 +138,7 @@
       (dict-set* problem* ':name (list name) ':component (list name)
                  ':selectors selectors ':named-selectors named-selectors
                  ':tests (list assert) ':tool (list tool))))
-
-  (define extras*
+(define extras*
     (for/list ([group (group-by (λ (x) (cons (dict-ref x ':component) (dict-ref x ':tool))) extras)])
       (define asserts (append-map (curryr dict-ref ':tests) group))
       (dict-set (first group) ':tests asserts)))
@@ -143,8 +148,46 @@
    extras*
    (list (dict-set* problem** ':tool '(modular) ':name (list ':check)))))
 
-(define (read-command cmd problem-context theorem-context proof-context)
+(define (append-child d box-info elt-info list-id)
+  (define elt-num #f)
+  (define new-elt-num (gensym))
+  ;;Create a new elements tree with the child added
+  (define elements*
+    (let loop ([tree (dom-elements d)])
+      (match tree
+	[(? string?) tree]
+	[(list (list tag attrs ...) children ...)
+	 (define attrdict (attributes->dict attrs))
+         ;;Alter Children based on wether or not this is the list
+         (when (equal? (first (dict-ref attrdict ':id '(#f))) list-id)
+           (set! children (append children (list (list (append elt-info (list ':num new-elt-num))))))
+           (set! elt-num (first (dict-ref attrdict ':num '(#f)))))
+         ;;Build the new elements tree with the potentially altered children
+         (cons 
+           (cons tag attrs)
+           (map loop children))])))
+  (unless elt-num
+    (raise-user-error 'append-child "Could not find element with ID ~a" list-id))
+  ;;Create a new box tree with the child added
+  (define boxes*
+    (let loop ([tree (dom-boxes d)])
+      (match-define (list (list type cmds ...) children ...) tree)
+      (define cmddict (attributes->dict cmds))
+      ;;Alter the children when this is the list tree
+      (when (equal? (first (dict-ref cmddict ':elt '(#f))) elt-num)
+	(set! children (append children (list (list (append box-info (list ':elt new-elt-num)))))))
+      (cons
+	(cons type cmds)
+	(map loop children))))
+  ;;return a new dom with the altered elements and box tree
+  (struct-copy dom d [elements elements*]
+	             [boxes boxes*]))
+
+(define (read-command cmd problem-context script-context theorem-context proof-context)
   (match cmd
+    ;;Saves a list of provided psuedo js commands to the name of a script to use later
+    [`(script ,name ,cmds ...)
+      (hash-set! script-context name cmds)]
     [`(page ,name (load ,file ,pname) ,attrs ...)
      (define problem (dict-ref (call-with-input-file file parse-file) pname))
      (define the-dom* (first (dict-ref problem ':documents)))
@@ -158,11 +201,42 @@
                       (cons (struct-copy dom the-dom* [properties ctx*])
                             (cdr (dict-ref problem ':documents))))))
      (hash-set! problem-context name problem*)]
+    ;;Creates a new page with a given name by running a script on an already loaded page
+    [`(page ,name (run-js ,old-page ,script-name))
+      ;;Check that the sudoscript translates to javascript that does what the javascript in the provided file does
+      (define generated-js (script->js (hash-ref script-context script-name) script-name))
+      (define problem* (hash-ref problem-context old-page))
+      (define provided-js (substring (first (dict-ref problem* ':script)) 1 (- (string-length (first (dict-ref problem* ':script))) 1)))
+      (when (not (equal? generated-js provided-js))
+	(raise (format "Page script and proof script do not match, can not verify this page\n Page Script: ~a\n Proof Script: ~a\n" provided-js generated-js)))
+      ;;Compute the list of changes this script can perform on the page
+      (define effects (execute-script (hash-ref script-context script-name)))
+      ;;Pull the problem of the old-page out of the context
+      (define the-dom* (first (dict-ref problem* ':documents)))
+      ;;Itterate through the effects of the script, changing the page in the needed ways when certain effects appear
+      (for ([effect effects])
+	(match effect
+	  ;;When the append child effect appears, append child and box to elt
+          [(list 'append-child (list 'id list-id) elt-info box-info)
+            (set! problem*
+	      (dict-set problem* ':documents
+	        (list (append-child the-dom* box-info elt-info list-id))))
+	    (set! the-dom* (first (dict-ref problem* ':documents)))]))
+      (hash-set! problem-context name problem*)]
+    [`(page ,name (run ,old-page (append-child (id ,list-id) ,box-info ,elt-info)))
+      ;;Pull up the old page
+      (define problem (hash-ref problem-context old-page))
+      (define the-dom* (first (dict-ref problem ':documents)))
+      ;;Use the box and elt info to append a new child to the specified list
+      (define problem*
+	(dict-set problem ':documents
+	  (list (append-child the-dom* box-info elt-info list-id))))
+      (hash-set! problem-context name problem*)]
     [`(import ,file)
      (call-with-input-file file
        (λ (p)
          (for ([cmd* (in-port read p)])
-           (read-command cmd* problem-context theorem-context proof-context))))]
+           (read-command cmd* problem-context script-context theorem-context proof-context))))]
     [`(define (,name ,args ...) ,body)
      (define helper
        (procedure-reduce-arity
@@ -186,7 +260,8 @@
   (define problem-context (make-hash))
   (define theorem-context (make-hash))
   (define proof-context (make-hash))
+  (define script-context (make-hash))
   (for ([cmd (in-port read port)])
-    (read-command cmd problem-context theorem-context proof-context))
+    (read-command cmd problem-context script-context theorem-context proof-context))
   proof-context)
 

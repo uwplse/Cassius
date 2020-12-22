@@ -17,6 +17,8 @@
   (parameterize ([read-decimal-as-inexact false])
     (for ([expr (in-port read port)])
       (match expr
+	[`(define-script ,name ,script)
+	  (dict-set! scripts name script)]
         [`(define-stylesheet ,name ,rules ...)
          (dict-set! sheets name
                     (for/list ([rule rules])
@@ -44,6 +46,7 @@
 
          (get-from ':sheets sheets)
          (get-from ':layouts layouts)
+	 (get-from ':script scripts)
          (set! properties (dict-set properties ':documents (dict-ref properties ':layouts)))
          (set! properties
                (dict-set properties ':fonts

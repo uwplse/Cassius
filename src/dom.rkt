@@ -3,9 +3,9 @@
 
 (provide (struct-out dom) dom-context in-elements in-boxes parse-dom unparse-dom
          dom-box->elt dom-elt->box dom-first-box? dom-last-box?
-         dom-strip-positions dom-set-range)
+         dom-strip-positions dom-set-range dom-rematch!)
 
-(struct dom (name properties elements boxes match) #:prefab)
+(struct dom (name properties elements boxes match) #:prefab #:mutable)
 
 (define (dom-context dom key #:default [default #f])
   (dict-ref (dom-properties dom) key default))
@@ -25,6 +25,9 @@
                [elements (unparse-tree (dom-elements doc))]
                [boxes (unparse-tree (dom-boxes doc))]
                [match #f]))
+
+(define (dom-rematch! dom)
+  (set-dom-match! dom (build-match (dom-elements dom) (dom-boxes dom))))
 
 (define (build-match elts boxes)
   (define num->elt (make-hasheq))

@@ -1,0 +1,66 @@
+;; -*- mode: scheme -*-
+;; A Proof to verify the functionality of a simple website that uses java script
+;; By Skyler Griffith
+
+(import "common.thm")
+
+(page press-0 (load "append-with-js.rkt" list)
+      :w (between 800 1920)
+      :h (between 600 1280)
+      :fs (between 16 32))
+ 
+(page press-1 (run press-0 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
+ 
+(page press-2 (run press-1 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
+(page press-3 (run press-2 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
+(page press-4 (run press-3 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
+(page press-5 (run press-4 (append-child (id list) 
+    [BLOCK]
+    [li]))) 
+
+
+(script add_element
+  (let list (select (id list)))
+  (let elt (create [li]))
+  (set elt ':id "'element-' + (list.children.length + 1) + '/' + window.iteration")
+  (set elt ':text "'value-' + (list.children.length + 1) + '/' + window.iteration")
+  (append-child list elt))
+
+(page press-js (run-js press-0 add_element))
+
+(theorem (top-above-bottom b)
+  (>= (- (bottom b) (top b) 0)))
+
+(proof (top-above-bottom top-above-bottom press-js)
+  (component list (id list))
+  (component button (tag button))
+  (components todos (child (id list) *))
+
+  (erase todos :text)
+  (assert todos (and (> (height ?) 0) (float-flow-skip ?) (non-negative-margins ?)))
+  (pre list (= (floats-tracked ?) 0))
+  (induct list ; the inductive fact
+  	(and (>= (- (bottom inductive-footer) (top inductive-header)) 0) (= (floats-tracked inductive-footer) (floats-tracked inductive-header))))
+  (assert list (forall () (>= (- (bottom (last list)) (top (first list)) 0)))))
+
+(proof (interactive-onscreen interactive-onscreen press-0 press-1 press-2 press-3 press-4 press-5)
+  (component list (id list))
+  (component button (tag button))
+  (components todos (child (id list) *))
+  (erase todos :text)
+  (assert list 
+    (=> (or (= (prev list) null)
+            (non-negative-margins (prev list)))
+        (non-negative-margins list)))
+  (assert * (forall (b) (=> (onscreen ?)
+  		            (=> (or (is-component b) (is-interactive b)) (onscreen b)))))
+  (assert (- * list) (forall (t) (=> (has-type t text) (> (width t) 0) (non-negative-margins ?))))
+  (assert root (onscreen root)))
