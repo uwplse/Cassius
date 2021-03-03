@@ -26,9 +26,7 @@
     [BLOCK]
     [li]))) 
 
-
-
-(page press-js (run-js press-0 add_element))
+(page press-js (run-js press-0))
 
 (theorem (top-above-bottom b)
   (>= (- (bottom b) (top b) 0)))

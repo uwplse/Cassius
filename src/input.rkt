@@ -17,8 +17,10 @@
   (parameterize ([read-decimal-as-inexact false])
     (for ([expr (in-port read port)])
       (match expr
-	[`(define-script ,name ,script)
-	  (dict-set! scripts name script)]
+	      [`(define-script ,name ,lines ...)
+	       (dict-set! scripts name 
+                    (for/list ([line lines])
+                      line))]
         [`(define-stylesheet ,name ,rules ...)
          (dict-set! sheets name
                     (for/list ([rule rules])
