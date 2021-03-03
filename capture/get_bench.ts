@@ -24,7 +24,6 @@ var Page = curry(Box, "PAGE")
 var TextBox = curry(Box, "TEXT")
 var Magic = curry(Box, "MAGIC")
 var Anon = curry(Box, "ANON")
-
 var esprima: any
 
 
@@ -943,9 +942,60 @@ import { MAX, compute_flt_pointer, check_float_registers } from "./ezone";
 import { dump_fonts } from "./fonts";
 import { dump_browser } from "./browser";
 
-function trim_script(script) {
+function dump_script(script) {
     var AST = esprima.parseScript(script);
-    console.log(AST)
+    var code = AST.body[0].body.body
+    var i
+    var out = ""
+    for(i=0;i<code.length;i++){
+      var stmt = code[i]
+      var line = ""
+      console.log(stmt)
+      console.log(stmt.type)
+      if (stmt.type == "VariableDeclaration"){
+        var declarator = stmt.declarations[0];
+        line = line + "(let"
+        var name = declarator.id.name
+        line = line + " " + name
+        if(declarator.init.callee.property.name == "querySelector"){
+          line += " (select (id "
+          var selector = declarator.init.arguments[0].value
+          line += selector.substring(1) + ")))"
+        }
+        if(declarator.init.callee.property.name == "createElement"){
+          line += " (create "
+          var selector = declarator.init.arguments[0].value
+          line += "[" + selector + "]))"
+        }
+      }
+      if(stmt.type == "ExpressionStatement"){
+        var expr = stmt.expression
+        console.log(expr)
+        if(expr.type == "AssignmentExpression"){
+          line += "(set"
+          var lhs = expr.left
+          var rhs = expr.right
+          console.log(rhs)
+          var selector = lhs.object.name
+          line += " " + selector + " "
+          var member = lhs.property.name
+          if (member == "id"){
+            line += "\':id" + " " + "havokRHS" + ")"
+          }
+          if(member == "innerText"){
+            line += "\':text" + " " + "havokRHS" + ")"
+          }
+        }
+        if(expr.type == "CallExpression"){
+          line += "(append-child "
+          var child = expr.arguments[0].name
+          var parent = expr.callee.object.name
+          line += parent + " " + child + ")"
+        }
+      }
+      out = out + line + "\n"
+    }
+    return out;
 }
 
 export function page2text(name) {
@@ -993,7 +1043,7 @@ export function page2text(name) {
     text += "))\n\n";
     
     text += "(define-script " + name +"\n";
-    text += trim_script(dump_string(document.querySelectorAll("script")[0].textContent));
+    text += dump_script(document.querySelectorAll("script")[0].textContent);
     text += ")\n\n";
 
     text += "(define-problem " + name;
