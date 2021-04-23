@@ -949,9 +949,7 @@ function dump_script(script) {
     var out = ""
     for(i=0;i<code.length;i++){
       var stmt = code[i]
-      var line = ""
-      console.log(stmt)
-      console.log(stmt.type)
+      var line = "  "
       if (stmt.type == "VariableDeclaration"){
         var declarator = stmt.declarations[0];
         line = line + "(let"
@@ -992,8 +990,13 @@ function dump_script(script) {
           var parent = expr.callee.object.name
           line += parent + " " + child + ")"
         }
-      }
-      out = out + line + "\n"
+	}
+	if(i != code.length - 1){
+	  out = out + line + "\n"
+	}
+	else {
+	  out = out + line
+	}
     }
     return out;
 }

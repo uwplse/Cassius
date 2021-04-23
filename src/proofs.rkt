@@ -206,12 +206,10 @@
       ;;Check that the sudoscript translates to javascript that does what the javascript in the provided file does
       (define problem* (hash-ref problem-context old-page))
       (define script (first (dict-ref problem* ':script)))
-      (pretty-print script)
       ;;Compute the list of changes this script can perform on the page
       (define effects (execute-script script))
       ;;Pull the problem of the old-page out of the context
       (define the-dom* (first (dict-ref problem* ':documents)))
-      (pretty-print the-dom*)
       ;;Itterate through the effects of the script, changing the page in the needed ways when certain effects appear
       (for ([effect effects])
 	(match effect
@@ -221,7 +219,6 @@
 	      (dict-set problem* ':documents
 	        (list (append-child the-dom* box-info elt-info list-id))))
 	    (set! the-dom* (first (dict-ref problem* ':documents)))]))
-      (pretty-print the-dom*)
       (hash-set! problem-context name problem*)]
     [`(page ,name (run ,old-page (append-child (id ,list-id) ,box-info ,elt-info)))
       ;;Pull up the old page
