@@ -948,12 +948,11 @@ export function page2text(name) {
 
     var text = "";
     text += "(define-stylesheet " + name;
-    for (var sid in document.styleSheets) {
-        console.log("Reading", sid, document.styleSheets[sid]);
+    for (var sheet of document.styleSheets) {
         try {
-            text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
+            text += dump_stylesheet(sheet, features, sheet.media);
         } catch (e) {
-            console.warn(document.styleSheets[sid], e);
+            console.warn(sheet, e);
             ERROR = e;
             features["unknown-error"] = true;
         }
@@ -987,12 +986,7 @@ export function page2text(name) {
     text += "))\n\n";
     
     for (var script of document.querySelectorAll("script")) {
-        var src;
-        if (script.src) {
-            src = script.textContent;
-        } else {
-            src = 
-        }
+        if (script.src) continue;
         text += "(define-script " + name +"\n";
         text += dump_script(script.textContent);
         text += ")\n\n";
