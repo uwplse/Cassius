@@ -66,7 +66,6 @@ class Browser:
     def capture(self, url, id, prerun=None):
         code = ""
         if prerun: code += "; " + prerun
-        code += "; " + jsfile("esprima.js")
         code += "; " + jsfile("all.js")
         code += "; return page2text(arguments[0]);"
         text = self.execute(url, code, id)

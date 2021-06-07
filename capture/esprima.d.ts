@@ -1,0 +1,1 @@
+export var esprima: any
