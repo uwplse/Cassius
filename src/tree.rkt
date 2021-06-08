@@ -4,7 +4,7 @@
          node-stx? node? node-type node-id node-parent node-children* node-children node-attrs
          node-get node-get* node-set! node-set*! node-add! node-remove!
          node-prev node-next node-fchild node-lchild in-ancestors in-tree
-	 add-node-before! clone-node delete-node!)
+	 add-node-before! clone-node delete-node! append-node!)
 
 (define-by-match node-stx?
   (? string?)
@@ -42,6 +42,24 @@
   (set-node-children*!
    (node-parent next)
    (add-to-list-before (node-children* (node-parent next)) next node)))
+
+(define (add-to-list-after lst elt to-add)
+  (if (equal? (car lst) elt)
+    (cons lst to-add)
+    (cons (car lst) (add-to-list-after (cdr lst) elt to-add))))
+
+(define (append-node! parent node-info)
+  (match-define `([,type ,attrs ...]) node-info)
+  (define n (node type node-counter (attributes->dict attrs) parent '()))
+  (set! node-counter (+ 1 node-counter))
+  (if (not (empty? (node-children parent)))
+    (set-node-children*!
+      parent
+      (append (node-children parent) (list n)))
+    (set-node-children*!
+      parent
+      (cons n empty)))
+  n)
 
 (define (clone-node n)
   (match n

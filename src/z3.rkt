@@ -70,15 +70,17 @@
      (raise-cassius-error (format "~a (~a:~a)" text line column))]
     ['unsupported
      (error "Z3 unsupported:" input)]
-    [`(model ,entries ...)
-     (for/hash ([entry entries]
-                #:when (equal? (first entry) 'define-fun)
-                #:when (null? (third entry)))
-       (match-define `(define-fun ,const ,_ ,_ ,val) entry)
-       (values const (deserialize val)))]
     [(? eof-object?)
      (error "Z3 error: premature EOF received")]
-    [_ msg]))
+    [_
+     (match input
+       ['(get-model)
+        (for/hash ([entry msg]
+                #:when (equal? (first entry) 'define-fun)
+                #:when (null? (third entry)))
+          (match-define `(define-fun ,const ,_ ,_ ,val) entry)
+          (values const (deserialize val)))]
+       [_ msg])]))
 
 (define (call-with-z3 fn)
   (let ([proc (z3-process)])

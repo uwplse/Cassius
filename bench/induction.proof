@@ -4,41 +4,18 @@
 
 (import "common.thm")
 
-(page press-0 (load "induction.rkt" doc-1)
+(page press-0 (load "list.rkt" list)
       :w (between 800 1920)
       :h (between 600 1280)
       :fs (between 16 32))
  
-(page press-1 (load "induction.rkt" doc-2)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-2 (load "induction.rkt" doc-3)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-3 (load "induction.rkt" doc-4)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-4 (load "induction.rkt" doc-5)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-5 (load "induction.rkt" doc-6)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
-(page press-50 (load "induction.rkt" doc-7)
-      :w (between 800 1920)
-      :h (between 600 1280)
-      :fs (between 16 32))
- 
+(page press-1 (run-js 1 press-0))
+(page press-2 (run-js 1 press-1))
+(page press-3 (run-js 1 press-2))
+(page press-4 (run-js 1 press-3))
+(page press-5 (run-js 1 press-4))
+(page press-50 (run-js 50 press-0))
+
 (theorem (top-above-bottom b)
   (>= (- (bottom b) (top b) 0)))
 

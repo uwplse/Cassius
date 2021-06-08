@@ -1,7 +1,6 @@
 /*
 javascript:void((function(x){x.src = "http://localhost:8000/capture/all.js"; document.querySelector("head").appendChild(x)})(document.createElement("script")));
 */
-
 var Props = "width height margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top-width border-right-width border-bottom-width border-left-width float display text-align border-top-style border-right-style border-bottom-style border-left-style overflow-x overflow-y position top bottom left right box-sizing min-width max-width min-height max-height font-size font-family font-style font-weight text-indent clear color background-color line-height vertical-align".split(" ");
 var BadProps = "clear float direction min-height max-height max-width min-width overflow-x overflow-y position box-sizing white-space font-size text-indent vertical-align".split(" ");
 var BadTags = "img iframe input svg:svg button frame noframes".split(" ");
@@ -25,6 +24,7 @@ var Page = curry(Box, "PAGE")
 var TextBox = curry(Box, "TEXT")
 var Magic = curry(Box, "MAGIC")
 var Anon = curry(Box, "ANON")
+
 
 Box.prototype.toString = function() {
     var s = "[" + this.type;
@@ -940,15 +940,7 @@ function annotate_box_elt(box) {
 import { MAX, compute_flt_pointer, check_float_registers } from "./ezone";
 import { dump_fonts } from "./fonts";
 import { dump_browser } from "./browser";
-
-function trim_script(script) {
-    var out = "";
-    var split_script = script.split("\n");
-    for (var i = 0; i < split_script.length; i++) {
-        out += split_script[i].trim() + "\n";
-    }
-    return out;
-}
+import { dump_script } from "./scripts"
 
 export function page2text(name) {
     LETTER = name;
@@ -956,12 +948,11 @@ export function page2text(name) {
 
     var text = "";
     text += "(define-stylesheet " + name;
-    for (var sid in document.styleSheets) {
-        console.log("Reading", sid, document.styleSheets[sid]);
+    for (var sheet of document.styleSheets) {
         try {
-            text += dump_stylesheet(document.styleSheets[sid], features, document.styleSheets[sid].media);
+            text += dump_stylesheet(sheet, features, sheet.media);
         } catch (e) {
-            console.warn(document.styleSheets[sid], e);
+            console.warn(sheet, e);
             ERROR = e;
             features["unknown-error"] = true;
         }
@@ -994,9 +985,12 @@ export function page2text(name) {
     text += dump_tree(page.children[0]);
     text += "))\n\n";
     
-    text += "(define-script " + name +"\n";
-    text += trim_script(dump_string(document.querySelectorAll("script")[0].textContent));
-    text += ")\n\n";
+    for (var script of document.querySelectorAll("script")) {
+        if (script.src) continue;
+        text += "(define-script " + name +"\n";
+        text += dump_script(script.textContent);
+        text += ")\n\n";
+    }
 
     text += "(define-problem " + name;
     text += "\n  :title " + dump_string(document.title);
