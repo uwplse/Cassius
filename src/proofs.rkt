@@ -183,11 +183,9 @@
   (struct-copy dom d [elements elements*]
 	             [boxes boxes*]))
 
-(define (read-command cmd problem-context script-context theorem-context proof-context)
+(define (read-command cmd problem-context theorem-context proof-context)
   (match cmd
     ;;Saves a list of provided psuedo js commands to the name of a script to use later
-    [`(script ,name ,cmds ...)
-      (hash-set! script-context name cmds)]
     [`(page ,name (load ,file ,pname) ,attrs ...)
      (define problem (dict-ref (call-with-input-file file parse-file) pname))
      (define the-dom* (first (dict-ref problem ':documents)))
@@ -202,7 +200,7 @@
                             (cdr (dict-ref problem ':documents))))))
      (hash-set! problem-context name problem*)]
     ;;Creates a new page with a given name by running a script on an already loaded page
-    [`(page ,name (run-js ,old-page))
+    [`(page ,name (run-js ,n ,old-page))
       ;;Check that the sudoscript translates to javascript that does what the javascript in the provided file does
       (define problem* (hash-ref problem-context old-page))
       (define script (first (dict-ref problem* ':script)))
@@ -211,7 +209,7 @@
       ;;Pull the problem of the old-page out of the context
       (define the-dom* (first (dict-ref problem* ':documents)))
       ;;Itterate through the effects of the script, changing the page in the needed ways when certain effects appear
-      (for ([effect effects])
+      (for* ([i (in-range n)] [effect effects])
 	(match effect
 	  ;;When the append child effect appears, append child and box to elt
           [(list 'append-child (list 'id list-id) elt-info box-info)
@@ -233,7 +231,7 @@
      (call-with-input-file file
        (λ (p)
          (for ([cmd* (in-port read p)])
-           (read-command cmd* problem-context script-context theorem-context proof-context))))]
+           (read-command cmd* problem-context theorem-context proof-context))))]
     [`(define (,name ,args ...) ,body)
      (define helper
        (procedure-reduce-arity
@@ -257,8 +255,7 @@
   (define problem-context (make-hash))
   (define theorem-context (make-hash))
   (define proof-context (make-hash))
-  (define script-context (make-hash))
   (for ([cmd (in-port read port)])
-    (read-command cmd problem-context script-context theorem-context proof-context))
+    (read-command cmd problem-context theorem-context proof-context))
   proof-context)
 
