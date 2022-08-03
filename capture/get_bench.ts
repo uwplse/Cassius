@@ -985,9 +985,11 @@ export function page2text(name) {
     text += dump_tree(page.children[0]);
     text += "))\n\n";
     
+    var n_scripts = 0;
     for (var script of document.querySelectorAll("script")) {
         if (script.src) continue;
-        text += "(define-script " + name +"\n";
+        n_scripts++;
+        text += "(define-script " + name + "." + n_scripts +"\n";
         text += dump_script(script.textContent);
         text += ")\n\n";
     }
@@ -998,7 +1000,11 @@ export function page2text(name) {
     text += "\n  :sheets firefox " + name;
     text += "\n  :fonts " + name;
     text += "\n  :layouts " + name;
-    text += "\n  :script " + name;
+    if (n_scripts) {
+        text += "\n  :script";
+        for (var i = 1; i <= n_scripts; i++)
+            text += n_scripts + " ";
+    }
     if (ERROR) {
         text += "\n  :error " + dump_string(ERROR + "");
         features["unknown-error"] = true;

@@ -114,6 +114,7 @@
   (match v
     [(== 'true) #t]
     [(== 'false) #f]
+    [`(to_real ,n) n]
     [`(- ,n) (- (deserialize n))]
     [`(/ ,n ,d) (exact->inexact (/ (deserialize n) (deserialize d)))]
     [`(let ((,names ,values) ...) ,body)

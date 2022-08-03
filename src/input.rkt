@@ -43,7 +43,9 @@
            (when (dict-has-key? properties key)
              (define val*
                (for/list ([name (dict-ref properties key)])
-                 (dict-ref hash name)))
+                 (if (dict-has-key? hash name)
+                     (dict-ref hash name)
+                     (raise-user-error 'input "Could not find ~a ~a" key name))))
              (set! properties (dict-set properties key val*))))
 
          (get-from ':sheets sheets)
