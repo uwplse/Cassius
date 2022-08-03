@@ -83,8 +83,14 @@ class Browser:
     def quit(self):
         self.browser.quit()
 
+def url_to_name(url):
+    name = url.rsplit("/", 1)[1].rsplit(".", 1)[0]
+    if name == "":
+        name = url.split("//", 1)[1].split("/", 1)[0]
+    return name
+
 def name(urls):
-    fns = [url.rsplit("/", 1)[1].rsplit(".", 1)[0] for url in urls]
+    fns = [url_to_name(url) for url in urls]
     if len(fns) == len(set(fns)):
         return zip(fns, urls)
     else:
