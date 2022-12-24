@@ -35,7 +35,7 @@ First, set up Cassius with:
 Then, test out your Cassius installation by running, from the top-level directory,
 
     python3 capture/capture.py http://example.com/ --output bench/example.rkt
-    racket src/run.rkt accept bench/example.rkt doc-1
+    racket src/run.rkt accept bench/example.rkt example.com
 
 This should churn for a few seconds and say, "Accepted".
 
