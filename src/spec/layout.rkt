@@ -841,6 +841,11 @@
        (= (pb b) ,(get-px-or-% 'padding-bottom '(w p) 'b))
        (= (mt b) (ite (is-margin/auto (style.margin-top r)) 0.0 ,(get-px-or-% 'margin-top '(w p) 'b)))
        (= (mb b) (ite (is-margin/auto (style.margin-bottom r)) 0.0 ,(get-px-or-% 'margin-bottom '(w p) 'b)))
+
+       (= (pankaj-a b) (font.ascent metrics))
+       (= (pankaj-d b) (font.descent metrics))
+       (= (pankaj-l b) leading)
+
        (ite (first-box? b)
             (and
              (= (pl b) ,(get-px-or-% 'padding-left '(w p) 'b))
@@ -936,6 +941,11 @@
   (define-fun a-text-box ((b Box)) Bool
     ,(smt-let ([p (pflow b)] [v (vflow b)]
                [metrics (font-info b)] [leading (- (line-height b) (height-text b))])
+
+       (= (pankaj-a b) (font.ascent metrics))
+       (= (pankaj-d b) (font.descent metrics))
+       (= (pankaj-l b) leading)
+
        (= (type b) box/text)
        ;; Only true if there are no wrapping opportunities in the box
        (= (stfwidth b) (max (+ (ml b) (w b)) (ite (is-box (vbox b)) (stfwidth (vbox b)) 0.0)))

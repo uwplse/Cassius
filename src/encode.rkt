@@ -122,6 +122,14 @@
       (node-set! elt ':y (+ (data 'y) (data 'yo)))
       (node-set! elt ':w (+ (data 'bl) (data 'pl) (data 'w) (data 'pr) (data 'scroll-y) (data 'br)))
       (node-set! elt ':h (+ (data 'bt) (data 'pt) (data 'h) (data 'pb) (data 'scroll-x) (data 'bb)))
+
+      (node-set! elt ':ab (data 'above-baseline))
+      (node-set! elt ':bb (data 'below-baseline))
+
+      (node-set! elt ':A (data 'pankaj-a))
+      (node-set! elt ':D (data 'pankaj-d))
+      (node-set! elt ':L (data 'pankaj-l))
+
       (node-set! elt ':fg (data 'fg-color))
       (node-set! elt ':bg (data 'bg-color)))))
 

@@ -29,6 +29,11 @@
                 (baseline Real) (above-baseline Real) (below-baseline Real)
                 (ez.sufficient Bool) (ez.lookback Bool)
                 (has-contents Bool) (first-box? Bool) (last-box? Bool)
+
+                (pankaj-a Real)
+                (pankaj-d Real)
+                (pankaj-l Real)
+
                 (is-component Bool)
                 (fg-color Color) (bg-color Color)))
       (BoxType box/root box/text box/inline box/block box/line)

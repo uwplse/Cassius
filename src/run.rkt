@@ -9,7 +9,7 @@
     [(success doms test)
      (when (*debug*)
        (for ([tree (map dom-boxes doms)])
-         (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt)))))
+         (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :ab :bb :elt :A :D :L)))))
      (eprintf "Accepted!\n")]
     [(failure doms)
      (for ([tree (map dom-boxes doms)]) (displayln (tree->string tree #:attrs '(:x :y :w :h :fs :elt :style))))
